@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
-use crate::{empty_plugin, sample_plugin};
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 
 #[semio_framework_async_macros::async_test]
 async fn parse_and_print_round_trip_the_sample_program() {

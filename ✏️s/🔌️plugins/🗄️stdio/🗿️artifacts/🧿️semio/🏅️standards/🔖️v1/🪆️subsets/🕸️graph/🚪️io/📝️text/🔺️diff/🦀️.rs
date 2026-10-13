@@ -5,8 +5,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::graph::schema::diff::*;
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
+use crate::schema::diff::*;
+use crate::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 /// 🧪️ Hand-rolled `protocol::DiffCodec` — `graph`'s two collection fields print as
@@ -14,17 +14,17 @@ use protocol::MutationDiff;
 /// snapshot facet's own real hex/bracket node/edge encoders (duplicated locally, same convention
 /// every sibling subset's `🔺️diff` facet already establishes — see that facet's own doc comment
 /// for why).
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
-use crate::standards::v1::subsets::base::schema::geometry::{native, SemioPoint2};
-use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_f64_hex, dec_node_id, dec_optional, dec_port, dec_property, dec_str, enc_node_id, enc_optional, enc_point2_fields, enc_port, enc_property, enc_str};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value, enc_semio_value};
-use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_node};
-use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_node};
-use crate::standards::v1::subsets::graph::io::text::snapshot::{dec_edge};
-use crate::standards::v1::subsets::graph::io::text::snapshot::{enc_edge};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{native, SemioPoint2};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexedTripleDiff, Replace};
+use crate::io::text::snapshot::{dec_f64_hex, dec_node_id, dec_optional, dec_port, dec_property, dec_str, enc_node_id, enc_optional, enc_point2_fields, enc_port, enc_property, enc_str};
+use semio_s_artifact_stdio_semio_value::io::text::diff::{dec_semio_value, enc_semio_value};
+use crate::io::text::snapshot::dec_node;
+use crate::io::text::snapshot::enc_node;
+use crate::io::text::snapshot::dec_edge;
+use crate::io::text::snapshot::enc_edge;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_f64(value: f64) -> String {

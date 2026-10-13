@@ -41,8 +41,8 @@ pub fn example_snapshot(example_id: &str) -> Option<BitmapSnapshot> {
 /// 🗃️ The whole-document load an example switch answers with: a freshly packed snapshot and an edit-free op log. It is NOT an
 /// edit, so no mutation row, no diff and no history row exists for it.
 pub fn load_document_effect(document: &BitmapSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <BitmapSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc-bitmap", crate::WFC_BITMAP_DOCUMENT_SCHEMA));
+    let pack = <BitmapSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc-bitmap", crate::WFC_BITMAP_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 

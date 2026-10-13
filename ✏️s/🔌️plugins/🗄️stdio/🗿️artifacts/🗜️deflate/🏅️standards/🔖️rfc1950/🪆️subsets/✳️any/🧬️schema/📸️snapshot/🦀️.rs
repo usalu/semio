@@ -53,8 +53,8 @@ impl DeflateLevelHint {
 /// same treatment RFC1950 §2.3 mandates for the checksum, extended here to FCHECK too (both are
 /// pure functions of the other header bits, not independently-settable data).
 ///
-/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
-/// `store::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).
+/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::os_store::serialization::ArtifactDsl`/
+/// `store::os_store::serialization::ArtifactPack` below — NOT a replacement (same treatment as `BinarySnapshot`).
 /// `DslRecord` only gives this type `DslField` so it can be embedded as a block in a record; it does not touch the artifact's own
 /// honest hex-text/raw-binary envelope format.
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]

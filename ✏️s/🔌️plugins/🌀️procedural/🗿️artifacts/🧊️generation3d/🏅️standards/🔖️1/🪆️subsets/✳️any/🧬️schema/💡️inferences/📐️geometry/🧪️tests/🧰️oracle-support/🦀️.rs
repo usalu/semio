@@ -8,8 +8,8 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::catalogue::catalogue;
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::queries::analysis::{edge_table, face_table, ShapeScope};
+use semio_framework_3d_brep_engine::{GeometryHandle, ShapeRoot, ShapeValue};
+use semio_framework_3d_brep_queries::analysis::{edge_table, face_table, ShapeScope};
 use semio_framework_3d::mesh::HalfedgeMesh;
 use serde_json::Value;
 use std::collections::BTreeMap;
@@ -119,7 +119,7 @@ fn session_handle(session: &mut KernelSession, recipe: &Value) -> GeometryHandle
                 .find(|handle| {
                     let value = session.export(handle).expect("edge export");
                     let ShapeRoot::Edge(id) = value.root else { return false };
-                    edge_table(&value.body, &ShapeScope::edge(id)).expect("edge table").first().is_some_and(|row| row.curve_kind != semio_framework_3d::brep::queries::analysis::CurveKind::Line)
+                    edge_table(&value.body, &ShapeScope::edge(id)).expect("edge table").first().is_some_and(|row| row.curve_kind != semio_framework_3d_brep_queries::analysis::CurveKind::Line)
                 })
                 .expect("a curved edge")
         }

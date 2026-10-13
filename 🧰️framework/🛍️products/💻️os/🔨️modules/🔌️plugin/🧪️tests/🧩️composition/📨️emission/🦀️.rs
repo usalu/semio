@@ -28,9 +28,9 @@ fn child_emission_private_input_request_retains_whole_page_backing_undergrant() 
         dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:reference["dialect"]["artifactKind"].as_str().unwrap().into(),standard:reference["dialect"]["standard"].as_str().unwrap().into(),subset:reference["dialect"]["subset"].as_str().unwrap().into()},
     };
     let source=serde_json::to_vec(&fixture["source"]).unwrap();
-    let(mut pages,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits{maximum_pages:1,maximum_bytes:store::OWNED_SCHEMA_DECODE_PAGE_BYTES}).unwrap());
+    let(mut pages,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits{maximum_pages:1,maximum_bytes:store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES}).unwrap());
     let backing=pages.allocation_byte_demand();assert_eq!(birth.requested_bytes,backing);
-    pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(&source).unwrap()).unwrap();pages.seal().unwrap();
+    pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(&source).unwrap()).unwrap();pages.seal().unwrap();
     let mut request=store::MemberOpenRequest::new(semio_framework_job::OperationId(1),semio_framework_job::Generation(1),1000,expected,None,pages,store::os_spr::ActorId(fixture["source"]["actor"].as_str().unwrap().into()));
     let release_grant=|bytes:usize|store::RetainedCloneGrant{maximum_items:1,maximum_release_bytes:bytes,maximum_depth:1,..Default::default()};
     request.close_step(release_grant(1)).unwrap();request.close_step(release_grant(source.len())).unwrap();request.close_step(release_grant(1)).unwrap();

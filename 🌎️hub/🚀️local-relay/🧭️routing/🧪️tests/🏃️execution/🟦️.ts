@@ -7,6 +7,6 @@ import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️pro
 export class LocalRelayRoutingScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("local-relay-routing-check accepts no arguments");
-    await runRepositoryCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🚀️local-relay/🧭️routing/🧪️tests/🔬️admission/🟦️.ts")], this.repoRoot, "hub-local-relay-routing", 120_000);
+    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🚀️local-relay/🧭️routing/🧪️tests/🔬️admission/🟦️.ts")],this.repoRoot,"hub-local-relay-routing",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }

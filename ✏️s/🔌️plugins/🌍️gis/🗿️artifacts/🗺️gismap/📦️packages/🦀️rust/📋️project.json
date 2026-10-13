@@ -91,7 +91,7 @@
         }
       },
       "dependsOn": [
-        "@semio-tech/gis-plugin:describe"
+        "semio-hub-gis-component:component"
       ]
     },
     "verify-inference-native-service": {

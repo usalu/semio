@@ -8,13 +8,14 @@
 
 use super::colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_function, lift_shading, matrix_of, numbers_of, rect_of};
 use super::content::{parse_content, FontTable};
-use super::fonts::{base_encoding_from_name, cmap, decode_text_string, FontCodec};
+use crate::standards::v1_7::subsets::base::modules::fonts::{base_encoding_from_name, cmap, FontCodec};
+use crate::standards::v1_7::subsets::base::io::decode_text_string;
 use super::images::lift_image;
-use super::lexer::{dict_f64, dict_get, dict_i64, dict_name};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};
-use super::lexer::{PResult,PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources,PdfArtifactResourcePort};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::{PdfAdmittedStreamRole, PdfGraphIdentity, PdfGraphPath, PdfStreamRoleValue};
 use crate::standards::v1_7::subsets::base::schema::content_mapping::{ResourceMap, rename_content};

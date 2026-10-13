@@ -5,12 +5,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::image::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — the `#[cfg(test)] mod tests` block below calls `print_diff`/`parse_diff`/
@@ -19,8 +19,8 @@ use protocol::command::DiffAlgebra;
 /// but callers using method syntax do not get the trait for free) (W2b closer fix).
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::image::io::text::snapshot::encode_option;
-use crate::standards::v1::subsets::image::io::text::snapshot::decode_option;
+use crate::io::text::snapshot::encode_option;
+use crate::io::text::snapshot::decode_option;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_image_diff(d: &SemioImageDiff) -> String {
     let mut tokens: Vec<String> = Vec::new();

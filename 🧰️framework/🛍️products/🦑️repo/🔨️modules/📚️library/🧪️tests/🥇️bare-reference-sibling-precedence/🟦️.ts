@@ -8,9 +8,9 @@ const root = resolve(import.meta.dir, "../../../../../../..");
 const library = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library";
 const text = normalizationSourceDeclarations(resolve(root, library, "🧹️normalization/🟦️.ts"));
 const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest, true);
-const names = ["resolveReferencePath", "referencePathIndex", "addUniqueIndex", "ancestorReferenceCoordinateRoot", "splitTokenSuffix", "normalizeRelative", "sourceRelative"];
+const names = ["resolveReferencePath", "referencePathIndex", "addUniqueIndex", "ancestorReferenceCoordinateRoot", "splitTokenSuffix", "normalizeRelative", "sourceRelative", "referenceLeaf", "referenceLeafNames", "referenceLeafNameSets"];
 const declarations = Object.fromEntries(names.map((name) => {
-  const found = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
+  const found = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => declaration.name.getText(syntax) === name));
   expect(found, name).toHaveLength(1);
   return [name, found[0]!.getText(syntax)];
 }));

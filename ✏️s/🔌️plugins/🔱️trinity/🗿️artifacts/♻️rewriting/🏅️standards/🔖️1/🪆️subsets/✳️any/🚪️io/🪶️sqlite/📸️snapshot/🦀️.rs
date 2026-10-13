@@ -1,6 +1,6 @@
 //! ♻️ typed thirty-table Rewriting capability awaiting its owning assertion gate.
 use crate::RewritingSnapshot;
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding}};
 use semio_framework_value::ValueError;
 #[path="💰️backing/🦀️.rs"]
 mod backing;

@@ -14,7 +14,7 @@ use crate::retained::{FlowOwner, FlowRetirement};
 
 // #region 🔖️ArtifactVcs
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationApplyError, MutationApplyResult, MutationDiff, Patchable};
-use crate::os_store::{ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, HistoryLane, MemberStoreOwner, DocumentStoreOwners, SnapshotRetirementFactory};
+use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactOwnedValueRetirementFactory, ArtifactPreparedOperationSource, ArtifactStore, ArtifactStoreCursorDisposer, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, ErasedSnapshotRetirement, store_schema::HistoryLane, document_store_owners::MemberStoreOwner, document_store_owners::DocumentStoreOwners, SnapshotRetirementFactory};
 
 
 
@@ -190,7 +190,7 @@ impl MemberStoreOwner<FlowMutation> for FlowHostSnapshot {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, FlowMutation>::source_birth_bytes::<FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, FlowMutation>>()? + FlowAuthoringFactory::birth_demand().capacity_bytes, depth: 1 })
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, FlowMutation>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FlowMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, FlowMutation>> {
         DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, FlowAuthoringFactory::birth_demand(), || (FlowSnapshotRetirementFactory, FlowOwnedHostSnapshotRetirementFactory, FlowMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, FlowMutation>::new(), Arc::new(FlowAuthoringFactory) as Arc<dyn ArtifactStoreOneItemPreparationFactory<FlowHostSnapshot, FlowMutation>>))
     }
 }

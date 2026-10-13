@@ -2,6 +2,7 @@
 import { blake3Hex } from "../../../../../../../🔨️modules/🔏️hash/🟦️.ts";
 import schemaModule from "./🔣️.json";
 import { MODULE_BRIDGE_FILE, MODULE_VENDOR_DIRECTORY } from "../🟦️.ts";
+import { COMPONENT_RECEIPT_FILE } from "../../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 
 const defs = schemaModule.$defs;
 const bundleProperties = defs.TrustedPluginModuleBundleV1.properties;
@@ -14,6 +15,8 @@ export const TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES: number = defs.TrustedPluginMo
 export const TRUSTED_PLUGIN_MODULE_INDEX_MAX_MODULES: number = defs.TrustedPluginModuleIndexV1.properties.modules.maxItems;
 export const TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE = "🔣️.json";
 export const TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE = "🛂️.descriptor.semio";
+/** 🧾️ The canonical `ComponentReceiptV1` a module carries beside its entry: the package's own receipt. */
+export const TRUSTED_PLUGIN_MODULE_RECEIPT_FILE = COMPONENT_RECEIPT_FILE;
 const IDENTITY_MAX_BYTES: number = defs.PluginModuleIdentityV1.maxLength;
 const PATH_MAX_CHARS: number = defs.TrustedPluginModulePathV1.maxLength;
 const PATH_PATTERN = new RegExp(defs.TrustedPluginModulePathV1.pattern, "u");
@@ -49,6 +52,7 @@ export type TrustedPluginModuleIndexEntryV1 = Readonly<{
   version: string;
   componentSha256: string;
   descriptorByteSha256: string;
+  receiptSha256: string;
   dependencies: readonly string[];
   dialectArtifactKinds: readonly string[];
   extendsPluginId: string | null;
@@ -58,7 +62,7 @@ export type TrustedPluginModuleIndexEntryV1 = Readonly<{
 }>;
 export type TrustedPluginModuleIndexV1 = Readonly<{ schema: string; generationId: string; modules: readonly TrustedPluginModuleIndexEntryV1[] }>;
 /** 🪪️ The package a plugin module must have been derived from. */
-export type TrustedPluginModuleSourceV1 = Readonly<{ pluginId: string; packageId: string; version: string; componentSha256: string; descriptorByteSha256: string }>;
+export type TrustedPluginModuleSourceV1 = Readonly<{ pluginId: string; packageId: string; version: string; componentSha256: string; descriptorByteSha256: string; receiptSha256: string }>;
 
 /** 🚫️ Every refusal of this contract, one type so a caller can tell a refused module from a failed transport. */
 export class TrustedPluginModuleRefusalV1 extends Error {
@@ -123,6 +127,7 @@ export function validateTrustedPluginModuleBundleV1(value: unknown, source: Trus
   const file = (name: string) => files.find((candidate) => candidate.path === `${directory}${name}`);
   if (record.entry !== `${directory}${MODULE_BRIDGE_FILE}` || !file(MODULE_BRIDGE_FILE) || !file(TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE)) return refuse("entry or JSON descriptor is missing");
   if (file(TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE)?.sha256 !== record.sourceDescriptorByteSha256) return refuse("packed descriptor is not the package's own descriptor");
+  if (file(TRUSTED_PLUGIN_MODULE_RECEIPT_FILE)?.sha256 !== source.receiptSha256) return refuse("component receipt is not the package's own receipt");
   if (record.pluginId !== source.pluginId || record.packageId !== source.packageId || record.version !== source.version || record.sourceComponentSha256 !== source.componentSha256 || record.sourceDescriptorByteSha256 !== source.descriptorByteSha256)
     return refuse("was not derived from its package");
   return Object.freeze({
@@ -183,6 +188,7 @@ export function validateTrustedPluginModuleIndexV1(value: unknown): TrustedPlugi
       !validIdentity(entry.version) ||
       !validDigest(entry.componentSha256) ||
       !validDigest(entry.descriptorByteSha256) ||
+      !validDigest(entry.receiptSha256) ||
       !validDigest(entry.bundleSha256) ||
       !validLength(entry.bundleByteLength, TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES) ||
       !validTrustedPluginModulePathV1(entry.entry) ||
@@ -203,6 +209,7 @@ export function validateTrustedPluginModuleIndexV1(value: unknown): TrustedPlugi
       version: entry.version,
       componentSha256: entry.componentSha256,
       descriptorByteSha256: entry.descriptorByteSha256,
+      receiptSha256: entry.receiptSha256,
       dependencies: Object.freeze([...(dependencies as string[])]),
       dialectArtifactKinds: Object.freeze([...(dialects as string[])]),
       extendsPluginId: entry.extendsPluginId as string | null,
@@ -217,7 +224,7 @@ export function validateTrustedPluginModuleIndexV1(value: unknown): TrustedPlugi
 
 /** 🪪️ The package an index entry says its module derives from. */
 export function trustedPluginModuleSourceOfEntryV1(entry: TrustedPluginModuleIndexEntryV1): TrustedPluginModuleSourceV1 {
-  return { pluginId: entry.pluginId, packageId: entry.packageId, version: entry.version, componentSha256: entry.componentSha256, descriptorByteSha256: entry.descriptorByteSha256 };
+  return { pluginId: entry.pluginId, packageId: entry.packageId, version: entry.version, componentSha256: entry.componentSha256, descriptorByteSha256: entry.descriptorByteSha256, receiptSha256: entry.receiptSha256 };
 }
 
 async function sha256Hex(bytes: Uint8Array): Promise<string> {

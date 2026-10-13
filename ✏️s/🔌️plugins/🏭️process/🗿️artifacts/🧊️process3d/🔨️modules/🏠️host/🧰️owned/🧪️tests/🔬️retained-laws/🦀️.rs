@@ -173,7 +173,7 @@ fn owned_store_measured(label: &str, operation_value: u64, budget: &mut Replacem
     process3d_admit_publication_authority(operation, generation, generation.0, generation.0, generation.0, crate::host::owned::Process3dPublicationLimits { maximum_items: PROCESS3D_MAXIMUM_DOMAIN_ITEMS, maximum_output_pages: PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: PROCESS3D_MOUNTED_CONTROL_CREDITS }).expect("fixture publication authority");
     let mut snapshot = crate::empty_process3d_snapshot();
     snapshot.stock_label = label.into();
-    let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, label, snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, label, snapshot, None);
     let mut authority = Process3dStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::CancelToken::root_now();
     let mut preview_sequence = 0;
@@ -211,7 +211,7 @@ fn retained_initializer_replays_every_neutral_timeline_mutation() {
         let after = std::fs::read_to_string(folder.join("📸️snapshot/➡️after/🔣️.json")).unwrap();
         let snapshot: Process3dSnapshot = semio_framework_pack_json::from_json_str(&before, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
         let mutation: Process3dMutation = semio_framework_pack_json::from_json_str(&mutation, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-        let mut envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, case, snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, case, snapshot, None);
         envelope.cursor = None;
         envelope.vcs.edits.try_push(protocol::Edit { id: format!("timeline-{index}"), actor: Some("neutral-law".into()), line: None, forwards: vec![mutation], inverse: Default::default(), mutation_meta: Vec::new(), verb: None, sequence_number: 1, started_at: "1".into(), finished_at: None }).unwrap();
         let operation = semio_framework_job::OperationId(u64::MAX - 4_000 - index as u64);
@@ -544,7 +544,7 @@ fn retained_string_cursor_enforces_one_byte_grants_and_hostile_boundaries() {
 /// 🧾️ The envelope snapshot decoder publishes and forwards an admitted timeline's complete backing extent.
 #[test]
 fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
-    use store::ArtifactEnvelopeSnapshotFieldAuthority as _;
+    use store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
@@ -553,7 +553,7 @@ fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
     timeline.phase = 3;
     let extent = timeline.steps.capacity() * size_of::<ProcessStep>();
     assert!(extent > fixture["releaseBytes"].as_u64().unwrap() as usize && extent < PROCESS3D_MAXIMUM_DOMAIN_BYTES);
-    let mut decoder = Process3dSnapshotDecodeAuthority::new(semio_framework_job::OperationId(7001), semio_framework_job::Generation(1), store::OwnedSchemaPath::ROOT);
+    let mut decoder = Process3dSnapshotDecodeAuthority::new(semio_framework_job::OperationId(7001), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
     *decoder.retirement = Some(Box::new(Process3dOwnedRetirement::owner(Process3dRetirementOwner::Timeline { value: timeline })));
     decoder.state = Process3dSnapshotDecodeState::Closing;
     let advertised = decoder.next_close_byte_demand().unwrap();
@@ -572,7 +572,7 @@ fn snapshot_decoder_publishes_and_funds_large_timeline_backing() {
 /// 🧮️ A nested mutation decoder forwards the same complete physical backing grant as its snapshot sibling.
 #[test]
 fn mutation_decoder_forwards_large_retained_backing_grant() {
-    use store::ArtifactEnvelopeMutationFieldAuthority as _;
+    use store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     let row = &fixture["decoderBacking"];
     assert_eq!(row["queryEachDemand"].as_bool(), Some(true));
@@ -580,7 +580,7 @@ fn mutation_decoder_forwards_large_retained_backing_grant() {
     timeline.steps = Vec::with_capacity(row["capacityItems"].as_u64().unwrap() as usize);
     timeline.phase = 3;
     let extent = timeline.steps.capacity() * size_of::<ProcessStep>();
-    let mut decoder = Process3dMutationDecodeAuthority::new(semio_framework_job::OperationId(7004), semio_framework_job::Generation(1), store::OwnedSchemaPath::ROOT);
+    let mut decoder = Process3dMutationDecodeAuthority::new(semio_framework_job::OperationId(7004), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
     *decoder.retirement = Some(Box::new(Process3dOwnedRetirement::owner(Process3dRetirementOwner::Timeline { value: timeline })));
     decoder.state = Process3dMutationDecodeState::Closing;
     let funded = decoder.close_step(1, extent).unwrap();

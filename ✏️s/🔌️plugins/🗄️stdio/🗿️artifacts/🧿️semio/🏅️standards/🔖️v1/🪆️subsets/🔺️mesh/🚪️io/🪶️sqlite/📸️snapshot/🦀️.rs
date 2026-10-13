@@ -1,16 +1,15 @@
 //! 🔺️ Mesh primitives and indexed, ordered numeric buffers with explicit material relationships.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot,SemioMesh,SemioPrimitive,SemioTopology,SemioMaterial,SemioTexture};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3,SemioUv,SemioRgba};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text,reconstruct_blob},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
-#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::transfer;
+use crate::schema::snapshot::{SemioMeshSnapshot, SemioMesh, SemioPrimitive, SemioTopology, SemioMaterial, SemioTexture};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioUv, SemioRgba};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 fn reference(id:Option<&str>)->Cell<'_>{match id{None=>Cell::Null,Some(id)=>Cell::Text(id)}}
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits every Mesh buffer, exact IEEE word and literal reference through the same row writer.
-pub(crate)fn visit_rows(snapshot:&SemioMeshSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioMeshSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
 out.insert_key_float("semio_mesh_document",1,&[Cell::Text(&snapshot.schema)],float_columns("semio_mesh_document"))?;
 for(ordinal,texture)in snapshot.textures.iter().enumerate(){out.insert_float("semio_mesh_texture",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&texture.id),Cell::Text(&texture.mime),Cell::Blob(&texture.bytes)],float_columns("semio_mesh_texture"))?;}
 for(ordinal,material)in snapshot.materials.iter().enumerate(){let c=material.base_color;out.insert_float("semio_mesh_material",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&material.id),Cell::Float32(c.r),Cell::Float32(c.g),Cell::Float32(c.b),Cell::Float32(c.a),Cell::Float32(material.metallic),Cell::Float32(material.roughness),reference(material.base_color_texture.as_deref()),reference(material.metallic_roughness_texture.as_deref()),reference(material.normal_texture.as_deref()),reference(material.occlusion_texture.as_deref()),reference(material.emissive_texture.as_deref())],float_columns("semio_mesh_material"))?;}
@@ -37,7 +36,7 @@ fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Resu
 fn tick(control:&mut SqliteSnapshotControl<'_>,completed:&mut usize)->Result<(),ValueError>{*completed+=1;if *completed%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,*completed,0)?;}Ok(())}
 fn topology(value:SemioTopology)->&'static str{match value{SemioTopology::Points=>"points",SemioTopology::Lines=>"lines",SemioTopology::LineStrip=>"line_strip",SemioTopology::Triangles=>"triangles",SemioTopology::TriangleStrip=>"triangle_strip",SemioTopology::TriangleFan=>"triangle_fan"}}
 impl ArtifactSqliteSnapshot for SemioMeshSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -71,19 +70,16 @@ pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&s
 impl SemioMeshSnapshot{
 /// 🧮️ Projects owned semantic rows under the caller's typed resource control.
 pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
+semantic::layout(control.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

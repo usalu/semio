@@ -29,7 +29,7 @@ use semio_s_artifact_stdio_las::LasSnapshot;
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("mesh") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.las", standard: StandardId("1.0"), subset: SubsetId::ANY };
 
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub struct SemioMeshToLas;
 

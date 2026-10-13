@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-os-flow-component"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The browser module of `semio-framework-os-flow`: the one cdylib wasm-bindgen links, holding no code of its own"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "product"
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = ["-O", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
+[package.metadata.wasm-pack.profile.custom]
+wasm-opt = ["-O", "--enable-bulk-memory", "--enable-nontrapping-float-to-int"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-flow = { path = "../../../📦️packages/🦀️rust" }

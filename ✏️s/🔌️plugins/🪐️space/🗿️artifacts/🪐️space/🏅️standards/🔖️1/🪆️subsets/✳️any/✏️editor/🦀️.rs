@@ -275,11 +275,11 @@ impl ArtifactEditor for SpaceIndexEditor {
             "foldDirectoryEvents", "presenceHeartbeat", "inviteMember", "removeMember", "setVisibility", "copyInviteLink", "requestInviteMember"]
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         semio_s_space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-index-artifact-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         semio_s_space_core::space_retained_store_preparation::<Self::Config, Self::ConfigMutation>("space-index-config-retained", SPACE_INDEX_RETAINED_OUTPUT_BYTES)
     }
 

@@ -11,8 +11,8 @@ use crate::editor::flow::{apply_canvas_options, flow_content_leaves_emit, seed_h
 use crate::{FlowMutation, FlowSnapshot};
 use flow::{neural::ColdRetire, FlowEvalSession};
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️FlowNodeGraphEditOp
 /// 🎯️ One batched edit inside a `FlowCommand::NodeGraphEdit`/`SpotlightCommit`, closed over the exact
@@ -130,10 +130,10 @@ pub fn node_graph_edit_result(doc: &ArtifactView<'_, FlowSnapshot>, config: &Flo
                 }
                 FlowNodeGraphEditOp::Connect { source_node_id, source_port_id, target_node_id, target_port_id } => {
                     let id = host.connect_ports(source_node_id, source_port_id, target_node_id, target_port_id).map_err(|error| Fault::from(format!("nodeGraphEdit connect refusal: {error}")))?;
-                    edit.connect(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowEdge {
+                    edit.connect(semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowEdge {
                         id,
-                        from: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: source_node_id.clone(), port: source_port_id.clone() },
-                        to: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: target_node_id.clone(), port: target_port_id.clone() },
+                        from: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: source_node_id.clone(), port: source_port_id.clone() },
+                        to: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: target_node_id.clone(), port: target_port_id.clone() },
                         kind: "data".into(),
                     });
                 }

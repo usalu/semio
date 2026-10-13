@@ -2,9 +2,9 @@
 
 use crate::os_spr::{ActorId, Edit, MutationId, MutationMeta, UndoPolicy};
 use crate::os_store::{
-    ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonTree, ArtifactStoreBatchDigest, admit_artifact_batch_digest, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemLiveAuthority,
-    ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, ErasedSnapshotRetirement,
-    HistoryLane, SnapshotRead, SnapshotRetirementFactory,
+    one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ArtifactCanonicalJson, ArtifactCanonicalJsonTree, ArtifactStoreBatchDigest, admit_artifact_batch_digest, ArtifactOwnedValueRetirementFactory, one_item::ArtifactStoreOneItemCheckpoint, one_item::ArtifactStoreOneItemFootprint, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemLiveAuthority,
+    one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, one_item::ArtifactStoreOneItemPreparationStep, one_item_publication::ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, ErasedSnapshotRetirement,
+    store_schema::HistoryLane, snapshot_read::SnapshotRead, SnapshotRetirementFactory,
 };
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneCursor, RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneRef, RetainedCloneSource, RetainedCloneStep, admit_retained_clone_progress, admit_retained_clone_close};
 use semio_framework_value::{ValueError, ValueRefusalKind, retirement::{RetireOwned, controlled::ControlledRetirement, shared::SharedControlledRetirement}, FactoryAuthority};

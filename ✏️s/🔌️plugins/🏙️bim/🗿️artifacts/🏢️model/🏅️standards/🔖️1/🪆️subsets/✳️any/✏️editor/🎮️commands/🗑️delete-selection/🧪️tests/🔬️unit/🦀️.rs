@@ -77,7 +77,7 @@ async fn any_number_of_elements_leave_as_parts_of_a_bounded_inverse() {
         after = crate::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");
     }
     assert!(ids.iter().all(|id| !after.columns.contains_key(id)));
-    assert!(store::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&mutations).is_ok(), "the gesture fits the store");
+    assert!(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&mutations).is_ok(), "the gesture fits the store");
 }
 
 #[semio_framework_async_macros::async_test]
@@ -85,7 +85,7 @@ async fn a_selection_beyond_one_gesture_streams_and_the_rest_stays_selected() {
     let (snapshot, ids) = crowded(70_000);
     let first = plan(&snapshot, &ids);
     assert!(!first.mutations.is_empty() && !first.remaining.is_empty(), "{} parts, {} left", first.mutations.len(), first.remaining.len());
-    assert!(store::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&first.mutations).is_ok());
+    assert!(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(&first.mutations).is_ok());
     let mut after = snapshot.clone();
     for mutation in &first.mutations {
         after = crate::mutations::apply_model_mutation(&after, mutation).expect("the part leaves");

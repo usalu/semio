@@ -29,7 +29,7 @@ fn home_config_holds_no_directory_projection() {
 fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use std::io::Write as _;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
-    use store::ArtifactStoreOneItemPreparation as _;
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation as _;
     let mut preparation = HomeConfigPreparation {
         owners: store::OneItemOwners::detached(
             HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }),
@@ -37,16 +37,16 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
             std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HomeConfig>::default()),
         ),
         serialized_bytes: None,
-        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+        checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,
     };
     let page = semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES;
-    let production = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: page, maximum_capacity_bytes: page, maximum_release_bytes: page, maximum_depth: 8 };
+    let production = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: page, maximum_capacity_bytes: page, maximum_release_bytes: page, maximum_depth: 8 };
     preparation.cancel();
-    assert!(matches!(preparation.advance(production).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+    assert!(matches!(preparation.advance(production).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));
     assert!(matches!(preparation.close_step(production).expect("close before begin_close"), RetainedCloneStep::Progress(progress) if progress == Default::default()));
     preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 0, ..production }).expect("zero-item close"), RetainedCloneStep::Progress(progress) if progress == Default::default()));
+    assert!(matches!(preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..production }).expect("zero-item close"), RetainedCloneStep::Progress(progress) if progress == Default::default()));
     let mut turns = 0;
     while !preparation.terminal_is_empty() {
         let demand = (
@@ -56,7 +56,7 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
             preparation.next_close_depth_demand().expect("depth demand"),
         );
         let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.0.max(page), maximum_capacity_bytes: demand.1, maximum_release_bytes: demand.2, maximum_depth: demand.3.max(1) };
-        let step = preparation.close_step(store::ArtifactStoreOneItemGrant::from_retained(grant)).expect("one owner per fully granted turn");
+        let step = preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(grant)).expect("one owner per fully granted turn");
         assert!(step.progress().fits(grant));
         turns += 1;
         assert!(turns < 64, "the close ladder terminates");
@@ -98,7 +98,7 @@ async fn local_studio_tombstones_are_exact_point_invertible_events() {
 /// the config unchanged; the retained config lane admits exactly the admissible tombstones.
 #[test]
 fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
-    use store::ArtifactStoreOneItemPreparationFactory as _;
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory as _;
     let full = HomeConfig { retired_local_studio_ids: (0..HOME_RETIRED_LOCAL_STUDIOS_MAXIMUM).map(|index| format!("studio-{index:04}")).collect(), ..HomeConfig::default() };
     for (mutation, base, code) in [(HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-over".into() }), &full, "mutation.target-mismatch"), (HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "bad\u{7}id".into() }), &HomeConfig::default(), "mutation.invariant")] {
         let outcome = mutation.diff(base);
@@ -106,10 +106,10 @@ fn local_studio_tombstones_refuse_inadmissible_ids_and_the_ceiling() {
         assert!(outcome.messages().iter().any(|message| message.code.0 == code), "{code}");
     }
     let factory = HomeConfigPreparationFactory;
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }), store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id: "studio-a".into() }), store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: String::new() }), store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }), store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "studio-a".into() }), store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&HomeConfigMutation::ListLocalStudio(ListLocalStudio { space_id: "studio-a".into() }), store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: String::new() }), store::os_store::store_schema::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&HomeConfigMutation::RetireLocalStudio(RetireLocalStudio { space_id: "x".repeat(HOME_RETIRED_LOCAL_STUDIO_ID_BYTES + 1) }), store::os_store::store_schema::HistoryLane::Document).is_err());
 }
 //#endregion 🪦️LocalStudioTombstones
 

@@ -1933,7 +1933,7 @@
                 {
                   "type": "integer",
                   "minimum": 0,
-                  "semioPrimitive": "u64",
+                  "x-semio-primitive": "u64",
                   "maximum": 18446744073709551615
                 },
                 {
@@ -6071,7 +6071,7 @@
             {
               "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64",
+              "x-semio-primitive": "u64",
               "maximum": 18446744073709551615
             },
             {
@@ -6142,7 +6142,7 @@
             {
               "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64",
+              "x-semio-primitive": "u64",
               "maximum": 18446744073709551615
             },
             {
@@ -6324,7 +6324,7 @@
             },
             "value": {
               "type": "integer",
-              "semioPrimitive": "i64",
+              "x-semio-primitive": "i64",
               "minimum": -9223372036854775808,
               "maximum": 9223372036854775807
             }

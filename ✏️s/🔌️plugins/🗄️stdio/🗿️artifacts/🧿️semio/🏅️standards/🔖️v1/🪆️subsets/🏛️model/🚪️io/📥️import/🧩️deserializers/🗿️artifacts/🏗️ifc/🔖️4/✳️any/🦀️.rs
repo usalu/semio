@@ -23,10 +23,8 @@
 //!   (element/spatial) edges implied by the containment tree this bridge walks — other real IFC
 //!   relationship kinds (`IfcRelVoidsElement`/`IfcRelConnectsElements`/…) are not read here.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::model::schema::snapshot::{
-    ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA,
-};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, Property, PropertySet, PsetValue, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_ifc::standards::v4::subsets::any::io::spatial::{analyze_spatial, Mat4, PropertySet as IfcPropertySet, SpatialAnalysis, SpatialNode as IfcSpatialNode};
 use semio_s_artifact_stdio_ifc::IfcSnapshot;

@@ -11,13 +11,13 @@ use super::*;
 use crate::standards::v2_0::subsets::any::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
 use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
-use crate::schema::snapshot::{
+use crate::standards::v2_0::subsets::any::schema::snapshot::{
     GltfAccessor, GltfAlphaMode, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAnimationSampler, GltfAsset, GltfBuffer, GltfBufferView, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation,
     GltfJson, GltfMaterial, GltfMesh, GltfMorphTarget, GltfNode, GltfNormalTextureInfo, GltfOcclusionTextureInfo, GltfOrthographic, GltfPbrMetallicRoughness, GltfPerspective, GltfPrimitive, GltfSampler, GltfScene, GltfSkin, GltfSnapshot,
     GltfSourceForm, GltfSparseAccessor, GltfSparseIndices, GltfSparseValues, GltfTexture, GltfTextureInfo,
 };
 #[cfg(test)]
-use crate::schema::snapshot::GltfDocument;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
 use framework_schema::ArtifactSchema;
 use protocol::os_spr::command::DiffAlgebra;
 use protocol::MutationDiff;

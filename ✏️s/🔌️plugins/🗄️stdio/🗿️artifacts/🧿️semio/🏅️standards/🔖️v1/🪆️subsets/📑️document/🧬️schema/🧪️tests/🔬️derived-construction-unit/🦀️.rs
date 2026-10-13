@@ -13,11 +13,11 @@ mod tests {
         assert_eq!(built.images.len(), 1);
         assert_eq!(built.blocks.len(), 1);
 
-        let text = <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(&built);
+        let text = <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&built);
         let from_text = SemioDocumentBuilderConstruction::from_text(&text).expect("from_text").build().expect("build");
         assert_eq!(from_text, built);
 
-        let bytes = <SemioDocumentSnapshot as store::ArtifactPack>::encode_pack(&built);
+        let bytes = <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&built);
         let from_binary = SemioDocumentBuilderConstruction::from_binary(&bytes).expect("from_binary").build().expect("build");
         assert_eq!(from_binary, built);
     }

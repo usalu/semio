@@ -1,7 +1,7 @@
 //! 🌳️ Borrowed Drawing fields materialize only in the caller-returned original typed root.
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode,PathSegment,DrawLayer,DrawStyle,DrawCanvas,SemioDrawingSnapshot};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3,SemioQuaternion,SemioTransform,SemioRgba};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::{workspace,text_into};
+use crate::schema::snapshot::{DrawNode, PathSegment, DrawLayer, DrawStyle, DrawCanvas, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform, SemioRgba};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::{workspace, text_into};
 use semio_framework_value::{DslValue,FromValue,NativeDecodeControl,ValueError,ValueRefusalKind};
 
 fn refusal(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}

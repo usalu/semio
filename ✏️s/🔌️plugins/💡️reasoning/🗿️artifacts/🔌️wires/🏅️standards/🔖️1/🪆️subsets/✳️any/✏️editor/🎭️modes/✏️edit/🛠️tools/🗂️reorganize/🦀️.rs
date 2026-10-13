@@ -6,8 +6,8 @@
 
 use crate::{GraphNodeId, SemioGraphMutation};
 use semio_framework_value::DslValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::move_node::MoveNode;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode;
 use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity, layout_run_job, layout_run_overlay_positions, LayoutRunConfig, LayoutRunEdge, LayoutRunEncodeError, LayoutRunGraph, LayoutRunNode, LayoutRunOpEncoder, LayoutRunPoint, LayoutRunResume};
 use semio_framework_plugin::Fault;
 use semio_framework_ui_locale::LocalizedLabel;

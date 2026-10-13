@@ -16,7 +16,7 @@ async fn all_canonical_leaf_services_are_independently_registered() {
 
 #[semio_framework_async_macros::async_test]
 async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
-    let snapshot_pack = <GltfSnapshot as store::ArtifactPack>::encode_pack(&GltfSnapshot::default());
+    let snapshot_pack = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&GltfSnapshot::default());
     let budgets = WireArtifactInferenceBudget { allocation_bytes: 1_000_000, work_units: 1, recursion_depth: 1 };
     let dependencies = vec![("snapshot".into(), snapshot_pack.clone())];
     let request = ArtifactInferenceExecutionRequest { operation:17,generation:9,cancelled:false, retained:semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:1048576,maximum_release_bytes:1048576,maximum_depth:128},
@@ -30,7 +30,7 @@ async fn one_leaf_service_returns_its_id_bound_generic_envelope() {
     };
     let service = gltf_inference_services().into_iter().find(|service| service.metadata().inference_schema == "s.stdio.gltf.inference.overall-size.v1").unwrap();
     let execution = service.infer(&request).unwrap();
-    let envelope = crate::standards::v2_0::subsets::any::io::binary::inferences::decode_gltf_inference_leaf_binary(execution.execution.as_ref().unwrap().canonical_payload.as_ref().unwrap()).unwrap();
+    let envelope = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::binary::inferences::decode_gltf_inference_leaf_binary(execution.execution.as_ref().unwrap().canonical_payload.as_ref().unwrap()).unwrap();
     assert_eq!(envelope.id, "s.stdio.gltf.inference.overall-size.v1");
     assert!(envelope.cache_key.contains(":p"));
     assert_eq!(envelope.dependency_hashes.len(), 1);

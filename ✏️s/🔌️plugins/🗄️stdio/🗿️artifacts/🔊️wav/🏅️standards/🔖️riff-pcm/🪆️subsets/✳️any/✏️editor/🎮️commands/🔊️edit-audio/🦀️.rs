@@ -477,9 +477,9 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
         let item = RetainedCloneProgress { copied_items: 1, ..Default::default() };
         let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         let progress = if self.retirement.is_some() {
-            match store::artifact_retirement_box_close_step(&mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
+            match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
         } else if self.pending.is_some() {
-            match store::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
+            match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
         } else if let Some(mutation) = self.mutations.pop() {
             self.pending = Some(mutation);
             item
@@ -492,7 +492,7 @@ impl ArtifactCommandWork<EditorApp<WavEditor>> for EditAudioWork {
             self.ext_pending = self.format_ext.take().flatten();
             item
         } else if self.ext_pending.is_some() {
-            match store::artifact_retirement_admit_owned(&mut self.ext_pending, &mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
+            match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.ext_pending, &mut self.retirement, grant) { Ok(step) => step.progress(), Err(error) => return refuse(error) }
         } else {
             self.plan = None;
             item
@@ -514,13 +514,13 @@ impl EditAudioWork {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::RetirementDemand;
         let item = RetirementDemand { depth: 1, ..Default::default() };
-        if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
-        if self.pending.is_some() { return store::artifact_retirement_owned_birth_demands(&self.pending); }
+        if let Some(owner) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body); }
+        if self.pending.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending); }
         if !self.mutations.is_empty() { return Ok(item); }
         if self.mutations.capacity() != 0 { return Ok(RetirementDemand { release_bytes: self.mutations.capacity() * size_of::<WavMutation>(), depth: 1, ..Default::default() }); }
         if !self.format_ext_copy.terminal_is_empty() { return Ok(self.format_ext_copy.close_demands()); }
         if self.format_ext.is_some() { return Ok(item); }
-        if self.ext_pending.is_some() { return store::artifact_retirement_owned_birth_demands(&self.ext_pending); }
+        if self.ext_pending.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.ext_pending); }
         if self.plan.is_some() { return Ok(item); }
         Ok(Default::default())
     }

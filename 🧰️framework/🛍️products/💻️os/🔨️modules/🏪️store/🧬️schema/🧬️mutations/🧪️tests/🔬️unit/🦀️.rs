@@ -24,8 +24,8 @@ fn walk(tree: &dyn crate::os_store::ArtifactCanonicalJsonTree) -> serde_json::Va
     }
 }
 
-fn checkpoint(parent: Option<&str>, avatar: Option<&str>) -> super::super::super::SpaceCheckpoint {
-    use super::super::super::{SpaceCheckpoint, SpaceMemberPin};
+fn checkpoint(parent: Option<&str>, avatar: Option<&str>) -> super::super::space_history_document::SpaceCheckpoint {
+    use super::super::space_history_document::{SpaceCheckpoint, SpaceMemberPin};
     SpaceCheckpoint {
         id: "cp".into(),
         parent_id: parent.map(Into::into),
@@ -38,7 +38,7 @@ fn checkpoint(parent: Option<&str>, avatar: Option<&str>) -> super::super::super
 
 #[test]
 fn every_leaf_shape_has_a_canonical_tree_equal_to_its_value_document_parsed_by_an_independent_serde_json() {
-    use super::super::super::SpaceAlternative;
+    use super::super::space_history_document::SpaceAlternative;
     let alternative = SpaceAlternative { id: "alt".into(), name: "Alt".into(), checkpoint_ids: vec!["x".into(), "y".into()] };
     for mutation in [
         SpaceHistoryMutation::CommitSpaceCheckpoint(CommitSpaceCheckpoint { checkpoint: checkpoint(None, None) }),

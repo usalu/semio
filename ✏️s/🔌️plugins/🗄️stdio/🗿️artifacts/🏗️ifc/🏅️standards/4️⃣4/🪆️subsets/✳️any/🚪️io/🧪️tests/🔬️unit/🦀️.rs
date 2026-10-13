@@ -11,11 +11,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_ifc_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <IfcSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -51,14 +51,14 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v4::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::ArtifactDsl::print_dsl(&demo_ifc_snapshot());
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_ifc_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
 
         // 🔬️ Also the empty-entities case (`IfcSnapshot::default()`), exercising `instance*`'s
         // zero-width match and the empty-value-list optional group.
-        let empty_text = store::ArtifactDsl::print_dsl(&empty_ifc_snapshot());
+        let empty_text = store::os_store::serialization::ArtifactDsl::print_dsl(&empty_ifc_snapshot());
         let (empty_envelope, empty_body) = store::semio_format::split_text_preamble(&empty_text).expect("split preamble");
         let empty_reconstructed = format!("{}\n{empty_body}", empty_envelope.envelope_id());
         assert!(recognizer.recognize(&empty_reconstructed).expect("recognize"), "grammar did not recognize empty dsl body:\n{empty_reconstructed}");
@@ -72,10 +72,10 @@ mod conformance_laws {
         value.entities[0].args = words.iter().map(|word| snapshot::IfcValue::Real(f64::from_bits(*word))).collect();
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v4::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("IFC4 native grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("IFC4 grammar fragments");
-        let text = store::ArtifactDsl::print_dsl(&value);
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&value);
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("native envelope");
         assert!(recognizer.recognize(&format!("{}\n{body}", envelope.envelope_id())).expect("native word grammar"));
-        let decoded = [<IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("native scalar text"), <IfcSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&value)).expect("native scalar Pack")];
+        let decoded = [<IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("native scalar text"), <IfcSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&value)).expect("native scalar Pack")];
         for restored in decoded {
             assert_eq!(restored.entities[0].args.iter().map(|value| match value { snapshot::IfcValue::Real(value) => value.to_bits(), _ => panic!("IFC4 real became another variant") }).collect::<Vec<_>>(), words);
         }
@@ -111,7 +111,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v4::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::ArtifactPack::encode_pack(&demo_ifc_snapshot());
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo_ifc_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -140,13 +140,13 @@ mod conformance_laws {
 
         let demo = demo_ifc_snapshot();
 
-        let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_ifc_snapshot()");
-        assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ifc_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_ifc_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <IfcSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_ifc_snapshot()");
-        assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_ifc_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗄️storage` per Wave C.
 
 use super::DeleteStorageRequirement;
-use crate::diff::ProgramStorageDelta;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramStorageDelta;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteStorageRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

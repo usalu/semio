@@ -5,7 +5,7 @@
 //! `InferredField`/incremental caching needed for a single BFS pass (same ruling trinity's own
 //! `jack` and sibling `🌊️flow` topology facets reach for their own node/edge graphs).
 
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology

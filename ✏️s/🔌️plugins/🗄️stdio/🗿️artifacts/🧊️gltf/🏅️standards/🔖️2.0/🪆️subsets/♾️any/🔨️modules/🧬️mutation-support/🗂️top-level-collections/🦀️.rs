@@ -1,10 +1,10 @@
 //! 🔒 Read-only typed-reference scan and sparse row mechanics private to the top-level collection leaves. Nothing here writes
 //! into a snapshot: every function reads `base` and answers the sparse rows the owning leaf declares.
-use crate::schema::diff::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
 use protocol::list_delta::Keyed;
-use crate::schema::snapshot::*;
-use crate::GltfSnapshot;
-pub use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+pub use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
 
 /// 🧭️ The 13 top-level glTF collections other entities address by index.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

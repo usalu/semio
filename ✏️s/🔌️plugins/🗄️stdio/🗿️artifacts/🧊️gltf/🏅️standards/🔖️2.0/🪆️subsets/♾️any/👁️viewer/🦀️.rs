@@ -4,10 +4,10 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use crate::viewer::gltf::modes::view;
 use crate::viewer::gltf::modes::view::windows::main;
-use crate::GltfMutation;
+use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;

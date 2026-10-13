@@ -1,9 +1,9 @@
 //! 📊️ Borrowed native table declarations and every cell admit exact semantic rows before ownership.
 use super::{SemioTableSnapshot,SqliteDatabaseLimits,ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
-use crate::standards::v1::subsets::value::io::sqlite::snapshot::semantic::{Census,add,hex_text,value_text,value_binary};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::semantic::{Census, add, hex_text, value_text, value_binary};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio table native primitive differs from its authored shape")}
 /// 🏛️ Admits the own seven-table layout including all eight value columns.
@@ -14,7 +14,7 @@ pub(crate)fn layout(limits:SqliteDatabaseLimits)->Result<()>{
 }
 fn kind(tag:u8)->Result<usize>{match tag{0=>Ok(4),1=>Ok(4),2=>Ok(3),3=>Ok(5),4=>Ok(3),5=>Ok(5),_=>Err(invalid())}}
 /// 📦️ Counts binary columns and recursive typed cells without constraining row width.
-pub(crate)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}let mut census=Census::new(limits);census.row(add(8,control.borrow_text(native::bytes(&mut reader)?)?.len())?)?;
   let count=native::length(&mut reader)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;for _ in 0..count{let bytes=add(24,control.borrow_text(native::bytes(&mut reader)?)?.len())?;census.row(add(bytes,kind(reader.read_u8().map_err(|_|invalid())?)?)?)?;control.step()?;}Ok::<_,ValueError>(())})?;
@@ -24,7 +24,7 @@ pub(crate)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlit
  })
 }
 /// 📃️ Counts optional declaration/row lists and all nested literal reference values.
-pub(crate)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","columns","rows"],control)?;let mut census=Census::new(limits);census.row(add(8,hex_text(fields[0].ok_or_else(invalid)?,control)?)?)?;
   let mut columns=native::Items::new(fields[1].unwrap_or("[]"))?;let count=columns.count(control,limits.max_rows)?;census.future(count)?;

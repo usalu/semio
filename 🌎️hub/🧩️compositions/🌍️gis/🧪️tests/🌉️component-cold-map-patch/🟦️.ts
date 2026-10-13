@@ -28,8 +28,8 @@ export async function proveGisComponentColdMapPatch(repoRoot: string): Promise<v
   const admitted = (candidate: any): boolean =>
     candidate.package.pluginId === "gis" &&
     candidate.package.packageId === "semio:gis" &&
-    candidate.package.cargoPackage === "semio-hub-gis" &&
-    candidate.package.componentFile === "semio_hub_gis.wasm" &&
+    candidate.package.cargoPackage === "semio-hub-gis-component" &&
+    candidate.package.componentFile === "semio_hub_gis_component.wasm" &&
     candidate.app.id === "s.gis.gismap@1/*#editor" &&
     candidate.app.actionId === "patchPositions" &&
     candidate.surface === "1:gis2d.play.composite" &&
@@ -133,11 +133,10 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
         this.repoRoot,
         {
           pluginId: "gis",
-          cargoPackage: "semio-hub-gis",
+          cargoPackage: "semio-hub-gis-component",
           componentPackageId: "semio:gis",
-          outputName: "semio_hub_gis.wasm",
+          outputName: "semio_hub_gis_component.wasm",
           componentProfile: "wasm-release",
-          rootCdylib: true,
         },
         target,
         stage,
@@ -153,7 +152,7 @@ export class ComponentColdMapPatchNativeCheckScript extends BundleScript {
                 {
                   package: "semio-hub-gis",
                   target: { kind: "test", name: "component_cold_map_patch" },
-                  cargoArgs: ["--no-default-features", "--features", "component-receipt-acceptance"],
+                  cargoArgs: ["--features", "component-receipt-acceptance"],
                   laws: [
                     "genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface",
                     "genuine_gis_component_rejects_stale_cold_authority_before_loading",

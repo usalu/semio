@@ -19,8 +19,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (owned by
 //! the stdio W2/table-graph orchestrator, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Leaves
 use super::add_edge_property;

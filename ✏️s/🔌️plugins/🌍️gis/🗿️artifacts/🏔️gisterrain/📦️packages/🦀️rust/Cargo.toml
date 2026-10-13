@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["dep:semio-framework", "dep:semio-s-artifact-gis-gismap", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-s-artifact-gis-gismap", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -47,7 +47,9 @@ semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }

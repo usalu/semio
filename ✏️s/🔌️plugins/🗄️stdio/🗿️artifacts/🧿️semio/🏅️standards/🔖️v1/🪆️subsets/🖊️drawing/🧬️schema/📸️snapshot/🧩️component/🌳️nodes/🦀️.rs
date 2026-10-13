@@ -1,10 +1,7 @@
 //! 🌳️ Intrinsic Drawing value projection and bounded native construction.
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode};
-#[cfg(test)] use crate::standards::v1::subsets::drawing::schema::snapshot::{PathSegment};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
-#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
+use crate::schema::snapshot::DrawNode;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
 use semio_framework_value::{DslValue, ToValue, FromValue, ValueError, ValueRefusalKind, DecodedValue, NativeEncodeControl};
-#[cfg(test)] use semio_framework_value::{NativeDecodeControl};
 
 #[path="🧾️original/🦀️.rs"]
 mod original;

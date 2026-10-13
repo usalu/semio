@@ -11,7 +11,7 @@ impl ToolLatestWinsKeyCopy {
         let mut key=String::new();key.try_reserve_exact(size).map_err(|_|ValueError::literal(semio_framework_value::ValueRefusalKind::AllocationFailed,"latest-wins original key backing refused"))?;let retained_capacity_bytes=key.capacity();
         Ok(Some((Self{key:Some(key),instance,part:0,offset:0,prefix:0,source:parts.map(|part|(part.as_ptr()as usize,part.len()))},RetainedCloneProgress{copied_items:1,retained_capacity_bytes,..Default::default()})))
     }
-    pub(crate) fn next_copy_byte_demand(&self,parts:[&str;4])->usize{if self.part==0||self.part<=4&&self.prefix<16{1}else if self.part<=4&&self.offset<parts[self.part-1].len(){3}else{0}}
+    fn next_copy_byte_demand(&self,parts:[&str;4])->usize{if self.part==0||self.part<=4&&self.prefix<16{1}else if self.part<=4&&self.offset<parts[self.part-1].len(){3}else{0}}
     pub(crate) fn advance(&mut self,parts:[&str;4],grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
         let idle=RetainedCloneProgress::default();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(idle));}
         if self.source!=parts.map(|part|(part.as_ptr()as usize,part.len())){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"latest-wins original borrowed key source changed"));}

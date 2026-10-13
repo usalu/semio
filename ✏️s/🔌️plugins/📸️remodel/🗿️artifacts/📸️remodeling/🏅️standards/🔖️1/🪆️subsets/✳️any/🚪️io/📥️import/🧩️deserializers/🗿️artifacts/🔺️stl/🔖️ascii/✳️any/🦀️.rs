@@ -4,7 +4,7 @@ use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use semio_framework_plugin::{ ArtifactDeserializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::decode_stl_ascii;
 
 /// 🎯️ The foreign dialect this leaf reads.

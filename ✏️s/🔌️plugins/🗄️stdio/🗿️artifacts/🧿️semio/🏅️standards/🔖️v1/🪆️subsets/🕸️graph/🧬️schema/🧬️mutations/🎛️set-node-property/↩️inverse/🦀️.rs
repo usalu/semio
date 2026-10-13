@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `SetNodeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `set-node-property` back to the BASE value of that key; nothing when the node or key is absent.

@@ -31,13 +31,26 @@ fn fixture_lease(schema: &str, pack_schema_hash: &str) -> crate::os_directory::D
         descriptor_digest_v1: "11".repeat(32),
         catalog: crate::os_directory::DocumentOpenCatalogV1 { generation_id: "22".repeat(32) },
         package: crate::os_directory::DocumentOpenPackageV1 {
-            plugin_id: "fixture.plugin".into(),
-            package_id: "fixture.package".into(),
+            plugin_id: "fixture-plugin".into(),
+            package_id: "semio:fixture-plugin".into(),
             version: "1.0.0".into(),
             component_sha256: "33".repeat(32),
             component_blake3: "44".repeat(32),
             descriptor_byte_sha256: "55".repeat(32),
             execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
+            component_receipt: crate::os_component_receipt::ComponentReceiptV1 {
+                schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                plugin_id: "fixture-plugin".into(),
+                package_id: "semio:fixture-plugin".into(),
+                profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                target: crate::os_component_receipt::COMPONENT_TARGET.into(),
+                wasm_sha256: "33".repeat(32),
+                wasm_bytes: 1024,
+                semantic_descriptor_sha256: "55".repeat(32),
+                toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+                source_tree_digest: "3".repeat(64),
+                provenance_sha256: "4".repeat(64),
+            },
         },
         component: crate::os_directory::DocumentExecutionTargetComponentV1 { sha256: "33".repeat(32), blake3: "44".repeat(32), byte_length: 1024 },
         descriptor: crate::os_directory::DocumentExecutionTargetDescriptorV1 { sha256: "55".repeat(32), byte_length: 512 },
@@ -161,16 +174,16 @@ struct FixtureComponentCodec {
     pack_schema_hash: Option<[u8; 32]>,
 }
 
-impl crate::os_store::ComponentDocumentCodec for FixtureComponentCodec {
+impl crate::os_store::codec_registry::ComponentDocumentCodec for FixtureComponentCodec {
     fn schema(&self) -> &str {
         &self.schema
     }
 
-    fn pack_schema_hash(&self) -> crate::os_store::ComponentDocumentCodecFuture<'_, [u8; 32]> {
+    fn pack_schema_hash(&self) -> crate::os_store::codec_registry::ComponentDocumentCodecFuture<'_, [u8; 32]> {
         Box::pin(async move { self.pack_schema_hash.ok_or_else(|| crate::os_store::VcsError::ValidationFailed("fixture component cannot answer".into())) })
     }
 
-    fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> crate::os_store::ComponentDocumentCodecFuture<'a, crate::os_store::ArtifactTextFiles> {
+    fn print_mirror<'a>(&'a self, _pack: &'a [u8], _spr: &'a [u8]) -> crate::os_store::codec_registry::ComponentDocumentCodecFuture<'a, crate::os_store::text_format::ArtifactTextFiles> {
         Box::pin(async move { Err(crate::os_store::VcsError::Deserialize("fixture component prints no mirror".into())) })
     }
 }
@@ -185,7 +198,7 @@ async fn a_mounted_component_codec_is_the_kind_identity_before_any_lease() {
     for case in fixture["componentIdentity"].as_array().expect("component identity cases") {
         let name = case["name"].as_str().expect("name");
         let component = &case["component"];
-        crate::os_store::register_component_document_codec(std::sync::Arc::new(FixtureComponentCodec {
+        crate::os_store::codec_registry::register_component_document_codec(std::sync::Arc::new(FixtureComponentCodec {
             schema: component["schema"].as_str().expect("component schema").to_string(),
             pack_schema_hash: component["packSchemaHash"].as_str().map(digest),
         }))

@@ -1,8 +1,8 @@
 //! 🧭️ The value editor's edit rules: which snapshot pointer raises which ONE concrete value mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{build, edited, ent, event_path, field, item, keyed, named, position, record, rem, resolve, segments, unsupported, Reshape};
-use crate::standards::v1::subsets::value::schema::mutations::SemioValueMutation;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, edited, ent, event_path, field, item, keyed, named, position, record, rem, resolve, segments, unsupported, Reshape};
+use crate::schema::mutations::SemioValueMutation;
+use crate::schema::snapshot::SemioValueSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};

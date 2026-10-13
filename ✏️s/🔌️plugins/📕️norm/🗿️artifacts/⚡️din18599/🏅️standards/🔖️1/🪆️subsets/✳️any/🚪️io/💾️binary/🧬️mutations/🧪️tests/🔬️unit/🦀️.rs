@@ -18,10 +18,10 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_through_store() {
-    let envelope = store::create_document_envelope("norm.din18599/v1", "din18599", Din18599Snapshot::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope("norm.din18599/v1", "din18599", Din18599Snapshot::default(), None);
     let mut store = store::os_store::test_support::plain_test_store(envelope).await;
     store
-        .dispatch(store::ArtifactCommand::Apply {
+        .dispatch(store::os_store::store_schema::ArtifactCommand::Apply {
             mutations: vec![sample_mutation()],
             transaction: None,
         }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())

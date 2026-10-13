@@ -678,7 +678,7 @@ pub mod counts {
     //! 🧮️ Frequency counting and probability-vector validation: the shared foundation every discrete
     //! entropy/estimator/divergence function builds on.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Tolerances};
+    use crate::schema::entropy_internals::{EntropyError, Tolerances};
     use std::collections::HashMap;
 
     // #region 🔖️Counts
@@ -945,7 +945,7 @@ pub mod counts {
             }
             out.push(v.max(0.0));
         }
-        let sum: f64 = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum(out.iter().copied());
+        let sum: f64 = crate::schema::entropy_internals::numeric::neumaier_sum(out.iter().copied());
         if (sum - 1.0).abs() > tolerances.renormalize_sum {
             return Err(EntropyError::NotNormalized { sum });
         }
@@ -984,11 +984,11 @@ pub mod discrete {
     //! 📐️ Plug-in (exact-given-the-distribution) discrete entropy family: Shannon, Rényi, Tsallis,
     //! Hartley, collision/min-entropy, Sharma-Mittal, Kaniadakis, cross/joint/conditional entropy.
     //! Every function here takes a *given* probability vector and returns `f64` directly (no
-    //! [`crate::standards::v1::subsets::table::schema::entropy_internals::Estimate`]) — estimation from raw samples lives in `estimators.rs`.
+    //! [`crate::schema::entropy_internals::Estimate`]) — estimation from raw samples lives in `estimators.rs`.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{neumaier_sum, x_ln_x};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, LogBase, Tolerances};
+    use crate::schema::entropy_internals::counts::validate_probabilities;
+    use crate::schema::entropy_internals::numeric::{neumaier_sum, x_ln_x};
+    use crate::schema::entropy_internals::{EntropyError, LogBase, Tolerances};
 
     // #region 🔖️Shannon
     /// 📐️ Shannon entropy `H(p) = -sum p_i log p_i`, in `base`.
@@ -1183,12 +1183,12 @@ pub mod discrete {
 pub mod estimators {
     //! 📊️ Bias-corrected discrete entropy estimators: plug-in, Miller-Madow, Grassberger, jackknife,
     //! Chao-Shen, Schurmann-Grassberger (Dirichlet posterior mean), NSB, and James-Stein shrinkage.
-    //! All formulas operate on integer/weighted [`crate::standards::v1::subsets::table::schema::entropy_internals::counts::Counts`] and compute in nats
+    //! All formulas operate on integer/weighted [`crate::schema::entropy_internals::counts::Counts`] and compute in nats
     //! internally, converting to the caller's [`LogBase`] only at the end.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::Counts;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{digamma, ln_gamma, neumaier_sum, x_ln_x};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::counts::Counts;
+    use crate::schema::entropy_internals::numeric::{digamma, ln_gamma, neumaier_sum, x_ln_x};
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Method
     /// 📊️ Which bias-correction strategy [`entropy_discrete`] applies to raw counts.
@@ -1401,7 +1401,7 @@ pub mod estimators {
             log_weighted.push(evidence + quad_weight.max(1e-300).ln());
             h_alpha.push(bayes_entropy_nats(counts, alpha));
         }
-        let log_norm = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::log_sum_exp(&log_weighted);
+        let log_norm = crate::schema::entropy_internals::numeric::log_sum_exp(&log_weighted);
         if !log_norm.is_finite() {
             return Err(EntropyError::NotConverged { what: "NSB quadrature", iterations: nodes.len() });
         }
@@ -1486,7 +1486,7 @@ pub mod estimators {
         if support * 2 < k {
             warnings.push(Warning::Undersampled { occupied_bins: support, total_bins: k });
         }
-        let clamped = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-9 * (k as f64).ln().max(1.0));
+        let clamped = crate::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-9 * (k as f64).ln().max(1.0));
         if clamped != nats {
             warnings.push(Warning::ClippedNegative);
         }
@@ -1519,7 +1519,7 @@ pub mod knn {
     //! entropy, KSG mutual information, and kNN transfer entropy. Includes a brute-force `O(n)`
     //! reference implementation used as the correctness oracle in tests.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Metric};
+    use crate::schema::entropy_internals::{EntropyError, Metric};
 
     // #region 🔖️Distance
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -1714,9 +1714,9 @@ pub mod continuous {
     //! 📈️ Differential (continuous) entropy estimators: histogram, Gaussian KDE (leave-one-out
     //! plug-in), Kozachenko-Leonenko kNN, Vasicek/Correa m-spacing, and the Gaussian closed form.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::knn::KdTree;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{digamma, log_sum_exp, neumaier_sum, x_ln_x};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{BinsSpec, ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
+    use crate::schema::entropy_internals::knn::KdTree;
+    use crate::schema::entropy_internals::numeric::{digamma, log_sum_exp, neumaier_sum, x_ln_x};
+    use crate::schema::entropy_internals::{BinsSpec, ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Shared
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2097,9 +2097,9 @@ pub mod divergence {
     //! (Hellinger, Bhattacharyya, total variation, chi-square), empirical Wasserstein-1D and energy
     //! distance over raw samples, and a closure-based Bregman divergence for arbitrary convex `phi`.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, LogBase, Tolerances};
+    use crate::schema::entropy_internals::counts::validate_probabilities;
+    use crate::schema::entropy_internals::numeric::neumaier_sum;
+    use crate::schema::entropy_internals::{EntropyError, LogBase, Tolerances};
 
     // #region 🔖️Shared
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2362,9 +2362,9 @@ pub mod divergence {
     /// solves rather than an explicit matrix inverse.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn log_det_divergence(cov_p: &[f64], cov_q: &[f64], n: usize) -> Result<f64, EntropyError> {
-        let ld_p = crate::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_p, n)?;
-        let ld_q = crate::standards::v1::subsets::table::schema::entropy_internals::matrix::log_det(cov_q, n)?;
-        let l_q = crate::standards::v1::subsets::table::schema::entropy_internals::matrix::cholesky(cov_q, n)?;
+        let ld_p = crate::schema::entropy_internals::matrix::log_det(cov_p, n)?;
+        let ld_q = crate::schema::entropy_internals::matrix::log_det(cov_q, n)?;
+        let l_q = crate::schema::entropy_internals::matrix::cholesky(cov_q, n)?;
         // 🔢️ tr(Sigma_q^-1 Sigma_p) via solving L_q L_q^T X = Sigma_p column-by-column, then summing
         // the diagonal of X (forward/backward substitution, no explicit inverse).
         let mut trace = 0.0_f64;
@@ -2438,11 +2438,11 @@ pub mod mutual {
     //! KSG-2 continuous MI, and multivariate generalizations (total correlation, dual total
     //! correlation, O-information).
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::{Counts, JointCounts};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::estimators::{entropy_discrete, DiscreteMethod};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::knn::KdTree;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{checked_state_count, clamp_near_zero, digamma};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
+    use crate::schema::entropy_internals::counts::{Counts, JointCounts};
+    use crate::schema::entropy_internals::estimators::{entropy_discrete, DiscreteMethod};
+    use crate::schema::entropy_internals::knn::KdTree;
+    use crate::schema::entropy_internals::numeric::{checked_state_count, clamp_near_zero, digamma};
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Packing
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -2720,9 +2720,9 @@ pub mod pid {
     //! empirical counts (no bias correction — see [`pid_two_sources`]'s doc for why) and internally
     //! in nats, converted to the caller's [`LogBase`] only at the API boundary.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::JointCounts;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{checked_state_count, clamp_near_zero, neumaier_sum};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, LogBase};
+    use crate::schema::entropy_internals::counts::JointCounts;
+    use crate::schema::entropy_internals::numeric::{checked_state_count, clamp_near_zero, neumaier_sum};
+    use crate::schema::entropy_internals::{EntropyError, LogBase};
 
     // #region 🔖️Packing
     /// 🧩️ Packs several aligned symbol sequences into one joint symbol via mixed-radix encoding. A
@@ -3035,7 +3035,7 @@ pub mod fisher {
     //! already-computed `ln_L` and parameter/sample counts — no external crate, no `Estimate` wrapper
     //! since these are exact-given-inputs, not estimated-from-samples quantities.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::EntropyError;
+    use crate::schema::entropy_internals::EntropyError;
 
     // #region 🔖️FisherInformation
     /// 📉️ Numerical (observed) Fisher information via a central second-difference of the supplied
@@ -3109,8 +3109,8 @@ pub mod symbolic {
     //! plug-in entropy estimators (`discrete.rs`, `ordinal.rs`, `regularity.rs`) a `Vec<u32>` of
     //! symbol codes plus a declared [`Symbolizer::alphabet_size`].
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, normal_cdf};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, TiePolicy};
+    use crate::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, normal_cdf};
+    use crate::schema::entropy_internals::{EntropyError, TiePolicy};
 
     // #region 🔖️Embedding
     /// 🔤️ Time-delay (Takens) embedding: state vector `i` is `[x[i], x[i+tau], ..., x[i+(dim-1)*tau]]`
@@ -3427,12 +3427,12 @@ pub mod symbolic {
 pub mod regularity {
     //! 🔁️ Regularity/complexity measures over a single scalar time series: Approximate Entropy
     //! (ApEn), Sample Entropy (SampEn), and Fuzzy Entropy (FuzzyEn). All three compare
-    //! time-delay-embedded template vectors (via [`crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed`]) under a Chebyshev
+    //! time-delay-embedded template vectors (via [`crate::schema::entropy_internals::symbolic::embed`]) under a Chebyshev
     //! tolerance radius `r` and differ only in how "matching" is counted and whether self-matches
     //! are included — see each function's docstring for the exact convention.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Tolerance, Warning};
+    use crate::schema::entropy_internals::numeric::neumaier_sum;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Tolerance, Warning};
 
     // #region 🔖️Config
     /// 🔁️ Shared knobs for the ApEn/SampEn/FuzzyEn family: embedding dimension `m` and tolerance
@@ -3537,8 +3537,8 @@ pub mod regularity {
             return Err(EntropyError::InsufficientData { what: "approximate_entropy", needed: cfg.m + 2, actual: x.len() });
         }
         let r = resolve_tolerance(x, cfg.r)?;
-        let templates_m = crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m, 1)?;
-        let templates_m1 = crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, cfg.m + 1, 1)?;
+        let templates_m = crate::schema::entropy_internals::symbolic::embed(x, cfg.m, 1)?;
+        let templates_m1 = crate::schema::entropy_internals::symbolic::embed(x, cfg.m + 1, 1)?;
         let apen_nats = apen_phi(&templates_m, r) - apen_phi(&templates_m1, r);
 
         let mut warnings = Vec::new();
@@ -3557,9 +3557,9 @@ pub mod regularity {
     /// windows rather than the (larger) index range `m`-only embedding would otherwise allow.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn shared_templates(x: &[f64], m: usize) -> Result<TemplatePair, EntropyError> {
-        let templates_m1 = crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m + 1, 1)?;
+        let templates_m1 = crate::schema::entropy_internals::symbolic::embed(x, m + 1, 1)?;
         let k = templates_m1.len();
-        let mut templates_m = crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::embed(x, m, 1)?;
+        let mut templates_m = crate::schema::entropy_internals::symbolic::embed(x, m, 1)?;
         templates_m.truncate(k);
         Ok((templates_m, templates_m1))
     }
@@ -3669,9 +3669,9 @@ pub mod ordinal {
     //! series to a finite alphabet, then reports the Shannon entropy of the resulting symbol
     //! distribution.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, x_ln_x};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::{DispersionSymbolizer, OrdinalConfig, OrdinalSymbolizer, Symbolizer};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, x_ln_x};
+    use crate::schema::entropy_internals::symbolic::{DispersionSymbolizer, OrdinalConfig, OrdinalSymbolizer, Symbolizer};
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Shared
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -3857,8 +3857,8 @@ pub mod markov {
     //! entropy rate. All internal computation happens in nats; [`LogBase`] conversion is applied only
     //! at the [`MarkovChain::entropy_rate`] boundary.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, x_ln_x};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Estimate, LogBase};
+    use crate::schema::entropy_internals::numeric::{checked_state_count, neumaier_sum, x_ln_x};
+    use crate::schema::entropy_internals::{EntropyError, Estimate, LogBase};
 
     // #region 🔖️Context
     /// ⛓️ Packs a window of `order` consecutive symbols into a single mixed-radix context id in
@@ -4020,10 +4020,10 @@ pub mod multiscale {
     //! regularity/ordinal entropy at each scale, summarized by a complexity index (mean entropy
     //! across valid scales).
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::ordinal::{dispersion_entropy, permutation_entropy, DispersionConfig};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::regularity::{fuzzy_entropy, sample_entropy, RegularityConfig};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::OrdinalConfig;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Estimate, LogBase};
+    use crate::schema::entropy_internals::ordinal::{dispersion_entropy, permutation_entropy, DispersionConfig};
+    use crate::schema::entropy_internals::regularity::{fuzzy_entropy, sample_entropy, RegularityConfig};
+    use crate::schema::entropy_internals::symbolic::OrdinalConfig;
+    use crate::schema::entropy_internals::{EntropyError, Estimate, LogBase};
 
     // #region 🔖️Grain
     /// 📶️ How each scale's coarse-grained series is derived from non-overlapping windows of the
@@ -4169,7 +4169,7 @@ pub mod lz {
 
     use std::collections::HashMap;
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::{EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Lz76
     /// 🗜️ Kaspar & Schuster (1987) incremental-parsing complexity `c(n)`, generalized from binary
@@ -4367,7 +4367,7 @@ pub mod fft {
     //! lengths, Bluestein's chirp-z algorithm for arbitrary lengths (Welch segment lengths are
     //! user-chosen and rarely powers of two), plus the standard analysis window functions.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::EntropyError;
+    use crate::schema::entropy_internals::EntropyError;
     use std::ops::{Add, Mul, Sub};
 
     // #region 🔖️Complex
@@ -4749,8 +4749,8 @@ pub mod spectral {
     //! concentrated (tonal) vs. spread (noise-like) the signal's power is across frequency. See
     //! Welch, P. (1967), "The use of fast Fourier transform for the estimation of power spectra."
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::fft::{window, Complex, Fft, WindowKind};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::fft::{window, Complex, Fft, WindowKind};
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Config
     /// 📶️ Configuration for [`spectral_entropy`]'s Welch periodogram estimate.
@@ -4872,7 +4872,7 @@ pub mod spectral {
         let p: Vec<f64> = selected.iter().map(|&v| v / total_power).collect();
         let bins = p.len();
 
-        let entropy_nats = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
+        let entropy_nats = crate::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
         let value = if cfg.normalize {
             if bins <= 1 {
                 0.0
@@ -4917,8 +4917,8 @@ pub mod wavelet {
     //! spread (noisy) the signal's energy is across scale. See Mallat, S. (1989), "A theory for
     //! multiresolution signal decomposition: the wavelet representation."
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::neumaier_sum;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::numeric::neumaier_sum;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Families
     /// 🪢️ Orthonormal wavelet family selecting the low-pass decomposition filter. Higher-order
@@ -5132,7 +5132,7 @@ pub mod wavelet {
             return Err(EntropyError::DegenerateInput { what: "wavelet subband energies sum to ~0" });
         }
         let p: Vec<f64> = energies.iter().map(|&e| (e / total).max(0.0)).collect();
-        let nats = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
+        let nats = crate::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats)?;
 
         let n = x.len();
         let mut warnings = Vec::new();
@@ -5167,8 +5167,8 @@ pub mod matrix {
     //! symmetric matrices, one-sided Jacobi SVD, and Cholesky decomposition — feeding SVD entropy,
     //! eigenvalue entropy, and von Neumann (density-matrix) entropy.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Tolerances, Warning};
+    use crate::schema::entropy_internals::counts::validate_probabilities;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Tolerances, Warning};
 
     // #region 🔖️Jacobi
     /// 🔢️ Cyclic Jacobi eigenvalue algorithm for a real symmetric `n x n` matrix (row-major).
@@ -5449,7 +5449,7 @@ pub mod matrix {
             return Err(EntropyError::DegenerateInput { what: "all singular values are zero" });
         }
         let p: Vec<f64> = singular_values.iter().map(|&s| s / sum).collect();
-        let h = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base)?;
+        let h = crate::schema::entropy_internals::discrete::entropy(&p, base)?;
         let nats = base.to_nats(h);
         let effective_rank = nats.exp();
         let stable_rank = singular_values.iter().map(|s| s * s).sum::<f64>() / singular_values[0].max(1e-300).powi(2);
@@ -5491,7 +5491,7 @@ pub mod matrix {
             }
         }
         let p = validate_probabilities(&clipped, Tolerances::default())?;
-        let h = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, base)?;
+        let h = crate::schema::entropy_internals::discrete::entropy(&p, base)?;
         let rank = p.iter().filter(|&&v| v > 1e-12).count();
 
         Ok(Estimate { value: h, base, method: "von_neumann", n, n_effective: n as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings, diagnostics: vec![("rank", rank as f64)] })
@@ -5513,10 +5513,10 @@ pub mod inference {
     //! is an explicit `u64` seed fed through [`Xorshift64`] — never wall-clock time — so a full
     //! surrogate/permutation batch is exactly reproducible from one seed.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::fft::{Complex, Fft};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::inverse_normal_cdf;
-    pub use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError};
+    use crate::schema::entropy_internals::fft::{Complex, Fft};
+    use crate::schema::entropy_internals::numeric::inverse_normal_cdf;
+    pub use crate::schema::entropy_internals::numeric::Xorshift64;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError};
 
     // #region 🔖️ConfidenceIntervals
     /// 🧪️ Linear-interpolated percentile of an already-sorted slice (`p` in `[0, 1]`), interpolating
@@ -5823,9 +5823,9 @@ pub mod transfer {
     //! Supports a quantile-binned discrete backend and a Frenzel-Pompe kNN (KSG-style) continuous
     //! backend, both built from delay-embedded history vectors.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::knn::KdTree;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::digamma;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
+    use crate::schema::entropy_internals::knn::KdTree;
+    use crate::schema::entropy_internals::numeric::digamma;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Metric, Warning};
 
     // #region 🔖️Embedding
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -5992,7 +5992,7 @@ pub mod transfer {
                     c.push(target_symbols[i]);
                 }
                 let _ = (a_size, b_size);
-                crate::standards::v1::subsets::table::schema::entropy_internals::mutual::conditional_mutual_information(&a, &c, &b, LogBase::Nats)?.value
+                crate::schema::entropy_internals::mutual::conditional_mutual_information(&a, &c, &b, LogBase::Nats)?.value
             }
             TeBackend::Knn { k } => {
                 let a = history_matrix(source, cfg.l_history, start);
@@ -6008,7 +6008,7 @@ pub mod transfer {
                 ksg_cmi_generalized(&joint, total_dim, cfg.l_history, 1, k)?
             }
         };
-        let nats = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
+        let nats = crate::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
 
         let mut warnings = Vec::new();
         if n_samples < 200 {
@@ -6060,7 +6060,7 @@ pub mod transfer {
                     past.push(sym);
                     future.push(symbols[i]);
                 }
-                crate::standards::v1::subsets::table::schema::entropy_internals::mutual::mutual_information(&past, &future, crate::standards::v1::subsets::table::schema::entropy_internals::estimators::DiscreteMethod::Plugin, LogBase::Nats)?.value
+                crate::schema::entropy_internals::mutual::mutual_information(&past, &future, crate::schema::entropy_internals::estimators::DiscreteMethod::Plugin, LogBase::Nats)?.value
             }
             TeBackend::Knn { k } => {
                 let past = history_matrix(x, k_history, k_history);
@@ -6074,7 +6074,7 @@ pub mod transfer {
                 ksg1_generalized(&joint, total_dim, k_history, k)?
             }
         };
-        let clamped = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
+        let clamped = crate::schema::entropy_internals::numeric::clamp_near_zero(nats, 1e-6);
 
         Ok(Estimate {
             value: base.from_nats(clamped),
@@ -6102,8 +6102,8 @@ pub mod spatial {
     //! 🖼️ Image / spatial entropy over plain pixel slices (no image-decoding dependency): global
     //! grayscale histogram entropy and gray-level co-occurrence matrix (GLCM) texture entropy.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::x_ln_x;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::numeric::x_ln_x;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Config
     /// 🖼️ Which spatial-entropy computation [`entropy_2d`] performs.
@@ -6215,8 +6215,8 @@ pub mod graph {
     //! 🕸️ Graph entropy over plain edge lists (no graph-library dependency): degree-distribution
     //! entropy and random-walk entropy rate.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::x_ln_x;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::numeric::x_ln_x;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
 
     // #region 🔖️Degree
     /// 🕸️ Shannon entropy of the (out-)degree distribution of a graph given as an edge list.
@@ -6360,8 +6360,8 @@ pub mod ml {
     //! outputs, BALD (epistemic) mutual information from ensemble predictions, and expected
     //! calibration error.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::x_ln_x;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase};
+    use crate::schema::entropy_internals::numeric::x_ln_x;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase};
 
     // #region 🔖️Predictive
     /// 🤖️ Shannon entropy of each row of a row-major `[n_samples x n_classes]` probability batch.
@@ -6378,7 +6378,7 @@ pub mod ml {
         let mut out = Vec::with_capacity(n_samples);
         for i in 0..n_samples {
             let row = &probs[i * n_classes..(i + 1) * n_classes];
-            let p = crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(row, crate::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
+            let p = crate::schema::entropy_internals::counts::validate_probabilities(row, crate::schema::entropy_internals::Tolerances::default())?;
             let nats = -p.iter().map(|&v| x_ln_x(v)).sum::<f64>();
             out.push(Estimate { value: base.from_nats(nats), base, method: "predictive_entropy", n: n_classes, n_effective: n_classes as f64, std_error: None, ci: None::<ConfidenceInterval>, warnings: Vec::new(), diagnostics: Vec::new() });
         }
@@ -6409,15 +6409,15 @@ pub mod ml {
             let mut mean_member_entropy_nats = 0.0_f64;
             for m in 0..n_members {
                 let member = &sample[m * n_classes..(m + 1) * n_classes];
-                let p = crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(member, crate::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
+                let p = crate::schema::entropy_internals::counts::validate_probabilities(member, crate::schema::entropy_internals::Tolerances::default())?;
                 for c in 0..n_classes {
                     mean_probs[c] += p[c] / n_members as f64;
                 }
                 mean_member_entropy_nats += -p.iter().map(|&v| x_ln_x(v)).sum::<f64>() / n_members as f64;
             }
-            let mean_probs = crate::standards::v1::subsets::table::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::standards::v1::subsets::table::schema::entropy_internals::Tolerances::default())?;
+            let mean_probs = crate::schema::entropy_internals::counts::validate_probabilities(&mean_probs, crate::schema::entropy_internals::Tolerances::default())?;
             let predictive_nats = -mean_probs.iter().map(|&v| x_ln_x(v)).sum::<f64>();
-            let bald_nats = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::clamp_near_zero(predictive_nats - mean_member_entropy_nats, 1e-9);
+            let bald_nats = crate::schema::entropy_internals::numeric::clamp_near_zero(predictive_nats - mean_member_entropy_nats, 1e-9);
 
             out.push(Estimate {
                 value: base.from_nats(bald_nats),
@@ -6489,8 +6489,8 @@ pub mod streaming {
     //! 🌊️ Online/streaming entropy estimation: a mergeable `StreamingEstimator` trait plus exact
     //! incremental counts, a fixed sliding window, and exponentially decayed counts.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::x_ln_x;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
+    use crate::schema::entropy_internals::numeric::x_ln_x;
+    use crate::schema::entropy_internals::{ConfidenceInterval, EntropyError, Estimate, LogBase, Warning};
     use std::collections::VecDeque;
 
     // #region 🔖️Trait
@@ -6759,9 +6759,9 @@ pub mod features {
     //! named registry of standard entropy features over a single raw series, plus simple heuristics
     //! for picking bin counts and kNN neighbor counts.
 
-    use crate::standards::v1::subsets::table::schema::entropy_internals::regularity::{sample_entropy, RegularityConfig};
-    use crate::standards::v1::subsets::table::schema::entropy_internals::symbolic::OrdinalConfig;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::{BinsSpec, EntropyError, Estimate, LogBase, Tolerance};
+    use crate::schema::entropy_internals::regularity::{sample_entropy, RegularityConfig};
+    use crate::schema::entropy_internals::symbolic::OrdinalConfig;
+    use crate::schema::entropy_internals::{BinsSpec, EntropyError, Estimate, LogBase, Tolerance};
 
     // #region 🔖️Feature
     /// 📋️ One named entry of a [`FeatureRegistry::compute`] result.
@@ -6775,7 +6775,7 @@ pub mod features {
     // #region 🔖️StandardFeatures
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn feature_histogram_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        crate::standards::v1::subsets::table::schema::entropy_internals::continuous::entropy_continuous(x, &crate::standards::v1::subsets::table::schema::entropy_internals::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats)
+        crate::schema::entropy_internals::continuous::entropy_continuous(x, &crate::schema::entropy_internals::continuous::ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -6787,12 +6787,12 @@ pub mod features {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn feature_permutation_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
         let cfg = OrdinalConfig::new(3, 1)?;
-        crate::standards::v1::subsets::table::schema::entropy_internals::ordinal::permutation_entropy(x, cfg, LogBase::Nats)
+        crate::schema::entropy_internals::ordinal::permutation_entropy(x, cfg, LogBase::Nats)
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn feature_spectral_entropy(x: &[f64]) -> Result<Estimate, EntropyError> {
-        crate::standards::v1::subsets::table::schema::entropy_internals::spectral::spectral_entropy(x, crate::standards::v1::subsets::table::schema::entropy_internals::spectral::SpectralConfig::default())
+        crate::schema::entropy_internals::spectral::spectral_entropy(x, crate::schema::entropy_internals::spectral::SpectralConfig::default())
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -6809,7 +6809,7 @@ pub mod features {
         } else {
             vec![0; x.len()]
         };
-        crate::standards::v1::subsets::table::schema::entropy_internals::lz::lempel_ziv_complexity(&symbols, true)
+        crate::schema::entropy_internals::lz::lempel_ziv_complexity(&symbols, true)
     }
     // #endregion 🔖️StandardFeatures
 

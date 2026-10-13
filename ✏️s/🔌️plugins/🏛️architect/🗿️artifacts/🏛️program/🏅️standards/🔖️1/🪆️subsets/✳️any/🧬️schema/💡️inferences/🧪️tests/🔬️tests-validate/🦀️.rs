@@ -1,7 +1,7 @@
 use super::*;
-use crate::kernel::EntityHeader;
-use crate::registers::Requirement;
-use crate::{empty_plugin, sample_plugin};
+use crate::standards::v1::subsets::any::schema::kernel::EntityHeader;
+use crate::standards::v1::subsets::any::schema::registers::Requirement;
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 
 #[semio_framework_async_macros::async_test]
 async fn sample_plugin_passes_validation() {
@@ -21,8 +21,8 @@ async fn detects_orphan_requirement() {
     program.requirements.push(Requirement {
         header: EntityHeader::new(EntityId::new_serial("requirement", "Orphan"), "Orphan"),
         code: "OR-1".into(),
-        kind: crate::registers::RequirementKind::Functional,
-        statement: crate::kernel::TextField::plain("orphan req"),
+        kind: crate::standards::v1::subsets::any::schema::registers::RequirementKind::Functional,
+        statement: crate::standards::v1::subsets::any::schema::kernel::TextField::plain("orphan req"),
         rationale: None,
         source: None,
         stakeholder_ids: Vec::new(),
@@ -48,7 +48,7 @@ async fn detects_orphan_requirement() {
 #[semio_framework_async_macros::async_test]
 async fn detects_broken_relationship_target() {
     let mut program = sample_plugin();
-    program.relationships.push(crate::registers::Relationship {
+    program.relationships.push(crate::standards::v1::subsets::any::schema::registers::Relationship {
         header: EntityHeader::new(EntityId::new_serial("relationship", "broken"), "broken"),
         source_id: program.elements[0].header.id.clone(),
         target_id: EntityId("missing-target".into()),

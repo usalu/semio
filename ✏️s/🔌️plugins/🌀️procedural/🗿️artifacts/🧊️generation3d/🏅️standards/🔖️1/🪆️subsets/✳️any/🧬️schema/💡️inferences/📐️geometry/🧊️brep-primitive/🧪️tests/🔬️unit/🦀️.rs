@@ -28,6 +28,6 @@ fn a_box_is_deterministic_value_for_value_and_survives_a_json_round_trip() {
     assert_eq!(first, second);
     let GeometryValue::Shape(shape) = &first.outputs["shape"] else { panic!("a shape") };
     let text = semio_framework_pack_json::to_json_string(&**shape);
-    let decoded: semio_framework_3d::brep::engine::ShapeValue = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the shape value decodes");
+    let decoded: semio_framework_3d_brep_engine::ShapeValue = semio_framework_pack_json::from_json_str(&text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the shape value decodes");
     assert_eq!(&decoded, &**shape);
 }

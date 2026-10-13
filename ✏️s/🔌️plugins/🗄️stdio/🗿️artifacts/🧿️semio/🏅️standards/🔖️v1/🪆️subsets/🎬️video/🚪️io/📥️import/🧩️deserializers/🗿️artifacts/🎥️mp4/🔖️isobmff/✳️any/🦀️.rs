@@ -13,7 +13,7 @@
 //!   `SemioVideoSample` has no separate decode/presentation timestamp pair.
 //! - `Mp4Snapshot.ftyp` has no video-subset counterpart and is dropped.
 
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp4::Mp4Snapshot;
 

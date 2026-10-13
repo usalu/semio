@@ -10,7 +10,7 @@ pub type LayoutStore = store::ArtifactStore<crate::LayoutSnapshot, LayoutMutatio
 /// the framework's bounded default owners; every standalone store goes through here instead.
 pub async fn new_layout_store(envelope: LayoutEnvelope, actor: protocol::ActorId) -> Result<OwnedLayoutStore, store::VcsError> {
     let mut store = LayoutStore::new(envelope, actor).await?;
-    let owners = store::funded_bounded_artifact_store_owners::<crate::LayoutSnapshot, LayoutMutation>().expect("layout document store owner catalog is fully funded");
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::LayoutSnapshot, LayoutMutation>().expect("layout document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("layout document store refused its exact owner catalog: {error}");
     }
@@ -55,4 +55,4 @@ impl Drop for OwnedLayoutStore {
     }
 }
 
-pub type LayoutEnvelope = store::ArtifactEnvelope<crate::LayoutSnapshot, LayoutMutation>;
+pub type LayoutEnvelope = store::os_store::store_schema::ArtifactEnvelope<crate::LayoutSnapshot, LayoutMutation>;

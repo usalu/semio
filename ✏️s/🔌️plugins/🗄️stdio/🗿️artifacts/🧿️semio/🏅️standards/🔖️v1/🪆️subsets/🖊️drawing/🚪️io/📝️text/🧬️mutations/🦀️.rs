@@ -4,36 +4,33 @@
 //! `keyword:arg1,arg2,...` grammar convention (hex/bracket-encoded values, reusing the sibling
 //! `📸️snapshot` facet's own real primitives rather than re-deriving a second copy).
 
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
+use crate::schema::mutations::SemioDrawingMutation;
 
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::standards::v1::subsets::drawing::schema::mutations::{
-    change_stroke_color::ChangeStrokeColor, change_stroke_width::ChangeStrokeWidth, create_layer::CreateLayer, create_node::CreateNode, delete_layer::DeleteLayer, delete_node::DeleteNode, drag_nodes::DragNodes, flatten_node::FlattenNode,
-    group_nodes::GroupNodes, move_node::MoveNode, reorder_nodes::ReorderNodes, replace_fill::ReplaceFill, replace_path::ReplacePath, rotate_node::RotateNode, scale_node::ScaleNode, unflatten_node::UnflattenNode, ungroup_node::UngroupNode,
-};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_rgba};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_rgba};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_quaternion};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_quaternion};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point2};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point2};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_path_segment};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_path_segment};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::NodePath;
+use {crate::schema::mutations::change_stroke_color::ChangeStrokeColor, crate::schema::mutations::change_stroke_width::ChangeStrokeWidth, crate::schema::mutations::create_layer::CreateLayer, crate::schema::mutations::create_node::CreateNode, crate::schema::mutations::delete_layer::DeleteLayer, crate::schema::mutations::delete_node::DeleteNode, crate::schema::mutations::drag_nodes::DragNodes, crate::schema::mutations::flatten_node::FlattenNode, crate::schema::mutations::group_nodes::GroupNodes, crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::reorder_nodes::ReorderNodes, crate::schema::mutations::replace_fill::ReplaceFill, crate::schema::mutations::replace_path::ReplacePath, crate::schema::mutations::rotate_node::RotateNode, crate::schema::mutations::scale_node::ScaleNode, crate::schema::mutations::unflatten_node::UnflattenNode, crate::schema::mutations::ungroup_node::UngroupNode};
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_rgba;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_rgba;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_quaternion;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_quaternion;
+use crate::io::text::snapshot::dec_node;
+use crate::io::text::snapshot::enc_node;
+use crate::io::text::snapshot::dec_layer;
+use crate::io::text::snapshot::enc_layer;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point3;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point3;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::io::text::snapshot::dec_path_segment;
+use crate::io::text::snapshot::enc_path_segment;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -191,26 +188,26 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::drawing::schema::mutations::*;
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use crate::standards::v1::subsets::drawing::schema::mutations::change_stroke_color;
-use crate::standards::v1::subsets::drawing::schema::mutations::change_stroke_width;
-use crate::standards::v1::subsets::drawing::schema::mutations::create_layer;
-use crate::standards::v1::subsets::drawing::schema::mutations::create_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::delete_layer;
-use crate::standards::v1::subsets::drawing::schema::mutations::delete_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes;
-use crate::standards::v1::subsets::drawing::schema::mutations::flatten_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::group_nodes;
-use crate::standards::v1::subsets::drawing::schema::mutations::move_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::reorder_nodes;
-use crate::standards::v1::subsets::drawing::schema::mutations::replace_fill;
-use crate::standards::v1::subsets::drawing::schema::mutations::replace_path;
-use crate::standards::v1::subsets::drawing::schema::mutations::rotate_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::scale_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::unflatten_node;
-use crate::standards::v1::subsets::drawing::schema::mutations::ungroup_node;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::mutations::change_stroke_color;
+use crate::schema::mutations::change_stroke_width;
+use crate::schema::mutations::create_layer;
+use crate::schema::mutations::create_node;
+use crate::schema::mutations::delete_layer;
+use crate::schema::mutations::delete_node;
+use crate::schema::mutations::drag_nodes;
+use crate::schema::mutations::flatten_node;
+use crate::schema::mutations::group_nodes;
+use crate::schema::mutations::move_node;
+use crate::schema::mutations::reorder_nodes;
+use crate::schema::mutations::replace_fill;
+use crate::schema::mutations::replace_path;
+use crate::schema::mutations::rotate_node;
+use crate::schema::mutations::scale_node;
+use crate::schema::mutations::unflatten_node;
+use crate::schema::mutations::ungroup_node;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

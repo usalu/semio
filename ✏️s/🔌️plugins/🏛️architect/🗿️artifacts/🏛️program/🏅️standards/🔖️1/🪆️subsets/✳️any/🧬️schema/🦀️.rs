@@ -1,9 +1,45 @@
 //! 🧬️ ProgramSnapshot artifact schema — every field of the artifact with its state class.
 
-use crate::kernel::*;
-use crate::registers::*;
+use crate::standards::v1::subsets::any::schema::kernel::*;
+use crate::standards::v1::subsets::any::schema::registers::*;
 use framework_schema::ArtifactSchema;
 use graph::{orient_endpoints, Undirected};
+
+/// 📜️ Persisted architect program document schema identifier.
+pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
+
+//#region 🔖️Dialect
+/// 🎯️ Ticket 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET: the one `Dialect` coordinate every
+/// role surface (`✏️editor`, `👁️viewer`) for this subset shares — lives at the ARTIFACT level (not
+/// under `editor`/`viewer`) so a viewer file can read it without ever importing through the sibling
+/// editor module. `artifact_kind` matches this schema's own `#[artifact_schema(id = "…")]` ("s.architect.program",
+/// confirmed at `🧬️schema/🦀️component.rs:14`) and `definition()`'s own schema-capability claim
+/// above (`"s.architect.program"`); `standard`/`subset` match this file's own
+/// `🏅️standards/🔖️1/🪆️subsets/✳️any` location — i.e. the canonical surface id is
+/// `s.architect.program@1/*#editor` / `s.architect.program@1/*#viewer` (contract §1 grammar).
+pub const ARCHITECT_DIALECT: semio_framework_plugin::app::Dialect =
+    semio_framework_plugin::app::Dialect { artifact_kind: "s.architect.program", standard: semio_framework_plugin::app::StandardId("1"), subset: semio_framework_plugin::app::SubsetId::ANY };
+//#endregion 🔖️Dialect
+
+//#region 🔖️ArtifactKind
+/// 🗂️ This artifact's `ArtifactKindSpec` — Data × Value per owner-table (`data.program`).
+pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
+    semio_framework_plugin::ArtifactKindSpec {
+        id: "data.program".into(),
+        label: semio_framework_ui_locale::LocalizedLabel::native("Architect Program", "Raumprogramm"),
+        source_format: ARCHITECT_PROGRAM_SCHEMA.into(),
+        component_kind: "architect".into(),
+        dimension: "data".into(),
+        media_capability: semio_framework_plugin::OsMediaCapability::MeshOnly,
+        media_type: semio_framework_plugin::MediaType { class: semio_framework_plugin::MediaClass::Data, form: semio_framework_plugin::MediaForm::Value },
+        schema: ARCHITECT_PROGRAM_SCHEMA.into(),
+        export_formats: vec![],
+        import_formats: vec![],
+        export_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into(), "stdio.xlsx".into(), "stdio.zip".into()],
+        import_stdio_kinds: vec!["stdio.csv".into(), "stdio.json".into()],
+    }
+}
+//#endregion 🔖️ArtifactKind
 
 //#region 🔖️Artifact
 /// 🧬️ program document artifact state.
@@ -148,13 +184,13 @@ pub struct ProgramArtifact {
     pub knowledge_payload: Vec<KnowledgeRecord>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub knowledge: crate::ProgramKnowledgeChild,
+    pub knowledge: crate::standards::v1::subsets::any::schema::snapshot::ProgramKnowledgeChild,
     /// 🏁️ See `ProgramSnapshot::benchmarks_payload`.
     #[state(artifact)]
     pub benchmarks_payload: Vec<BenchmarkRecord>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub benchmarks: crate::ProgramBenchmarksChild,
+    pub benchmarks: crate::standards::v1::subsets::any::schema::snapshot::ProgramBenchmarksChild,
     #[state(artifact)]
     pub traces: Vec<TraceLink>,
     #[state(artifact)]
@@ -165,14 +201,14 @@ pub struct ProgramArtifact {
 //#region 🔖️Conversions
 impl Default for ProgramArtifact {
     fn default() -> Self {
-        Self::from_snapshot(crate::empty_plugin())
+        Self::from_snapshot(crate::standards::v1::subsets::any::schema::snapshot::empty_plugin())
     }
 }
 
 impl ProgramArtifact {
     /// 📸️ Persisted subset.
-    pub fn to_snapshot(&self) -> crate::ProgramSnapshot {
-        crate::ProgramSnapshot {
+    pub fn to_snapshot(&self) -> crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot {
+        crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot {
             schema: self.schema.clone(),
             meta: self.meta.clone(),
             project: self.project.clone(),
@@ -249,7 +285,7 @@ impl ProgramArtifact {
     }
 
     /// 🧬️ Builds the document artifact from its snapshot.
-    pub fn from_snapshot(snapshot: crate::ProgramSnapshot) -> Self {
+    pub fn from_snapshot(snapshot: crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot) -> Self {
         Self {
             schema: snapshot.schema,
             meta: snapshot.meta,
@@ -327,7 +363,7 @@ impl ProgramArtifact {
     }
 
     /// 🔄 Writes persistent fields from a snapshot into this artifact.
-    pub fn set_snapshot(&mut self, snapshot: crate::ProgramSnapshot) {
+    pub fn set_snapshot(&mut self, snapshot: crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot) {
         self.schema = snapshot.schema;
         self.meta = snapshot.meta;
         self.project = snapshot.project;

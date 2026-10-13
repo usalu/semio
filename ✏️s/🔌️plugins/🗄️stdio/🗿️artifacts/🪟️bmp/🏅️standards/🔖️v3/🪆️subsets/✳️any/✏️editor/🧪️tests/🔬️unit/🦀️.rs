@@ -17,7 +17,7 @@ fn number(value: u64) -> semio_framework_value::DslValue {
 }
 
 fn direct_command() -> BmpEditCommand {
-    bmpEditor_command_from_action(
+    bmp_editor_command_from_action(
         paint_region::DIRECT_ACTION_ID,
         Some(&semio_framework_value::DslValue::object([
             ("x".into(), number(1)),
@@ -123,7 +123,7 @@ fn retained_indexed_paint_keeps_duplicate_color_indices_distinct() {
     use protocol::{Mutation, MutationDiff};
     let before = crate::standards::v_v3::subsets::any::io::decode_bmp(include_bytes!("../../../🧫️fixtures/🧬️canonical-byte-authority/indexed-rgb1-duplicate-palette.bmp")).unwrap();
     let command =
-        bmpEditor_command_from_action(paint_region::INDEXED_ACTION_ID, Some(&semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)), ("paletteIndex".into(), number(1))])))
+        bmp_editor_command_from_action(paint_region::INDEXED_ACTION_ID, Some(&semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)), ("paletteIndex".into(), number(1))])))
             .unwrap();
     let preview = crate::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview(&before).unwrap();
     let mutations = drive(&command, &before, paint_region::INDEXED_ACTION_ID);

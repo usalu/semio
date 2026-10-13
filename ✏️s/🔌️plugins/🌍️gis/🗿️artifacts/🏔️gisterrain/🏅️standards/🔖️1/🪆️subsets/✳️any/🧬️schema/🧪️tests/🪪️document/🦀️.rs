@@ -1,7 +1,7 @@
 //! 🧪️ Terrain codecs preserve the exact durable child owner.
 use crate::{GisTerrainDiff, GisTerrainSnapshot};
 use crate::schema::GisTerrainArtifact;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn terrain_document_contract_preserves_mesh_identity_through_conversion_and_codecs() {

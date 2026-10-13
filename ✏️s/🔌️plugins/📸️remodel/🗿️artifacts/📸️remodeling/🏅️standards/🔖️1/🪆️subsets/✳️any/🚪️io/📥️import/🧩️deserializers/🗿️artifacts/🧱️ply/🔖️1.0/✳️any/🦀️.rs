@@ -5,7 +5,7 @@ use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::
 use semio_framework_plugin::{ ArtifactDeserializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_ply::standards::v1_0::engine::decode_ply;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const PLY_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.ply", standard: StandardId("1.0"), subset: SubsetId::ANY };

@@ -23,8 +23,8 @@
 //! individual `#[path]` mount. Dispatch coverage compares variants and triad owners
 //! bijectively through that registry.
 
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 //#region 🔖️ProgramMutation
 /// 🧩️ Every variant wraps exactly one `protocol::MutationKind<ProgramSnapshot, ProgramMutation>`

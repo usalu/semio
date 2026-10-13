@@ -79,7 +79,7 @@ fn retained_publication_refuses_a_forward_or_exact_inverse_over_the_native_item_
     let mut oracle = rows["before"].clone();
     json_patch::patch(&mut oracle, &serde_json::from_value::<json_patch::Patch>(rows["oracle"].clone()).unwrap()).unwrap();
     assert_eq!(oracle, rows["expected"]);
-    assert_eq!(rows["maximumBytes"].as_u64().unwrap() as usize, kernel::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    assert_eq!(rows["maximumBytes"].as_u64().unwrap() as usize, kernel::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     for row in rows["cases"].as_array().unwrap() {
         let emitted = match row["emitted"].as_str() {
             Some(key) => &rows[key],

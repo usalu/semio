@@ -29,8 +29,8 @@ where
         state
     };
     for (index, edited) in edits {
-        let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
-        store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<P, Mu>()).unwrap_or_else(|error| panic!("{guest}: the drag history catalog installs: {error:?}"));
+        let mut store = ArtifactStore::<P, Mu>::new(create_document_envelope::<P, Mu>(schema, guest, base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap_or_else(|error| panic!("{guest}: the drag history store opens: {error:?}"));
+        store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, Mu>()).unwrap_or_else(|error| panic!("{guest}: the drag history catalog installs: {error:?}"));
         for leaf in log {
             crate::with_authoring_identity!(|identity| store.dispatch(ArtifactCommand::Apply { mutations: vec![leaf.clone()], transaction: None }, &mut identity).await).unwrap_or_else(|error| panic!("{guest}: a logged leaf applies: {error:?}"));
         }
@@ -44,7 +44,7 @@ where
         edited_log[*index] = edited.clone();
         let expected = fresh(&edited_log);
         let mut replay = store.begin_report_replay(&drafts, Some(&target)).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} begins: {error:?}"));
-        while let store::ReplayStep::Pending(_) = replay.step(store.replay_edits(), &mut || false).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} steps: {error:?}")) {}
+        while let store::os_store::replay::ReplayStep::Pending(_) = replay.step(store.replay_edits(), &mut || false).unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} steps: {error:?}")) {}
         let result = replay.finish().unwrap_or_else(|error| panic!("{guest}: the replay of edit #{index} finishes: {error:?}"));
         assert!(!store.replay_report(&result).unwrap_or_else(|error| panic!("{guest}: the report of edit #{index} reads: {error:?}")).blocks_finalize(), "{guest}: a re-offset or re-targeted drag never blocks finalizing");
         assert_eq!(result.state().unwrap_or_else(|| panic!("{guest}: the replay of edit #{index} reached no state")).as_ref(), &expected, "{guest}: the replay of edit #{index} equals the fresh fold of the edited log");

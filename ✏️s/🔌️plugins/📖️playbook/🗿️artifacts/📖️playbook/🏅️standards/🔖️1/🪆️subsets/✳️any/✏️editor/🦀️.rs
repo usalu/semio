@@ -22,7 +22,7 @@ use crate::editor::playbook::modes::builder::windows::steps as steps_window;
 use crate::op::PlaybookMutation;
 use crate::schema::default_block;
 use crate::{artifact_kind, playbook_add_block_leaves, playbook_add_step_leaves, playbook_composed_spec, playbook_flow_content, playbook_flow_emit, steps_from_flow_content, PlaybookSnapshot, PlaybookSpec, PlaybookStep, PLAYBOOK_DIALECT, PLAYBOOK_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
@@ -154,14 +154,14 @@ pub fn playbook_minted_id(doc: &ArtifactView<'_, PlaybookSnapshot>, prefix: &str
 #[derive(Default)]
 pub struct PlaybookPlayApp;
 
-/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::empty_document_spr` (never a
+/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::os_store::text_format::empty_document_spr` (never a
 /// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
 /// before its app-owned bounded retirement authority detached` trap on this path; the framework
 /// re-stamps the log with the live mount's identity before hydration sees it
-/// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
+/// (`store::os_store::text_format::stamp_document_spr_identity`), so no app ever states its own mount.
 pub fn reset_playbook_document_effect(document: &PlaybookSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <PlaybookSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
+    let pack = <PlaybookSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("playbook", PLAYBOOK_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -334,7 +334,7 @@ struct PlaybookOneItemPreparation<P: 'static, M: 'static> {
     owners: store::OneItemOwners<P, M>,
     phase: u8,
     retained_bytes: usize,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
@@ -350,7 +350,7 @@ fn playbook_bounded_serialized_bytes<T: semio_framework_value::ToValue>(value: &
     Ok(bytes)
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for PlaybookOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: protocol::Mutation<P> + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
@@ -358,26 +358,26 @@ where
 {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<M>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<M>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
 
-    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Playbook retained preparation rejected its lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, playbook_bounded_serialized_bytes(mutation)?))
     }
 
-    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<PlaybookOneItemPreparation<P, M>>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
 
-        if request.lane != store::HistoryLane::Document
+        if request.lane != store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
         }
@@ -385,37 +385,37 @@ where
             owners: store::OneItemOwners::from_request(request),
             phase: 0,
             retained_bytes: 0,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for PlaybookOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         match self.phase {
             0 => {
                 let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its exact base root"))?;
                 let retained_bytes = playbook_bounded_serialized_bytes(base.get()).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Playbook retained Store value exceeds its fixed envelope"))?;
                 if grant.maximum_copy_bytes < retained_bytes {
-                    return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+                    return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 }
                 let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its mutation owner"))?;
                 let inverse = mutation.inverse(base.get())?;
@@ -424,8 +424,8 @@ where
                 *self.owners.candidate = Some((post, inverse, forward));
                 self.retained_bytes = retained_bytes;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: retained_bytes, ..Default::default() }))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: retained_bytes, ..Default::default() }))
             }
             1 => {
                 let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Playbook retained preparation lost its Store authority"))?;
@@ -438,20 +438,20 @@ where
                     }
                 };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
                 *self.owners.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -480,13 +480,13 @@ impl ArtifactEditor for PlaybookPlayApp {
     const DIALECT: Dialect = PLAYBOOK_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = PLAYBOOK_DOCUMENT_SCHEMA;
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(PlaybookOneItemPreparationFactory::<Self::Config, Self::ConfigMutation>::default()))
     }
 
     /// 📬️ The ARTIFACT lane's publication authority for the parent's own `change-title` (`updatePlaybook`): a retained tool whose
     /// contract states `Artifact` has nowhere to stage its edit without it.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔒privacy` per Wave C.
 
 use super::RenamePrivacyRequirement;
-use crate::diff::{ProgramPrivacyDelta, ProgramPrivacyPatchEntry};
-use crate::registers::PrivacyRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramPrivacyDelta, ProgramPrivacyPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::PrivacyRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePrivacyRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

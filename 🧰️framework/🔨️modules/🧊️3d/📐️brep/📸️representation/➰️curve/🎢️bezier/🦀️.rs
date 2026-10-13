@@ -7,7 +7,7 @@
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
 //! under `➰️curve` per that file's own pre-mounted-stub note.
 
-use crate::brep::representation::vector::{Pnt2, Pnt3};
+use crate::vector::{Pnt2, Pnt3};
 
 // #region 🔖️Bezier
 
@@ -129,8 +129,8 @@ impl RationalBezier3 {
         for i in 0..=m {
             let a = i as f64 / m as f64;
             let b = (m - i) as f64 / m as f64;
-            let left = if i > 0 { self.controls[i - 1].to_vec() * a } else { crate::brep::representation::vector::Vec3::ZERO };
-            let right = if i <= n { self.controls[i].to_vec() * b } else { crate::brep::representation::vector::Vec3::ZERO };
+            let left = if i > 0 { self.controls[i - 1].to_vec() * a } else { crate::vector::Vec3::ZERO };
+            let right = if i <= n { self.controls[i].to_vec() * b } else { crate::vector::Vec3::ZERO };
             controls.push(Pnt3::from_array((left + right).to_array()));
         }
         RationalBezier3::unweighted(controls)

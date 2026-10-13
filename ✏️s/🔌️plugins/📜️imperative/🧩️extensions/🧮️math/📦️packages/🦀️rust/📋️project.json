@@ -16,30 +16,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "package": {
       "executor": "nx:run-commands",
       "options": {
@@ -49,7 +25,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/imperative-extension-math.sxt"
+        "{workspaceRoot}/✏️s/🔌️plugins/📜️imperative/🧩️extensions/🧮️math/🧩️component/📦️packages/🦀️rust/dist/imperative-extension-math.sxt"
       ],
       "inputs": [
         "production",

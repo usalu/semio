@@ -1,8 +1,10 @@
 //! Deserialize layout via stdio.dwg.
 use crate::LayoutSnapshot;
-use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
-use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
-use semio_s_artifact_stdio_dwg::{dwg_from_bytes, DwgDrawing, DwgSnapshot};
+use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::encode_dwg;
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::dwg_from_bytes;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 pub fn register() {}
 

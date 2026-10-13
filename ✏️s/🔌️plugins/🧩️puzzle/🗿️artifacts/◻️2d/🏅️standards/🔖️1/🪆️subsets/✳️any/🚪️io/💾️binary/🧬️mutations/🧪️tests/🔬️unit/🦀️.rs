@@ -6,7 +6,7 @@ fn puzzle2d_document_vcs_replays_granular_operations() {
     use crate::standards::v1::subsets::any::schema::empty_puzzle2d_snapshot;
     use crate::standards::v1::subsets::any::schema::mutations::create_node;
     use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     ::semio_framework_async::poll::resolve_ready(store.dispatch(ArtifactCommand::Apply { mutations: vec![create_node(Puzzle2dNode { id: "n1".into(), ..Default::default() }, None)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("apply");

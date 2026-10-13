@@ -11,9 +11,9 @@ import faultCustodySchema from "../⚠️fault/🧬️schema/🔣️.json";
 import {MountedFaultCustody} from "../⚠️fault/🟦️.ts";
 
 test("original mounted close faults remain owned across refused admission and physical frame closure",()=>{
- const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=readFileSync(join(import.meta.dir,"../../../../🦀️.rs"),"utf8");
+ const source=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8"),host=["🧵️instance/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs","🧵️retained-command/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(join(import.meta.dir,"../../../.."),file),"utf8")).join("\n");
  expect(new Ajv({strict:false}).compile(faultCustodySchema)(faultCustodyCorpus)).toBe(true);
- expect(source).toContain("store::artifact_retirement_owned_birth_demands(&self.retained_close_fault)");expect(source).toContain("store::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)");expect(source).toContain("store::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)");expect(source).toContain("self.retained_close_fault_refusal=Some(original)");expect(host).toContain("&& self.retained_close_fault_retirement.is_none()");expect(host).toContain("&& self.retained_close_fault_refusal.is_none()");
+ expect(source).toContain("store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retained_close_fault)");expect(source).toContain("store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)");expect(source).toContain("store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)");expect(source).toContain("self.retained_close_fault_refusal=Some(original)");expect(host).toContain("&& self.retained_close_fault_retirement.is_none()");expect(host).toContain("&& self.retained_close_fault_refusal.is_none()");
  for(const row of faultCustodyCorpus.cases){
   const original={origin:row.origin,code:row.code,message:row.message};const cursor=new MountedFaultCustody(original,row.existingCode,64,488),grant={items:1,copy:488,capacity:64,release:64,depth:2};let oracle={original,active:null as typeof original|null,report:row.existingCode as string|null};
   expect(cursor.capture({...grant,copy:0},v=>v.code)).toBe(row.existingCode!==null);expect(cursor.source).toBe(original);expect(cursor.capture(grant,v=>v.code)).toBe(true);oracle=jsonPatch.applyPatch(oracle,[{op:"replace",path:"/report",value:row.existingCode??row.code}]).newDocument;
@@ -25,7 +25,7 @@ test("original mounted close faults remain owned across refused admission and ph
 
 test("mounted publications keep original payload and allocation through a genuine caller grant",()=>{
  const root=join(import.meta.dir,"../../../..");
- const host=readFileSync(join(root,"🦀️.rs"),"utf8"),frontier=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8");
+ const host=["🧵️instance/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs","🧵️retained-command/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(root,file),"utf8")).join("\n"),frontier=[join(import.meta.dir,"../🦀️.rs"),join(root,"🧵️instance/🔄️full-operation/🦀️.rs")].map(file=>readFileSync(file,"utf8")).join("\n");
  const start=host.indexOf("fn retirement_step(&mut self, grant: RetainedCloneGrant)",host.indexOf("impl<A: ArtifactApp> MountedTypedCommandFullOperation"));
  expect(start).toBeGreaterThanOrEqual(0);const body=host.slice(start,host.indexOf("fn terminal_is_empty",start));
  expect(body).not.toContain("artifact_mutations.pop()");expect(body).not.toContain("drop(self.completion.take())");expect(body).not.toContain("drop(chunk)");
@@ -35,8 +35,8 @@ test("mounted publications keep original payload and allocation through a genuin
  expect(frontier).toContain("if owner.terminal_is_empty(){let bytes=owner.frame_release_bytes()");
  for(const axis of ["copy_bytes","capacity_bytes","release_bytes","depth"]){expect(frontier).toContain("grant.maximum_"+axis+"<demand."+axis);}
  const ladder=readFileSync(join(root,"🪜️close-ladder/🦀️.rs"),"utf8");expect(ladder).toContain("CloseRung::DirectIngress => self.window_config_store.close_direct_ingress(grant)");expect(ladder).toContain("CloseRung::GrantedMounted => self.granted_mounted_retirement_step(grant)");
- const publicationStart=host.indexOf("impl<A: ArtifactApp> PendingArtifactStorePublication<A>");
- const end=/\r?\n    }\r?\n/.exec(host.slice(publicationStart));expect(end).not.toBeNull();const publication=host.slice(publicationStart,publicationStart+end!.index+end![0].length);
+ const owner=readFileSync(join(root,"🧩️composition/📬️publication/🦀️.rs"),"utf8"),publicationStart=owner.indexOf("impl<A: ArtifactApp> PendingArtifactStorePublication<A>");
+ const end=/\r?\n}\r?\n/.exec(owner.slice(publicationStart));expect(end).not.toBeNull();const publication=owner.slice(publicationStart,publicationStart+end!.index+end![0].length);
  expect(publication).toContain("fn close_step(&mut self, grant:RetainedCloneGrant)");
  expect(publication).not.toContain("maximum_bytes");
 });
@@ -53,7 +53,7 @@ test("publication rejection survives body and frame retirement and emits one ori
  }
 });
 test("mounted publication rejection queues its one original fault page, then retires the original publication only after the ACK",()=>{
- const root=join(import.meta.dir,"../../../.."),host=readFileSync(join(root,"🦀️.rs"),"utf8"),frontier=readFileSync(join(import.meta.dir,"../🦀️.rs"),"utf8");
+ const root=join(import.meta.dir,"../../../.."),host=["🧵️instance/🦀️.rs","🧵️instance/🔄️full-operation/🦀️.rs","🧵️retained-command/🔄️full-operation/🦀️.rs"].map(file=>readFileSync(join(root,file),"utf8")).join("\n"),frontier=[join(import.meta.dir,"../🦀️.rs"),join(root,"🧵️instance/🔄️full-operation/🦀️.rs")].map(file=>readFileSync(file,"utf8")).join("\n");
  const unit=host.indexOf("fn publish_mounted_typed_operation_unit"),publisher=host.slice(unit,host.indexOf("let live_revision",unit));expect(unit).toBeGreaterThan(0);
  expect(publisher).toContain("if mounted.reject_cancelled_publication()? {");expect(publisher.indexOf("mounted.reject_cancelled_publication()")).toBeLessThan(publisher.indexOf("try_claim_publication"));
  const start=host.indexOf("fn reject_cancelled_publication"),reject=host.slice(start,host.indexOf("fn ",start+40));expect(start).toBeGreaterThan(0);

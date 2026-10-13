@@ -90,7 +90,7 @@ fn the_incremental_residency_assembles_byte_identically_to_the_whole_set_encode(
 /// ⏱️ Wave B44 LAW: a mutation's PUBLICATION must be O(changed) turns, not O(n).
 ///
 /// 🧾️ A turn is one host↔guest round trip, and the typed-operation publication pages its emit at ONE
-/// item per turn (`store::ArtifactStoreOneItemGrant { maximum_items: 1 }`,
+/// item per turn (`store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1 }`,
 /// `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`). So the emit's mutation COUNT is the
 /// publication's turn count, and that is the observable a latency law can pin deterministically —
 /// unlike the settle's own turn total, which also carries the retirement state machine's

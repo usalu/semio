@@ -1,6 +1,7 @@
 use super::*;
-use semio_s_artifact_stdio_dwg::schema::snapshot::DwgLogicalDrawing;
-use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalDrawing;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_dwg() -> DwgSnapshot {

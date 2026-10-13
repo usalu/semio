@@ -14,7 +14,7 @@
 //! and is dropped. `version` is always emitted as the fixed literal `"2.1"` (never captured on
 //! decode, so there is nothing to round-trip it from); `parts` is always empty.
 
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, RelationKind, SemioModelSnapshot};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, PsetValue, RelationKind, SemioModelSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment, BcfComponents, BcfTopic, BcfViewpoint, BcfVisibility};
 use semio_s_artifact_stdio_bcf::BcfSnapshot;
@@ -39,7 +39,7 @@ pub fn register() {}
 
 //#region 🔖️Convert
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn text_property<'a>(properties: &'a [crate::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
+fn text_property<'a>(properties: &'a [semio_s_artifact_stdio_semio_model::schema::snapshot::Property], key: &str) -> Option<&'a str> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Text { value } => Some(value.as_str()),
         _ => None,
@@ -47,7 +47,7 @@ fn text_property<'a>(properties: &'a [crate::standards::v1::subsets::model::sche
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn number_property(properties: &[crate::standards::v1::subsets::model::schema::snapshot::Property], key: &str) -> Option<f64> {
+fn number_property(properties: &[semio_s_artifact_stdio_semio_model::schema::snapshot::Property], key: &str) -> Option<f64> {
     properties.iter().find(|p| p.key == key).and_then(|p| match &p.value {
         PsetValue::Number { value } => Some(*value),
         _ => None,
@@ -55,8 +55,8 @@ fn number_property(properties: &[crate::standards::v1::subsets::model::schema::s
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn topic_from_element(element: &crate::standards::v1::subsets::model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
-    let empty: Vec<crate::standards::v1::subsets::model::schema::snapshot::Property> = Vec::new();
+fn topic_from_element(element: &semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement, referenced_guids: &[String]) -> BcfTopic {
+    let empty: Vec<semio_s_artifact_stdio_semio_model::schema::snapshot::Property> = Vec::new();
     let topic_props = element.psets.iter().find(|p| p.name == "Pset_BcfTopic").map_or(empty.as_slice(), |p| p.properties.as_slice());
     let comments_props = element.psets.iter().find(|p| p.name == "Pset_BcfComments").map_or(empty.as_slice(), |p| p.properties.as_slice());
 

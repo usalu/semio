@@ -24,7 +24,7 @@ pub struct PresentationSnapshot {
     pub schema: String,
     /// 🖼️ The shared source figure the composed `presentation` deck is derived from — the PERSISTED
     /// payload of that child slot (`🏭️process`'s `stock_payload` pattern). A composed child's content
-    /// never travels inside `store::ArtifactChild`, and the react shell answers `Effect::LoadDocument`
+    /// never travels inside `store::os_store::artifact_child::ArtifactChild`, and the react shell answers `Effect::LoadDocument`
     /// with an EMPTY member roster, so `crate::genesis_presentation_child_pack` can only derive the deck
     /// from fields the parent's own pack/DSL round-trips.
     #[state(artifact)]

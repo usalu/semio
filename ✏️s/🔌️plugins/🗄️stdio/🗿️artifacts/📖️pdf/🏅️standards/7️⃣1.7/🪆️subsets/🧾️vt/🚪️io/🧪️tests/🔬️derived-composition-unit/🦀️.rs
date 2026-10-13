@@ -44,7 +44,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn missing_dpartroot_fails_compose() {
         let snapshot = PdfSnapshot::default();
-        let bytes = <PdfSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = PdfVtComposerComposition::compose(&sources).expect_err("a document with no DPartRoot must not stamp vt");
         assert!(err.diagnostics.iter().any(|d| d.severity == Severity::Error), "got {:?}", err.diagnostics);

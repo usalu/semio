@@ -247,10 +247,10 @@ fn selection_history() -> (DrawingSnapshot, Vec<DrawingMutation>) {
 /// fresh fold of the edited log, and an overwrite finalizes exactly that state. Returns the report.
 async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], index: usize, edited: &DrawingMutation) -> protocol::ReplayReport {
     use protocol::OpBinary;
-    let mut store = store::ArtifactStore::new(store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(crate::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(crate::DRAWING_DOCUMENT_SCHEMA, "selection-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     for mutation in log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), log.len(), "one applied operation per committed leaf");
@@ -262,7 +262,7 @@ async fn replay_history_edit(base: &DrawingSnapshot, log: &[DrawingMutation], in
     let preview = store.state_before(&ids[index], &drafts).expect("the preview base folds");
     assert_eq!(preview.as_ref(), &prefix, "the preview base is the state right before the edited leaf, nothing downstream");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[index])).expect("the replay begins at the edited leaf");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     let report = store.replay_report(&result).expect("report");
     let mut fresh = base.clone();

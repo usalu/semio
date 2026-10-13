@@ -1,3 +1,4 @@
+import { readBuildMode, type BuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, watch, writeFileSync } from "node:fs";
 import { randomUUID } from "node:crypto";
 import { dirname, join, resolve } from "node:path";
@@ -75,25 +76,29 @@ export function developmentRuntimeRoot(packageRoot: string, variant: string, pro
   return join(packageRoot, "dist", "runtime", renderer, profile, variant);
 }
 
-/** 🔌️ THE staging root for a profile — the ONE directory every producer writes and every consumer
- * reads: `@semio-tech/framework-plugin-web:support-<profile>`, every crate's `materialize-<profile>`
- * and `@semio-tech/framework-os-dev:plugin` write it; the react Vite `/🔌️plugin-modules` mount, the
- * WGPU browser host, the native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate`
- * and the production distribution copy read it. Derived from this module's own location — never from a
- * workspace walk — so Vite's config bundler resolves it without pulling repository discovery in, and so
- * no caller can pick a second root. Two roots is what this function replaces: a `🧑‍💻dev/🔌️plugin-modules`
- * written only by the catalog builder while `materialize-*` wrote here drifted silently for two days
- * (ticket 26/09/09/PROCEDURAL-3D-END-TO-END, `📓️wgpu-playground-boot-2026-09-12.md` §2.1). */
-export function pluginModulesRoot(profile: "dev" | "release"): string {
-  return pluginModulesRootIn(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../.."), profile);
+/** 🔌️ THE plugin-modules root — the ONE directory every producer writes and every consumer reads, for every host profile:
+ * `@semio-tech/framework-plugin-web:support`, every crate's `materialize` (shipped `wasm-release` modules) and
+ * `components iterate` (the one local `wasm-prototype` module being edited) write it; the react Vite `/🔌️plugin-modules`
+ * mount, the WGPU browser host, the native runner's `SEMIO_PLUGIN_MODULES`, `prepare`/`activate` and the production
+ * distribution copy read it. There is one shipped component profile, so there is one module root: a host profile selects
+ * the host build, never a second copy of the plugins, and every module carries the `🧾️receipt.json` that names its
+ * profile, which is how release consumers refuse a local iterate module (ticket 26/09/23 wave A2). Derived from this
+ * module's own location — never from a workspace walk — so Vite's config bundler resolves it without pulling repository
+ * discovery in, and so no caller can pick a second root. */
+export function pluginModulesRoot(): string {
+  return pluginModulesRootIn(resolve(dirname(fileURLToPath(import.meta.url)), "../../../../../.."));
 }
 
-/** 🗂️ The same staging root inside an EXPLICIT workspace — the one form a sandboxed consumer (the
- * production distribution copy, driven against a throwaway workspace in its own tests) may use. The
- * repository-relative path lives here once so no caller ever spells a second one. */
-export function pluginModulesRootIn(workspace: string, profile: "dev" | "release"): string {
-  if (profile !== "dev" && profile !== "release") throw new Error("Select a plugin staging profile: dev or release");
-  return join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", profile, "🔌️plugin-modules");
+/** 🗂️ The same plugin-modules root inside an EXPLICIT workspace — the one form a sandboxed consumer (the production
+ * distribution copy, driven against a throwaway workspace in its own tests) may use. The repository-relative path lives
+ * here once so no caller ever spells a second one. */
+export function pluginModulesRootIn(workspace: string): string {
+  return join(workspace, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "🔌️plugin-modules");
+}
+
+/** 📦️ Selects canonical compiled browser modules independently of the active runtime view. */
+export function builtPluginModulesRootIn(workspace: string, mode: BuildMode): string {
+  return join(dirname(pluginModulesRootIn(workspace)), readBuildMode(mode), "🔌️plugin-modules");
 }
 
 /** 📬️ Atomically announces completed preparation without rewriting a warm receipt. */
@@ -137,8 +142,8 @@ export function observeActivationReceipts(directory: string, listener: (receipt:
  * caller — kept a plain record so the rule below is pure and a fixture can drive every outcome. */
 export type PreparedComponentFacts = Readonly<{
   pluginId: string;
-  /** 🧱️ `false` when the component's own `component-<profile>`/`materialize-<profile>` never produced
-   * a staging directory at all — the shape a crate that failed to compile leaves behind. */
+  /** 🧱️ `false` when the component's own `component`/`materialize` never produced a module directory at
+   * all — the shape a crate that failed to compile leaves behind. */
   directoryPresent: boolean;
   /** 🔣️ `pluginId` the staged `🔣️.json` names, `undefined` when that descriptor is absent or unreadable. */
   descriptorPluginId?: string;

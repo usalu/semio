@@ -1,5 +1,5 @@
 use super::*;
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 
 #[semio_framework_async_macros::async_test]
 async fn requirement_lists_output_nonempty_for_sample() {

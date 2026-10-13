@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::{Generation3dSnapshot, GENERATION_3D_SCHEMA};
 use semio_framework_artifact_flow_flow::{CameraJson, SynapseSpec, Widget, WidgetLayout};
 use semio_framework_os_kernel::os_store::test_support;
-use store::{create_document_envelope, ArtifactCommand};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 #[test]
 fn op_text_round_trip_create_widget() {

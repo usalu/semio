@@ -29,7 +29,7 @@ pub(crate) fn rejection_outcome_code(code: &str) -> protocol::OutcomeCode {
 /// 📨️ Converts a glTF mutation rejection into its protocol outcome: the vocabulary code at its level and the rejection path
 /// as the target; a mismatch or invariant keeps the glTF code in front of the detail, since its generic code alone does not
 /// say which law refused.
-pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<crate::schema::diff::GltfDiff> {
+pub(crate) fn rejection_outcome(code: &str, path: &str, detail: String) -> protocol::MutationOutcome<semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff> {
     let target = path.split('/').filter(|part| !part.is_empty()).map(str::to_string).collect::<Vec<_>>();
     match rejection_outcome_code(code) {
         protocol::OutcomeCode::NoOp => protocol::MutationOutcome::new(Default::default()).warning("mutation.no-op", detail),

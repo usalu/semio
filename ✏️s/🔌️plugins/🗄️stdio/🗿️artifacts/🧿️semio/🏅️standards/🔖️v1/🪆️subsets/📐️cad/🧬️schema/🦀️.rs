@@ -1,7 +1,7 @@
 //! 🧬️ SemioCadArtifact schema — full artifact state, mirrors `SemioCadSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer, SemioCadSnapshot};
+use crate::schema::snapshot::{CadBlock, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

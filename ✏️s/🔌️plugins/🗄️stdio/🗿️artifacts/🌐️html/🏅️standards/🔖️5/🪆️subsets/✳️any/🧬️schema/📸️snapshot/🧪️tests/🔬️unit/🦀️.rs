@@ -179,8 +179,8 @@ async fn codec_retention_law() {
     let re_encoded = write_html_document(&snap);
     assert_eq!(re_encoded, FIXTURE, "fixture must round-trip byte-for-byte");
 
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <HtmlSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️CodecRetentionLaw
@@ -188,10 +188,10 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn snapshot_dsl_and_pack_round_trip() {
     let snap = parse_html_document(FIXTURE).expect("fixture parses");
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <HtmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed, snap);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <HtmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <HtmlSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }

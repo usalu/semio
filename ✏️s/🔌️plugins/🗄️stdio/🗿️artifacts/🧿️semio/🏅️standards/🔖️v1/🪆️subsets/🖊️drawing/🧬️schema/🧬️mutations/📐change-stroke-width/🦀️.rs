@@ -1,8 +1,8 @@
 //! 📐️️ `change-stroke-width` — sets one scalar field (`DrawStyle.stroke_width`, name-keyed) on
 //! the named style, independently of `change-stroke-color` per SMO's stroke decomposition ruling.
 
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

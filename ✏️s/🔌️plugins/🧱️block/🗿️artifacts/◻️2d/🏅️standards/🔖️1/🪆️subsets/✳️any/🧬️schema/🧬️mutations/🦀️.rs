@@ -10,7 +10,7 @@ use crate::Block2dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
-pub type Block2dEnvelope = store::ArtifactEnvelope<Block2dSnapshot, Block2dMutation>;
+pub type Block2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block2dSnapshot, Block2dMutation>;
 pub type Block2dStore = store::ArtifactStore<Block2dSnapshot, Block2dMutation>;
 //#endregion 🔖️Store
 

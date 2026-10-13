@@ -1,6 +1,7 @@
 //! ⚖️ Exact original diagnostics match the canonical independent JSON view and actual caller receipts.
 use super::*;
 use semio_framework_value::ToValue;
+use semio_framework_value::retained_clone::RetainedCloneGrant;
 use semio_framework_job::{OperationId,Generation,StepBudget,root_cancel_token};
 fn fault_bytes(fault:&Fault)->usize{
  let scope=&fault.scope;let mut bytes=std::mem::size_of::<FaultScope>()+fault.code.0.capacity()+fault.message.capacity()+fault.causes.capacity()*std::mem::size_of::<FaultCause>();
@@ -24,7 +25,7 @@ fn original_extension_invoke_fault_reply_preserves_source_system_receipts_and_ca
    if let Some(source)=owner.cause.as_ref(){assert_eq!(source.projection_identity(),address)}
    if result.is_some(){output=result;break}assert!(turn<99999,"original fault output stalled copy={copy} phase={} demand={demand:?}",owner.phase);
   }
-  let output=output.unwrap();assert!(owner.terminal_is_empty());assert_eq!(original+born,freed+output.capacity());let decoded=semio_framework_os_kernel::os_store::pack_rt::decode_wire_value(&output).unwrap();let produced:serde_json::Value=decoded.into();assert_eq!(produced,expected);
+  let output=output.unwrap();assert!(owner.terminal_is_empty());assert_eq!(original+born,freed+output.capacity());let decoded=semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&output).unwrap();let produced:serde_json::Value=decoded.into();assert_eq!(produced,expected);
   let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
   eprintln!("[DEBUG] original fault output copy={copy} sameSource=true canonicalWire=true born={born} freed={freed} outputCapacity={} Drop0=true",output.capacity());
  }
@@ -49,6 +50,6 @@ fn original_inference_gateway_failure_all_owned_causes(){
   let(code,message,progress)=value.fault_wire_fields();let expected=serde_json::json!({"origin":"plugin","code":code,"severity":"error","message":message,"scope":{},"retainedProgress":{"copiedItems":progress.copied_items,"copiedBytes":progress.copied_bytes,"retainedCapacityBytes":progress.retained_capacity_bytes,"releasedBytes":progress.released_bytes},"retryable":false});let address=value.source_identity();
   let(mut owner,birth)=semio_framework_trace::observe_heap_allocations_on_this_thread(||RetainedExtensionFaultReply::new(ExtensionInvocationCause::Inference(value)));assert_eq!((birth.requested_bytes,birth.released_bytes),(0,0));let cancel=root_cancel_token();let mut sequence=0;let mut output=None;
   for turn in 0..100000{let demand=owner.demands(copy).unwrap();let grant=RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy,maximum_capacity_bytes:demand.capacity_bytes,maximum_release_bytes:demand.release_bytes,maximum_depth:demand.depth.max(1)};let mut receipt=Default::default();let mut cx=StepContext::new(OperationId(71),Generation(3),StepBudget::new(1,u64::MAX,grant),cancel.clone(),||Some(1),&mut sequence,&mut receipt);let(result,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||owner.advance(&mut cx));let progress=cx.retained_progress();assert!(progress.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));if let Some(source)=owner.cause.as_ref(){assert_eq!(source.projection_identity(),address);if let ExtensionInvocationCause::Inference(crate::ArtifactInferenceGatewayFailure::Json(semio_framework_pack_json::JsonError::DuplicateMember{name,offset}))=source{assert_eq!((name.as_str(),*offset),("same member 源",11));}}if let Some(bytes)=result.unwrap(){output=Some(bytes);break}assert!(turn<99999,"gateway cause case={case} copy={copy} phase={} demand={demand:?}",owner.phase);}
-  assert!(owner.terminal_is_empty());let decoded:serde_json::Value=semio_framework_os_kernel::os_store::pack_rt::decode_wire_value(&output.unwrap()).unwrap().into();assert_eq!(decoded,expected);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Original gateway failure case={case} copy={copy} retains source and owned JSON detail; actual System receipt and canonical Serde view; terminalDrop0");
+  assert!(owner.terminal_is_empty());let decoded:serde_json::Value=semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&output.unwrap()).unwrap().into();assert_eq!(decoded,expected);let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(owner));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] Original gateway failure case={case} copy={copy} retains source and owned JSON detail; actual System receipt and canonical Serde view; terminalDrop0");
  }}
 }

@@ -3,28 +3,28 @@ use super::*;
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips() {
     let snap = SemioPresentationSnapshot::default();
-    let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioPresentationSnapshot::default();
-    let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn demo_snapshot_pack_and_dsl_round_trip() {
     let snap = demo_semio_presentation_snapshot();
-    let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 
-    let text = <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
 
@@ -47,7 +47,7 @@ async fn pack_round_trips_populated_structure() {
             notes: vec![DocBlock::paragraph("x")],
         }],
     };
-    let bytes = <SemioPresentationSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }

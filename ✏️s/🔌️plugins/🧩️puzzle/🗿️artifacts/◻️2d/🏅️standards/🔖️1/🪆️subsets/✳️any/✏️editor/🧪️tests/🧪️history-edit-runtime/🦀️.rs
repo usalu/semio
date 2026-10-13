@@ -23,7 +23,7 @@ use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use protocol::OpText;
 use semio_framework::kernel::{HistoryEntry, HistoryTimeTravel, HistoryTimeTravelStage};
 use semio_framework_plugin::{ActionMeta, PluginApp, ViewModel, FRAMEWORK_HISTORY_BODY_KEY};
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 const HISTORY_EDIT_RUNTIME_CORPUS: &str = include_str!("../../🧫️fixtures/🧫️history-edit-runtime/🔣️.json");
 
@@ -421,8 +421,8 @@ fn a_long_remote_history_change_replays_over_turns_pauses_and_resumes_on_the_boa
     let mut remote = app_with_registry();
     let (local_backbone, mut local_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-local", "mem://puzzle2d-remote-replay-local"));
     let (remote_backbone, mut remote_probe) = block_on(MemoryBackbone::pair("mem://puzzle2d-remote-replay-remote", "mem://puzzle2d-remote-replay-remote"));
-    block_on(local.attach_backbone(store::Backbones::Memory(local_backbone))).expect("attach the local replica");
-    block_on(remote.attach_backbone(store::Backbones::Memory(remote_backbone))).expect("attach the remote replica");
+    block_on(local.attach_backbone(store::os_store::backbone::Backbones::Memory(local_backbone))).expect("attach the local replica");
+    block_on(remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone))).expect("attach the remote replica");
     let seed = edits(&mut local).len();
     run(&mut local, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "seed drag");
     relay(&mut local_probe, &mut remote_probe, &mut remote);
@@ -486,7 +486,7 @@ fn switching_to_a_long_alternative_replays_over_turns_and_cancel_leaves_zero_tra
         let seed = edits(&mut app).len();
         run(&mut app, seed, &json!({ "translate": { "select": ["left"], "dx": 1.0, "dy": 0.0, "step": 10.0 } }), "trunk drag");
         assert_eq!(current_line(&mut app), None, "the canonical trunk is an implicit viewer head");
-        let trunk = store::canonical_check_in_line(&app.document_identity().expect("the seeded board has a document identity"));
+        let trunk = store::os_store::codec_registry::canonical_check_in_line(&app.document_identity().expect("the seeded board has a document identity"));
         dispatch(&mut app, "createAlternative", Some(&json!({ "name": "Long" })), None).expect("a new alternative");
         let long = block_on(app.history_snapshot()).expect("history").active_alternative_id.expect("the new alternative is current");
         assert_ne!(long, trunk);

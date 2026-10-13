@@ -14,9 +14,9 @@
     {
       "args": [
         "--profile",
-        "wasm-dev"
+        "wasm-prototype"
       ],
-      "profile": "wasm-dev"
+      "profile": "wasm-prototype"
     },
     {
       "args": [
@@ -56,252 +56,39 @@
       "--profile",
       "dev",
       "--profile",
-      "wasm-dev"
+      "wasm-prototype"
     ]
   ],
   "cases": [
     {
       "name": "same-profile-serialized",
-      "first": "wasm-dev",
-      "second": "wasm-dev",
+      "first": "wasm-prototype",
+      "second": "wasm-prototype",
       "action": "release-first"
     },
     {
       "name": "native-profile-independent",
-      "first": "wasm-dev",
+      "first": "wasm-prototype",
       "second": "dev",
       "action": "parallel"
     },
     {
       "name": "release-profile-independent",
-      "first": "wasm-dev",
+      "first": "wasm-prototype",
       "second": "wasm-release",
       "action": "parallel"
     },
     {
       "name": "cancelled-waiter",
-      "first": "wasm-dev",
-      "second": "wasm-dev",
+      "first": "wasm-prototype",
+      "second": "wasm-prototype",
       "action": "cancel-second"
     },
     {
       "name": "crashed-holder",
-      "first": "wasm-dev",
-      "second": "wasm-dev",
+      "first": "wasm-prototype",
+      "second": "wasm-prototype",
       "action": "kill-first"
     }
-  ],
-  "prebuild": {
-    "jobs": [
-      {
-        "cpus": 10,
-        "memoryGiB": 32,
-        "passes": 1,
-        "jobs": 2
-      },
-      {
-        "cpus": 4,
-        "memoryGiB": 8,
-        "passes": 1,
-        "jobs": 1
-      },
-      {
-        "cpus": 32,
-        "memoryGiB": 256,
-        "passes": 2,
-        "jobs": 13
-      },
-      {
-        "cpus": 16,
-        "memoryGiB": 20,
-        "passes": 1,
-        "jobs": 1
-      },
-      {
-        "cpus": 16,
-        "memoryGiB": 64,
-        "passes": 2,
-        "jobs": 3
-      }
-    ],
-    "jobsOverride": {
-      "value": "3",
-      "jobs": 3,
-      "invalid": [
-        "0",
-        "x",
-        "-1",
-        "1.5"
-      ]
-    },
-    "plan": {
-      "valid": {
-        "version": 1,
-        "workspaces": [
-          {
-            "manifest": "/w/hub/Cargo.toml",
-            "packages": [
-              "hub-a",
-              "hub-b"
-            ]
-          },
-          {
-            "manifest": "/w/s/Cargo.toml",
-            "packages": [
-              "ext-a"
-            ]
-          }
-        ]
-      },
-      "invalid": [
-        {
-          "version": 2,
-          "workspaces": [
-            {
-              "manifest": "/w/hub/Cargo.toml",
-              "packages": [
-                "hub-a"
-              ]
-            }
-          ]
-        },
-        {
-          "version": 1,
-          "workspaces": []
-        },
-        {
-          "version": 1,
-          "workspaces": [
-            {
-              "manifest": "relative/Cargo.toml",
-              "packages": [
-                "hub-a"
-              ]
-            }
-          ]
-        },
-        {
-          "version": 1,
-          "workspaces": [
-            {
-              "manifest": "/w/hub/Cargo.toml",
-              "packages": []
-            }
-          ]
-        },
-        {
-          "version": 1,
-          "workspaces": [
-            {
-              "manifest": "/w/hub/Cargo.toml",
-              "packages": [
-                "hub-a",
-                "hub-a"
-              ]
-            }
-          ]
-        },
-        {
-          "version": 1,
-          "workspaces": [
-            {
-              "manifest": "/w/hub/Cargo.toml",
-              "packages": [
-                "../escape"
-              ]
-            }
-          ]
-        },
-        {
-          "version": 1,
-          "workspaces": [
-            {
-              "manifest": "/w/hub/Cargo.toml",
-              "packages": [
-                "hub-a"
-              ],
-              "extra": true
-            }
-          ]
-        }
-      ]
-    },
-    "requests": [
-      {
-        "name": "hub package",
-        "args": [
-          "-p",
-          "hub-b",
-          "--lib",
-          "--target",
-          "wasm32-wasip2",
-          "--profile",
-          "wasm-release"
-        ],
-        "workspace": 0,
-        "profile": "wasm-release",
-        "target": "wasm32-wasip2"
-      },
-      {
-        "name": "extension package",
-        "args": [
-          "-p",
-          "ext-a",
-          "--lib",
-          "--target",
-          "wasm32-wasip2",
-          "--profile=wasm-dev"
-        ],
-        "workspace": 1,
-        "profile": "wasm-dev",
-        "target": "wasm32-wasip2"
-      },
-      {
-        "name": "unplanned package",
-        "args": [
-          "-p",
-          "other",
-          "--lib",
-          "--target",
-          "wasm32-wasip2",
-          "--profile",
-          "wasm-release"
-        ],
-        "workspace": null
-      },
-      {
-        "name": "no profile",
-        "args": [
-          "-p",
-          "hub-a",
-          "--lib",
-          "--target",
-          "wasm32-wasip2"
-        ],
-        "workspace": null
-      },
-      {
-        "name": "no target",
-        "args": [
-          "-p",
-          "hub-a",
-          "--lib",
-          "--profile",
-          "wasm-dev"
-        ],
-        "workspace": null
-      },
-      {
-        "name": "no package",
-        "args": [
-          "--lib",
-          "--target",
-          "wasm32-wasip2",
-          "--profile",
-          "wasm-dev"
-        ],
-        "workspace": null
-      }
-    ]
-  }
+  ]
 }

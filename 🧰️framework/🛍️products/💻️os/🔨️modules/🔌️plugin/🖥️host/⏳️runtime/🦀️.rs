@@ -64,7 +64,8 @@ use crate::actor_bindings::{
     semio::framework::events as wit_events,
 };
 use crate::imports::AsyncActorHostState;
-use crate::{JobBudget, JobStep, PluginHostError, SharedEngineConfig, TurnFault};
+use crate::SharedEngineConfig;
+use semio_framework_plugin_interpreter::{JobBudget, JobStep, PluginHostError, TurnFault};
 use semio_framework::kernel::{Budget, Effect, Event, TurnResult as KernelTurnResult};
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};

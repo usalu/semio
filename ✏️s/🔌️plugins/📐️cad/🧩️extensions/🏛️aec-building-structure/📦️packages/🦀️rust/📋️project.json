@@ -16,14 +16,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
     "package": {
       "executor": "nx:run-commands",
       "options": {
@@ -33,7 +25,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/cad-extension-aec-building-structure.sxt"
+        "{workspaceRoot}/✏️s/🔌️plugins/📐️cad/🧩️extensions/🏛️aec-building-structure/🧩️component/📦️packages/🦀️rust/dist/cad-extension-aec-building-structure.sxt"
       ],
       "inputs": [
         "production",

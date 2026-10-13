@@ -8,7 +8,7 @@
       "documentSchema": "note.document",
       "runtime": "owned",
       "text": "structured",
-      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-release/semio_hub_note.wasm"
+      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust/dist/components/release/semio_hub_note_component.wasm"
     },
     {
       "package": "semio:note",
@@ -16,7 +16,7 @@
       "documentSchema": "note.document",
       "runtime": "wasmtime",
       "text": "structured",
-      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust/dist/component-release/semio_hub_note.wasm"
+      "producerOutput": "🌎️hub/🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust/dist/components/release/semio_hub_note_component.wasm"
     },
     {
       "package": "semio:gis",
@@ -24,7 +24,7 @@
       "documentSchema": "gis.map",
       "runtime": "wasmtime",
       "text": "structured",
-      "producerOutput": "🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_hub_gis.wasm"
+      "producerOutput": "🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/dist/components/release/semio_hub_gis_component.wasm"
     },
     {
       "package": "semio:stdio",
@@ -32,7 +32,7 @@
       "documentSchema": "stdio.txt",
       "runtime": "wasmtime",
       "text": "carrier",
-      "producerOutput": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/dist/component-release/semio_hub_stdio.wasm"
+      "producerOutput": "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust/dist/components/release/semio_hub_stdio_component.wasm"
     }
   ]
 }

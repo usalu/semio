@@ -4,15 +4,15 @@
 
 use super::super::prelude::*;
 use super::super::value::FAULT_PREFIX;
-use semio_framework_3d::brep::engine::{Brep, BrepError, GeometryHandle, ShapeRoot, ShapeValue, ShapeWire};
-use semio_framework_3d::brep::operations::euler::{make_edge, make_vertex};
-use semio_framework_3d::brep::operations::primitives::make_polyline_wire;
-use semio_framework_3d::brep::representation::curve::Curve3;
-use semio_framework_3d::brep::representation::tolerance::Tol;
-use semio_framework_3d::brep::representation::vector::matrix::Frame3;
-use semio_framework_3d::brep::representation::topology::history::OpRecorder;
-use semio_framework_3d::brep::representation::topology::Body;
-use semio_framework_3d::brep::representation::vector::{Pnt3, Vec3 as KernelVec3};
+use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle, ShapeRoot, ShapeValue, ShapeWire};
+use semio_framework_3d_brep_operations::euler::{make_edge, make_vertex};
+use semio_framework_3d_brep_operations::primitives::make_polyline_wire;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as KernelVec3};
 use std::f64::consts::TAU;
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Arc;

@@ -437,7 +437,7 @@
                     "properties": {
                       "child": {
                         "type": "object",
-                        "description": "store::ArtifactChild handle into s.stdio.semio@v1/image.",
+                        "description": "store::os_store::artifact_child::ArtifactChild handle into s.stdio.semio@v1/image.",
                         "required": [
                           "childId",
                           "target"

@@ -36,19 +36,19 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_s_artifact_stdio_csv::standards::v_rfc4180::subsets::any::io::text::snapshot::decode_csv;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::{diff_semio_table_mutation, inverse_semio_table_mutation, SemioTableMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::mutations::{decode_semio_table_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::binary::snapshot::{decode_semio_table_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::binary::snapshot::{encode_semio_table_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{print_semio_table_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{parse_semio_table_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{decode_semio_table_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::io::text::snapshot::{encode_semio_table_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_table::schema::mutations::{diff_semio_table_mutation, inverse_semio_table_mutation, SemioTableMutation};
+    use semio_s_artifact_stdio_semio_table::io::text::mutations::decode_semio_table_mutation_json;
+    use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+    use semio_s_artifact_stdio_semio_table::io::binary::snapshot::decode_semio_table_pack;
+    use semio_s_artifact_stdio_semio_table::io::binary::snapshot::encode_semio_table_pack;
+    use semio_s_artifact_stdio_semio_table::io::text::snapshot::print_semio_table_dsl;
+    use semio_s_artifact_stdio_semio_table::io::text::snapshot::parse_semio_table_dsl;
+    use semio_s_artifact_stdio_semio_table::io::text::snapshot::decode_semio_table_snapshot_json;
+    use semio_s_artifact_stdio_semio_table::io::text::snapshot::encode_semio_table_snapshot_json;
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Input

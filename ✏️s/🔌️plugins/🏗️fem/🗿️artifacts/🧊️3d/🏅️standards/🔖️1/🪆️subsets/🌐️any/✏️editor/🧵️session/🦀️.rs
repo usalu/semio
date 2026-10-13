@@ -496,8 +496,8 @@ const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
     size_of::<SubspaceIterationJob>(),
     size_of::<Fem3dPageVisualJob>(),
     size_of::<Fem3dPageVisualLease>(),
-    size_of::<store::SnapshotRead<Fem3dSnapshot>>(),
-    size_of::<store::SnapshotReadReturn>(),
+    size_of::<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>(),
+    size_of::<store::os_store::snapshot_read::SnapshotReadReturn>(),
 ]);
 
 struct Fem3dMeshedSolid {
@@ -2949,8 +2949,8 @@ impl MountedRecoverySlot {
 
 struct MountedState {
     identity: Identity,
-    snapshot: Option<store::SnapshotRead<Fem3dSnapshot>>,
-    snapshot_return: Option<store::SnapshotReadReturn>,
+    snapshot: Option<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>,
+    snapshot_return: Option<store::os_store::snapshot_read::SnapshotReadReturn>,
     cancel: semio_framework_job::CancelToken,
     preview_sequence: u64,
     credit: Fem3dPageCredit,
@@ -2967,7 +2967,7 @@ struct MountedState {
 }
 
 impl MountedState {
-    fn new(identity: Identity, snapshot: store::SnapshotRead<Fem3dSnapshot>, current: Option<Fem3dPageVisualLease>, credit: Fem3dPageCredit, recovery: Rc<MountedRecoverySlot>) -> Self {
+    fn new(identity: Identity, snapshot: store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>, current: Option<Fem3dPageVisualLease>, credit: Fem3dPageCredit, recovery: Rc<MountedRecoverySlot>) -> Self {
         let solver = Fem3dSolverView::new(identity.freshness(0), snapshot.nodes.len());
         Self {
             identity,
@@ -3152,13 +3152,13 @@ impl MountedState {
                         return PluginLifecycleStep::Blocked { reason: "FEM3D snapshot already returned" };
                     };
                     self.snapshot_return = Some(witness);
-                    return session_pending(1, size_of::<store::SnapshotRead<Fem3dSnapshot>>());
+                    return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem3dSnapshot>>());
                 }
                 if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
                     return session_pending(0, 0);
                 }
                 if self.snapshot_return.take().is_some() {
-                    return session_pending(1, size_of::<store::SnapshotReadReturn>());
+                    return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>());
                 }
                 self.close_lane = 6;
                 session_pending(1, 0)

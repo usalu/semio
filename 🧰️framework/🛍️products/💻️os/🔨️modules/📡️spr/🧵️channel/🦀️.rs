@@ -1417,7 +1417,7 @@ pub enum AppCommand {
     Command {
         seq: u64,
         command: Vec<u8>,
-        /// 🗣️ Packed `ViewModel` (see `crate::os_store::pack_rt`) the client wants this command evaluated against.
+        /// 🗣️ Packed `ViewModel` (see `crate::os_pack::pack_rt`) the client wants this command evaluated against.
         view_state: Vec<u8>,
     },
     CommandText {

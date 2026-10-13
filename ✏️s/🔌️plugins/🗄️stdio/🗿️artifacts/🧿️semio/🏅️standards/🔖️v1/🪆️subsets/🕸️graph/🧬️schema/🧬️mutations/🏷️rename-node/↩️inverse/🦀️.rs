@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RenameNode`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `rename-node` from the new id back to the old one (the edge cascade follows it back); nothing

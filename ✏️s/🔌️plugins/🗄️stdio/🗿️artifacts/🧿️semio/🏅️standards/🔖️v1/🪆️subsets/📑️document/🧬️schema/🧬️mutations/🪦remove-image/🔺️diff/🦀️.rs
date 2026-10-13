@@ -10,7 +10,7 @@ pub fn diff(payload: &super::RemoveImage, base: &SemioDocumentSnapshot) -> proto
     }
     let super::RemoveImage { id } = payload;
     protocol::MutationOutcome::new({
-        SemioDocumentDiff { styles: None, images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
+        SemioDocumentDiff { styles: None, images: Some(crate::schema::diff::ImagesDiff { removed: vec![id.clone()], ..Default::default() }), blocks: None }
     })
 }
 //#endregion 🔖️Diff

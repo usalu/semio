@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
@@ -16,7 +16,7 @@ fn full(index: usize) -> DagSnapshot {
     let dialect = &target["dialect"];
     DagSnapshot {
         schema: row["schema"].as_str().unwrap().into(),
-        content: store::ArtifactChild::new(
+        content: store::os_store::artifact_child::ArtifactChild::new(
             child["childId"].as_str().unwrap().into(),
             semio_framework_artifact_reference::ArtifactRef {
                 artifact_id: target["artifactId"].as_str().unwrap().into(),
@@ -107,7 +107,7 @@ fn sqlite_snapshot_dag_independent_sqlite_interprets_literal_two_table_parent() 
 #[test]
 fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns() {
     use store::sqlite_snapshot::*;
-    let codec = store::ArtifactCodec::bare::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA).snapshot_sqlite.expect("missing DAG parent capability");
+    let codec = store::bare_artifact_codec::<DagSnapshot, DagMutation>(DAG_DOCUMENT_SCHEMA).snapshot_sqlite.expect("missing DAG parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.dag.dag".into(), standard: "1".into(), subset: "*".into() };
     for index in 0..3 {
         let expected = Owned::new(full(index));
@@ -138,7 +138,7 @@ fn sqlite_snapshot_dag_actual_erased_binary_text_keeps_all_literal_child_columns
 #[test]
 fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let value = Owned::new(full(0));
     let exact = SqliteDatabaseLimits { max_rows: 2, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 1, ..Default::default() };
@@ -175,7 +175,7 @@ fn sqlite_snapshot_dag_actual_semantic_rows_admit_exact_count_and_cancel_all_cop
 #[test]
 fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let value = Owned::new(full(2));
     let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|value.to_sqlite_database(sqlite_control)).unwrap();
     for change in 0..4 {
@@ -197,7 +197,7 @@ fn sqlite_snapshot_dag_owned_relationship_and_dialect_edits_are_rejected() {
 fn sqlite_snapshot_dag_independent_sqlite_edits_reconstruct_literal_parent() {
     use std::io::Write;
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let expected = Owned::new(full(2));
     let database = original_owners::with_sqlite_recipient(Default::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, Default::default(), &mut |_| true).unwrap();

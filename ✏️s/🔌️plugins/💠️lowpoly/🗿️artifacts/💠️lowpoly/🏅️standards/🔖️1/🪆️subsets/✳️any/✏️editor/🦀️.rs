@@ -66,7 +66,7 @@ use semio_framework_plugin::WindowEngagementPossible;
 use semio_framework_plugin::WindowEngagementStatus;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -1245,16 +1245,16 @@ fn lowpoly_artifact_mutation_retained_bytes(mutation: &LowpolyMutation) -> Resul
 /// 🧺️ One forward row plus the leaf's derived inverse rows. A relative leaf's inverse carries what the base held — a
 /// stroke's overwritten pixels, a selection motion's prior mesh content — which preflight never sees, so it declares the
 /// lane's whole one-item byte envelope; every other inverse is bounded by its forward twin.
-fn admit_lowpoly_artifact_mutation(mutation: &LowpolyMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_lowpoly_artifact_mutation(mutation: &LowpolyMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = lowpoly_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("Lowpoly Artifact mutation exceeds its fixed retained preparation envelope".into());
     }
     let inverse_bytes = match mutation {
-        LowpolyMutation::ApplyPaintStroke(_) | LowpolyMutation::MoveSelection(_) | LowpolyMutation::RotateSelection(_) | LowpolyMutation::ScaleSelection(_) => store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES.saturating_sub(retained_bytes),
+        LowpolyMutation::ApplyPaintStroke(_) | LowpolyMutation::MoveSelection(_) | LowpolyMutation::RotateSelection(_) | LowpolyMutation::ScaleSelection(_) => store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES.saturating_sub(retained_bytes),
         _ => retained_bytes,
     };
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes.saturating_add(inverse_bytes)))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes.saturating_add(inverse_bytes)))
 }
 
 fn lowpoly_refusal(message: impl Into<String>) -> semio_framework_value::ValueError {
@@ -1290,12 +1290,12 @@ fn lowpoly_config_mutation_retained_bytes(mutation: &LowpolyConfigMutation) -> u
 }
 
 /// 🧺️ One forward row plus its point inverse, whose bytes (for `create-mesh` the prior content too) the forward twin bounds.
-fn admit_lowpoly_config_mutation(mutation: &LowpolyConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_lowpoly_config_mutation(mutation: &LowpolyConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = lowpoly_config_mutation_retained_bytes(mutation);
     if retained_bytes > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
         return Err("Lowpoly config mutation exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes.saturating_mul(2)))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes.saturating_mul(2)))
 }
 
 fn prepare_lowpoly_config(base: &LowpolyConfig, mutation: &LowpolyConfigMutation) -> Result<(LowpolyConfig, Vec<LowpolyConfigMutation>), semio_framework_value::ValueError> {
@@ -1316,45 +1316,45 @@ struct LowpolyArtifactStorePreparationFactory;
 
 struct LowpolyArtifactStorePreparation {
     owners: store::OneItemOwners<LowpolySnapshot, LowpolyMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<LowpolySnapshot, LowpolyMutation> for LowpolyArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<LowpolySnapshot, LowpolyMutation> for LowpolyArtifactStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<LowpolyMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<LowpolyMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &LowpolyMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &LowpolyMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Lowpoly Artifact preparation rejected its lane".into());
         }
         admit_lowpoly_artifact_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &LowpolyMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &LowpolyMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<LowpolyArtifactStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES || lowpoly_artifact_mutation_retained_bytes(&request.mutation).map_or(true, |bytes| bytes > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES) || !lowpoly_snapshot_admitted(request.base.get()) {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<LowpolySnapshot, LowpolyMutation, LowpolyMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES || lowpoly_artifact_mutation_retained_bytes(&request.mutation).map_or(true, |bytes| bytes > LOWPOLY_ARTIFACT_STORE_MAXIMUM_BYTES) || !lowpoly_snapshot_admitted(request.base.get()) {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly Artifact preparation rejected original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(LowpolyArtifactStorePreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> for LowpolyArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> for LowpolyArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly Artifact preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly Artifact preparation lost its mutation owner"))?;
         let retained_bytes = lowpoly_artifact_mutation_retained_bytes(mutation).unwrap_or(0);
@@ -1366,17 +1366,17 @@ impl store::ArtifactStoreOneItemPreparation<LowpolySnapshot, LowpolyMutation> fo
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<LowpolySnapshot, LowpolyMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<LowpolySnapshot, LowpolyMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<LowpolySnapshot, LowpolyMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<LowpolySnapshot, LowpolyMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -1389,45 +1389,45 @@ struct LowpolyConfigStorePreparationFactory;
 
 struct LowpolyConfigStorePreparation {
     owners: store::OneItemOwners<LowpolyConfig, LowpolyConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<LowpolyConfig, LowpolyConfigMutation> for LowpolyConfigStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<LowpolyConfig, LowpolyConfigMutation> for LowpolyConfigStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<LowpolyConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<LowpolyConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &LowpolyConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &LowpolyConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Lowpoly config preparation rejected its lane".into());
         }
         admit_lowpoly_config_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &LowpolyConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &LowpolyConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<LowpolyConfigStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES || lowpoly_config_mutation_retained_bytes(&request.mutation) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES || lowpoly_config_retained_bytes(request.base.get()) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<LowpolyConfig, LowpolyConfigMutation, LowpolyConfigMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES || lowpoly_config_mutation_retained_bytes(&request.mutation) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES || lowpoly_config_retained_bytes(request.base.get()) > LOWPOLY_CONFIG_STORE_MAXIMUM_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly config preparation rejected original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(LowpolyConfigStorePreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation> for LowpolyConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation> for LowpolyConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly config preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Lowpoly config preparation lost its mutation owner"))?;
         let retained_bytes = lowpoly_config_mutation_retained_bytes(mutation);
@@ -1439,17 +1439,17 @@ impl store::ArtifactStoreOneItemPreparation<LowpolyConfig, LowpolyConfigMutation
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<LowpolyConfig, LowpolyConfigMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<LowpolyConfig, LowpolyConfigMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<LowpolyConfig, LowpolyConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<LowpolyConfig, LowpolyConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -1556,11 +1556,11 @@ impl ArtifactEditor for LowpolyPlayApp {
         }
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(LowpolyArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(LowpolyConfigStorePreparationFactory))
     }
 
@@ -1860,14 +1860,14 @@ impl ArtifactEditor for LowpolyPlayApp {
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
 /// `"mesh:in"`/`"artifact:in"` above, `commands::document::{set_snapshot_json,replace_snapshot_json}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
-/// (`store::empty_document_spr`, the `🏗️fem`/process3d shape) — never a live `ArtifactEnvelope`
+/// (`store::os_store::text_format::empty_document_spr`, the `🏗️fem`/process3d shape) — never a live `ArtifactEnvelope`
 /// minted just to print it: such an envelope owns a bounded retirement authority, and dropping it at
 /// the end of this function trapped the guest (`artifact envelope terminal shell reached Drop before
 /// its app-owned bounded retirement authority detached every nested owner`) on every mesh import and
 /// `replaceSnapshotJson` (ticket 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
 pub fn reset_document_effect(scene: &LowpolySnapshot) -> semio_framework_plugin::Effect {
     let pack = <LowpolySnapshot as ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("lowpoly", LOWPOLY_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("lowpoly", LOWPOLY_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

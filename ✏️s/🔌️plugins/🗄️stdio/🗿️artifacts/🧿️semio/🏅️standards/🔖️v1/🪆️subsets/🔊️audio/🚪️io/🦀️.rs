@@ -4,30 +4,14 @@
 //! `🦀️.rs`, a closer-only hot file) via `#[path=...]` relative to this file's own directory.
 //! Registration flows through `🎹️composer::register`.
 
-#[cfg(feature = "conversion-audio")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️.rs"]
-pub mod mp3_deserializer;
-#[cfg(feature = "conversion-audio")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🎵️mp3/🔖️mpeg1-layer3/✳️any/🦀️.rs"]
-pub mod mp3_serializer;
-#[cfg(feature = "conversion-audio")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️.rs"]
-pub mod wav_deserializer;
-#[cfg(feature = "conversion-audio")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🔊️wav/🔖️riff-pcm/✳️any/🦀️.rs"]
-pub mod wav_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-audio")]
-    use crate::standards::v1::subsets::audio::io::{mp3_deserializer::SemioAudioFromMp3, mp3_serializer::SemioAudioToMp3, wav_deserializer::SemioAudioFromWav, wav_serializer::SemioAudioToWav};
-    use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-    use crate::standards::v1::subsets::audio::io::SemioAudioAnalyzer;
+    use crate::schema::snapshot::SemioAudioSnapshot;
+    use crate::io::SemioAudioAnalyzer;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::FaultScope;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    #[cfg(feature = "conversion-audio")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of, io::ComposerEntry};
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") };
@@ -108,8 +92,8 @@ use semio_framework_diagnostic::TextSpan;
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_semio_audio_invariants(&snapshot),
@@ -139,14 +123,12 @@ use semio_framework_diagnostic::TextSpan;
     /// artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") }, store::ArtifactCodec::of::<SemioAudioSnapshot, crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(
-            crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_audio_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") }, store::artifact_codec::<SemioAudioSnapshot, crate::schema::mutations::SemioAudioMutation>(
+            crate::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-audio")]
-        register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -155,15 +137,10 @@ use semio_framework_diagnostic::TextSpan;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::audio::schema::semio_audio_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioAudioSnapshot, crate::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation>(crate::standards::v1::subsets::audio::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") })
+            .schemas([crate::schema::semio_audio_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioAudioSnapshot, crate::schema::mutations::SemioAudioMutation>(crate::schema::snapshot::STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("audio") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-audio")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(bridge_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_audio_artifact_inference_descriptor()]);
         builder
     }
 
@@ -172,21 +149,13 @@ use semio_framework_diagnostic::TextSpan;
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::audio::schema::inferences::semio_audio_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_audio_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
-    /// 🌉️ audio↔mp3 / audio↔wav bridge entries (W4) -- forward + reverse rows per pair, giving all 4
-    /// IoKeys per pair per the master plan's io architecture note.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-audio")]
-    fn bridge_entries() -> &'static [ComposerEntry] {
-        static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioAudioFromMp3>(), serializer_entry_of::<SemioAudioToMp3>(), deserializer_entry_of::<SemioAudioFromWav>(), serializer_entry_of::<SemioAudioToWav>()]).as_slice()
-    }
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(all(test, feature = "conversion-audio"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
@@ -203,11 +172,11 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::audio::schema::diff::SemioAudioDiff;
-    use crate::standards::v1::subsets::audio::schema::mutations::{SemioAudioMutation};
+    use crate::schema::diff::SemioAudioDiff;
+    use crate::schema::mutations::SemioAudioMutation;
     #[cfg(test)]
-    use crate::standards::v1::subsets::audio::schema::mutations::{insert_channel, set_format, set_sample_rate};
-    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+    use crate::schema::mutations::{insert_channel, set_format, set_sample_rate};
+    use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
     use semio_framework_plugin::ArtifactBuilder;
 
     //#region 🔖️Builder
@@ -261,10 +230,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioAudioMutation as protocol::Mutation<SemioAudioSnapshot>>::diff(&mutation, &self.snapshot);
@@ -291,7 +260,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioAudioSnapshot, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     //#region 🔖️Parts
@@ -334,14 +303,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

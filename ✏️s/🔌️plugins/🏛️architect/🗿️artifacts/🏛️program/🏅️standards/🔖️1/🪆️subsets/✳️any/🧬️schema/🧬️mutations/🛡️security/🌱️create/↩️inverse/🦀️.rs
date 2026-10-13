@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `🛡️security` per Wave C.
 
-use crate::ProgramMutation;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ↩️ Undo a create by deleting the row it added.
 pub fn inverse(payload: &super::CreateSecurityRequirement, _base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {

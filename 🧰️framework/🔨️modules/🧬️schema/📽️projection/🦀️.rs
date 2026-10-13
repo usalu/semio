@@ -1108,16 +1108,7 @@ export type OsMediaCapability = "meshOnly" | "brep";"####,
  * Nothing constructs or reads one yet in this packet: additive contract only (packet
  * A2-abi-sdk's builder wiring and E1-describe's emitter/registry `check` gate consume it next).
  */
-export type PackageDescriptor = { descriptorVersion: number, role: PackageRole, manifest: PluginManifest, activationEvents: Array<ActivationEvent>, capabilityRequests: Array<CapabilityRequest>, extensionPoints: Array<ExtensionPointDeclaration>, execution: ExecutionMode, quotas: QuotaSchema, contributions: ContributionSet, assets: Array<AssetDeclaration>, hashes: PackageHashes, };"####,
-        },
-        SchemaMetadata {
-            name: "PackageHashes",
-            version: 1,
-            typescript: r####"/**
- * #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
- * `📓️design-abi.md` §3.
- */
-export type PackageHashes = { wasmSha256: string, coreWasmSha256: string, descriptorSha256: string, };"####,
+export type PackageDescriptor = { descriptorVersion: number, role: PackageRole, manifest: PluginManifest, activationEvents: Array<ActivationEvent>, capabilityRequests: Array<CapabilityRequest>, extensionPoints: Array<ExtensionPointDeclaration>, execution: ExecutionMode, quotas: QuotaSchema, contributions: ContributionSet, assets: Array<AssetDeclaration>, };"####,
         },
         SchemaMetadata {
             name: "PackageRole",
@@ -1535,7 +1526,7 @@ recordedAt?: string, };"####,
             name: "TutorialDocumentEvent",
             version: 1,
             typescript: r####"/**
- * 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
+ * 🖋️ One document-track entry — mirrors `store::os_store::store_schema::ArtifactCommand` with `Mutation =
  * serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
  * diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
  * annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic

@@ -15,7 +15,6 @@ workspace = true
 
 [lib]
 name = "semio_framework_math"
-crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]

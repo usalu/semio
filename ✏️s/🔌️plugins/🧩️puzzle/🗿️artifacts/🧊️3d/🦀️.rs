@@ -866,7 +866,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
         ("s.puzzle.puzzle3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
         ("s.puzzle.puzzle3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle3dPlayApp>>()` derives
-        // its extension claim from `<Puzzle3dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Puzzle3dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle3d-play"`, not the base `Puzzle3dSnapshot`'s `"puzzle3d"`.
         ("s.puzzle.puzzle3d.codec.document-1", "codec", "puzzle.3d:puzzle3d-play", &[("codec", "puzzle.3d"), ("codec-extension", "9:puzzle.3d:puzzle3d-play")], None),

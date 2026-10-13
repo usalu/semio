@@ -8,8 +8,8 @@ use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
 use semio_framework_pack_json::{self as json, Value};
 use semio_framework_tool_machine::{node_drag_emit, NodeDragRecord, NodeGraphEditRow};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️NodeGraphEdit
 pub mod node_graph_edit {

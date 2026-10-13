@@ -22,7 +22,7 @@ required-features = ["component-app-assembly"]
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -47,7 +47,7 @@ semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-kit = { workspace = true }
 semio-s-artifact-stdio-zip = { workspace = true }
 pack = { workspace = true }
 serde = { workspace = true }

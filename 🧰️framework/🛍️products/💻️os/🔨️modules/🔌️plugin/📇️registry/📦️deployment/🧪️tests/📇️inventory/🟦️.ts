@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import Ajv from "ajv";
 import emojiRegex from "emoji-regex";
 import { build } from "esbuild";
+import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import schema from "../../🧬️schema/🔣️.json";
 import extensionSchema from "../../../../../../../../🔨️modules/🪪️identity/📁️installation/🧬️schema/🔣️.json";
@@ -46,18 +47,18 @@ describe("explicit deployment inventory", () => {
       const entries: DeployedRegistryEntryV1[] = row.input.modules.map(({ pluginId, directoryName }) => parseDeployedRegistryEntryV1({
         pluginId, directoryName, packageId: `semio:${pluginId}`, packageName: `future-${pluginId}`,
         cratePath: `future/${pluginId}/📦️packages/🦀️rust`, wasmOut: `future_${pluginId}.wasm`, role: "plugin",
-        capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes: {"wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000", "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000", "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"},
+        capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated",
       }));
       const source = emitTypeScript(entries, entries.map(({pluginId,directoryName}) => ({pluginId,directoryName})));
       const assertion = `\nif(JSON.stringify(COMPONENT_MODULE_DIRECTORIES)!==${JSON.stringify(JSON.stringify(row.input.modules))})throw Error("Inventory drift");\nlet actual=null;try{actual=pluginModuleUrl(${JSON.stringify(row.query)})}catch{}\nif(actual!==${JSON.stringify(row.expected === null ? null : `/🔌️plugin-modules/${row.expected}/🌉️bridge.js`)})throw Error("Owner route drift");\nconsole.log("[DEBUG] Independent generated inventory ${row.id}");`;
       const executable = source.replace('"../../📦️deployment/🟦️.ts"', JSON.stringify(runtimePath)).replace("\"../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts\"", JSON.stringify(resolve(resolveDir, "../../../../../../../🔨️modules/🪪️identity/📁️installation/🟦️.ts"))) + assertion;
-      const actual = Bun.spawnSync(["bun", "run", "-"], { stdin: Buffer.from(executable), stdout: "pipe", stderr: "pipe" });
-      expect(actual.exitCode, Buffer.from(actual.stderr).toString()).toBe(0);
-      expect(Buffer.from(actual.stdout).toString()).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
+      const actual = spawnSync("bun", ["run", "-"], { input: executable, encoding: "utf8" });
+      expect(actual.status, actual.stderr).toBe(0);
+      expect(actual.stdout).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
       const independent = await build({ stdin: { contents: source + assertion, resolveDir, loader: "ts" }, bundle: true, platform: "node", format: "esm", write: false });
-      const result = Bun.spawnSync(["node", "--input-type=module", "-e", independent.outputFiles![0]!.text], { stdout: "pipe", stderr: "pipe" });
-      expect(result.exitCode, Buffer.from(result.stderr).toString()).toBe(0);
-      expect(Buffer.from(result.stdout).toString()).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
+      const result = spawnSync("node", ["--input-type=module", "-e", independent.outputFiles![0]!.text], { encoding: "utf8" });
+      expect(result.status, result.stderr).toBe(0);
+      expect(result.stdout).toContain(`[DEBUG] Independent generated inventory ${row.id}`);
     }
   });
 });

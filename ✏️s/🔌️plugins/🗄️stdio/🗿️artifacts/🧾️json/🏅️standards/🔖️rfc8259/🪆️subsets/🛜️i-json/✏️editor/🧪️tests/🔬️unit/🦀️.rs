@@ -141,7 +141,7 @@ async fn kit_fixture_holding(document: &JsonSnapshot) -> KitFixtureApp {
     register_document_schema();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<JsonIJsonEditor>, _>(async { semio_framework_plugin::App { definition: create_json_i_json_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_JSON_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
     app
 }
 
@@ -167,8 +167,8 @@ async fn the_kit_verb_edits_the_document_through_its_exact_retained_factory() {
     let node_id = main::encode_path_id(&[main::member_segment(id_index)]);
     let revision = semio_s_artifact_stdio_contract::window_kit_canonical_revision(app.test_document_revision());
     dispatch_settled(&mut app, "set-node", &[("nodeId", &node_id), ("revision", &revision), ("value", "\"semio.stdio.i-json.edited\"")]).await.expect("set-node settles");
-    let printed = <JsonSnapshot as store::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
-    let restored=<JsonSnapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[id_index].value,JsonValue::String{value:"semio.stdio.i-json.edited".into()});
+    let printed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&app.snapshot().expect("json snapshot"));
+    let restored=<JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("owned logical edit payload");assert_eq!(restored,app.snapshot().expect("json snapshot"));let JsonValue::Object{members}=&restored.value else{panic!("edited object")};assert_eq!(members[id_index].value,JsonValue::String{value:"semio.stdio.i-json.edited".into()});
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 //#endregion 🪟️KitVerbLaws

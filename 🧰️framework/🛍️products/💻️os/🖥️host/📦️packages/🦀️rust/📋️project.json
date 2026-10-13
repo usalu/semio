@@ -17,6 +17,9 @@
       "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🎚️config/**/*.json",
       "{projectRoot}/**/*",
       "{workspaceRoot}/🧰️framework/🔨️modules/🔏️hash/🟦️.ts"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🖥️host/🧩️component/**/*"
     ]
   },
   "targets": {
@@ -176,27 +179,6 @@
       "dependsOn": [
         "wasm"
       ]
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bun 📜️script.ts test quick",
-        "cwd": "{projectRoot}"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bun 📜️script.ts test long",
-        "cwd": "{projectRoot}"
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bun 📜️script.ts test exhaustive",
-        "cwd": "{projectRoot}"
-      }
     }
   }
 }

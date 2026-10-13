@@ -7,8 +7,8 @@
 //! `DocBlock` node (table cells included); `wordCount` is a whitespace-split word count over every
 //! Paragraph/Heading run's text plus every Code block's literal text plus every slide's notes.
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun};
-use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, SlideShape};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun};
+use crate::schema::snapshot::{SemioPresentationSnapshot, SlideShape};
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened run text.

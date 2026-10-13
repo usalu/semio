@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `CreateLayer`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

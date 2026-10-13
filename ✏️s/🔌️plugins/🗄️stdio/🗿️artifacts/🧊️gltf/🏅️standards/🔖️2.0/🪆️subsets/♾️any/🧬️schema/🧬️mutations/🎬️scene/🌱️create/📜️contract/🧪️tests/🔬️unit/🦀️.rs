@@ -1,5 +1,5 @@
-use crate::schema::mutations::contract_tests::{assert_laws, decode, scene_snapshot};
-use crate::schema::mutations::create_scene as mutation;
+use crate::standards::v2_0::subsets::any::schema::mutations::contract_tests::{assert_laws, decode, scene_snapshot};
+use crate::standards::v2_0::subsets::any::schema::mutations::create_scene as mutation;
 
 #[test]
 fn canonical_vectors_execute_direct_mutation_and_codec_laws() {

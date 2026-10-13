@@ -611,7 +611,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     let mut snapshot = crate::standards::v1::subsets::any::io::text::snapshot::default_document();
     snapshot.name = "\u{1f642}\n".repeat(MAX_LAYOUT_EXPORT_STRING_BYTES / 5);
     snapshot.background_drawing =
-        Some(crate::LayoutDrawingChild { handle: store::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
+        Some(crate::LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("drawing-child".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/drawing").expect("child reference")), content: Default::default() });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("document!s.stdio.semio@v1/model").expect("model reference"), pin: store::LinkPin::Head, role: "model".into() });
     let expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&snapshot)).expect("independent document JSON oracle");
     let mut cursor = TypedJsonCursor::document();
@@ -921,8 +921,8 @@ fn pdf_export_omits_a_frame_on_a_hidden_layer() {
 
 #[test]
 fn pdf_export_prints_the_background_drawing() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
@@ -960,8 +960,8 @@ fn pdf_export_prints_the_background_drawing() {
 
 #[test]
 fn pdf_export_prints_a_styled_plan_stroke() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
@@ -1011,8 +1011,8 @@ fn pdf_export_prints_a_styled_plan_stroke() {
 
 #[test]
 fn pdf_export_prints_a_filled_plan_path() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
@@ -1060,8 +1060,8 @@ fn pdf_export_prints_a_filled_plan_path() {
 
 #[test]
 fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
@@ -1099,8 +1099,8 @@ fn pdf_export_prints_a_placed_drawing_inside_its_frame() {
 
 #[test]
 fn pdf_export_prints_drawing_text() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),
@@ -1145,8 +1145,8 @@ fn pdf_export_prints_drawing_text() {
 
 #[test]
 fn pdf_export_prints_an_embedded_drawing_png() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
@@ -1187,8 +1187,8 @@ fn pdf_export_prints_an_embedded_drawing_png() {
 
 #[test]
 fn pdf_export_prints_a_rotated_drawing_png() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;
@@ -1234,8 +1234,8 @@ fn pdf_export_prints_edited_drawing_text() {
     use crate::mutations::set_drawing_text::SetDrawingText;
     use crate::mutations::LayoutMutation;
     use protocol::{Mutation, MutationDiff};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let content = SemioDrawingSnapshot {
         schema: "stdio.semio.drawing".into(),

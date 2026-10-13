@@ -119,7 +119,7 @@ pub fn handle(payload: &NodeGraphEdit, doc: &ArtifactView<'_, DagSnapshot>, _cfg
 /// yielded is the empty emit (zero trace).
 pub(crate) fn dag_node_drag_emit(doc: &ArtifactView<'_, DagSnapshot>, verb: &str, gesture: &str, leaves: Vec<SemioGraphMutation>) -> Emit<DagMutation, DagConfigMutation> {
     let drag = node_drag_emit(DAG_PLAY_APP_ID, verb, doc.operation_optional().map_or("", |operation| operation.authoring_seed.as_str()), gesture, leaves);
-    Emit::node_drag_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot, _>(drag, "content", &doc.snapshot.content.child_id)
+    Emit::node_drag_child::<semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot, _>(drag, "content", &doc.snapshot.content.child_id)
 }
 
 //#region 🧪️Tests

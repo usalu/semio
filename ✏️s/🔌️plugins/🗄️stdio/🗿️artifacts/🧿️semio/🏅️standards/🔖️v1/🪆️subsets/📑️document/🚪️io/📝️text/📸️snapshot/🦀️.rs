@@ -5,16 +5,16 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::document::schema::snapshot::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_image};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_image};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_style};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_style};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::io::text::diff::dec_image;
+use crate::io::text::diff::enc_image;
+use crate::io::text::diff::dec_style;
+use crate::io::text::diff::enc_style;
+use crate::io::text::diff::dec_block;
+use crate::io::text::diff::enc_block;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION document wave: real structured
@@ -73,7 +73,7 @@ pub(crate) fn parse_document_snapshot_body(body: &str) -> Result<SemioDocumentSn
 /// `#[value(tag = "kind")]` data-carrying enum with heterogeneous per-variant field sets — no
 /// `dsl::DslField`/`DslEnum` impl exists for it, and `IndexedTripleDiff<DocBlockDiff, DocBlock>`
 /// compounds the gap. Hand-rolled instead, matching `🔺️diff`'s already-hand-rolled convention.
-impl store::ArtifactDsl for SemioDocumentSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioDocumentSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA
@@ -89,25 +89,25 @@ impl store::ArtifactDsl for SemioDocumentSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_document_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioDocumentSnapshot`] — a thin
-/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `📃️mutate-semio-document` test adapter, which reads the
 /// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
 /// drive the same codec production does. Same rationale as `🧰️kit`'s `decode_kit_snapshot_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_document_dsl(text: &str) -> Result<SemioDocumentSnapshot, String> {
-    <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_document_dsl`] — same rationale.
+/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_document_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_document_dsl(snapshot: &SemioDocumentSnapshot) -> String {
-    <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
@@ -136,17 +136,17 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::document::schema::snapshot::*;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_image};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_image};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_style};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_style};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::io::text::diff::dec_image;
+use crate::io::text::diff::enc_image;
+use crate::io::text::diff::dec_style;
+use crate::io::text::diff::enc_style;
+use crate::io::text::diff::dec_block;
+use crate::io::text::diff::enc_block;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 use framework_schema::ArtifactSchema;
 
 

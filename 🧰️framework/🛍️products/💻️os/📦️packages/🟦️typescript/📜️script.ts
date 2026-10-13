@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { TEST_LEVEL_BUDGET_MS, resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` task router: `bun ./📜️script.ts test [quick|long|exhaustive] [args…]`. */
@@ -218,8 +219,8 @@ class MutationVerbVocabularyCheckScript extends BundleScript {
 }
 
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "../../tsconfig.json", ...segments], this.root);
+  async run(segments: string[]): Promise<void> {
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "../../tsconfig.json", owner: "os:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 

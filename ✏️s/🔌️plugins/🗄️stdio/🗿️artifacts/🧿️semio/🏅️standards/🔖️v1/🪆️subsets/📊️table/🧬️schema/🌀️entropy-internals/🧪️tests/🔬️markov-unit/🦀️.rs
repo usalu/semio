@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64;
+    use crate::schema::entropy_internals::numeric::Xorshift64;
 
     /// ⛓️ Generates a sequence from a hand-specified 2-state chain (`transition[i][j] = P(i -> j)`)
     /// starting at state 0, using a deterministic PRNG so tests are exactly reproducible.

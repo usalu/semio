@@ -82,7 +82,7 @@ pub fn inverse_raster_mutation(snapshot: &RasterSnapshot, mutation: &RasterMutat
     })
 }
 
-pub type RasterEnvelope = store::ArtifactEnvelope<RasterSnapshot, RasterMutation>;
+pub type RasterEnvelope = store::os_store::store_schema::ArtifactEnvelope<RasterSnapshot, RasterMutation>;
 pub type RasterStore = store::ArtifactStore<RasterSnapshot, RasterMutation>;
 //#endregion 🔖️Mutations
 

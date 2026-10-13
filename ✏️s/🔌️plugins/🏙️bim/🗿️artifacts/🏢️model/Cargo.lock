@@ -2203,7 +2203,6 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
 ]
 
 [[package]]
@@ -2975,6 +2974,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -3251,6 +3251,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",

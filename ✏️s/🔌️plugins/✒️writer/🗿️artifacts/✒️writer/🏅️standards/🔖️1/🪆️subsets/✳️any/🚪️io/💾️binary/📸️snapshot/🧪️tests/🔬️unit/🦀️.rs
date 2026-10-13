@@ -27,7 +27,7 @@ async fn writer_projection_dsl_pack_equivalence() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::op::WriterMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     // 🔐️ Through the owner-installing constructor: a bare `new` installs no catalog and
     // `reserve_edit_history_slot` then refuses every `Apply`
@@ -41,7 +41,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
 #[semio_framework_async_macros::async_test]
 async fn pack_schema_identity_is_the_derived_record_spec() {
-    let spec = <WriterSnapshot as store::ArtifactPack>::record_spec().expect("writer snapshot declares its record spec");
+    let spec = <WriterSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("writer snapshot declares its record spec");
     let hash = store::os_pack::schema_hash(&spec);
     assert_ne!(hash, [0u8; 32]);
     assert_eq!(hash, store::os_pack::schema_hash(&WriterSnapshot::__dsl_spec()));

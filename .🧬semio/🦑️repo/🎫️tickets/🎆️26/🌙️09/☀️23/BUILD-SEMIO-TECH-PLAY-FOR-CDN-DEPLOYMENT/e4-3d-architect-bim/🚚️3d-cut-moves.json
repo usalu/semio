@@ -1,0 +1,374 @@
+[
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation"
+  ],
+  "moves": [
+   {
+    "from": "crate::brep::representation",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::brep::representation",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::queries",
+    "to": "semio_framework_3d_brep_queries",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::operations",
+    "to": "semio_framework_3d_brep_operations",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::engine",
+    "to": "semio_framework_3d_brep_engine",
+    "names": "*"
+   },
+   {
+    "from": "crate::mesh",
+    "to": "semio_framework_3d::mesh",
+    "names": "*"
+   },
+   {
+    "from": "crate::inertia",
+    "to": "semio_framework_3d::inertia",
+    "names": "*"
+   },
+   {
+    "from": "crate::rigid",
+    "to": "semio_framework_3d::rigid",
+    "names": "*"
+   },
+   {
+    "from": "crate::collision",
+    "to": "semio_framework_3d::collision",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries"
+  ],
+  "moves": [
+   {
+    "from": "crate::brep::queries",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::brep::queries",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::representation",
+    "to": "semio_framework_3d_brep_representation",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::operations",
+    "to": "semio_framework_3d_brep_operations",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::engine",
+    "to": "semio_framework_3d_brep_engine",
+    "names": "*"
+   },
+   {
+    "from": "crate::mesh",
+    "to": "semio_framework_3d::mesh",
+    "names": "*"
+   },
+   {
+    "from": "crate::inertia",
+    "to": "semio_framework_3d::inertia",
+    "names": "*"
+   },
+   {
+    "from": "crate::rigid",
+    "to": "semio_framework_3d::rigid",
+    "names": "*"
+   },
+   {
+    "from": "crate::collision",
+    "to": "semio_framework_3d::collision",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations"
+  ],
+  "moves": [
+   {
+    "from": "crate::brep::operations",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::brep::operations",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::representation",
+    "to": "semio_framework_3d_brep_representation",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::queries",
+    "to": "semio_framework_3d_brep_queries",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::engine",
+    "to": "semio_framework_3d_brep_engine",
+    "names": "*"
+   },
+   {
+    "from": "crate::mesh",
+    "to": "semio_framework_3d::mesh",
+    "names": "*"
+   },
+   {
+    "from": "crate::inertia",
+    "to": "semio_framework_3d::inertia",
+    "names": "*"
+   },
+   {
+    "from": "crate::rigid",
+    "to": "semio_framework_3d::rigid",
+    "names": "*"
+   },
+   {
+    "from": "crate::collision",
+    "to": "semio_framework_3d::collision",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine"
+  ],
+  "moves": [
+   {
+    "from": "crate::brep::engine",
+    "to": "crate",
+    "names": "*"
+   },
+   {
+    "from": "$crate::brep::engine",
+    "to": "$crate",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::representation",
+    "to": "semio_framework_3d_brep_representation",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::queries",
+    "to": "semio_framework_3d_brep_queries",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::operations",
+    "to": "semio_framework_3d_brep_operations",
+    "names": "*"
+   },
+   {
+    "from": "crate::mesh",
+    "to": "semio_framework_3d::mesh",
+    "names": "*"
+   },
+   {
+    "from": "crate::inertia",
+    "to": "semio_framework_3d::inertia",
+    "names": "*"
+   },
+   {
+    "from": "crate::rigid",
+    "to": "semio_framework_3d::rigid",
+    "names": "*"
+   },
+   {
+    "from": "crate::collision",
+    "to": "semio_framework_3d::collision",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🧰️framework/🔨️modules/🧊️3d/🥽️mesh",
+   "🧰️framework/🔨️modules/🧊️3d/🌀️rigid",
+   "🧰️framework/🔨️modules/🧊️3d/🛞️inertia",
+   "🧰️framework/🔨️modules/🧊️3d/🧿️collision",
+   "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/🦀️.rs",
+   "🧰️framework/🔨️modules/🧊️3d/🧪️tests/🧰️support"
+  ],
+  "moves": [
+   {
+    "from": "crate::brep::representation",
+    "to": "semio_framework_3d_brep_representation",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::queries",
+    "to": "semio_framework_3d_brep_queries",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::operations",
+    "to": "semio_framework_3d_brep_operations",
+    "names": "*"
+   },
+   {
+    "from": "crate::brep::engine",
+    "to": "semio_framework_3d_brep_engine",
+    "names": "*"
+   }
+  ]
+ },
+ {
+  "files": [
+   "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/🏃️benches/⏱️brep-kernel.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/📐️brep-invoke/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧪️tests/🎒️mesh-session/🦀️.rs",
+   "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/♻️retention/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🌗️mesh-shading/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏗️brep-solid/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎯️brep-evaluate/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✅️analysis-check/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🛠️brep-feature/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✏️mesh-edit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🧰️oracle-support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧪️tests/🧰️construction-support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/💎️value/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔌️inputs/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🎚️mesh-component/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/↔️mesh-transform/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧊️brep-primitive/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔁️brep-transform/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🥽️mesh-primitive/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧱️mesh-support/🧪️tests/🧰️mesh-harness/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔗️brep-boolean/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔎️mesh-inspect/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/📏️analysis-measure/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/✂️brep-intersect/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🗺️mesh-uv/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⚙️compute/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🐚️brep-topology/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🔀️mesh-convert/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🏳️brep-surface/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧵️brep-sources/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/🧵️brep-sources/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📐️geometry/〰️brep-curve/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🗑️object/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🔷️mesh-edit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📤️media/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧵️uv/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/🧲️transform/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🌐️model/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧭️view/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧪️tests/🔌️mounted/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/📼️mesh-interchange/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🦀️.rs",
+   "✏️s/🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📐️geometry/💾️brep-interchange/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📌️panels/🗿️artifact/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🖌️session/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🔺️diff/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/🧪️tests/🧭️normal-channels/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧪️tests/🔬️export-concrete-forest-mesh/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/🧬️mutations/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "✏️s/🔌️plugins/💠️lowpoly/🗿️artifacts/💠️lowpoly/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🌊️session/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📐️step/🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/📐️geometry/🧪️tests/🔬️unit/🦀️.rs",
+   "🧰️framework/🛍️products/💻️os/🖥️host/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/✅validation-report/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⚙️engine/🕹️interaction/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/📸️snapshot/🔁️body/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📤️export/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🚪️io/📥️import/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📐️geometry/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🗺️geometry-import/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/🦀️.rs",
+   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/📸️snapshot/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🦀️.rs",
+   "✏️s/🔌️plugins/🏭️process/🗿️artifacts/🧊️process3d/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/💡️inferences/📐️geometry/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧪️tests/🔬️extension-guest-standalone/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🦀️.rs",
+   "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🥽️mesh/🧪️tests/🔬️unit/🦀️.rs",
+   "✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts/🧊️3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/⏳️precompute/📐️geometry/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "semio_framework_3d::brep::representation",
+    "to": "semio_framework_3d_brep_representation",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d::brep::queries",
+    "to": "semio_framework_3d_brep_queries",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d::brep::operations",
+    "to": "semio_framework_3d_brep_operations",
+    "names": "*"
+   },
+   {
+    "from": "semio_framework_3d::brep::engine",
+    "to": "semio_framework_3d_brep_engine",
+    "names": "*"
+   }
+  ]
+ }
+]

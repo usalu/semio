@@ -5,7 +5,7 @@ use semio_framework_value::{DslValue,Number};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(error:impl std::fmt::Display)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,error.to_string())}
 
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{FloatColumn,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{FloatColumn,NativeEncodingBound}}};
 #[path="📤️projection/🦀️.rs"]mod owned_projection;
 #[path="📥️reconstruction/🦀️.rs"]mod owned_reconstruction;
 const SCALAR:&[FloatColumn]=&[FloatColumn::Binary64(1)];

@@ -73,42 +73,6 @@
         "command": "bun ./📜️script.ts test-wgpu-world-terrain",
         "forwardAllArgs": true
       }
-    },
-    "test-quick": {
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default"
-      ],
-      "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
-      }
-    },
-    "test-long": {
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default"
-      ],
-      "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
-      }
-    },
-    "test-exhaustive": {
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default"
-      ],
-      "options": {
-        "cwd": ".",
-        "command": "bun \"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/📜️script.ts\" native cargo test --manifest \"🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/Cargo.toml\""
-      }
     }
   },
   "namedInputs": {

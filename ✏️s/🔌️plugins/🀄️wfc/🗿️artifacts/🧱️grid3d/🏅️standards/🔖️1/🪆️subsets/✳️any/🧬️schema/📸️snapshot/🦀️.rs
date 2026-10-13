@@ -10,7 +10,7 @@
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Ids
 pub const WFC_GRID3D_DOCUMENT_SCHEMA: &str = "s.wfc.grid3d";
@@ -54,7 +54,7 @@ pub struct Grid3dMesh {
 #[value(tag = "kind", rename_all = "camelCase")]
 pub enum Grid3dTileMedia {
     Mesh { mesh: Grid3dMesh },
-    MeshChild { child: store::ArtifactChild<SemioMeshSnapshot> },
+    MeshChild { child: store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> },
 }
 
 impl Default for Grid3dTileMedia {

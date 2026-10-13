@@ -7,10 +7,10 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.json"]
 }
 pub fn cad_to_wire(from: &crate::CadSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(from)
+    store::os_store::serialization::ArtifactPack::encode_pack(from)
 }
 pub fn cad_from_wire(bytes: &[u8]) -> Result<crate::CadSnapshot, store::PackError> {
-    <crate::CadSnapshot as store::ArtifactPack>::decode_pack(bytes)
+    <crate::CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -142,16 +142,16 @@ use semio_framework_value::DslValue;
 use semio_framework::mesh_io::MeshImporter;
 use semio_framework_plugin::{ArtifactDeserializer, ArtifactSerializer};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_brep_export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
+use semio_s_artifact_stdio_semio_brep_import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 #[cfg(test)]
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21};
 use semio_s_artifact_stdio_step::StepSnapshot;
 use semio_s_artifact_stdio_stl::standards::v_ascii::engine::encode_stl_binary;
@@ -373,16 +373,16 @@ pub fn import_glb_object(bytes: &[u8]) -> Option<CadImportedObject> {
 
 /// 🌉️ Transfers actual topology out of the importer before its local kernel is dropped.
 fn model_element_from_solid_handle(kernel: &Brep, kind: &str, handle: GeometryHandle) -> CadImportedObject {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioTransform;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
-    let geometry = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(kernel.representation());
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+    use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement};
+    let geometry = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::snapshot_from_body(kernel.representation());
     let element = SemioModelElement { id: kind.into(), class: ElementClass::Other { name: "spatial.shape.imported".into() }, placement: SemioTransform::identity(), geometry: GeometryRef::Brep { brep_id: handle.0 }, spatial_id: None, psets: Vec::new() };
     CadImportedObject { element, geometry }
 }
 
 /// 🧊️ Actual imported topology remains owned until its composed child publishes or cancels.
 pub struct CadImportedObject {
-    pub element: semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement,
+    pub element: semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement,
     pub geometry: SemioBrepSnapshot,
 }
 
@@ -518,7 +518,7 @@ pub fn cad_mesh_from_document(doc: &DslValue) -> Result<semio_framework_plugin::
 /// — the identical OBJ-text bridge every other native-geometry import path in this file already
 /// uses. A layer with no entities (or none that triangulate) contributes no object — never a
 /// fabricated placeholder.
-pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> crate::CadWorkingScene {
+pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> crate::CadWorkingScene {
     use crate::standards::v1::subsets::any::io::geometry_import::cad_object_from_mesh;
     use crate::standards::v1::subsets::any::schema::inferences::{cad_brep_kernel, next_cad_id};
     let mut kernel = cad_brep_kernel();
@@ -527,11 +527,11 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
         .iter()
         .enumerate()
         .filter_map(|(layer_index, layer)| {
-            let filtered = semio_s_artifact_stdio_dwg::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
+            let filtered = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing { layers: drawing.layers.clone(), entities: drawing.entities.iter().filter(|entity| entity.layer == layer_index).cloned().collect(), extmin: drawing.extmin, extmax: drawing.extmax };
             if filtered.entities.is_empty() {
                 return None;
             }
-            let mesh = semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&filtered);
+            let mesh = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&filtered);
             if mesh.indices.is_empty() || mesh.positions.is_empty() {
                 return None;
             }
@@ -549,7 +549,7 @@ pub fn cad_working_scene_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawi
 /// pure function CAN produce. An empty drawing retains the document's canonical empty-pane
 /// child; it contributes no imported object. Ticket
 /// `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 3.
-pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg::DwgDrawing) -> Result<DslValue, String> {
+pub fn cad_document_from_dwg(drawing: &semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<DslValue, String> {
     use crate::standards::v1::subsets::any::schema::geometry::semio_model_snapshot_from_objects;
     use crate::standards::v1::subsets::any::schema::inferences::default_document;
     use crate::{cad_model_child_handle, CadPaneId};
@@ -641,11 +641,11 @@ pub mod derived_construction {
         }
 
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
 
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<CadSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
@@ -700,14 +700,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <CadSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <CadSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

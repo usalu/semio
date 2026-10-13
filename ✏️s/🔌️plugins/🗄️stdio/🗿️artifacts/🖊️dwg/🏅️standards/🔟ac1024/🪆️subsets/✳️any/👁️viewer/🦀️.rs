@@ -4,8 +4,8 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
-use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use crate::viewer::dwg_ac1024::modes::view;
 use crate::viewer::dwg_ac1024::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;

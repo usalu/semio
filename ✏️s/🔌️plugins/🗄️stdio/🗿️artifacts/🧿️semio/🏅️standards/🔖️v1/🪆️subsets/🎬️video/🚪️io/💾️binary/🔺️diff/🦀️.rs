@@ -11,12 +11,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::video::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, enc_indexed_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, enc_indexed_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -139,6 +139,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::standards::v1::subsets::video::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bool, dec_bool, enc_list, dec_list, enc_kind, dec_kind, enc_rational, dec_rational, enc_sample, dec_sample, enc_stream, dec_stream, enc_sample_diff, dec_sample_diff, enc_samples_diff, dec_samples_diff, enc_stream_diff, dec_stream_diff, enc_streams_diff, dec_streams_diff};
+use crate::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_bool, dec_bool, enc_list, dec_list, enc_kind, dec_kind, enc_rational, dec_rational, enc_sample, dec_sample, enc_stream, dec_stream, enc_sample_diff, dec_sample_diff, enc_samples_diff, dec_samples_diff, enc_stream_diff, dec_stream_diff, enc_streams_diff, dec_streams_diff};
 }
 pub use diff_codec::*;

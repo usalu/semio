@@ -5,11 +5,11 @@
 //! the move as a REMOVED-plus-ADDED pair inside a single `frames` triple, which the shared
 //! `apply_indexed` replays in that order (modified, then removed descending, then added ascending)
 //! — that ordering is exactly why `2 -> 0` lands the frame first.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::move_frame;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::move_frame;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️move-frame/⏮️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀️move-frame/⏮️moves/📸️snapshot/➡️after/🔣️.json");
@@ -40,7 +40,7 @@ async fn moves_frame_two_to_the_head_of_the_sequence() {
     assert_eq!(produced.frames[0], base.frames[2], "the moved frame must sit first afterwards");
     assert_eq!((produced.frames[1].clone(), produced.frames[2].clone()), (base.frames[0].clone(), base.frames[1].clone()), "the frames it jumped over keep their relative order");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -53,9 +53,9 @@ async fn the_undo_move_frame_swaps_from_and_to() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::MoveFrame(move_frame::MoveFrame { from: 0, to: 2 })], "the undo of a 2 -> 0 move is a 0 -> 2 move");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "move-frame/moves-the-last-frame-to-the-front: the undo did not restore the before-snapshot");
 }

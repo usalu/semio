@@ -1,7 +1,7 @@
 //! 🧬️ SemioBrepArtifact schema — full artifact state, mirrors `SemioBrepSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
+use crate::schema::snapshot::{BrepCoedge, BrepEdge, BrepFace, BrepLoop, BrepShell, BrepSolid, BrepVertex, SemioBrepSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

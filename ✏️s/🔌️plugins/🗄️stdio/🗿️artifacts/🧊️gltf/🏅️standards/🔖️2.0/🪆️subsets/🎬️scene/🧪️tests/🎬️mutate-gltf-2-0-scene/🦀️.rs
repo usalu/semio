@@ -78,11 +78,45 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{inverse_specs, mutable_input, restored_members};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{bind_default_scene,bind_node_camera,bind_node_child,bind_node_mesh,bind_node_skin,bind_scene_root_node,change_node_extension_data,change_node_extra_data,change_node_morph_weights,change_node_name,change_node_transform,change_scene_extension_data,change_scene_extra_data,change_scene_name,create_node,create_scene,delete_node,delete_scene,move_node,move_node_child,move_node_parent,move_scene,move_scene_root_node,reorder_node_children,reorder_nodes,reorder_scene_root_nodes,reorder_scenes,unbind_default_scene,unbind_node_camera,unbind_node_child,unbind_node_mesh,unbind_node_skin,unbind_scene_root_node};
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::serialize_gltf_document;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_default_scene;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_node_camera;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_node_child;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_node_mesh;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_node_skin;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::bind_scene_root_node;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_node_extension_data;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_node_extra_data;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_node_morph_weights;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_node_name;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_node_transform;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_scene_extension_data;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_scene_extra_data;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::change_scene_name;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::create_node;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::create_scene;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::delete_node;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::delete_scene;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_node;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_node_child;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_node_parent;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_scene;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_scene_root_node;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::reorder_node_children;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::reorder_nodes;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::reorder_scene_root_nodes;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::reorder_scenes;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_default_scene;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_node_camera;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_node_child;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_node_mesh;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_node_skin;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_node;
 
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfJson, GltfSnapshot};
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params

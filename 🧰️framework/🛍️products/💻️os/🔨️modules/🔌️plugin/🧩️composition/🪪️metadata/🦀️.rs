@@ -5,13 +5,13 @@ mod private_child_metadata {
 
     #[derive(Clone, Copy)]
     pub(crate) struct PrivateChildMemberMetadataSource<'a> {
-        pub(crate) expected: &'a ArtifactRef,
-        pub(crate) parent_id: &'a str,
-        pub(crate) parent_dialect: &'a ArtifactDialect,
-        pub(crate) key: MemberKeyRef<'a>,
-        pub(crate) actor: &'a str,
-        pub(crate) transaction: Option<&'a protocol::TransactionRef>,
-        pub(crate) group_id: Option<&'a str>,
+        expected: &'a ArtifactRef,
+        parent_id: &'a str,
+        parent_dialect: &'a ArtifactDialect,
+        key: MemberKeyRef<'a>,
+        actor: &'a str,
+        transaction: Option<&'a protocol::TransactionRef>,
+        group_id: Option<&'a str>,
     }
 
     impl<'a> PrivateChildMemberMetadataSource<'a> {
@@ -21,7 +21,7 @@ mod private_child_metadata {
         }
     }
 
-    pub(crate) struct PrivateChildMemberMetadataParts {
+    struct PrivateChildMemberMetadataParts {
         pub(crate) expected: ArtifactRef,
         pub(crate) owner: store::OwnerRef,
         pub(crate) actor: ActorId,
@@ -48,11 +48,11 @@ mod private_child_metadata {
     pub(crate) struct PrivateChildMemberMetadata { parts: ManuallyDrop<Option<PrivateChildMemberMetadataParts>> }
 
     impl PrivateChildMemberMetadata {
-        pub(crate) fn from_parts(parts: PrivateChildMemberMetadataParts) -> Self { Self { parts: ManuallyDrop::new(Some(parts)) } }
+        fn from_parts(parts: PrivateChildMemberMetadataParts) -> Self { Self { parts: ManuallyDrop::new(Some(parts)) } }
         pub(crate) fn parts(&self) -> Option<&PrivateChildMemberMetadataParts> { self.parts.as_ref() }
         pub(crate) fn parts_mut(&mut self) -> Option<&mut PrivateChildMemberMetadataParts> { self.parts.as_mut() }
         /// 🧳️ Moves the ready exact identities once into the retained typed request and content owners.
-        pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivateChildMemberMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
+        fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivateChildMemberMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
         pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity())).or_else(|| parts.shared_fields().into_iter().find_map(|field| field.has_owner().then(|| field.original_allocation_bytes())))).unwrap_or(0) }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.parts.is_none() }
         /// 🪵️ Releases a ready bundle's original string allocation under one whole release grant.
@@ -199,13 +199,13 @@ mod private_child_metadata {
     }
 
     #[derive(Clone, Copy)]
-    pub(crate) struct PrivatePublicationMetadataSource<'a> { pub(crate) actor: &'a SharedUtf8, pub(crate) transaction: Option<&'a protocol::TransactionRef>, pub(crate) group_id: Option<&'a str> }
+    pub(crate) struct PrivatePublicationMetadataSource<'a> { actor: &'a SharedUtf8, transaction: Option<&'a protocol::TransactionRef>, group_id: Option<&'a str> }
 
     impl<'a> PrivatePublicationMetadataSource<'a> {
         fn fields(self) -> [&'a str; 4] { let (id, tool) = self.transaction.map(|transaction| (transaction.id.as_str(), transaction.tool.as_str())).unwrap_or(("", "")); [self.actor.as_str(), id, tool, self.group_id.unwrap_or("")] }
     }
 
-    pub(crate) struct PrivatePublicationMetadataParts { pub(crate) actor: SharedUtf8, pub(crate) transaction: Option<protocol::TransactionRef>, pub(crate) group_id: Option<String> }
+    pub(crate) struct PrivatePublicationMetadataParts { actor: SharedUtf8, transaction: Option<protocol::TransactionRef>, group_id: Option<String> }
 
     impl PrivatePublicationMetadataParts {
         fn actor_if_owned(&mut self) -> Option<&mut SharedUtf8> { self.actor.has_owner().then_some(&mut self.actor) }
@@ -219,7 +219,7 @@ mod private_child_metadata {
         pub(crate) fn from_parts(parts: PrivatePublicationMetadataParts) -> Self { Self { parts: ManuallyDrop::new(Some(parts)) } }
         pub(crate) fn parts(&self) -> Option<&PrivatePublicationMetadataParts> { self.parts.as_ref() }
         pub(crate) fn parts_mut(&mut self) -> Option<&mut PrivatePublicationMetadataParts> { self.parts.as_mut() }
-        pub(crate) fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivatePublicationMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
+        fn take_ready(&mut self, grant: RetainedCloneGrant) -> Result<Option<PrivatePublicationMetadataParts>, ValueError> { if grant.maximum_items == 0 { return Ok(None); } Ok(self.parts.take()) }
         pub(crate) fn next_close_byte_demand(&self) -> usize { self.parts.as_ref().and_then(|parts| parts.fields().into_iter().flatten().find_map(|field| (field.capacity() != 0).then_some(field.capacity())).or_else(|| parts.actor.has_owner().then(|| parts.actor.original_allocation_bytes()))).unwrap_or(0) }
         pub(crate) fn terminal_is_empty(&self) -> bool { self.parts.is_none() }
         /// 🧺️ Closes one whole original parent metadata allocation or its empty inline bundle.
@@ -270,5 +270,5 @@ mod private_child_metadata {
     include!("🧪️tests/🔬️unit/🦀️.rs");
 }
 
-pub(crate) use private_child_metadata::{PrivateChildMemberMetadata, PrivateChildMemberMetadataIssuer, PrivateChildMemberMetadataSource, PrivatePublicationMetadata, PrivatePublicationMetadataIssuer, PrivatePublicationMetadataParts, PrivatePublicationMetadataSource};
-#[cfg(test)] pub(crate) use private_child_metadata::{PrivateChildMemberMetadataParts};
+use private_child_metadata::{PrivateChildMemberMetadata, PrivateChildMemberMetadataIssuer, PrivateChildMemberMetadataSource, PrivatePublicationMetadata, PrivatePublicationMetadataIssuer, PrivatePublicationMetadataParts, PrivatePublicationMetadataSource};
+#[cfg(test)] use private_child_metadata::{PrivateChildMemberMetadataParts};

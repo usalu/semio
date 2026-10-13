@@ -3,11 +3,11 @@
 //! triple — removed base indices, modified rows (a sparse per-row diff) and added rows with their final position — while the
 //! single optional `properties` CHILD slot carries its replacement (`Some(None)` clears it). No whole-list slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType};
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::schema::snapshot::{SemioKitConnection, SemioKitDesign, SemioKitPiece, SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -121,13 +121,13 @@ pub struct SemioKitDiff {
     pub designs: Option<IndexedTripleDiff<SemioKitDesignDiff, SemioKitDesign>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub objects: Option<IndexedTripleDiff<Replace<store::ArtifactChild<SemioObjectSnapshot>>, store::ArtifactChild<SemioObjectSnapshot>>>,
+    pub objects: Option<IndexedTripleDiff<Replace<store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>>, store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub models: Option<IndexedTripleDiff<Replace<store::ArtifactChild<SemioModelSnapshot>>, store::ArtifactChild<SemioModelSnapshot>>>,
+    pub models: Option<IndexedTripleDiff<Replace<store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>, store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
+    pub properties: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub representations: Option<IndexedTripleDiff<SemioKitLinkDiff, store::ArtifactLink>>,
@@ -230,8 +230,8 @@ impl protocol::command::DiffAlgebra<SemioKitSnapshot> for SemioKitDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioKitDiff> {
-    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
-    use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use crate::schema::snapshot::demo_kit_snapshot;
     let demo = demo_kit_snapshot();
     vec![
         SemioKitDiff::default(),

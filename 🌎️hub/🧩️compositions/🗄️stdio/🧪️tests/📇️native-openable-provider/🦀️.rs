@@ -3,19 +3,19 @@ use std::collections::BTreeSet;
 #[test]
 fn native_catalog_dependency_is_exactly_its_compiled_owner() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../🗿️artifact-authority/🔏️trusted-catalog/🧫️fixtures/🔗️compiled-dependencies/🔣️.json"))).unwrap();
-    let expected = semio_hub_stdio::catalog::native_artifact_catalog_dependency().unwrap();
+    let expected = semio_hub_stdio_catalog::native_artifact_catalog_dependency().unwrap();
     assert_eq!(serde_json::to_value(&expected).unwrap(), fixture["nativeCases"][0]["dependencies"][0]);
     let rows = fixture["nativeCases"].as_array().unwrap();
     assert_eq!(rows.len(), 9);
     for row in rows {
         let expected = row["accepted"].as_bool().unwrap();
         let parsed = serde_json::from_value::<Vec<semio_framework::PluginDependency>>(row["dependencies"].clone());
-        let accepted = parsed.as_ref().is_ok_and(|dependencies| semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(dependencies).is_ok());
+        let accepted = parsed.as_ref().is_ok_and(|dependencies| semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(dependencies).is_ok());
         assert_eq!(accepted, expected, "{}", row["id"]);
         let bytes = semio_framework_os_kernel::pack_rt::encode_wire_value(&row["dependencies"].clone().into());
         let decoded = <Vec<semio_framework::PluginDependency> as semio_framework_value::FromValue>::from_value(semio_framework_os_kernel::pack_rt::decode_wire_value(&bytes).unwrap());
         assert_eq!(decoded.is_ok(), parsed.is_ok(), "{}: the wire decoder and the JSON reader refuse the same dependency pins", row["id"]);
-        assert_eq!(decoded.is_ok_and(|dependencies| semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&dependencies).is_ok()), expected, "{}", row["id"]);
+        assert_eq!(decoded.is_ok_and(|dependencies| semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&dependencies).is_ok()), expected, "{}", row["id"]);
     }
 }
 
@@ -39,7 +39,7 @@ fn generic_plugin_builder_preserves_domain_owned_topic_contributions() {
 }
 
 use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
-use semio_hub_stdio::catalog::native_codec_factory_receipts;
+use semio_hub_stdio_catalog::native_codec_factory_receipts;
 
 #[test]
 fn native_composition_and_validation_claims_are_disjoint_but_each_exclusive() {
@@ -81,7 +81,7 @@ fn artifact_owned_native_codec_receipts_form_one_complete_static_bijection() {
 
 #[test]
 fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly() {
-    use semio_hub_stdio::catalog::{artifact_definitions, native_codec_artifact_kinds, validate_native_codec_artifact_kinds};
+    use semio_hub_stdio_catalog::{artifact_definitions, native_codec_artifact_kinds, validate_native_codec_artifact_kinds};
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🔣️.json"))).unwrap();
     let expected = native_codec_artifact_kinds();
     let receipts = native_codec_factory_receipts().unwrap();
@@ -115,9 +115,13 @@ fn native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assemb
     }
 }
 
+/// ⚖️ LAW: the native catalog commitment accepts exactly the payloads JSON-equal to the compiled one. A payload with
+/// permuted object fields is accepted, yet it is a distinct intrinsic value on the wire: Pack retains the occurrence
+/// order of intrinsic object entries (`encode_dsl_value`), so acceptance is the validator's semantic comparison, never
+/// byte equality.
 #[test]
 fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities() {
-    use semio_hub_stdio::catalog::{native_artifact_catalog_contribution, validate_native_artifact_catalog_contributions};
+    use semio_hub_stdio_catalog::{native_artifact_catalog_contribution, validate_native_artifact_catalog_contributions};
     fn reverse_object_fields(value: &mut semio_framework::DslValue) {
         match value {
             semio_framework::DslValue::Object(fields) => {
@@ -136,7 +140,7 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️catalog/🧫️fixtures/📇️native-catalog-surface/🧪️commitment.json"))).unwrap();
     let contribution = native_artifact_catalog_contribution().unwrap();
-    let definition_count = semio_hub_stdio::catalog::artifact_definitions().unwrap().len();
+    let definition_count = semio_hub_stdio_catalog::artifact_definitions().unwrap().len();
     let codec_count = native_codec_factory_receipts().unwrap().len();
     let original = serde_json::to_value(&contribution).unwrap();
     println!("native-catalog-payload={}", serde_json::to_string(&original["payload"]).unwrap());
@@ -188,7 +192,9 @@ fn native_catalog_commitment_covers_all_definition_semantics_and_codec_authoriti
             reverse_object_fields(&mut actual[0].payload);
             assert_ne!(before, actual[0].payload);
             assert_eq!(serde_json::to_value(&actual[0]).unwrap(), changed);
-            assert_eq!(semio_framework_os_kernel::pack_rt::encode_wire_value(&before), semio_framework_os_kernel::pack_rt::encode_wire_value(&actual[0].payload));
+            let permuted = semio_framework_os_kernel::pack_rt::encode_wire_value(&actual[0].payload);
+            assert_ne!(semio_framework_os_kernel::pack_rt::encode_wire_value(&before), permuted);
+            assert_eq!(semio_framework_os_kernel::pack_rt::decode_wire_value(&permuted).unwrap(), actual[0].payload);
         }
         if operation == "missing-topic" {
             actual.clear();
@@ -237,7 +243,7 @@ fn native_codec_projection_pack_schema_hashes_equal_live_receipts() {
         assert_eq!(declared["native_factory"]["pack_schema_hash"], row["pack_schema_hash"]);
     }
     let key = "\"pack_schema_hash\": \"";
-    for receipt in semio_hub_stdio::catalog::live_native_codec_factory_receipts().expect("live artifact-owned native codec receipts") {
+    for receipt in semio_hub_stdio_catalog::live_native_codec_factory_receipts().expect("live artifact-owned native codec receipts") {
         let row = generated.find(&format!("\"factory_id\": \"{}\"", receipt.factory_id)).unwrap_or_else(|| panic!("projection omits {}", receipt.factory_id));
         let start = row + generated[row..].find(key).expect("projection row carries pack_schema_hash") + key.len();
         generated.replace_range(start..start + 64, &receipt.pack_schema_hash.iter().map(|byte| format!("{byte:02x}")).collect::<String>());
@@ -266,7 +272,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
         }
     }
     let fixture: serde_json::Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../📇️publication/🧫️fixtures/🧬️trusted-stdio-catalog/🔣️.json"))).unwrap();
-    let spec = <semio_s_artifact_stdio_las::LasSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().unwrap();
+    let spec = <semio_s_artifact_stdio_las::LasSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::record_spec().unwrap();
     let graph = semio_framework_os_kernel::os_pack::PackSchemaGraph::of(&spec);
     let json: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&graph.to_json())).unwrap();
     let records = json.as_array().unwrap();
@@ -284,7 +290,7 @@ fn las_native_receipt_binds_canonical_graph_and_independent_blake3() {
     assert_eq!(independent, graph.canonical_bytes());
     let hash = blake3::hash(&independent).to_hex().to_string();
     assert_eq!(hash, fixture["structuralCodec"]["packSchemaHash"].as_str().unwrap());
-    let receipts = semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap();
+    let receipts = semio_hub_stdio_catalog::live_native_codec_factory_receipts().unwrap();
     let las = receipts.iter().find(|receipt| receipt.artifact_kind == "s.stdio.las").unwrap();
     assert_eq!(las.pack_schema_hash, *blake3::hash(&independent).as_bytes());
     assert_ne!(hash, fixture["structuralCodec"]["protocolSourceSha256"].as_str().unwrap());
@@ -320,9 +326,9 @@ async fn text_document_codecs_compile_their_neutral_fixture_through_the_linked_r
         let (again, _) = (codec.compile_dsl)(&printed.dsl, &printed.ops).await.unwrap_or_else(|error| panic!("{id}: {error:?}"));
         assert_eq!(again.pack, files.pack, "{id}: the mirror compiles back to the identical pack");
         let snapshot = match kind {
-            "s.stdio.txt" => neutral(<semio_s_artifact_stdio_txt::TxtSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
-            "s.stdio.tsv" => neutral(<semio_s_artifact_stdio_tsv::TsvSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
-            "s.stdio.html" => neutral(<semio_s_artifact_stdio_html::HtmlSnapshot as semio_framework_os_kernel::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.txt" => neutral(<semio_s_artifact_stdio_txt::TxtSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.tsv" => neutral(<semio_s_artifact_stdio_tsv::TsvSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
+            "s.stdio.html" => neutral(<semio_s_artifact_stdio_html::HtmlSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::decode_pack(&files.pack).unwrap()),
             other => panic!("{id}: {other} is outside the text codec fixture"),
         };
         assert_eq!(snapshot, case["snapshot"], "{id}");

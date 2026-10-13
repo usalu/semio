@@ -1,5 +1,5 @@
 //#region 🧬️ComposedParentFixture
-type ParentFixtureChild = store::ArtifactChild<TestSnapshot>;
+type ParentFixtureChild = store::os_store::artifact_child::ArtifactChild<TestSnapshot>;
 
 thread_local! { static PARENT_SNAPSHOT_CLONES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 
@@ -14,7 +14,7 @@ struct ComposedParentSnapshot {
 }
 
 
-impl store::ArtifactSqliteSnapshot for ComposedParentSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for ComposedParentSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🪴️parent.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
@@ -39,7 +39,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
                 let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
                 let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
-                Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
+                Some(store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target))
             }
             _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "optional child identity must have all four fields or none")),
         };
@@ -148,7 +148,7 @@ impl Mutation<ComposedParentSnapshot> for RecursiveFixtureMutation {
 }
 }
 
-impl store::ArtifactDsl for ComposedParentSnapshot {
+impl store::os_store::serialization::ArtifactDsl for ComposedParentSnapshot {
     const EXTENSION: &'static str = "composed-parent-test";
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
         let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
@@ -161,8 +161,8 @@ impl store::ArtifactDsl for ComposedParentSnapshot {
 
 impl ArtifactPack for ComposedParentSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -177,7 +177,7 @@ impl ArtifactPack for ComposedParentSnapshot {
 #[expect(clippy::large_enum_variant, reason = "The fixture keeps its bounded retained hex authority inline through one exact field transition.")]
 enum ComposedParentSnapshotDecodeState {
     AwaitToken,
-    Decode(store::OwnedSchemaHexAuthority<{ store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }>),
+    Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<{ store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }>),
     Ready,
     Published,
     Closing,
@@ -187,14 +187,14 @@ enum ComposedParentSnapshotDecodeState {
 struct ComposedParentSnapshotDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: ComposedParentSnapshotDecodeState,
     value: std::mem::ManuallyDrop<Option<ComposedParentSnapshot>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl ComposedParentSnapshotDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -205,55 +205,55 @@ impl ComposedParentSnapshotDecodeAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn terminal_is_empty(&self) -> bool {
         matches!(self.state, ComposedParentSnapshotDecodeState::Published | ComposedParentSnapshotDecodeState::Complete) && self.value.is_none() && self.retirement.is_none()
     }
 
-    fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if matches!(self.state, ComposedParentSnapshotDecodeState::Decode(_)) {
-            return Ok(semio_framework_value::RetirementDemand { release_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, depth: 1, ..Default::default() });
+            return Ok(semio_framework_value::RetirementDemand { release_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, depth: 1, ..Default::default() });
         }
         let demand = match self.retirement.as_ref() {
-            Some(owner) => store::artifact_retirement_box_demands(owner, maximum_copy_bytes),
-            None => store::artifact_retirement_owned_birth_demands(&self.value),
+            Some(owner) => store::os_store::snapshot_read::artifact_retirement_box_demands(owner, maximum_copy_bytes),
+            None => store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value),
         };
         demand.map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-demand", 0))
     }
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for ComposedParentSnapshotDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for ComposedParentSnapshotDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if matches!(self.state, ComposedParentSnapshotDecodeState::AwaitToken) {
             if !terminal {
                 return Err(self.diagnostic("composed-parent-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = ComposedParentSnapshotDecodeState::Decode(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = ComposedParentSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
         }
         let path = self.path;
         let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state else {
-            return Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.snapshot-pack-token-replayed", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            return Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.snapshot-pack-token-replayed", offset: token.start, line: 0, column: 0, path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
         };
         match authority.step(source, cx) {
-            store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-            store::OwnedSchemaHexStep::Complete => {
-                let bytes = authority.as_bytes().ok_or(store::OwnedSchemaDecodeDiagnostic {
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
+                let bytes = authority.as_bytes().ok_or(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
                     code: "composed-parent-envelope.snapshot-pack-missing",
                     offset: token.start,
                     line: 0,
                     column: 0,
                     path,
                  refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })?;
-                let value = <ComposedParentSnapshot as ArtifactPack>::decode_pack(bytes).map_err(|_| store::OwnedSchemaDecodeDiagnostic {
+                let value = <ComposedParentSnapshot as ArtifactPack>::decode_pack(bytes).map_err(|_| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
                     code: "composed-parent-envelope.snapshot-pack-malformed",
                     offset: token.start,
                     line: 0,
@@ -263,53 +263,53 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
                 assert!(authority.release(), "completed composed-parent snapshot pack releases its retained bytes exactly once");
                 *self.value = Some(value);
                 self.state = ComposedParentSnapshotDecodeState::Ready;
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
-            store::OwnedSchemaHexStep::Cancelled => Err(self.diagnostic("composed-parent-envelope.snapshot-pack-cancelled", token.start)),
-            store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(self.diagnostic("composed-parent-envelope.snapshot-pack-cancelled", token.start)),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
         }
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<ComposedParentSnapshot>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<ComposedParentSnapshot>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if !matches!(self.state, ComposedParentSnapshotDecodeState::Ready) {
             return Err(self.diagnostic("composed-parent-envelope.snapshot-pack-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("composed-parent-envelope.snapshot-owner-missing", 0))?;
         target.publish_snapshot_reserved(reservation, value);
         self.state = ComposedParentSnapshotDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.depth)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let empty = store::RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(store::RetainedCloneStep::Complete(empty));
@@ -327,14 +327,14 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot> for C
         if let ComposedParentSnapshotDecodeState::Decode(authority) = &mut self.state {
             authority.cancel();
             self.state = ComposedParentSnapshotDecodeState::Closing;
-            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
+            return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, ..empty }));
         }
         if self.retirement.is_some() {
             let fault = self.diagnostic("composed-parent-envelope.snapshot-retirement-fault", 0);
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| fault);
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| fault);
         }
         if self.value.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-admission", 0))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|_| self.diagnostic("composed-parent-envelope.snapshot-retirement-admission", 0))?;
             self.state = ComposedParentSnapshotDecodeState::Closing;
             return Ok(step);
         }
@@ -354,36 +354,36 @@ impl Drop for ComposedParentSnapshotDecodeAuthority {
 }
 
 struct ComposedParentRejectedFieldAuthority {
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for ComposedParentRejectedFieldAuthority {
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for ComposedParentRejectedFieldAuthority {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
     fn publish_reserved(
         &mut self,
-        _target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<RecursiveFixtureMutation>,
-        _reservation: store::ArtifactEnvelopeFieldReservation,
+        _target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget<RecursiveFixtureMutation>,
+        _reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-mutation-not-admitted", offset: 0, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if grant.maximum_items == 0 {
             return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress::default()));
         }
@@ -396,23 +396,23 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation> for
     }
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for ComposedParentRejectedFieldAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for ComposedParentRejectedFieldAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "composed-parent-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if grant.maximum_items == 0 {
             return Ok(store::RetainedCloneStep::Progress(store::RetainedCloneProgress::default()));
         }
@@ -428,36 +428,36 @@ impl store::ArtifactEnvelopeSprConflictAuthority for ComposedParentRejectedField
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct ComposedParentEnvelopeOwnedFieldCatalog;
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveFixtureMutation> for ComposedParentEnvelopeOwnedFieldCatalog {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveFixtureMutation> for ComposedParentEnvelopeOwnedFieldCatalog {
     fn begin_vcs(
         &self,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
-        path: store::OwnedSchemaPath,
-    ) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+        path: store::os_store::owned_schema_decode::OwnedSchemaPath,
+    ) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RecursiveFixtureMutation>::default()),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<ComposedParentSnapshot, RecursiveFixtureMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
     fn begin_snapshot(
         &self,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
-        path: store::OwnedSchemaPath,
-    ) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>> {
+        path: store::os_store::owned_schema_decode::OwnedSchemaPath,
+    ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<ComposedParentSnapshot>> {
         Box::new(ComposedParentSnapshotDecodeAuthority::new(operation, generation, path))
     }
 
@@ -465,8 +465,8 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveF
         &self,
         _operation: semio_framework_job::OperationId,
         _generation: semio_framework_job::Generation,
-        path: store::OwnedSchemaPath,
-    ) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation>> {
+        path: store::os_store::owned_schema_decode::OwnedSchemaPath,
+    ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<RecursiveFixtureMutation>> {
         Box::new(ComposedParentRejectedFieldAuthority { path, terminal: false })
     }
 
@@ -474,13 +474,13 @@ impl store::ArtifactEnvelopeOwnedFieldCatalog<ComposedParentSnapshot, RecursiveF
         &self,
         _operation: semio_framework_job::OperationId,
         _generation: semio_framework_job::Generation,
-        path: store::OwnedSchemaPath,
-    ) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+        path: store::os_store::owned_schema_decode::OwnedSchemaPath,
+    ) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(ComposedParentRejectedFieldAuthority { path, terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<RecursiveFixtureMutation>>> {
-        store::artifact_bounded_history_entry_decoder()
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<RecursiveFixtureMutation>>> {
+        store::os_store::owned_schema_decode::artifact_bounded_history_entry_decoder()
     }
 }
 
@@ -529,8 +529,8 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     async fn render(_body_key: &str, _doc: &ArtifactView<'_, Self::Snapshot>, _cfg: &ConfigView<'_, Self::Config>, _view_state: &ViewModel) -> UiAssemblyResult<ComponentTree> {
         built_text_to_component_tree(semio_framework_ui_locale::Label::data("Composed parent fixture"))
     }
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
-        Some(store::ArtifactEnvelopeDecodeOwnerBundle::new(
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+        Some(store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(
             std::sync::Arc::new(ComposedParentEnvelopeOwnedFieldCatalog),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<RecursiveFixtureMutation>::default()),
@@ -540,12 +540,12 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
         let birth = recursive_fixture_owners_birth_demand::<Self::Snapshot>()?;
         Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth, ..Default::default() })
     }
-    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(recursive_fixture_owners::<Self::Snapshot>("recursive-parent", grant))
     }
     fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> { Some(bounded_document_store_disposer()) }
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         _operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
@@ -565,7 +565,7 @@ impl<const HAS_CHILD: bool> ArtifactApp for ComposedParentApp<HAS_CHILD> {
     fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> { TestApp::<false>::build_transient_store_disposer() }
 }
 
-type RecursiveFixtureChild = store::ArtifactChild<TestSnapshot>;
+type RecursiveFixtureChild = store::os_store::artifact_child::ArtifactChild<TestSnapshot>;
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_schema::ArtifactSchema)]
 #[artifact_schema(id = "s.test.child")]
@@ -580,7 +580,7 @@ struct RecursiveBranchSnapshot {
 }
 
 
-impl store::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for RecursiveBranchSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🌿️branch.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
@@ -605,7 +605,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             [SqliteValue::Text(id), SqliteValue::Text(kind), SqliteValue::Text(standard), SqliteValue::Text(subset)] => {
                 let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: kind.clone(), standard: standard.clone(), subset: subset.clone() } };
                 let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
-                Some(store::ArtifactChild::new(target.artifact_id.clone(), target))
+                Some(store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target))
             }
             _ => return Err(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "optional child identity must have all four fields or none")),
         };
@@ -724,32 +724,32 @@ where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
-    let base = store::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
+    let base = store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<P, RecursiveFixtureMutation>()?;
     let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })?;
     let capacity_bytes = base.capacity_bytes.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fixture catalog original source tree capacity overflow"))?;
     Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: base.depth.max(preparation.depth) })
 }
 
 /// 🗃️ Admits the fixture catalog under `grant`: bounded retirement owners and one wire-carrying preparation factory.
-fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
+fn recursive_fixture_owners<P>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, RecursiveFixtureMutation>>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
     let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, RecursiveFixtureMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, RecursiveFixtureMutation, store::MutationApplyEdit<P, RecursiveFixtureMutation>>(), depth: 1 })
-        .map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
-    store::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || {
+        .map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+    store::os_store::document_store_owners::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || {
         store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<P, RecursiveFixtureMutation>(), recursive_fixture_wire_source, recursive_fixture_wire_schema)
     })
 }
 
 /// 🏗️ Funds the fixture catalog from its own quotes for stores no scheduler grants.
-fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
+fn funded_recursive_fixture_owners<P>(prefix: &'static str) -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, RecursiveFixtureMutation>, semio_framework_value::ValueError>
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Sync,
     RecursiveFixtureMutation: Mutation<P>,
 {
-    store::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
+    store::os_store::document_store_owners::fund_document_store_owners(recursive_fixture_owners_birth_demand::<P>()?, |grant| recursive_fixture_owners::<P>(prefix, grant))
 }
 
 struct RecursiveBranchSnapshotOpen {
@@ -849,13 +849,13 @@ impl store::MemberSnapshotOpenOperation for RecursiveBranchSnapshotOpen {
 impl RecursiveBranchSnapshotOpen {
     fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_ref() {
-            return store::artifact_retirement_box_demands(active, maximum_copy_bytes);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(active, maximum_copy_bytes);
         }
         if self.snapshot.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.snapshot);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot);
         }
         if self.request.is_some() {
-            return store::artifact_retirement_owner_demands(&self.request, maximum_copy_bytes);
+            return store::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, maximum_copy_bytes);
         }
         Ok(semio_framework_value::RetirementDemand { release_bytes: self.input.capacity(), depth: usize::from(!self.terminal), ..Default::default() })
     }
@@ -879,13 +879,13 @@ impl store::ErasedSnapshotRetirement for RecursiveBranchSnapshotOpen {
         }
         self.diagnostic.get_or_insert(store::MemberOpenDiagnostic::Cancelled);
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, grant);
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant);
         }
         if self.snapshot.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant);
         }
         if self.request.is_some() {
-            let step = store::artifact_retirement_owner_close(&mut self.request, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_owner_close(&mut self.request, grant)?;
             return Ok(store::RetainedCloneStep::Progress(step.progress()));
         }
         if self.input.capacity() != 0 {
@@ -928,7 +928,7 @@ impl Drop for RecursiveBranchSnapshotOpen {
 
 macro_rules! recursive_fixture_snapshot {
     ($snapshot:ty, $extension:literal) => {
-        impl store::ArtifactDsl for $snapshot {
+        impl store::os_store::serialization::ArtifactDsl for $snapshot {
             const EXTENSION: &'static str = $extension;
             fn parse_dsl(text: &str) -> Result<Self, TextError> {
                 let value = serde_json::from_str::<Value>(text).map_err(|error| TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string(), TextSpan::at(1, 1)))?;
@@ -947,12 +947,12 @@ macro_rules! recursive_fixture_snapshot {
             }
         }
 
-        impl store::MemberStoreOwner<RecursiveFixtureMutation> for $snapshot {
+        impl store::os_store::document_store_owners::MemberStoreOwner<RecursiveFixtureMutation> for $snapshot {
             type SnapshotOpen = RecursiveBranchSnapshotOpen;
             fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
                 recursive_fixture_owners_birth_demand::<Self>()
             }
-            fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, RecursiveFixtureMutation>> {
+            fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, RecursiveFixtureMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, RecursiveFixtureMutation>> {
                 recursive_fixture_owners::<Self>("recursive-member", grant)
             }
         }
@@ -1011,7 +1011,7 @@ enum ReadyComposedParentInitializationPhase {
 }
 
 struct ReadyComposedParentInitialization {
-    envelope: Option<store::ArtifactEnvelope<ComposedParentSnapshot, RecursiveFixtureMutation>>,
+    envelope: Option<store::os_store::store_schema::ArtifactEnvelope<ComposedParentSnapshot, RecursiveFixtureMutation>>,
     runtime: Option<store::ArtifactStoreInitializationRuntime<ComposedParentSnapshot>>,
     candidate: Option<store::ArtifactStore<ComposedParentSnapshot, RecursiveFixtureMutation>>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
@@ -1025,7 +1025,7 @@ struct ReadyComposedParentInitialization {
 }
 
 impl ReadyComposedParentInitialization {
-    fn new(envelope: store::ArtifactEnvelope<ComposedParentSnapshot, RecursiveFixtureMutation>, candidate_generation: u64, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<ComposedParentSnapshot, RecursiveFixtureMutation>, candidate_generation: u64, actor: protocol::ActorId) -> Self {
         Self {
             envelope: Some(envelope),
             runtime: None,
@@ -1073,7 +1073,7 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             return candidate.close_owned_demands(body).map(nested);
         }
         if let Some(retirement) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body);
         }
         if let Some(runtime) = self.runtime.as_ref() {
             return runtime.initialization_retirement_demands(body).map(nested);
@@ -1090,8 +1090,8 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
                 return semio_framework_job::JobOutcomeBorrow::admit_yield(cx);
             }
             let bytes = usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX).min(4096);
-            let stepped = crate::app::retirement_self_grant(|body| store::artifact_retirement_box_demands(self.retirement.as_ref().expect("replay retirement remains retained"), body), bytes)
-                .and_then(|grant| store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step)));
+            let stepped = crate::app::retirement_self_grant(|body| store::os_store::snapshot_read::artifact_retirement_box_demands(self.retirement.as_ref().expect("replay retirement remains retained"), body), bytes)
+                .and_then(|grant| store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| (grant, step)));
             return match stepped {
                 Ok((grant, step)) if step.progress().fits(grant) => {
                     let progress = step.progress();
@@ -1262,7 +1262,7 @@ impl store::ArtifactStoreInitializationAuthority<ComposedParentSnapshot, Recursi
             return Ok(store::RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant);
         }
         if let Some(runtime) = self.runtime.as_mut() {
             let factory: std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<ComposedParentSnapshot>> = std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<ComposedParentSnapshot>::default());
@@ -1323,10 +1323,10 @@ async fn retained_composed_replacement_fixture_at_revision(
     member.set_owner(Some(owner.clone())).await;
     let bytes = member.envelope_pack_bytes().await.expect("candidate child full envelope");
     close_member_admission_fixture(&mut member);
-    let chunks = bytes.chunks(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
-    let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: bytes.len() }).expect("candidate member page credits");
+    let chunks = bytes.chunks(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
+    let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: bytes.len() }).expect("candidate member page credits");
     for chunk in chunks {
-        pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded member page")).unwrap_or_else(|_| panic!("pre-admitted candidate member page"));
+        pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded member page")).unwrap_or_else(|_| panic!("pre-admitted candidate member page"));
     }
     pages.seal().expect("candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, child_reference.clone(), Some(owner.clone()), pages, protocol::ActorId("actor:composition-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("candidate member request"));
@@ -1347,7 +1347,7 @@ async fn composed_replacement_candidate(
     let parent_dialect: ArtifactDialect = ComposedParentApp::<true>::DIALECT.into();
     let child_reference = ArtifactRef { artifact_id: "child-1".into(), dialect: child_dialect };
     let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new("child-1".into(), child_reference)), revision: parent_revision };
-    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new(envelope, app.store.local_actor_id().clone()).await.expect("candidate parent store");
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("candidate parent catalog installs");
@@ -1462,7 +1462,7 @@ async fn recursive_member_envelope_with_history(reference: &ArtifactRef, owner: 
     Box::pin(member.set_owner(Some(owner.clone()))).await;
     match &mut member {
         RecursiveTestMembers::Branch(store) => {
-            crate::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], transaction: None }, &mut identity)).await)
+            crate::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![RecursiveFixtureMutation { value }], transaction: None }, &mut identity)).await)
                 .expect("recursive historical member mutation");
         }
     }
@@ -1522,10 +1522,10 @@ async fn recursive_member_ingress(
     snapshot_pack: Vec<u8>,
 ) -> crate::app::OwnedDocumentMemberIngress {
     let bytes = Box::pin(recursive_member_envelope(&reference, &owner, &snapshot_pack)).await;
-    let chunks = bytes.chunks(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
-    let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: bytes.len() }).expect("recursive candidate member page credits");
+    let chunks = bytes.chunks(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
+    let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: bytes.len() }).expect("recursive candidate member page credits");
     for chunk in chunks {
-        pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(chunk).expect("recursive bounded member page")).unwrap_or_else(|_| panic!("recursive candidate member page admission"));
+        pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(chunk).expect("recursive bounded member page")).unwrap_or_else(|_| panic!("recursive candidate member page admission"));
     }
     pages.seal().expect("recursive candidate member page set");
     let request = store::MemberOpenRequest::new(operation, generation, u64::MAX, reference.clone(), Some(owner.clone()), pages, protocol::ActorId("actor:composition-opening-fixture".into())).admit(1).unwrap_or_else(|_| panic!("recursive candidate member request"));
@@ -1546,8 +1546,8 @@ async fn recursive_parent_document_files(
     schema: &str,
     dialect: ArtifactDialect,
     snapshot: ComposedParentSnapshot,
-) -> store::ArtifactPackFiles {
-    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(schema, parent_id, snapshot, None);
+) -> store::os_store::serialization::ArtifactPackFiles {
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(schema, parent_id, snapshot, None);
     envelope.dialect = Some(dialect);
     let mut parent_store = Box::new(Box::pin(store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("recursive archive parent store"));
     store::install_unscheduled_catalog(&mut parent_store, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive archive parent catalog installs");
@@ -1555,12 +1555,12 @@ async fn recursive_parent_document_files(
     crate::with_authoring_identity!(|identity| Box::pin(parent_store.apply_one(
         generation,
         RecursiveFixtureMutation { value: 7 },
-        protocol::HistoryLane::Document,
+        protocol::os_store::store_schema::HistoryLane::Document,
         &mut identity,
     ))
     .await)
     .expect("recursive archive parent mutation");
-    let files = Box::pin(store::print_document_pack(parent_store.envelope())).await.expect("recursive archive parent pack");
+    let files = Box::pin(store::os_store::text_format::print_document_pack(parent_store.envelope())).await.expect("recursive archive parent pack");
     close_recursive_parent_fixture(&mut parent_store);
     files
 }
@@ -1615,7 +1615,7 @@ async fn drive_recursive_document_archive_load(
         ) {
             return status;
         }
-        let _ = composed_maintenance_turn(app, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("recursive archive public maintenance step");
+        let _ = composed_maintenance_turn(app, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).expect("recursive archive public maintenance step");
         semio_framework_async::yield_once().await;
     }
     panic!("recursive archive operation exceeded its public maintenance progress authority")
@@ -1635,7 +1635,7 @@ async fn retained_recursive_replacement_fixture(
     let leaf_reference = ArtifactRef { artifact_id: "grandchild-1".into(), dialect: leaf_dialect.clone() };
     let root_reference = ArtifactRef { artifact_id: parent_id.into(), dialect: parent_dialect.clone() };
     let snapshot = ComposedParentSnapshot { slot: Some(ParentFixtureChild::new(branch_reference.artifact_id.clone(), branch_reference.clone())), revision: 0 };
-    let mut envelope = store::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<ComposedParentSnapshot, RecursiveFixtureMutation>(ComposedParentApp::<true>::DOCUMENT_SCHEMA, parent_id, snapshot, None);
     envelope.dialect = Some(parent_dialect);
     let mut candidate = store::ArtifactStore::new(envelope, app.store.local_actor_id().clone()).await.expect("recursive candidate parent store");
     store::install_unscheduled_catalog(&mut candidate, funded_recursive_fixture_owners::<ComposedParentSnapshot>("recursive-parent")).expect("recursive candidate parent catalog installs");
@@ -2228,34 +2228,34 @@ async fn retained_window_input_recursive_replacement_cancellation_and_stale_auth
 struct SlowFreshEnvelopeFieldDecoder {
     budget: usize,
     steps: std::sync::Arc<std::sync::atomic::AtomicUsize>,
-    inner: Box<dyn store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>,
+    inner: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>,
 }
 
 impl SlowFreshEnvelopeFieldDecoder {
-    fn new(budget: usize, steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, inner: Box<dyn store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>) -> Self {
+    fn new(budget: usize, steps: &std::sync::Arc<std::sync::atomic::AtomicUsize>, inner: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation>>) -> Self {
         Self { budget, steps: std::sync::Arc::clone(steps), inner }
     }
 }
 
-impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation> for SlowFreshEnvelopeFieldDecoder {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtureMutation> for SlowFreshEnvelopeFieldDecoder {
     fn accept_field_token(
         &mut self,
         field_id: u16,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.steps.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
         cx.consume_fuel(1);
         if self.budget > 0 {
             self.budget -= 1;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         self.inner.accept_field_token(field_id, token, terminal, source, cx)
     }
 
-    fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn finish_record(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.finish_record(cx)
     }
 
@@ -2267,23 +2267,23 @@ impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtur
         self.inner.maximum_retained_close_bytes()
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.next_close_copy_byte_demand()
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.next_close_capacity_byte_demand(maximum_copy_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.next_close_release_byte_demand()
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.next_close_depth_demand()
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.inner.close_step(grant)
     }
 
@@ -2292,7 +2292,7 @@ impl store::ArtifactEnvelopeFieldDecoder<ComposedParentSnapshot, RecursiveFixtur
     }
 }
 
-fn envelope_law_pages() -> store::OwnedSchemaDecodePages {
+fn envelope_law_pages() -> store::os_store::owned_schema_decode::OwnedSchemaDecodePages {
     let snapshot = ComposedParentSnapshot { slot: None, revision: 0 };
     let snapshot_hex = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
@@ -2309,11 +2309,11 @@ fn envelope_law_pages() -> store::OwnedSchemaDecodePages {
         "conflicts": []
     }))
     .expect("schema-first composed envelope law fixture");
-    let chunks = wire.chunks(store::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
+    let chunks = wire.chunks(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).collect::<Vec<_>>();
     let mut pages =
-        store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: wire.len() }).expect("envelope law page credits");
+        store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: chunks.len(), maximum_bytes: wire.len() }).expect("envelope law page credits");
     for chunk in chunks {
-        pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded envelope law page")).unwrap_or_else(|_| panic!("pre-admitted envelope law page"));
+        pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(chunk).expect("bounded envelope law page")).unwrap_or_else(|_| panic!("pre-admitted envelope law page"));
     }
     pages.seal().expect("sealed envelope law page set");
     pages
@@ -2328,7 +2328,7 @@ fn install_slow_envelope_decode(
     let operation = semio_framework_job::OperationId(operation);
     let generation = semio_framework_job::Generation(app.store.generation_now());
     let bundle = ComposedParentApp::<true>::build_envelope_decode_owner_bundle().expect("composed parent envelope decode bundle");
-    let completion = store::ArtifactEnvelopeDecodeCompletion::new();
+    let completion = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeCompletion::new();
     let inner = bundle.begin_fresh_decoder(operation, generation, std::sync::Arc::clone(&app.envelope_completed_records), std::sync::Arc::clone(&completion));
     app.admit_artifact_envelope_decode_owner(operation, generation, envelope_law_pages(), Box::new(SlowFreshEnvelopeFieldDecoder::new(budget, steps, inner)), completion)
         .unwrap_or_else(|_| panic!("exact envelope decode owner admission"))
@@ -2359,9 +2359,9 @@ async fn drain_envelope_decode(app: &mut VcsArtifactApp<ComposedParentApp, TestM
         if poll == crate::app::ArtifactEnvelopeDecodeOperationPoll::Ready {
             break;
         }
-        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(grant).expect("envelope decode maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
         let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);
@@ -2421,9 +2421,9 @@ async fn one_reactor_turn_pumps_the_envelope_decode_worker_to_its_terminal_poll(
     assert!(!PluginApp::has_runnable_typed_operations(&app), "a retired decode is no longer runnable reactor-turn work");
     app.cancel_artifact_envelope_load(handle).expect("cancel envelope law decode before fixture close");
     for _ in 0..10_000 {
-        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original maintenance demand");
         let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-        assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+        assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
         let step = app.maintenance_step(grant).expect("envelope law decode cancellation maintenance");
         if let Some(progress) = step.progress() { assert!(progress.fits(grant)); }
         let _ = semio_framework_job::pump_worker_job_retirements(8,app.mounted_policy.maintenance);

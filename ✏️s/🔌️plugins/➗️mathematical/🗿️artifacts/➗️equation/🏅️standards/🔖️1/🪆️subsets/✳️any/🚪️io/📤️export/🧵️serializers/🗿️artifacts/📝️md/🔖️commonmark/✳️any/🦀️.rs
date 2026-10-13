@@ -16,6 +16,6 @@ impl Serializer<EquationSnapshot> for EquationIntoMd {
     const FIDELITY: IoFidelity = IoFidelity::Canonical;
     async fn serialize(from: &EquationSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let md = MdSnapshot { schema: STDIO_MD_DOCUMENT_SCHEMA.into(), blocks: vec![MdBlock::CodeBlock { info: Some("json".into()), literal: semio_framework_pack_json::to_json_string(&equation_carrier_snapshot(from)) }] };
-        Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::ArtifactPack>::encode_pack(&md))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<MdSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&md))))
     }
 }

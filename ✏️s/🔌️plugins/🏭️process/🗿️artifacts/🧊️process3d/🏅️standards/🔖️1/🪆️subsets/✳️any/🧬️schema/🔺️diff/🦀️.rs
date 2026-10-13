@@ -6,9 +6,9 @@ use crate::{Capability, Pose, ProcessMeasure, ProcessStep, Process3dSnapshot, St
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 
-type BrepChild = store::ArtifactChild<SemioBrepSnapshot>;
+type BrepChild = store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse field delta for the process3d artifact.

@@ -3,6 +3,18 @@ import { posix } from "node:path";
 
 export const SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
 
+/** 🔢️ Orders two well-formed strings exactly as their UTF-8 bytes (Unicode code point order) without allocating: UTF-16 code units already agree except that surrogates (U+10000 and above) must sort after U+E000–U+FFFF. */
+export function utf8Compare(left: string, right: string): number {
+  const length = Math.min(left.length, right.length);
+  for (let index = 0; index < length; index++) {
+    const a = left.charCodeAt(index), b = right.charCodeAt(index);
+    if (a === b) continue;
+    const ordered = (a >= 0xd800 ? (a <= 0xdfff ? a + 0x2000 : a - 0x800) : a) - (b >= 0xd800 ? (b <= 0xdfff ? b + 0x2000 : b - 0x800) : b);
+    return ordered < 0 ? -1 : 1;
+  }
+  return left.length === right.length ? 0 : left.length < right.length ? -1 : 1;
+}
+
 export function normalizeRelative(value: string): string {
   return sourceRelative(value).normalize("NFC");
 }

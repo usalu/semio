@@ -10,7 +10,7 @@
         "@semio-tech/mit-bestand-demonstrator:prepare-dev"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -26,7 +26,7 @@
         "--graph=stdout"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -40,7 +40,7 @@
         "@semio-tech/mit-bestand-demonstrator:build"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_BUILD_MODE": "release",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -54,7 +54,7 @@
         "@semio-tech/mit-bestand-demonstrator:dev"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       },
       "watch": "@semio-tech/mit-bestand-demonstrator:activate-dev"
@@ -69,7 +69,7 @@
         "@semio-tech/mit-bestand-demonstrator:serve"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -83,7 +83,7 @@
         "@semio-tech/mit-bestand-demonstrator:activate-dev"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -99,7 +99,7 @@
         "--graph=stdout"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -113,7 +113,7 @@
         "@semio-tech/mit-bestand-demonstrator:prepare-e2e"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -127,7 +127,7 @@
         "@semio-tech/mit-bestand-demonstrator:serve-e2e"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     },
@@ -141,7 +141,7 @@
         "@semio-tech/mit-bestand-demonstrator:test-e2e"
       ],
       "env": {
-        "SEMIO_BUILD_MODE": "dev",
+        "SEMIO_BUILD_MODE": "prototype",
         "SEMIO_RENDERER": "react"
       }
     }

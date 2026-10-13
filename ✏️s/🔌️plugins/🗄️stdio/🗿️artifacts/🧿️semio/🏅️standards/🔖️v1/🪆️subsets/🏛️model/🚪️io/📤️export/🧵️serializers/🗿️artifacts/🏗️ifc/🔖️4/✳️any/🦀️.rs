@@ -22,8 +22,8 @@
 //! - `geometry`/non-unit `scale` on a placement have no IFC representation in this analyzer's
 //!   model and are dropped (`GeometryRef` is never read; `SemioTransform.scale` is ignored).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, PsetValue, SemioModelSnapshot, SpatialKind};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_ifc::IfcSnapshot;
 use semio_s_artifact_stdio_contract::part21::{Part21Document, Part21Header, Part21Instance, Part21Value};
@@ -209,7 +209,7 @@ fn part21_value_of_pset_value(v: &PsetValue) -> Part21Value {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &crate::standards::v1::subsets::model::schema::snapshot::PropertySet) {
+fn build_pset(instances: &mut Vec<Part21Instance>, alloc: &mut IdAlloc, owner_id: u64, element_id: u64, pset: &semio_s_artifact_stdio_semio_model::schema::snapshot::PropertySet) {
     let mut prop_ids = Vec::new();
     for prop in &pset.properties {
         let pid = alloc.next();

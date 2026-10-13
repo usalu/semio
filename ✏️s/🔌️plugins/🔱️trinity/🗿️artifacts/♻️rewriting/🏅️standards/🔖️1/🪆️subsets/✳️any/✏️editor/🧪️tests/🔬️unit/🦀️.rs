@@ -66,7 +66,7 @@ async fn new_app() -> RewritingTestApp {
 /// 🧫️ Loads the independently selected composed test input after creating an empty runtime app.
 async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) {
     let state = fixture_rule_state();
-    let files = store::ArtifactPackFiles { pack: store::ArtifactPack::encode_pack(&state), spr: store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
+    let files = store::os_store::serialization::ArtifactPackFiles { pack: store::os_store::serialization::ArtifactPack::encode_pack(&state), spr: store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA).await, ops: String::new() };
     let mut archive = PluginApp::document_load_archive(app, &files).expect("stamp test input");
     let reference = state.working_graph.content.target.clone();
     let owner = store::OwnerRef {
@@ -74,7 +74,7 @@ async fn load_rule_fixture(app: &mut VcsArtifactApp<EditorApp<TrinityRewritingPl
         slot: crate::content::WORKING_CHILD_SLOT.into(), child_id: state.working_graph.content.child_id.clone(),
     };
     let pack = crate::content::genesis_working_child_pack(&state, &owner.slot, &owner.child_id).unwrap().unwrap();
-    let envelope_pack = store::genesis_member_envelope_pack("stdio.semio", &reference, &owner, &pack).await.expect("owned child envelope");
+    let envelope_pack = store::os_store::text_format::genesis_member_envelope_pack("stdio.semio", &reference, &owner, &pack).await.expect("owned child envelope");
     archive.members.push(protocol::OwnedDocumentMemberPackEntry {
         ordinal: 0,
         reference: protocol::DocumentArchiveArtifactRef { artifact_id: reference.artifact_id, artifact_kind: reference.dialect.artifact_kind, standard: reference.dialect.standard, subset: reference.dialect.subset },
@@ -288,7 +288,7 @@ async fn set_active_example_loads_the_registered_demo_document() {
     let loads = receipt.effects.iter().filter(|effect| matches!(effect, semio_framework_plugin::Effect::LoadDocument { .. })).count();
     assert_eq!(loads, 1, "the registered example id produces exactly one LoadDocument effect");
     let loaded = crate::editor::rewriting::commands::set_active_example_document(crate::examples::demo::ID).expect("the demo example resolves to a document");
-    assert_eq!(loaded, store::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
+    assert_eq!(loaded, store::os_store::serialization::ArtifactDsl::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo example's own dsl parses"), "the document the effect carries is the example the subset registers");
     assert_ne!(loaded, app.snapshot().unwrap(), "the effect is HOST-applied: a mounted app with no host keeps its own snapshot, which is what makes the effect the only guest-side witness");
 }
 
@@ -374,7 +374,7 @@ async fn rewriting_io_declares_graph_in_and_graph_out_ports() {
 
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_history() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let expected: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = fixture_rule_state();
     let before = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();
@@ -389,9 +389,9 @@ async fn reset_document_ownership_rewriting_preserves_pack_with_an_edit_free_his
 
 //#region 🩹️RailVerbLaws
 /// 🧸️ The live `workingGraph` member — the working graph's single truth (design §20.15), never the parent's genesis owner.
-async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{ArtifactPack, SpaceMember};
+async fn live_working(app: &RewritingTestApp) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("rewriting parent projection");
     let bytes = app.child_store(crate::content::WORKING_CHILD_SLOT, &snapshot.working_graph.content.child_id).await.expect("working child").document_pack_bytes().await.expect("working child pack");
     SemioGraphSnapshot::decode_pack(&bytes).expect("working child snapshot")
@@ -658,7 +658,7 @@ async fn one_canvas_drag_is_one_history_row_labelled_from_its_leaf() {
 async fn a_deleted_working_graph_selection_is_relative_leaves() {
     let mut app = new_app().await;
     let before = live_working(&app).await;
-    let touches = |edge: &semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge, id: &str| edge.source.value == id || edge.target.value == id;
+    let touches = |edge: &semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphEdge, id: &str| edge.source.value == id || edge.target.value == id;
     let doomed = before.nodes.iter().map(|node| node.id.value.clone()).find(|id| before.edges.iter().any(|edge| touches(edge, id))).expect("a node with an edge");
     let touching = before.edges.iter().filter(|edge| touches(edge, &doomed)).count();
     let apart = before.edges.iter().find(|edge| !touches(edge, &doomed)).map(|edge| edge.id.value.clone());

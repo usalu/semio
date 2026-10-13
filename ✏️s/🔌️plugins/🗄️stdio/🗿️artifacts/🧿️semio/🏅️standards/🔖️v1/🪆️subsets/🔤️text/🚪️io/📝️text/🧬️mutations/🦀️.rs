@@ -5,11 +5,11 @@
 //! value convention, reused so this facet's grammar can lean on the shared `hex` macro instead of
 //! a quoted-string production).
 
-use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
+use crate::schema::mutations::SemioTextMutation;
 
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::text::schema::mutations::{add_mark::AddMark, change_run_language::ChangeRunLanguage, edit_run::EditRun, insert_run::InsertRun, remove_mark::RemoveMark, remove_run::RemoveRun, reorder_runs::ReorderRuns};
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use {crate::schema::mutations::add_mark::AddMark, crate::schema::mutations::change_run_language::ChangeRunLanguage, crate::schema::mutations::edit_run::EditRun, crate::schema::mutations::insert_run::InsertRun, crate::schema::mutations::remove_mark::RemoveMark, crate::schema::mutations::remove_run::RemoveRun, crate::schema::mutations::reorder_runs::ReorderRuns};
+use crate::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -172,9 +172,9 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::text::schema::mutations::*;
-use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioTextDiff;
+use crate::schema::snapshot::SemioTextSnapshot;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTextSnapshot, SemioTextMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. This
 /// plugin crate reaches the derive through the `dsl` extern-crate alias `🦀️.rs` declares

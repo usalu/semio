@@ -43,7 +43,7 @@ pub fn validate(payload: &ApplyLocalCatalogDocument) -> Result<(), Fault> {
         return Err(Fault::new(FaultOrigin::App, "s.home.apply-local-catalog-document.id-invalid", "the kept studio's id is empty, oversized or carries control characters"));
     }
     let (pack, spr) = decoded(payload)?;
-    let parsed: store::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::parse_document_pack(&pack, &spr))
+    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr))
         .map_err(|error| Fault::new(FaultOrigin::App, "s.home.apply-local-catalog-document.not-a-studio", format!("the kept studio's pair is not a studio document: {error}")))?;
     let envelope = parsed.into_envelope();
     let named = envelope.schema == semio_framework_artifact_space_space::S_SPACE_SCHEMA && envelope.id == payload.document_id;

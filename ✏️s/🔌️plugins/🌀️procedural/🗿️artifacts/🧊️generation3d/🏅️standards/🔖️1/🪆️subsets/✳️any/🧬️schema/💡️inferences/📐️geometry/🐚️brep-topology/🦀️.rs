@@ -5,12 +5,12 @@
 use super::brep_curve::guarded;
 use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{GeometryHandle, GeometryKind};
+use semio_framework_3d_brep_engine::{GeometryHandle, GeometryKind};
 
 const EMPTY: &str = "generation3d.geometry.topology-empty";
 const LABEL_MISSING: &str = "generation3d.geometry.label-missing";
 
-fn kernel(error: semio_framework_3d::brep::engine::BrepError) -> WidgetFault {
+fn kernel(error: semio_framework_3d_brep_engine::BrepError) -> WidgetFault {
     kernel_fault(&error)
 }
 

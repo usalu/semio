@@ -67,11 +67,11 @@ fn retained_window_input_preserves_owner_generation() {
             snapshot: owner.current_read_erased().unwrap(),
         };
         assert_eq!(snapshot.generation(), row["generation"].as_u64().unwrap());
-        let digest = crate::app::test_window_transient_context_identity(Some(&snapshot));
+        let digest = crate::tool_jobs::test_window_transient_context_identity(Some(&snapshot));
         let duplicate=snapshot.try_duplicate().unwrap();
-        assert_eq!(digest, crate::app::test_window_transient_context_identity(Some(&duplicate)));
+        assert_eq!(digest, crate::tool_jobs::test_window_transient_context_identity(Some(&duplicate)));
         crate::component::window_mutation::close_test_original_with_pump(duplicate,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
-        assert_ne!(digest, crate::app::test_window_transient_context_identity(None));
+        assert_ne!(digest, crate::tool_jobs::test_window_transient_context_identity(None));
         digests.insert(digest);
         identities.insert((snapshot.window_id().to_owned(), snapshot.window_kind_id().to_owned(), snapshot.generation(), snapshot.document_generation()));
         crate::component::window_mutation::close_test_original_with_pump(snapshot,||{let demand=owner.maintenance_returned_reads_demands(4096).unwrap();owner.maintenance_returned_reads_step(&factory,quoted(demand,1)).unwrap();});
@@ -111,12 +111,12 @@ fn retained_window_input_replacement_rejects_old_authority_and_publication() {
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let mutation = |id: &str, revision| WindowTransientMutation::of::<ReplacementWindow>(id, crate::publication_fixture::ChangePublicationTransient { revision }.into());
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     for (id, revision) in expected["before"].as_object().unwrap() {
         let authority = old.capture(Some(&view(id))).unwrap().unwrap();
         let mut publication = old.begin(semio_framework_job::OperationId(1), &authority, mutation(id, revision.as_u64().unwrap())).unwrap();
         for _ in 0..1024 {
-            if matches!(old.advance(publication.as_mut(), grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+            if matches!(old.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
                 assert!(publication.acknowledge());
                 break;
             }
@@ -240,11 +240,11 @@ fn retained_window_input_refresh_admits_live_generation_after_a_committed_write(
         ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
     };
     let mutation = |revision| WindowTransientMutation::of::<ReplacementWindow>("canvas-left", crate::publication_fixture::ChangePublicationTransient { revision }.into());
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65_536, maximum_capacity_bytes: 65_536, maximum_release_bytes: 65_536, maximum_depth: 64 };
     let publish = |registry: &mut WindowTransientOwnerRegistry, authority: &WindowTransientAuthority, revision: u64| {
         let mut publication = registry.begin(semio_framework_job::OperationId(1), authority, mutation(revision)).unwrap();
         for _ in 0..1024 {
-            if matches!(registry.advance(publication.as_mut(), grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+            if matches!(registry.advance(publication.as_mut(), grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
                 assert!(publication.acknowledge());
                 break;
             }

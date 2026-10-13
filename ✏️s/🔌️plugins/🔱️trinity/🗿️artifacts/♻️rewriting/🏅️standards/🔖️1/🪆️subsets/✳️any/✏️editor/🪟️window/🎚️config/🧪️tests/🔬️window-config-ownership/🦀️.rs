@@ -73,7 +73,7 @@ async fn rewriting_window_config_retained_publication_renders_and_reloads_two_co
             if std::time::Instant::now() >= deadline {
                 return Err("window config operations did not finish".into());
             }
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+            app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
             app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.map_err(|error| format!("{error:?}"))?;
             if let Some(page) = app.take_typed_operation_result_page(1) {
                 let lane = page.lane;

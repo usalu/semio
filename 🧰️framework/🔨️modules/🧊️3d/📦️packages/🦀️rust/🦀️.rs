@@ -1,5 +1,6 @@
-//! 🌐️ Shared 3D s-module: a half-edge mesh kernel, single-precision rigid-body algebra, and
-//! BVH-accelerated collision queries. Scene math (camera/frustum/picking) relocated to
+//! 🌐️ Shared 3D s-module: a half-edge mesh kernel, single-precision rigid-body algebra, inertia algebra and
+//! BVH-accelerated collision queries. The boundary-representation kernel lives in its own crates
+//! (`semio-framework-3d-brep-{representation,queries,operations,engine}`, wave E4 crate cut). Scene math (camera/frustum/picking) relocated to
 //! `semio-framework-ui`'s `kernel_3d_scene` mount (ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave MESH) — it has zero
 //! artifact-document inputs (a camera and a screen rect, not a snapshot), so it stays renderer
@@ -43,12 +44,15 @@ pub mod rigid;
 pub mod collision;
 //#endregion 🔖️Collision
 
-#[path = "../../📐️brep/🦀️.rs"]
-pub mod brep;
-
 //#region 🔖️Inertia
 /// 🛞️ Symmetric 3x3 eigen solver, principal inertia and parallel-axis algebra shared by the
 /// B-Rep and mesh analysis queries.
 #[path = "../../🛞️inertia/🦀️.rs"]
 pub mod inertia;
 //#endregion 🔖️Inertia
+
+//#region 🧪️TestSupport
+#[cfg(test)]
+#[path = "../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
+//#endregion 🧪️TestSupport

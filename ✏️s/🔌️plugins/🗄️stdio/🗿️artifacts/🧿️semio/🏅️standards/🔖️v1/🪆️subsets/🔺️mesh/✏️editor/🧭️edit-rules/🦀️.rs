@@ -1,8 +1,8 @@
 //! 🧭️ The mesh editor's edit rules: which snapshot pointer raises which ONE concrete mesh mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{complete, ent, find, ins, keyed, named, rem, resolve, Entries, Reshape};
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete, ent, find, ins, keyed, named, rem, resolve, Entries, Reshape};
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, Selector, SnapshotEditEvent};

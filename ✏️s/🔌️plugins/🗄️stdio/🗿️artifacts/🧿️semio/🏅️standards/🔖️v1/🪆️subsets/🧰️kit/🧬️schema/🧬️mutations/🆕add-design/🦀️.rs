@@ -1,8 +1,8 @@
 //! 🆕️ `add-design` — appends a new, empty DESIGN (no pieces/connections yet — populate via
 //! `edit-design`) to the kit's catalog.
 
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

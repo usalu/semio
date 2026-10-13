@@ -35,7 +35,7 @@ pub struct PlaybookStringList {
 //#endregion 🔖️DeltaHelpers
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `flow` is a `store::ArtifactChild<S>` composed-artifact
+/// 🔀️ Hand-written, not derived: `flow` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact
 /// handle bridged through `to_dsl_value`/`from_dsl_value` (see the sibling `🧬️schema/🦀️component.rs`
 /// impl for [`crate::schema::PlaybookArtifact`] — same trap, same fix). This is
 /// [`crate::mutation::MutationDiff::Diff`]'s own wire shape, so it must implement `ToValue`/

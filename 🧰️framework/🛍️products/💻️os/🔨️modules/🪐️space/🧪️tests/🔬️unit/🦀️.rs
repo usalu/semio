@@ -3,7 +3,7 @@ use super::*;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 use protocol::Mutation as _;
 use protocol::MutationDiff as _;
-use store::{ArtifactDsl, BlobStore};
+use store::{os_store::serialization::ArtifactDsl, BlobStore};
 
 //#region 🧸️Fixtures
 fn demo_user(id: &str, role: SpaceRole) -> SpaceUser {
@@ -83,8 +83,8 @@ fn collection_envelope_id_is_two_dot_segments() {
     let id = <CollectionSnapshot as ArtifactDsl>::envelope_id();
     assert_eq!(id, "os.collection");
     assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-    let pack = store::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
-    let decoded = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&empty_collection_snapshot("test"));
+    let decoded = <CollectionSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded.name, "test");
 }
 
@@ -93,8 +93,8 @@ fn space_envelope_id_is_two_dot_segments() {
     let id = <SpaceSnapshot as ArtifactDsl>::envelope_id();
     assert_eq!(id, "os.space");
     assert_eq!(id.split('.').count(), 2, "SemioEnvelope::from_envelope_id requires plugin.artifact");
-    let pack = store::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));
-    let decoded = <SpaceSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&empty_space_snapshot("test", SpaceKind::Atelier, SpaceVisibility::Private));
+    let decoded = <SpaceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded.name, "test");
 }
 
@@ -216,15 +216,15 @@ fn space_member_removal_inverse_restores_the_original_index() {
     base.users.push(demo_user("u3", SpaceRole::Author));
     base.programs = vec!["cad".into(), "draw".into(), "note".into()];
     let removed = SpaceMutation::RemoveUser { user_id: "u2".into() };
-    let after = store::apply_outcome(&base, removed.diff(&base)).0;
+    let after = store::os_store::replay::apply_outcome(&base, removed.diff(&base)).0;
     let restore = removed.inverse(&base).expect("inverse");
     assert_eq!(restore, vec![SpaceMutation::UpsertUser { user: demo_user("u2", SpaceRole::Spectator), index: Some(1) }]);
-    let restored = store::apply_outcome(&after, restore[0].diff(&after)).0;
+    let restored = store::os_store::replay::apply_outcome(&after, restore[0].diff(&after)).0;
     assert_eq!(restored, base);
     let uninstalled = SpaceMutation::UninstallProgram { plugin_id: "draw".into() };
-    let after = store::apply_outcome(&base, uninstalled.diff(&base)).0;
+    let after = store::os_store::replay::apply_outcome(&base, uninstalled.diff(&base)).0;
     let restore = uninstalled.inverse(&base).expect("inverse");
-    assert_eq!(store::apply_outcome(&after, restore[0].diff(&after)).0, base);
+    assert_eq!(store::os_store::replay::apply_outcome(&after, restore[0].diff(&after)).0, base);
 }
 //#endregion 🧪️SpaceMutationLaws
 
@@ -503,8 +503,8 @@ fn backbone_uris_are_stable() {
 //#endregion 🧪️PathResolverLaws
 
 //#region 🧪️DraftLaws
-fn memory_draft_port() -> Arc<store::BackbonePorts> {
-    Arc::new(store::BackbonePorts::Memory(crate::host::resolve_kernel_future(store::MemoryBackbonePort::new())))
+fn memory_draft_port() -> Arc<store::os_store::backbone::BackbonePorts> {
+    Arc::new(store::os_store::backbone::BackbonePorts::Memory(crate::host::resolve_kernel_future(store::os_store::backbone::MemoryBackbonePort::new())))
 }
 
 #[test]
@@ -619,7 +619,7 @@ fn promote_unknown_draft_errors() {
     assert_eq!(catalog.promote_draft(&port, "space-1", "nope", None), Err(SpaceError::UnknownDraft("nope".into())));
 }
 
-/// 🧪️ `draft_catalog_for` is the port-keyed global registry: the SAME `Arc<store::BackbonePorts>`
+/// 🧪️ `draft_catalog_for` is the port-keyed global registry: the SAME `Arc<store::os_store::backbone::BackbonePorts>`
 /// identity always resolves to the SAME `DraftCatalog` instance (so callers sharing a port share
 /// draft bookkeeping), while two DISTINCT port identities never share one.
 #[test]
@@ -730,7 +730,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
     let mut atelier = empty_space_snapshot("Atelier", SpaceKind::Atelier, SpaceVisibility::Private);
     atelier.users.push(demo_user("u2", SpaceRole::Author));
     atelier.users.push(demo_user("u1", SpaceRole::Author));
-    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let space_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-repair-space", atelier, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let space_history = space_store.envelope().vcs.clone();
     let loaded = space_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_space_atelier_invariant(loaded.clone());
@@ -740,7 +740,7 @@ fn load_repair_reconcilers_never_write_history_rows() {
 
     let mut collection = empty_collection_snapshot("Demo");
     collection.folders.push(CollectionFolder { id: "f1".into(), parent_id: Some("missing".into()), name: "Orphan".into() });
-    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    let collection_store = crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "art-repair-collection", collection, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
     let collection_history = collection_store.envelope().vcs.clone();
     let loaded = collection_store.snapshot().expect("projection");
     let (repaired, reports) = reconcile_collection_integrity(loaded.clone());
@@ -767,9 +767,9 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // op here is an in-memory fixture operation, never real I/O.
     test_identity!(identity);
     let mut nested_space_store =
-        crate::host::resolve_kernel_future(store::ArtifactStore::new(store::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
-    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
+        crate::host::resolve_kernel_future(store::ArtifactStore::new(store::os_store::document_materialize::create_document_envelope::<SpaceSnapshot, SpaceMutation>(S_SPACE_SCHEMA, "art-nested-space", demo_space(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid artifact store fixture");
+    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![SpaceMutation::SetName { name: "Nested Space".into() }], transaction: None }, &mut identity)).expect("apply");
+    crate::host::resolve_kernel_future(nested_space_store.dispatch(store::os_store::store_schema::ArtifactCommand::CommitCheckpoint { message: Some("checkpoint".into()), authors: Vec::new() }, &mut identity)).expect("commit checkpoint");
     let original_pack_files = crate::host::resolve_kernel_future(nested_space_store.snapshot_pack()).expect("snapshot pack");
 
     let blob_store = TestBlobStore::default();
@@ -813,7 +813,7 @@ fn zip_export_import_round_trips_real_store_documents_and_blob() {
     // fixture strings) — the law `zip_export_import_export_is_byte_stable` proved with mock bytes
     // holds end-to-end.
     let mut reexport_pack_files = HashMap::new();
-    reexport_pack_files.insert("art-nested-space".to_string(), store::ArtifactPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
+    reexport_pack_files.insert("art-nested-space".to_string(), store::os_store::serialization::ArtifactPackFiles { pack: imported_pack.clone(), spr: imported_spr.clone(), ops: String::new() });
     let re_read_artifact = real_artifact_reader(&reexport_pack_files);
     let re_read_blob = real_blob_reader(&fresh_blob_store);
     let twice = export_collection_zip(&imported.collection, &imported.collection_spr, &re_read_artifact, &re_read_blob).expect("re-export");

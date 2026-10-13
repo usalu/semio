@@ -1,0 +1,118 @@
+{
+ "order": [
+  "model",
+  "read",
+  "write",
+  "mutations",
+  "inferences",
+  "editor",
+  "aggregator"
+ ],
+ "allow": {
+  "read": [
+   "model"
+  ],
+  "write": [
+   "model"
+  ],
+  "mutations": [
+   "model"
+  ],
+  "inferences": [
+   "model"
+  ],
+  "editor": [
+   "model",
+   "read",
+   "write",
+   "mutations",
+   "inferences"
+  ],
+  "aggregator": [
+   "model",
+   "read",
+   "write",
+   "mutations",
+   "inferences",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "/🪆️subsets/♾️any/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "editor"
+  ],
+  [
+   "/📚️examples/",
+   "editor"
+  ],
+  [
+   "/🚪️io/📥️import/",
+   "read"
+  ],
+  [
+   "/🚪️io/📤️export/",
+   "write"
+  ],
+  [
+   "/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🔨️modules/(🧬️mutation-support|🧭️mutation-dispatch)/",
+   "mutations"
+  ],
+  [
+   "/🚪️io/(💾️binary|📝️text)/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🔨️modules/",
+   "inferences"
+  ],
+  [
+   "/🚪️io/(💾️binary|📝️text)/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🚪️io/💾️binary/📸️snapshot/🧮️decoded-accessors/",
+   "inferences"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/",
+   "model"
+  ],
+  [
+   "🏅️standards/🔖️2.0/🦀️\\.rs",
+   "model"
+  ],
+  [
+   "/🪆️subsets/[^/]+/🦀️\\.rs",
+   "model"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

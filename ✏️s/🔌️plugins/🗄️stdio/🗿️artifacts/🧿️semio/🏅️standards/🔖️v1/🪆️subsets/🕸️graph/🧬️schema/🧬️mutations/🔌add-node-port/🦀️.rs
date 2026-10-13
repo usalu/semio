@@ -2,8 +2,8 @@
 //! `ports` (an intrinsically ordered, anonymous collection nested one level inside `nodes` — mirrors
 //! `🔤️text`'s `add-mark` exactly).
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

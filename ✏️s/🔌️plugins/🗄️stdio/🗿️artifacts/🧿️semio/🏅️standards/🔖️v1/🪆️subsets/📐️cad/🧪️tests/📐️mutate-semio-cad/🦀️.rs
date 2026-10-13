@@ -34,18 +34,18 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::mutations::{diff_semio_cad_mutation, inverse_semio_cad_mutation, SemioCadMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::text::mutations::{decode_semio_cad_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::binary::snapshot::{encode_semio_cad_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::binary::snapshot::{decode_semio_cad_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::text::snapshot::{decode_semio_cad_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::text::snapshot::{encode_semio_cad_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::text::snapshot::{print_semio_cad_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::cad::io::text::snapshot::{parse_semio_cad_dsl};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_cad::schema::mutations::{diff_semio_cad_mutation, inverse_semio_cad_mutation, SemioCadMutation};
+    use semio_s_artifact_stdio_semio_cad::io::text::mutations::decode_semio_cad_mutation_json;
+    use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
+    use semio_s_artifact_stdio_semio_cad::io::binary::snapshot::encode_semio_cad_pack;
+    use semio_s_artifact_stdio_semio_cad::io::binary::snapshot::decode_semio_cad_pack;
+    use semio_s_artifact_stdio_semio_cad::io::text::snapshot::decode_semio_cad_snapshot_json;
+    use semio_s_artifact_stdio_semio_cad::io::text::snapshot::encode_semio_cad_snapshot_json;
+    use semio_s_artifact_stdio_semio_cad::io::text::snapshot::print_semio_cad_dsl;
+    use semio_s_artifact_stdio_semio_cad::io::text::snapshot::parse_semio_cad_dsl;
 
     const DSL_ASSET: &str = "asset://📐️drawing/🗣️.dsl.semio";
     const PACK_ASSET: &str = "asset://📐️drawing/🎒️.pack.semio";

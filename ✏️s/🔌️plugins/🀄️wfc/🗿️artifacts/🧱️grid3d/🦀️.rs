@@ -49,9 +49,9 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// 🧊️ Addresses one tile mesh as this document's child in the `s.stdio.semio@v1/mesh` store — the
 /// one place the dialect is spelled, so every author (examples, editor affordances, importers) mints
 /// the handle here rather than restating it. `child_id` IS the mesh artifact id.
-pub fn mesh_child_handle(mesh_id: &str) -> store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot> {
+pub fn mesh_child_handle(mesh_id: &str) -> store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot> {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
-    store::ArtifactChild::new(mesh_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: mesh_id.to_string(), dialect })
+    store::os_store::artifact_child::ArtifactChild::new(mesh_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: mesh_id.to_string(), dialect })
 }
 //#endregion 🧊️MeshChild
 

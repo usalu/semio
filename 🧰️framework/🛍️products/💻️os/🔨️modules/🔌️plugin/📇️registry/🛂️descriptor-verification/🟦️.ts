@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
+import { SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { CATALOG_DESCRIPTOR_PACK_FILENAME, StrictCatalogDescriptor, boundedCatalogDiagnostic, rejectPlaceholderCatalogIdentity, validateCatalogDescriptorPair } from "../✅️catalog-verification/🟦️.ts";
 import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️discovery/🟦️.ts";
 
@@ -9,9 +10,8 @@ import { DESCRIPTOR_JSON_REL_PATH, DeployedRegistryEntryV1 } from "../🔎️dis
 //#region 🔖️DescriptorGate
 
 
-/** #️⃣ Lowercase hex SHA-256 — same algorithm `semio-framework-plugin-describe` uses for
- * `hashes.wasmSha256` (see that crate's own `sha256_hex` doc for why not this repo's usual
- * `blake3`-based `semio-framework-hash`). */
+/** #️⃣ Lowercase hex SHA-256 — the algorithm every `ComponentReceiptV1` digest uses (the shipped component, the
+ * semantic descriptor pack), never this repo's usual `blake3`-based `semio-framework-hash`. */
 export function sha256HexOfFile(path: string): string {
   return createHash("sha256").update(readFileSync(path)).digest("hex");
 }
@@ -70,22 +70,19 @@ export function auditInteractiveJobClassificationDrift(pluginId: string, ownerRo
 }
 
 
-/** 🧬️ The component a committed descriptor describes: `describe` hashes the `dist/component-dev` deliverable it staged
- * (`hashes.wasmSha256`, the `rebuild-all` invariant the hub's trusted-catalog preflight enforces as well), so that file is
- * what the descriptor is checked against — never the canonical `wasm-release` artifact of the ambient target dir, whose
- * bytes no descriptor names (an unrelated release build there failed every `check`, ticket 26/09/23 W4). */
-export function describedComponentPath(repoRoot: string, entry: Pick<DeployedRegistryEntryV1, "cratePath" | "wasmOut">): string {
-  return join(repoRoot, entry.cratePath, "dist", "component-dev", entry.wasmOut);
-}
-
-
-/** 🪪️ One descriptor's component finding: a missing deliverable is a warning ("not built"), bytes that differ from
- * `wasmSha256` are an error (the descriptor is stale against its own build). */
-export function describedComponentFindings(repoRoot: string, entry: Pick<DeployedRegistryEntryV1, "pluginId" | "cratePath" | "wasmOut">, wasmSha256: string): { warnings: string[]; errors: string[] } {
-  const described = describedComponentPath(repoRoot, entry);
-  if (!existsSync(described)) return { warnings: [`${entry.pluginId}: has hashes.wasmSha256 but no component-dev deliverable at ${relative(repoRoot, described)} — the described component is not built`], errors: [] };
-  const actual = sha256HexOfFile(described);
-  return actual === wasmSha256 ? { warnings: [], errors: [] } : { warnings: [], errors: [`${entry.pluginId}: hashes.wasmSha256 is ${wasmSha256} but ${relative(repoRoot, described)} actually hashes to ${actual} — re-run \`describe\` after the latest build`] };
+/** 🧾️ One committed semantic descriptor against the shipped component it was verified with: the `wasm-release`
+ * deliverable's `🧾️receipt.json` must name exactly this pack (`semanticDescriptorSha256`) and exactly the bytes beside it
+ * (`wasmSha256`, `wasmBytes`). No shipped deliverable yet is a warning ("not built"); a receipt that names other bytes or
+ * another descriptor is an error — the committed declaration moved past its last shipped build (ticket 26/09/23 wave A2). */
+export function shippedComponentFindings(repoRoot: string, entry: Pick<DeployedRegistryEntryV1, "pluginId" | "packageId" | "packageName" | "cratePath">, semanticPack: Uint8Array): { warnings: string[]; errors: string[] } {
+  const deliverable = componentDeliverableV1(join(repoRoot, entry.cratePath), entry.packageName, SHIPPED_COMPONENT_PROFILE);
+  if (!existsSync(deliverable.receipt) || !existsSync(deliverable.wasm)) return { warnings: [`${entry.pluginId}: no shipped component and receipt under ${relative(repoRoot, deliverable.directory)} — the described component is not built`], errors: [] };
+  try {
+    const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: entry.pluginId, packageId: entry.packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), semanticPack);
+    return { warnings: [], errors: findings.map((finding) => `${entry.pluginId}: ${finding} (${relative(repoRoot, deliverable.receipt)}) — rebuild it with \`bun nx run <its crate project>:component\``) };
+  } catch (error) {
+    return { warnings: [], errors: [`${entry.pluginId}: ${relative(repoRoot, deliverable.receipt)} does not decode: ${boundedCatalogDiagnostic(error)}`] };
+  }
 }
 
 
@@ -94,8 +91,8 @@ export function describedComponentFindings(repoRoot: string, entry: Pick<Deploye
  * complete `🔣️.json` + `🛂️.descriptor.semio` pair, the pair strict-decodes to one semantically
  * identical value in both forms, it carries no placeholder identity, `pluginId`/`packageId`/`extends`
  * match the Cargo component, every `on-extension-request:<point>` names a real host extension point,
- * the described component's sha256 matches `hashes.wasmSha256` ({@link describedComponentFindings}), and no
- * committed `interactiveJob` contradicts the owner's own Rust classification.
+ * the shipped component's receipt names exactly this semantic pack and the bytes beside it
+ * ({@link shippedComponentFindings}), and no committed `interactiveJob` contradicts the owner's own Rust classification.
  *
  * A missing, half-published, divergent or placeholder pair is an **error**, not a warning: the strict
  * catalog gate treats exactly these as unpublishable, so a green `check` over them was reporting a
@@ -143,11 +140,9 @@ export function validateDescriptors(entries: readonly DeployedRegistryEntryV1[],
         errors.push(`${entry.pluginId}: declares on-extension-request:${point}, but host plugin ${JSON.stringify(hostPluginId)} declares no extension point ${JSON.stringify(point)} (has: ${[...(hostExtensionPoints ?? [])].join(", ") || "none"})`);
       }
     }
-    if (entry.hashes) {
-      const findings = describedComponentFindings(repoRoot, entry, entry.hashes.wasmSha256);
-      warnings.push(...findings.warnings);
-      errors.push(...findings.errors);
-    }
+    const findings = shippedComponentFindings(repoRoot, entry, pair.packBytes);
+    warnings.push(...findings.warnings);
+    errors.push(...findings.errors);
   }
   console.log(`descriptor gate: ${described}/${entries.length} crates own a verified 🔣️.json + 🛂️.descriptor.semio pair.`);
   return { warnings, errors };

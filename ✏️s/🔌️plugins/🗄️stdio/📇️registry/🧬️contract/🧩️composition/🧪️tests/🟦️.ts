@@ -12,7 +12,8 @@ export function runCompositionContributionChecks(): number {
   const unique = ajv.compile({ type: "array", uniqueItems: true });
   for (const vector of corpus.cases) {
     const laws = vector.contributions.flatMap((row: any) => row.apps ?? []).flatMap((app: any) => app.laws ? Object.values(app.laws) : []);
-    const oracle = vector.contributions.every((row: unknown) => validRow(row)) && ["artifact", "package", "order"].every((key) => unique(vector.contributions.map((row: Record<string, unknown>) => row[key]))) && unique(laws);
+    const owned = vector.contributions.flatMap((row: any) => [row.package, ...(row.symbolPackages ?? []), ...(row.catalogPackage ? [row.catalogPackage] : [])]);
+    const oracle = vector.contributions.every((row: unknown) => validRow(row)) && ["artifact", "package", "order"].every((key) => unique(vector.contributions.map((row: Record<string, unknown>) => row[key]))) && unique(laws) && unique(owned);
     let selected: string[] | undefined;
     try { selected = selectCompositionContributionsV1(vector.contributions, vector.selection).map((row) => row.artifact); } catch {}
     assert.equal(selected !== undefined, oracle, `${vector.id}: independent admission`);

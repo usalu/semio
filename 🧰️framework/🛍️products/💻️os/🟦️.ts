@@ -217,7 +217,7 @@ function remoteEnvelopeUrl(remote: { readonly hostPort: string; readonly spaceId
   return `http://${remote.hostPort}/spaces/${encodeURIComponent(remote.spaceId)}/documents/${encodeURIComponent(remote.documentId)}/envelope`;
 }
 
-/** 🔌️ `store::encode_document_pack_bytes` — length-prefixed `pack` then raw `spr`. */
+/** 🔌️ `store::os_store::serialization::encode_document_pack_bytes` — length-prefixed `pack` then raw `spr`. */
 export function encodeDocumentPackBytes(pack: Uint8Array, spr: Uint8Array): Uint8Array {
   const out: number[] = [];
   writeVarintU64(out, pack.length);

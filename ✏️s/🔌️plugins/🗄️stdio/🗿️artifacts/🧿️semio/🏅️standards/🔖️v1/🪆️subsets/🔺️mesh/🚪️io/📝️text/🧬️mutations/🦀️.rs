@@ -5,58 +5,58 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::mesh::schema::mutations::*;
+use crate::schema::mutations::*;
 #[cfg(test)]
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_texture};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_texture};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_material};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_material};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_mesh};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_mesh};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_primitive};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_primitive};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_topology};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_topology};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_uv};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_uv};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_rgba};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_rgba};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_point3};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_point3};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{hex_decode};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{hex_encode};
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::schema::diff::SemioMeshDiff;
+use crate::io::text::snapshot::dec_texture;
+use crate::io::text::snapshot::enc_texture;
+use crate::io::text::snapshot::dec_material;
+use crate::io::text::snapshot::enc_material;
+use crate::io::text::snapshot::dec_mesh;
+use crate::io::text::snapshot::enc_mesh;
+use crate::io::text::snapshot::dec_primitive;
+use crate::io::text::snapshot::enc_primitive;
+use crate::io::text::snapshot::dec_topology;
+use crate::io::text::snapshot::enc_topology;
+use crate::io::text::snapshot::dec_uv;
+use crate::io::text::snapshot::enc_uv;
+use crate::io::text::snapshot::dec_rgba;
+use crate::io::text::snapshot::enc_rgba;
+use crate::io::text::snapshot::dec_point3;
+use crate::io::text::snapshot::enc_point3;
+use crate::io::text::snapshot::dec_list;
+use crate::io::text::snapshot::enc_list;
+use crate::io::text::snapshot::decode_option;
+use crate::io::text::snapshot::encode_option;
+use crate::io::text::snapshot::dec_str;
+use crate::io::text::snapshot::enc_str;
+use crate::io::text::snapshot::hex_decode;
+use crate::io::text::snapshot::hex_encode;
+use crate::schema::snapshot::SemioMeshSnapshot;
 #[cfg(test)]
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
+use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `🧊️brep`/`🌊️flow`'s own facets document).
 use protocol::{OpBinary, OpText};
-use crate::standards::v1::subsets::mesh::schema::mutations::change_material_base_color;
-use crate::standards::v1::subsets::mesh::schema::mutations::change_material_metallic;
-use crate::standards::v1::subsets::mesh::schema::mutations::change_material_roughness;
-use crate::standards::v1::subsets::mesh::schema::mutations::change_texture_mime;
-use crate::standards::v1::subsets::mesh::schema::mutations::create_material;
-use crate::standards::v1::subsets::mesh::schema::mutations::create_mesh;
-use crate::standards::v1::subsets::mesh::schema::mutations::create_primitive;
-use crate::standards::v1::subsets::mesh::schema::mutations::create_texture;
-use crate::standards::v1::subsets::mesh::schema::mutations::delete_material;
-use crate::standards::v1::subsets::mesh::schema::mutations::delete_mesh;
-use crate::standards::v1::subsets::mesh::schema::mutations::delete_primitive;
-use crate::standards::v1::subsets::mesh::schema::mutations::delete_texture;
-use crate::standards::v1::subsets::mesh::schema::mutations::move_vertex;
-use crate::standards::v1::subsets::mesh::schema::mutations::replace_primitive_geometry;
-use crate::standards::v1::subsets::mesh::schema::mutations::replace_texture_bytes;
-use crate::standards::v1::subsets::mesh::schema::mutations::set_primitive_material;
-use crate::standards::v1::subsets::mesh::schema::mutations::set_primitive_topology;
+use crate::schema::mutations::change_material_base_color;
+use crate::schema::mutations::change_material_metallic;
+use crate::schema::mutations::change_material_roughness;
+use crate::schema::mutations::change_texture_mime;
+use crate::schema::mutations::create_material;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::create_primitive;
+use crate::schema::mutations::create_texture;
+use crate::schema::mutations::delete_material;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::delete_primitive;
+use crate::schema::mutations::delete_texture;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_primitive_geometry;
+use crate::schema::mutations::replace_texture_bytes;
+use crate::schema::mutations::set_primitive_material;
+use crate::schema::mutations::set_primitive_topology;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioMeshSnapshot, SemioMeshMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Seventeen
 /// triads: mesh lifecycle, primitive lifecycle + topology/geometry/material, material lifecycle +

@@ -664,7 +664,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.puzzle.puzzle2d.grammar.4", "grammar", "2d.pack", &[("grammar", "2d.pack")], None),
         ("s.puzzle.puzzle2d.grammar.5", "grammar", "2d.spr", &[("grammar", "2d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle2dPlayApp>>()` derives
-        // its extension claim from `<Puzzle2dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Puzzle2dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle2d-play"`, not the base `Puzzle2dSnapshot`'s `"puzzle2d"`.
         ("s.puzzle.puzzle2d.codec.document-1", "codec", "board.ports.directed.v1:puzzle2d-play", &[("codec", "board.ports.directed.v1"), ("codec-extension", "17:board.ports.directed.v1:puzzle2d-play")], None),

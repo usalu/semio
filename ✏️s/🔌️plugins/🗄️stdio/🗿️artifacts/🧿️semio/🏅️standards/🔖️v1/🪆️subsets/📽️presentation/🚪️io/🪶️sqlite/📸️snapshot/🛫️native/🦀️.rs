@@ -1,10 +1,10 @@
 //! 📽️ Emits every Presentation owner and its actual typed Document block vocabulary under one control.
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot,SlideShape,SlideFrame,PlaceholderKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
-use crate::standards::v1::subsets::document::io::sqlite::snapshot::native_encoding as document;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::snapshot::{SemioPresentationSnapshot, SlideShape, SlideFrame, PlaceholderKind};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
+use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::native_encoding as document;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,ValueError};
-pub(crate) fn encode(value:&SemioPresentationSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.presentation.dsl v1\n","s.stdio.semio.presentation.pack v1",control,|control|crate::standards::v1::subsets::presentation::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}
+pub(crate) fn encode(value:&SemioPresentationSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio s.stdio.semio.presentation.dsl v1\n","s.stdio.semio.presentation.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}
 fn comma(w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.delimiter(b",",e)}
 fn option(value:Option<&String>,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{match value{None=>if e==SnapshotEncoding::Binary{w.byte(0)}else{w.bytes(b"[0]")},Some(value)=>{if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"[1,")?}w.string(value,e)?;w.delimiter(b"]",e)}}}
 fn number(value:f64,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{if e==SnapshotEncoding::Binary{w.number(value,e)}else{w.integer(value.to_bits(),e)}}
@@ -18,7 +18,7 @@ fn shape(value:&SlideShape,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(
  SlideShape::Placeholder{kind,..}=>placeholder(kind,w,e)?
  }w.delimiter(b"]",e)}
 fn shapes(values:&[SlideShape],w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.list(values,e,|w,value|shape(value,w,e))}
-pub(crate) fn fields(value:&SemioPresentationSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;w.delimiter(b"\nmasters=",e)?;
+pub fn fields(value:&SemioPresentationSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;w.delimiter(b"\nmasters=",e)?;
  w.list(&value.masters,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;w.delimiter(b"]",e)})?;w.delimiter(b"\nlayouts=",e)?;
  w.list(&value.layouts,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;w.string(&value.master_id,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;w.delimiter(b"]",e)})?;w.delimiter(b"\nslides=",e)?;
  w.list(&value.slides,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;option(value.layout_id.as_ref(),w,e)?;comma(w,e)?;shapes(&value.shapes,w,e)?;comma(w,e)?;blocks(&value.notes,w,e)?;w.delimiter(b"]",e)})

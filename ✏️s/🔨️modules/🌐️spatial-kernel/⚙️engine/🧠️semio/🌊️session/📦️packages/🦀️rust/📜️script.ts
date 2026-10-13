@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { resolve } from "node:path";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../../../🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
@@ -19,7 +20,7 @@ class TestScript extends BundleScript {
   }
 }
 async function buildSessionWasm(rsDir: string): Promise<void> {
-  await buildRepositoryWasmWebV1({ rsDir, logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", outputDirectory: "🕸️bindings", shipProfile: "wasm-release", cargoFeatures:["browser-publication"], pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
+  await buildRepositoryWasmWebV1({ rsDir, componentDir: resolve(rsDir, "../../🧩️component/📦️packages/🦀️rust"), logPrefix: "s/spatial-kernel/semio/session", wasmBaseName: "semio_session", outputDirectory: "🕸️bindings", shipProfile: "wasm-release", pkg: { name: "@semio-tech/s-spatial-kernel-semio-session", files: ["semio_session.js","semio_session_bg.wasm","semio_session.d.ts"], main: "semio_session.js", module: "semio_session.js", types: "semio_session.d.ts" } });
 }
 class WasmScript extends BundleScript { async run(): Promise<void> { await buildSessionWasm(import.meta.dir); } }
 class CanonicalScript extends BundleScript {

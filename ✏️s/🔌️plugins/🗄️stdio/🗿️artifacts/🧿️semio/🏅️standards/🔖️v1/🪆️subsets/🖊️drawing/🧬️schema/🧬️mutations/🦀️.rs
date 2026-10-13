@@ -14,8 +14,8 @@
 //! `📓️wave4-reports/drawing-triads-report.md`'s `## sharedFileRequests` for the exact fields
 //! needed before those verbs can be authored conformingly.
 
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Leaves
 use super::change_stroke_color;
@@ -118,9 +118,9 @@ pub fn inverse_semio_drawing_mutation(mutation: &SemioDrawingMutation, base: &Se
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioDrawingMutation> {
-    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
-    use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
-    use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+    use crate::schema::diff::NodePath;
+    use crate::schema::snapshot::{DrawLayer, DrawNode, PathSegment};
 
     let leaf_path = NodePath { layer: 0, path: vec![0] };
     let root_path = NodePath { layer: 0, path: vec![] };

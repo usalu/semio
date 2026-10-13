@@ -41,7 +41,7 @@ import { canonicalFilenameForKind, fixedContractFilename, loadCatalogTaxonomy, l
 import { loadFrameworkOsPlaygroundCatalog } from "./🎮️playground/🟦️.ts";
 import { getWorkspaceRoot } from "./🗂️workspaces/🟦️.ts";
 import {repositoryCargoPreparationStorageV1, cargoRepositoryPackages, cargoRepositoryPackageSelections, cargoWorkspaceForManifest, cargoNextestConfiguration, selectedCargoArguments, prepareCargoWorkspaceInvocation, cargoWorkspacePreparationInvocationV1 } from "./🗂️workspaces/🦀️cargo/🟦️.ts";
-import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioShipEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
+import { budgetTimeoutHint, cargoProfileDir, defaultBudgetMs, daemonBudgetOpts, orchestratorBudgetOpts, resolveWorkspaceBin, runCmd, runCmdStatus, runNodeBin, runNodeBinStatus, semioBuildMode, semioReleaseEnv, tryRun, type RunCmdOpts, type SemioBuildMode } from "./🏃️process/🟦️.ts";
 
 export const HUB_DATA_DIR_NAME = "🌐hub";
 export const SPACE_DATA_DIR_NAME = "🔗space";
@@ -965,8 +965,8 @@ export const PACKAGE_TEST_BUDGET_MS: Record<string, Partial<Record<TestLevel, nu
   "semio-hub-space": { quick: 1_200_000 },
   "semio-hub-sourcing": { quick: 600_000 },
   "semio-s-plugin-cad-aec-building": { quick: 600_000 },
-  "semio-s-plugin-cad-aec-building-energy": { quick: 600_000 },
-  "semio-s-plugin-cad-aec-building-structure": { quick: 600_000 },
+  "semio-s-plugin-cad-aec-energy": { quick: 600_000 },
+  "semio-s-plugin-cad-aec-structure": { quick: 600_000 },
   "semio-s-plugin-cad-spatial-shape": { quick: 600_000 },
   "semio-s-plugin-imperative-control": { quick: 600_000 },
   "semio-s-plugin-imperative-effect": { quick: 600_000 },
@@ -2254,18 +2254,8 @@ export function repositoryWasmBuildPolicyV1(cwd: string): WasmBuildPolicyV1 {
 }
 /** 🦀️ Composes actual repository source preparation with neutral browser compiler execution. */
 export async function buildRepositoryWasmWebV1(options: WasmPackWebBuildOptions): Promise<void> {
-  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),["build", "--manifest-path", join(options.rsDir, "Cargo.toml")],options.rsDir,process.env);
+  prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(getWorkspaceRoot()),getWorkspaceRoot(),["build", "--manifest-path", join(options.componentDir, "Cargo.toml")],options.componentDir,process.env);
   await buildWasmWebV1(options, repositoryWasmBuildPolicyV1(options.rsDir));
-}
-
-const EXTENSION_COMPONENT_WASM_TARGET = "wasm32-wasip2";
-
-/** 🛡️ Explicit WASI-only link profiles; native dev and publication identity stay separate. */
-export function selectComponentWasmProfile(mode: SemioBuildMode, override?: string): "wasm-dev" | "wasm-release" {
-  if (mode !== "dev" && mode !== "ship") throw new Error("invalid component build mode");
-  const profile = override ?? (mode === "ship" ? "wasm-release" : "wasm-dev");
-  if (profile !== "wasm-dev" && profile !== "wasm-release") throw new Error("SEMIO_PLUGIN_PROFILE must be wasm-dev or wasm-release");
-  return profile;
 }
 
 function parseCargoTomlStringArray(block: string, key: string): string[] {
@@ -2318,20 +2308,17 @@ export function parseExtensionCargoManifest(
   return { packageName, directoryName, version, description, componentPackageId, extends: extendsHost, contributes };
 }
 
-/** 📦 Builds a wasip2 component and writes a runtime-installable `.sxt` beside the crate (`dist/<id>.sxt` by default). */
-export async function runExtensionComponentPackage(opts: { readonly rsDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
+/** 📦 Packs the SHIPPED `wasm-release` component of one extension component crate — built, staged and verified against its committed
+ * semantic descriptor by the one component stage — into a runtime-installable `.sxt` beside that crate (`dist/<id>.sxt`). */
+export async function runExtensionComponentPackage(opts: { readonly componentDir: string; readonly repoRoot?: string; readonly logPrefix?: string }): Promise<string> {
   const repoRoot = opts.repoRoot ?? getWorkspaceRoot();
-  const rsDir = resolve(opts.rsDir);
-  const manifestPath = join(rsDir, "Cargo.toml");
+  const componentDir = resolve(opts.componentDir);
+  const manifestPath = join(componentDir, "Cargo.toml");
   const parsed = parseExtensionCargoManifest(manifestPath, repoRoot);
-  const profile = selectComponentWasmProfile(semioBuildMode(), process.env.SEMIO_PLUGIN_PROFILE);
   const logPrefix = opts.logPrefix ?? parsed.componentPackageId;
-  if (runCmdStatus("cargo", ["build", "--manifest-path", manifestPath, "-p", parsed.packageName, "--target", EXTENSION_COMPONENT_WASM_TARGET, "--profile", profile], { cwd: repoRoot, budgetMs: buildBudgetMs() }) !== 0) {
-    throw new Error(`extension component build failed: ${parsed.packageName}`);
-  }
-  const wasmArtifact = join(cargoTargetDirectory(repoRoot), EXTENSION_COMPONENT_WASM_TARGET, cargoProfileDir(profile), `${parsed.packageName.replace(/-/g, "_")}.wasm`);
-  if (!existsSync(wasmArtifact)) throw new Error(`missing wasm artifact ${wasmArtifact}`);
-  const componentWasm = new Uint8Array(readFileSync(wasmArtifact));
+  const { componentStageTargetV1, stageComponentV1 } = await import("../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, manifestPath), "wasm-release", "verify");
+  const componentWasm = new Uint8Array(readFileSync(staged.deliverable.wasm));
   const { packExtensionPackage } = await import("../../../💻️os/🔨️modules/🔌️plugin/🏪️store/📥️installation/🟦️.ts");
   const manifest = {
     extensionId: parsed.componentPackageId,
@@ -2344,7 +2331,7 @@ export async function runExtensionComponentPackage(opts: { readonly rsDir: strin
     packageFormat: 1,
   };
   const packed = packExtensionPackage({ manifest, componentWasm });
-  const outPath = join(rsDir, "dist", `${parsed.componentPackageId}.sxt`);
+  const outPath = join(componentDir, "dist", `${parsed.componentPackageId}.sxt`);
   mkdirSync(dirname(outPath), { recursive: true });
   writeFileSync(outPath, packed);
   console.log(`[TRACE] ${logPrefix} packaged ${outPath} (${packed.length} bytes)`);
@@ -5637,5 +5624,4 @@ export * from "./🏃️process/🟦️.ts";
 /** 🎮️ Generated playground catalog, dev/test port table and locked-example define — owned by
  * `📚️library/🎮️playground/🟦️.ts` so port consumers need no taxonomy walk. */
 export * from "./🎮️playground/🟦️.ts";
-export { playgroundVariantsFromCrateManifest, registerPlaygroundSiteBuildCommands } from "./🎮️playground/🌐️site/🟦️.ts";
 //#endregion 🎮️Playground

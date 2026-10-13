@@ -10,7 +10,7 @@ use std::{collections::VecDeque, future::Future, ops::{Deref, DerefMut}, pin::Pi
 
 #[path = "🗂️index/🦀️.rs"]
 mod index;
-pub use index::{HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldIndexIter,HistoryFoldSet,HistoryFoldSetIter,HistoryFoldSetIntoIter};
+pub use index::{HistoryFoldIndexInsert,HistoryFoldIndex,HistoryFoldIndexIntoIter,HistoryFoldIndexIter,HistoryFoldSet,HistoryFoldSetIter,HistoryFoldSetIntoIter};
 
 struct FoldRetirementQueue { locked:AtomicBool, values:std::cell::UnsafeCell<VecDeque<Box<dyn ErasedSnapshotRetirement>>> }
 unsafe impl Send for FoldRetirementQueue {}

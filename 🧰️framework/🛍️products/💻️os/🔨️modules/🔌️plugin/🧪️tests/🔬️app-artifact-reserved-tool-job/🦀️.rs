@@ -18,7 +18,7 @@ mod artifact_reserved_tool_job_tests {
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-            crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
+            crate::app_testing::artifact_app_laws::fixture_job_outcome(descriptor)
         }
 
         fn begin_close(&mut self) {}

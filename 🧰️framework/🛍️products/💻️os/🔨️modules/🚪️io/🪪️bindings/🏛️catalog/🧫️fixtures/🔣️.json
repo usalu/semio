@@ -13,6 +13,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "owner": {
@@ -24,6 +37,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "artifact": {
@@ -55,6 +81,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "owner": {
@@ -66,6 +105,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "artifact": {
@@ -91,6 +143,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "host",
+            "packageId": "semio:host",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "owner": {
@@ -102,6 +167,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "artifact": {
@@ -150,6 +228,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "host",
+            "packageId": "semio:host",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "owner": {
@@ -161,6 +252,19 @@
           "descriptorByteSha256": "3333333333333333333333333333333333333333333333333333333333333333",
           "executionProtocol": {
             "appChannelVersion": 23
+          },
+          "componentReceipt": {
+            "schema": "semio.plugin.component-receipt/v1",
+            "pluginId": "owner",
+            "packageId": "semio:owner",
+            "profile": "wasm-release",
+            "target": "wasm32-wasip2",
+            "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+            "wasmBytes": 1024,
+            "semanticDescriptorSha256": "3333333333333333333333333333333333333333333333333333333333333333",
+            "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+            "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+            "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
           }
         },
         "artifact": {

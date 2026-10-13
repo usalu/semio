@@ -1,0 +1,31 @@
+{
+  "version": 1,
+  "tests": [
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83d\udce5\ufe0finvocation/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83d\udce5\ufe0finvocation/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udecd\ufe0fproducts/\ud83e\udd91\ufe0frepo/\ud83d\udd28\ufe0fmodules/\ud83d\udcda\ufe0flibrary/\ud83c\udfc3\ufe0fprocess/\ud83c\udf9b\ufe0fowned-execution/\ud83e\uddea\ufe0ftests/\ud83d\udfe6\ufe0f.ts"
+  ],
+  "bindings": [
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83e\uddeb\ufe0ffixtures/\ud83d\udce8\ufe0fmanaged-output.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83d\udfe6\ufe0f.ts",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83d\udccb\ufe0fpolicy/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83e\uddea\ufe0ftesting/\ud83e\udd80\ufe0fcargo/\ud83c\udfaf\ufe0fexact/\ud83d\udce5\ufe0finvocation/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83d\udce5\ufe0finvocation/\ud83e\uddeb\ufe0ffixtures/\ud83d\udd23\ufe0f.json",
+    "\ud83e\uddf0\ufe0fframework/\ud83d\udd28\ufe0fmodules/\ud83c\udfc3\ufe0fprocess/\ud83d\udce5\ufe0fcapture/\ud83d\udccb\ufe0fpolicy/\ud83e\uddec\ufe0fschema/\ud83d\udd23\ufe0f.json"
+  ],
+  "controls": {
+    "testLevel": "long",
+    "bunTimeoutMilliseconds": 60000,
+    "maximumUnits": 8388608,
+    "maximumOwnedBytes": 67108864,
+    "maximumDepth": 64,
+    "nativeBudgetMilliseconds": 120000,
+    "phaseBudgetMilliseconds": 600000,
+    "maximumOutputBytes": 67108864
+  }
+}

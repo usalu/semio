@@ -1,0 +1,66 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "maximumElapsedMilliseconds",
+    "output"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "maximumElapsedMilliseconds": {
+      "type": "number",
+      "maximum": 86400000,
+      "minimum": 0
+    },
+    "output": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "maximumBytes",
+            "maximumLines"
+          ],
+          "properties": {
+            "maximumBytes": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 268435456
+            },
+            "maximumLines": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 65536
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  },
+  "anyOf": [
+    {
+      "properties": {
+        "maximumElapsedMilliseconds": {
+          "exclusiveMinimum": 0
+        }
+      }
+    },
+    {
+      "properties": {
+        "maximumElapsedMilliseconds": {
+          "const": 0
+        },
+        "output": {
+          "type": "null"
+        }
+      }
+    }
+  ]
+}

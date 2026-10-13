@@ -55,7 +55,7 @@ fn defaults_and_ranges_follow_the_schema_source_of_record() {
 
 #[test]
 fn the_config_round_trips_through_its_pack_and_dsl_codecs() {
-    use store::{ArtifactDsl, ArtifactPack};
+    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     let config = EnergyModelConfig { zone_timestep_minutes: 10, system_timestep_minutes: 2, warmup_days: 3, result_field: "solarAbsorbed".into() };
     assert_eq!(EnergyModelConfig::decode_pack(&config.encode_pack()).unwrap(), config);
     assert_eq!(EnergyModelConfig::parse_dsl(&config.print_dsl()).unwrap(), config);

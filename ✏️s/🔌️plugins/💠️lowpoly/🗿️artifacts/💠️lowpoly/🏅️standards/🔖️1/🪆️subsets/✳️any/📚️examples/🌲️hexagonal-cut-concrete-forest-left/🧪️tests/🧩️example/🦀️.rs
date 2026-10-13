@@ -9,7 +9,7 @@ async fn primary_asset_is_nonempty() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
-    let snapshot = <crate::LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text).expect("concrete forest fixture parses");
+    let snapshot = <crate::LowpolySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("concrete forest fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::LowpolyInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::LowpolyInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

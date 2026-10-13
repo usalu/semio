@@ -16,8 +16,8 @@
 //! invented geometry, and per-vertex normals collapse to one facet normal.
 use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 /// 🔺️ The mesh half, isolated so the round-trip test can drive it without a live flow evaluator.

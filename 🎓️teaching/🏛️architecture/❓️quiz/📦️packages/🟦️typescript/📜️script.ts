@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** ❓️ `@teaching/architecture-quiz` task router: `bun ./📜️script.ts <dev|dev-site|build|test [quick|long|exhaustive]|test-e2e [dev] [rehearsal] [--serial] [--keep] [--proctor <executable>] [Playwright arguments…]|typecheck|check|publish|docker-image-build [--tag <tag>] [--jobs <n>]|docker-image-check [--tag <tag>] [--port <n>] [--keep]|docker-image-publish [--tag <tag>]|docker-stack-check [--tag <tag>] [--http-port <n>] [--https-port <n>] [--keep]|docker-stack-bundle [--tag <tag>] [--out <directory>]|deploy-check [--tag <tag>] [--jobs <n>]>`. */
@@ -50,8 +51,8 @@ class TestEndToEndScript extends BundleScript {
 /** 🪁️ `typecheck` — the site's entry, Vite configuration, local stack, deploy verbs, end-to-end gate, every test and
  * spec, and this router against the compiler (`tsconfig.json`). */
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runCmd(process.execPath, [join(this.repoRoot, "node_modules", "typescript", "bin", "tsc"), "--noEmit", "-p", "tsconfig.json", ...segments], { cwd: this.root });
+  async run(segments: string[]): Promise<void> {
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "architecture-quiz:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 class CheckScript extends BundleScript {

@@ -30,10 +30,10 @@ fn cad_document_contract_world_window_config_matches_neutral_fixture_and_codecs(
     assert_eq!(restored, base);
     assert_eq!(CadWorldWindowConfigMutation::parse_op(&mutation.print_op()).expect("text mutation"), mutation);
     assert_eq!(CadWorldWindowConfigMutation::decode_op(&mutation.encode_op().expect("binary mutation")).expect("decoded mutation"), mutation);
-    let text = store::ArtifactDsl::print_dsl(&next);
-    assert_eq!(<CadWorldWindowConfig as store::ArtifactDsl>::parse_dsl(&text).expect("window config text"), next);
-    let bytes = store::ArtifactPack::encode_pack(&next);
-    assert_eq!(<CadWorldWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack"), next);
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&next);
+    assert_eq!(<CadWorldWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("window config text"), next);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&next);
+    assert_eq!(<CadWorldWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("window config pack"), next);
 }
 
 #[test]

@@ -283,7 +283,7 @@
         "byteLength": {
           "type": "integer",
           "minimum": 1,
-          "maximum": 67108864
+          "maximum": 268435456
         },
         "sha256": {
           "$ref": "#/$defs/digest"
@@ -382,6 +382,22 @@
         }
       }
     },
+    "TrustedBundleReceiptV1": {
+      "description": "The shipped `ComponentReceiptV1` a catalog package carries inline: the only byte identity of its semantic descriptor. The hub requires `pluginId` and `packageId` to equal the package's, `wasmSha256` and `wasmBytes` to equal its component's digest and length, and `semanticDescriptorSha256` to equal its descriptor file's digest; a descriptor carrying a byte binding of its own is refused.",
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/describe/component-receipt/component.json#/$defs/ComponentReceiptV1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "const": "wasm-release"
+            }
+          }
+        }
+      ]
+    },
     "TrustedBundlePackageV1": {
       "type": "object",
       "additionalProperties": false,
@@ -393,6 +409,7 @@
         "dependencies",
         "component",
         "descriptor",
+        "receipt",
         "executionProtocol",
         "browserActor",
         "pluginModule",
@@ -430,6 +447,9 @@
         },
         "descriptor": {
           "$ref": "#/$defs/TrustedBundleFileV1"
+        },
+        "receipt": {
+          "$ref": "#/$defs/TrustedBundleReceiptV1"
         },
         "browserActor": {
           "$ref": "#/$defs/TrustedBundleBrowserActorV1"
@@ -517,7 +537,7 @@
       ],
       "properties": {
         "schemaVersion": {
-          "const": 3
+          "const": 4
         },
         "profiles": {
           "type": "array",

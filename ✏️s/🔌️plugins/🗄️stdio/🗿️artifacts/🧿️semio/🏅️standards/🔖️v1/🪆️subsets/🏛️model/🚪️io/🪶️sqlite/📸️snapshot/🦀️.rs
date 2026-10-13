@@ -1,12 +1,11 @@
 //! 🏛️ Spatial hierarchy, physical elements, geometry identities and typed property relationships.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
-#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::artifact::{RowIndex};
-use crate::standards::v1::subsets::model::schema::snapshot::{SemioModelSnapshot,SpatialNode,SpatialKind,SemioModelElement,ElementClass,GeometryRef,PropertySet,Property,PsetValue,ModelRelation,RelationKind};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform,SemioPoint3,SemioQuaternion};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use crate::schema::snapshot::{SemioModelSnapshot, SpatialNode, SpatialKind, SemioModelElement, ElementClass, GeometryRef, PropertySet, Property, PsetValue, ModelRelation, RelationKind};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioTransform, SemioPoint3, SemioQuaternion};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a paid literal Model identity with bounded text comparisons.
@@ -36,7 +35,7 @@ fn placement(id:i64,t:SemioTransform,out:&mut RowWriter<'_,'_>)->Result<(),Value
  out.insert_key_float("semio_model_placement",id,&[Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_model_placement"))
 }
 /// 🫳️ Visits the real Model entities, hierarchy, typed property variants and relation endpoints.
-pub(crate)fn visit_rows(snapshot:&SemioModelSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioModelSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let entities=entity_frontier(snapshot,out)?;let mut parents=out.allocate_frontier(snapshot.spatial.len())?;
  for node in &snapshot.spatial{out.checkpoint()?;let parent=match &node.parent_id{None=>None,Some(id)=>Some(usize::try_from(spatial_reference(&entities,id,snapshot.spatial.len(),out)?-1).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error.to_string()))?)};parents.push((parent,0u8));}
  spatial_cycles(&mut parents,out)?;let phase=out.phase();let mut relations=out.allocate_frontier(snapshot.relations.len())?;for edge in &snapshot.relations{out.checkpoint()?;relations.push(edge.id.as_str());}
@@ -126,15 +125,12 @@ impl SemioModelSnapshot{
 pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.spatial.len())?;for spatial in &self.spatial{b.text(&spatial.id)?;b.text(&spatial.name)?;b.optional_text(spatial.parent_id.as_deref())?;b.scalars(11)?;}b.entities(self.elements.len())?;for element in &self.elements{b.text(&element.id)?;b.optional_text(element.spatial_id.as_deref())?;b.scalars(11)?;if let ElementClass::Other{name}=&element.class{b.text(name)?;}match &element.geometry{GeometryRef::None=>{},GeometryRef::Brep{brep_id}=>b.text(brep_id)?,GeometryRef::Mesh{mesh_id}=>b.text(mesh_id)?}b.entities(element.psets.len())?;for pset in &element.psets{b.text(&pset.name)?;b.entities(pset.properties.len())?;for property in &pset.properties{b.text(&property.key)?;match &property.value{PsetValue::Text{value}=>b.text(value)?,PsetValue::Number{..}|PsetValue::Boolean{..}=>b.scalars(1)?}}}}b.entities(self.relations.len())?;for relation in &self.relations{b.text(&relation.id)?;b.text(&relation.from)?;b.text(&relation.to)?;b.scalars(1)?;if let RelationKind::Other{label}=&relation.kind{b.text(label)?;}}Ok(())}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

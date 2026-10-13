@@ -4,9 +4,9 @@
 #[semio_framework_async_macros::async_test]
 async fn the_assets_carry_the_whole_metabolism_graph() {
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo parent parses");
+    let snapshot = <crate::WiresSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo parent parses");
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("the demo names its bundled board");
-    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("board pack");
+    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("board pack");
     let composed = crate::wires_composed(&snapshot, &content);
     let nodes = crate::schema::board_snapshot_nodes(&composed.board);
     assert_eq!(nodes.len(), 7, "the demo board carries every metabolism topic");
@@ -20,7 +20,7 @@ async fn the_assets_carry_the_whole_metabolism_graph() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::WiresSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::WiresSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::WiresInference::infer(&snapshot).expect("parent-only inference");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::WiresInference::infer(&snapshot).expect("parent-only inference"));
 }

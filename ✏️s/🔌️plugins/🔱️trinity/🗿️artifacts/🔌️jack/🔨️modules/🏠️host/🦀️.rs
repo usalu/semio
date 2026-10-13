@@ -12,7 +12,7 @@ use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
 #[cfg(test)]
 use crate::standards::v1::subsets::any::io::binary::mutations::{encode_op, decode_op};
 //#region 🔖️OwnedSprCatalog
-const JACK_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+const JACK_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🎟️ Whether one admitted item, copy, capacity, release and depth grant covers every independent demand axis.
 pub(crate) fn funds(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
@@ -36,7 +36,7 @@ pub(crate) fn admit_demand(grant: RetainedCloneGrant, demand: RetirementDemand, 
 #[expect(clippy::large_enum_variant, reason = "The active decoder retains its fixed-size owned field authority inline so cursor transitions do not allocate another retirement owner.")]
 enum JackSnapshotDecodeState {
     AwaitToken,
-    Decode(store::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
+    Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
     Ready,
     Published,
     Closing,
@@ -46,22 +46,22 @@ enum JackSnapshotDecodeState {
 struct JackSnapshotDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: JackSnapshotDecodeState,
     value: std::mem::ManuallyDrop<Option<JackSnapshot>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl JackSnapshotDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self { operation, generation, path, state: JackSnapshotDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
-    fn native(&self, code: &'static str, error: ValueError) -> store::OwnedSchemaDecodeDiagnostic {
+    fn native(&self, code: &'static str, error: ValueError) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
         self.diagnostic(code, 0).with_native(error)
     }
 
@@ -70,87 +70,87 @@ impl JackSnapshotDecodeAuthority {
             return Ok(RetirementDemand { release_bytes: JACK_OWNED_FIELD_BYTES, depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.value);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value);
         }
         Ok(Default::default())
     }
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapshotDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapshotDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
+        let diagnostic = |code: &'static str, offset| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         if matches!(self.state, JackSnapshotDecodeState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("jack-envelope.snapshot-pack-must-be-scalar", token.start));
             }
-            self.state = JackSnapshotDecodeState::Decode(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = JackSnapshotDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
         }
         let JackSnapshotDecodeState::Decode(authority) = &mut self.state else { return Err(diagnostic("jack-envelope.snapshot-pack-token-replayed", token.start)) };
         match authority.step(source, cx) {
-            store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-            store::OwnedSchemaHexStep::Complete => {
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                 let bytes = authority.as_bytes().ok_or_else(|| diagnostic("jack-envelope.snapshot-pack-missing", token.start))?;
-                let value = <JackSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("jack-envelope.snapshot-pack-malformed", token.start))?;
+                let value = <JackSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| diagnostic("jack-envelope.snapshot-pack-malformed", token.start))?;
                 assert!(authority.release(), "completed Jack snapshot pack releases its inline bytes exactly once");
                 *self.value = Some(value);
                 self.state = JackSnapshotDecodeState::Ready;
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
-            store::OwnedSchemaHexStep::Cancelled => Err(diagnostic("jack-envelope.snapshot-pack-cancelled", token.start)),
-            store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(diagnostic("jack-envelope.snapshot-pack-cancelled", token.start)),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
         }
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<JackSnapshot>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<JackSnapshot>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if !matches!(self.state, JackSnapshotDecodeState::Ready) {
             return Err(self.diagnostic("jack-envelope.snapshot-pack-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("jack-envelope.snapshot-owner-missing", 0))?;
         target.publish_snapshot_reserved(reservation, value);
         self.state = JackSnapshotDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.copy_bytes).map_err(|error| self.native("jack-envelope.snapshot-close-demand", error))
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes).map_err(|error| self.native("jack-envelope.snapshot-close-demand", error))
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.release_bytes).map_err(|error| self.native("jack-envelope.snapshot-close-demand", error))
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.depth).map_err(|error| self.native("jack-envelope.snapshot-close-demand", error))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -168,10 +168,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapsho
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JACK_OWNED_FIELD_BYTES, ..empty }));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| self.native("jack-envelope.snapshot-retirement-fault", error));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| self.native("jack-envelope.snapshot-retirement-fault", error));
         }
         if self.value.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| self.native("jack-envelope.snapshot-retirement-birth", error));
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| self.native("jack-envelope.snapshot-retirement-birth", error));
         }
         self.state = JackSnapshotDecodeState::Complete;
         Ok(RetainedCloneStep::Complete(empty))
@@ -184,14 +184,14 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot> for JackSnapsho
 
 impl Drop for JackSnapshotDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self), "Jack snapshot decode reached Drop before publication or bounded retirement");
+        assert!(store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(self), "Jack snapshot decode reached Drop before publication or bounded retirement");
     }
 }
 
 #[expect(clippy::large_enum_variant, reason = "The active decoder retains its fixed-size owned field authority inline so cursor transitions do not allocate another retirement owner.")]
 enum JackMutationDecodeState {
     AwaitToken,
-    Decode(store::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
+    Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<JACK_OWNED_FIELD_BYTES>),
     Ready,
     Published,
     Closing,
@@ -201,22 +201,22 @@ enum JackMutationDecodeState {
 struct JackMutationDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: JackMutationDecodeState,
     value: std::mem::ManuallyDrop<Option<TrinityGraphMutation>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl JackMutationDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self { operation, generation, path, state: JackMutationDecodeState::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() }
     }
 
-    fn native(&self, code: &'static str, error: ValueError) -> store::OwnedSchemaDecodeDiagnostic {
+    fn native(&self, code: &'static str, error: ValueError) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
         self.diagnostic(code, 0).with_native(error)
     }
 
@@ -225,79 +225,79 @@ impl JackMutationDecodeAuthority {
             return Ok(RetirementDemand { release_bytes: JACK_OWNED_FIELD_BYTES, depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.value);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value);
         }
         Ok(Default::default())
     }
 }
 
-impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for JackMutationDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for JackMutationDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
+        let diagnostic = |code: &'static str, offset| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() };
         if matches!(self.state, JackMutationDecodeState::AwaitToken) {
             if !terminal {
                 return Err(diagnostic("jack-envelope.mutation-pack-must-be-scalar", token.start));
             }
-            self.state = JackMutationDecodeState::Decode(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            self.state = JackMutationDecodeState::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
         }
         let JackMutationDecodeState::Decode(authority) = &mut self.state else { return Err(diagnostic("jack-envelope.mutation-pack-token-replayed", token.start)) };
         match authority.step(source, cx) {
-            store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-            store::OwnedSchemaHexStep::Complete => {
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                 let bytes = authority.as_bytes().ok_or_else(|| diagnostic("jack-envelope.mutation-pack-missing", token.start))?;
                 let value = TrinityGraphMutation::decode_op(bytes).map_err(|_| diagnostic("jack-envelope.mutation-pack-malformed", token.start))?;
                 assert!(authority.release(), "completed Jack mutation pack releases its inline bytes exactly once");
                 *self.value = Some(value);
                 self.state = JackMutationDecodeState::Ready;
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
-            store::OwnedSchemaHexStep::Cancelled => Err(diagnostic("jack-envelope.mutation-pack-cancelled", token.start)),
-            store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(diagnostic("jack-envelope.mutation-pack-cancelled", token.start)),
+            store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
         }
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<TrinityGraphMutation>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget<TrinityGraphMutation>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if !matches!(self.state, JackMutationDecodeState::Ready) {
             return Err(self.diagnostic("jack-envelope.mutation-pack-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("jack-envelope.mutation-owner-missing", 0))?;
         target.publish_mutation_reserved(reservation, value);
         self.state = JackMutationDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.copy_bytes).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.release_bytes).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.close_demands(0).map(|demand| demand.depth).map_err(|error| self.native("jack-envelope.mutation-close-demand", error))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -315,10 +315,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: JACK_OWNED_FIELD_BYTES, ..empty }));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| self.native("jack-envelope.mutation-retirement-fault", error));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress())).map_err(|error| self.native("jack-envelope.mutation-retirement-fault", error));
         }
         if self.value.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| self.native("jack-envelope.mutation-retirement-birth", error));
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| self.native("jack-envelope.mutation-retirement-birth", error));
         }
         self.state = JackMutationDecodeState::Complete;
         Ok(RetainedCloneStep::Complete(empty))
@@ -331,7 +331,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation> for Jac
 
 impl Drop for JackMutationDecodeAuthority {
     fn drop(&mut self) {
-        assert!(store::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self), "Jack mutation decode reached Drop before publication or bounded retirement");
+        assert!(store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority::terminal_is_empty(self), "Jack mutation decode reached Drop before publication or bounded retirement");
     }
 }
 
@@ -339,34 +339,34 @@ struct JackRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for JackRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for JackRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "jack-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: ValueRefusalKind::InvariantViolated, retained_progress: RetainedCloneProgress::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let empty = RetainedCloneProgress::default();
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(empty));
@@ -385,39 +385,39 @@ impl store::ArtifactEnvelopeSprConflictAuthority for JackRejectedConflictAuthori
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct JackEnvelopeOwnedFieldCatalog;
-impl store::ArtifactEnvelopeOwnedFieldCatalog<JackSnapshot, TrinityGraphMutation> for JackEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()), self.edit_history_decoder())
-            .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>)
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<JackSnapshot, TrinityGraphMutation> for JackEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(self.begin_snapshot(operation, generation, path), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()), self.edit_history_decoder())
+            .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<JackSnapshot, TrinityGraphMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<JackSnapshot>> {
         Box::new(JackSnapshotDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<TrinityGraphMutation>> {
         Box::new(JackMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(JackRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<TrinityGraphMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()))
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<TrinityGraphMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()))
     }
 }
 
-pub fn jack_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<JackSnapshot, TrinityGraphMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(JackEnvelopeOwnedFieldCatalog), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()))
+pub fn jack_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<JackSnapshot, TrinityGraphMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(JackEnvelopeOwnedFieldCatalog), std::sync::Arc::new(OwnedValueRetirementFactory::<JackSnapshot>::default()), std::sync::Arc::new(OwnedValueRetirementFactory::<TrinityGraphMutation>::default()))
 }
 //#endregion 🔖️OwnedSprCatalog
 
@@ -460,7 +460,7 @@ impl JackSnapshotCloneAuthority {
     }
 
     fn with_local_owner(retain_local_owner: bool) -> Self {
-        let content = store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
+        let content = store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } });
         Self {
             value: std::mem::ManuallyDrop::new(Some(JackSnapshot { schema: String::new(), name: String::new(), manifest_id: None, manifest: Default::default(), camera: Default::default(), content, root_node_id: None, query: String::new() })),
             active: std::mem::ManuallyDrop::new(None),
@@ -703,13 +703,13 @@ impl JackSnapshotCloneAuthority {
     /// 📏️ Quotes the next close turn of the partial clone: the retained child cursor, else the partial kind, else the partial snapshot.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.active.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.active);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.active);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.value);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value);
         }
         Ok(Default::default())
     }
@@ -727,13 +727,13 @@ impl JackSnapshotCloneAuthority {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.active.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.active, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.active, &mut self.retirement, grant);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant);
         }
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(empty))
@@ -777,8 +777,8 @@ struct JackStoreInitializationAuthority {
     actor_close: std::mem::ManuallyDrop<Option<ControlledRetirement<protocol::ActorId>>>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<JackSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<JackSnapshot, TrinityGraphMutation>>>,
     displaced: std::mem::ManuallyDrop<Option<JackSnapshot>>,
@@ -796,7 +796,7 @@ struct JackStoreInitializationAuthority {
 }
 
 impl JackStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         Self {
             actor: std::mem::ManuallyDrop::new(Some(actor)),
             actor_close: std::mem::ManuallyDrop::new(None),
@@ -856,12 +856,12 @@ impl JackStoreInitializationAuthority {
     fn settle_displaced(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, ValueError> {
         let grant = cx.retained_grant();
         if self.active.is_some() {
-            let step = store::artifact_retirement_box_close_step(&mut self.active, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant)?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
         if self.displaced.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant)?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
@@ -908,10 +908,10 @@ impl JackStoreInitializationAuthority {
             }
         }
         if let Some(owner) = self.active.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.displaced);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.displaced);
         }
         if let Some(runtime) = self.runtime.as_ref() {
             if runtime.terminal_is_empty() {
@@ -926,11 +926,11 @@ impl JackStoreInitializationAuthority {
             return clone.close_demands(body);
         }
         if let Some(owner) = self.envelope_retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.envelope.is_some() {
             let Some(owners) = self.owners.as_ref() else {
-                return Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>(), capacity_bytes: store::bounded_artifact_store_owners_birth_bytes::<JackSnapshot, TrinityGraphMutation>(), depth: 1, ..Default::default() });
+                return Ok(RetirementDemand { copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>(), capacity_bytes: store::os_store::document_store_owners::bounded_artifact_store_owners_birth_bytes::<JackSnapshot, TrinityGraphMutation>(), depth: 1, ..Default::default() });
             };
             if !owners.constructor_is_complete() {
                 return nested(owners.constructor_demands(body)?);
@@ -941,7 +941,7 @@ impl JackStoreInitializationAuthority {
         }
         if let Some(owners) = self.owners.as_ref() {
             return if owners.uninstalled_owners_terminal_is_empty() {
-                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>(), depth: 1, ..Default::default() })
+                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<JackSnapshot, TrinityGraphMutation>>>(), depth: 1, ..Default::default() })
             } else {
                 nested(owners.uninstalled_owners_demands(body)?)
             };
@@ -1001,10 +1001,10 @@ impl JackStoreInitializationAuthority {
             }
         }
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant);
         }
         if let Some(runtime) = self.runtime.as_mut() {
             if runtime.terminal_is_empty() {
@@ -1025,13 +1025,13 @@ impl JackStoreInitializationAuthority {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope_retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.envelope_retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.envelope_retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope.is_some() {
             if self.owners.is_none() {
                 let placement = demand.copy_bytes;
                 let owners_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - placement, ..grant };
-                return match store::bounded_artifact_store_owners::<JackSnapshot, TrinityGraphMutation>(owners_grant) {
+                return match store::os_store::document_store_owners::bounded_artifact_store_owners::<JackSnapshot, TrinityGraphMutation>(owners_grant) {
                     Ok((owners, mut receipt)) => {
                         *self.owners = Some(owners);
                         receipt.copied_bytes += placement;
@@ -1333,7 +1333,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<JackSnapshot, 
                 Ok(None)
             }
             JackStoreInitializationPhase::BuildOwners => {
-                match store::bounded_artifact_store_owners::<JackSnapshot, TrinityGraphMutation>(cx.retained_grant()) {
+                match store::os_store::document_store_owners::bounded_artifact_store_owners::<JackSnapshot, TrinityGraphMutation>(cx.retained_grant()) {
                     Ok((owners, progress)) => {
                         *self.owners = Some(owners);
                         match cx.consume_retained(progress) {
@@ -1432,7 +1432,7 @@ impl Drop for JackStoreInitializationAuthority {
 }
 
 pub fn jack_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,

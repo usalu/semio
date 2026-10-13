@@ -1,6 +1,6 @@
 use super::*;
 use std::sync::Arc;
-use semio_framework_3d::brep::engine::ShapeValue;
+use semio_framework_3d_brep_engine::ShapeValue;
 use std::collections::BTreeMap;
 
 #[path = "../../../../../🧬️schema/💡️inferences/📐️geometry/⏱️phased-job/🧪️tests/🧰️support/🦀️.rs"]
@@ -29,7 +29,7 @@ fn text_of(evaluation: &WidgetEvaluation, port: &str) -> String {
 
 fn volume_of(evaluation: &WidgetEvaluation) -> (f64, usize) {
     let Some(GeometryValue::Shape(shape)) = evaluation.outputs.get("shape") else { panic!("shape output: {:?}", evaluation.fault) };
-    (support::kernel_measures(shape).0.expect("a volume"), shape.components(semio_framework_3d::brep::engine::GeometryKind::Face).len())
+    (support::kernel_measures(shape).0.expect("a volume"), shape.components(semio_framework_3d_brep_engine::GeometryKind::Face).len())
 }
 
 #[test]

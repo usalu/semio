@@ -12,7 +12,7 @@ fn sqlite_snapshot_bim_original_reader_tracks_current_shared_ownership(){
  println!("[DEBUG] BIM original reader tables=93 rows=3972 reversed_order=true shared_owner_sets=5 required_grid_and_leader_ordinal_refused");
 }
 use super::*;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{SqliteDatabaseLimits,SnapshotEncoding};
 fn fixture()->ModelSnapshot{let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();semio_framework_pack_json::from_json_str(&corpus["cases"][0]["snapshot"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()}
 fn database(snapshot:&ModelSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap()}

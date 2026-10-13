@@ -1,6 +1,6 @@
 //! ✏️ Field-set apply edit for small config records (window configs and document config lanes): clones the mutation payload under grants, exchanges it into the post record by move and keeps the displaced content as the inverse row, all through original custody.
 use super::{RetainedCloneEdit,RetainedCloneEditCursor,RetainedCloneEditStep,RetainedClonePreparationFactory,custody::RetainedEditCustody};
-use crate::os_store::{ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,ArtifactCanonicalJsonTree,ArtifactOwnedValueRetirementFactory,ArtifactStoreOneItemFootprint,ArtifactStoreOneItemPreparationFactory,HistoryLane,SnapshotRetirementFactory};
+use crate::os_store::{one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,ArtifactCanonicalJsonTree,ArtifactOwnedValueRetirementFactory,one_item::ArtifactStoreOneItemFootprint,one_item_publication::ArtifactStoreOneItemPreparationFactory,store_schema::HistoryLane,SnapshotRetirementFactory};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedClone,RetainedCloneBirthDemand,RetainedCloneCursor,RetainedCloneGrant,RetainedCloneProgress,RetainedCloneRef,RetainedCloneStep,admit_retained_clone_close,admit_retained_clone_progress}};
 use std::{marker::PhantomData,mem::{ManuallyDrop,size_of},sync::Arc};
 

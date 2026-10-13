@@ -1,4 +1,9 @@
-//! 📐️ General computational BREP contract and first-party arena engine with bounded jobs and retirement.
+//! ⚙️ First-party boundary-representation engine of the 3D kernel: the arena-backed `Brep` API over the representation,
+//! query and operation crates, with bounded operation jobs, shape values, mesh import, retention and retirement.
+//!
+//! Crate cut of `semio-framework-3d` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).
+
+extern crate semio_framework_value_derive as value_derive;
 /// 🧱 Vertex positions with outer and inner vertex loops for each face.
 pub type SolidFaceLoops = (Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>);
 
@@ -11,41 +16,37 @@ pub use mesh_io::{MeshImportCursor, MeshImportStep};
 
 
 
-#[path = "🔖️contract/🦀️.rs"]
-pub mod contract;
-pub use contract::*;
+use semio_framework_3d_brep_representation::contract::*;
 
 #[path = "🪅️shape-value/🦀️.rs"]
 mod shape_value;
 pub use shape_value::{ImportedShape, ShapeComponent, ShapeRoot, ShapeTessellationJob, ShapeValue, ShapeWire};
 
-use crate::brep::operations::boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
-use crate::brep::operations::euler::make_vertex;
-use crate::brep::operations::intersect::intersect_curve_curve;
-use crate::brep::operations::intersect::intersect_curve_surface;
-use crate::brep::operations::intersect::intersect_surface_surface;
-use crate::brep::operations::primitives::{
-    make_box, make_cone, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus, Wire,
-};
-use crate::brep::operations::sew::{convert_to_nurbs, heal_solid, sew_faces};
-use crate::brep::operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
-use crate::brep::queries::classification::point_in_solid;
-use crate::brep::queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
-use crate::brep::queries::tessellation::{TessellationJob};
-#[cfg(test)] use crate::brep::queries::tessellation::{tessellate_solid};
-use crate::brep::queries::validation::{issue_reaches, validate_body};
-use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
-use crate::brep::representation::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::{KernelError, ValidationIssue};
-use crate::brep::representation::surface::surface_ops::closest_uv as surface_closest_uv_fn;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::{Affine3, Frame3};
-use crate::brep::representation::vector::{Pnt3, Vec3 as NativeVec3};
-use contract::Vec3 as EVec3;
+use semio_framework_3d_brep_operations::boolean::{boolean_job, boolean_solid, BooleanAdmission, BooleanJob, BooleanOp, BooleanProgress, BooleanStep};
+use semio_framework_3d_brep_operations::euler::make_vertex;
+use semio_framework_3d_brep_queries::intersect::intersect_curve_curve;
+use semio_framework_3d_brep_queries::intersect::intersect_curve_surface;
+use semio_framework_3d_brep_queries::intersect::intersect_surface_surface;
+use {semio_framework_3d_brep_operations::primitives::{make_box, make_cone, make_cylinder, make_planar_face_from_points, make_planar_face_from_wire, make_polyline_wire, make_rectangle_wire, make_regular_polygon_wire, make_sphere, make_torus}, semio_framework_3d_brep_representation::topology::Wire};
+use semio_framework_3d_brep_operations::sew::{convert_to_nurbs, heal_solid, sew_faces};
+use semio_framework_3d_brep_operations::transform::{copy_solid, transform_face, transform_solid, transform_wire};
+use semio_framework_3d_brep_queries::classification::point_in_solid;
+use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_face, closest_point_on_solid, distance_solid_solid, edge_length, face_area, solid_bounding_box, solid_center_of_mass, solid_surface_area, solid_volume};
+use semio_framework_3d_brep_queries::tessellation::TessellationJob;
+#[cfg(test)] use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_queries::validation::{issue_reaches, validate_body};
+use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::curve_ops::{approximate_curve_with_count, closest_parameter as curve_closest_parameter_fn, coons_patch_nurbs, interpolate_curve, interpolate_surface_grid, ParamMethod};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::{KernelError, ValidationIssue};
+use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv as surface_closest_uv_fn;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3};
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as NativeVec3};
+use semio_framework_3d_brep_representation::contract::Vec3 as EVec3;
 use mesh_io::{export_solid_glb, export_solid_mesh, export_solid_obj, export_solid_stl, import_glb_to_body, import_mesh_to_body, import_obj_to_body, import_stl_to_body, mesh_to_mesh_data, triangle_mesh_from_transfer};
 
 
@@ -392,12 +393,12 @@ pub mod retirement;
 
 // #region 🔖️Types
 
-use crate::brep::representation::arena::ShellId;
-use crate::brep::representation::topology::history::PersistentLabel;
-use crate::brep::representation::topology::EntityRef;
+use semio_framework_3d_brep_representation::arena::ShellId;
+use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
+use semio_framework_3d_brep_representation::topology::EntityRef;
 
 /// 🧠 One live registry entry. Vertex/Edge/Face/🐚️Shell/Solid wrap the arena id whose own
-/// [`crate::brep::representation::topology::history::PersistentLabel`]
+/// [`semio_framework_3d_brep_representation::topology::history::PersistentLabel`]
 /// [`label_of_entity`] resolves through; Wire/Curve/Surface/Compound carry no arena identity of
 /// their own (a `Wire` bundles arena ids but isn't itself stored in `Body`; a bare `Curve3`/
 /// `Surface` constructed via `register_curve`/`register_surface` never enters `body.curves3`/
@@ -718,7 +719,7 @@ impl Brep {
         self.live.get(handle.as_str()).ok_or_else(|| BrepError::MissingHandle(handle.as_str().to_string()))
     }
 
-    /// ♻️ [`crate::brep::representation::topology::EntityRef`] roots for every entity currently kept alive by a live
+    /// ♻️ [`semio_framework_3d_brep_representation::topology::EntityRef`] roots for every entity currently kept alive by a live
     /// handle — the protection set [`Body::reachable_from`] walks before [`Body::compact`] frees
     /// anything, so `dispose`/`retain` never reclaim geometry a surviving handle still needs. A
     /// `Wire`'s member edges/vertices are included even though the wire itself isn't a `Body` root,
@@ -1259,7 +1260,7 @@ impl Brep {
             Entity::Curve(curve, _) => {
                 let (start, end) = curve.domain();
                 if !start.is_finite() || !end.is_finite() { return Err(BrepError::InvalidInput("length requires a bounded curve".into())); }
-                let length = crate::brep::representation::curve::curve_ops::arc_length(curve, start, end, 1e-9);
+                let length = semio_framework_3d_brep_representation::curve::curve_ops::arc_length(curve, start, end, 1e-9);
                 if !length.is_finite() { return Err(BrepError::InvalidInput("curve length is not finite".into())); }
                 Ok(length)
             }
@@ -1554,14 +1555,14 @@ impl Brep {
             other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
         }
     }
-    fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<crate::brep::queries::tessellation::TessellationInput<'a>,BrepError> {
-        use crate::brep::queries::tessellation::TessellationInput;
+    fn tessellation_input<'a>(&'a self,shape:&GeometryHandle)->Result<semio_framework_3d_brep_queries::tessellation::TessellationInput<'a>,BrepError> {
+        use semio_framework_3d_brep_queries::tessellation::TessellationInput;
         match self.entity(shape)? {
             Entity::Vertex(id)=>Ok(TessellationInput::Vertex(*id)),Entity::Solid(id)=>Ok(TessellationInput::Solid(*id)),Entity::Face(id)=>Ok(TessellationInput::Face(*id)),Entity::Shell(id)=>Ok(TessellationInput::Shell(*id)),Entity::Wire(wire,_)=>Ok(TessellationInput::Wire(&wire.members)),Entity::Compound(solids,_)=>Ok(TessellationInput::Solids(solids)),other=>Err(BrepError::InvalidInput(format!("cannot tessellate {}",entity_tag(other)))),
         }
     }
     /// ⏱️ Presents the same original entity to one granted topology/mesh turn.
-    pub fn step_tessellation_job_sync(&self,shape:&GeometryHandle,job:&mut TessellationJob,budget:usize)->Result<crate::brep::queries::tessellation::TessellationStep,BrepError> {
+    pub fn step_tessellation_job_sync(&self,shape:&GeometryHandle,job:&mut TessellationJob,budget:usize)->Result<semio_framework_3d_brep_queries::tessellation::TessellationStep,BrepError> {
         job.step(&self.body,self.tessellation_input(shape)?,budget).map_err(|error|map_err(&error))
     }
 
@@ -2180,3 +2181,9 @@ impl SolidImporter for GlbSolidImporter {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region 🧪️TestSupport
+#[cfg(test)]
+#[path = "../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
+//#endregion 🧪️TestSupport

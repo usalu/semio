@@ -3,6 +3,9 @@
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 
+/// 🧬️ Artifact schema descriptor id.
+pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
+
 #[path = "🔗️graph-source/🦀️.rs"]
 pub mod graph_source;
 

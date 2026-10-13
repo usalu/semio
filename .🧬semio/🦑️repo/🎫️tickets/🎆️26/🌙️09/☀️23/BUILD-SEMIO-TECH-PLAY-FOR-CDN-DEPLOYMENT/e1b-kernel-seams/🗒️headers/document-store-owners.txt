@@ -1,0 +1,5 @@
+//! 🏠️ The Store's owner catalog: the document and member owner catalogs an `ArtifactStore` installs (retirement
+//! factories, preparation authorities and the store disposer), their unscheduled completion, and the framework's bounded
+//! catalog constructors. The catalog carries the engine's disposer, so it lives with the engine, above the vocabulary.
+//!
+//! Layering: `📓️2026-10-13-wave-e1b-kernel-seams.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT).

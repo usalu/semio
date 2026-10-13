@@ -6,7 +6,7 @@ use std::collections::{BTreeMap,BTreeSet};
 use crate::standards::v_commonmark::subsets::any::io::binary::snapshot::owned_pack::{OwnedNodes,RetireNode};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{NativeEncodingBound,Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SnapshotEncoding,SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase},os_store::serialization::ArtifactSqliteSnapshot};
 
 #[derive(Clone,Copy)]
 enum BlockOwner{Document,Quote(i64),Item(i64)}

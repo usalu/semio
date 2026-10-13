@@ -10,7 +10,7 @@ use crate::ModelSnapshot;
 /// 🗄️ The demo model, handcrafted in this facet's DSL.
 pub const BIM_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
-impl store::ArtifactDsl for ModelSnapshot {
+impl store::os_store::serialization::ArtifactDsl for ModelSnapshot {
     const EXTENSION: &'static str = "bim";
     fn envelope_id() -> &'static str {
         "bim.model"
@@ -32,12 +32,12 @@ impl store::ArtifactDsl for ModelSnapshot {
 
 /// 📖️ Parses `.bim` DSL text into a [`ModelSnapshot`].
 pub fn parse_dsl(text: &str) -> Result<ModelSnapshot, semio_framework_diagnostic::TextError> {
-    <ModelSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <ModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a [`ModelSnapshot`] back to `.bim` DSL text.
 pub fn print_dsl(snapshot: &ModelSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 
 /// 📄️ The demo snapshot, parsed from its committed DSL.

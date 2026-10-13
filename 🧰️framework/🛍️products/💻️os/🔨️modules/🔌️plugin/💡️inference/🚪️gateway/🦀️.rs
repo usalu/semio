@@ -1,29 +1,30 @@
 //! 🚪️ The registered inference gateway retains one original caller and whole decoded request.
-use crate::app::*;
+use crate::artifact_inference::WireArtifactInferenceBudget;
+use crate::artifact_inference::artifact_inference_service;
+use crate::artifact_inference::WireArtifactInferenceCacheMode;
+use crate::artifact_inference::ArtifactInferenceExecution;
+use crate::artifact_inference::ARTIFACT_INFERENCE_WIRE_VERSION;
+use crate::artifact_inference::ArtifactInferenceExecutable;
+use crate::artifact_inference::ArtifactInferenceExecutionError;
+use crate::artifact_inference::ArtifactInferenceExecutionRequest;
+use crate::artifact_inference::ArtifactInferenceService;
+use crate::artifact_inference::ArtifactInferenceServiceRegistry;
+use crate::artifact_inference::WireArtifactInferenceMetadata;
+use crate::artifact_inference::WireArtifactInferenceProvenance;
+use crate::artifact_inference::WireArtifactInferenceRequest;
+use crate::artifact_inference::WireArtifactInferenceResult;
+use crate::artifact_inference::active_artifact_inferences;
+use crate::artifact_inference::artifact_inference_service_registry;
+use crate::artifact_inference::begin_artifact_inference;
+use crate::artifact_inference::cancelled_artifact_inferences;
+use crate::artifact_inference::inference_cancelled;
+use crate::artifact_inference::validate_inference_execution;
+use crate::artifact_inference::validate_wire_request_metadata;
+use crate::artifact_inference::validate_wire_request_resources;
+use crate::artifact_inference::ArtifactInferenceGatewayFailure;
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,NativeDecodeControl,NativeEncodeContinuation,NativeEncodeControl,RetirementDemand,retirement::RetireOwned,native_decoding::NativeDecodeContinuation};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_pack_json::{Value,Number,JsonGrammarCursor,JsonSourceCursor,JsonReadLimits,JsonMemberPolicy,JsonWriteCursor,JsonWriteSource,JsonWriteNode};
-
-/// ⚠️ Original typed causes cross the recipient without display allocation.
-#[derive(semio_framework_value::RetireOwned)]
-pub enum ArtifactInferenceGatewayFailure{Native(ValueError),Json(semio_framework_pack_json::JsonError),Execution(ArtifactInferenceExecutionError),Literal(&'static str)}
-impl From<ValueError> for ArtifactInferenceGatewayFailure{fn from(value:ValueError)->Self{Self::Native(value)}}
-
-impl ArtifactInferenceGatewayFailure {
- pub(crate) fn fault_wire_fields(&self)->(&str,&str,RetainedCloneProgress){
-  match self{
-   Self::Native(error)=>(error.kind.as_str(),&error.message,error.retained_progress()),
-   Self::Execution(error)=>(error.code,error.cause.as_ref().map_or(error.message.as_str(),|cause|cause.message.as_ref()),error.retained_progress),
-   Self::Literal(message)=>("inference.gateway.refusal",message,Default::default()),
-   Self::Json(error)=>{use semio_framework_pack_json::JsonError;match error{
-    JsonError::Native(error)=>(error.kind.as_str(),&error.message,error.retained_progress()),
-    JsonError::DuplicateMember{name,..}=>("json.duplicateMember",name,Default::default()),
-    JsonError::UnexpectedEof=>("json.unexpectedEof","unexpectedEof",Default::default()),JsonError::UnexpectedByte{..}=>("json.unexpectedByte","unexpectedByte",Default::default()),JsonError::InvalidNumber(_)=>("json.invalidNumber","invalidNumber",Default::default()),JsonError::InvalidEscape(_)=>("json.invalidEscape","invalidEscape",Default::default()),JsonError::InvalidUnicodeEscape(_)=>("json.invalidUnicodeEscape","invalidUnicodeEscape",Default::default()),JsonError::UnpairedSurrogate(_)=>("json.unpairedSurrogate","unpairedSurrogate",Default::default()),JsonError::ControlCharacterInString{..}=>("json.controlCharacterInString","controlCharacterInString",Default::default()),JsonError::InvalidUtf8=>("json.invalidUtf8","invalidUtf8",Default::default()),JsonError::TrailingData(_)=>("json.trailingData","trailingData",Default::default()),JsonError::MaxDepthExceeded(_)=>("json.maxDepthExceeded","maxDepthExceeded",Default::default()),
-   }}
-  }
- }
- pub(crate) fn source_identity(&self)->usize{self.fault_wire_fields().1.as_ptr()as usize}
-}
 
 /// 🧾️ Absence retains the gateway source; a refusal transfers its original typed cause.
 pub struct ArtifactInferenceGatewayStep{pub payload:Option<Vec<u8>>,pub retained_progress:RetainedCloneProgress,pub refusal:Option<ArtifactInferenceGatewayFailure>}
@@ -198,3 +199,111 @@ pub fn original_inference_gateway_demands(gateway:&ArtifactInferenceGateway,copy
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+/// 🛑️ Cancels one active bounded inference by its caller-provided identity.
+pub fn cancel_artifact_inference(cancellation_id: &str) -> Result<(), ArtifactInferenceExecutionError> {
+    let retired = crate::plugin_runtime::cancel_extension_inference(cancellation_id);
+    let active = active_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "active inference registry is poisoned"))?;
+    if !active.contains(cancellation_id) {
+        if retired {
+            return Ok(());
+        }
+        return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancellation", format!("no active inference has cancellation id {cancellation_id:?}")));
+    }
+    cancelled_artifact_inferences().lock().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "cancelled inference registry is poisoned"))?.insert(cancellation_id.to_owned());
+    Ok(())
+}
+
+pub async fn wire_artifact_infer_cold(request: &[u8],operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    let registry = artifact_inference_service_registry().read().map_err(|_| ArtifactInferenceExecutionError::new("artifact-inference.unavailable", "artifact inference registry is poisoned"))?;
+    wire_artifact_infer_from_cold(&registry, request,operation,generation)
+}
+
+pub(crate) fn wire_artifact_infer_from_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8],operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    wire_artifact_infer_from_context_cold(registry, request, None,operation,generation)
+}
+
+fn wire_artifact_infer_from_context_cold(registry: &ArtifactInferenceServiceRegistry, request: &[u8], context: Option<&dyn std::any::Any>,operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    let request_text = std::str::from_utf8(request).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
+    let request: WireArtifactInferenceRequest =
+        semio_framework_pack_json::from_json_str(request_text, JsonMemberPolicy::Reject).map_err(|error| ArtifactInferenceExecutionError::new("artifact-inference.request-decode", error.to_string()))?;
+    if request.wire_version != ARTIFACT_INFERENCE_WIRE_VERSION {
+        return Err(ArtifactInferenceExecutionError::new("artifact-inference.wire-version", format!("expected {}, got {}", ARTIFACT_INFERENCE_WIRE_VERSION, request.wire_version)));
+    }
+    let service = registry
+        .get(&request.artifact_kind, &request.inference_schema)
+        .copied()
+        .ok_or_else(|| ArtifactInferenceExecutionError::new("artifact-inference.not-registered", format!("no inference service for {}/{}", request.artifact_kind, request.inference_schema)))?;
+    if context.is_none() && matches!(service.infer, ArtifactInferenceExecutable::Contextual(_, _)) {
+        crate::plugin_runtime::with_extension_inference_context(|context| wire_artifact_infer_with_service_cold(request, service, context,operation,generation))
+    } else {
+        wire_artifact_infer_with_service_cold(request, service, context,operation,generation)
+    }
+}
+
+fn wire_artifact_infer_with_service_cold(request: WireArtifactInferenceRequest, service: ArtifactInferenceService, context: Option<&dyn std::any::Any>,operation:u64,generation:u64) -> Result<Vec<u8>, ArtifactInferenceExecutionError> {
+    let expected = WireArtifactInferenceMetadata::from(service.metadata());
+    validate_wire_request_metadata(&request, &expected)?;
+    validate_wire_request_resources(&request)?;
+    let _cancellation = begin_artifact_inference(&request.cancellation_id)?;
+    if inference_cancelled(&request.cancellation_id)? {
+        return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancelled", "inference was cancelled before execution"));
+    }
+    let execution_request = ArtifactInferenceExecutionRequest {
+        operation,generation,cancelled:false,
+        policy: &request.policy,
+        budgets: &request.budgets,
+        retained: request.retained,
+        cancellation_id: &request.cancellation_id,
+        previous_state: request.previous_state.as_deref(),
+        requested_cache_mode: request.requested_cache_mode.clone(),
+        canonical_payload: &request.canonical_payload,
+        dependencies: &request.dependencies,
+    };
+    let execution = match context {
+        Some(context) => service.infer_with_context(&execution_request, context),
+        None => service.infer(&execution_request),
+    }?.execution.ok_or_else(||ArtifactInferenceExecutionError::new("artifact-inference.pending","cold inference inspection has no completed execution"))?;
+    if inference_cancelled(&request.cancellation_id)? {
+        crate::plugin_runtime::cancel_extension_inference(&request.cancellation_id);
+        return Err(ArtifactInferenceExecutionError::new("artifact-inference.cancelled", "inference was cancelled during execution"));
+    }
+    validate_inference_execution(&request, &execution)?;
+    let provenance = WireArtifactInferenceProvenance {
+        owner: request.owner.clone(),
+        inference_schema: request.inference_schema.clone(),
+        algorithm_version: request.algorithm_version,
+        policy_version: request.policy_version,
+        source_dialect: request.source_dialect.clone(),
+    };
+    let result = WireArtifactInferenceResult {
+        retirement_progress: execution.retirement_progress,
+        wire_version: ARTIFACT_INFERENCE_WIRE_VERSION,
+        owner: request.owner.clone(),
+        artifact_kind: request.artifact_kind,
+        artifact_schema: request.artifact_schema,
+        artifact_schema_version: request.artifact_schema_version,
+        inference_schema: request.inference_schema.clone(),
+        inference_schema_version: request.inference_schema_version,
+        algorithm_version: request.algorithm_version,
+        policy_version: request.policy_version,
+        revision: request.revision,
+        generation: request.generation,
+        source_dialect: request.source_dialect.clone(),
+        policy: request.policy.clone(),
+        budgets: request.budgets.clone(),
+        retained: request.retained,
+        previous_state: request.previous_state.clone(),
+        requested_cache_mode: request.requested_cache_mode.clone(),
+        canonical_payload: execution.canonical_payload,
+        dependencies: request.dependencies.clone(),
+        diagnostics: execution.diagnostics,
+        provenance,
+        validity: execution.validity,
+        quality: execution.quality,
+        complete: execution.complete,
+        actual_cache_mode: execution.actual_cache_mode,
+        cancellation_id: request.cancellation_id,
+    };
+    Ok(semio_framework_pack_json::to_json_string(&result).into_bytes())
+}

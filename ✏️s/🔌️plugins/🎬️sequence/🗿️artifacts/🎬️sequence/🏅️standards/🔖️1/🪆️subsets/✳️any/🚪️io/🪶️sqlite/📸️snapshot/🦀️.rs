@@ -1,18 +1,18 @@
 //! 🎬️ Handwritten parent schema and literal composed-child relational ownership.
 use crate::standards::v1::subsets::any::schema::snapshot::SequenceSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound}}};
 fn identity(row:&SqliteRow,columns:usize)->Result<(),ValueError>{if row.values.len()!=columns||row.rowid<=0||row.integer(0)?!=row.rowid{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Sequence requires exact fields and positive aliased identities"))}Ok(())}
 impl ArtifactSqliteSnapshot for SequenceSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn retire_sqlite_snapshot(self){neural_engine::ColdRetire::retire_cold(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   control.check_rows(2)?;let maximum=control.limits().max_value_bytes;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_borrowed(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;control.check_rows(2)?;semantic_owned(self,control)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
 
  fn preflight_sqlite_snapshot_encoding(&self,_:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
@@ -33,7 +33,7 @@ impl ArtifactSqliteSnapshot for SequenceSnapshot{
   native.begin_stage(6)?;native.charge(size_of::<Self>())?;
   let schema=native.copy_text(document.text(1)?)?;native.step()?;let child_id=native.copy_text(child.text(2)?)?;native.step()?;let artifact_id=native.copy_text(child.text(3)?)?;native.step()?;
   let artifact_kind=native.copy_text(child.text(4)?)?;native.step()?;let standard=native.copy_text(child.text(5)?)?;native.step()?;let subset=native.copy_text(child.text(6)?)?;native.step()?;native.checkpoint()?;
-  Ok(Self{schema,content:store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}})})})();(result,native.owned_bytes())})?
+  Ok(Self{schema,content:store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}})})})();(result,native.owned_bytes())})?
  }
 }
 

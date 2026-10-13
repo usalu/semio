@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `📋operations` per Wave C.
 
-use crate::ProgramMutation;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ↩️ Undo a delete by recreating the captured row. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::DeleteOperationalRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {

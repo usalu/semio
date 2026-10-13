@@ -9,7 +9,7 @@ fn sqlite_snapshot_json_owned_input_allocation_is_independent_exact_and_cumulati
  snapshot.value=JsonValue::Object{members:vec![JsonMember{key:literal.into(),value:JsonValue::String{value:literal.into()}},JsonMember{key:literal.into(),value:JsonValue::String{value:String::new()}}]};
  let limits=SqliteDatabaseLimits{max_allocation_bytes:neutral["maximumAllocationBytes"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot))};
+  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot))};
   let mut yes=|_|true;let mut control=SqliteSnapshotControl::new(&mut yes,SqliteDatabaseLimits{max_value_bytes:neutral["semanticBytes"].as_u64().unwrap()as usize,..limits});
   let restored=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| JsonSnapshot::decode_sqlite_snapshot_native(&payload,&mut control, native_owner)).expect("native input backing must not use the semantic SQL allowance");
   assert_eq!(restored,snapshot);restored.retire_sqlite_snapshot();

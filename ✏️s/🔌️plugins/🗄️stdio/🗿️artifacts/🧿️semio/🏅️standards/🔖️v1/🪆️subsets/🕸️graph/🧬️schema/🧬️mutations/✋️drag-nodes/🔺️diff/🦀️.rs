@@ -1,9 +1,9 @@
 //! 🔺️ Diff for `DragNodes`.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphNodeDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{SemioGraphDiff, SemioGraphNodeDiff};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Every addressed node moves by `(dx, dy)` read off its BASE position. An empty or repeated target list or a non-finite

@@ -1,6 +1,6 @@
 //! program -> xlsx — one worksheet per program table, header row 1 and one row per record from column A; stdio's minimal
 //! package builder turns the workbook into the authoritative OPC XML parts (`build_minimal_xlsx`).
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 pub use semio_s_artifact_stdio_xlsx::schema::snapshot::{XlsxCell, XlsxCellValue, XlsxSheet, XlsxWorkbook};
 pub use semio_s_artifact_stdio_xlsx::XlsxSnapshot;
 use semio_s_artifact_stdio_xlsx::schema::construction::build_minimal_xlsx;
@@ -44,7 +44,7 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<XlsxSnapshot, semio_frame
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<XlsxSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

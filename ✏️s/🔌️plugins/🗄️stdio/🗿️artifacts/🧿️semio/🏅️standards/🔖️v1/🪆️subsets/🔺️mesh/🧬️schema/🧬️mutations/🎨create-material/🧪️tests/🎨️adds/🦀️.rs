@@ -5,10 +5,10 @@
 //! is a `NamedAdded { index: base.materials.len(), item }`. Materials live in their OWN top-level
 //! collection, parallel to meshes — creating one binds it to nothing.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨create-material/🎨️adds/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨create-material/🎨️adds/📸️snapshot/➡️after/🔣️.json");

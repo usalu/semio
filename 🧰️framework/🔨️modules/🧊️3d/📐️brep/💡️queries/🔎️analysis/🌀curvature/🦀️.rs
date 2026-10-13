@@ -4,11 +4,11 @@
 //! Curvature is positive where the surface bends away from its outward normal, so a convex solid has
 //! non-negative principal curvatures: sphere `1/r`, cylinder `(1/r, 0)`, a hole's wall `-1/r`.
 
-use crate::brep::representation::arena::FaceId;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::Vec3;
+use semio_framework_3d_brep_representation::arena::FaceId;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::Vec3;
 
 /// 🌀 Local shape of a surface at one parameter pair.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

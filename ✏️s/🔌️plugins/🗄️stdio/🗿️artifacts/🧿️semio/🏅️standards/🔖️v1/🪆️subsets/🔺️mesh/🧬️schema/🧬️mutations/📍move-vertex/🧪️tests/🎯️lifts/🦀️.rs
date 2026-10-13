@@ -8,10 +8,10 @@
 //! one slot — so the committed diff legitimately carries every vertex, changed or not, and that is
 //! the shape being pinned here.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍move-vertex/🎯️lifts/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📍move-vertex/🎯️lifts/📸️snapshot/➡️after/🔣️.json");

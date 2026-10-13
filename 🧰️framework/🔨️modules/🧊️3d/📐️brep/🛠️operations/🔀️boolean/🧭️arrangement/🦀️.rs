@@ -7,10 +7,10 @@
 //! attached at; a seam is one edge whose two sides are the same region, so the cycles on its two sides are one face.
 
 use super::*;
-use crate::brep::operations::euler::{add_face, make_loop, split_edge_with_vertex};
-use crate::brep::representation::curve::curve_ops::{interpolate_curve, ParamMethod};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::surface::surface_ops::closest_uv;
+use {crate::euler::{add_face, split_edge_with_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_representation::curve::curve_ops::{interpolate_curve, ParamMethod};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
 use std::f64::consts::{PI, TAU};
 
 const NO_POLE: i64 = i64::MIN;

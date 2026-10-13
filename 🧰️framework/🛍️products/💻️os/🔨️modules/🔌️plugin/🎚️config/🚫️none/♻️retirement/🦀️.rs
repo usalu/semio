@@ -7,10 +7,11 @@
 //! (ticket 26/09/19/SEMIO-TECH-PLAY-GRID-WITH-EVERY-APP, `📓️flow.md` §8).
 
 use super::no_draft_retirement::zero_payload_store_owners;
-use crate::app::{bounded_config_store_disposer, ArtifactOwnedDisposer, NoConfig, NoConfigMutation};
+use crate::store_lifecycle::{bounded_config_store_disposer, ArtifactOwnedDisposer};
+use crate::app_views::{NoConfig, NoConfigMutation};
 use crate::store;
 
-pub fn no_config_store_owners() -> Result<store::DocumentStoreOwners<NoConfig, NoConfigMutation>, semio_framework_value::ValueError> {
+pub fn no_config_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<NoConfig, NoConfigMutation>, semio_framework_value::ValueError> {
     zero_payload_store_owners::<NoConfig, NoConfigMutation>()
 }
 

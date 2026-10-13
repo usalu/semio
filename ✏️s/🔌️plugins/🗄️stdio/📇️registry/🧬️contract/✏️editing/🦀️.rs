@@ -1,7 +1,7 @@
 //! ✏️ Schema-erased, typed snapshot editing shared by every stdio artifact editor.
 
 use crate::{kernel, value_derive};
-use kernel::{ArtifactDsl, Mutation, MutationDiff, OpBinary};
+use kernel::{os_store::serialization::ArtifactDsl, Mutation, MutationDiff, OpBinary};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, ArtifactRetainedWorkCapacity, BoundedArtifactCommandWork};
 use semio_framework_plugin::ActionArgDef;
@@ -816,7 +816,7 @@ pub trait BoundedNativeEditingEditor: SnapshotEditingEditor {
     }
 }
 
-pub type ArtifactPreparationFactory<S, M> = std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>;
+pub type ArtifactPreparationFactory<S, M> = std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<S, M>>;
 
 fn retained_copy_close_demands(bytes:&Vec<u8>,reserved:bool,complete:bool)->semio_framework_value::RetirementDemand{semio_framework_value::RetirementDemand{release_bytes:bytes.capacity(),depth:usize::from(bytes.capacity()!=0||reserved||complete),..Default::default()}}
 fn retained_copy_close_step(bytes:&mut Vec<u8>,reserved:&mut bool,complete:&mut bool,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->semio_framework_job::InteractiveJobCloseStep{
@@ -972,7 +972,7 @@ pub fn close_revision_turn(revision: &mut Option<String>, grant: semio_framework
 pub struct NativeEditPreparationRoute<S, M> {
     recognizes: fn(&M) -> bool,
     #[factory_child]
-    factory: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>,
+    factory: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<S, M>>,
 }
 
 impl<S, M> NativeEditPreparationRoute<S, M> {
@@ -986,15 +986,15 @@ struct RoutedNativeEditPreparationFactory<S, M> {
     #[factory_owned]
     route: NativeEditPreparationRoute<S, M>,
     #[factory_child]
-    fallback: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M>>,
+    fallback: std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<S, M>>,
 }
 
-impl<S, M> semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<S, M> for RoutedNativeEditPreparationFactory<S, M>
+impl<S, M> semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<S, M> for RoutedNativeEditPreparationFactory<S, M>
 where
     S: Send + Sync + 'static,
     M: Send + Sync + 'static,
 {
-    fn preflight(&self, mutation: &M, lane: semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M, lane: semio_framework_plugin::plugin_app_close_prelude::store::os_store::store_schema::HistoryLane) -> Result<semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         if (self.route.recognizes)(mutation) {
             self.route.factory.preflight(mutation, lane)
         } else {
@@ -1004,12 +1004,12 @@ where
 
     fn begin_batch_digest(&self,edit:&mut Option<Box<semio_framework_plugin::plugin_app_close_prelude::store::Edit<M>>>,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreBatchDigest<M>>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{self.fallback.begin_batch_digest(edit,grant)}
 
-    fn begin_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_demand(mutation,lane)}else{self.fallback.begin_demand(mutation,lane)}}
+    fn begin_demand(&self,mutation:&M,lane:semio_framework_plugin::plugin_app_close_prelude::store::os_store::store_schema::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{if(self.route.recognizes)(mutation){self.route.factory.begin_demand(mutation,lane)}else{self.fallback.begin_demand(mutation,lane)}}
     fn begin(
         &self,
-        request: semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M, M>,
-        grant:semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparation<S, M>>,semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationRequest<S, M, M>)> {
+        request: semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<S, M, M>,
+        grant:semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<S, M>>,semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError,semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<S, M, M>)> {
         if (self.route.recognizes)(&request.mutation) {
             self.route.factory.begin(request,grant)
         } else {
@@ -1368,7 +1368,7 @@ fn check_publication_limits<S, M: Mutation<S> + OpBinary>(snapshot: &S, mutation
         let inverses = mutation.inverse(snapshot).map_err(|error| edit_fault("snapshot-edit.inverse-refused", error.into_message()))?;
         std::iter::once(mutation).chain(inverses.iter()).try_for_each(|operation| {
             let bytes = operation.encode_op().map_err(|error| edit_fault("snapshot-edit.publication-codec", error.to_string()))?;
-            (bytes.len() <= kernel::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).then_some(()).ok_or_else(|| edit_fault("snapshot-edit.publication-limit", "the edit or its exact undo exceeds the native publication item limit"))
+            (bytes.len() <= kernel::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).then_some(()).ok_or_else(|| edit_fault("snapshot-edit.publication-limit", "the edit or its exact undo exceeds the native publication item limit"))
         })
     })
 }
@@ -1504,7 +1504,7 @@ macro_rules! snapshot_editing_bounded_first_step_tool_proofs {
 #[macro_export]
 macro_rules! snapshot_editing_publication_authority {
     () => {
-        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             Some(semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
         }
     };

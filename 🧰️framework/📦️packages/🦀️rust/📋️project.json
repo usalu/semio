@@ -125,30 +125,6 @@
         "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test-package-descriptor-value-codec"
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework",
-        "command": "bun ./🔨️modules/🏃️process/📜️script.ts command --config ./⚙️configuration/🏃️process/🔣️.json --cwd 📦️packages/🦀️rust --manifest 📦️packages/🦀️rust/Cargo.toml -- bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "lint": {
       "executor": "nx:run-commands",
       "options": {

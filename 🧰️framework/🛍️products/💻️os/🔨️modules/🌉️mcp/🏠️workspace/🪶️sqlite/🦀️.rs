@@ -17,7 +17,7 @@ fn number_value<P:semantic::Port>(text:&str,scanner:&mut Option<semio_framework_
  loop{port.work(1,0)?;let cursor=scanner.as_mut().unwrap();let number=cursor.step(text).map_err(|_|ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number column must be a finite JSON numeric literal"))?;if let Some(number)=number{if cursor.position()!=text.len(){return Err(ValueError::literal(ValueRefusalKind::InvalidValue,"Probe number column has trailing numeric bytes"))}return Ok(DslValue::Number(match number{semio_framework_pack_json::Number::UInt(value)=>Number::UInt(value),semio_framework_pack_json::Number::Int(value)=>Number::Int(value),semio_framework_pack_json::Number::Float(value)=>Number::Float(value)}));}}
 }
 
-impl store::ArtifactSqliteSnapshot for super::ProbeSnapshot{
+impl store::os_store::serialization::ArtifactSqliteSnapshot for super::ProbeSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut frame=semantic::Projection::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ProjectSnapshot};semantic::project(&self.0,&mut frame,&mut port)?;Ok(frame.database)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{let mut frame=semantic::Reconstruction::new();let mut port=semantic::Direct{control,phase:SqliteSnapshotPhase::ReconstructSnapshot};semantic::reconstruct(database,&mut frame,&mut port).map(Self)}

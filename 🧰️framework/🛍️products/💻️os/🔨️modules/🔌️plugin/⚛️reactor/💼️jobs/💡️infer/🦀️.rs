@@ -293,7 +293,7 @@ impl BoundedJob for OriginalInferenceJob {
 impl Drop for OriginalInferenceJob{fn drop(&mut self){assert!(std::thread::panicking()||self.terminal_drop_is_shallow(),"original inference job dropped before full source closure");}}
 
 // 🚫️async: E1 pure parse consumed by the sync factory above and by `decode`'s own body.
-fn decode_request(input: &[u8]) -> Result<crate::app::WireArtifactInferenceRequest, semio_framework::Fault> {
+fn decode_request(input: &[u8]) -> Result<crate::artifact_inference::WireArtifactInferenceRequest, semio_framework::Fault> {
     let input_text = std::str::from_utf8(input).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))?;
     semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.infer.decode", format!("invalid {} input: {error}", super::JOB_KIND_INFER)))
 }
@@ -319,13 +319,13 @@ enum InteractivePhase {
 enum PumpTransition { Settled(JobStep) }
 
 struct InteractiveInferenceJob {
-    request: crate::app::WireArtifactInferenceRequest,
+    request: crate::artifact_inference::WireArtifactInferenceRequest,
     restored: Option<Vec<u8>>,
     operation: Operation,
     bridge: InferenceBridge,
     /// 🛑️ Drop guard: releases this inference's cancellation slot when the machine is dropped,
     /// exactly as the former future's own `let _cancellation = …` binding did for its whole run.
-    _cancellation: crate::app::ArtifactInferenceCancellationGuard,
+    _cancellation: crate::artifact_inference::ArtifactInferenceCancellationGuard,
     cancel: semio_framework_job::CancelToken,
     session: Option<InferenceSession>,
     rejected: Option<InferenceRejected>,
@@ -341,9 +341,9 @@ struct InteractiveInferenceJob {
 impl InteractiveInferenceJob {
     /// 🎟️ Admission: validates the request's declared resources and claims its cancellation slot
     /// before any worker capacity is touched, so a refused inference never reaches the pool.
-    fn admit(job: u64, request: crate::app::WireArtifactInferenceRequest, restored: Option<&[u8]>) -> Result<Self, Vec<u8>> {
-        crate::app::validate_wire_request_resources(&request).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
-        let cancellation = crate::app::begin_artifact_inference(&request.cancellation_id).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+    fn admit(job: u64, request: crate::artifact_inference::WireArtifactInferenceRequest, restored: Option<&[u8]>) -> Result<Self, Vec<u8>> {
+        crate::artifact_inference::validate_wire_request_resources(&request).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
+        let cancellation = crate::artifact_inference::begin_artifact_inference(&request.cancellation_id).map_err(|error| semio_framework_diagnostic::encode_fault_bytes(&super::fault(error.code, error.message)))?;
         let operation = Operation::new(OperationId(job), RevisionId(request.revision), Generation(request.generation), 0);
         let bridge = InferenceBridge::new(operation);
         Ok(Self {
@@ -447,7 +447,7 @@ impl InteractiveInferenceJob {
     /// then either absorbs its non-terminal outcome in place or hands the crossing back.
     /// 🚫️async: E1 state action body consumed by the sync `pump` loop above.
     fn pump_transition(&mut self) -> PumpTransition {
-        match crate::app::inference_cancelled(&self.request.cancellation_id) {
+        match crate::artifact_inference::inference_cancelled(&self.request.cancellation_id) {
             Ok(true) => self.cancel.cancel_now(),
             Ok(false) => {}
             Err(error) => return PumpTransition::Settled(self.fail(super::fault(error.code, error.message))),
@@ -653,21 +653,21 @@ fn bridge_fault(error: &InferenceBridgeError) -> semio_framework::Fault {
 /// 🧾️ The result of a completed interactive inference, reporting only what the host observed: the job completed (`complete`), faulted nowhere (`valid`),
 /// its final persisted state or last checkpoint is the resume state (`previous_state`), and it published no diagnostics on the success path. A fidelity the
 /// job never declared is `unreported`, never `exact`.
-fn encode_result(request: crate::app::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>,retirement_progress:RetainedCloneProgress) -> Result<Vec<u8>, semio_framework::Fault> {
+fn encode_result(request: crate::artifact_inference::WireArtifactInferenceRequest, canonical_payload: Vec<u8>, resume_state: Option<Vec<u8>>,retirement_progress:RetainedCloneProgress) -> Result<Vec<u8>, semio_framework::Fault> {
     let allocation = usize::try_from(request.budgets.allocation_bytes).map_err(|_| super::fault("job.infer.result", "allocation budget exceeds this runtime's address space"))?;
     if canonical_payload.len() > allocation {
         return Err(super::fault("job.infer.result", format!("interactive inference result has {} bytes, above allocation budget {allocation}", canonical_payload.len())));
     }
-    let provenance = crate::app::WireArtifactInferenceProvenance {
+    let provenance = crate::artifact_inference::WireArtifactInferenceProvenance {
         owner: request.owner.clone(),
         inference_schema: request.inference_schema.clone(),
         algorithm_version: request.algorithm_version,
         policy_version: request.policy_version,
         source_dialect: request.source_dialect.clone(),
     };
-    let result = crate::app::WireArtifactInferenceResult {
+    let result = crate::artifact_inference::WireArtifactInferenceResult {
         retirement_progress,
-        wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: crate::artifact_inference::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: request.owner,
         artifact_kind: request.artifact_kind,
         artifact_schema: request.artifact_schema,

@@ -7,10 +7,15 @@
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use super::encryption::Decryptor;
 use super::filters::decode_stream;
-use super::lexer::{brute_force_scan, dict_i64, find_last_subslice, malformed, parse_indirect_at, Lexer, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::lexer::{brute_force_scan, dict_i64, find_last_subslice, parse_indirect_at, Lexer};
+use crate::standards::v1_7::subsets::base::io::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfIndirectObject, PdfObject};
 use std::collections::{HashMap, HashSet};
 
+
+/// 🧮 Trailer keys the writer derives from the file it lays out (ISO 32000-1 §7.5.5, §7.5.8.2) —
+/// never document content, so a reader drops them and a writer states them afresh.
+pub const WRITER_TRAILER_KEYS: [&str; 10] = ["Size", "Prev", "XRefStm", "Encrypt", "Type", "W", "Index", "Filter", "DecodeParms", "Length"];
 //#region 🔖️Entries
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum XrefEntry {

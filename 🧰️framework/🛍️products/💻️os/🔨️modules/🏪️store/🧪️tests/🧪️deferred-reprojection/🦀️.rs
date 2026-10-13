@@ -334,7 +334,7 @@ impl MemberStoreOwner<CountedOp> for DemoSnapshot {
         super::fixture_authoring_birth_demand::<CountedOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, CountedOp>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, CountedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, CountedOp>> {
         super::fixture_authoring_member_owners::<CountedOp>(grant)
     }
 }

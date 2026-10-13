@@ -149,14 +149,14 @@ pub struct HistoryEdit {
     /// ::inverse`). Empty for text-compiled/imported logs — a decoder recomputing them from a
     /// fresh replay never touches this field; when non-empty, `write_backwards_section` persisted
     /// them explicitly (only the `.spr` binary path ever sets this — the `.ops` text mirror stays
-    /// forwards-only, see `crate::os_store::print_document_spr`/`parse_document_spr`).
+    /// forwards-only, see `crate::os_store::text_format::print_document_spr`/`parse_document_spr`).
     pub inverse: Vec<OpPayload>,
     /// 🧮️ Present iff the caller supplied it; absent for text-compiled/imported logs. Not
     /// required for round-trip — a decoder recomputing inverse/meta from a fresh replay never
     /// touches this field.
     pub meta: Option<Vec<HistoryOpMeta>>,
     /// 🛤️ Which undo/redo cursor this edit belongs to, as the document layer's own lane name
-    /// (`crate::os_store::HistoryLane`'s camelCase word). `None` means the default DOCUMENT lane, so
+    /// (`crate::os_store::store_schema::HistoryLane`'s camelCase word). `None` means the default DOCUMENT lane, so
     /// an ordinary edit costs nothing on the wire. It has to live here and not only on the envelope:
     /// without it a save/load cycle turned every side-lane edit back into a document edit, and the
     /// reloaded store's plain `Undo` then reverted an interaction edit that must never be undone
@@ -267,7 +267,7 @@ impl HistoryLog {
 //#endregion 🔖️Fold
 
 //#region 🔖️TextGrammar
-// Own twin of crate::os_store::OpsHeaderLine's grammar, built directly against `dsl_schema` (never `vcs`,
+// Own twin of crate::os_store::command_format::OpsHeaderLine's grammar, built directly against `dsl_schema` (never `vcs`,
 // never `dsl_derive` — this crate has no path dep on either). Field declaration order below
 // mirrors vcs's struct field order exactly: `crate::os_dsl::schema::print_record` reorders keyed fields
 // scalar-before-composite (stable sort, ties broken by declaration order), so matching vcs's
@@ -371,7 +371,7 @@ fn text_error_to_protocol(err: semio_framework_diagnostic::TextError) -> Protoco
 
 /// 📥️ Parses the full `.ops` text into a `HistoryLog`. Blank lines and `#`-comments
 /// normalize away; a two-space-indented line under a pending `edit` header is an opaque forward
-/// op line (never interpreted). Unlike `crate::os_store::replay_ops`, this never replays operation semantics
+/// op line (never interpreted). Unlike `crate::os_store::text_format::replay_ops`, this never replays operation semantics
 /// (ops are opaque here) — `HistoryEdit::meta`/inverse are simply never populated from text.
 pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
     struct PendingEdit {
@@ -458,7 +458,7 @@ pub fn parse_ops_text(ops: &str) -> Result<HistoryLog, ProtocolError> {
 /// (`REC_VIEWER`). Errors if any op payload carries no text
 /// (the binary-only `.spr` convention): this crate is schema-agnostic and cannot recover text
 /// from an opaque binary payload — printing `.ops` for a real app document goes through the
-/// concrete `Mutation::print_op` path instead (`crate::os_store::print_document_pack`'s `.ops` mirror).
+/// concrete `Mutation::print_op` path instead (`crate::os_store::text_format::print_document_pack`'s `.ops` mirror).
 pub fn print_ops_text(log: &HistoryLog) -> Result<String, ProtocolError> {
     let mut out = String::new();
 

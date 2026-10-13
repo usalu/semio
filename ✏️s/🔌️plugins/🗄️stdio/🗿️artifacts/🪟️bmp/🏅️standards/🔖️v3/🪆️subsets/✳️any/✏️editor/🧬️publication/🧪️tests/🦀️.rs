@@ -3,7 +3,7 @@ use super::*;
 use semio_framework_value::{FromValue,retained_clone::RetainedCloneSource};
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::mutations::{PaintIndexedRegion,PaintDirectRegion};
-fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
 fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T){

@@ -1,0 +1,32 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-flow-dictionary-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `flow-extension-dictionary` extension component: the one cdylib of `semio-s-plugin-flow-dictionary`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:flow-extension-dictionary"
+
+[package.metadata.semio]
+role = "extension"
+deployment-directory = "📚️flow-extension-dictionary"
+component-kind = "extension"
+extends = "flow"
+contributes = ["flow.extension"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-flow-dictionary = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

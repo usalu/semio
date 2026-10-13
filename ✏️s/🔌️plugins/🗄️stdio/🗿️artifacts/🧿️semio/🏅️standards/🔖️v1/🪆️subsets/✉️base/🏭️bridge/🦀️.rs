@@ -10,8 +10,8 @@
 extern crate semio_framework_os_kernel as protocol;
 
 use protocol::Mutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::SemioMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
+use semio_s_artifact_stdio_semio::schema::mutations::SemioMutation;
+use semio_s_artifact_stdio_semio::schema::snapshot::SemioSnapshot;
 
 
 fn main() {

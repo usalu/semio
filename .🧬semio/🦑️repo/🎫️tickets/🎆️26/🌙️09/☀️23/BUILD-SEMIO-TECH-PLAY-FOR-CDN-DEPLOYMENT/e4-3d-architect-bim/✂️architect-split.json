@@ -1,0 +1,54 @@
+{
+ "source": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+ "crates": [
+  {
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust/🦀️.rs",
+   "header": "//! 🧬️ Architect program model: the persisted `ProgramSnapshot` with its 65 feature-area registers, the shared entity\n//! kernel, the sparse `ProgramDiff`, the artifact schema, dialect and kind, and the composed benchmark and knowledge tables.\n//!\n//! Crate cut of `semio-s-artifact-architect-program` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\nextern crate semio_framework_os_kernel as store;\nextern crate semio_framework_schema as framework_schema;\n",
+   "own": [
+    "standards::v1::subsets::any::schema"
+   ],
+   "exclude": [
+    "standards::v1::subsets::any::schema::inferences",
+    "standards::v1::subsets::any::schema::mutations"
+   ]
+  },
+  {
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust/🦀️.rs",
+   "header": "//! 🧬️ Architect program mutations: the `ProgramMutation` dispatch enum and its 260 register leaves (create, delete,\n//! rename and replace per register), each with its sparse diff and captured-state inverse.\n//!\n//! Crate cut of `semio-s-artifact-architect-program` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\nextern crate semio_framework_os_kernel as store;\nextern crate semio_framework_schema as framework_schema;\n",
+   "own": [
+    "standards::v1::subsets::any::schema::mutations"
+   ]
+  },
+  {
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/💡️inferences/📦️packages/🦀️rust/🦀️.rs",
+   "header": "//! 💡️ Architect program inferences: the derived `ProgramInference` (validation, reports, analyses, adjacency and\n//! trace topology) computed from the persisted snapshot.\n//!\n//! Crate cut of `semio-s-artifact-architect-program` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\nextern crate semio_framework_os_kernel as store;\nextern crate semio_framework_schema as framework_schema;\n",
+   "own": [
+    "standards::v1::subsets::any::schema::inferences"
+   ]
+  },
+  {
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📦️packages/🦀️rust/🦀️.rs",
+   "header": "//! 🚪️ Architect program io: the native binary, text, json and sqlite codecs, the register table exchange, the stdio\n//! import deserializers and export serializers, and the composer, builder and analyzer facets.\n//!\n//! Crate cut of `semio-s-artifact-architect-program` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\nextern crate semio_framework_os_kernel as store;\nextern crate semio_framework_schema as framework_schema;\n",
+   "own": [
+    "standards::v1::subsets::any::io"
+   ]
+  },
+  {
+   "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust/🦀️.rs",
+   "header": "//! ✏️ Architect program editor, viewer and examples: the play app with its commands, modes, windows, panels, config and\n//! presence, the read-only viewer, and the demo example.\n//!\n//! Crate cut of `semio-s-artifact-architect-program` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).\n\nextern crate semio_framework_os_kernel as dsl;\nextern crate semio_framework_os_kernel as protocol;\nextern crate semio_framework_os_kernel as store;\nextern crate semio_framework_schema as framework_schema;\n",
+   "own": [
+    "examples",
+    "editor",
+    "viewer"
+   ]
+  }
+ ],
+ "drop": [
+  "standards::v1::subsets::any::schema::mutations",
+  "standards::v1::subsets::any::schema::inferences",
+  "standards::v1::subsets::any::io",
+  "examples",
+  "editor",
+  "viewer"
+ ]
+}

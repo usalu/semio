@@ -6,10 +6,10 @@
 //! tri-state `Option<Option<SemioRgba>>` — this case takes the SET arm, so its inner value is a
 //! real object and the committed diff survives a JSON round trip (the `null`/clear arm would not).
 
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪣replace-fill/🎨️repaints/📸️snapshot/➡️after/🔣️.json");

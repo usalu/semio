@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "scenarios": [
+    { "id": "flushed-records-survive-reopen", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "put", "store": "a", "key": "k2", "value": "" },
+      { "op": "flush", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
+      { "op": "get", "store": "a", "key": "k2", "expect": "" },
+      { "op": "get", "store": "a", "key": "k3", "expect": null }
+    ] },
+    { "id": "unflushed-records-are-lost-on-crash", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "crash", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": null }
+    ] },
+    { "id": "concurrent-writers-publish-complete-packs", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "from-a" },
+      { "op": "put", "store": "b", "key": "k2", "value": "from-b" },
+      { "op": "flush", "store": "b" },
+      { "op": "flush", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "from-a" },
+      { "op": "get", "store": "a", "key": "k2", "expect": "from-b" }
+    ] },
+    { "id": "damaged-pack-reads-as-miss-and-is-repaired", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "flush", "store": "a" },
+      { "op": "corrupt", "store": "a", "key": "k1" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": null },
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "flush", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" }
+    ] },
+    { "id": "retain-accessed-keeps-exactly-the-live-set", "operations": [
+      { "op": "put", "store": "a", "key": "k1", "value": "alpha" },
+      { "op": "put", "store": "a", "key": "k2", "value": "beta" },
+      { "op": "flush", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
+      { "op": "retain", "store": "a" },
+      { "op": "reopen", "store": "a" },
+      { "op": "get", "store": "a", "key": "k1", "expect": "alpha" },
+      { "op": "get", "store": "a", "key": "k2", "expect": null }
+    ] }
+  ]
+}

@@ -1,6 +1,6 @@
 //! 📖️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): a streaming body abstraction wired into
 //! `Host::http_fetch`/`Host::blob_read`. The poll world has no live channel — a poll-world
-//! completion is one shot, and `⚛️reactor/📮️requests::RequestRegistry::append_chunk`'s chunk-
+//! completion is one shot, and `🌐host/📮️requests::RequestRegistry::append_chunk`'s chunk-
 //! reassembly fix already buffers the WHOLE body before `Host` ever sees it — so `BodyReader::Poll`
 //! just replays that already-complete buffer in caller-sized slices. `BodyReader::Direct` wraps a
 //! REAL `wit_bindgen::StreamReader<u8>`, so a `component-guest-async` guest on a genuine
@@ -40,7 +40,7 @@ impl BodyReader {
     /// 🌊️ Wraps a real host-async `stream<u8>` — see `Host::http_fetch`/`Host::blob_read`'s
     /// `Direct` arms, the only callers.
     #[cfg(all(feature = "component-guest-async", target_arch = "wasm32", target_env = "p2"))]
-    pub(crate) async fn direct(stream: wit_bindgen::StreamReader<u8>) -> Self {
+    async fn direct(stream: wit_bindgen::StreamReader<u8>) -> Self {
         BodyReader::Direct(stream)
     }
 

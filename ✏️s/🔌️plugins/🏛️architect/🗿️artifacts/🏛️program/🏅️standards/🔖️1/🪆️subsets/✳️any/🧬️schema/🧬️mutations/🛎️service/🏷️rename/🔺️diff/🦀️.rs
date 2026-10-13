@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛎️services` per Wave C.
 
 use super::RenameServiceRequirement;
-use crate::diff::{ProgramServicesDelta, ProgramServicesPatchEntry};
-use crate::registers::ServiceRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramServicesDelta, ProgramServicesPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::ServiceRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameServiceRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -6,15 +6,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::cad::io::binary::diff::{encode_option, decode_option};
-use crate::standards::v1::subsets::cad::schema::diff::*;
+use crate::io::binary::diff::{encode_option, decode_option};
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -83,10 +83,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::{parse_f64, enc_point2, dec_point2};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_i32(s: &str) -> Result<i32, String> {
@@ -101,18 +98,6 @@ pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Vec<T>, String> {
     split_top_level(strip_brackets(s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec).collect()
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
-    format!("[{},{}]", p.x, p.y)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_point2(s: &str) -> Result<SemioPoint2, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [x, y] = parts.as_slice() else { return Err(format!("point2: expected 2 fields, got {}", parts.len())) };
-    Ok(SemioPoint2 { x: parse_f64(x)?, y: parse_f64(y)? })
 }
 
 /// 📐️ `L`ine/`A`rc/`C`ircle/`E`llipse/`P`olyline/`T`ext/`I`nsert/`S`olid/`D`imension — the `dxf`

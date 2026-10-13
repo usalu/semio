@@ -4,7 +4,7 @@ mod tests {
     use crate::workflow::{MediaContract, WorkflowEdge, WorkflowPosition, empty_workflow, placeholder_media_contract, validate_workflow};
     use {semio_framework::AppRole,semio_framework_artifact_reference::ArtifactDialect,semio_framework::MediaClass,semio_framework::MediaForm,semio_framework::MediaType,semio_framework::MediaWireFormat,semio_framework::ModeDefinition,semio_framework::PluginManifest,semio_framework::WindowKindDefinition};
     use std::sync::Arc;
-    use store::{MemoryBackbone, MemoryBackbonePort};
+    use store::{os_store::backbone::MemoryBackbone, os_store::backbone::MemoryBackbonePort};
     use semio_framework_ui_locale::LocalizedLabel;
     use ui_wgpu::wgpu::SurfaceKind;
 
@@ -535,7 +535,7 @@ mod tests {
     /// 🧮️ The complete history position (applied, redo, checkpoint, alternative) the event log of `edits` + `transitions` folds to.
     fn workflow_history<'a>(document_id: &str, edits: impl IntoIterator<Item = &'a store::Edit<workflow::WorkflowMutation>>, transitions: &[protocol::MutationEnvelope], conflicts: &[protocol::Conflict]) -> protocol::HistoryFold {
         let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(document_id.to_string()));
-        store::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts, &head).expect("event log folds")
+        store::os_store::ledger::fold_event_log::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(document_id, &edits.into_iter().collect::<Vec<_>>(), transitions, conflicts, &head).expect("event log folds")
     }
 
     /// 🧮️ [`workflow_history`] of one host backbone document.
@@ -572,7 +572,7 @@ mod tests {
         assert_eq!(rebuilt_document.conflicts, document.conflicts);
 
         let text = export_backbone_dsl(&document).expect("backbone text encodes");
-        let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
+        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("backbone text decodes");
         assert!(parsed.envelope.edit_messages.iter().eq(document.edit_messages.iter()));
         assert_eq!(parsed.envelope.conflicts, document.conflicts);
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), document_history(&document));
@@ -581,7 +581,7 @@ mod tests {
         invalid.conflicts[0].id = protocol::ConflictId("conflict-invalid".into());
         assert!(encode_backbone_payload(&invalid).is_err(), "host binary persistence must reject a non-content-addressed conflict id");
         let malformed_text = text.ops.replacen(&document.conflicts[0].id.0, "conflict-invalid", 1);
-        assert!(resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text)).is_err(), "host text persistence must reject a non-content-addressed conflict id");
+        assert!(resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &malformed_text)).is_err(), "host text persistence must reject a non-content-addressed conflict id");
     }
 
     #[test]
@@ -603,7 +603,7 @@ mod tests {
         assert_eq!(document_history(&OsWorkflowStore::new(decoded, store.inner.local_actor_id().clone()).expect("workflow rebuild").document()), history);
 
         let text = export_backbone_dsl(&document).expect("text encode");
-        let parsed = resolve_kernel_future(store::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
+        let parsed = resolve_kernel_future(store::os_store::text_format::parse_document_text::<workflow::WorkflowSnapshot, workflow::WorkflowMutation>(&text.dsl, &text.ops)).expect("text decode");
         assert_eq!(workflow_history(&parsed.envelope.id, parsed.envelope.vcs.edits.iter(), &parsed.envelope.transitions, &parsed.envelope.conflicts), history);
     }
 
@@ -634,7 +634,7 @@ mod tests {
 
     #[test]
     fn creates_and_lists_space_catalog_entries() {
-        let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
+        let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::Memory(resolve_kernel_future(MemoryBackbonePort::new()))));
         let owner = space::SpaceUser { id: "user-1".into(), name: "Ada".into(), avatar: None, role: space::SpaceRole::Author };
         let entry = create_os_space("Catalog Space", space::SpaceKind::Studio, space::SpaceVisibility::Private, owner, &port).expect("create");
         assert_eq!(entry.collection_count, 1, "create_os_space must seed exactly one default collection");
@@ -663,8 +663,8 @@ mod tests {
         let mut store_b = OsWorkflowStore::new(store_a.document(), protocol::ActorId("workflow-peer-b".into())).expect("valid replicated workflow store fixture");
 
         let (backbone_a, backbone_b) = resolve_kernel_future(MemoryBackbone::pair("mem://reconcile-race", "mem://reconcile-race"));
-        store_a.attach_backbone(store::Backbones::Memory(backbone_a)).expect("attach a");
-        store_b.attach_backbone(store::Backbones::Memory(backbone_b)).expect("attach b");
+        store_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).expect("attach a");
+        store_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).expect("attach b");
 
         let document = store_a.snapshot().expect("projection");
         let node_a = document.graph.nodes.iter().find(|node| node.id == node_a_id).expect("node a");

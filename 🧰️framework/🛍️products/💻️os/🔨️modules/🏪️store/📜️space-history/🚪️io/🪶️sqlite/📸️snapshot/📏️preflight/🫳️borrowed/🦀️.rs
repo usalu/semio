@@ -1,5 +1,5 @@
 //! 🫳️ Exact history wire demand borrows original checkpoint and alternative fields.
-use crate::os_store::{SpaceHistorySnapshot,SpaceCheckpoint,SpaceAlternative,SpaceMemberPin};
+use crate::os_store::{space_history_document::SpaceHistorySnapshot,space_history_document::SpaceCheckpoint,space_history_document::SpaceAlternative,space_history_document::SpaceMemberPin};
 use crate::os_vcs::Author;
 use crate::os_spr::HybridLogicalTimestamp;
 use crate::sqlite_snapshot::SnapshotEncoding;

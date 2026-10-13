@@ -16,7 +16,7 @@ pub type SemioDrawingInferenceText = String;
 //#endregion 🚚️Carrier
 
 mod flattened_node_cache {
-use crate::standards::v1::subsets::drawing::schema::inferences::flattened_scene::FlattenedNode;
+use crate::schema::inferences::flattened_scene::FlattenedNode;
 /// 🌉 Hand-written, not dual-derived: `FlattenedNode`'s own fields (`SemioTransform`, `DrawStyle`,
 /// and transitively `SemioPoint3`/`SemioQuaternion`/`SemioRgba`) have already dropped `serde`
 /// entirely in favor of `ToValue`/`FromValue` — a `#[derive(Serialize, Deserialize)]` here would

@@ -9,7 +9,7 @@ use crate::standards::riff_pcm::subsets::any::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 
 /// 🎼️ Encodes every owned logical snapshot field independently of ordinary file syntax.
-impl store::ArtifactDsl for WavSnapshot {
+impl store::os_store::serialization::ArtifactDsl for WavSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_WAV_DOCUMENT_SCHEMA
@@ -26,7 +26,7 @@ impl store::ArtifactDsl for WavSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

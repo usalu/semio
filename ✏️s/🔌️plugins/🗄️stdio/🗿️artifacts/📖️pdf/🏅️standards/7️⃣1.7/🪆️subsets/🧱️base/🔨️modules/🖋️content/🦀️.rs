@@ -5,8 +5,9 @@
 
 use super::colour::{lift_colour_space_inline, lower_colour_space_inline};
 use super::filters::{decode_stream, encode_stream};
-use super::fonts::FontCodec;
-use super::lexer::{is_ws, number_text, write_object, Lexer, PResult, PdfEngineError, Token};
+use crate::standards::v1_7::subsets::base::modules::fonts::FontCodec;
+use crate::standards::v1_7::subsets::base::modules::lexer::{is_ws, number_text, write_object, Lexer, Token};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfInlineImage, PdfImageBody, PdfLineCap, PdfLineJoin, PdfObject, PdfOp, PdfPropertyList, PdfTextArrayItem, PdfTextString};
 use std::collections::HashMap;
 
@@ -369,7 +370,7 @@ fn push_nums(out: &mut Vec<u8>, values: &[f64]) {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn push_name(out: &mut Vec<u8>, name: &str) {
-    super::lexer::write_name(out, name);
+    crate::standards::v1_7::subsets::base::modules::lexer::write_name(out, name);
     out.push(b' ');
 }
 
@@ -387,7 +388,7 @@ fn encode_text(text: &PdfTextString, font: Option<&FontCodec>, font_name: Option
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn push_string(out: &mut Vec<u8>, bytes: &[u8]) {
-    super::lexer::write_string(out, bytes);
+    crate::standards::v1_7::subsets::base::modules::lexer::write_string(out, bytes);
     out.push(b' ');
 }
 
@@ -553,8 +554,8 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 out.push(b'[');
                 for item in items {
                     match item {
-                        PdfTextArrayItem::Text { text } => super::lexer::write_string(&mut out, &encode_text(&PdfTextString::Text { text: text.clone() }, font, font_name)?),
-                        PdfTextArrayItem::Codes { codes } => super::lexer::write_string(&mut out, &encode_text(&PdfTextString::Codes {codes:codes.clone()},font,font_name)?),
+                        PdfTextArrayItem::Text { text } => crate::standards::v1_7::subsets::base::modules::lexer::write_string(&mut out, &encode_text(&PdfTextString::Text { text: text.clone() }, font, font_name)?),
+                        PdfTextArrayItem::Codes { codes } => crate::standards::v1_7::subsets::base::modules::lexer::write_string(&mut out, &encode_text(&PdfTextString::Codes {codes:codes.clone()},font,font_name)?),
                         PdfTextArrayItem::Adjust { amount } => {
                             out.push(b' ');
                             out.extend_from_slice(number_text(*amount).as_bytes());
@@ -667,7 +668,7 @@ pub fn print_content(ops: &[PdfOp], fonts: &dyn FontTable) -> PResult<Vec<u8>> {
                 let (encoded, filter_entries) = encode_stream(&data, &filters);
                 for entry in filter_entries.iter().chain(image.extra.iter()) {
                     out.push(b' ');
-                    super::lexer::write_name(&mut out, &entry.key);
+                    crate::standards::v1_7::subsets::base::modules::lexer::write_name(&mut out, &entry.key);
                     out.push(b' ');
                     write_object(&mut out, &entry.value);
                 }

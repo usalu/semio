@@ -25,5 +25,10 @@
         "{projectRoot}/🕸️bindings"
       ]
     }
+  },
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧩️component/**/*"
+    ]
   }
 }

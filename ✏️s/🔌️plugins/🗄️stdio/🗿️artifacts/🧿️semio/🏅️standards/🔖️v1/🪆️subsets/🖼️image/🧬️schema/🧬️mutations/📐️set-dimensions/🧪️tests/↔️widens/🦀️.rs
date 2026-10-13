@@ -6,11 +6,11 @@
 //! actually differs, so a width-only change would emit a width-only diff. The before-snapshot is
 //! frameless on purpose: `set-dimensions` does not resize pixel buffers, so a fixture with frames
 //! would encode an inconsistent `width*height*4` after-state.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_dimensions;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_dimensions;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐️set-dimensions/↔️widens/📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +41,7 @@ async fn widens_and_heightens_the_canvas() {
     assert_eq!(produced.colorspace, base.colorspace, "set-dimensions must not touch the recorded source colorspace");
     assert_eq!(produced.metadata, base.metadata, "set-dimensions must not touch the metadata");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -54,9 +54,9 @@ async fn the_undo_set_dimensions_restores_the_original_canvas() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetDimensions(set_dimensions::SetDimensions { width: 2, height: 1 })], "the undo must carry BASE's own dimensions, not a delta");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-dimensions/widens-the-frameless-canvas-to-four-by-two: the undo did not restore the before-snapshot");
 }

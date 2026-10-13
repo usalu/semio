@@ -227,7 +227,7 @@ impl MemberStoreOwner<FailClosedOp> for DemoSnapshot {
         super::fixture_authoring_birth_demand::<FailClosedOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, FailClosedOp>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, FailClosedOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, FailClosedOp>> {
         super::fixture_authoring_member_owners::<FailClosedOp>(grant)
     }
 }

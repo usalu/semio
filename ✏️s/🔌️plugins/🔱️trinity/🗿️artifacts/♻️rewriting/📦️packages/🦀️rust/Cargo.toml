@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-os-infinite", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-tool-machine"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-framework-os-infinite", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-tool-machine"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -49,6 +49,8 @@ semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-graph = { workspace = true }
 semio-s-artifact-trinity-jack = { workspace = true }
 pack = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }

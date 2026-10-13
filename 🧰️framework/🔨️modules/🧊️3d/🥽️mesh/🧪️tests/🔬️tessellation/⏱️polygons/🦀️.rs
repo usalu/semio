@@ -3,7 +3,7 @@ use super::*;
 /// 🧩️ Concave, smooth, flipped and shared-edge source polygons use the same funded normal cursor and retain original asset allocations.
 #[test]
 fn original_mesh_tessellation_normal_polygons_keep_original_assets(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::RetainedCloneGrant,retirement::controlled::{ControlledRetirement,ErasedControlledRetirement},DslValue};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();let assets=&law["surfaceAssetCustody"];
     for polygon in law["polygons"].as_array().unwrap(){for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){

@@ -2,7 +2,7 @@
 use super::*;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 #[test]
 fn authored_fill_rules_survive_pack_and_reach_paint_picking_and_export() {
     let rows:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();

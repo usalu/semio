@@ -56,12 +56,12 @@ fn the_renderer_row_fixture_decodes_exactly() {
 const NODE_GRAPH_EDIT_ROWS: &str = include_str!("../../../../../../../../../../../../../../🧰️framework/🔨️modules/🛠️tool-machine/🧫️fixtures/🧫️node-graph-edit-rows/🔣️.json");
 
 //#region ✋️ChildIntentLeaves
-fn fold(base: &semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot {
+fn fold(base: &semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation]) -> semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot {
     let mut state = base.clone();
     for leaf in leaves {
-        let outcome = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::diff_semio_flow_mutation(leaf, &state);
+        let outcome = semio_s_artifact_stdio_semio_flow::schema::mutations::diff_semio_flow_mutation(leaf, &state);
         assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-        state = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
+        state = semio_framework_os_kernel::apply_diff(outcome.diff(), &state).expect("a leaf diff applies to the state it was computed from");
     }
     state
 }
@@ -71,7 +71,7 @@ fn fold(base: &semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schem
 #[semio_framework_async_macros::async_test]
 async fn child_intent_leaves_reproduce_the_edited_content() {
     use crate::editor::sequence::edit_rules::SceneEdit;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+    use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
     let app = new_app().await;
     let live = live_host_snapshot(&app).await;
     let base = neural_engine::ColdOwner::new(crate::SequenceWorkingScene { steps: live.steps.clone(), edges: live.edges.clone() });

@@ -1,8 +1,8 @@
 //! 🧭️ The B-rep editor's edit rules: which snapshot pointer raises which ONE concrete B-rep mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{ent, ins, keyed, named, rem, resolve, spread_snake, Reshape, ITEM};
-use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, ins, keyed, named, rem, resolve, spread_snake, Reshape, ITEM};
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_plugin::Fault;
 use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};
 

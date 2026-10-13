@@ -2,8 +2,8 @@
 //! the id; the display text is `change-node-label`). Edges are id-keyed entities whose `source`/`target` are data, so the
 //! cascade rewrites those fields and never deletes or re-creates an edge.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 /// 🏷️ `rename-node` payload — the node and the id it takes.

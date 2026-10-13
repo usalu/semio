@@ -1,25 +1,27 @@
+import type { BuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { COMPONENT_MODULE_DIRECTORIES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 import { join, relative } from "node:path";
 import { playRuntimeComponentIds } from "../🟦️.ts";
 import { PLUGIN_BUILD_TARGETS, EXTENSION_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { componentModuleOwnerV1, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import type { BrowserArtifactSource } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
+import { pluginModulesRootIn, builtPluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 import type { StaticDirectoryAssetSpecV1 } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 
-/** 🎡️ Selects only immutable component, browser-support and font outputs for play. */
-export function playRuntimeAssetSources(workspace: string, profile: "dev" | "release"): readonly BrowserArtifactSource[] {
-  if (!["dev", "release"].includes(profile)) throw new Error(`Unknown play profile: ${profile}`);
-  const moduleRoot = join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+/** 🎡️ Selects only immutable component, browser-support and font outputs for play, from the one plugin-modules root every build driver materializes into,
+ * each under the exact ownership key its producer staged it with. */
+export function playRuntimeAssetSources(workspace: string, mode?: BuildMode): readonly BrowserArtifactSource[] {
+  const moduleRoot = mode ? builtPluginModulesRootIn(workspace, mode) : pluginModulesRootIn(workspace);
   const catalog = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   const pluginRoute = MODULE_PLUGIN_ROUTE.slice(1);
   return [
     ...playRuntimeComponentIds().map(id => {
       const row = catalog.get(id)!, name = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), extension = row.role === "extension";
-      return { root: join(moduleRoot, name), destination: `${(extension ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE).slice(1)}/${name}`, owner: `${row.cratePath}/Cargo.toml:browser:${profile}`, ...(extension ? { shimDirectory: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}` } : {}) };
+      return { root: join(moduleRoot, name), destination: `${(extension ? MODULE_EXTENSION_ROUTE : MODULE_PLUGIN_ROUTE).slice(1)}/${name}`, owner: componentModuleOwnerV1(row.cratePath), ...(extension ? { shimDirectory: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}` } : {}) };
     }),
-    { root: join(moduleRoot, PREVIEW2_VENDOR_RELATIVE), destination: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}`, owner: `browser-support:${profile}:preview2` },
-    { root: join(moduleRoot, MODULE_SHARD_DIRECTORY), destination: `${pluginRoute}/${MODULE_SHARD_DIRECTORY}`, owner: `browser-support:${profile}:shard` },
+    { root: join(moduleRoot, PREVIEW2_VENDOR_RELATIVE), destination: `${pluginRoute}/${PREVIEW2_VENDOR_RELATIVE}`, owner: "browser-support:preview2" },
+    { root: join(moduleRoot, MODULE_SHARD_DIRECTORY), destination: `${pluginRoute}/${MODULE_SHARD_DIRECTORY}`, owner: "browser-support:shard" },
     { root: join(workspace, "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust/dist/fonts"), destination: `${pluginRoute}/${MODULE_VENDOR_DIRECTORY}`, owner: "infinite:fonts" },
   ];
 }
@@ -30,7 +32,7 @@ export function playRuntimeAssetSources(workspace: string, profile: "dev" | "rel
  * the font pack on the same route shadowed `🔤️guestslim-typst-fonts.bin` with a 404 on every pane. */
 export function playDevStaticDirMounts(workspace: string, extensionDirectory: (name: string) => string): readonly StaticDirectoryAssetSpecV1[] {
   const extensionRoute = MODULE_EXTENSION_ROUTE.slice(1) + "/";
-  return playRuntimeAssetSources(workspace, "dev").map(row => ({ kind: "static-dir", route: `/${row.destination}`, root: relative(workspace, row.destination.startsWith(extensionRoute) ? extensionDirectory(row.destination.slice(extensionRoute.length)) : row.root) }));
+  return playRuntimeAssetSources(workspace).map(row => ({ kind: "static-dir", route: `/${row.destination}`, root: relative(workspace, row.destination.startsWith(extensionRoute) ? extensionDirectory(row.destination.slice(extensionRoute.length)) : row.root) }));
 }
 
 if (import.meta.vitest) {

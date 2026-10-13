@@ -74,7 +74,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -123,7 +123,7 @@ use super::*;
 //#region 🧪️RetainedCommandEnvelope
 #[test]
 fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
-    use store::ArtifactStoreOneItemPreparationFactory as _;
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory as _;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧫️retained-command-limits/🔣️.json")).expect("language-neutral retained fixture");
     let migrated: Vec<&str> = fixture["routes"].as_array().expect("routes").iter().filter(|row| row["disposition"] == "Migrated").map(|row| row["id"].as_str().expect("route id")).collect();
     assert_eq!(migrated, ANIMATE_PRESENTATION_RETAINED_TOOL_IDS);
@@ -137,14 +137,14 @@ fn retained_command_fixture_matches_exact_routes_and_serde_json_boundaries() {
         let encoded = serde_json::to_vec(&mutation).expect("third-party JSON encode");
         let decoded: PresentationConfigMutation = serde_json::from_slice(&encoded).expect("third-party JSON decode");
         assert_eq!(decoded, mutation);
-        assert_eq!(factory.preflight(&decoded, store::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
+        assert_eq!(factory.preflight(&decoded, store::os_store::store_schema::HistoryLane::Document).is_ok(), case["accepted"].as_bool().expect("admission oracle"));
     }
 }
 
 #[test]
 fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
     use std::io::Write as _;
-    use store::ArtifactStoreOneItemPreparation as _;
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparation as _;
     let value = "x".repeat(ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES);
     let mut preparation = AnimatePresentationConfigPreparation {
         base: None,
@@ -154,15 +154,15 @@ fn retained_config_cancel_and_cleanup_respect_the_production_grant() {
         sealed_candidate: None,
         serialized_bytes: None,
         prepared: None,
-        checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+        checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
         cancelled: false,
         closing: false,
     };
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 4_096 };
     preparation.cancel();
-    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::ArtifactStoreOneItemPreparationStep::Blocked));
+    assert!(matches!(preparation.advance(grant).expect("cancelled step"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked));
     preparation.begin_close();
-    assert!(matches!(preparation.close_step(store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
+    assert!(matches!(preparation.close_step(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: 1 }).expect("undersized close"), store::SnapshotRetirementStep::Blocked));
     assert!(matches!(preparation.close_step(grant).expect("bounded close"), store::SnapshotRetirementStep::Pending { released_items: 1, released_bytes: 4_096 }));
     assert!(matches!(preparation.close_step(grant).expect("terminal close"), store::SnapshotRetirementStep::Complete));
     assert!(preparation.terminal_is_empty());
@@ -269,9 +269,9 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let receiver = meta("actor-a").instance_id;
     instance_a.bind_instance_id(receiver).await;
     instance_b.bind_instance_id(receiver).await;
-    let (backbone_a, backbone_b) = store::MemoryBackbone::pair("mem://animate-presentation-convergence", "mem://animate-presentation-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://animate-presentation-convergence", "mem://animate-presentation-convergence").await;
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a);
     instance_a.dispatch_typed(PresentationCommand::AddTile(add_tile::AddTile { crop: Some(crate::FigureTileFrame { x: 0.0, y: 0.0, width: 0.3, height: 0.3 }) }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut *instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
@@ -525,7 +525,7 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     assert!(!tiles.is_empty(), "the demo example must survive the archive door with its tile crops, not an empty deck");
     assert!(!source.src.is_empty(), "the demo example must survive the archive door with its source figure");
     let derived = crate::genesis_presentation_child_pack(&snapshot, "presentation", &snapshot.presentation.child_id).expect("the loaded snapshot still derives its own presentation member");
-    let deck = <semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
+    let deck = <semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&derived).expect("the derived presentation member decodes");
     assert_eq!(deck.slides.len(), tiles.len(), "the genesis-derived deck must carry one slide per loaded tile");
     assert!(!deck.masters.is_empty(), "the genesis-derived deck must carry the loaded source figure as its master");
     artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);

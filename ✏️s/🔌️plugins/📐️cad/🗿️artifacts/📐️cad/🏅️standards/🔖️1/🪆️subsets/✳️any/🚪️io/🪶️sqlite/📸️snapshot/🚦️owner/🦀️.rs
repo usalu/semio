@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::schema::references::frontiers as semanti
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::frontiers;
 use semio_framework_diagnostic::{TextError, TextSpan};
 use semio_framework_value::{NativeDecodeControl, ValueError, ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot, sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, validate_sqlite_database_schema_controlled, artifact::{Projection, Cell, FloatColumn, insert_ieee754, read_binary64, ieee754_is_null}}};
 
 const NUMBERS: &[FloatColumn] = &[FloatColumn::Binary64(6), FloatColumn::Binary64(7), FloatColumn::Binary64(8), FloatColumn::Binary64(10), FloatColumn::Binary64(11), FloatColumn::Binary64(12), FloatColumn::Binary64(13), FloatColumn::Binary64(14), FloatColumn::Binary64(15), FloatColumn::Binary64(18)];
 
@@ -16,12 +16,12 @@ fn slots(value: &CadSnapshot) -> [(&'static str, Option<&CadModelChild>); 4] {
 }
 fn ordinal(value: usize) -> Result<Cell<'static>, ValueError> { i64::try_from(value).map(Cell::Integer).map_err(|_| ValueError::new(ValueRefusalKind::WorkLimit, "CAD ordinal exceeds signed SQL identity")) }
 fn optional(value: Option<f64>) -> Cell<'static> { value.map(Cell::Real).unwrap_or(Cell::Null) }
-fn validate_child<S>(value: &store::ArtifactChild<S>, subset: &str) -> Result<(), ValueError> {
+fn validate_child<S>(value: &store::os_store::artifact_child::ArtifactChild<S>, subset: &str) -> Result<(), ValueError> {
     let dialect = &value.target.dialect;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != subset { return Err(invalid("CAD composed child has another model/drawing domain")); }
     Ok(())
 }
-fn child_cells<S>(value: &store::ArtifactChild<S>) -> [Cell<'_>; 5] {
+fn child_cells<S>(value: &store::os_store::artifact_child::ArtifactChild<S>) -> [Cell<'_>; 5] {
     let target = &value.target;
     let dialect = &target.dialect;
     [Cell::Text(&value.child_id), Cell::Text(&target.artifact_id), Cell::Text(&dialect.artifact_kind), Cell::Text(&dialect.standard), Cell::Text(&dialect.subset)]
@@ -79,11 +79,11 @@ fn flag(row: &SqliteRow, index: usize) -> Result<bool, ValueError> {
 fn optional_number(row: &SqliteRow, index: usize) -> Result<Option<f64>, ValueError> {
     if ieee754_is_null(row, index, NUMBERS)? { Ok(None) } else { read_binary64(row, index, NUMBERS).map(Some) }
 }
-fn child<S: Send + 'static>(row: &SqliteRow, start: usize, subset: &str, control: &mut NativeDecodeControl<'_>) -> Result<store::ArtifactChild<S>, ValueError> {
-    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef {
+fn child<S: Send + 'static>(row: &SqliteRow, start: usize, subset: &str, control: &mut NativeDecodeControl<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, ValueError> {
+    let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef {
         artifact_id: String::new(),
         dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() },
-    }), close::<store::ArtifactChild<S>>);
+    }), close::<store::os_store::artifact_child::ArtifactChild<S>>);
     value.as_mut().child_id = control.copy_text(row.text(start)?)?;
     value.as_mut().target.artifact_id = control.copy_text(row.text(start + 1)?)?;
     value.as_mut().target.dialect.artifact_kind = control.copy_text(row.text(start + 2)?)?;
@@ -198,7 +198,7 @@ fn validate_owned(value: &CadSnapshot, mut checkpoint: impl FnMut() -> Result<()
 fn bound_text(value: &str, bound: &mut store::sqlite_snapshot::artifact::NativeEncodingBound<'_, '_>) -> Result<(), ValueError> {
     bound.repeated(value.len(), 16)?; bound.add(96)
 }
-fn bound_child<S>(value: &store::ArtifactChild<S>, subset: &str, bound: &mut store::sqlite_snapshot::artifact::NativeEncodingBound<'_, '_>) -> Result<(), ValueError> {
+fn bound_child<S>(value: &store::os_store::artifact_child::ArtifactChild<S>, subset: &str, bound: &mut store::sqlite_snapshot::artifact::NativeEncodingBound<'_, '_>) -> Result<(), ValueError> {
     validate_child(value, subset)?;
     for cell in child_cells(value) { if let Cell::Text(value) = cell { bound_text(value, bound)?; } }
     bound.add(512)
@@ -233,7 +233,7 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
     fn decode_sqlite_snapshot_native(payload: &store::io_schema::IoPayload, control: &mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>) -> Result<Self, ValueError> {
         control.check_rows(1)?;
         let maximum = control.limits().max_rows;
-        store::decode_sqlite_snapshot_record_native(payload, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
+        store::decode_sqlite_snapshot_record_native(payload, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {
             native_rows(record, native, maximum)?;
             let mut value = semio_framework_dsl_record::__rt::DecodedFieldOwner::new(Self::__dsl_from_record_controlled(record, native)?, close::<Self>);
             validate_owned(value.as_mut(), || native.scoped_stage(|native| { native.begin_stage(0)?; native.step() }))?;
@@ -244,7 +244,7 @@ impl ArtifactSqliteSnapshot for CadSnapshot {
         control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0)?;
         forecast(self, |count| control.check_rows(count))?;
         validate_owned(self, || control.checkpoint(SqliteSnapshotPhase::EncodeNative, 0, 0))?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), control,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), control,native_owner)
     }
 }
 semio_framework_value::artifact_retire_struct!(crate::CadNode { id, label, kind });

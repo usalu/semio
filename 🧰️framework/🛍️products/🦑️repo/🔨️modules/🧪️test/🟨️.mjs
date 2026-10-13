@@ -1,17 +1,20 @@
-// 🧪️ Nx plugin: one virtual project per discovered test case.
+// 🧪️ Nx plugin: one virtual project per test OWNER (the directory holding a `🧪️tests` directory of discovered cases).
 //
 // Discovery is every taxonomy-declared kind-only feature beneath `🧪️tests/*`. There are no hand-authored `📋️project.json` files
-// for tests, so a case can never be silently omitted from a higher level, and `checkLeveledTestTargets`
-// style scanners become unnecessary — the four level targets are generated, always, for every case.
+// for tests, so a case can never be silently omitted. An owner project carries exactly two targets: `lint` (the contract phase
+// over every case) and `test`, whose level, facet and case are ARGUMENTS (`nx run <owner>:test long --facet oracle --case x`),
+// never separate targets; Nx caches every argument combination on its own.
 //
 // The exclusion set, the case slug rule, the adapter filenames and the location of the testing
 // domain are all TAXONOMY DATA (`🔣️taxonomy.json`). This plugin declares none of them, so marking
 // another area exempt or relocating the domain is a vocabulary edit, never a code edit here.
 
-import { existsSync, lstatSync, readFileSync, readdirSync } from "node:fs";
+import { observeDependencies, observedFs, observeInference } from "../📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
 import { fileURLToPath } from "node:url";
+
+const { existsSync, lstatSync, readFileSync, readdirSync } = observedFs;
 const nxPath = (p) => p.split("\\").join("/");
 const dependencyModule = new URL("./🕸️dependencies/🟨️.mjs", import.meta.url);
 const dependencyRevision = createHash("sha256").update(readAuthoritySource(dependencyModule)).digest("hex");
@@ -27,7 +30,6 @@ const implementationRevision = () => createHash("sha256").update(readAuthoritySo
 const loadedRevision = implementationRevision();
 
 const TAXONOMY_REL = "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json";
-const LEVELS = ["quick", "long", "exhaustive"];
 const CASE_SEGMENTER = new Intl.Segmenter("und", { granularity: "grapheme" });
 
 /** 🏷️ Resolves a single presented emoji and the taxonomy-defined case identifier. */
@@ -113,14 +115,14 @@ function isExcluded(vocabulary, relPath) {
   });
 }
 
-/** 🏷️ Same deterministic project name the coordinator derives, so both agree without coordination. */
-function projectNameFor(ownerRel, caseSlug, hash) {
+/** 🏷️ The deterministic project name of one test owner: its path slug and the coordinator's owner-path hash. */
+function projectNameFor(ownerRel, hash) {
   const slug = ownerRel
     .split("/")
     .map((segment) => segment.replace(/[^a-zA-Z0-9]+/g, "").toLowerCase())
     .filter(Boolean)
     .join("-");
-  return `test-${slug || "root"}-${hash}-${caseSlug}`;
+  return `test-${slug || "root"}-${hash}`;
 }
 
 /** #⃣ The coordinator's owner-path hash, recomputed here so the two never drift. */
@@ -204,10 +206,10 @@ function inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters) {
 }
 
 /** 🎚️ One generated target routed through the testing domain's own router. */
-function target(domain, command, inputs, cacheable = true, scope) {
+function target(domain, command, inputs, cacheable = true, scope, forwardAllArgs = false) {
   return {
     executor: "nx:run-commands",
-    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs: false, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
+    options: { cwd: domain, command: `bun ./📜️script.ts ${command}`, forwardAllArgs, env: { SEMIO_TEST_OUTPUT_SCOPE: scope } },
     inputs,
     // 📤️Only the durable products of a run are cache outputs. The work directory holds each case's
     // mutable fixture copies, which are large, regenerated on every run and meaningless to restore.
@@ -217,8 +219,8 @@ function target(domain, command, inputs, cacheable = true, scope) {
 }
 
 /**
- * 🕸️ Generates one project per test case with the full phase and level target set. Level targets are
- * cumulative: `test-long` selects every scenario tagged `fundamental`, `quick` or `long`.
+ * 🕸️ Generates one project per test owner: `lint` runs the contract phase over every case, `test` runs the owner's cases with the level, facet and case
+ * selection passed as arguments. Its inputs are the union of every case's inputs, so changing one case invalidates its owner's cached runs.
  */
 async function testCaseProjects(configFiles, _options, context) {
   const { workspaceRoot } = context;
@@ -235,6 +237,7 @@ async function testCaseProjects(configFiles, _options, context) {
   const { cacheInternals: native } = await import(`${libraryModule.href}?revision=${libraryRevision}`);
   const state = { manifests: new Map(), closures: new Map(), names: new Map(), plans: new Map() };
   const javascript = policy.toolchains.javascript;
+  const owners = new Map();
   let commandInputs;
 
   for (const configFile of featureCandidates) {
@@ -246,49 +249,42 @@ async function testCaseProjects(configFiles, _options, context) {
     const caseRel = dirname(rel);
     const testsRel = dirname(caseRel);
     if (basename(testsRel) !== vocabulary.testsDirName) continue;
-
     const ownerRel = dirname(testsRel);
-    const caseSlug = basename(caseRel);
-    if (!canonicalCase(vocabulary, ownerRel, caseSlug)) continue;
-    commandInputs ??= [...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))];
-
+    if (!canonicalCase(vocabulary, ownerRel, basename(caseRel))) continue;
     const adapters = [];
     for (const fileKindId of Object.values(vocabulary.testAdapterFileKinds)) {
-      const filename = filenameForKind(vocabulary, fileKindId);
-      const adapterRel = `${caseRel}/${filename}`;
+      const adapterRel = `${caseRel}/${filenameForKind(vocabulary, fileKindId)}`;
       if (authority.file(adapterRel)) adapters.push(adapterRel);
     }
+    const owner = owners.get(ownerRel) ?? { configFile, testsRel, cases: [] };
+    owner.cases.push({ caseRel, adapters });
+    owners.set(ownerRel, owner);
+  }
 
-    const name = projectNameFor(ownerRel, caseSlug, await ownerHash(ownerRel));
-    const inputs = inputsFor(workspaceRoot, vocabulary, ownerRel, caseRel, adapters);
+  for (const [ownerRel, owner] of [...owners].sort(([left], [right]) => Buffer.compare(Buffer.from(left), Buffer.from(right)))) {
+    commandInputs ??= [...native.relativeScriptInputs([join(workspaceRoot, vocabulary.testDomainPath, "📜️script.ts")], workspaceRoot), ...javascript.files.map((path) => `{workspaceRoot}/${path}`), ...javascript.environment.map((env) => ({ env })), ...javascript.commands.map((runtime) => ({ runtime }))];
+    const name = projectNameFor(ownerRel, await ownerHash(ownerRel));
+    const adapters = [...new Set(owner.cases.flatMap((row) => row.adapters))].sort();
+    const inputs = [...new Map(owner.cases.flatMap((row) => inputsFor(workspaceRoot, vocabulary, ownerRel, row.caseRel, row.adapters)).map((input) => [JSON.stringify(input), input])).values()];
     const domain = vocabulary.testDomainPath;
-    const select = `--owner ${JSON.stringify(ownerRel)} --case ${caseSlug}`;
-    const scoped = (phase, command, cacheable = true) => {
+    const scoped = (phase, command, forwardAllArgs) => {
       const nativeInputs = nativeInputsFor(workspaceRoot, vocabulary, ownerRel, adapters, phase, native, policy, state);
-      return { ...target(domain, command, [...inputs, "testCommandSources", ...nativeInputs.inputs, { env: "SEMIO_TEST_LEVEL" }, { env: "SEMIO_TEST_BUDGET_MS" }], cacheable, `${name}/${phase}`), dependsOn: nativeInputs.dependsOn };
+      return { ...target(domain, command, [...inputs, "testCommandSources", ...nativeInputs.inputs, { env: "SEMIO_TEST_LEVEL" }, { env: "SEMIO_TEST_BUDGET_MS" }], true, `${name}/${phase}`, forwardAllArgs), dependsOn: nativeInputs.dependsOn };
     };
-
     results.push([
-      configFile,
+      owner.configFile,
       {
         projects: {
           [name]: {
             name,
-            root: caseRel,
+            root: owner.testsRel,
             projectType: "application",
             namedInputs: { testCommandSources: commandInputs },
-            tags: ["type:test", `owner:${ownerRel}`, ...adapters.map((adapter) => `impl:${basename(adapter)}`)],
+            tags: ["type:test", `owner:${ownerRel}`, ...[...new Set(adapters.map((adapter) => basename(adapter)))].sort().map((adapter) => `impl:${adapter}`)],
+            metadata: { semio: { testCases: owner.cases.map((row) => basename(row.caseRel)).sort() } },
             targets: {
-              lint: scoped("lint", `contract ${select}`),
-              "test-contract": scoped("test-contract", `contract ${select}`),
-              "test-oracle": scoped("test-oracle", `oracle ${select}`),
-              "test-subject": scoped("test-subject", `subject ${select}`),
-              "test-parity": scoped("test-parity", `parity ${select}`),
-              test: scoped("test", `run ${select}`),
-              // 🎚️Every level is cached alike: `inputsFor` already hashes the case's full owner-and-oracle
-              // closure, `SEMIO_TEST_LEVEL`/`SEMIO_TEST_BUDGET_MS` are hashed env, and outputs are declared —
-              // exhaustive is the most expensive level, not a less deterministic one.
-              ...Object.fromEntries(LEVELS.map((level) => [`test-${level}`, scoped(`test-${level}`, `run ${level} ${select}`)])),
+              lint: scoped("lint", `contract --owner-root ${JSON.stringify(ownerRel)}`, false),
+              test: scoped("test", `cases ${JSON.stringify(ownerRel)}`, true),
             },
           },
         },
@@ -323,7 +319,11 @@ function testCaseDependencies(_options, context) {
 async function invokeCurrentImplementation(kind, args) {
   await testBootstrap;
   const revision = implementationRevision();
-  if (revision === loadedRevision) return kind === "nodes" ? testCaseProjects(...args) : testCaseDependencies(...args);
+  if (revision === loadedRevision) {
+    if (kind !== "nodes") return observeDependencies({ receiptPath: join(process.env.NX_WORKSPACE_DATA_DIRECTORY || join(resolve(args[1].workspaceRoot), ".nx", "workspace-data"), "inference", "test-cases.receipt.json") }, () => testCaseDependencies(...args));
+    const workspaceRoot = resolve(args[2].workspaceRoot), libraryRevision = createHash("sha256").update(readAuthoritySource(new URL("../📚️library/🟨️.mjs", import.meta.url))).digest("hex");
+    return observeInference({ cachePath: join(process.env.NX_WORKSPACE_DATA_DIRECTORY || join(workspaceRoot, ".nx", "workspace-data"), "inference", "test-cases.json"), key: [revision, libraryRevision, args[0], args[1] ?? null, workspaceRoot] }, () => testCaseProjects(...args));
+  }
   const url = new URL(import.meta.url);
   url.searchParams.set("revision", revision);
   const current = await import(url.href);

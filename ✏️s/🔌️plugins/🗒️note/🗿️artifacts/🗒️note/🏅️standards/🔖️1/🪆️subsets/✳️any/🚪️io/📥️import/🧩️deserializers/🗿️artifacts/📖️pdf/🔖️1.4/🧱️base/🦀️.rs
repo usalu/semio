@@ -1,7 +1,7 @@
 //! 📥️ Imports the first PDF 1.4 page as one text block.
 
 use crate::schema::{create_note_id, NoteIdOwner};
-use crate::standards::v1::subsets::any::io::text::snapshot::{empty_note_snapshot};
+use crate::standards::v1::subsets::any::io::text::snapshot::empty_note_snapshot;
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};

@@ -25,7 +25,7 @@ pub(crate) mod octets;
 mod canonical;
 
 /// 🏷️ Document schema id for `stdio.pdf` (1.7) -- deliberately distinct from 1.4's flat
-/// `stdio.pdf` (avoids colliding with 1.4's own `store::register_document_codec` registration,
+/// `stdio.pdf` (avoids colliding with 1.4's own `store::os_store::codec_registry::register_document_codec` registration,
 /// which the flat pre-D4 registry can't disambiguate by standard; same shape as gif 89a's
 /// `STDIO_GIF89A_DOCUMENT_SCHEMA`, see that module's doc comment).
 pub const STDIO_PDF17_DOCUMENT_SCHEMA: &str = "stdio.pdf.1.7";

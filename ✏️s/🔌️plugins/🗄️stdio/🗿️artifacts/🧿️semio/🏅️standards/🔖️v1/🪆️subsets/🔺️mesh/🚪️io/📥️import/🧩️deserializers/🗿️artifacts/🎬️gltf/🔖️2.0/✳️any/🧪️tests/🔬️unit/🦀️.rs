@@ -1,7 +1,12 @@
 use super::*;
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAsset, GltfMaterial, GltfMesh, GltfPbrMetallicRoughness};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfBuffer;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfBufferView;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAsset;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfMaterial;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfMesh;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfPbrMetallicRoughness;
 
 /// 🏗️ A real-shaped 2-triangle quad (shared POSITION/NORMAL/TEXCOORD_0/COLOR_0/indices) with
 /// one PBR material and one embedded (data-uri) texture — exercises every mapped field.
@@ -61,7 +66,7 @@ fn sample_gltf() -> GltfSnapshot {
         occlusion_texture: None,
         emissive_texture: None,
         emissive_factor: [0.0, 0.0, 0.0],
-        alpha_mode: semio_s_artifact_stdio_gltf::schema::snapshot::GltfAlphaMode::Opaque,
+        alpha_mode: semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode::Opaque,
         alpha_cutoff: 0.5,
         double_sided: false,
         extensions: None,
@@ -71,7 +76,7 @@ fn sample_gltf() -> GltfSnapshot {
     document.accessors = accessors;
     document.buffers = vec![GltfBuffer { byte_length: buf.len(), uri: None, name: None, extensions: None, extras: None }];
 
-    GltfSnapshot { schema: "stdio.gltf".into(), document, buffers: vec![buf], source_form: semio_s_artifact_stdio_gltf::schema::snapshot::GltfSourceForm::Json }
+    GltfSnapshot { schema: "stdio.gltf".into(), document, buffers: vec![buf], source_form: semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSourceForm::Json }
 }
 
 #[semio_framework_async_macros::async_test]

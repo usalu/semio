@@ -19,9 +19,9 @@ impl Deserializer<CurationSnapshot> for ZipIntoCuration {
         let IoPayload::Binary(bytes) = payload else {
             return Err(error("expected a binary zip payload".into()));
         };
-        let archive = <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
+        let archive = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
         let member = document_archive_member::<CurationSnapshot>();
         let entry = archive.entries.iter().find(|entry| entry.name == member).ok_or_else(|| error(format!("the archive has no {member} member")))?;
-        Ok(IoOutcome::clean(store::ArtifactDsl::parse_dsl(std::str::from_utf8(&entry.data).map_err(|e| error(e.to_string()))?).map_err(|e| error(e.to_string()))?))
+        Ok(IoOutcome::clean(store::os_store::serialization::ArtifactDsl::parse_dsl(std::str::from_utf8(&entry.data).map_err(|e| error(e.to_string()))?).map_err(|e| error(e.to_string()))?))
     }
 }

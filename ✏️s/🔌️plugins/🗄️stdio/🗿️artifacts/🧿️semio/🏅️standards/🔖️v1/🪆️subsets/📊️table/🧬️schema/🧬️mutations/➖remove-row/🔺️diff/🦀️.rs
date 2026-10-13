@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RemoveRow`.
 
-use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Removes the row at `index`: the `rows` triple names exactly that removal.

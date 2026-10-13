@@ -14,7 +14,7 @@ use framework_schema::ArtifactSchema;
 
 //#region Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from 87a's `"stdio.gif"` so the two
-/// standards' document codecs never collide in the shared `store::document_codec_registry`
+/// standards' document codecs never collide in the shared `store::os_store::codec_registry::document_codec_registry`
 /// (still keyed by a flat schema string pre-D4; see `engine::register`).
 pub const STDIO_GIF89A_DOCUMENT_SCHEMA: &str = "stdio.gif.89a";
 /// 🧬️ Artifact schema descriptor id — distinct from 87a's `"s.stdio.gif"` for the same reason.

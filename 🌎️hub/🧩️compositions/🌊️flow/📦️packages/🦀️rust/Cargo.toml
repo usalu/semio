@@ -9,23 +9,10 @@ description = "Flow plugin - one crate for the flow artifact (diff/op/dsl/pack/s
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:flow"
-
 [package.metadata.semio]
-deployment-directory = "🌊️flow"
-component-kind = "plugin"
 role = "hub"
-consumes = ["flow.extension"]
-
-[[package.metadata.semio.playground]]
-variant = "flow"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-ports = { react = 6016, wgpu = 6116 }
-engines = ["./🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust"]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
@@ -50,7 +37,7 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 infinite_canvas = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 ui_wgpu = {path = "../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 # 🧬️ SEMANTIC-UI-CONTRACT-AND-RENDERER-FAMILY (26/08/20): the raw `ui::*` builder DSL (tree items
 # with row actions, form field controls) has no SDK-level convenience wrapper for every shape the
 # Generate-mode windows need — depended on directly rather than routed through `semio-framework-plugin`,
@@ -66,8 +53,5 @@ serde.workspace = true
 serde_json.workspace = true
 
 [dev-dependencies]
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-
-[package.metadata.semio.sources]
-artifacts = ["../../../../../✏️s/🔌️plugins/🌊️flow/🗿️artifacts"]

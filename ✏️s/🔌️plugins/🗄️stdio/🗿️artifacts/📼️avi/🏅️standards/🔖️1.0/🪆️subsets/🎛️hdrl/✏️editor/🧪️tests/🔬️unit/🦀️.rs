@@ -39,7 +39,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_AVI_DOCUMENT_SCHEMA) else {
         panic!("AVI snapshot builds one document load");
     };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real AVI document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real AVI document");
     let handle = app.submit_media_export(semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID).await.expect("registered AVI playback producer");
     let mut completed = None;
     for _ in 0..10_000 {

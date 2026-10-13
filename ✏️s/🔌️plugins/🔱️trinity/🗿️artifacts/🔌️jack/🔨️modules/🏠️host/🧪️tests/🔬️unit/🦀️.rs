@@ -16,16 +16,16 @@ async fn nakagin_document_text_round_trips_store_with_applied_operation() {
     test_identity!(identity);
     let envelope = create_document_envelope_for_test();
     let mut doc_store = new_trinity_graph_store(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![set_query("MATCH (a:Piece) RETURN a.name".into())], transaction: None }, &mut identity).await.expect("apply set-query");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![set_query("MATCH (a:Piece) RETURN a.name".into())], transaction: None }, &mut identity).await.expect("apply set-query");
     ::store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     ::store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
 }
 
 /// 🧫️ The empty Nakagin-manifest document the round-trip laws edit the query of.
-fn create_document_envelope_for_test() -> store::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
+fn create_document_envelope_for_test() -> store::os_store::store_schema::ArtifactEnvelope<JackSnapshot, TrinityGraphMutation> {
     create_document_envelope::<JackSnapshot, TrinityGraphMutation>(TRINITY_GRAPH_SCHEMA, "doc-text-test", crate::standards::v1::subsets::any::schema::empty_jack_document(), None)
 }
-use store::create_document_envelope;
+use store::os_store::document_materialize::create_document_envelope;
 
 fn empty_jack_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> JackStoreInitializationAuthority {
     let envelope = create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-retained-load", crate::standards::v1::subsets::any::schema::empty_jack_document(), None);

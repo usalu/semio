@@ -41,7 +41,7 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-s-artifact-stdio-avi = { workspace = true, optional = true }
 semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
 # /🧩️ Capability Dependencies
-semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-jpg = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
@@ -51,7 +51,16 @@ semio-s-artifact-stdio-png = { workspace = true }
 # 🖼️ `conversion-image` carries the `s.stdio.semio/v1/image` <-> `s.stdio.png` composers the texture/DSM
 # asset bridge (`🚪️io` `semio_image_from_png_bytes`/`png_bytes_from_semio_image`) dispatches through;
 # without it `io_dispatch` answers `no composer registered for s.stdio.semio/v1/image … s.stdio.png`.
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-image", "conversion-mesh"] }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+semio-s-artifact-stdio-semio-image-export = { workspace = true }
+semio-s-artifact-stdio-semio-image-import = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-import = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 # 🧮️ 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave M3d moved
 # `algebra`/`optimize`/`lie`/`signal`/`spatial` wholesale into this crate's own artifact schema as
@@ -68,7 +77,7 @@ semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
 semio-framework = { workspace = true }
 semio-framework-os = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-plugin = { workspace = true }
 # 🧵️ The retained command factory names `semio_framework_job::Operation` in its `ToolJobFactory`
 # signatures, so the job crate has to be linked here the same way `🖨️raster` and `🌍️gis` link it.
 semio-framework-job = { workspace = true }
@@ -91,7 +100,7 @@ semio-framework-pixels = { path = "../../../../../../../🧰️framework/🔨️
 
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔬️ Test oracle only (never `[dependencies]`): validates that our own encoded/decoded PNG bytes

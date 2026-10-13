@@ -300,31 +300,35 @@ export async function testRuntimeComponents(workspace: string): Promise<void> {
   const targets = cacheInternals.playgroundPreparationTargets(paths, workspace, dev), projects = new Map(components.map((row: any) => [row.pluginId, row.project]));
   const { testSelectedRuntimeDependencies } = await import("../🎯️selected-runtime/🟦️.ts");
   testSelectedRuntimeDependencies(targets);
+  const vectors = JSON.parse(readFileSync(join(dirname(fileURLToPath(import.meta.url)), "../../🧫️fixtures/nx-contract/🔣️.json"), "utf8")).closurePreparation;
+  const moduleOutputs = (ids: readonly string[]) => ids.flatMap((id: string) => { const directory = components.find((row: any) => row.pluginId === id)?.["deployment-directory"]; return directory === undefined ? [] : [`{workspaceRoot}/${vectors.modules}/${directory}`]; }).sort();
   let checked = 0;
   for (const component of components) for (const row of component.playground ?? []) for (const profile of ["dev", "release"]) {
-    const bootExpected = oracle(components, [{ id: component.pluginId, appScoped: true }]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
-    const fullExpected = oracle(components, [component.pluginId]).map((id: string) => `${projects.get(id)}:materialize-${profile}`).sort();
-    const actual = targets[`prepare-${row.variant}-react-${profile}`].dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`)).sort();
-    assert.deepEqual(actual, bootExpected, `${row.variant} ${profile}: boot prepare uses appScoped host closure`);
+    const bootExpected = oracle(components, [{ id: component.pluginId, appScoped: true }]), fullExpected = oracle(components, [component.pluginId]);
+    const prepare = targets[`prepare-${row.variant}-react-${profile}`];
+    assert.equal(prepare.cache, false, `${row.variant} ${profile}: a preparation builds through the driver and answers to Cargo freshness`);
+    assert.equal(prepare.metadata?.semio?.orchestrator, true);
+    assert.deepEqual([...prepare.outputs].sort(), moduleOutputs(bootExpected), `${row.variant} ${profile}: boot prepare publishes exactly the appScoped host closure`);
+    for (const prerequisite of vectors.prerequisites) assert.ok(prepare.dependsOn.includes(prerequisite), `${row.variant} ${profile}: prepare needs ${prerequisite}`);
+    assert.ok(!prepare.dependsOn.some((id: string) => /:(?:materialize|describe|component)$/u.test(id)));
     const native = targets[`prepare-${row.variant}-native-${profile}`];
     assert.equal(native.dependsOn[0], `@semio-tech/plugin-registry:session-${row.variant}`);
-    assert.deepEqual(native.dependsOn.slice(1).sort(), fullExpected);
-    assert.ok(!native.dependsOn.some((id: string) => /renderer.*:(wasm|generate-)|:fonts$/.test(id)));
-
+    assert.equal(native.cache, false);
+    assert.deepEqual(native.outputs.slice(1).sort(), moduleOutputs(fullExpected));
+    assert.ok(!native.dependsOn.some((id: string) => /renderer.*:(wasm|generate-)|:fonts$|:(?:materialize|describe|component)$/.test(id)));
     if (profile === "release") {
       const name = `build-${row.variant}-react-release`, build = targets[name];
-      assert.equal(build?.cache, true, `${name}: production needs a cacheable owner`);
+      assert.equal(build?.cache, false, `${name}: production builds its closure through the driver`);
+      assert.equal(build.metadata?.semio?.orchestrator, true);
       const distDir = row.distDir;
       assert.deepEqual(build.outputs, [distDir ? `{workspaceRoot}/${distDir}` : `{projectRoot}/dist/${name}`]);
-      const prepareBoot = targets[`prepare-${row.variant}-react-release`].dependsOn;
       assert.ok(build.dependsOn.includes("@semio-tech/assets:build"));
-      assert.ok(fullExpected.every((id: string) => build.dependsOn.includes(id)), `${name}: production ships the full materialize closure`);
-      assert.ok(prepareBoot.filter((id: string) => id.endsWith(":materialize-release")).every((id: string) => build.dependsOn.includes(id)));
-      assert.ok(!build.dependsOn.some((target: string) => /:?(?:activate|dev|serve)-/.test(target)));
-      assert.ok(build.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive));
+      for (const prerequisite of vectors.prerequisites) assert.ok(build.dependsOn.includes(prerequisite));
+      assert.ok(!build.dependsOn.some((target: string) => /:?(?:activate|dev|serve)-|:(?:materialize|describe|component)$/.test(target)));
     }
     checked++;
   }
+  assert.ok(checked > 0);
 }
 
 /** 🗂️ Keeps producers inside the workspace supplied by Nx's own task environment. */
@@ -361,7 +365,6 @@ export async function testBunDependencies(workspace: string, output: string): Pr
   const native = cacheInternals.cargoTargets("🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", workspace).build.inputs;
   assert.deepEqual(native.flatMap((input: any) => input.externalDependencies ?? []), cases.nativeInputs.externalDependencies);
   for (const path of cases.nativeInputs.excluded) assert.equal(native.includes(path), false);
-  assert.deepEqual(native.find((input: any) => input.json === "{workspaceRoot}/package.json")?.fields, cases.nativeInputs.manifestFields);
   const { HashPlanner, transferProjectGraph } = require("nx/src/native"), { transformProjectGraphForRust } = require("nx/src/native/transform-objects");
   const plan = (model: any, key: string): string[] => {
     const project = { name: "probe", type: "lib", data: { root: "probe", targets: { build: { executor: "nx:run-commands", inputs: [{ externalDependencies: ["npm:" + key] }], options: { command: "bun ./📜️script.ts build" } } } } };
@@ -660,7 +663,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const target = authoredWorkspace.targets[name];
       if (target?.parallelism !== undefined) assert.equal(target.parallelism, false, name);
     }
-    for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
+    for (const name of ["test", "lint", "build", "verify"]) assert.equal(authoredWorkspace.targets[name].cache, true, name);
     for (const name of ["format", "setup", "publish"]) assert.equal(authoredWorkspace.targets[name].cache, false, name);
     const root = getWorkspaceRoot();
     assert.equal(Object.keys(JSON.parse(readFileSync(join(root, "nx.json"), "utf8")).targetDefaults ?? {}).length, 0, "Native Nx defaults override custom project metadata; apply defaults inside the repository plugin");
@@ -741,32 +744,31 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       if (!manifest.package?.metadata?.component?.package || !["plugin", "extension"].includes(manifest.package?.metadata?.semio?.["component-kind"])) continue;
       componentPackages++;
       componentLaunchers.push({ project: project.name, pluginId: manifest.package.metadata.component.package.slice("semio:".length) });
-      const moduleDirectory = manifest.package.metadata.semio["deployment-directory"];
-      if (moduleDirectory === undefined) {
-        for (const row of vectors.componentProfiles) assert.ok(project.targets[row.target], "headless component still owns its compiler producer");
-        for (const row of vectors.materialization.profiles) assert.equal(project.targets[row.target], undefined, "headless component cannot imply browser deployment");
-        continue;
-      }
-      assert.equal(typeof moduleDirectory, "string");
-      for (const row of vectors.materialization.profiles) {
-        const target = project.targets[row.target], shared = contracts.find((project) => project.name === vectors.materialization.project)?.targets[row.support];
-        assert.equal(target?.cache, true, `${project.name}:${row.target} needs a materialization producer`);
-        assert.deepEqual(target.dependsOn, [row.component, `${vectors.materialization.project}:${row.support}`, ...row.tooling]);
-        assert.deepEqual(target.outputs, [`{workspaceRoot}/${vectors.materialization.root}/dist/${row.profile}/🔌️plugin-modules/${moduleDirectory}`]);
-        assert.ok(target.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
-        assert.ok(target.options.command.includes(`materialize ${row.profile} --manifest`));
-        assert.equal(shared?.cache, true);
-        const supportRoot = `{projectRoot}/dist/${row.profile}/🔌️plugin-modules`;
-        assert.deepEqual(shared.outputs, [`${supportRoot}/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim`, `${supportRoot}/🪞️vendor/🔤️guestslim-typst-fonts.bin`, `${supportRoot}/🧵️shard`], "browser support owns the preview2 shims, the typst font asset every served module root needs, and the shard worker");
-        assert.deepEqual(shared.dependsOn, ["semio-framework-os-infinite:fonts"], "browser support stages the font the fonts target publishes");
-      }
-      for (const row of vectors.componentProfiles) {
-        const target = project.targets[row.target];
-        assert.equal(target?.cache, true, `${project.name}:${row.target} needs a component producer`);
-        assert.deepEqual(target.outputs, [row.output]);
-        assert.notEqual(target.parallelism, false, `${project.name}:${row.target} should participate in Nx parallelism`);
-        assert.ok(target.options.command.includes(`native component ${row.profile} --manifest`));
-      }
+      for (const removed of vectors.materialization.removedTargets) assert.equal(project.targets[removed], undefined, `${project.name}:${removed} is a driver stage, never a per-component Nx target`);
+      const component = project.targets[vectors.componentTarget.target];
+      assert.equal(component?.cache, false, `${project.name}:component answers to Cargo freshness and the stage cache`);
+      assert.equal(component.metadata?.semio?.orchestrator, true, `${project.name}:component owns its driver without an owner-command deadline`);
+      for (const dependency of vectors.componentTarget.dependsOn) assert.ok(component.dependsOn.includes(dependency), `${project.name}:component follows ${dependency}`);
+      assert.equal(component.outputs[0], vectors.componentTarget.output);
+      assert.ok(component.options.command.includes(vectors.componentTarget.command));
+    }
+    {
+      const row = vectors.materialization, shared = contracts.find((project) => project.name === row.project)?.targets[row.support];
+      assert.equal(shared?.cache, row.supportCache);
+      const supportRoot = `{projectRoot}/${row.modules}`;
+      assert.deepEqual(shared.outputs, [supportRoot, `{projectRoot}/${row.canonicalModules}`].flatMap(base => [`${base}/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim`, `${base}/🪞️vendor/🔤️guestslim-typst-fonts.bin`, `${base}/🧵️shard`]), "browser support owns the preview2 shims, the typst font asset every served module root needs, and the shard worker");
+      assert.deepEqual(shared.dependsOn, ["semio-framework-os-infinite:fonts"], "browser support stages the font the fonts target publishes");
+    }
+    for (const row of vectors.releaseOrchestrators) {
+      const target = contracts.find((project) => project.name === row.project)?.targets[row.target];
+      assert.ok(target, `${row.project}:${row.target} must be a release orchestrator`);
+      assert.equal(target.cache, false);
+      assert.equal(target.metadata?.semio?.orchestrator, true);
+      assert.equal(target.executor, "nx:run-commands", `${row.project}:${row.target} must not be wrapped by an owner command deadline`);
+      assert.deepEqual(target.metadata.semio.release.jobs.map((job: any) => job.id), row.jobs);
+      for (const prerequisite of row.prerequisites) assert.ok(target.dependsOn.includes(prerequisite), `${row.project}:${row.target} needs ${prerequisite}`);
+      const generators = new Set(Object.values(JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8")).generatorContracts ?? {}).map((contract: any) => contract.target));
+      assert.ok(target.dependsOn.every((dependency: string) => row.prerequisites.includes(dependency) || generators.has(dependency)), `${row.project}:${row.target} depends on generators and prerequisites only: ${target.dependsOn.filter((dependency: string) => !row.prerequisites.includes(dependency) && !generators.has(dependency)).join(", ")}`);
     }
     assert.ok(componentPackages > 0, "Component metadata must discover plugin producers");
     const fontProject = contracts.find((project) => project.name === vectors.fontAssets.project)!;
@@ -809,9 +811,9 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const session = sessionProject.targets[`session-${variant}`];
       assert.equal(session?.cache, true, `${variant} needs its own cacheable playground session`);
       assert.ok(session.dependsOn.includes(vectors.playgroundSessions.prerequisite));
-      const descriptors=session.dependsOn.filter((dependency:string)=>dependency!==vectors.playgroundSessions.prerequisite);
-      assert.ok(descriptors.length>0);
-      assert.ok(descriptors.every((dependency:string)=>dependency.endsWith(vectors.playgroundSessions.descriptorPrerequisiteSuffix)));
+      assert.deepEqual(session.dependsOn, [vectors.playgroundSessions.prerequisite], `${variant} session needs no component build`);
+      const descriptors = session.inputs.filter((input: unknown) => typeof input === "string" && input.startsWith("{workspaceRoot}/"));
+      assert.ok(descriptors.length > 0 && descriptors.every((input: string) => vectors.playgroundSessions.descriptorInputs.some((name: string) => input.endsWith(`/${name}`))), `${variant} session hashes the committed semantic descriptors of its closure`);
       assert.deepEqual(session.outputs, [`{projectRoot}/dist/sessions/${variant}`]);
       assert.ok(session.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*"));
     }
@@ -828,15 +830,13 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
 
         const targetName = `prepare-${playground.variant}-react-${profile}`, preparation = preparationProject.targets[targetName];
         assert.ok(preparation, `${targetName} needs declared prerequisites`);
-        assert.equal(preparation.cache, true, `${targetName} only validates already Nx-materialized bytes and writes nothing`);
-        assert.deepEqual(preparation.outputs, []);
-        assert.ok(preparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${targetName} must hash its whole transitive dependency closure`);
+        assert.equal(preparation.cache, false, `${targetName} builds its closure through the driver`);
+        assert.equal(preparation.metadata?.semio?.orchestrator, true);
         const wgpuTargetName = `prepare-${playground.variant}-wgpu-${profile}`, wgpuPreparation = preparationProject.targets[wgpuTargetName];
         assert.ok(wgpuPreparation, `${wgpuTargetName} needs declared prerequisites`);
         assert.ok(wgpuPreparation.dependsOn.includes(`@semio-tech/framework-renderer-wgpu:${profile === "release" ? "wasm-release" : "wasm"}`));
-        assert.equal(wgpuPreparation.cache, true, `${wgpuTargetName} validates completed prerequisites without publishing live state`);
-        assert.deepEqual(wgpuPreparation.outputs, [], `${wgpuTargetName} validates browser prerequisites without copying native modules`);
-        assert.ok(wgpuPreparation.inputs.some((input: any) => input.dependentTasksOutputFiles === "**/*" && input.transitive), `${wgpuTargetName} must hash its whole transitive dependency closure`);
+        assert.equal(wgpuPreparation.cache, false, `${wgpuTargetName} builds its closure through the driver`);
+        assert.deepEqual(wgpuPreparation.outputs, preparation.outputs, `${wgpuTargetName} publishes the same boot closure modules`);
         const activationName = `activate-${playground.variant}-react-${profile}`, activationTarget = preparationProject.targets[activationName];
         assert.ok(activationTarget, `${activationName} must follow completed preparation`);
         assert.equal(activationTarget.cache, true, `${activationName} publishes into a variant/profile-scoped runtime root and is safe to replay`);
@@ -867,24 +867,22 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
         }
         const hostLauncher = componentLaunchers.find((entry) => entry.pluginId === playground.pluginId);
         if (!hostLauncher) throw new Error(`${playground.variant}: host plugin must launch`);
-        const materializeDeps = preparation.dependsOn.filter((id: string) => id.endsWith(`:materialize-${profile}`));
-        assert.ok(materializeDeps.includes(`${hostLauncher.project}:materialize-${profile}`), `${targetName}: boot prepare must materialize the host`);
-        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated"))).plugins.map((row: any) => `${componentLaunchers.find((entry) => entry.pluginId === row.pluginId)!.project}:materialize-${profile}`);
-        assert.ok(materializeDeps.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
-        // Host fanout playgrounds (no app-scoped row) previously pulled every crate; boot prepare must stay smaller.
-        if (fullSession.length > materializeDeps.length + 5) {
-          assert.ok(materializeDeps.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
-        }
+        const moduleOf = (pluginId: string) => contracts.find((project) => project.name === componentLaunchers.find((entry) => entry.pluginId === pluginId)?.project);
+        const hostDirectory = moduleOf(playground.pluginId) && toml.parse(readFileSync(join(root, moduleOf(playground.pluginId)!.root, "Cargo.toml"), "utf8")).package.metadata.semio["deployment-directory"];
+        if (hostDirectory !== undefined) assert.ok(preparation.outputs.some((output: string) => output.endsWith(`/${hostDirectory}`)), `${targetName}: boot prepare must publish the host module`);
+        const fullSession = buildPlaygroundSession(playground.variant, (await import("../../../../../../💻️os/🔨️modules/🔌️plugin/📇️registry/📖️catalog-view/🟦️.ts")).readGeneratedCatalogProjection(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated"))).plugins;
+        assert.ok(preparation.outputs.length <= fullSession.length, `${targetName}: boot prepare must not exceed the full session closure`);
+        if (fullSession.length > preparation.outputs.length + 5) assert.ok(preparation.outputs.length < fullSession.length / 2, `${targetName}: host boot prepare must skip the catalog fanout`);
+        for (const prerequisite of vectors.closurePreparation.prerequisites) assert.ok(preparation.dependsOn.includes(prerequisite));
         const engines = playground.engines.map((engine: string) => contracts.find((project) => resolve(root, project.root) === resolve(root, engine))!.name + ":wasm");
         for (const engine of engines) assert.ok(preparation.dependsOn.includes(engine));
         assert.ok(preparation.dependsOn.includes(`@semio-tech/plugin-registry:session-${playground.variant}`));
-        assert.ok(preparation.dependsOn.includes(`@semio-tech/framework-plugin-web:support-${profile}`));
+        assert.ok(preparation.dependsOn.includes(`${vectors.materialization.project}:${vectors.materialization.support}`));
         assert.ok(preparation.dependsOn.includes(vectors.playgroundPreparation.fonts));
       }
       const target = `session-${playground.variant}`;
       assert.ok(sessionProject.targets[target]);
     }
-    for (const entry of componentLaunchers) for (const row of [...vectors.componentProfiles, ...vectors.materialization.profiles]) assert.ok(contracts.find((project) => project.name === entry.project)?.targets[row.target], `${entry.project}:${row.target} must name an Nx target`);
     assert.deepEqual(result.violations.filter((finding) => finding.rule === "ORCH-01"), [], "All public commands must use one script entrypoint");
     for (const entry of vectors.entrypoints) assert.ok(contracts.find((project) => project.name === entry.project)?.targets[entry.target].dependsOn?.includes(entry.prerequisite), `${entry.project}:${entry.target} needs ${entry.prerequisite} in Nx`);
     for (const entry of vectors.nativeBinaries) {
@@ -949,7 +947,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(workspace.targets.setup.dependsOn, vectors.lifecycle.setupDependencies);
     assert.deepEqual(workspace.targets.prepare.dependsOn, vectors.lifecycle.prepareDependencies);
     for (const target of vectors.lifecycle.setupDependencies) assert.equal(workspace.targets[target]?.cache, false);
-    for (const name of ["test", "lint", "build", "verify", "test-exhaustive"]) assert.equal(workspace.targets[name]?.cache, true, name);
+    for (const name of ["test", "lint", "build", "verify"]) assert.equal(workspace.targets[name]?.cache, true, name);
     assert.equal(workspace.targets.dev, undefined, "the playground variant switch is dissolved: playgrounds are dashboard commands");
     assert.equal(cacheInternals.nativeTargetCommandInputs({ options: { command: "bun ./x.ts", cwd: "." } }, root).some((input: { readonly env?: string }) => input.env && input.env.startsWith("SEMIO_")), true, "native leaves must fingerprint SEMIO toolchain env");
     const hostProject = contracts.find((project) => project.name === vectors.platformEnvironment.project)!;
@@ -1017,7 +1015,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       const selected = `@semio-tech/framework-os-dev:${command}-note-react-dev`;
       const invocation = resolveInvocation(["run", selected]);
       assert.equal(invocation.watch, command === "dev" ? "@semio-tech/framework-os-dev:activate-note-react-dev" : undefined);
-      assert.equal(invocation.env.SEMIO_BUILD_MODE, "dev");
+      assert.equal(invocation.env.SEMIO_BUILD_MODE, "prototype");
       assert.equal(resolveInvocation(["run", selected, "--graph=stdout"]).watch, undefined);
     }
     for (const renderer of vectors.benchmarkRenderers) {
@@ -1088,10 +1086,8 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
       assert.ok(sourceCache.bytes <= discovery.limitBytes);
     }
     assert.ok(sourceCache.entries.size < 100);
-    const materializerSource = ts.createSourceFile("materializer.ts", readFileSync(join(root, vectors.materialization.source), "utf8"), ts.ScriptTarget.Latest, true);
-    const spawnDeclaration = materializerSource.statements.find((node: any) => ts.isFunctionDeclaration(node) && node.name?.text === "spawnAsync");
-    const spawnCode = ts.transpileModule(spawnDeclaration.getText(materializerSource), { compilerOptions: { target: ts.ScriptTarget.ES2022 } }).outputText;
-    const materializerSpawn = new Function("spawn", `${spawnCode}; return spawnAsync;`)(spawn);
+    const { captureOwnedCommandV1 } = await import(pathToFileURL(join(root, vectors.materialization.source)).href);
+    const materializerSpawn = (command: string, args: readonly string[], cwd: string, signal?: AbortSignal) => captureOwnedCommandV1(command, args, cwd, signal ? { signal } : {});
     const materializerFixture = join(fixture, "materializer-cancel");
     mkdirSync(materializerFixture, { recursive: true });
     const childScript = join(materializerFixture, "📜️script.ts"), pidPath = join(materializerFixture, "pid");
@@ -1138,7 +1134,7 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     assert.deepEqual(cacheInternals.goDependencies(goManifest), { module: go.Module.Path, requires: go.Require.map((row: any) => row.Path), replacements: go.Replace.map((row: any) => ({ module: row.Old.Path, path: row.New.Path })) });
     await assert.rejects(async () => await plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`, "other/📋️project.json"], {}, { workspaceRoot: fixture }), new RegExp(`duplicate.*${graph.leaf.name}`, "i"));
     const projects = await plugin.createNodesV2[1]([`${graph.leaf.directory}/📋️project.json`], {}, { workspaceRoot: fixture });
-    assert.equal(projects[0][1].projects[graph.leaf.name].targets[graph.leaf.derivedTarget].cache, true);
+    assert.equal(projects[0][1].projects[graph.leaf.name].targets[graph.leaf.cachedTarget].cache, true);
     const rooted = await plugin.createNodesV2[1](["📋️project.json"], {}, { workspaceRoot: fixture });
     const resolvedRoot = rooted[0][1].projects[graph.workspaceRoot.name].targets;
     for (const name of graph.workspaceRoot.targets) {
@@ -1184,17 +1180,20 @@ export function createCachePolicyTests(dependencies: Record<string, any>, testSo
     const { resolveNxInvocation } = await import("../../🚀️bootstrap/📜️script.ts");
     assert.deepEqual(resolveNxInvocation(["run", "workspace:build", "--graph=stdout", "--", "assets"]).args, ["run", "@semio-tech/assets:build", "--graph=stdout"]);
     assert.deepEqual(resolveNxInvocation(["show", "projects"]).args, ["show", "projects"]);
-    assert.deepEqual(resolveNxInvocation(["run", "workspace:cpp", "--", "build", "macos-release"]).args, ["run", "workspace:cpp-build", "--", "macos-release"]);
-    const cpp = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "CppScript");
-    const configure = cpp.members.find((node: any) => node.name?.getText(source) === "runConfigure").getText(source);
+    assert.deepEqual(resolveNxInvocation(["run", "workspace:cpp", "--", "build"]).args, ["run", "workspace:cpp-build"]);
+    const cppSource = ts.createSourceFile("cmake.ts", readFileSync(join(root,"🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts"),"utf8"), ts.ScriptTarget.Latest, true);
+    const cpp = cppSource.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "CppScript");
+    const configure = cpp.members.find((node: any) => node.name?.getText(cppSource) === "runConfigure").getText(cppSource);
     assert.ok(!configure.includes("runSetup"), "CMake configuration must not reinstall its prerequisites");
-    assert.ok(!cpp.getText(source).includes("ensureVcpkg"), "No current project consumes a vcpkg installation");
-    assert.equal(resolveNxInvocation(["run", "workspace:test", "--", "quick"]).args[1], "workspace:test-quick");
-    assert.equal(resolveNxInvocation(["run", "workspace:test", "--", "fundamental"]).args[1], "workspace:test-fundamental");
+    assert.ok(!cpp.getText(cppSource).includes("ensureVcpkg"), "No current project consumes a vcpkg installation");
+    assert.deepEqual(resolveNxInvocation(["run", "workspace:test", "--", "quick"]).args, ["run", "workspace:test", "--", "quick"]);
+    assert.deepEqual(resolveNxInvocation(["run", "workspace:test"]).args, ["run", "workspace:test", "--", "fundamental"]);
+    assert.deepEqual(resolveNxInvocation(["run", "workspace:test", "--", "long", "repo-mcp", "-run", "TestX"]).args, ["run", "repo-mcp:test", "--", "long", "-run", "TestX"]);
     assert.equal(resolveNxInvocation(["run", "workspace:setup", "--", "deps", "wasm"]).args[1], "workspace:deps-wasm");
     const rootTest = source.statements.find((node: any) => ts.isClassDeclaration(node) && node.name?.text === "TestScript").getText(source);
     assert.ok(!rootTest.includes("run-many"), "The root test target cannot schedule a second Nx graph");
-    for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.ok(workspace.targets[`test-${level}`].dependsOn.length > 0);
+    for (const level of ["fundamental", "quick", "long", "exhaustive"]) assert.equal(workspace.targets[`test-${level}`], undefined, level);
+    assert.deepEqual(workspace.targets.test.dependsOn.find((row: any) => typeof row === "object" && row.target === "test"), { target: "test", projects: ["*", "!workspace", "!@semio-tech/repo-test-domain"], params: "forward" });
     for (const retired of [["run", "workspace:dev", "--", "s"], ["run", "workspace:dev", "--", "mcp", "http", "os"], ["run", "@semio-tech/framework-os-dev:dev"]]) assert.deepEqual(resolveNxInvocation(retired).args, retired, `${retired.join(" ")}: the bootstrap is no playground or MCP resolver; the dashboard registry resolves playgrounds`);
     const osDevProject = JSON.parse(readFileSync(join(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript/📋️project.json"), "utf8")) as { targets: Record<string, { dependsOn?: readonly string[]; options?: { command?: string } }> };
     assert.equal(osDevProject.targets.dev, undefined, "the framework-os-dev dev alias is dissolved: playgrounds are the generated dev-<variant>-<renderer>-<profile> targets");

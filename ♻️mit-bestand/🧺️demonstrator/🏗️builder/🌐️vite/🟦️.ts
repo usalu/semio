@@ -1,9 +1,12 @@
+import { builtPluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { viteCacheDirectory } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import tailwindcss from "@tailwindcss/vite";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite";
-import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
+import { playgroundAssetVitePlugins, playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioAssetsVitePlugin, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirVitePlugin, semioServeCloseVitePlugin } from "../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { demonstratorGisMapTileServeMode } from "../../🔨️modules/📦️site/🗺️tile-serve-mode/🟦️.ts";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { devStreamMuxServer, semioBackboneVitePlugin, semioBlobVitePlugin, semioActivationVitePlugin } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
@@ -38,14 +41,14 @@ const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeMod
 //#endregion 🔖️DemonstratorUnionAssets
 
 export default defineConfig(({ command }) => {
-  const profile = command === "build" ? "release" : "dev";
+  const profile = readBuildMode(process.env.SEMIO_BUILD_MODE) === "prototype" ? "dev" : "release";
   const development = command === "serve" ? readDemonstratorActivation(repoRoot) : undefined;
-  const pluginModulesDir = path.join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+  const pluginModulesDir = command === "build" ? builtPluginModulesRootIn(repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE)) : path.join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
   const installedExtensionsDir = development?.extensionsDirectory ?? pluginModulesDir;
   return {
   root: playDir,
   base: "./",
-  cacheDir: repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"),
+  cacheDir: viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "mit-bestand-demonstrator"), process.env, import.meta.url),
   publicDir: path.join(playDir, "public"),
   assetsInclude: ["**/*.wasm"],
   worker: { format: "es" },
@@ -110,6 +113,6 @@ export default defineConfig(({ command }) => {
       exclude: ["playwright", "playwright-core", "chromium-bidi", "fsevents", ...FRAMEWORK_ENGINE_OPTIMIZE_DEPS_EXCLUDE],
     }),
   },
-  build: semioViteProductionBuild(),
+  build: semioViteBuild(),
   };
 });

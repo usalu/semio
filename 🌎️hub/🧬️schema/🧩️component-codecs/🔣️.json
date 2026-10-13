@@ -57,7 +57,7 @@
           },
           "producerOutput": {
             "type": "string",
-            "pattern": "^🌎️hub/🧩️compositions/.+/📦️packages/🦀️rust/dist/component-release/[^/]+\\.wasm$"
+            "pattern": "^🌎️hub/🧩️compositions/.+/📦️packages/🦀️rust/dist/components/release/[^/]+\\.wasm$"
           }
         }
       }

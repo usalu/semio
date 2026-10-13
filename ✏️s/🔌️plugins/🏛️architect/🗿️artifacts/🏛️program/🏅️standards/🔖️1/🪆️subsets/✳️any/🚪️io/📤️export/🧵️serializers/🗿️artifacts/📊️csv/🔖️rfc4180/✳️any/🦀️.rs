@@ -4,8 +4,8 @@
 //!
 //! 🔖 `IoFidelity::Lossy`: register rows only — relationships, adjacencies, quantities and project
 //! metadata have no column in this table.
-use crate::schema::snapshot::ProgramSnapshot;
-use crate::kernel::PluginError;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::kernel::PluginError;
 use crate::standards::v1::subsets::any::io::tables::{collect_rows,RegisterCsvRow,REGISTER_ROW_COLUMNS};
 use semio_s_artifact_stdio_csv as stdio_csv;
 

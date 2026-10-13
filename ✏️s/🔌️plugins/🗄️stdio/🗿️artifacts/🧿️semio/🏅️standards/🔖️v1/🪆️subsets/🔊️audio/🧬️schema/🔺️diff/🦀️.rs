@@ -12,12 +12,9 @@
 //! independently hit by gltf/pptx/docx/bcf/xlsx) — `IndexedTripleDiff<D,T>` is a bare generic with
 //! no `DslField` impl of its own.
 
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use semio_s_artifact_stdio_semio_base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::command::DiffAlgebra;
-/// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
-/// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.
-use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexTransport
@@ -355,7 +352,7 @@ impl DiffAlgebra<SemioAudioSnapshot> for SemioAudioDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioAudioDiff` cases built declaratively (empty/no-op, every scalar with both collection triples) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-audio"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioAudioDiff> {
     vec![

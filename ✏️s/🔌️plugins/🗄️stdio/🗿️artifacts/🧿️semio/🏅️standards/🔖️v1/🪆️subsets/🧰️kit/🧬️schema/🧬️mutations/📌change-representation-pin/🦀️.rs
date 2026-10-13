@@ -2,8 +2,8 @@
 //! `pin` changes) — `change`, not `update`: a single narrow field, not an inseparable ≥2-field
 //! facet rewritten atomically (📌️important.md's `change-link-pin` ruling).
 
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

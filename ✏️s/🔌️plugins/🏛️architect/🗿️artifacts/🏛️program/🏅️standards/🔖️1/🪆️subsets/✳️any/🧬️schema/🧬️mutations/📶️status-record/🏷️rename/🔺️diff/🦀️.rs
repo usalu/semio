@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📶status-records` per Wave C.
 
 use super::RenameStatusRecord;
-use crate::diff::{ProgramStatusRecordsDelta, ProgramStatusRecordsPatchEntry};
-use crate::registers::StatusRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramStatusRecordsDelta, ProgramStatusRecordsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::StatusRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameStatusRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

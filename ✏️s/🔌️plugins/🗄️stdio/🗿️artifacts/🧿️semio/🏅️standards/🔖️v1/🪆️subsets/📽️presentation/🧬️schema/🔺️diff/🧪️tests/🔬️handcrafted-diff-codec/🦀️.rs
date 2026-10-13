@@ -1,5 +1,5 @@
 use super::*;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffBinary,DiffText};
 
 /// 🧪️ `DiffCodec` round-trip law over the hand-rolled `SemioPresentationDiff` grammar —
 /// exercises masters/layouts (named-keyed removed/modified/added), slides (index-keyed

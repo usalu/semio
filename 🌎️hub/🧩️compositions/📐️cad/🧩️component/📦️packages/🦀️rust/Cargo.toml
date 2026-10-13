@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-cad-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `cad` plugin component: the one cdylib of `semio-hub-cad`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:cad"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "📐️cad"
+component-kind = "plugin"
+consumes = ["cad.computer"]
+
+[[package.metadata.semio.playground]]
+variant = "cad"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.cad.cad@1/*#editor"
+ports = { react = 6020, wgpu = 6120 }
+
+# 🎪️ The `koordinator` demonstrator row moved to
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT). The `/cad-assets` asset row below
+# stays here too (a copy also lives on the bundle crate) since the standalone `cad` dev variant needs
+# it independently of the demonstrator.
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-assets"
+app = "s.cad.cad@1/*#editor"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets"
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-cad = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }

@@ -18,10 +18,10 @@ use crate::os_spr::Mutation;
 use crate::os_spr::{ArtifactId, Edit, SchemaId};
 pub use crate::os_spr::ActorId;
 use crate::os_spr::{ApplyCapability, DiffAlgebra, Identified, MutationDiff, Patchable};
-use crate::os_store::create_document_envelope;
+use crate::os_store::document_materialize::create_document_envelope;
 #[cfg(test)]
-use crate::os_store::ArtifactCommand;
-use crate::os_store::{ArtifactEnvelope, ArtifactStore};
+use crate::os_store::store_schema::ArtifactCommand;
+use crate::os_store::{store_schema::ArtifactEnvelope, ArtifactStore};
 
 pub const DAG_DOCUMENT_SCHEMA: &str = "dag.host_snapshot";
 

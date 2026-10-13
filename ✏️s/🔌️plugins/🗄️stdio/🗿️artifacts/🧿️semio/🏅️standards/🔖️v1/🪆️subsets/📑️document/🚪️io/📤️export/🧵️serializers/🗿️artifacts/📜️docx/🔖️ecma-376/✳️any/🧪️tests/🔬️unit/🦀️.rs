@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::document::schema::snapshot::{DocImage, DocStyle, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocImage, DocStyle, DocTableCell, DocTableRow, RunStyle, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_semio() -> SemioDocumentSnapshot {
@@ -32,7 +32,7 @@ async fn list_and_quote_flatten_image_and_pagebreak_drop() {
         styles: Vec::new(),
         images: vec![DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2, 3] }],
         blocks: vec![
-            DocBlock::List { ordered: true, items: vec![crate::standards::v1::subsets::document::schema::snapshot::DocListItem { blocks: vec![DocBlock::paragraph("item one")] }] },
+            DocBlock::List { ordered: true, items: vec![semio_s_artifact_stdio_semio_document::schema::snapshot::DocListItem { blocks: vec![DocBlock::paragraph("item one")] }] },
             DocBlock::Quote { blocks: vec![DocBlock::paragraph("quoted")] },
             DocBlock::Image { image_id: "img1".into(), alt: "alt text".into(), width: None, height: None },
             DocBlock::PageBreak,

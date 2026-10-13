@@ -47,7 +47,7 @@ fn inbound_request_fixture() -> InboundRequestFixture {
 }
 
 fn inbound_request_budget() -> semio_framework::kernel::Budget {
-    semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1_000, max_effects: 16, max_patch_bytes: 65_536, max_frames: 16 }
+    semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1_000, max_effects: 16, max_patch_bytes: 65_536, max_frames: 16 }
 }
 
 /// 🧩️ A bundle whose one handler mirrors what every real flow extension installs: a pure
@@ -64,14 +64,14 @@ fn inbound_request_bundle(capability: &str) -> crate::plugin_runtime::ExtensionB
     })
 }
 
-async fn drive_inbound_request(runtime: &crate::plugin_runtime::PluginRuntime<crate::app::NoPluginApp>, req: u64, capability: &str, request: &str) -> Vec<Effect> {
+async fn drive_inbound_request(runtime: &crate::plugin_runtime::PluginRuntime<crate::plugin_app::NoPluginApp>, req: u64, capability: &str, request: &str) -> Vec<Effect> {
     let event = Event::Request {
         req: semio_framework::kernel::RequestId(req),
         from: semio_framework::kernel::MessageEndpoint::Shell { instance: semio_framework::kernel::PluginInstanceId("0".into()) },
         capability: capability.to_string(),
         payload: request.as_bytes().to_vec(),
     };
-    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one inbound-request turn").effects
+    crate::reactor::poll_kernel(runtime, vec![event], None, None, inbound_request_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one inbound-request turn").effects
 }
 
 /// ⚖️ LAW: every fixture row is answered by exactly one `Effect::Respond` carrying the SAME `req`, on
@@ -87,7 +87,7 @@ fn every_inbound_request_row_is_answered_on_the_turn_it_arrives() {
     assert_eq!(fixture.seam.origin_tag, "shell");
     assert_eq!(fixture.seam.answered_on_turn, 1);
     ::semio_framework_async::poll::resolve_ready(async {
-        let runtime = crate::plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::extension_deactivate().await;
         let mut installed = false;
         for (index, row) in fixture.rows.iter().enumerate() {

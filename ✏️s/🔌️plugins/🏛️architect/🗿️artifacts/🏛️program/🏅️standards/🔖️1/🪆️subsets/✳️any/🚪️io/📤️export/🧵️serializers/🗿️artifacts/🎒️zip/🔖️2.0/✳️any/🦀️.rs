@@ -1,5 +1,5 @@
 //! program -> zip
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 pub use semio_s_artifact_stdio_zip::schema::snapshot::ZipEntry;
 pub use semio_s_artifact_stdio_zip::ZipSnapshot;
 use semio_s_artifact_stdio_zip::STDIO_ZIP_DOCUMENT_SCHEMA;
@@ -19,7 +19,7 @@ pub fn serialize(snapshot: &ProgramSnapshot) -> Result<ZipSnapshot, semio_framew
 }
 
 pub fn serialize_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<ZipSnapshot as store::ArtifactPack>::encode_pack(&serialize(snapshot)?))
+    Ok(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&serialize(snapshot)?))
 }
 
 pub fn serialize_raw_bytes(snapshot: &ProgramSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

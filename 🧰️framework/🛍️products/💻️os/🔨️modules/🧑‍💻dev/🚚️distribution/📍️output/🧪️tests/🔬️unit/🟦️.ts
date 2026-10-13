@@ -4,7 +4,7 @@ import { mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "nod
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 
-import { playgroundReactReleaseNxOutput, playgroundReactReleaseOutputPath } from "../../🟦️.ts";
+import { playgroundReactNxOutput, playgroundReactOutputPath } from "../../🟦️.ts";
 
 /** 📦️ Proves authored distribution destinations with independent JSON schema and Node target producers. */
 export async function testDistributionOutputContract(workspace: string, artifacts: string): Promise<void> {
@@ -16,17 +16,17 @@ export async function testDistributionOutputContract(workspace: string, artifact
   const temporary = mkdtempSync(join(artifacts, "distribution-output-"));
   try {
     for (const vector of corpus.cases) {
-      const actual = (): string => playgroundReactReleaseOutputPath(temporary, join(temporary, corpus.stagingRoot), vector.row);
-      const nx = (): string => playgroundReactReleaseNxOutput(corpus.stagingRoot, vector.row);
+      const actual = (): string => playgroundReactOutputPath(temporary, join(temporary, corpus.stagingRoot), vector.row, "release");
+      const nx = (): string => playgroundReactNxOutput(corpus.stagingRoot, vector.row, "release");
       if (!vector.valid) {
         assert.throws(actual, undefined, vector.id); assert.throws(nx, undefined, vector.id);
-        assert.throws(() => cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package" }], corpus.stagingRoot), undefined, vector.id);
+        assert.throws(() => cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package" }], corpus.stagingRoot, workspace), undefined, vector.id);
         continue;
       }
       assert.equal(relative(temporary, actual()).replaceAll("\\", "/"), vector.path, vector.id);
       assert.equal(new URL(vector.path, pathToFileURL(`${temporary}/`)).pathname, pathToFileURL(actual()).pathname, vector.id);
       assert.equal(nx(), `{workspaceRoot}/${vector.path}`, vector.id);
-      const target = cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package", pluginId: "neutral" }], corpus.stagingRoot);
+      const target = cacheInternals.pluginSiteTargetsForCrate("owners/component/package", [{ ...vector.row, cratePath: "owners/component/package", pluginId: "neutral" }], corpus.stagingRoot, workspace);
       assert.deepEqual(target[`build-${vector.row.variant}-site`].outputs, [nx()], vector.id);
     }
     const configs: string[] = [];
@@ -39,13 +39,13 @@ export async function testDistributionOutputContract(workspace: string, artifact
     const rows = cacheInternals.collectPlaygroundCatalog(configs, temporary);
     assert.equal(rows.length, 2);
     assert.ok(rows.every((row: any) => row.distDir === undefined));
-    for (const row of rows) assert.equal(playgroundReactReleaseOutputPath(temporary, join(temporary, corpus.stagingRoot), row), join(temporary, corpus.stagingRoot, "dist", `build-${row.variant}-react-release`));
+    for (const row of rows) assert.equal(playgroundReactOutputPath(temporary, join(temporary, corpus.stagingRoot), row, "release"), join(temporary, corpus.stagingRoot, "dist", `build-${row.variant}-react`, "release"));
     const nodeSource = `import { readFileSync } from 'node:fs';
       import { pathToFileURL } from 'node:url';
       const { cacheInternals } = await import(pathToFileURL(process.argv[1]).href);
       const corpus = JSON.parse(readFileSync(process.argv[2], 'utf8'));
       const result = corpus.cases.map(v => {
-        try { const rows = cacheInternals.pluginSiteTargetsForCrate('owners/component/package', [{ ...v.row, cratePath: 'owners/component/package' }], corpus.stagingRoot); return { id: v.id, valid: true, outputs: rows['build-' + v.row.variant + '-site'].outputs }; }
+        try { const rows = cacheInternals.pluginSiteTargetsForCrate('owners/component/package', [{ ...v.row, cratePath: 'owners/component/package' }], corpus.stagingRoot, process.cwd()); return { id: v.id, valid: true, outputs: rows['build-' + v.row.variant + '-site'].outputs }; }
         catch { return { id: v.id, valid: false }; }
       });
       process.stdout.write(JSON.stringify(result));`;

@@ -24,7 +24,8 @@
 //! `tounicode_cmap_bfrange_identity_and_bfchar`, and the Identity-H writer/reader round trip).
 
 use crate::examples::bachelor_thesis::{source, DOCUMENT_BYTES};
-use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
+use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
 use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
 use crate::standards::v1_7::subsets::base::schema::inferences::Pdf17Inference;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
@@ -34,7 +35,7 @@ use crate::standards::v1_7::subsets::base::io::PdfBuilderConstruction as PdfBuil
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText, Inference, Mutation, MutationDiff, OpBinary};
 use semio_framework_plugin::ArtifactBuilder;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn assert_logical_cos_retained(snapshot: &PdfSnapshot) {

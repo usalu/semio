@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind;
+    use crate::schema::snapshot::SemioTextMarkKind;
 
     #[semio_framework_async_macros::async_test]
     async fn typed_constructors_build_a_populated_snapshot() {

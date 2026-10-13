@@ -1,5 +1,5 @@
 use super::*;
-use crate::app::{plugin_demand_grant, PluginLifecycleStep};
+use crate::bounded_ownership::{plugin_demand_grant, PluginLifecycleStep};
 use semio_framework_value::RetirementDemand;
 
 /// 🎟️ Funds one quoted retirement turn on every axis, with `copy` as the smallest payload credit.

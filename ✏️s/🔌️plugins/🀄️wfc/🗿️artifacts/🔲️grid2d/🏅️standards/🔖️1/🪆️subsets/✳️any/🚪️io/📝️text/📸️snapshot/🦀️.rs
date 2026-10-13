@@ -2,7 +2,7 @@
 //!
 //! The `*Dsl` types below are LOCAL structural twins of the schema tree's own records rather than
 //! derives on those records, for one measured reason: `WfcTile2d::media` is a tagged ENUM whose
-//! `Image` arm carries a `store::ArtifactChild<SemioImageSnapshot>`, so a single `dsl::DslRecord`
+//! `Image` arm carries a `store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>`, so a single `dsl::DslRecord`
 //! derive cannot state it. The twin carries the field as `dsl::DslValue` — the engine's own
 //! schema-less literal — and bridges at the boundary through `semio_framework_value::ToValue::to_value`/
 //! `semio_framework_value::FromValue::from_value`, which exist for every `ToValue`/`FromValue` type. The remaining records
@@ -159,7 +159,7 @@ impl Default for Grid2dSnapshotDsl {
 //#endregion 🔖️DslMirror
 
 //#region 🔖️HandcraftedArtifactCodecs
-impl store::ArtifactDsl for Grid2dSnapshotDsl {
+impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshotDsl {
     const EXTENSION: &'static str = "wfcgrid2d";
     fn envelope_id() -> &'static str {
         "wfc.grid2d"
@@ -177,7 +177,7 @@ impl store::ArtifactDsl for Grid2dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -218,18 +218,18 @@ pub(crate) fn grid2d_document_from_dsl(parsed: Grid2dSnapshotDsl) -> Result<Grid
     })
 }
 
-impl store::ArtifactDsl for Grid2dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Grid2dSnapshot {
     const EXTENSION: &'static str = "wfcgrid2d";
     fn envelope_id() -> &'static str {
         "wfc.grid2d"
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        grid2d_document_from_dsl(<Grid2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)
+        grid2d_document_from_dsl(<Grid2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
     }
 
     fn print_dsl(&self) -> String {
-        <Grid2dSnapshotDsl as store::ArtifactDsl>::print_dsl(&grid2d_document_to_dsl(self))
+        <Grid2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&grid2d_document_to_dsl(self))
     }
 }
 
@@ -238,12 +238,12 @@ impl store::ArtifactDsl for Grid2dSnapshot {
 
 /// 📖️ Parses `.wfcgrid2d` DSL text into a `Grid2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Grid2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Grid2dSnapshot` back to `.wfcgrid2d` DSL text.
 pub fn print_dsl(document: &Grid2dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🚚️Carrier
@@ -257,7 +257,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 
 
 

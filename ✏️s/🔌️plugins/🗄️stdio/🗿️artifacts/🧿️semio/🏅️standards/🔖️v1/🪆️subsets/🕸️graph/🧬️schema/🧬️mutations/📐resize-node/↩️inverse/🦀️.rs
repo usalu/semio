@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `ResizeNode`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `resize-node` back to the node's BASE size; nothing when the node is absent or keeps its size.

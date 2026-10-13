@@ -28,10 +28,10 @@ async fn facade_generator_example_pack_agrees_with_dsl() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::schema::mutations::{change_title_operation, PlaybookMutation};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<PlaybookSnapshot, PlaybookMutation> = ArtifactStore::new(create_document_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook-demo", empty_playbook_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<PlaybookSnapshot, PlaybookMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<PlaybookSnapshot, PlaybookMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     store.dispatch(ArtifactCommand::Apply { mutations: vec![change_title_operation(Some("Recipe".into()))], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<PlaybookMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<PlaybookSnapshot, PlaybookMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;

@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::En1996Snapshot;
 
-/// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`store::ArtifactDsl`):
+/// 🗄️ The load-bearing-wall example fixture, handcrafted in `en1996`'s DSL (`store::os_store::serialization::ArtifactDsl`):
 /// an EN-annex masonry class 2 wall check under a transient design situation, distinct from
 /// `En1996Snapshot::default()`'s DE-annex/persistent values so the grammar's non-default branches
 /// (annex, masonry class, design situation, exposure, mortar) are exercised too.
@@ -16,12 +16,12 @@ pub const EN1996_LOADBEARING_WALL_EXAMPLE_TEXT: &str = include_str!("../../../�
 
 /// 📖️ Parses `.en1996` DSL text into a `En1996Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1996Snapshot, semio_framework_diagnostic::TextError> {
-    <En1996Snapshot as store::ArtifactDsl>::parse_dsl(text)
+    <En1996Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1996Snapshot` back to `.en1996` DSL text.
 pub fn print_dsl(document: &En1996Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -45,7 +45,7 @@ pub fn write_committed_example_assets(assets_root: &std::path::Path) -> std::io:
         let dir = assets_root.join(folder).join(folder);
         std::fs::create_dir_all(&dir)?;
         std::fs::write(dir.join("🗣️.dsl.semio"), print_dsl(&doc))?;
-        let pack = <En1996Snapshot as store::ArtifactPack>::encode_pack(&doc);
+        let pack = <En1996Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&doc);
         std::fs::write(dir.join("🎒️.pack.semio"), pack)?;
     }
     Ok(())
@@ -68,11 +68,11 @@ pub fn decode_en1996_snapshot_json(text: &str) -> Result<En1996Snapshot, String>
 }
 
 pub fn decode_en1996_dsl(text: &str) -> Result<En1996Snapshot, String> {
-    <En1996Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1996Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 pub fn encode_en1996_dsl(snapshot: &En1996Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

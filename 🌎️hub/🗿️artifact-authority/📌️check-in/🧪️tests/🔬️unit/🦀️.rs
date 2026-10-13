@@ -175,7 +175,7 @@ fn check_in_jobs_join_bound_retain_and_cancel_by_document() {
 #[cfg(feature = "native-artifact-execution")]
 struct LinkedGisMapCodec {
     identity: TrustedArtifactIdentity,
-    codec: ::directory::os_store::ArtifactCodec,
+    codec: ::directory::os_store::serialization::ArtifactCodec,
 }
 
 #[cfg(feature = "native-artifact-execution")]
@@ -220,13 +220,13 @@ impl TrustedArtifactCatalog for LinkedGisMapCatalog {
 /// one-operation edit each — exactly its store's own event log.
 #[cfg(feature = "native-artifact-execution")]
 async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutation>) -> (ArtifactPair, Vec<protocol::MutationEnvelope>) {
-    use ::directory::os_store::{ArtifactCommand, ArtifactPack, ArtifactStore, SnapshotRetirementStep};
+    use ::directory::os_store::{store_schema::ArtifactCommand, serialization::ArtifactPack, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, GIS_MAP_SCHEMA};
     let pack = <GisMapSnapshot as ArtifactPack>::encode_pack(&GisMapSnapshot::default());
-    let spr = ::directory::os_store::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
-    let parsed = ::directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
+    let spr = ::directory::os_store::text_format::empty_document_spr("karte", GIS_MAP_SCHEMA).await;
+    let parsed = ::directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
     let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope(), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("editor store");
-    store.install_document_store_owners_exact(::directory::os_store::bounded_artifact_store_owners());
+    store.install_document_store_owners_exact(::directory::os_store::document_store_owners::bounded_artifact_store_owners());
     let mut applied = Ok(());
     for mutation in mutations {
         if let Err(error) = store.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await {
@@ -236,7 +236,7 @@ async fn gis_map_ledger(mutations: Vec<semio_s_artifact_gis_gismap::GisMapMutati
     }
     let events = store.event_log();
     loop {
-        match store.close_owned_step(1, ::directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
+        match store.close_owned_step(1, ::directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
             SnapshotRetirementStep::Complete => break,
             SnapshotRetirementStep::Pending { .. } => {}
             SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
@@ -280,7 +280,7 @@ fn gis_map_position(index: usize, id: &str, lon: f64) -> semio_s_artifact_gis_gi
 /// 🏗️ The check-in authority over the linked GIS Map codec.
 #[cfg(feature = "native-artifact-execution")]
 fn gis_map_authority() -> ValidatingCanonicalArtifactAuthority<LinkedGisMapCatalog> {
-    let codec = ::directory::os_store::ArtifactCodec::of::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA);
+    let codec = ::directory::os_store::artifact_codec::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(semio_s_artifact_gis_gismap::GIS_MAP_SCHEMA);
     ValidatingCanonicalArtifactAuthority::new(LinkedGisMapCatalog(LinkedGisMapCodec { identity: TrustedArtifactIdentity::from_descriptor(&descriptor()), codec }))
 }
 
@@ -300,7 +300,7 @@ async fn materialize_check_in_folds_a_supersession_of_the_ledger() {
     let candidate = authority.materialize_check_in(request, &context).await.expect("a ledger holding a supersession checks in");
     let history = ::directory::os_spr::decode_history(&candidate.pair.spr, &::directory::os_spr::DecodeOptions::default()).await.expect("checked-in history");
     assert_eq!((history.edits.len(), history.transitions.len()), (1, 1), "the superseded edit keeps its slot and the supersession is kept, not applied away");
-    let head = ::directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&candidate.pair.pack, &candidate.pair.spr).await.expect("the checked-in pair reloads").into_snapshot();
+    let head = ::directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&candidate.pair.pack, &candidate.pair.spr).await.expect("the checked-in pair reloads").into_snapshot();
     assert_eq!(head.positions.iter().map(|position| (position.id.clone(), position.data.clone())).collect::<Vec<_>>(), vec![("p".to_string(), ::directory::DslValue::object([("lat".into(), ::directory::DslValue::float(47.0)), ("lon".into(), ::directory::DslValue::float(9.0))]))], "the reload folds the effective input (in the pack's canonical key order)");
 }
 

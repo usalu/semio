@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn make_loose_quad(body: &mut Body, p0: Pnt3, p1: Pnt3, p2: Pnt3, p3: Pnt3, normal: Vec3) -> FaceId {

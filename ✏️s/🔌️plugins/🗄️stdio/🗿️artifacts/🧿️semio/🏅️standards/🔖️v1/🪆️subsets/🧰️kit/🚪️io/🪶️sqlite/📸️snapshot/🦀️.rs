@@ -1,15 +1,15 @@
 //! 🧰️ Kit types, designs, placed pieces, connections, typed child handles and history pins.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot,SemioKitType,SemioKitDesign,SemioKitPiece,SemioKitConnection};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::standards::v1::subsets::base::schema::{geometry::{SemioPoint3,SemioQuaternion},child::validate_semio_child_identity};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use crate::schema::snapshot::{SemioKitSnapshot, SemioKitType, SemioKitDesign, SemioKitPiece, SemioKitConnection};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion}, semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🔍️ Resolves a retained, paid identity frontier with bounded text comparisons.
@@ -27,7 +27,7 @@ fn reference(target:&semio_framework_artifact_reference::ArtifactRef,out:&mut Ro
  out.insert("semio_kit_reference",&[Cell::Text(&target.artifact_id),Cell::Text(&target.dialect.artifact_kind),Cell::Text(&target.dialect.standard),Cell::Text(&target.dialect.subset)])
 }
 /// 🧒️ Projects ordered child aliases independently from their persisted target identities.
-fn project_children<S>(children:&[store::ArtifactChild<S>],table:&str,subset:&str,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+fn project_children<S>(children:&[store::os_store::artifact_child::ArtifactChild<S>],table:&str,subset:&str,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let _ids=frontier(children,0,|child|child.child_id.as_str(),out)?;
  for(ordinal,child)in children.iter().enumerate(){let target=reference(&child.target,out)?;out.insert(table,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&child.child_id),Cell::Integer(target)])?;validate_semio_child_identity(&child.child_id,&child.target,subset).map_err(|error|ValueError::new(ValueRefusalKind::InvalidValue,error))?;}Ok(())
 }
@@ -36,7 +36,7 @@ fn decimal(mut value:u64,scratch:&mut[u8;20])->&str{
  let mut at=scratch.len();loop{at-=1;scratch[at]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&scratch[at..]).expect("ASCII unsigned decimal")
 }
 /// 🫳️ Visits the actual Kit catalog, placements, child references and history pins through one row writer.
-pub(crate)fn visit_rows(snapshot:&SemioKitSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioKitSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let types=frontier(&snapshot.types,0,|kind|kind.id.as_str(),out)?;
  let _designs=frontier(&snapshot.designs,0,|design|design.id.as_str(),out)?;
  out.insert_key("semio_kit_document",1,&[Cell::Text(&snapshot.schema)])?;
@@ -88,7 +88,7 @@ fn kit_blob_size(text:&str)->Result<u64,ValueError>{
  if text.is_empty()||text.len()>20||(text.len()>1&&text.as_bytes()[0]==b'0')||!text.bytes().all(|byte|byte.is_ascii_digit()){return Err(kit_invalid("invalid Semio kit blob identity or size"))}text.parse::<u64>().map_err(|error|kit_invalid(&error.to_string()))
 }
 impl ArtifactSqliteSnapshot for SemioKitSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
 fn preflight_sqlite_snapshot_encoding(&self,_encoding:semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{(|| -> Result<(),ValueError>{admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut b=Bound::file_only("",control)?;self.native_fields(&mut b)?;b.finish()})()}
@@ -120,18 +120,15 @@ fn single_float_row<'a>(db:&'a SqliteDatabase,table:&str)->Result<SqliteRow<'a>,
 
 impl SemioKitSnapshot{
 /// 📏️ Bounds explicitly owned native fields before encoding.
-pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.types.len())?;for ty in &self.types{b.text(&ty.id)?;b.text(&ty.name)?;b.text(&ty.category)?;}b.entities(self.designs.len())?;for design in &self.designs{b.text(&design.id)?;b.text(&design.name)?;b.entities(design.pieces.len())?;for piece in &design.pieces{b.text(&piece.id)?;b.text(&piece.type_id)?;b.scalars(10)?;}b.entities(design.connections.len())?;for connection in &design.connections{b.text(&connection.id)?;b.text(&connection.connecting_piece_id)?;b.text(&connection.connecting_port)?;b.text(&connection.connected_piece_id)?;b.text(&connection.connected_port)?;}}for child in &self.objects{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_child(child,b)?;}for child in &self.models{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_child(child,b)?;}if let Some(child)=&self.properties{crate::standards::v1::subsets::object::io::sqlite::snapshot::native_child(child,b)?;}b.entities(self.representations.len())?;for link in &self.representations{b.text(&link.role)?;crate::standards::v1::subsets::object::io::sqlite::snapshot::native_reference(&link.target,b)?;match &link.pin{store::LinkPin::Head=>{},store::LinkPin::Checkpoint{id}=>b.text(id)?,store::LinkPin::Snapshot{blob}=>{b.text(&blob.hash)?;b.text(&blob.media_type)?;b.scalars(1)?;}}}Ok(())}
+pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.types.len())?;for ty in &self.types{b.text(&ty.id)?;b.text(&ty.name)?;b.text(&ty.category)?;}b.entities(self.designs.len())?;for design in &self.designs{b.text(&design.id)?;b.text(&design.name)?;b.entities(design.pieces.len())?;for piece in &design.pieces{b.text(&piece.id)?;b.text(&piece.type_id)?;b.scalars(10)?;}b.entities(design.connections.len())?;for connection in &design.connections{b.text(&connection.id)?;b.text(&connection.connecting_piece_id)?;b.text(&connection.connecting_port)?;b.text(&connection.connected_piece_id)?;b.text(&connection.connected_port)?;}}for child in &self.objects{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::native_child(child,b)?;}for child in &self.models{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::native_child(child,b)?;}if let Some(child)=&self.properties{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::native_child(child,b)?;}b.entities(self.representations.len())?;for link in &self.representations{b.text(&link.role)?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::native_reference(&link.target,b)?;match &link.pin{store::LinkPin::Head=>{},store::LinkPin::Checkpoint{id}=>b.text(id)?,store::LinkPin::Snapshot{blob}=>{b.text(&blob.hash)?;b.text(&blob.media_type)?;b.scalars(1)?;}}}Ok(())}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

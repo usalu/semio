@@ -10,16 +10,16 @@ fn sample_snapshot() -> SemioAudioSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = sample_snapshot();
-    let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = sample_snapshot();
-    let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -36,10 +36,10 @@ async fn default_snapshot_has_no_channels_or_tags() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = sample_snapshot();
-    let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioAudioSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }

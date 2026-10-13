@@ -1,5 +1,5 @@
 use super::*;
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 
 #[semio_framework_async_macros::async_test]
 async fn element_label_falls_back_to_the_raw_id() {

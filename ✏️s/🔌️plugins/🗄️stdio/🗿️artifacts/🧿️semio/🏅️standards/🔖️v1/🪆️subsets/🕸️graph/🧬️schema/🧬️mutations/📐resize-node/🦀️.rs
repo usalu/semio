@@ -1,8 +1,8 @@
 //! 📐 `resize-node` — a node takes an absolute canvas width and height (taxonomy's `resize` verb: the final size, not a
 //! scale factor). Composed editors (dag, reasoning/wires) keep node sizes on the graph's native `width`/`height`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 /// 📐 `resize-node` payload — the node and the size it takes.

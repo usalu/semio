@@ -31,7 +31,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_recheck_flags_no_hard_issue_on_a_clean_builder_document() {
         let snapshot = SvgBasicBuilder::empty().build().expect("empty document builds clean");
-        let bytes = <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let diagnostics = SvgBasicValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a builder-clean document: {diagnostics:?}");
     }

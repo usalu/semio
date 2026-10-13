@@ -5,7 +5,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[canonical_json(owner = semio_framework_pack_json)]
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct SetSurfaceCount {
+struct SetSurfaceCount {
     pub value: i32,
 }
 impl SetSurfaceCount {

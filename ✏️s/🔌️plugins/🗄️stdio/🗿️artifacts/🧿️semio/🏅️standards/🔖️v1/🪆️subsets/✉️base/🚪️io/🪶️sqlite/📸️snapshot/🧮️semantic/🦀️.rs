@@ -1,6 +1,6 @@
 //! ✉️ The complete Semio union admits every authored layout and its selected root cells.
 use super::{SemioSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 fn add(a:usize,b:usize)->Result<usize,ValueError>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio union semantic cell extent overflow"))}
 /// 🏛️ Validates every selected and unselected authored table before native ownership.
 pub(super)fn layout(limits:SqliteDatabaseLimits)->Result<(),ValueError>{

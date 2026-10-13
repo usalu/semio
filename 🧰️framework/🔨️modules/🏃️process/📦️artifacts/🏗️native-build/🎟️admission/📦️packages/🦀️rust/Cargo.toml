@@ -1,0 +1,31 @@
+[package]
+name = "semio-build-scheduler"
+version = "0.0.0"
+edition = "2024"
+publish = false
+description = "Memory-admitting rustc wrapper of the release build driver"
+
+[[bin]]
+name = "semio-build-scheduler"
+path = "../../🦀️.rs"
+
+[[example]]
+name = "jobserver-oracle"
+path = "../../../🎰️jobserver/🔮️oracles/🦀️.rs"
+
+[dev-dependencies]
+jobserver = "=0.1.35"
+
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "thin"
+debug = false
+
+[workspace]
+members = ["."]
+
+[workspace.metadata.semio.repository]
+exclude-patterns = []
+schema-version = 1
+member-manifests = ["Cargo.toml"]

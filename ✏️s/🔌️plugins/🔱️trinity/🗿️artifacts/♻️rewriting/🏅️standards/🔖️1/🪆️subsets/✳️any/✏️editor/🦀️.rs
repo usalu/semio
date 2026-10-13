@@ -69,8 +69,8 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::{BTreeMap, HashMap};
 use semio_framework_2d::compute::EngineHandles;
-use store::{ArtifactPack};
-#[cfg(test)] use store::{ArtifactDsl};
+use store::{os_store::serialization::ArtifactPack};
+#[cfg(test)] use store::{os_store::serialization::ArtifactDsl};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_REWRITING_PLAY_CONTROLLER_ID: &str = "trinity-rewriting-play";
@@ -106,8 +106,8 @@ const TRINITY_LOD_MODE_AUTOMATIC: &str = "automatic";
 /// 🪆️ The authored Nakagin asset materializes its actual typed child.
 #[cfg(test)]
 fn nakagin_fixture() -> JackSnapshot {
-    let child=semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(NAKAGIN_CHILD).expect("declared complete Nakagin Semio child");
-    let content=store::ArtifactChild::new("nakagin-jack-demo-content".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"nakagin-jack-demo-content".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}});
+    let child=semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(NAKAGIN_CHILD).expect("declared complete Nakagin Semio child");
+    let content=store::os_store::artifact_child::ArtifactChild::new("nakagin-jack-demo-content".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"nakagin-jack-demo-content".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}});
     let mut graph=JackSnapshot{schema:JackSnapshot::SCHEMA.into(),name:"Nakagin Capsule Tower".into(),manifest_id:Some("nakagin".into()),manifest:semio_s_artifact_trinity_jack::Manifest::nakagin_default(),camera:semio_s_artifact_trinity_jack::Camera::default(),content,root_node_id:Some("7dc5b737-3b6b-4068-b315-b7bacc91c2e1".into()),query:semio_s_artifact_trinity_jack::TRINITY_JACK_DEFAULT_QUERY.into()};
     semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut graph.content,child);
     graph
@@ -141,7 +141,7 @@ pub(crate) fn default_rule_state() -> RewritingSnapshot {
 /// (outside undo history) instead of an `artifact_mutations` entry.
 pub(crate) fn reset_document_effect(state: &RewritingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RewritingSnapshot as ArtifactPack>::encode_pack(state);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("rewriting", REWRITE_RULE_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -774,7 +774,7 @@ impl ArtifactEditor for TrinityRewritingPlayApp {
 
     /// 🧾️ Store publication authority for the `Artifact` lane — without it the host refuses every document
     /// verb at dispatch (`declares the unsupported artifact publication lane`).
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

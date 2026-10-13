@@ -5,8 +5,8 @@
 //! (`$ACADVER AC1009`) plus a `LAYER` table built from `layers` — `print_dxf_document` (dxf's own
 //! writer) needs no MORE than that for a structurally valid file.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, SemioCadSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_dxf::{
     schema::snapshot::{DxfBlock, DxfEntity, DxfArc, DxfCircle, DxfInsert, DxfLine, DxfOther, DxfPolyline, DxfSolid, DxfText, DxfHeaderVar, DxfLayer, DxfTables, DxfValue},
@@ -75,7 +75,7 @@ fn dxf_entity_from_cad(rec: &CadEntityRecord) -> DxfEntity {
 
 //#region 🔖️LayerBlockMap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dxf_layer_from_cad(l: &crate::standards::v1::subsets::cad::schema::snapshot::CadLayer) -> DxfLayer {
+fn dxf_layer_from_cad(l: &semio_s_artifact_stdio_semio_cad::schema::snapshot::CadLayer) -> DxfLayer {
     DxfLayer { name: l.name.clone(), color: l.color_index, linetype: l.line_type.clone(), flags: if l.visible { 0 } else { 1 }, unknown_group_codes: vec![] }
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

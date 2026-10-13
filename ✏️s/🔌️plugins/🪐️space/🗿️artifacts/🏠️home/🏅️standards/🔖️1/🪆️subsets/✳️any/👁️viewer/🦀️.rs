@@ -186,7 +186,7 @@ impl ArtifactViewer for HomeViewer {
         Some(crate::editor::home::config::schema::app_schema_descriptor())
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(HomeConfigPreparationFactory))
     }
 

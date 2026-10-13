@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::model::io::import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
+use semio_s_artifact_stdio_semio_model_import::deserializers::artifacts::bcf::v2_1::any::model_from_bcf;
 use semio_s_artifact_stdio_bcf::schema::snapshot::{BcfComment as BcfCommentT, BcfComponents as BcfComponentsT, BcfTopic as BcfTopicT, BcfViewpoint as BcfViewpointT, BcfVisibility as BcfVisibilityT};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -37,12 +37,12 @@ async fn bcf_to_model_to_bcf_to_model_round_trips() {
 async fn non_topic_elements_and_spatial_are_dropped_not_forced() {
     let mut s1 = model_from_bcf(&fixture());
     // hand-add content BCF cannot represent
-    s1.spatial.push(crate::standards::v1::subsets::model::schema::snapshot::SpatialNode {
+    s1.spatial.push(semio_s_artifact_stdio_semio_model::schema::snapshot::SpatialNode {
         id: "site-1".into(),
-        kind: crate::standards::v1::subsets::model::schema::snapshot::SpatialKind::Site,
+        kind: semio_s_artifact_stdio_semio_model::schema::snapshot::SpatialKind::Site,
         name: "Unrepresentable Site".into(),
         parent_id: None,
-        placement: crate::standards::v1::subsets::base::schema::geometry::SemioTransform::identity(),
+        placement: semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform::identity(),
     });
     let bcf_x = bcf_from_model(&s1);
     assert_eq!(bcf_x.topics.len(), 1, "only the BcfTopic-classed element becomes a topic");

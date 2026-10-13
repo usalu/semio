@@ -1,4 +1,5 @@
-pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64) {
+#[cfg(test)] use crate::tool_contract::ArtifactToolPublicationLane;
+async fn test_mounted_original_owned_publication<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static>(app: &mut VcsArtifactApp<A, M>, emit: Emit<A::Mutation, A::ConfigMutation, A::DraftMutation>, meta: ActionMeta, parent_touched: bool, observe: impl Fn(&VcsArtifactApp<A, M>) -> Vec<bool>) -> (Vec<KernelMutation>, UndoGroup, u64) {
     let revision = app.store.content_revision_now();
     let command_count = app.command_log.len();
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(u64::from_be_bytes(revision[..8].try_into().unwrap())), semio_framework_job::Generation(app.store.generation_now()), 17);
@@ -29,7 +30,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 }
             }
             assert!(started.elapsed().as_millis() <= 90000, "original mounted publication wall limit");
-            app.publish_mounted_typed_operation_run(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("actual retained publisher owns original parent and children");
+            app.publish_mounted_typed_operation_run(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.expect("actual retained publisher owns original parent and children");
             let changed = observe(&app);
             assert!(!changed.is_empty());
             assert!(changed.iter().all(|changed| *changed) || changed.iter().all(|changed| !*changed), "all original child lanes share one visibility decision");
@@ -39,7 +40,7 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
                 let bytes = page.bytes().to_vec();
                 let token = page.token;
                 assert!(mounted.take_result_page().is_none());
-                app.publish_mounted_typed_operation_run(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
+                app.publish_mounted_typed_operation_run(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), bytes);
                 assert_eq!(mounted.result_page.as_ref().unwrap().token, token);
                 if page.lane == TypedOperationResultLane::Child { child_page = true; assert!(mounted.owned_child_committed); assert_eq!(app.command_log.len(),command_count+1); assert_eq!(app.command_log.iter().next_back().unwrap().action_id,"compositeEdit"); }
@@ -55,8 +56,8 @@ pub(crate) async fn test_mounted_original_owned_publication<A: ArtifactApp, M: S
     assert!(mounted.owned_child_group.is_none(), "actual private group registry closes before the mounted original owner");
     let mut retired = false;
     for _ in 0..100000 {
-        let grant = crate::app::retirement_self_grant(|body| mounted.retirement_demands(body), 262144).unwrap();
-        if matches!(mounted.retirement_step(grant).unwrap(), crate::app::PluginLifecycleStep::Complete(_)) { retired=true; break; }
+        let grant = crate::bounded_ownership::retirement_self_grant(|body| mounted.retirement_demands(body), 262144).unwrap();
+        if matches!(mounted.retirement_step(grant).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)) { retired=true; break; }
     }
     assert!(retired, "mounted original owner reaches its complete terminal retirement");
     assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::Retiring);

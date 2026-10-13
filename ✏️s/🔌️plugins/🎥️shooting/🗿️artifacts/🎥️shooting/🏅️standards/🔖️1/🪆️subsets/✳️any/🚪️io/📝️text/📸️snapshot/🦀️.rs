@@ -1,6 +1,6 @@
 //! 📜️ Shooting artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! `store::ArtifactDsl for ShootingSnapshot` is implemented directly on the artifact type (see
+//! `store::os_store::serialization::ArtifactDsl for ShootingSnapshot` is implemented directly on the artifact type (see
 //! `🗿️artifacts/🎥️shooting/🦀️.rs`'s doc comment for why). This component only adds the thin
 //! artifact-facing `parse_dsl`/`print_dsl` wrappers plus the canonical example-fixture constant and its
 //! round-trip law.
@@ -13,17 +13,17 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::ShootingSnapshot;
 
-/// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::ArtifactDsl`).
+/// 🗄️ The base-icon example snapshot, handcrafted in `shooting`'s DSL (`store::os_store::serialization::ArtifactDsl`).
 pub const SHOOTING_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 📖️ Parses `.shooting` DSL text into a `ShootingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<ShootingSnapshot, semio_framework_diagnostic::TextError> {
-    <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <ShootingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `ShootingSnapshot` back to `.shooting` DSL text.
 pub fn print_dsl(snapshot: &ShootingSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests
@@ -63,7 +63,7 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{ShootingAsset,ShootingEmblemChild,ShootingSavedCamera,ShootingSceneLighting,ShootingShot,SHOOTING_DOCUMENT_SCHEMA};
 use schema::ArtifactSchema;
 
-impl store::ArtifactDsl for ShootingSnapshot{
+impl store::os_store::serialization::ArtifactDsl for ShootingSnapshot{
  const EXTENSION:&'static str="shooting";
  fn envelope_id()->&'static str{"shooting.shooting"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
@@ -86,8 +86,8 @@ use crate::{ShootingEmblemChild, ShootingSnapshot};
 use semio_framework_pack_json::json;
 use semio_framework_pack_json::Value;
 use schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use semio_s_artifact_stdio_svg::SvgSnapshot;
 use crate::ShootingAsset;
@@ -119,7 +119,11 @@ pub fn default_snapshot_json() -> String {
 /// OS/plugin runtime already ran stdio's own boot-time `plugin()` registration first.
 pub(crate) fn shooting_ensure_semio_drawing_bridge_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
+    ONCE.call_once(|| {
+        semio_s_artifact_stdio_semio_drawing::io::register();
+        (semio_s_artifact_stdio_semio_drawing_import::CONVERSION.register)();
+        (semio_s_artifact_stdio_semio_drawing_export::CONVERSION.register)();
+    });
 }
 
 /// 🌉️ `SemioDrawingSnapshot` → real SVG text, entirely through stdio's registered
@@ -140,14 +144,14 @@ pub(crate) fn shooting_drawing_to_svg_text(drawing: &SemioDrawingSnapshot) -> Re
     };
     let source = semio_framework_plugin::io::ErasedComposeSource {
         dialect: semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.semio", standard: semio_framework_artifact_reference::StandardId("v1"), subset: semio_framework_artifact_reference::SubsetId("drawing") },
-        payload: semio_framework_plugin::io::IoPayload::Binary(<SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing)),
+        payload: semio_framework_plugin::io::IoPayload::Binary(<SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(drawing)),
     };
     let composed = ::semio_framework_async::poll::resolve_ready(semio_framework_plugin::io::io_dispatch(&key, std::slice::from_ref(&source))).map_err(|error| error.message)?;
     let bytes = match composed.payload {
         semio_framework_plugin::io::IoPayload::Binary(bytes) => bytes,
         semio_framework_plugin::io::IoPayload::Text(_) => return Err("s.stdio.semio/v1/drawing -> s.stdio.svg dispatch returned Text, expected Binary (ArtifactPack)".into()),
     };
-    let svg_snapshot = <SvgSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string())?;
+    let svg_snapshot = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string())?;
     write_svg_xml(&svg_snapshot.doc)
 }
 }

@@ -15,7 +15,7 @@ mod tests {
         let buf = b.add_buffer(bytes);
         let bv = b.add_buffer_view(buf, 0, 36, None, Some(34962));
         let acc = b.add_accessor(GltfAccessorSpec::new(GltfComponentType::Float, GltfAccessorType::Vec3, 3).with_buffer_view(bv, 0).with_min_max(vec![0.0, 0.0, 0.0], vec![1.0, 1.0, 0.0]));
-        let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(crate::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
+        let mat = b.add_material(GltfMaterial { pbr_metallic_roughness: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfPbrMetallicRoughness { base_color_factor: [1.0, 0.0, 0.0, 1.0], ..Default::default() }), ..Default::default() });
         let mesh = b.add_mesh();
         b.add_mesh_primitive(mesh, &[("POSITION", acc)], None, Some(mat), None);
         let node = b.add_node(Some(mesh));
@@ -24,7 +24,7 @@ mod tests {
         let snapshot = b.build().expect("build");
 
         assert_eq!(snapshot.document.asset.version, "2.0");
-        let decoded = crate::engine::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
+        let decoded = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor(&snapshot.document, &snapshot.buffers, acc).expect("decode");
         assert_eq!(decoded.components, vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0]);
     }
 }

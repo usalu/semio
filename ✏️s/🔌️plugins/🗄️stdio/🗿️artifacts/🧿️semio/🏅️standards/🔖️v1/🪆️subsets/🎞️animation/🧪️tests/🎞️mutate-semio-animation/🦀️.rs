@@ -31,15 +31,15 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::{diff_semio_animation_mutation, inverse_semio_animation_mutation, SemioAnimationMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::io::text::mutations::{decode_semio_animation_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::io::text::snapshot::{print_semio_animation_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::animation::io::text::snapshot::{parse_semio_animation_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_animation::schema::mutations::{diff_semio_animation_mutation, inverse_semio_animation_mutation, SemioAnimationMutation};
+    use semio_s_artifact_stdio_semio_animation::io::text::mutations::decode_semio_animation_mutation_json;
+    use semio_s_artifact_stdio_semio_animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+    use semio_s_artifact_stdio_semio_animation::io::text::snapshot::print_semio_animation_dsl;
+    use semio_s_artifact_stdio_semio_animation::io::text::snapshot::parse_semio_animation_dsl;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

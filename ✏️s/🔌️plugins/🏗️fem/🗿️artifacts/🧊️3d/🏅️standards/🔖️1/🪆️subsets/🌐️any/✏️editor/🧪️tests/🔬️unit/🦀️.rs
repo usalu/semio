@@ -103,7 +103,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -239,14 +239,14 @@ async fn every_boot_document_mutation_is_admissible_on_the_artifact_lane() {
     let factory = Fem3dArtifactPreparationFactory;
     for solid in &boot.solids {
         let mutation = Fem3dMutation::CreateSolid(crate::standards::v1::subsets::any::schema::mutations::create_solid::CreateSolid { solid: solid.clone(), index: None });
-        assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
+        assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "solid {} exceeds the artifact one-item envelope", solid.id);
     }
     for node in &boot.nodes {
         let mutation = Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: node.clone(), index: None });
-        assert!(factory.preflight(&mutation, store::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
+        assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok(), "node {} exceeds the artifact one-item envelope", node.id);
     }
     assert!(factory
-        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::HistoryLane::Interaction)
+        .preflight(&Fem3dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id: "n0".into(), x: 0.0, y: 0.0, z: 0.0 }, index: None }), store::os_store::store_schema::HistoryLane::Interaction)
         .is_err());
 }
 
@@ -622,4 +622,4 @@ async fn fem3d_camera_scene_encoding_preserves_the_typed_pose() {
     assert_eq!(semio_framework_pack_json::from_json_str::<crate::Viewport3dOrbit>(&crate::viewport::scene_camera_json(&custom), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap(), custom);
 }
 //#endregion 🎬️SceneRender
-use store::ArtifactStoreOneItemPreparationFactory;
+use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;

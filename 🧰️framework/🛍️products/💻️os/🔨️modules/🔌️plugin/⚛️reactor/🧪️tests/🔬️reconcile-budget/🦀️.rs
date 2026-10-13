@@ -65,8 +65,8 @@ fn nakagin_scale_world_scene() -> semio_framework_ui_scene::World3dScene {
 /// ways — and hands back the patch the turn would emit plus the reconcile turns it took at the
 /// production per-turn opportunity budget.
 fn publish_nakagin_world_patch(surface: &str) -> (ui_contract::UiPatch, usize, usize) {
-    let node = crate::app::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
-    let tree = crate::app::built_to_component_tree(node);
+    let node = crate::window_surface::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
+    let tree = crate::window_surface::built_to_component_tree(node);
     let opportunities = reconcile_step_opportunities(50_000_000);
     let patches = patches::PatchTracker::new();
     patches.begin(surface.to_string(), tree).expect("mounted admission");
@@ -148,8 +148,8 @@ fn a_nakagin_scale_world_publication_reconciles_and_retires_within_a_handful_of_
 /// tracker mounted so the caller can retire the surface owner through the terminal ladder — the
 /// retained half W-S2 measured only through the emitted patch.
 fn mount_and_publish_nakagin_world(surface: &str) -> (patches::PatchTracker, ui_contract::UiPatch) {
-    let node = crate::app::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
-    let tree = crate::app::built_to_component_tree(node);
+    let node = crate::window_surface::scene_surface("puzzle3d-main-perspective", semio_framework_ui_contract::SurfaceKind::World3d, &nakagin_scale_world_scene()).expect("nakagin world surface");
+    let tree = crate::window_surface::built_to_component_tree(node);
     let tracker = patches::PatchTracker::new();
     tracker.begin(surface.to_string(), tree).expect("mounted admission");
     let mut owner = None;

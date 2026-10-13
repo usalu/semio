@@ -1,4 +1,4 @@
-use crate::standards::v1::subsets::graph::io::text::mutations::*;
+use crate::io::text::mutations::*;
 use protocol::OpText;
 
 #[semio_framework_async_macros::async_test]

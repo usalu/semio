@@ -15,7 +15,7 @@ use super::{
 };
 use ::directory::os_directory::{ArtifactCheckpoint, ArtifactFrontier, ArtifactHash, DocumentCheckInPhaseV1, DocumentCheckInProgressV1, DocumentCheckInReadyV1, DocumentCheckInRefusalV1, DocumentCheckInStatusV1, DocumentDescriptor, DocumentScope, EditedArtifactFrontierV1, DOCUMENT_CHECK_IN_STATUS_SCHEMA_V1};
 use ::directory::os_directory::io::binary::descriptor_digest::{descriptor_digest_v1};
-use ::directory::os_store::canonical_check_in_line;
+use ::directory::os_store::codec_registry::canonical_check_in_line;
 use semio_framework_hash::Sha256;
 use std::collections::BTreeMap;
 use std::sync::atomic::{AtomicBool, Ordering};

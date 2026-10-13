@@ -1,5 +1,5 @@
 use crate::standards::v1_1::subsets::base::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
 
 fn fixture() -> serde_json::Value { serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap() }
 
@@ -13,8 +13,8 @@ fn sqlite_snapshot_svg_literal_metadata_native_state_is_distinct_from_external_w
     value.doc.declaration.as_mut().unwrap().encoding = Some(f["metadata"]["encoding"].as_str().unwrap().into());
     value.doc.doctype.as_mut().unwrap().prolog_position = f["metadata"]["prologPosition"].as_str().unwrap().parse().unwrap();
     assert_eq!(restore(&project(&value)).unwrap(), value);
-    assert_eq!(<SvgSnapshot as store::ArtifactPack>::decode_pack(&<SvgSnapshot as store::ArtifactPack>::encode_pack(&value)).expect("own semantic snapshot pack must retain literal metadata"), value);
-    assert_eq!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(&<SvgSnapshot as store::ArtifactDsl>::print_dsl(&value)).expect("own semantic snapshot text must retain literal metadata"), value);
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&value)).expect("own semantic snapshot pack must retain literal metadata"), value);
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&value)).expect("own semantic snapshot text must retain literal metadata"), value);
 }
 
 fn native_unicode_snapshot() -> SvgSnapshot {
@@ -22,14 +22,14 @@ fn native_unicode_snapshot() -> SvgSnapshot {
     SvgSnapshot { schema: f["literalSchema"].as_str().unwrap().into(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: vec![SvgNode::Text { text: f["text"].as_str().unwrap().repeat(f["repeat"].as_u64().unwrap() as usize) }] }), ..SvgDocument::default() } }
 }
 fn native_payload(snapshot: &SvgSnapshot, encoding: SnapshotEncoding) -> semio_framework_os_kernel::io_schema::IoPayload {
-    match encoding { SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)), SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot)) }
+    match encoding { SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(snapshot)), SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)) }
 }
 
 #[test]
 fn sqlite_snapshot_svg_native_long_unicode_carriers_and_interior_cancellation() {
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let at = f["cancelAtBytes"].as_u64().unwrap() as usize;
-    let codec = <SvgSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("actual SVG owner capability");
+    let codec = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().expect("actual SVG owner capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = native_payload(&snapshot, encoding);
@@ -56,7 +56,7 @@ async fn sqlite_snapshot_svg_native_limits_and_literal_typed_file_io() {
     let snapshot = native_unicode_snapshot(); let f = native_control_fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("SVG owned SQLite controls").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
-    let codec = <SvgSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     let wide = SvgSnapshot { schema: snapshot.schema.clone(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: vec![], children: (0..f["wideChildren"].as_u64().unwrap()).map(|_| SvgNode::Element { name: "g".into(), attrs: vec![], children: vec![] }).collect() }), ..SvgDocument::default() } };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let bytes = io_export_sqlite_snapshot(&dialect, &snapshot, encoding, SqliteDatabaseLimits::default(), &mut |_| true).await.unwrap().value;
@@ -88,8 +88,8 @@ fn sqlite_snapshot_svg_domain_names_and_all_native_document_fields_roundtrip() {
     assert_eq!(database.table("svg_entity").unwrap().rows.len(), 1);
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap(); let restored = restore(&import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap()).unwrap(); assert_eq!(restored, snapshot);
     assert_eq!(restored.export_utf8().unwrap(), snapshot.export_utf8().unwrap());
-    assert_eq!(<SvgSnapshot as store::ArtifactPack>::encode_pack(&restored), <SvgSnapshot as store::ArtifactPack>::encode_pack(&snapshot));
-    assert_eq!(<SvgSnapshot as store::ArtifactDsl>::print_dsl(&restored), <SvgSnapshot as store::ArtifactDsl>::print_dsl(&snapshot));
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored), <SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot));
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored), <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot));
     assert_eq!(restore(&project(&SvgSnapshot::default())).unwrap(), SvgSnapshot::default());
 }
 
@@ -117,8 +117,8 @@ fn sqlite_snapshot_svg_independent_geometry_queries_and_edits_preserve_native_st
     let mut child = Command::new("bun").args(["-e", script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap(); child.stdin.take().unwrap().write_all(&bytes).unwrap(); let output = child.wait_with_output().unwrap(); assert!(output.status.success(), "{}", String::from_utf8_lossy(&output.stderr));
     let restored = restore(&import_sqlite_database(&output.stdout, SqliteDatabaseLimits::default(), &mut |_| true).unwrap()).unwrap();
     let mut expected = source; fn edit(node: &mut SvgNode) { if let SvgNode::Element { attrs, children, .. } = node { for attr in attrs { if attr.name == "d" { attr.value = crate::schema::snapshot::SvgAttributeValue::PathData(vec![crate::schema::snapshot::PathCommand::MoveTo{x:1.0,y:2.0,relative:false},crate::schema::snapshot::PathCommand::CurveTo{x1:3.0,y1:4.0,x2:5.0,y2:6.0,x:7.0,y:8.0,relative:false},crate::schema::snapshot::PathCommand::ClosePath]); } } for child in children { edit(child); } } } edit(expected.doc.root.as_mut().unwrap()); assert_eq!(restored, expected);
-    assert_eq!(<SvgSnapshot as store::ArtifactPack>::decode_pack(&<SvgSnapshot as store::ArtifactPack>::encode_pack(&restored)).unwrap(), restored);
-    assert_eq!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(&<SvgSnapshot as store::ArtifactDsl>::print_dsl(&restored)).unwrap(), restored);
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored)).unwrap(), restored);
+    assert_eq!(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored)).unwrap(), restored);
 }
 
 #[semio_framework_async_macros::async_test]
@@ -127,11 +127,11 @@ async fn sqlite_snapshot_svg_tiny_and_basic_io_validators_recheck_reconstructed_
     use crate::standards::v1_1::subsets::{tiny::io::SvgTinyValidator, basic::io::SvgBasicValidator};
     for (key, tiny) in [("tinyText", true), ("basicText", false)] {
         let source = SvgSnapshot::import_utf8(fixture()[key].as_str().unwrap().as_bytes()).unwrap(); let restored = restore(&project(&source)).unwrap(); assert_eq!(restored, source);
-        for payload in [IoPayload::Binary(<SvgSnapshot as store::ArtifactPack>::encode_pack(&restored)), IoPayload::Text(<SvgSnapshot as store::ArtifactDsl>::print_dsl(&restored))] {
+        for payload in [IoPayload::Binary(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored)), IoPayload::Text(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored))] {
             let diagnostics = if tiny { SvgTinyValidator::validate(&payload).await } else { SvgBasicValidator::validate(&payload).await }; assert!(diagnostics.iter().all(|diagnostic| diagnostic.severity != Severity::Error), "{diagnostics:?}");
         }
         let mut edited = project(&source); edited.table_mut("svg_element").unwrap().rows.iter_mut().find(|row| row.text(1).unwrap() == "rect").unwrap().values[1] = SqliteValue::Text(if tiny { "linearGradient" } else { "feTurbulence" }.into()); let edited = restore(&edited).unwrap();
-        let diagnostics = if tiny { SvgTinyValidator::validate(&IoPayload::Binary(<SvgSnapshot as store::ArtifactPack>::encode_pack(&edited))).await } else { SvgBasicValidator::validate(&IoPayload::Binary(<SvgSnapshot as store::ArtifactPack>::encode_pack(&edited))).await }; assert!(diagnostics.iter().any(|diagnostic| diagnostic.severity == Severity::Error), "{diagnostics:?}");
+        let diagnostics = if tiny { SvgTinyValidator::validate(&IoPayload::Binary(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&edited))).await } else { SvgBasicValidator::validate(&IoPayload::Binary(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&edited))).await }; assert!(diagnostics.iter().any(|diagnostic| diagnostic.severity == Severity::Error), "{diagnostics:?}");
     }
 }
 
@@ -142,11 +142,11 @@ fn sqlite_snapshot_svg_owned_tiny_basic_guard_matches_all_existing_conformance_r
 fn sqlite_snapshot_svg_erased_native_preflight_admission_and_limits() {
     let snapshot = snapshot();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.svg".into(), standard: "1.1".into(), subset: "*".into() };
-    let codec = <SvgSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let actual = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("svg preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
+        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(actual, expected);
     }
     let large = SvgSnapshot { schema: "stdio.svg".into(), doc: SvgDocument { root: Some(SvgNode::Element { name: "svg".into(), attrs: Vec::new(), children: vec![SvgNode::Text { text: "x".repeat(100000) }] }), ..SvgDocument::default() } };

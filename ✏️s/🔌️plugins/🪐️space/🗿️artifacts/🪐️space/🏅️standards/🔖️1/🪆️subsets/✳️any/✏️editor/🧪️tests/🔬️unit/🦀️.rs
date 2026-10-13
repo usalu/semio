@@ -33,7 +33,7 @@ pub(crate) mod context {
     pub async fn new_app_with_artifact() -> (SpaceIndexApp, String) {
         use crate::standards::v1::subsets::any::schema::snapshot::{SpaceArtifactDialect, SpaceArtifactRow, empty_space_index_snapshot};
         use semio_framework_plugin::PluginApp;
-        use store::ArtifactDsl;
+        use store::os_store::serialization::ArtifactDsl;
         let mut app = new_app().await;
         let id = "artifact-1".to_string();
         let mut snapshot = empty_space_index_snapshot("space-1");
@@ -48,7 +48,7 @@ pub(crate) mod context {
             updated_at_ms: 1,
             updated_by: "user:1".into(),
         });
-        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load test artifact");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load test artifact");
         (app, id)
     }
     
@@ -59,12 +59,12 @@ pub(crate) mod context {
             ArtifactHash, DirectoryActor, DirectoryActorKind, DirectoryEvent, DirectoryEventBody, DirectorySpaceKind, DirectorySpaceVisibility, DocumentDescriptor, DocumentFrontier, DocumentIndexEntryV1, DocumentOwner, DocumentScope, Hlc,
         };
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_plugin::PluginApp};
-        use store::ArtifactDsl;
+        use store::os_store::serialization::ArtifactDsl;
     
         let mut app = new_app().await;
         let id = "artifact-0123456789abcdef0123456789abcdef".to_string();
         let snapshot = empty_space_index_snapshot("space-1");
-        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load empty Space index");
+        semio_framework_plugin::artifact_app_laws::load_document_text(&mut app, &store::os_store::text_format::ArtifactTextFiles { dsl: snapshot.print_dsl(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load empty Space index");
         let descriptor = DocumentDescriptor {
             space_id: "space-1".into(),
             document_id: id.clone(),
@@ -101,7 +101,7 @@ pub(crate) mod context {
         ];
         app.dispatch_typed(SpaceIndexCommand::FoldDirectoryEvents(FoldDirectoryEvents { events_json: semio_framework_pack_json::to_json_string(&events) }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fold indexed artifact");
         let files = app.config_pack().await.expect("indexed config pack");
-        let config = store::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
+        let config = store::os_store::text_format::parse_document_pack::<SpaceIndexConfig, SpaceIndexConfigMutation>(&files.pack, &files.spr).await.expect("indexed config projection").snapshot;
         assert_eq!(config.indexed_artifacts.len(), 1);
         (app, id)
     }

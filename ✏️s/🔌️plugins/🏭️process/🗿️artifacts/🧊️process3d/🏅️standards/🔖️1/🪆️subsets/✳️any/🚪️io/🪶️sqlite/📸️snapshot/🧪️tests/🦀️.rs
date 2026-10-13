@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Process3dSnapshot;
 use crate::*;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -13,10 +13,10 @@ fn words() -> Vec<u64> {
 fn pose(v: f64) -> Pose {
     Pose { position: [v; 3], axis: [v; 3], angle: v }
 }
-fn child<S>(n: usize) -> store::ArtifactChild<S> {
+fn child<S>(n: usize) -> store::os_store::artifact_child::ArtifactChild<S> {
     let l = laws();
     let v = &l["childAddresses"][n];
-    store::ArtifactChild::new(
+    store::os_store::artifact_child::ArtifactChild::new(
         v["childId"].as_str().unwrap().into(),
         semio_framework_artifact_reference::ArtifactRef {
             artifact_id: v["artifactId"].as_str().unwrap().into(),
@@ -175,7 +175,7 @@ fn sqlite_snapshot_process3d_genuine_controlled_metadata_and_typed_construction_
 #[test]
 fn sqlite_snapshot_process3d_actual_erased_parent_both_encodings_have_queryable_domain_fields() {
     use store::sqlite_snapshot::*;
-    let codec = store::ArtifactCodec::bare::<Process3dSnapshot, crate::Process3dMutation>(crate::PROCESS_3D_SCHEMA);
+    let codec = store::bare_artifact_codec::<Process3dSnapshot, crate::Process3dMutation>(crate::PROCESS_3D_SCHEMA);
     let capability = codec.snapshot_sqlite.expect("Process3d parent owned relational capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.process.process3d".into(), standard: "1".into(), subset: "*".into() };
     for word in words() {
@@ -213,7 +213,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_process3d_actual_document_declaration_exposes_parent_capability() {
     semio_framework_plugin::Plugin::<SqliteProcessApps>::builder("process").label("Process owned SQLite").version("0.0.1").package_id("semio:process").artifact(crate::declaration().unwrap()).try_build().unwrap();
-    let codec = store::document_codec(crate::PROCESS_3D_SCHEMA).await.unwrap().unwrap();
+    let codec = store::os_store::codec_registry::document_codec(crate::PROCESS_3D_SCHEMA).await.unwrap().unwrap();
     assert!(codec.snapshot_sqlite.is_some(), "Actual Process3d declared document has no parent SQLite capability");
 }
 #[test]

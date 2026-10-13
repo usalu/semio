@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v_r12::subsets::any::schema::snapshot::*;
 use crate::standards::v_r12::subsets::any::io::text::snapshot as snapshot_text;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{self, SqliteDatabase as Db, SqliteValue as V, SqliteSnapshotControl as Control, SqliteSnapshotPhase as Phase, artifact::{Cell as C}};
 use std::collections::{BTreeMap, BTreeSet};
 #[path="🔢️number/🦀️.rs"]
@@ -115,10 +115,10 @@ fn reconstruct_sqlite_database(db: &Db, control: &mut Control<'_>) -> Result<Sel
 impl ArtifactSqliteSnapshot for DxfSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(|| -> Result<(),ValueError>{
         control.checkpoint(Phase::EncodeNative,0,0)?;native_rows(self,control)?;let mut out=Projection::forecast(control,Phase::EncodeNative)?;self.write_sqlite_rows(&mut out)?;out.finish_forecast()?;
-        Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)
+        Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)
     }
     fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-        let value:Self=store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control)?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
+        let value:Self=store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record,output,native,_body|{*output=Some(snapshot_text::from_record_controlled(record,native)?);Ok(())},control,native_control)?;let mut out=Projection::forecast(control,Phase::DecodeNative)?;value.write_sqlite_rows(&mut out)?;out.finish_forecast()?;Ok(value)
     }
 
     fn preflight_sqlite_snapshot_encoding(&self, encoding: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {self.preflight_sqlite_encoding(encoding,control)}
@@ -232,7 +232,7 @@ mod tests {
     }
     #[test]
     fn sqlite_snapshot_dxf_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{ArtifactDsl,ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
         let mut snapshot=fixture();snapshot.schema="DXF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
             assert_eq!(semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| DxfSnapshot::decode_sqlite_snapshot_native(&payload,&mut Control::new(&mut |_|true,limits), native_owner)).unwrap(),snapshot);
@@ -247,7 +247,7 @@ mod tests {
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("dxf_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());
     }
     use crate::standards::v_r12::subsets::any::io::sqlite::snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
 use semio_framework_value::FromValue;
     fn fixture() -> DxfSnapshot { DxfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
 
@@ -267,7 +267,7 @@ use semio_framework_value::FromValue;
     }
     async fn erased_snapshot(snapshot:&DxfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->DxfSnapshot{
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
-        use store::{ArtifactDsl,ArtifactPack};
+        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
         crate::register_sqlite_test_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.dxf".into(),standard:"r12".into(),subset:"*".into()};
         let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();

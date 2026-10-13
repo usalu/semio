@@ -2,13 +2,14 @@ import { expect, test } from "bun:test";
 import Ajv from "ajv";
 import deepEqual from "fast-deep-equal";
 import { blake3 } from "@noble/hashes/blake3.js";
+import { sha256 as nobleSha256 } from "@noble/hashes/sha2.js";
 import throttle from "lodash/throttle";
 import pMap from "p-map";
 import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { CurrentPhysicalOwnerV1, mapBoundedV1, type CurrentPhysicalPortV1 } from "../../../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
-import { writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
+import { CargoProvenanceSessionV1, sharedProvenanceCustodyV1, writeCompletedCargoInvocationProvenanceV1 } from "../../🟦️.ts";
 import {
   CARGO_PROVENANCE_PHYSICAL_BUDGET_V1,
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
@@ -18,7 +19,9 @@ import {
   cargoDepInfoResolvedSourcesV1,
   cargoDepInfoSourcesV1,
   cargoProvenancePhysicalControlV1,
+  cargoProvenanceMerkleRootV1,
   cargoProvenanceProgressSinkV1,
+  cargoUnitLeafV1,
   decodeCargoProvenanceV1,
   encodeCargoProvenanceV1,
   type CargoProvenanceV1,
@@ -234,7 +237,7 @@ function syntheticInvocation(root: string, fileCount: number, unitCount: number)
 }
 
 const physicalFor = (root: string) => new CurrentPhysicalOwnerV1(root, cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined }));
-const wrap = (port: CurrentPhysicalOwnerV1, overrides: Partial<CurrentPhysicalPortV1> = {}): CurrentPhysicalPortV1 => ({ control: port.control, read: (path) => port.read(path), digest: (path) => port.digest(path), directoryEntries: (path) => port.directoryEntries(path), checkpoint: () => port.checkpoint(), recheck: () => port.recheck(), ...overrides });
+const wrap = (port: CurrentPhysicalOwnerV1, overrides: Partial<CurrentPhysicalPortV1> = {}): CurrentPhysicalPortV1 => ({ control: port.control, read: (path) => port.read(path), digest: (path) => port.digest(path), measure: (path) => port.measure(path), directoryEntries: (path) => port.directoryEntries(path), checkpoint: () => port.checkpoint(), recheck: () => port.recheck(), ...overrides });
 
 test("a large invocation is observed against real bytes and published as a small interned receipt, atomically", async () => {
   const root = mkdtempSync(join(artifacts, "w-"));
@@ -310,4 +313,64 @@ test("the receipt document is decoded from the file the writer published for a c
   expect(sha256(readFileSync(files[2]!.path))).not.toBe(before);
   expect(before).toBe(sha256(files[2]!.bytes));
   expect(observed.invocationInputs.some((row) => row.path === join(root, "Cargo.toml") && row.sha256 === sha256(readFileSync(join(root, "Cargo.toml"))))).toBe(true);
+});
+
+test("Merkle roots equal the Python RFC 6962 oracle and a Noble SHA-256 recomputation, independent of leaf order", () => {
+  const noble = (bytes: Uint8Array): Uint8Array => nobleSha256(bytes);
+  const tree = (nodes: readonly Uint8Array[]): Uint8Array => {
+    if (nodes.length === 1) return noble(new Uint8Array([0, ...nodes[0]!]));
+    let split = 1;
+    while (split * 2 < nodes.length) split *= 2;
+    return noble(new Uint8Array([1, ...tree(nodes.slice(0, split)), ...tree(nodes.slice(split))]));
+  };
+  expect(fixture.merkle.length).toBeGreaterThan(4);
+  for (const row of fixture.merkle) {
+    expect(cargoProvenanceMerkleRootV1(row.leaves)).toBe(row.root);
+    expect(cargoProvenanceMerkleRootV1([...row.leaves].reverse())).toBe(row.root);
+    const independent = row.leaves.length === 0 ? noble(new Uint8Array()) : tree([...row.leaves].sort().map((leaf: string) => Uint8Array.from(Buffer.from(leaf, "hex"))));
+    expect(Buffer.from(independent).toString("hex")).toBe(row.root);
+  }
+  expect(() => cargoProvenanceMerkleRootV1(["xyz"])).toThrow("SHA-256 hex");
+});
+
+test("one build session hashes every file once and rechecks it once however many invocations name it, and stages receipts semantically equal to one-shot receipts", async () => {
+  const root = mkdtempSync(join(artifacts, "s-"));
+  const { files, invocation } = syntheticInvocation(root, 40, 3);
+  const control = () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined });
+  const custody = sharedProvenanceCustodyV1(root, control), session = new CargoProvenanceSessionV1(custody);
+  const passes = ["first", "second", "third"].map((name) => ({ name, receipt: join(root, "session", `cargo-unit-provenance-${name}.json`), invocation: { ...invocation, args: ["build", "-p", name] } }));
+  for (const unit of invocation.units) await session.prefetch(unit.message);
+  const staged = [];
+  for (const pass of passes) staged.push(await session.write(pass.receipt, pass.invocation, new Map(), join(root, "cargo-home")));
+  expect(passes.some((pass) => existsSync(pass.receipt))).toBe(false);
+  await session.close();
+  const reads = custody.files.observedReads();
+  expect(reads.files.size).toBeGreaterThan(files.length);
+  for (const [path, row] of reads.files) {
+    expect(row.reads, path).toBe(2);
+    expect(row.bytes, path).toBe(2 * statSync(path).size);
+  }
+  expect(reads.bytes).toBe([...reads.files.keys()].reduce((sum, path) => sum + 2 * statSync(path).size, 0));
+  const strip = (value: CargoProvenanceV1): unknown => JSON.parse(JSON.stringify({ ...value, args: [], builtAtMs: 0, observedAtMs: 0, units: value.units.map((unit) => ({ ...unit, observedAtMs: 0 })), buildResources: value.buildResources.map((row) => ({ ...row, observedAtMs: 0 })), compilerResources: value.compilerResources.map((row) => ({ ...row, observedAtMs: 0 })) }));
+  const oneShot = join(root, "one-shot.json");
+  await writeCompletedCargoInvocationProvenanceV1(oneShot, passes[0]!.invocation, new Map(), join(root, "cargo-home"), physicalFor(root));
+  const expected = strip(decodeCargoProvenanceV1(readFileSync(oneShot, "utf8")));
+  for (const pass of passes) expect(deepEqual(strip(decodeCargoProvenanceV1(readFileSync(pass.receipt, "utf8"))), expected), pass.name).toBe(true);
+  const roots = { repository: root, build: join(root, "build"), cargoHome: join(root, "cargo-home") };
+  const leaves = staged[0]!.units.map((unit) => cargoUnitLeafV1(unit, roots));
+  expect(staged[1]!.units.map((unit) => cargoUnitLeafV1(unit, roots))).toEqual(leaves);
+  expect(new Set(leaves).size).toBe(invocation.units.length);
+  console.log(`[DEBUG] session byte counter: ${reads.files.size} files, ${reads.bytes} bytes read for ${passes.length} invocations (2 reads per file)`);
+});
+
+test("a session whose files changed before its final recheck publishes no receipt", async () => {
+  const root = mkdtempSync(join(artifacts, "x-"));
+  const { files, invocation } = syntheticInvocation(root, 8, 2);
+  const custody = sharedProvenanceCustodyV1(root, () => cargoProvenancePhysicalControlV1({ cancelled: () => false, onProgress: () => undefined })), session = new CargoProvenanceSessionV1(custody);
+  const receipt = join(root, "session", "cargo-unit-provenance-changed.json");
+  await session.write(receipt, invocation, new Map(), join(root, "cargo-home"));
+  writeFileSync(files[3]!.path, "pub const CHANGED: u32 = 0;\n");
+  await expect(session.close()).rejects.toThrow("before transfer");
+  expect(existsSync(receipt)).toBe(false);
+  expect(readdirSync(join(root, "session"))).toEqual([]);
 });

@@ -78,7 +78,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio-office",

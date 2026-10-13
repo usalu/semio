@@ -1,0 +1,341 @@
+{
+ "_comment": "🎯️ Target crate graph of wave E1 (os-kernel), bottom-up. `nodes` are regexes over 🧭️facet-map.py node names.",
+ "crates": [
+  {
+   "name": "semio-framework-io-control",
+   "deps": [],
+   "nodes": [
+    "^io::control",
+    "^io::text"
+   ]
+  },
+  {
+   "name": "semio-framework-os-vcs",
+   "deps": [],
+   "nodes": [
+    "^os_vcs"
+   ]
+  },
+  {
+   "name": "semio-framework-os-pack",
+   "deps": [],
+   "nodes": [
+    "^os_pack"
+   ]
+  },
+  {
+   "name": "semio-framework-os-list-delta",
+   "deps": [],
+   "nodes": [
+    "^list_delta"
+   ]
+  },
+  {
+   "name": "semio-framework-os-identity",
+   "deps": [],
+   "nodes": [
+    "^os_identity"
+   ]
+  },
+  {
+   "name": "semio-framework-os-semio",
+   "deps": [],
+   "nodes": [
+    "^os_semio"
+   ]
+  },
+  {
+   "name": "semio-framework-os-spr",
+   "deps": [
+    "semio-framework-os-pack",
+    "semio-framework-os-vcs",
+    "semio-framework-io-control"
+   ],
+   "nodes": [
+    "^os_spr"
+   ]
+  },
+  {
+   "name": "semio-framework-os-dsl",
+   "deps": [
+    "semio-framework-os-pack",
+    "semio-framework-os-semio"
+   ],
+   "nodes": [
+    "^os_dsl"
+   ]
+  },
+  {
+   "name": "semio-framework-os-directory",
+   "deps": [
+    "semio-framework-os-spr",
+    "semio-framework-os-identity"
+   ],
+   "nodes": [
+    "^os_directory",
+    "^os_plugin_module_schema"
+   ]
+  },
+  {
+   "name": "semio-framework-os-inference",
+   "deps": [
+    "semio-framework-os-spr",
+    "semio-framework-io-control"
+   ],
+   "nodes": [
+    "^os_inference"
+   ]
+  },
+  {
+   "name": "semio-framework-os-extension",
+   "deps": [
+    "semio-framework-os-semio"
+   ],
+   "nodes": [
+    "^os_extension"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-base",
+   "deps": [
+    "semio-framework-os-spr",
+    "semio-framework-os-dsl",
+    "semio-framework-os-directory",
+    "semio-framework-os-inference",
+    "semio-framework-os-extension",
+    "semio-framework-os-list-delta"
+   ],
+   "nodes": [
+    "^os_store::component::artifact_child$",
+    "^os_store::component::artifact_child_owner_schema$",
+    "^os_store::component::artifact_child_retained_clone$",
+    "^os_store::component::artifact_link_schema$",
+    "^os_store::component::batch_digest$",
+    "^os_store::component::blob_reference_schema$",
+    "^os_store::component::canonical_edit$",
+    "^os_store::component::canonical_edit::borrowed$",
+    "^os_store::component::canonical_edit::native_source$",
+    "^os_store::component::canonical_edit::publication_authority_retirement$",
+    "^os_store::component::command_format$",
+    "^os_store::component::edit_message_clamp::settlement$",
+    "^os_store::component::edit_retirement$",
+    "^os_store::component::history_read_admission$",
+    "^os_store::component::initialization_catalog_close$",
+    "^os_store::component::ledger$",
+    "^os_store::component::member_group$",
+    "^os_store::component::member_open::history::dictionary::index$",
+    "^os_store::component::member_open::history::dictionary::record$",
+    "^os_store::component::member_owned_batch$",
+    "^os_store::component::one_item$",
+    "^os_store::component::one_item_publication$",
+    "^os_store::component::operation_envelope_serde$",
+    "^os_store::component::operation_identity::rows$",
+    "^os_store::component::prepared_operation_wire$",
+    "^os_store::component::prepared_operation_wire::text$",
+    "^os_store::component::prepared_retirement$",
+    "^os_store::component::presence$",
+    "^os_store::component::raw_replay_retirement$",
+    "^os_store::component::replay$",
+    "^os_store::component::replay_preparation$",
+    "^os_store::component::resident_backing$",
+    "^os_store::component::retained_read_retirement$",
+    "^os_store::component::retained_read_return_retirement$",
+    "^os_store::component::schema_diagnostic$",
+    "^os_store::component::serialization$",
+    "^os_store::component::snapshot_read$",
+    "^os_store::component::snapshot_read_registry_handle$",
+    "^os_store::component::snapshot_read_registry_retirement$",
+    "^os_store::component::space_history_document$",
+    "^os_store::component::space_history_mutations$",
+    "^os_store::component::space_history_mutations::commit_space_checkpoint$",
+    "^os_store::component::space_history_mutations::create_space_alternative$",
+    "^os_store::component::space_history_mutations::remove_space_alternative$",
+    "^os_store::component::space_history_mutations::remove_space_checkpoint$",
+    "^os_store::component::space_history_mutations::set_active_space_alternative$",
+    "^os_store::component::space_history_mutations::switch_space_alternative$",
+    "^os_store::component::sqlite_snapshot_retirement$",
+    "^os_store::component::sqlite_snapshot_workspace$",
+    "^os_store::component::store_schema$",
+    "^store\\-root/\\(top\\)$",
+    "^store\\-root/🔖️BlobStore$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-codec",
+   "deps": [
+    "semio-framework-os-store-base"
+   ],
+   "nodes": [
+    "^io::bindings$",
+    "^io::bindings::catalog$",
+    "^os_store::component::backbone$",
+    "^os_store::component::backbone_retirement$",
+    "^os_store::component::codec_registry$",
+    "^os_store::component::document_materialize$",
+    "^os_store::component::genesis_pack_admission$",
+    "^os_store::component::native_snapshot$",
+    "^os_store::component::owned_schema_decode$",
+    "^os_store::component::text_format$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-io",
+   "deps": [
+    "semio-framework-os-store-codec"
+   ],
+   "nodes": [
+    "^io$",
+    "^io::io_mechanism$",
+    "^io::io_mechanism::owned_serialization$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store",
+   "deps": [
+    "semio-framework-os-io"
+   ],
+   "nodes": [
+    "^os_store::component::durable_group$",
+    "^os_store::component::document_store_owners$",
+    "^os_store::component::initialization_authority$",
+    "^os_store::component::initialization_replay$",
+    "^os_store::component::member_open$",
+    "^os_store::component::member_open::history$",
+    "^os_store::component::member_open::history::dictionary$",
+    "^os_store::component::member_open::history::dictionary::identity$",
+    "^os_store::component::member_open::history::factory$",
+    "^os_store::component::member_open::operation$",
+    "^os_store::component::operation_identity$",
+    "^os_store::component::persisted_document_hydration$",
+    "^store\\-root/SpaceHost$",
+    "^store\\-root/SpaceMember$",
+    "^store\\-root/🔖️ArtifactStore$",
+    "^store\\-root/🔖️Authority$",
+    "^store\\-root/🔖️CodecRegistry$",
+    "^store\\-root/🔖️Composition$",
+    "^store\\-root/🔖️Config$",
+    "^store\\-root/🔖️History$",
+    "^store\\-root/🧬️OpaqueSnapshotRead$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-history",
+   "deps": [
+    "semio-framework-os-store"
+   ],
+   "nodes": [
+    "^os_store::component::space_history::io$",
+    "^os_store::component::space_history::io::sqlite$",
+    "^os_store::component::space_history::io::sqlite::snapshot$",
+    "^os_store::component::space_history::io::sqlite::snapshot::admission$",
+    "^os_store::component::space_history::io::sqlite::snapshot::fields$",
+    "^os_store::component::space_history::io::sqlite::snapshot::native$",
+    "^os_store::component::space_history::io::sqlite::snapshot::preflight$",
+    "^os_store::component::space_history::io::sqlite::snapshot::preflight::borrowed$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-preparation",
+   "deps": [
+    "semio-framework-os-store"
+   ],
+   "nodes": [
+    "^os_store::component::canonical_edit::reader$",
+    "^os_store::component::canonical_edit::value$",
+    "^os_store::component::canonical_edit::value::admission$",
+    "^os_store::component::edit_message_clamp$",
+    "^os_store::component::ephemeral_preparation$",
+    "^os_store::component::ephemeral_transfer$",
+    "^os_store::component::history_plan_retirement$",
+    "^os_store::component::mounted_pack_rt$",
+    "^os_store::component::mounted_pack_session$",
+    "^os_store::component::one_item_owners$",
+    "^os_store::component::paged_one_item$",
+    "^os_store::component::paged_one_item::mutation_apply$",
+    "^os_store::component::prepared_operation_wire::output$",
+    "^os_store::component::prepared_operation_wire::output::operations$",
+    "^os_store::component::presence_native_snapshot$",
+    "^os_store::component::presence_native_snapshot::json$",
+    "^os_store::component::presence_peer_read$",
+    "^os_store::component::presence_peer_rejection$",
+    "^os_store::component::presence_publication_io$",
+    "^os_store::component::presence_retirement$",
+    "^os_store::component::retained_codec_catalog$",
+    "^os_store::component::retained_config_hydration$",
+    "^os_store::component::retirement_integration$",
+    "^os_store::component::snapshot_clone_preparation$",
+    "^os_store::component::snapshot_clone_preparation::config_apply$",
+    "^os_store::component::snapshot_clone_preparation::custody$",
+    "^os_store::component::snapshot_clone_preparation::handoff$",
+    "^os_store::component::snapshot_clone_preparation::law$",
+    "^os_store::component::snapshot_clone_preparation::metadata$",
+    "^os_store::component::snapshot_clone_preparation::pending$",
+    "^os_store::component::snapshot_read_projection$",
+    "^os_store::component::space_history$",
+    "^os_store::component::sqlite_snapshot_native_decoding$",
+    "^os_store::component::sqlite_snapshot_native_encoding$",
+    "^os_store::component::test_support$",
+    "^store\\-root/SpaceHistoryDocument$",
+    "^store\\-root/📬️EphemeralOneItemPublication$",
+    "^store\\-root/📬️OneItemPublication$",
+    "^store\\-root/🔖️Backbone$",
+    "^store\\-root/🔖️CommandFormat$",
+    "^store\\-root/🔖️CompositionCoordinator$",
+    "^store\\-root/🔖️CompositionDsl$",
+    "^store\\-root/🔖️EditReplay$",
+    "^store\\-root/🔖️EffectiveForwards$",
+    "^store\\-root/🔖️EphemeralLanes$",
+    "^store\\-root/🔖️InteractionStatePack$",
+    "^store\\-root/🔖️InteractionStore$",
+    "^store\\-root/🔖️Materialize$",
+    "^store\\-root/🔖️MergeHelpers$",
+    "^store\\-root/🔖️OpsHeaderGrammar$",
+    "^store\\-root/🔖️Pack$",
+    "^store\\-root/🔖️PairMerge$",
+    "^store\\-root/🔖️SchemaExports$",
+    "^store\\-root/🔖️Schemas$",
+    "^store\\-root/🔖️Text$",
+    "^store\\-root/🔖️TextFormat$",
+    "^store\\-root/🧩️MemberOneItemPublication$",
+    "^store\\-root/🧬️OwnedSchemaDecode$",
+    "^store\\-root/🧺️BatchSource$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-composition",
+   "deps": [
+    "semio-framework-os-store-history",
+    "semio-framework-os-store-preparation"
+   ],
+   "nodes": [
+    "^os_store::component::composition_coordinator$",
+    "^os_store::component::composition_group$",
+    "^os_store::component::composition_links$",
+    "^os_store::component::initial_child_identity$",
+    "^os_store::component::member_open::genesis$",
+    "^os_store::component::owned_document_closure$"
+   ]
+  },
+  {
+   "name": "semio-framework-os-store-sync",
+   "deps": [
+    "semio-framework-os-store-composition"
+   ],
+   "nodes": [
+    "^os_store::sync",
+    "^os_store::worker"
+   ]
+  },
+  {
+   "name": "semio-framework-os-kernel",
+   "deps": [
+    "semio-framework-os-store-sync"
+   ],
+   "nodes": [
+    "^$",
+    "^os_store$",
+    "^os_dsl$"
+   ]
+  }
+ ]
+}

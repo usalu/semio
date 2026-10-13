@@ -14,6 +14,7 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildWasmWebV1({
       rsDir: this.root,
+      componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/editor/rs",
       wasmBaseName: "framework_editor",
       shipProfile: "wasm-release",

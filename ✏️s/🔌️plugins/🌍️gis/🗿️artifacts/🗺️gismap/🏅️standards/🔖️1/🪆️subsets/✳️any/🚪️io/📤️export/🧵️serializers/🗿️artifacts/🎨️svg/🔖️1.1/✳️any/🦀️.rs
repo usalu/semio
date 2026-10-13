@@ -5,7 +5,7 @@
 //! ids and payloads beyond geometry are not carried.
 use crate::standards::v1::subsets::any::schema::gis_map_snapshot_to_drawing;
 use crate::GisMapSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
+use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}
 

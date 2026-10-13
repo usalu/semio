@@ -6,10 +6,10 @@
 //! diff writes all five buffers as whole values — they are weak parallel data, never sub-diffed per
 //! vertex — while `topology` and `material_id` stay `None`.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐replace-primitive-geometry/🔲️swaps/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐replace-primitive-geometry/🔲️swaps/📸️snapshot/➡️after/🔣️.json");

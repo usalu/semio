@@ -2,8 +2,8 @@
 //! `set-node-property`, so a history edit of an earlier row never re-targets it; the inverse restores the entry at its
 //! BASE index, byte-exact).
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 /// ➖ `remove-node-property` payload — the node and the key of the entry it detaches.

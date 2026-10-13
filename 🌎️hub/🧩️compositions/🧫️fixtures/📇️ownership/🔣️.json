@@ -1,225 +1,225 @@
 {
   "components": [
     {
-      "package": "semio-hub-writer",
-      "owner": "🌎️hub/🧩️compositions/✒️writer",
+      "package": "semio-hub-writer-component",
+      "owner": "🌎️hub/🧩️compositions/✒️writer/🧩️component",
       "component": "semio:writer",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-mathematical",
-      "owner": "🌎️hub/🧩️compositions/➗️mathematical",
+      "package": "semio-hub-mathematical-component",
+      "owner": "🌎️hub/🧩️compositions/➗️mathematical/🧩️component",
       "component": "semio:mathematical",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-wfc",
-      "owner": "🌎️hub/🧩️compositions/🀄️wfc",
+      "package": "semio-hub-wfc-component",
+      "owner": "🌎️hub/🧩️compositions/🀄️wfc/🧩️component",
       "component": "semio:wfc",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-procedural",
-      "owner": "🌎️hub/🧩️compositions/🌀️procedural",
+      "package": "semio-hub-procedural-component",
+      "owner": "🌎️hub/🧩️compositions/🌀️procedural/🧩️component",
       "component": "semio:procedural",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-flow",
-      "owner": "🌎️hub/🧩️compositions/🌊️flow",
+      "package": "semio-hub-flow-component",
+      "owner": "🌎️hub/🧩️compositions/🌊️flow/🧩️component",
       "component": "semio:flow",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-animate",
-      "owner": "🌎️hub/🧩️compositions/🎞️animate",
+      "package": "semio-hub-animate-component",
+      "owner": "🌎️hub/🧩️compositions/🎞️animate/🧩️component",
       "component": "semio:animate",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-shooting",
-      "owner": "🌎️hub/🧩️compositions/🎥️shooting",
+      "package": "semio-hub-shooting-component",
+      "owner": "🌎️hub/🧩️compositions/🎥️shooting/🧩️component",
       "component": "semio:shooting",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-demonstrator",
-      "owner": "🌎️hub/🧩️compositions/🎪️demonstrator",
+      "package": "semio-hub-demonstrator-component",
+      "owner": "🌎️hub/🧩️compositions/🎪️demonstrator/🧩️component",
       "component": "semio:demonstrator",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-sequence",
-      "owner": "🌎️hub/🧩️compositions/🎬️sequence",
+      "package": "semio-hub-sequence-component",
+      "owner": "🌎️hub/🧩️compositions/🎬️sequence/🧩️component",
       "component": "semio:sequence",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-fem",
-      "owner": "🌎️hub/🧩️compositions/🏗️fem",
+      "package": "semio-hub-fem-component",
+      "owner": "🌎️hub/🧩️compositions/🏗️fem/🧩️component",
       "component": "semio:fem",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-architect",
-      "owner": "🌎️hub/🧩️compositions/🏛️architect",
+      "package": "semio-hub-architect-component",
+      "owner": "🌎️hub/🧩️compositions/🏛️architect/🧩️component",
       "component": "semio:architect",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-bim",
-      "owner": "🌎️hub/🧩️compositions/🏙️bim",
+      "package": "semio-hub-bim-component",
+      "owner": "🌎️hub/🧩️compositions/🏙️bim/🧩️component",
       "component": "semio:bim",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-process",
-      "owner": "🌎️hub/🧩️compositions/🏭️process",
+      "package": "semio-hub-process-component",
+      "owner": "🌎️hub/🧩️compositions/🏭️process/🧩️component",
       "component": "semio:process",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-lowpoly",
-      "owner": "🌎️hub/🧩️compositions/💠️lowpoly",
+      "package": "semio-hub-lowpoly-component",
+      "owner": "🌎️hub/🧩️compositions/💠️lowpoly/🧩️component",
       "component": "semio:lowpoly",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-reasoning",
-      "owner": "🌎️hub/🧩️compositions/💡️reasoning",
+      "package": "semio-hub-reasoning-component",
+      "owner": "🌎️hub/🧩️compositions/💡️reasoning/🧩️component",
       "component": "semio:reasoning",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-forms",
-      "owner": "🌎️hub/🧩️compositions/📋️forms",
+      "package": "semio-hub-forms-component",
+      "owner": "🌎️hub/🧩️compositions/📋️forms/🧩️component",
       "component": "semio:forms",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-layout",
-      "owner": "🌎️hub/🧩️compositions/📏️layout",
+      "package": "semio-hub-layout-component",
+      "owner": "🌎️hub/🧩️compositions/📏️layout/🧩️component",
       "component": "semio:layout",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-cad",
-      "owner": "🌎️hub/🧩️compositions/📐️cad",
+      "package": "semio-hub-cad-component",
+      "owner": "🌎️hub/🧩️compositions/📐️cad/🧩️component",
       "component": "semio:cad",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-norm",
-      "owner": "🌎️hub/🧩️compositions/📕️norm",
+      "package": "semio-hub-norm-component",
+      "owner": "🌎️hub/🧩️compositions/📕️norm/🧩️component",
       "component": "semio:norm",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-playbook",
-      "owner": "🌎️hub/🧩️compositions/📖️playbook",
+      "package": "semio-hub-playbook-component",
+      "owner": "🌎️hub/🧩️compositions/📖️playbook/🧩️component",
       "component": "semio:playbook",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-imperative",
-      "owner": "🌎️hub/🧩️compositions/📜️imperative",
+      "package": "semio-hub-imperative-component",
+      "owner": "🌎️hub/🧩️compositions/📜️imperative/🧩️component",
       "component": "semio:imperative",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-remodel",
-      "owner": "🌎️hub/🧩️compositions/📸️remodel",
+      "package": "semio-hub-remodel-component",
+      "owner": "🌎️hub/🧩️compositions/📸️remodel/🧩️component",
       "component": "semio:remodel",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-energy",
-      "owner": "🌎️hub/🧩️compositions/🔋️energy",
+      "package": "semio-hub-energy-component",
+      "owner": "🌎️hub/🧩️compositions/🔋️energy/🧩️component",
       "component": "semio:energy",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-trinity",
-      "owner": "🌎️hub/🧩️compositions/🔱️trinity",
+      "package": "semio-hub-trinity-component",
+      "owner": "🌎️hub/🧩️compositions/🔱️trinity/🧩️component",
       "component": "semio:trinity",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-dag",
-      "owner": "🌎️hub/🧩️compositions/🕸️dag",
+      "package": "semio-hub-dag-component",
+      "owner": "🌎️hub/🧩️compositions/🕸️dag/🧩️component",
       "component": "semio:dag",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-draw",
-      "owner": "🌎️hub/🧩️compositions/🖍️draw",
+      "package": "semio-hub-draw-component",
+      "owner": "🌎️hub/🧩️compositions/🖍️draw/🧩️component",
       "component": "semio:draw",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-raster",
-      "owner": "🌎️hub/🧩️compositions/🖨️raster",
+      "package": "semio-hub-raster-component",
+      "owner": "🌎️hub/🧩️compositions/🖨️raster/🧩️component",
       "component": "semio:raster",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-note",
-      "owner": "🌎️hub/🧩️compositions/🗒️note",
+      "package": "semio-hub-note-component",
+      "owner": "🌎️hub/🧩️compositions/🗒️note/🧩️component",
       "component": "semio:note",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-puzzle",
-      "owner": "🌎️hub/🧩️compositions/🧩️puzzle",
+      "package": "semio-hub-puzzle-component",
+      "owner": "🌎️hub/🧩️compositions/🧩️puzzle/🧩️component",
       "component": "semio:puzzle",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-block",
-      "owner": "🌎️hub/🧩️compositions/🧱️block",
+      "package": "semio-hub-block-component",
+      "owner": "🌎️hub/🧩️compositions/🧱️block/🧩️component",
       "component": "semio:block",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-space",
-      "owner": "🌎️hub/🧩️compositions/🪐️space",
+      "package": "semio-hub-space-component",
+      "owner": "🌎️hub/🧩️compositions/🪐️space/🧩️component",
       "component": "semio:space",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
-      "package": "semio-hub-sourcing",
-      "owner": "🌎️hub/🧩️compositions/🪵️sourcing",
+      "package": "semio-hub-sourcing-component",
+      "owner": "🌎️hub/🧩️compositions/🪵️sourcing/🧩️component",
       "component": "semio:sourcing",
       "role": "hub",
       "componentKind": "plugin"

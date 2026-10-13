@@ -2,7 +2,7 @@
  use super::{TiffSnapshot,ValueError,ValueRefusalKind,SqliteSnapshotControl,SqliteSnapshotPhase,RowWriter};
  use semio_framework_value::{DslValue as D,NativeDecodeControl};
  use semio_framework_dsl_record::{RecordValue,FieldValue as F};
- use semio_framework_os_kernel::{ArtifactSqliteSnapshot as _,sqlite_snapshot::SqliteDatabaseLimits};
+ use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot as _,sqlite_snapshot::SqliteDatabaseLimits};
  type Result<T>=std::result::Result<T,ValueError>;
  const TABLES:[(&str,usize);17]=[("tiff_ascii_value",4),("tiff_byte_value",4),("tiff_block",8),("tiff_sample",5),("tiff_document",2),("tiff_double_value",5),("tiff_float_value",6),("tiff_ifd",3),("tiff_long_value",4),("tiff_rational_value",5),("tiff_short_value",4),("tiff_signed_byte_value",4),("tiff_signed_long_value",4),("tiff_signed_rational_value",5),("tiff_signed_short_value",4),("tiff_tag",5),("tiff_undefined_value",4)];
  fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"TIFF native value differs from authored role")}

@@ -4,9 +4,9 @@
 
 use crate::editor::gltf::modes::edit;
 use crate::editor::gltf::modes::edit::windows::main;
-use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
-use crate::GltfMutation;
-use crate::standards::v2_0::subsets::any::schema::mutations as kinds;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
+use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations as kinds;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -87,7 +87,7 @@ const GLTF_ANY_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn gltf_any_editor_example_snapshot(example_id: &str) -> GltfSnapshot {
     if example_id == crate::examples::demo::ID {
-        <GltfSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         GltfSnapshot::default()
     }

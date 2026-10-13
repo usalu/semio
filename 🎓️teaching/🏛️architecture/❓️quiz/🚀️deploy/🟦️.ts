@@ -1,3 +1,4 @@
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 /** 🚀️ Operator verbs of the architecture quiz: the site goes to a CDN at the site host, the proctor runs as a zero-touch
  * Docker stack (proctor + Caddy) at the proctor host, both hosts from `🔣️.json`.
  *
@@ -268,7 +269,7 @@ export function deploymentDrift(repoRoot: string): string[] {
   expect(`${DEPLOY}/Caddyfile`, caddyfile, [`{$PROCTOR_HOST:${QUIZ_PROCTOR_HOST}} {`, `reverse_proxy proctor:${QUIZ_IMAGE_PORT}`, `load /${QUIZ_STACK_CERTIFICATES}`, "respond @oversized 413"]);
   const limits = new Set([...caddyfile.matchAll(/\{\$PROCTOR_LIMIT_BODY_BYTES:([^}\s]+)\}/gu)].map((placeholder) => placeholder[1]!));
   if (limits.size > 1) problems.push(`${DEPLOY}/Caddyfile defaults PROCTOR_LIMIT_BODY_BYTES to ${[...limits].join(" and ")}`);
-  expect(WORKFLOW, workflow, [`path: ${BUNDLE}/dist/${QUIZ_PAGES_DIRECTORY}`]);
+  expect(WORKFLOW, workflow, [`path: ${BUNDLE}/dist/release/${QUIZ_PAGES_DIRECTORY}`]);
   for (const image of [...dockerfile.matchAll(/^ARG \w+_IMAGE=(\S+)$/gmu), ...compose.matchAll(/^\s+image:\s*(\S+)$/gmu)].map((line) => line[1]!)) if (!image.startsWith(QUIZ_IMAGE_REPOSITORY) && !/^[\w./-]+:[\w.-]+@sha256:[0-9a-f]{64}$/u.test(image)) problems.push(`the base image ${image} is not pinned to an exact tag and digest`);
   for (const action of new Set([...workflow.matchAll(/^\s*(?:- )?uses:\s*(\S+)/gmu)].map((line) => line[1]!))) if (!/@[0-9a-f]{40}$/u.test(action)) problems.push(`${WORKFLOW} uses ${action} without a commit hash`);
   const project = JSON.parse(read(`${BUNDLE}/📋️project.json`)) as { targets: Record<string, unknown> };
@@ -380,7 +381,7 @@ export function publishQuizSite(bundleRoot: string, build: () => void): void {
   const proctorOrigin = releaseProctorOrigin();
   say(`building the site for ${QUIZ_SITE_ORIGIN} against ${proctorOrigin}`);
   build();
-  const dist = join(bundleRoot, "dist");
+  const dist = join(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE));
   const problems = siteArtifactProblems(dist, proctorOrigin);
   if (problems.length > 0) throw new Error(`the site artifact is not publishable:\n- ${problems.join("\n- ")}`);
   const pages = join(dist, QUIZ_PAGES_DIRECTORY);

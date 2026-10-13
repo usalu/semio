@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "semio://repo/caching/nx-graph-seal/v1",
+  "title": "Nx graph seal",
+  "description": "Proof that the cached Nx project graph in one workspace data directory was computed from re-verifiable inputs: the Nx tooling identity, the graph file stamps, the digests of both plugin receipts (which name the inference records and dependency facts used), every indexable directory with its stamp and listing, and the stamps of every graph-input file.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["format", "nx", "graph", "receipts", "directories", "inputs"],
+  "definitions": {
+    "stamp": { "type": "array", "minItems": 5, "maxItems": 5, "items": { "type": "number" } },
+    "names": { "type": "array", "items": { "type": "string", "minLength": 1, "pattern": "^[^/]+$" } }
+  },
+  "properties": {
+    "format": { "const": 1 },
+    "nx": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "graph": { "type": "object", "additionalProperties": false, "required": ["project-graph.json", "file-map.json"], "properties": { "project-graph.json": { "$ref": "#/definitions/stamp" }, "file-map.json": { "$ref": "#/definitions/stamp" } } },
+    "receipts": { "type": "object", "additionalProperties": { "type": "string", "pattern": "^[0-9a-f]{64}$" } },
+    "directories": {
+      "type": "array",
+      "items": { "type": "array", "minItems": 5, "maxItems": 5, "items": [{ "type": "string" }, { "$ref": "#/definitions/stamp" }, { "$ref": "#/definitions/names" }, { "$ref": "#/definitions/names" }, { "$ref": "#/definitions/names" }] }
+    },
+    "inputs": { "type": "array", "items": { "type": "array", "minItems": 2, "maxItems": 2, "items": [{ "type": "string", "minLength": 1 }, { "$ref": "#/definitions/stamp" }] } }
+  }
+}

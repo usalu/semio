@@ -25,7 +25,7 @@ fn rgba_snapshot(width: u32, height: u32, pixels: Vec<u8>) -> PngSnapshot {
 
 fn pixel_region_command() -> PngEditCommand {
     let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
-    pngEditor_command_from_action(patch_pixel_region::ACTION_ID, Some(&semio_framework_value::DslValue::object([
+    png_editor_command_from_action(patch_pixel_region::ACTION_ID, Some(&semio_framework_value::DslValue::object([
         ("x".into(), number(1)), ("y".into(), number(1)), ("width".into(), number(2)), ("height".into(), number(1)),
         ("red".into(), number(10)), ("green".into(), number(20)), ("blue".into(), number(30)), ("alpha".into(), number(128)),
     ]))).unwrap()
@@ -101,7 +101,7 @@ fn native_profile_action_parses_checked_samples_and_rejects_mismatch() {
         ("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1)), ("height".into(), number(1)),
         ("gray".into(), number(0x1234)),
     ]);
-    let command = pngEditor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments)).unwrap();
+    let command = png_editor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments)).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(command)) = command else { panic!("native PNG command") };
     assert_eq!(command.paint, crate::standards::v1_2::subsets::any::schema::snapshot::PngNativePaint::grayscale(0x1234));
     let indexed = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/indexed-2bit-duplicate-palette.png")).unwrap();
@@ -115,13 +115,13 @@ fn native_profile_action_defaults_are_valid_for_eight_and_sixteen_bit_sources() 
         let action = definitions.iter().find(|action| action.id == id).unwrap();
         semio_framework_value::DslValue::object(action.args.iter().map(|argument| (argument.id.clone(), argument.default.clone().expect("native paint argument default"))))
     };
-    let rgba = pngEditor_command_from_action(paint_native_region::RGBA_ACTION_ID, Some(&arguments(paint_native_region::RGBA_ACTION_ID))).unwrap();
+    let rgba = png_editor_command_from_action(paint_native_region::RGBA_ACTION_ID, Some(&arguments(paint_native_region::RGBA_ACTION_ID))).unwrap();
     let rgba8 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/rgba8-adam7.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(rgba)) = rgba else { panic!("RGBA native paint") };
     assert!(crate::standards::v1_2::subsets::any::schema::operations::validate_native_paint(&rgba8, rgba.region, rgba.paint).is_ok());
     assert_eq!(rgba.paint.fourth, u16::from(u8::MAX));
 
-    let grayscale = pngEditor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments(paint_native_region::GRAYSCALE_ACTION_ID))).unwrap();
+    let grayscale = png_editor_command_from_action(paint_native_region::GRAYSCALE_ACTION_ID, Some(&arguments(paint_native_region::GRAYSCALE_ACTION_ID))).unwrap();
     let grayscale16 = crate::standards::v1_2::subsets::any::io::decode_png(include_bytes!("../../../../../../../🧫️fixtures/🧬️canonical-source/precision-16bit-gray.png")).unwrap();
     let PngEditCommand::Native(PngNativeEditCommand::PaintNativeRegion(grayscale)) = grayscale else { panic!("grayscale native paint") };
     assert!(crate::standards::v1_2::subsets::any::schema::operations::validate_native_paint(&grayscale16, grayscale.region, grayscale.paint).is_ok());
@@ -256,7 +256,7 @@ fn retained_pixel_region_accepts_dci_4k_raster_with_bounded_work() {
     assert!(patch.pixels[..patch.pixels.len() - 4].iter().all(|byte| *byte == 7));
     assert_eq!(&patch.pixels[patch.pixels.len() - 4..], &[9, 8, 7, 6]);
     let mutation = PngMutation::PatchPixels(crate::schema::mutations::PatchPixelsMutation { revision: "0000000000000000".into(), x: width as u32 - 1, y: height as u32 - 1, width: 1, height: 1, red: 9, green: 8, blue: 7, alpha: 6 });
-    assert!(mutation.encode_op().unwrap().len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    assert!(mutation.encode_op().unwrap().len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 }
 
 #[test]
@@ -269,7 +269,7 @@ fn registered_pixel_region_factory_cancellation_retires_without_publication() {
     let snapshot = Arc::new(rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]));
     let command = PngEditCommand::Native(PngNativeEditCommand::PatchPixelRegion(patch_pixel_region::PatchPixelRegion { x: 1, y: 0, width: 1, height: 512, red: 9, green: 8, blue: 7, alpha: 6 }));
     let wire = command.encode_op().unwrap(); let completion = ArtifactToolCompletion::<EditorApp<PngEditor>>::test_new(); let consumer = completion.clone();
-    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), config: Arc::new(NoConfig::default()), history: Arc::new(semio_framework_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, pngEditor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
+    let payload = ArtifactRetainedCommandPayload::new(ArtifactRetainedCommandInputs { command, snapshot: snapshot.clone(), config: Arc::new(NoConfig::default()), history: Arc::new(semio_framework_plugin::HistoryView::empty()), interaction_state: Arc::new(Default::default()), interaction_hover: Arc::new(Default::default()), context: None, operation: AppOperationContext { app_instance_id: 1, parent_document_id: "png-registered-cancel".into(), operation_id: 41, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "png-cancel".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() }, completion }, png_editor_command_id, patch_pixel_region::MAXIMUM_RAW_BYTES, patch_pixel_region::CAPACITY.work_items(), Box::new(patch_pixel_region::PatchPixelRegionWork::default()));
     let bus = ActionBus::new(); bus.register(PngPixelRegionFactory::new("png-cancel")).unwrap();
     let (admission, mut input) = bus.begin_exact_wire("png-cancel", patch_pixel_region::ACTION_ID, patch_pixel_region::PAYLOAD_SCHEMA, wire.len()).unwrap();
     for page in wire.chunks(TOOL_WIRE_PAGE_BYTES) { input.admit_page(ToolWirePage::try_copy_from(page).unwrap()).map_err(|(fault, _)| fault).unwrap(); } input.seal().unwrap();
@@ -294,7 +294,7 @@ async fn registered_pixel_region_refuses_an_equal_length_later_snapshot() {
     let mut expected = rgba_snapshot(1_024, 512, vec![7; 1_024 * 512 * 4]);
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PngEditor>, _>(async { semio_framework_plugin::App { definition: create_png_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&expected, STDIO_PNG_DOCUMENT_SCHEMA) else { panic!("PNG fixture load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let revision = app.test_document_revision(); let number = |value| semio_framework_value::DslValue::Number(semio_framework_value::Number::UInt(value));
     let arguments = semio_framework_value::DslValue::object([("x".into(), number(0)), ("y".into(), number(0)), ("width".into(), number(1_024)), ("height".into(), number(512)), ("red".into(), number(9)), ("green".into(), number(8)), ("blue".into(), number(7)), ("alpha".into(), number(6))]);
     let meta = artifact_app_laws::meta("local"); semio_framework_plugin::with_authoring_identity!(|identity| app.handle_action(patch_pixel_region::ACTION_ID, Some(&arguments), &meta, &mut identity).await).unwrap(); assert_eq!(app.test_document_revision(), revision);

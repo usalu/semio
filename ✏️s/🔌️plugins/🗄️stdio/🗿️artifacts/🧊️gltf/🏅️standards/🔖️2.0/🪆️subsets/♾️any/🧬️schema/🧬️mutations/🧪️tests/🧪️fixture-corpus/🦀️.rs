@@ -19,7 +19,7 @@ const DIFF_SCHEMA: &str = include_str!("../../../🔺️diff/🔣️.json");
 const AGGREGATE_SCHEMA: &str = include_str!("../../🔣️.json");
 
 fn subset() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️2.0/🪆️subsets/♾️any")
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../..")
 }
 
 fn corpus() -> PathBuf {
@@ -164,7 +164,7 @@ fn assert_committed_outcome(name: &str, case: &Path, mutation: &GltfMutation) ->
         Some("rejected") => {
             let code = declared["code"].as_str().expect("a rejection names its outcome code");
             let rejection = declared["rejection"].as_str().expect("a rejection names its glTF refusal");
-            assert_eq!(crate::schema::modules::mutation_support::top_level::rejection_outcome_code(rejection).as_str(), code, "{name}: the declared outcome code is the one the glTF refusal maps to");
+            assert_eq!(crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome_code(rejection).as_str(), code, "{name}: the declared outcome code is the one the glTF refusal maps to");
             assert!(outcome.diff().is_empty_diff(), "{name}: a rejection changes nothing");
             assert_eq!(outcome.messages().iter().map(|message| message.code.0.as_str()).collect::<Vec<_>>(), [code], "{name}");
             assert!(outcome.messages().iter().all(|message| !matches!(message.code.0.as_str(), "mutation.target-mismatch" | "mutation.invariant") || message.message.starts_with(rejection)), "{name}: {:?}", outcome.messages());

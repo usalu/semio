@@ -75,7 +75,7 @@ pub fn board_redraw_layout_snapshot_json(snapshot_json:&str,options_json:&str,ma
 /// 🔤️ Parses `.puzzle2d` DSL text (`Puzzle2dSnapshot`'s `dsl::DslArtifact` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` snapshot — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle2dParseDslJson)]
 pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let snapshot = Puzzle2dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&snapshot))
 }

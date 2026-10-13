@@ -2,7 +2,7 @@
 
 use crate::schema::CadArtifact;
 use crate::{CadDiff, CadSnapshot};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 use semio_framework_os_kernel::{DiffBinary, DiffText};
 
 #[test]

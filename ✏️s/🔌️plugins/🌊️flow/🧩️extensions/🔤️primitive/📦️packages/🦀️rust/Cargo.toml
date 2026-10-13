@@ -1,6 +1,6 @@
 [package]
 workspace = "../.."
-name = "semio-s-plugin-flow-extension-primitive"
+name = "semio-s-plugin-flow-primitive"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -9,23 +9,11 @@ description = "Flow Core extension — contributes core operators to flow-play a
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:flow-extension-primitive"
-
 [package.metadata.semio]
-deployment-directory = "🔤️flow-extension-primitive"
-component-kind = "extension"
 role = "extension"
-extends = "flow"
-contributes = ["flow.extension"]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
-
-[features]
-default = ["component-guest"]
-component-guest = ["dep:semio-framework-plugin", "dep:semio-framework"]
 
 [dependencies]
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
@@ -33,8 +21,8 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 flow_extension_sdk = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust", package = "semio-framework-os-flow" }
 neural_engine = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 pack = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin", optional = true }
-semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework", optional = true }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
+semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 
 [dev-dependencies]
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

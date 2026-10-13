@@ -1,7 +1,7 @@
 //! 🏭️ IFC2x3 exact decimal syntax, instance types and EDM production fields.
 use crate::standards::v2x3::subsets::base::schema::snapshot::{Ifc2x3Snapshot,Ifc2x3EdmPreamble};
 use semio_s_artifact_stdio_contract::part21::{Part21Document,Part21Header,Part21Instance,Part21Value,Part21Decimal};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},*}};
 
 #[path="🔎️mvd/💰️diagnostics/🦀️.rs"]
 mod mvd_diagnostics;

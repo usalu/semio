@@ -1,6 +1,6 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
 use crate::standards::v_raw::subsets::any::schema::snapshot::{BinarySnapshot};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
 pub(crate)fn semantic(snapshot:&BinarySnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<(),ValueError>{backing::semantic(snapshot,control,phase)}
 pub(crate)fn native_cells(schema:&str,count:usize,bytes:impl IntoIterator<Item=Result<u8,ValueError>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::native_cells(schema,count,bytes,control)}

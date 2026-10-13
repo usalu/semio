@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::En1997Snapshot;
 use crate::{SoilLayer,SpreadFoundation,FoundationLoadCase,Pile,PileTestProfile,RetainingWall,Slope,UpliftCase,document::AnnexChoice};
 use std::collections::BTreeMap;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -25,7 +25,7 @@ fn ordered<'a>(rows:impl IntoIterator<Item=FloatRow<'a>>,parent:i64,c:&mut Sqlit
 fn groups<'a>(rows:Entities<'a>,parents:&Entities<'_>,c:&mut SqliteSnapshotControl<'_>)->Result<BTreeMap<i64,Vec<FloatRow<'a>>>, ValueError>{let mut out=BTreeMap::<i64,Vec<FloatRow<'a>>>::new();for(n,r)in rows.into_values().enumerate(){checkpoint(c,n,0)?;let p=r.integer(1)?;if !parents.contains_key(&p){return Err(invalid("EN1997 owning foreign key is dangling"));}out.entry(p).or_default().push(r);}Ok(out)}
 fn text(r:FloatRow<'_>,i:usize,c:&mut SqliteSnapshotControl<'_>)->Result<String, ValueError>{reconstruct_text(c,r.text(i)?)}
 /// 🪪️ Optional native capability supplied by the actual geotechnical pack owner.
-pub fn codec()->store::ArtifactSqliteSnapshotCodec{<En1997Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1997Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
 impl En1997Snapshot{
  fn write_sqlite_rows(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
   p.insert_key_float("en1997_document",1,&[Cell::Text(&self.structure_id),Cell::Integer(i64::from(self.geotechnical_category)),Cell::Text(&self.design_situation),Cell::Text(&self.design_approach),Cell::Text(annex(self.annex)),Cell::Real(self.groundwater_level),Cell::Real(self.investigation_depth)],DOCUMENT)?;
@@ -41,11 +41,11 @@ impl En1997Snapshot{
 }
 impl ArtifactSqliteSnapshot for En1997Snapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
  }
 
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let mut p=RowWriter::new(Self::SQLITE_SCHEMA,c)?;self.write_sqlite_rows(&mut p)?;p.finish()}

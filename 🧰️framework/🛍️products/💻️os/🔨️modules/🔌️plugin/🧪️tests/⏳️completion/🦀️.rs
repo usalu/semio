@@ -4,16 +4,16 @@
 /// `activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations`,
 /// `ui_dispatch_backstop_rejects_every_non_migrated_action_and_command`) need: they assert that an
 /// UNPROVED verb is refused and that a non-migrated verb never reaches the live tool bus at all.
-pub(crate) const TEST_APP_TOOLS_NONE: u8 = 0;
+const TEST_APP_TOOLS_NONE: u8 = 0;
 /// 🧾️ Owned factories for every verb, but NO `bounded_first_step_tool_proofs` row. A proof row is
 /// only admissible while the LIVE registry declares its `OpBinary::TOOL_JOB_IDS` id `Migrated`
 /// (`validate_tool_job_rows`'s `seen != expected` gate), so a registry-LESS wrapper can only ever
 /// carry zero rows — which is exactly what `registry_less_construction_rejects_before_the_reducer`
 /// constructs, and why it needs its own mode rather than the full one.
-pub(crate) const TEST_APP_TOOLS_FACTORIES: u8 = 1;
+const TEST_APP_TOOLS_FACTORIES: u8 = 1;
 /// 🧰️ Owned factories plus the proof rows for the generated tool ids — the migrated fixture every
 /// behavioural law uses, paired with `migrated_contract_registry`.
-pub(crate) const TEST_APP_TOOLS_FULL: u8 = 2;
+const TEST_APP_TOOLS_FULL: u8 = 2;
 
 const TEST_APP_COMMAND_SCHEMA: &str = "semio.test.app-command.v1";
 const TEST_APP_COMMAND_RAW_BYTES: usize = 65_536;
@@ -169,7 +169,7 @@ struct TestAppCommandJob<const RETAINED: bool, const TOOLS: u8> {
     metadata: Option<AppOperationContext>,
     command: Option<Box<TestCommand>>,
     snapshot: Option<std::sync::Arc<TestSnapshot>>,
-    snapshot_read: Option<store::SnapshotRead<TestSnapshot>>,
+    snapshot_read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
     retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
     config: Option<std::sync::Arc<TestConfig>>,
     history: Option<std::sync::Arc<HistoryView>>,
@@ -185,17 +185,17 @@ impl<const RETAINED: bool, const TOOLS: u8> TestAppCommandJob<RETAINED, TOOLS> {
         if let Some(raw) = self.raw.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes: raw.next_close_copy_byte_demand()?, capacity_bytes: raw.next_close_capacity_byte_demand(body)?, release_bytes: raw.next_close_release_byte_demand()?, depth: raw.next_close_depth_demand()? });
         }
-        if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
-        if self.command.is_some() { return store::artifact_retirement_owned_birth_demands(&self.command); }
-        if self.snapshot.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.snapshot); }
-        if self.config.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.config); }
-        if self.history.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.history); }
-        if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
-        if self.metadata.is_some() { return store::artifact_retirement_owned_birth_demands(&self.metadata); }
-        if self.context.is_some() { return store::artifact_retirement_owned_birth_demands(&self.context); }
-        if self.residual.is_some() { return store::artifact_retirement_owned_birth_demands(&self.residual); }
+        if let Some(owner) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body); }
+        if self.command.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.command); }
+        if self.snapshot.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.snapshot); }
+        if self.config.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.config); }
+        if self.history.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.history); }
+        if self.completion.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion); }
+        if self.metadata.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.metadata); }
+        if self.context.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.context); }
+        if self.residual.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.residual); }
         if self.rejected.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "fixture retains original context until its issuing authority is installed")); }
-        if self.snapshot_read.is_some() { return store::artifact_retirement_owned_birth_demands(&self.snapshot_read); }
+        if self.snapshot_read.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot_read); }
         Ok(Default::default())
     }
 }
@@ -257,16 +257,16 @@ impl<const RETAINED: bool, const TOOLS: u8> semio_framework_job::InteractiveJob 
             if raw.terminal_is_empty() { self.raw.take(); }
             return match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step };
         }
-        let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
-            else if self.command.is_some() { store::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
-            else if self.snapshot.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.snapshot, &mut self.retirement, grant) }
-            else if self.config.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.config, &mut self.retirement, grant) }
-            else if self.history.is_some() { store::artifact_retirement_admit_shared_lease(&mut self.history, &mut self.retirement, grant) }
-            else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
-            else if self.metadata.is_some() { store::artifact_retirement_admit_owned(&mut self.metadata, &mut self.retirement, grant) }
-            else if self.context.is_some() { store::artifact_retirement_admit_owned(&mut self.context, &mut self.retirement, grant) }
-            else if self.residual.is_some() { store::artifact_retirement_admit_owned(&mut self.residual, &mut self.retirement, grant) }
-            else if self.snapshot_read.is_some() { store::artifact_retirement_admit_owned(&mut self.snapshot_read, &mut self.retirement, grant) }
+        let step = if self.retirement.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) }
+            else if self.command.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
+            else if self.snapshot.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.snapshot, &mut self.retirement, grant) }
+            else if self.config.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.config, &mut self.retirement, grant) }
+            else if self.history.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.history, &mut self.retirement, grant) }
+            else if self.completion.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
+            else if self.metadata.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.metadata, &mut self.retirement, grant) }
+            else if self.context.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.context, &mut self.retirement, grant) }
+            else if self.residual.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.residual, &mut self.retirement, grant) }
+            else if self.snapshot_read.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot_read, &mut self.retirement, grant) }
             else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
         match step {
             Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },

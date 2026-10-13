@@ -8,7 +8,7 @@
 //! narrower stand-in for the one it mirrors.
 
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_window_item;
 use semio_framework_ui_locale::Label;

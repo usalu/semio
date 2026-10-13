@@ -1,5 +1,5 @@
 //! ⚠️ Accepted completion faults retain their original diagnostic and build a bounded borrowed report without allocation.
-use crate::app::ArtifactBoundedToolFault;
+use crate::tool_contract::ArtifactBoundedToolFault;
 use semio_framework_diagnostic::{Fault,FaultOrigin,Severity};
 #[derive(semio_framework_value::RetireOwned)]
 pub struct ArtifactCompletionFault{pub bounded:ArtifactBoundedToolFault,original:Fault}

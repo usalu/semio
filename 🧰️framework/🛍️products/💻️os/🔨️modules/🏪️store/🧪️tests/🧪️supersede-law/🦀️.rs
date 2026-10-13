@@ -97,7 +97,7 @@ impl MemberStoreOwner<LawOp> for DemoSnapshot {
         super::fixture_authoring_birth_demand::<LawOp>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, LawOp>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, LawOp>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, LawOp>> {
         super::fixture_authoring_member_owners::<LawOp>(grant)
     }
 }

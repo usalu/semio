@@ -72,8 +72,8 @@ pub(crate) mod context {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::jack_example_document();
         let (schema, id) = (document.schema.clone(), document.id.clone());
-        let envelope = store::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
-        let files = store::print_document_pack(&envelope).await.expect("print jack document pack");
+        let envelope = store::os_store::document_materialize::create_document_envelope::<WriterSnapshot, WriterMutation>(&schema, &id, document, None);
+        let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print jack document pack");
         retire_writer_envelope(envelope);
         semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load jack");
         app
@@ -85,7 +85,7 @@ pub(crate) mod context {
     /// detached every nested owner"), and only a store ever runs that protocol. No store adopts this one,
     /// so the artifact's OWN owner catalog retires it here — the same shape `🖨️raster`'s
     /// `retire_raster_envelope` uses for exactly this fixture pattern.
-    pub fn retire_writer_envelope(envelope: store::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
+    pub fn retire_writer_envelope(envelope: store::os_store::store_schema::ArtifactEnvelope<WriterSnapshot, WriterMutation>) {
         crate::host::owned::retire_writer_envelope(envelope);
     }
     
@@ -96,7 +96,7 @@ pub(crate) mod context {
         result.requested_effects.extend(drain_typed_operations(app).await);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -177,7 +177,7 @@ fn writer_envelope_wire() -> Vec<u8> {
     let snapshot = crate::schema::empty_writer_snapshot();
     let snapshot_hex = <WriterSnapshot as ArtifactPack>::encode_pack(&snapshot).iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = format!("{{\"schema\":\"{WRITER_DOCUMENT_SCHEMA}\",\"id\":\"writer-live-load\",\"vcs\":{{\"initialPack\":\"{snapshot_hex}\",\"edits\":[],\"changes\":[],\"checkpoints\":[],\"alternatives\":[]}},\"editMessages\":[],\"conflicts\":[]}}").into_bytes();
-    let envelope = store::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(WRITER_DOCUMENT_SCHEMA, "writer-live-load", snapshot, None);
     crate::host::owned::retire_writer_envelope(envelope);
     wire
 }
@@ -202,13 +202,13 @@ fn interactive_job_fixture_matches_the_exact_factory_join() {
 fn writer_artifact_store_preparation_admits_only_the_exact_bounded_text_cohort() {
     let factory = WriterArtifactPreparationFactory::shared();
     let edit = |text: String| WriterMutation::EditText(crate::schema::mutations::EditText { text });
-    let footprint = factory.preflight(&edit("after".into()), store::HistoryLane::Document).expect("bounded Writer Artifact mutation");
-    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, "one point-invertible EditText declares its forward AND its inverse row");
+    let footprint = factory.preflight(&edit("after".into()), store::os_store::store_schema::HistoryLane::Document).expect("bounded Writer Artifact mutation");
+    assert_eq!(footprint.work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, "one point-invertible EditText declares its forward AND its inverse row");
     assert!(footprint.is_admissible());
-    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)), store::HistoryLane::Document).is_ok());
-    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)), store::HistoryLane::Document).is_err());
-    assert!(factory.preflight(&edit("after".into()), store::HistoryLane::Interaction).is_err());
-    assert!(factory.preflight(&WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: "other".into() }), store::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES)), store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(factory.preflight(&edit("x".repeat(MAX_WRITER_COMMAND_TEXT_BYTES + 1)), store::os_store::store_schema::HistoryLane::Document).is_err());
+    assert!(factory.preflight(&edit("after".into()), store::os_store::store_schema::HistoryLane::Interaction).is_err());
+    assert!(factory.preflight(&WriterMutation::RenameWriter(crate::schema::mutations::RenameWriter { new_id: "other".into() }), store::os_store::store_schema::HistoryLane::Document).is_err());
 }
 
 #[test]
@@ -308,12 +308,12 @@ fn bounded_host_load_and_engagement_admission_reject_plus_one() {
 }
 
 fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Writer live envelope ingress credits");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Writer live envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Writer live envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Writer live envelope page admission failed: {fault:?}"));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("Writer live envelope seal/submit"));
@@ -322,7 +322,7 @@ fn admit_writer_envelope(app: &mut WriterApp, wire: &[u8]) -> semio_framework_pl
 
 fn drive_writer_live_load(app: &mut WriterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Writer live maintenance turn");
+        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Writer live maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Writer live load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
@@ -349,12 +349,12 @@ async fn writer_live_envelope_cancel_closes_retained_pages_without_publication()
     let mut app = context::new_app().await;
     let base_generation = app.artifact_generation_now();
     let wire = writer_envelope_wire();
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Writer ingress credits");
-    let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
-    let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    let first = &wire[..wire.len().min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+    let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
     bytes[..first.len()].copy_from_slice(first);
-    let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Writer first page");
+    let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Writer first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Writer page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Writer ingress");
     assert_eq!(drive_writer_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
@@ -718,12 +718,12 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
     }
     assert!(!crate::writer_text(&snapshot).is_empty(), "the demo example must survive the archive door with its authored body, not an empty document");
     let derived = crate::genesis_writer_child_pack(&snapshot, "document", &snapshot.document.child_id).expect("the loaded snapshot still derives its own document member");
-    let document = <semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&derived).expect("the derived document member decodes");
+    let document = <semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&derived).expect("the derived document member decodes");
     let body: String = document
         .blocks
         .iter()
         .filter_map(|block| match block {
-            semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::DocBlock::Code { text, .. } => Some(text.as_str()),
+            semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock::Code { text, .. } => Some(text.as_str()),
             _ => None,
         })
         .collect();

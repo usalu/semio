@@ -11,10 +11,10 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 
 #[semio_framework_async_macros::async_test]
 async fn shooting_document_text_round_trips_store_with_applied_operation() {
-    use store::ArtifactCommand;
+    use store::os_store::store_schema::ArtifactCommand;
 
-    let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::create_document_envelope(crate::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::empty_shooting_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<ShootingSnapshot, ShootingMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
+    let mut store = store::ArtifactStore::<ShootingSnapshot, ShootingMutation>::new(store::os_store::document_materialize::create_document_envelope(crate::SHOOTING_DOCUMENT_SCHEMA, "shooting", crate::empty_shooting_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ShootingSnapshot, ShootingMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     let asset = crate::ShootingAsset { id: "a1".into(), name: "Asset".into(), url: "/mesh/a1.glb".into(), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None };
     let create = crate::standards::v1::subsets::any::schema::mutations::create_asset::CreateAsset { asset, index: Some(0) };
     store.dispatch(ArtifactCommand::Apply { mutations: vec![ShootingMutation::CreateAsset(create)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");

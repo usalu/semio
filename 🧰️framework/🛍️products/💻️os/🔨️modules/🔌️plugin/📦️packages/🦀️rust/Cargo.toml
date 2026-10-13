@@ -18,8 +18,6 @@ path = "🦀️.rs"
 
 [features]
 default = []
-component-guest = []
-component-extension-guest = []
 # ⏳️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (W6-A, jobs-runtime → B1 world-collapse): selects the
 # guest-side DIRECT host-import path, where a job body awaits `host-async` rather than emitting an
 # effect and waiting for its completion event. Since the collapse both paths live in the SAME

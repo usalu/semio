@@ -7,7 +7,7 @@ use crate::diff::DagDiff;
 use crate::DagSnapshot;
 
 //#region 🔖️Store
-pub type DagEnvelope = store::ArtifactEnvelope<DagSnapshot, DagMutation>;
+pub type DagEnvelope = store::os_store::store_schema::ArtifactEnvelope<DagSnapshot, DagMutation>;
 pub type DagStore = store::ArtifactStore<DagSnapshot, DagMutation>;
 //#endregion 🔖️Store
 

@@ -15,7 +15,7 @@ mod tests {
 
     #[test]
     fn haar_periodic_multi_level_preserves_energy() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(11);
         let x: Vec<f64> = (0..64).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
         let cfg = WaveletConfig::new(WaveletFamily::Haar, 4, BoundaryMode::Periodic).unwrap();
         let dwt = Dwt::decompose(&x, cfg).unwrap();
@@ -37,7 +37,7 @@ mod tests {
     fn smooth_ramp_has_lower_wavelet_entropy_than_noise() {
         let n = 256;
         let ramp: Vec<f64> = (0..n).map(|i| i as f64).collect();
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(21);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(21);
         let noise: Vec<f64> = (0..n).map(|_| rng.next_f64() - 0.5).collect();
 
         let cfg = WaveletConfig::new(WaveletFamily::Daubechies4, 4, BoundaryMode::Symmetric).unwrap();
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn white_noise_has_higher_wavelet_entropy_than_pure_tone() {
         let n = 512;
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(33);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(33);
         let noise: Vec<f64> = (0..n).map(|_| rng.next_f64() - 0.5).collect();
         let sine: Vec<f64> = (0..n).map(|i| (2.0 * core::f64::consts::PI * 4.0 * i as f64 / n as f64).sin()).collect();
 

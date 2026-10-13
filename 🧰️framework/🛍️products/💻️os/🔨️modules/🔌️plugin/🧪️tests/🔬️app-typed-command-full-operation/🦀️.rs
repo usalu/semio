@@ -144,44 +144,44 @@ mod typed_command_full_operation_tests {
     struct TwoTurnPublicationPresencePreparation {
         request: Option<store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>>,
         prepared: Option<store::ArtifactEphemeralOneItemPrepared<PublicationPresence>>,
-        checkpoint: store::ArtifactStoreOneItemCheckpoint,
+        checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
         turn: u8,
         closing: bool,
     }
 
     impl store::ArtifactEphemeralOneItemPreparationFactory<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparationFactory {
-        fn preflight(&self, _mutation: &PublicationPresenceMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-            Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 64 })
+        fn preflight(&self, _mutation: &PublicationPresenceMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+            Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: 64 })
         }
 
         fn begin(
             &self,
             request: store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>,
         ) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation>>, store::ArtifactEphemeralOneItemPreparationRequest<PublicationPresence, PublicationPresenceMutation>> {
-            Ok(Box::new(TwoTurnPublicationPresencePreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
+            Ok(Box::new(TwoTurnPublicationPresencePreparation { request: Some(request), prepared: None, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), turn: 0, closing: false }))
         }
     }
 
     impl store::ArtifactEphemeralOneItemPreparation<PublicationPresence, PublicationPresenceMutation> for TwoTurnPublicationPresencePreparation {
-        fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
             if !grant.permits_one() {
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+                return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
             }
             if self.turn == 0 {
                 self.turn = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [1; 32] };
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [1; 32] };
+                return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
             if self.prepared.is_none() {
                 let request = self.request.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "two-turn publication-presence preparation lost its owner bundle"))?;
                 let next_root = protocol::apply_diff(request.mutation.diff(request.base.as_ref()).diff(), request.base.as_ref()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string()))?;
                 self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: std::sync::Arc::new(next_root) });
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 2, digest: [2; 32] };
             }
-            Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+            Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
         }
 
-        fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+        fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
             self.checkpoint
         }
 
@@ -199,7 +199,7 @@ mod typed_command_full_operation_tests {
             self.closing = true;
         }
 
-        fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+        fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if !self.closing || !grant.permits_one() {
                 return Ok(RetainedCloneStep::Progress(RetainedCloneProgress::default()));
@@ -327,7 +327,7 @@ mod typed_command_full_operation_tests {
     pub(super) async fn retained_cancellation_publication_boundaries<A: ArtifactApp<Presence = PublicationPresence, PresenceMutation = PublicationPresenceMutation> + Default>() {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral cancellation boundaries");
         let bytes = fixture["maximumBytes"].as_u64().unwrap() as usize;
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: fixture["maximumItems"].as_u64().unwrap() as usize, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 128 };
         assert_eq!(grant.maximum_items, 1);
         assert_eq!(bytes, TYPED_OPERATION_RESULT_PAGE_BYTES);
         for case in fixture["publicationCases"].as_array().unwrap() {
@@ -337,7 +337,7 @@ mod typed_command_full_operation_tests {
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
-        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
             let revision = app.store.content_revision_now();
             let operation = semio_framework_job::Operation::new(
                 semio_framework_job::allocate_operation_id(),
@@ -402,10 +402,10 @@ mod typed_command_full_operation_tests {
                     app.presence_store.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), app.presence_local_root_retirement_factory.clone()).unwrap();
                 mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Presence(pending));
                 let target = match boundary {
-                    "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
-                    "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
-                    "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
-                    "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
+                    "preparation" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing,
+                    "preflight" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
+                    "publishing" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing,
+                    "awaitingAck" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
                     other => panic!("unknown publication boundary {other}"),
                 };
                 for _ in 0..8 {
@@ -415,7 +415,7 @@ mod typed_command_full_operation_tests {
                     if pending.phase() == target {
                         break;
                     }
-                    app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                    app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 }
                 let Some(PendingArtifactStorePublication::Presence(pending)) = mounted.pending_artifact_publication.as_ref() else {
                     panic!("exact pending presence owner");
@@ -430,7 +430,7 @@ mod typed_command_full_operation_tests {
                 assert_eq!(mounted.result_page.as_ref().unwrap().bytes(), page.bytes());
                 assert!(mounted.acknowledge_result_page(page.token).unwrap());
             }
-            app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+            app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
             assert_eq!(mounted.stage, MountedTypedCommandFullOperationStage::AwaitingAck);
             let cancelled = mounted.result_page.as_ref().unwrap();
             assert_eq!(cancelled.lane, TypedOperationResultLane::Fault);
@@ -462,19 +462,19 @@ mod typed_command_full_operation_tests {
             presence.install_local_retirement_factory(factory.clone()).unwrap();
             let mut pending = presence.begin_publish_one(key.operation_id, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&TwoTurnPublicationPresencePreparationFactory), Some(factory.clone())).unwrap();
             for _ in 0..8 {
-                if pending.phase() == store::ArtifactStoreOneItemPublicationPhase::Publishing {
+                if pending.phase() == store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing {
                     break;
                 }
-                assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Progress(_)));
+                assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_)));
             }
-            assert_eq!(pending.phase(), store::ArtifactStoreOneItemPublicationPhase::Publishing);
+            assert_eq!(pending.phase(), store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing);
             let mut permit = if case["claimFirst"].as_bool().unwrap() { Some(lease.try_claim_publication().unwrap()) } else { None };
             assert!(cancellations.cancel(&key).unwrap());
             if !case["claimFirst"].as_bool().unwrap() {
                 permit = lease.try_claim_publication();
             }
             if permit.is_some() {
-                assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)));
+                assert!(matches!(presence.advance_publish_one(&mut pending, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)));
                 assert!(pending.acknowledge());
             }
             drop(permit);
@@ -551,7 +551,7 @@ mod typed_command_full_operation_tests {
         eprintln!("[DEBUG] latest-wins neutral key matched serde identity and retained subexact shared headers");
     }
 
-    pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
+    pub(super) async fn retained_document_cancellation<A: ArtifactApp + Default>(factory: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<A::Snapshot, A::Mutation>>, mutation: fn() -> A::Mutation, observe: fn(&A::Snapshot) -> i32) {
         let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).unwrap();
         for case in fixture["publicationCases"].as_array().unwrap() {
             for delayed_ack in [false, true] {
@@ -561,7 +561,7 @@ mod typed_command_full_operation_tests {
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
-        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
                 let before = app.store.snapshot_root();
                 let revision = app.store.content_revision_now();
                 let generation = app.store.generation_now();
@@ -624,10 +624,10 @@ mod typed_command_full_operation_tests {
                         app.store.begin_apply_batch(operation.operation, generation, revision, "fixture".into(), vec![mutation()], HistoryLane::Document, Some(&factory), None).unwrap_or_else(|_| panic!("exact scalar document preparation admission"));
                     mounted.pending_artifact_publication = Some(PendingArtifactStorePublication::Artifact(pending));
                     let target = match boundary {
-                        "preparation" => store::ArtifactStoreOneItemPublicationPhase::Preparing,
-                        "preflight" => store::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
-                        "publishing" => store::ArtifactStoreOneItemPublicationPhase::Publishing,
-                        "awaitingAck" => store::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
+                        "preparation" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing,
+                        "preflight" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::PreflightingCommit,
+                        "publishing" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing,
+                        "awaitingAck" => store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::AwaitingAck,
                         _ => unreachable!(),
                     };
                     for _ in 0..100_000 {
@@ -637,7 +637,7 @@ mod typed_command_full_operation_tests {
                         if pending.phase() == target {
                             break;
                         }
-                        app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                        app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                     }
                     let Some(PendingArtifactStorePublication::Artifact(pending)) = mounted.pending_artifact_publication.as_ref() else {
                         panic!("exact document pending owner");
@@ -661,7 +661,7 @@ mod typed_command_full_operation_tests {
                         assert!(mounted.acknowledge_result_page(receipt.token).unwrap());
                     }
                 }
-                app.publish_mounted_typed_operation_unit(&mut mounted, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
+                app.publish_mounted_typed_operation_unit(&mut mounted, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).unwrap();
                 let final_page = if delayed_ack {
                     let presented = mounted.take_result_page().unwrap();
                     let mut deliveries = 1;
@@ -926,7 +926,7 @@ mod typed_command_full_operation_tests {
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] original typed fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("original typed fixture supplied identity authority");
-        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
+        let mut app = VcsArtifactApp::<A>::new(A::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()),mounted_policy,&mut identity).await;
         let first = fixture["slotReservation"]["firstOperation"].as_u64().unwrap();
         let collision = fixture["slotReservation"]["collidingOperation"].as_u64().unwrap();
         app.typed_operation_reservations[first as usize % ARTIFACT_LIVE_OUTPUT_SLOTS] = Some(first);
@@ -1003,14 +1003,14 @@ mod typed_command_full_operation_tests {
             if app.presence_store.generation_now() == 1 {
                 break;
             }
-            app.advance_typed_operation_publication_one(crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
+            app.advance_typed_operation_publication_one(crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.unwrap();
         }
         assert_eq!(app.presence_store.generation_now(), 1);
         let stuck = app.tool_operations.get(1).expect("the structurally faulted operation stays mounted until it retires");
         assert_eq!(stuck.stage, MountedTypedCommandFullOperationStage::AwaitingAck, "a refused worker step leaves its own operation holding its own terminal fault page");
         let mut pages: Vec<(u64, TypedOperationResultLane, String)> = Vec::new();
         while let Some(page) = app.take_typed_operation_result_page(7) {
-            let code = if page.lane == TypedOperationResultLane::Fault { crate::app::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
+            let code = if page.lane == TypedOperationResultLane::Fault { crate::tool_contract::decode_typed_operation_fault_page(page.bytes()).code.0 } else { String::new() };
             let operation = page.token.operation;
             pages.push((operation, page.lane, code));
             if operation == 1 {
@@ -1265,8 +1265,8 @@ mod typed_command_full_operation_tests {
         let initial_root = presence.local_read().unwrap();
         let factory = TwoTurnPublicationPresencePreparationFactory;
         let mut publication = presence.begin_publish_one(operation.operation, 0, ChangePublicationPresence { revision: 1 }.into(), Some(&factory), Some(root_factory.clone())).expect("two-turn presence publication admits");
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 64, maximum_release_bytes: 64, maximum_depth: 128 };
-        assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::ArtifactStoreOneItemAdvance::Progress(_))));
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 64, maximum_release_bytes: 64, maximum_depth: 128 };
+        assert!(matches!(presence.advance_publish_one(&mut publication, grant), Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_))));
         assert!(std::ptr::eq(initial_root.get(), presence.local()));
         assert_eq!(presence.generation_now(), 0);
 
@@ -1376,7 +1376,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn typed_child_publication_has_one_retained_async_group_owner_and_never_clone_publishes() {
-        let source = include_str!("../../🦀️.rs");
+        let source = include_str!("../../🧵️instance/🦀️.rs");
         let child_start = source.rfind("async fn publish_mounted_typed_child_operation_unit(").expect("retained child publisher");
         let child_end = source[child_start..].find("fn publish_mounted_typed_operation_unit(").map(|offset| child_start + offset).expect("retained child publisher end");
         let child_publisher = &source[child_start..child_end];
@@ -1403,7 +1403,7 @@ mod typed_command_full_operation_tests {
     /// is asserted directly, as the order decoder → gate → reducer entry.
     #[test]
     fn full_operation_source_rejects_generic_reducers_and_old_monolithic_shells() {
-        let source = include_str!("../../🦀️.rs");
+        let source = [include_str!("../../🧵️retained-command/🔄️full-operation/🦀️.rs"), include_str!("../../🧵️instance/🦀️.rs")].concat();
         let start = source.find("impl<A: ArtifactApp> semio_framework_job::InteractiveJob for TypedCommandFullOperationJob<A>").expect("typed full-operation job");
         let end = source[start..].find("struct TypedCommandFullOperationJobFactory").map(|offset| start + offset).expect("typed full-operation factory");
         let job = &source[start..end];
@@ -1441,7 +1441,7 @@ mod typed_command_full_operation_tests {
     /// named by its own call — a new `.await` anywhere in the publisher fails here by name.
     #[test]
     fn fixture_contract_is_anchored_to_the_production_retained_factory_publisher_and_host_receivers() {
-        let source = include_str!("../../🦀️.rs");
+        let source = include_str!("../../🧵️instance/🦀️.rs");
         let admission_marker = ["async fn admit_command_json_with_", "proof(&self"].concat();
         let admission_start = source.rfind(&admission_marker).expect("production raw JSON admission");
         let admission_end = source[admission_start..].find("pub async fn new(app: A, actor").map(|offset| admission_start + offset).expect("admission route end");
@@ -1523,7 +1523,7 @@ mod typed_command_full_operation_tests {
 
     #[test]
     fn host_configuration_uses_one_bounded_event_sourced_lane_before_the_generic_gate() {
-        let source = include_str!("../../🦀️.rs");
+        let source = include_str!("../../🧵️instance/🦀️.rs");
         let start = source.find("pub(crate) async fn dispatch_action").expect("action route");
         let end = source[start..].find("async fn dispatch_command(").map(|offset| start + offset).expect("command route");
         let route = &source[start..end];

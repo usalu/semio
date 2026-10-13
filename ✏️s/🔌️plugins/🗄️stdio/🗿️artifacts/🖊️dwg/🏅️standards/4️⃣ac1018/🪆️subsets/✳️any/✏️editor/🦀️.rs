@@ -4,9 +4,9 @@
 
 use crate::editor::dwg_ac1018::modes::edit;
 use crate::editor::dwg_ac1018::modes::edit::windows::main;
-use crate::standards::v_ac1018::subsets::any::schema::mutations::{DwgMutation};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1018::subsets::any::schema::mutations::DwgMutation;
 
-use crate::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1018::subsets::any::schema::snapshot::DwgSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -87,7 +87,7 @@ const DWG_AC1018_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn dwg_ac1018_editor_example_snapshot(example_id: &str) -> DwgSnapshot {
     if example_id == crate::examples::demo::ID {
-        <DwgSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <DwgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         DwgSnapshot::default()
     }
@@ -243,7 +243,7 @@ impl ArtifactEditor for DwgAc1018Editor {
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

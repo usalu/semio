@@ -111,7 +111,7 @@ async fn loading_an_example_swaps_the_document_through_an_effect_and_never_a_mut
         assert!(emit.artifact_mutations.is_empty(), "example {id} must not reach the mutation seam");
         let [semio_framework_plugin::kernel::Effect::LoadDocument { pack, spr }] = emit.effects.as_slice() else { panic!("example {id} must emit exactly one LoadDocument effect") };
         assert!(!pack.is_empty() && !spr.is_empty(), "example {id} emitted an empty document");
-        let loaded = <EnergyModelSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
+        let loaded = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("the emitted pack decodes");
         assert_eq!(loaded.model, model, "example {id} loaded a different model than its own leaf declares");
     }
     let fault = reduce(&EnergyModelEditorCommand::SetActiveExample { example_id: "nonsense".into() }, &doc).err().expect("an unknown example id is refused");
@@ -589,11 +589,11 @@ async fn simulation_app() -> EnergyEditorApp {
     model.run_period.end_month = period["endMonth"].as_u64().unwrap() as u8;
     model.run_period.end_day = period["endDay"].as_u64().unwrap() as u8;
     let snapshot = snapshot_of(&model);
-    let pack = <EnergyModelSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let envelope = store::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
-    let spr = store::print_document_spr(&envelope).await.expect("fixture spr");
+    let pack = <EnergyModelSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<EnergyModelSnapshot, EnergyModelMutation>(ENERGY_MODEL_DOCUMENT_SCHEMA, "model", snapshot, None).into_owners();
+    let spr = store::os_store::text_format::print_document_spr(&envelope).await.expect("fixture spr");
     let mut app = dispatchable_app().await;
-    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fixture document loads");
+    semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("fixture document loads");
     let settings = &scenario["settings"];
     let args = semio_framework_plugin::DslValue::Object(["zoneTimestepMinutes", "systemTimestepMinutes", "warmupDays"].iter().map(|key| (key.to_string(), semio_framework_plugin::DslValue::String(settings[key].to_string()))).collect());
     app.handle_action(simulation::SET_SETTINGS_ACTION_ID, Some(&args), &semio_framework_plugin::artifact_app_laws::meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("settings dispatch");

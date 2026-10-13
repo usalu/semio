@@ -4,8 +4,8 @@
 //! ("presentation mirrors document's block shape with own types" — the shape types themselves
 //! (`SlideMaster`/`SlideLayout`/`Slide`/`SlideShape`) are owned here; only the block-tree LEAF is
 //! shared, per `w1b-type-ownership.md`).
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
 use framework_schema::ArtifactSchema;
 //#region 🔖️Geometry
 /// 📐️ A shape's on-slide placement: top-left `origin` (EMU-agnostic plane coordinates, matching

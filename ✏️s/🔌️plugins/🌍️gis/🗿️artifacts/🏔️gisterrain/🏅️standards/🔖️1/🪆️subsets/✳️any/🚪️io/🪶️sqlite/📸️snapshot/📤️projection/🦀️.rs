@@ -4,7 +4,7 @@ use store::sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, artifact::{P
 enum Parent<'a> { Collection(&'static str, usize), Property(usize, &'a str), Array(i64, usize), Member(i64, usize, &'a str) }
 fn decimal(mut value: u64, buffer: &mut [u8; 20]) -> Result<&str, ValueError> { let mut start = buffer.len(); loop { start -= 1; buffer[start] = b'0' + (value % 10) as u8; value /= 10; if value == 0 { break; } } std::str::from_utf8(&buffer[start..]).map_err(invalid) }
 pub(super) fn project(snapshot: &GisTerrainSnapshot, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
- let mut projection = Projection::new(<GisTerrainSnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, control)?;
+ let mut projection = Projection::new(<GisTerrainSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, control)?;
  projection.insert("gis_terrain_document", &[])?; insert_ieee754(&mut projection, "gis_terrain_parameters", &[Cell::Real(snapshot.exaggeration)], SCALAR)?;
  if let Some(child) = &snapshot.mesh { projection.insert("gis_terrain_mesh_child", &[Cell::Text(&child.child_id), Cell::Text(&child.target.artifact_id), Cell::Text(&child.target.dialect.artifact_kind), Cell::Text(&child.target.dialect.standard), Cell::Text(&child.target.dialect.subset)])?; }
  if let Some(map) = &snapshot.imported_map {

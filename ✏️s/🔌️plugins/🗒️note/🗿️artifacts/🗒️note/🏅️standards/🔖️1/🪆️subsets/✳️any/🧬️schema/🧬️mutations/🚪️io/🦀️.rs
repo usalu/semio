@@ -16,7 +16,7 @@ pub fn apply_note_mutation(snapshot: &NoteSnapshot, mutation: &NoteMutation) -> 
 // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
 pub fn apply_note_mutation_outcome(snapshot: &mut NoteSnapshot, mutation: &NoteMutation) -> protocol::MutationOutcome<NoteDiff> {
     let outcome = <NoteMutation as protocol::Mutation<NoteSnapshot>>::diff(mutation, snapshot);
-    let (next, outcome) = store::apply_outcome(snapshot, outcome);
+    let (next, outcome) = store::os_store::replay::apply_outcome(snapshot, outcome);
     *snapshot = next;
     outcome
 }

@@ -59,7 +59,7 @@ async fn advance_retained_extension_invocation(cx:&mut semio_framework_job::Step
 }
 
 enum CommandIngressOwner {
-    ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: crate::app::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
+    ReservedPresence { cursor: semio_framework::kernel::CommandPageCursor, admission: crate::peer_roster::PresenceRosterAdmission, page: semio_framework::kernel::FixedCommandPage },
     Presence { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64 },
     PendingPresencePage { cursor: semio_framework::kernel::CommandPageCursor, publication_generation: u64, page: semio_framework::kernel::FixedCommandPage },
     GenericAssembly { cursor: semio_framework::kernel::CommandPageCursor, pages: semio_framework::kernel::CommandPageSet },
@@ -282,7 +282,7 @@ impl TurnMoreWorkSources {
 }
 
 /// 🧹️ Retires late-built children and documents before their released arguments and keeps queued ownership runnable.
-pub(crate) fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault> {
+fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault> {
     let built_complete = ui_contract::close_built_node_page_one();
     let documents = ui_contract::close_ui_document_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
     let values = ui_contract::close_ui_value_page_with_grant(PATCH_RETIREMENT_ITEMS_PER_UNIT, PATCH_RETIREMENT_BYTES_PER_UNIT).map_err(reactor_close_fault)?;
@@ -292,7 +292,7 @@ pub(crate) fn close_late_ui_retirement() -> Result<bool, semio_framework::Fault>
 /// 🩺️ Records what this turn was handed so the per-turn memory line can put growth beside input
 /// size — the one comparison that separates "the events retain" from "the call itself leaks". Only
 /// the component boundary can price the events, and only wasm has a linear memory to price.
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub(super) fn note_turn_events(count: usize, payload_bytes: usize) {
     TURN_EVENTS.set((count, payload_bytes));
 }
@@ -322,9 +322,9 @@ fn trace_turn_phase_retention(phase: &str) {
 /// the actor world's own `log` import always lands somewhere the host prints. Off wasm the two are
 /// the same stream, so this stays one call site.
 fn trace_guest_line(line: &str) {
-    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     ::semio_framework_async::poll::resolve_ready(crate::component::wasip2::log("debug", line));
-    #[cfg(not(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2")))]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     eprintln!("{line}");
 }
 
@@ -362,7 +362,7 @@ fn trace_guest_memory_pressure() {
     }
 }
 
-fn native_close_key<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
+fn native_close_key<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, instance: u32) -> Result<instance_lifetime::NativeCloseKey, semio_framework::Fault> {
     let lifetimes = runtime.guest_lifetimes.try_borrow().map_err(|_| reactor_close_fault("lifecycle authority busy"))?;
     lifetimes.get(instance).filter(|slot| slot.cell.is_live()).and_then(|slot| slot.cell.owner()).map(|owner| owner.key()).ok_or_else(|| reactor_close_fault("instance has no acknowledged live lifetime"))
 }
@@ -536,7 +536,7 @@ thread_local! {
 /// ⏱️ Executing microseconds of the turn in flight, including the poll currently on the stack.
 /// `None` means the host clock was missing or ran backward, which the lifecycle authority retains
 /// its receipt for exactly like an overrun.
-pub(crate) fn guest_turn_executing_us() -> Option<u64> {
+fn guest_turn_executing_us() -> Option<u64> {
     let execution = TURN_EXECUTION.with(Cell::get);
     if execution.clock_lost {
         return None;
@@ -578,7 +578,7 @@ async fn with_turn_execution<T>(mut future: std::pin::Pin<&mut (impl std::future
 /// ⏱️ Charges the turn in flight with executing microseconds it never really spent, so a law can
 /// reach the strict ceiling deterministically instead of sleeping through it.
 #[cfg(test)]
-pub(crate) fn charge_turn_execution_us(spent_us: u64) {
+fn charge_turn_execution_us(spent_us: u64) {
     TURN_EXECUTION.with(|execution| {
         let mut current = execution.get();
         current.accumulated_us = current.accumulated_us.saturating_add(spent_us);
@@ -598,7 +598,7 @@ mod inbound_request_tests;
 /// 🧠️ Repository-owned actor ABI entrypoint. The component-model wrapper above and the native
 /// interpreter both call this exact kernel reducer, so WIT lifting is no longer the production
 /// host's semantic authority.
-pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
+pub async fn poll_kernel<PA: crate::plugin_app::PluginApp + 'static>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
@@ -612,7 +612,7 @@ pub async fn poll_kernel<PA: crate::app::PluginApp + 'static>(
 
 /// 🧠️ One guest turn under [`with_turn_execution`] accounting — the only door into [`poll_kernel_turn`].
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
-pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
+pub(super) async fn poll_kernel_output<PA: crate::plugin_app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
@@ -631,7 +631,7 @@ pub(super) async fn poll_kernel_output<PA: crate::app::PluginApp, T, Prepared>(
 /// that most turns never reach. Boxed here, the turn generator holds an 8-byte pointer and the
 /// exchange state is allocated only on the turns that actually run a command. See
 /// `📓️poll-task-leak-2026-09-10.md` §3.2.
-fn plugin_exchange_boxed<'a, 'b, 'context, PA: crate::app::PluginApp>(
+fn plugin_exchange_boxed<'a, 'b, 'context, PA: crate::plugin_app::PluginApp>(
     runtime: &'a crate::plugin_runtime::PluginRuntime<PA>,
     instance_id: u32,
     command: Option<(u64, crate::plugin_runtime::PluginCommandIngress)>,
@@ -815,7 +815,7 @@ fn plugin_exchange_boxed<'a, 'b, 'context, PA: crate::app::PluginApp>(
 /// the last flush into one coalesced `PresenceUpdate` each (free burst coalescing: a hover storm
 /// between polls still costs exactly one update per `(surface, node_key)`).
 #[expect(clippy::result_large_err, reason = "Patch reservation and publication callbacks return the original fixed surface or patch owner on refusal; these transfers must not allocate an error wrapper.")]
-async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
+async fn poll_kernel_turn<PA: crate::plugin_app::PluginApp, T, Prepared>(
     runtime: &crate::plugin_runtime::PluginRuntime<PA>,
     events: Vec<Event>,
     command_page: Option<(semio_framework::kernel::CommandPageCursor, semio_framework::kernel::FixedCommandPage)>,
@@ -1060,7 +1060,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                 REGISTRY.with(|registry| registry.resolve(semio_framework::kernel::RequestId(job), outcome));
             }
             Event::Message { source: MessageEndpoint::Shell { instance }, payload } => {
-                if let Some(token) = crate::app::TypedOperationResultPage::renderer_ack_token(&payload) {
+                if let Some(token) = crate::tool_jobs::TypedOperationResultPage::renderer_ack_token(&payload) {
                     if instance.0.parse::<u32>().ok() == Some(token.receiver) {
                         let _ = crate::plugin_runtime::plugin_acknowledge_typed_operation_result(runtime, token).await?;
                     }
@@ -1495,7 +1495,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
             continue;
         }
         let surface_key = surface.as_ref().to_owned();
-        let _ = crate::app::take_arena_unbuilt_rows();
+        let _ = crate::tree_kit::take_arena_unbuilt_rows();
         let mounted = match native_close_key(runtime, instance) {
             Ok(key) => PATCHES.with(|patches| patches.reserve_mounted(surface, key)),
             Err(_) => Err(surface),
@@ -1514,7 +1514,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
                         ));
                         continue;
                     }
-                    let unbuilt = crate::app::take_arena_unbuilt_rows();
+                    let unbuilt = crate::tree_kit::take_arena_unbuilt_rows();
                     ARENA_STARVED.with(|starved| starved.borrow_mut().note(instance, surface_key.as_str(), unbuilt));
                     for update in presence {
                         PRESENCE.with(|hub| {
@@ -1674,7 +1674,7 @@ async fn poll_kernel_turn<PA: crate::app::PluginApp, T, Prepared>(
 /// leaves open: never below one contiguous request ceiling (a lane that declared less could not carry
 /// one document-scaled publication at all) and never above
 /// [`semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES`].
-pub(crate) fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
+fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -> usize {
     usize::try_from(budget.max_patch_bytes).unwrap_or(semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES).clamp(semio_framework_trace::GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES, semio_framework::kernel::UI_TURN_PATCH_BUDGET_BYTES)
 }
 
@@ -1694,7 +1694,7 @@ pub(crate) fn turn_patch_budget_bytes(budget: semio_framework::kernel::Budget) -
 /// 3. the page's fixed capacity stops the loop at [`semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM`],
 ///    which is itself derived so the page never becomes a contiguous request past the guest's ceiling.
 #[expect(clippy::result_large_err, reason = "A refused publication returns its exact patch owner to the reserved pending slot without allocating an error wrapper.")]
-pub(crate) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kernel::UiTurnPatches, semio_framework::Fault> {
+fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framework::kernel::UiTurnPatches, semio_framework::Fault> {
     let mut page = semio_framework::kernel::UiTurnPatches::default();
     let mut spent = 0usize;
     while page.len() < semio_framework::kernel::UI_TURN_PATCHES_MAXIMUM {
@@ -1730,7 +1730,7 @@ pub(crate) fn take_turn_patch_page(budget_bytes: usize) -> Result<semio_framewor
 /// answer is never sent to the newer transfer's turns. The newer pages answer `Backpressure` with the stale cursor until the
 /// registry has retired the stale owner (`accept_page`, one bounded step per attempt); the host resends them fresh. A load
 /// that already reached a terminal state refuses the cancel and finishes as it ended.
-async fn supersede_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, lifetime: semio_framework::kernel::ActorInstanceLifetime, transfer_generation: u64) {
+async fn supersede_cold_pair_document_load<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, lifetime: semio_framework::kernel::ActorInstanceLifetime, transfer_generation: u64) {
     let stale = COLD_PAIR_DOCUMENT_LOAD.with(|slot| {
         slot.borrow_mut().as_mut().filter(|pending| pending.cursor.lifetime == lifetime && pending.cursor.transfer_generation < transfer_generation && !pending.superseded).map(|pending| {
             pending.superseded = true;
@@ -1742,7 +1742,7 @@ async fn supersede_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &
     }
 }
 
-async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
+async fn step_cold_pair_document_load<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, pending: cold_pair::ColdPairDocumentLoad, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::kernel::ColdPairIngressStatus {
     use protocol::DocumentArchiveLoadState;
     use semio_framework::kernel::ColdPairIngressStatus;
     let lifetime = pending.cursor.lifetime;
@@ -1773,7 +1773,7 @@ async fn step_cold_pair_document_load<PA: crate::app::PluginApp>(runtime: &crate
 /// 📸️ Drives every checkpoint-restored document load by one poll (`📓️api-stepped-document-load.md` §4). A terminal load
 /// is acknowledged; a faulted one reaches the instance's shell as a fault, a cancelled one keeps the initial document.
 /// A closed instance's load is dropped with it. Answers whether any load still runs.
-async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
+async fn step_restored_document_loads<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
     use protocol::DocumentArchiveLoadState;
     let operation = checkpoint::RESTORE_DOCUMENT_LOAD_OPERATION;
     let loads = RESTORED_DOCUMENT_LOADS.with(|loads| std::mem::take(&mut *loads.borrow_mut()));
@@ -1804,7 +1804,7 @@ async fn step_restored_document_loads<PA: crate::app::PluginApp>(runtime: &crate
     pending
 }
 
-fn fill_turn_patch_page<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
+fn fill_turn_patch_page<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, budget_bytes: usize) -> Result<(semio_framework::kernel::UiTurnPatches, Option<ActorUiPatchReceipt>), semio_framework::Fault> {
     let page = take_turn_patch_page(budget_bytes)?;
     let instance = page.iter().next().and_then(|patch| parse_surface_instance(&patch.surface.0));
     let receipt = instance.and_then(|instance| runtime.guest_lifetimes.borrow_mut().next_patch_receipt(instance));
@@ -1822,7 +1822,7 @@ const PROCESS_POOL_WALL_MS: u64 = 2;
 /// executes when the pool is pumped. Before this the only pump was the cooperative-maintenance cadence,
 /// so every submitted step waited ~170 reactor turns (measured 2026-09-09). Bounded by
 /// [`PROCESS_POOL_PUMPS_PER_TURN`] and [`PROCESS_POOL_WALL_MS`]; returns whether pool work remains.
-pub(crate) fn pump_process_worker_pool() -> bool {
+fn pump_process_worker_pool() -> bool {
     #[cfg(target_arch = "wasm32")]
     {
         PROCESS_POOL.with(|pool| {
@@ -1948,16 +1948,16 @@ const REACTOR_CLOSE_UNITS_PER_TURN: usize = 4_096;
 /// W-S2). At 256 it is 5. The turn stays interactive because [`PATCH_CLOSE_DEADLINE_STRIDE`] re-reads
 /// the clock every 8 units against the turn's own budget — the unit count is the ceiling, the
 /// deadline is the bound.
-pub(crate) const PATCH_CLOSE_UNITS_PER_TURN: usize = 256;
+const PATCH_CLOSE_UNITS_PER_TURN: usize = 256;
 /// ⏱️ How often the retirement run re-reads the clock — the same 64-opportunity stride the reconcile
 /// loop uses, scaled to this shorter run.
 const PATCH_CLOSE_DEADLINE_STRIDE: usize = 8;
 /// 🧹️ Items one retirement unit may retire. Priced per PAGE like every other stage of the turn
 /// (`SURFACE_RECONCILE_PAGE_BYTES` for bytes, this for items) instead of per item, so a
 /// document-scaled patch retires in a bounded handful of turns instead of one turn per item.
-pub(crate) const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
+const PATCH_RETIREMENT_ITEMS_PER_UNIT: usize = 1_024;
 /// 🧹️ Bytes one retirement unit may retire — the publication's own page budget.
-pub(crate) const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
+const PATCH_RETIREMENT_BYTES_PER_UNIT: usize = semio_framework_ui_runtime::SURFACE_RECONCILE_PAGE_BYTES;
 /// ⏱️ The reactor's OWN slice of one turn: the wall the executor may spend running ready tasks before
 /// it hands control back to whoever polled it. It is the reactor's slice, not the turn's — the turn's
 /// own wall is [`semio_framework::kernel::Budget::deadline_ms`], which the reconcile drive and the
@@ -2036,7 +2036,7 @@ pub const fn more_work_drive_budget_ms(grant_wall_ms: u64, guest_turn_cost_ms: u
 /// 🩹️ `take_ready_patch_into` already committed this output to its closing
 /// lifecycle; there is no `return_ready_patch` any more, so losing this
 /// capacity race simply drops the extracted page instead of re-queueing it.
-pub(crate) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, deadline: std::time::Instant) -> Result<usize, &'static str> {
+fn drive_reconcile_within(patches: &patches::PatchTracker, opportunities: usize, deadline: std::time::Instant) -> Result<usize, &'static str> {
     let mut spent = 0usize;
     for opportunity in 0..opportunities {
         let drivable = patches.has_drivable_work();
@@ -2087,7 +2087,7 @@ pub(crate) fn drive_reconcile_within(patches: &patches::PatchTracker, opportunit
 /// arrives as its own event-carrying turn, and arming for it bought exactly one round trip per turn
 /// that carried nothing (`📓️reactor-reconcile-spin-2026-09-14.md` §1). Same family as
 /// `📓️host-reconcile-silence-2026-09-12.md`, one layer out.
-pub(crate) fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
+fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
     if patches.has_drivable_work() {
         return true;
     }
@@ -2097,7 +2097,7 @@ pub(crate) fn reconcile_arms_turn(patches: &patches::PatchTracker) -> bool {
     })
 }
 
-fn live_patch_receipt<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
+fn live_patch_receipt<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, receipt: ActorUiPatchReceipt) -> bool {
     runtime.guest_lifetimes.borrow().get(receipt.lifetime.instance_id).is_some_and(|slot| slot.cell.is_live() && slot.cell.lifetime() == receipt.lifetime)
 }
 
@@ -2105,7 +2105,7 @@ fn original_turn_progress(before:semio_framework_value::RetainedCloneProgress,af
 
 /// 🧾️ Keeps exact producer grants and original deltas together when their receiver refuses authority.
 struct OriginalPublicationReceipts{
- constructor:Option<(crate::app::ArtifactStoreConstructorKind,crate::app::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
+ constructor:Option<(crate::document_ingress::ArtifactStoreConstructorKind,crate::document_ingress::ArtifactStoreConstructorPhase,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  preparation:Option<(semio_framework_job::OperationId,semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  history:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
  tool:Option<(semio_framework_value::RetainedCloneGrant,semio_framework_value::RetainedCloneProgress)>,
@@ -2235,7 +2235,7 @@ fn route_app_frame(instance: u32, frame_bytes: &[u8], effects: &mut Vec<Effect>)
 ///
 /// 🚫️async: E5 executor bridge — `plugin_resume_task` stays genuinely `async fn`; see
 /// `poll`'s `plugin_exchange` call for the same safety argument.
-pub fn drain_task_resumes<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
+pub fn drain_task_resumes<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, effects: &mut Vec<Effect>, max_rounds: u32, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> bool {
     for _ in 0..max_rounds {
         let Some(resume) = TASK_RESUMES.with(|resumes| resumes.borrow_mut().pop()) else {
             return false;

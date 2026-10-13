@@ -141,7 +141,7 @@ fn emit(p:&mut RowWriter<'_,'_>,table:&str,row:&ScalarRow<'_>)->Result<i64,Value
 fn scalar_cell(c:Cell<'_>)->ScalarCell<'_>{ScalarCell::Borrowed(c)}
 fn entity_row<T:Entity>(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,ordinal:Option<usize>,value:&T)->Result<i64,ValueError>{let mut c=ScalarRow::new();c.push(scalar_cell(Cell::Integer(parent)))?;if let Some(index)=ordinal{c.push(scalar_cell(Cell::Integer(i64::try_from(index).map_err(|e|invalid(e.to_string()))?)))?;}value.fields(&mut c)?;emit(p,table,&c)}
 fn entity_list<T:Entity>(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,values:&[T])->Result<(),ValueError>{for(index,value)in values.iter().enumerate(){entity_row(p,table,parent,Some(index),value)?;}Ok(())}
-fn child_fields<'a,S>(child:&'a store::ArtifactChild<S>,c:&mut ScalarRow<'a>)->Result<(),ValueError>{child.child_id.append(c)?;child.target.artifact_id.append(c)?;child.target.dialect.artifact_kind.append(c)?;child.target.dialect.standard.append(c)?;child.target.dialect.subset.append(c)}
+fn child_fields<'a,S>(child:&'a store::os_store::artifact_child::ArtifactChild<S>,c:&mut ScalarRow<'a>)->Result<(),ValueError>{child.child_id.append(c)?;child.target.artifact_id.append(c)?;child.target.dialect.artifact_kind.append(c)?;child.target.dialect.standard.append(c)?;child.target.dialect.subset.append(c)}
 
 const MESH_FIELDS:[&str;12]=["positions","normals","colors","indices","uvs","face_ids","vertex_ids","edge_positions","edge_ids","edge_uvs","edge_is_seam","paint_texture_base64"];
 const MESH_TYPES:[&str;12]=["f32","f32","f32","u32","f32","u32","u32","f32","u32","f32","u8","text"];
@@ -238,7 +238,7 @@ fn read_durable(r:&mut Reader<'_,'_,'_>,row:&SqliteRow,kind:&str)->Result<ByteBu
  }
  let shape=durable_shape(kind,&bytes,|_,_|r.native.step())?;if shape.field!=field||shape.tag!=tag||shape.kind!=storage||shape.count!=count{return Err(invalid("Remodeling structured durable boundary differs"))}Ok(ByteBuffer(bytes))
 }
-fn read_child<S>(row:&SqliteRow,index:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::ArtifactChild<S>,ValueError>{let child_id=String::read(row,index,n)?;let artifact_id=String::read(row,index,n)?;let artifact_kind=String::read(row,index,n)?;let standard=String::read(row,index,n)?;let subset=String::read(row,index,n)?;Ok(store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))}
+fn read_child<S>(row:&SqliteRow,index:&mut usize,n:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<store::os_store::artifact_child::ArtifactChild<S>,ValueError>{let child_id=String::read(row,index,n)?;let artifact_id=String::read(row,index,n)?;let artifact_kind=String::read(row,index,n)?;let standard=String::read(row,index,n)?;let subset=String::read(row,index,n)?;Ok(store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind,standard,subset}}))}
 fn read_float_buffer(r:&mut Reader<'_,'_,'_>,row:&SqliteRow)->Result<Float32Buffer,ValueError>{
  let samples=r.take("remodel_float_sample",row.rowid,1,6,true)?;
  match row.text(3)?{
@@ -288,13 +288,13 @@ fn restore(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Re
 
 
 /// 🪶️ The concrete owner shares one complete relational admission visitor across public and direct IO.
-impl store::ArtifactSqliteSnapshot for RemodelingSnapshot{
+impl store::os_store::serialization::ArtifactSqliteSnapshot for RemodelingSnapshot{
  const SQLITE_SCHEMA:&'static str=SCHEMA;
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{admit(self,c)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,c)}
  fn from_sqlite_database(database:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,c)}
- fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{admit(self,c)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=c.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
 }
 
 #[cfg(test)]

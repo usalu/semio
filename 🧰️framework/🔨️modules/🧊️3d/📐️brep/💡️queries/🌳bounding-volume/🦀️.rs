@@ -10,11 +10,11 @@
 pub mod spatial {
     //! 🌳️ Generic bounding-volume-hierarchy spatial index over AABB-bounded items.
     //!
-    //! Kernel-agnostic: works with any leaf payload (`semio_framework_3d::brep::kernel` instantiates
+    //! Kernel-agnostic: works with any leaf payload (`semio_framework_3d_brep_engine` instantiates
     //! `Bvh<FaceId>`/`Bvh<EdgeId>` internally) using only this file's own `engine::contract`'s `Vec3`/`Aabb`
     //! types, so this crate never depends on brep and stays reusable by other 3D kernels.
 
-    use crate::brep::engine::{Aabb, Vec3};
+    use semio_framework_3d_brep_representation::contract::{Aabb, Vec3};
 
     // #region 🔖️AabbHelpers
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -332,14 +332,14 @@ pub mod spatial {
 
 // 🌳 B-Rep entity BVH adapters over `spatial::Bvh` (ray / AABB / nearest by leaf bounds).
 
-use crate::brep::engine::{Aabb, Vec3};
-use crate::brep::queries::mass_properties::closest_point_on_face;
-use crate::brep::representation::arena::{EdgeId, FaceId, SolidId};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::Pnt3;
+use semio_framework_3d_brep_representation::contract::{Aabb, Vec3};
+use crate::mass_properties::closest_point_on_face;
+use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId, SolidId};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::Pnt3;
 use spatial::Bvh;
 
 // #region 🔖️Bounds

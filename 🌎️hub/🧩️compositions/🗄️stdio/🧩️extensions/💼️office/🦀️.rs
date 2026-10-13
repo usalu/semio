@@ -62,6 +62,3 @@ pub fn plugin() -> Result<Plugin<StdioOfficeApps>, PluginAssemblyError> {
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()
 }
-
-#[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, StdioOfficeApps);

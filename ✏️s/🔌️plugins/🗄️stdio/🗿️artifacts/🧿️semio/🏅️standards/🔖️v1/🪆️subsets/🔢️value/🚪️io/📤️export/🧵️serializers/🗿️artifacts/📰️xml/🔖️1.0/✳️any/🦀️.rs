@@ -15,7 +15,7 @@
 //! - `Ref{id}` is dereferenced the same way the value↔json serializer does (XML has no graph
 //!   either) — dangling refs and cycles are hard errors, never silently truncated.
 
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, ValueId};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, ValueId};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_xml::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDoctype, XmlDocument, XmlDtdDeclaration, XmlExternalId, XmlNode};
 use semio_s_artifact_stdio_xml::XmlSnapshot;

@@ -84,7 +84,7 @@ function scenario(row: any) {
 
 /** 🔬️ Compiles exact production parser, digest, input-mapping and preflight-comparison bodies. */
 function implementation(compiler: typeof compilers[number], adapters: Record<string, unknown> = {}) {
-  const names = ["sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "planRecord", "planString", "planPath", "planInteger", "parseLeafPreimage", "dispositionOperationId", "parseReferenceEdit", "parseMove", "parseTaxonomyPlan", "taxonomyPlanDigest", "generatorPathCompare", "normalizeRelative", "sourceRelative", "resumeGeneratorInputAuthority", "resumeGeneratorInputPhysicalPath", "resumeGeneratorInputRecord"];
+  const names = ["sha256", "canonicalArrayKey", "canonicalValue", "canonicalJson", "planRecord", "planString", "planPath", "planInteger", "parseLeafPreimage", "dispositionOperationId", "parseReferenceEdit", "parseMove", "parseTaxonomyPlan", "taxonomyPlanDigest", "generatorPathCompare", "normalizeRelative", "sourceRelative", "resumeGeneratorInputAuthority", "resumeGeneratorInputPhysicalPath", "resumeGeneratorInputRecord", "utf8Compare"];
   const selected = names.map((name) => { const node = declarations.get(name); if (!node) throw new Error("Missing production body: " + name); return node.getText(tree).replace(/^export\s+/u, ""); });
   for (const name of ["parseMoveSourceAuthority", "validateForwardMoveSourceInputs"]) {
     const optional = declarations.get(name);

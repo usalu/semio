@@ -2,7 +2,7 @@
 
 use crate::editor::architect::catalog::register_entities;
 use crate::editor::architect::chrome::{entity_id_from_json, entity_name_from_json};
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::{BlockListScene,BlockListStep,BlockListBlock,BlockListPaletteEntry};
 use semio_framework_ui_locale::Label;
 use semio_framework_ui_locale::LocalizedLabel;

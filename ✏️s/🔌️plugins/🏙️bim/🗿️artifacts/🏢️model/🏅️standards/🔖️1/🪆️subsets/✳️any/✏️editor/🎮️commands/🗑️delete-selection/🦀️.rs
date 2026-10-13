@@ -96,7 +96,7 @@ pub fn plan(snapshot: &ModelSnapshot, ids: &[String]) -> Plan {
         }
     }
     single.sort_by(|left, right| left.0.cmp(&right.0));
-    let fits = |batch: &[ModelMutation]| store::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(batch).is_ok();
+    let fits = |batch: &[ModelMutation]| store::os_store::one_item::ArtifactStoreOneItemFootprint::for_gesture::<ModelSnapshot, ModelMutation>(batch).is_ok();
     let (chunks, oversize) = if bulk.is_empty() { (Vec::new(), Vec::new()) } else { parts(snapshot, &bulk) };
     plan.remaining.extend(oversize);
     for chunk in chunks {

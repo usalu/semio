@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::Process3dSnapshot;
 
-/// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::ArtifactDsl`).
+/// 🗄️ The timber-beam-joinery example fixture, handcrafted in this artifact's DSL (`store::os_store::serialization::ArtifactDsl`).
 pub const PROCESS_3D_TIMBER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 /// 🌲️ The concrete forest example fixture — the real hexagonal-cut concrete forest piece
@@ -37,12 +37,12 @@ drill radius=0.008m depth=0.06m pose=position=@0.45,0.28,0.01 axis=^0,0,1 angle=
 
 /// 📖️ Parses `.process3d` DSL text into a `Process3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Process3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Process3dSnapshot` back to `.process3d` DSL text.
 pub fn print_dsl(document: &Process3dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -64,12 +64,12 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
 
 /// ✉️ Text and pack are two encodings of the one derived `__dsl_spec()`.
-impl store::ArtifactDsl for Process3dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Process3dSnapshot {
     const EXTENSION: &'static str = "process3d";
     fn envelope_id() -> &'static str {
         "process.process3d"
@@ -84,7 +84,7 @@ impl store::ArtifactDsl for Process3dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -99,26 +99,26 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
 
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
-/// language-neutral test adapter. `store::ArtifactDsl`/`store::ArtifactPack` and their error types
+/// language-neutral test adapter. `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` and their error types
 /// are unnameable outside this crate, so the identity law's evidence is produced here and handed
 /// over as text.
 ///
 /// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// re-parsing that — [`store::os_store::serialization::ArtifactDsl`]'s own documented LAW is that canonical output is a
 /// `parse_dsl` fixpoint, so the two must be byte-identical. `packDecoded` comes back through the
 /// binary codec, so agreeing on one snapshot cannot be achieved by carrying text bytes across.
 pub fn process3d_identity_report_json(dsl_text: &str) -> Result<String, String> {
-    let parsed = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
-    let canonical = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&parsed);
-    let reparsed = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
-    let canonical_again = <Process3dSnapshot as store::ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <Process3dSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <Process3dSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let parsed = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl_text).map_err(|error| error.to_string())?;
+    let canonical = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&parsed);
+    let reparsed = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
+    let canonical_again = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&reparsed);
+    let packed = <Process3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <Process3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([
         ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&ToValue::to_value(&parsed))),
         ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&ToValue::to_value(&reparsed))),
@@ -139,8 +139,8 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
 
 
@@ -153,9 +153,9 @@ use crate::standards::v1::subsets::any::schema::*;
 use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use store::ArtifactDsl;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use store::os_store::serialization::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
 pub fn default_document() -> crate::Process3dSnapshot {

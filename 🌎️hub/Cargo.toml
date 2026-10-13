@@ -6,49 +6,95 @@ members = [
     "📦️packages/🦀️rust",
     "🔐️auth/🔌️client/📦️packages/🦀️rust",
     "🧩️compositions/✒️writer/📦️packages/🦀️rust",
+    "🧩️compositions/✒️writer/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/➗️mathematical/📦️packages/🦀️rust",
+    "🧩️compositions/➗️mathematical/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🀄️wfc/📦️packages/🦀️rust",
+    "🧩️compositions/🀄️wfc/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌀️procedural/📦️packages/🦀️rust",
+    "🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌊️flow/📦️packages/🦀️rust",
+    "🧩️compositions/🌊️flow/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌍️gis/📦️packages/🦀️rust",
+    "🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🌿️vcs/📦️packages/🦀️rust",
+    "🧩️compositions/🌿️vcs/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎞️animate/📦️packages/🦀️rust",
+    "🧩️compositions/🎞️animate/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎥️shooting/📦️packages/🦀️rust",
+    "🧩️compositions/🎥️shooting/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎪️demonstrator/📦️packages/🦀️rust",
+    "🧩️compositions/🎪️demonstrator/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🎬️sequence/📦️packages/🦀️rust",
+    "🧩️compositions/🎬️sequence/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏗️fem/📦️packages/🦀️rust",
+    "🧩️compositions/🏗️fem/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏙️bim/📦️packages/🦀️rust",
+    "🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏛️architect/📦️packages/🦀️rust",
+    "🧩️compositions/🏛️architect/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🏭️process/📦️packages/🦀️rust",
+    "🧩️compositions/🏭️process/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/💠️lowpoly/📦️packages/🦀️rust",
+    "🧩️compositions/💠️lowpoly/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/💡️reasoning/📦️packages/🦀️rust",
+    "🧩️compositions/💡️reasoning/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📋️forms/📦️packages/🦀️rust",
+    "🧩️compositions/📋️forms/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📏️layout/📦️packages/🦀️rust",
+    "🧩️compositions/📏️layout/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📐️cad/📦️packages/🦀️rust",
+    "🧩️compositions/📐️cad/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📕️norm/📦️packages/🦀️rust",
+    "🧩️compositions/📕️norm/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📖️playbook/📦️packages/🦀️rust",
+    "🧩️compositions/📖️playbook/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📜️imperative/📦️packages/🦀️rust",
+    "🧩️compositions/📜️imperative/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/📸️remodel/📦️packages/🦀️rust",
+    "🧩️compositions/📸️remodel/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🔋️energy/📦️packages/🦀️rust",
+    "🧩️compositions/🔋️energy/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🔱️trinity/📦️packages/🦀️rust",
+    "🧩️compositions/🔱️trinity/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🕸️dag/📦️packages/🦀️rust",
+    "🧩️compositions/🕸️dag/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖍️draw/📦️packages/🦀️rust",
+    "🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🖨️raster/📦️packages/🦀️rust",
+    "🧩️compositions/🖨️raster/🧩️component/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🏭️bridge/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust",
+    "🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🗒️note/📦️packages/🦀️rust",
+    "🧩️compositions/🗒️note/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+    "🧩️compositions/🧩️puzzle/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🧱️block/📦️packages/🦀️rust",
+    "🧩️compositions/🧱️block/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🪐️space/📦️packages/🦀️rust",
+    "🧩️compositions/🪐️space/🧩️component/📦️packages/🦀️rust",
     "🧩️compositions/🪵️sourcing/📦️packages/🦀️rust",
+    "🧩️compositions/🪵️sourcing/🧩️component/📦️packages/🦀️rust",
 ]
 exclude = [
     "**/🏅️standards/**",
@@ -70,8 +116,10 @@ rust-version = "1.95"
 [workspace.dependencies]
 semio-framework-os-mcp = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust" }
 semio-framework-plugin-host = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
 semio-s-plugin-stdio = { path = "../✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust", default-features = false }
+semio-hub-stdio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust" }
+semio-hub-stdio-catalog = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
 semio-framework-artifact-playbook-playbook = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust" }
 semio-framework-artifact-space-space = { path = "../🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust" }
@@ -151,6 +199,9 @@ semio-s-artifact-stdio-step = { path = "../✏️s/🔌️plugins/🗄️stdio/�
 semio-s-artifact-stdio-ifc = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🏗️ifc/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-las = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/☁️las/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-gltf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-editor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-model = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-gltf-mutations = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-obj = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🗽️obj/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-ply = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧱️ply/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-dxf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖋️dxf/📦️packages/🦀️rust" }
@@ -158,6 +209,8 @@ semio-s-artifact-stdio-stl = { path = "../✏️s/🔌️plugins/🗄️stdio/�
 semio-s-artifact-stdio-svg = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎨️svg/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-bmp = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🪟️bmp/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-dwg = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-editor = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-dwg-model = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-png = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📷️png/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-pdf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-jpg = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📸️jpg/📦️packages/🦀️rust" }
@@ -168,6 +221,27 @@ semio-s-artifact-stdio-pptx = { path = "../✏️s/🔌️plugins/🗄️stdio/�
 semio-s-artifact-stdio-xlsx = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📕️xlsx/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-bcf = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/💬️bcf/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-semio = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-animation = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎞️animation/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-audio = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔊️audio/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-base = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-brep = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-cad = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📐️cad/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-catalog = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🧩️composition/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-document = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-drawing = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-flow = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🌊️flow/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-graph = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-image = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🖼️image/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-kit = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧰️kit/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-mesh = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔺️mesh/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-model = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-object = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📦️object/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-presentation = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📽️presentation/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-table = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📊️table/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-text = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔤️text/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-value = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust" }
+semio-s-artifact-stdio-semio-video = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🎬️video/📦️packages/🦀️rust" }
+
 semio-s-artifact-stdio-mp4 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎥️mp4/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-avi = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📼️avi/📦️packages/🦀️rust" }
 semio-s-artifact-stdio-mp3 = { path = "../✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🎵️mp3/📦️packages/🦀️rust" }
@@ -209,17 +283,17 @@ semio-s-artifact-norm-en1998 = { path = "../✏️s/🔌️plugins/📕️norm/�
 semio-s-artifact-norm-en1999 = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🪶️en1999/📦️packages/🦀️rust" }
 semio-s-artifact-norm-iso16757 = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/📇️iso16757/📦️packages/🦀️rust" }
 semio-s-artifact-norm-vdi3805 = { path = "../✏️s/🔌️plugins/📕️norm/🗿️artifacts/🏭️vdi3805/📦️packages/🦀️rust" }
-semio-hub-stdio-image = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-media = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-cad = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-bim = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-mesh = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-pdf = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-office = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-semio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust", default-features = false }
-semio-hub-stdio-binary = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust", default-features = false }
-semio-hub-gis = { path = "../🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust", default-features = false }
-semio-hub-vcs = { path = "../🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust", default-features = false }
+semio-hub-stdio-image = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust" }
+semio-hub-stdio-media = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust" }
+semio-hub-stdio-cad = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust" }
+semio-hub-stdio-bim = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust" }
+semio-hub-stdio-mesh = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust" }
+semio-hub-stdio-pdf = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust" }
+semio-hub-stdio-office = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust" }
+semio-hub-stdio-semio = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust" }
+semio-hub-stdio-binary = { path = "../🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust" }
+semio-hub-gis = { path = "../🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust" }
+semio-hub-vcs = { path = "../🌎️hub/🧩️compositions/🌿️vcs/📦️packages/🦀️rust" }
 [profile.dev]
 debug = false
 incremental = false
@@ -229,7 +303,7 @@ opt-level = 3
 
 # ⚡️ The plugin runtime every native dev host embeds (the semio MCP gateway, the hub, native shells) is
 # optimized even in the dev profile. At `opt-level = 0` the wasmtime component-model machinery around
-# every guest crossing and host call, and cranelift compiling a 129 MB wasm-dev guest, dominated the
+# every guest crossing and host call, and cranelift compiling a 129 MB unoptimized guest, dominated the
 # guest's own work. Measured on the wfc genesis `inference_run` over the semio MCP: 112.7 s with this
 # set unoptimized vs 63.9 s optimized (ticket 26/09/23, `📓️wp-g5.md`), and a first solve after a guest
 # rebuild waited ~9 min for its unoptimized cranelift compile. Only these crates change, so a rebuild
@@ -315,11 +389,11 @@ opt-level = 3
 [profile.dev.package.wit-parser]
 opt-level = 3
 
-# 🧮️ The owned wasm interpreter (`semio-framework-plugin-host::interpreter`) runs every trusted-catalog
+# 🧮️ The owned wasm interpreter (`semio-framework-plugin-interpreter`) runs every trusted-catalog
 # verification `codec.pack-schema-hash` on the hub's startup path. At `opt-level = 0` a debug hub spent
 # >11 min of one core interpreting writer/draw/puzzle during catalog load and the candidate readiness
 # wait gave up (ticket 26/09/23 W1 §4.6, sampled: 100 % in `CoreInstance::execute_machine`).
-[profile.dev.package.semio-framework-plugin-host]
+[profile.dev.package.semio-framework-plugin-interpreter]
 opt-level = 3
 
 # 🔐️ The repository's own SHA-256 carries every hub credential check: a sign-in derives PBKDF2-HMAC-SHA256
@@ -329,45 +403,14 @@ opt-level = 3
 [profile.dev.package.semio-framework-hash]
 opt-level = 3
 
-# 🛡️ WASI component links alone select this mitigation for rust-lld's ElemSection crash.
-# Native dev retains Cargo's parallel codegen policy; publication stays wasm-release.
-[profile.wasm-dev]
-inherits = "dev"
-codegen-units = 1
-# 🧾️ A component's described bytes must be its shipped bytes: `describe` and `component-dev` link the same
-# `cargo rustc --crate-type cdylib` unit, and `incremental` is part of that unit's profile identity, so an
-# inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
-# different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
-incremental = false
-# 🎚️ Composition components link at `opt-level = 1`. At `opt-level = 0` rustc keeps every trivial generic adapter
-# (`Option::map`, `Iterator::fold`, drop glue, the `ToValue`/`FromValue`/`RetireOwned`/`RetainedClone`/`CanonicalJsonTree`
-# derive bodies) as its own wasm function; after the grant-based retained-clone rollout (ticket 26/09/23
-# BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT) `semio-hub-stdio` reached 1 105 567 functions / 318 MB and `semio-hub-norm`
-# also crossed `wasm-component-ld`'s 1 000 000-function ceiling and the 256 MiB dev-component bound
-# (`FRESH_COMPONENT_MAX_BYTES`). `opt-level = 1` inlines the adapters: the same stdio assembly measures 299 058 functions
-# / 185 MB. Hot render paths below stay at `opt-level = 2`.
-opt-level = 1
-
-# 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
-# profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and
-# the runtime traps it with `plugin.internal.interactive-ceiling`, so the window renders a fault
-# instead of geometry. Raised beyond the profile's `opt-level = 1` for this render-path package only.
-[profile.wasm-dev.package.semio-framework-os-flow]
-opt-level = 2
-
-# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
-[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
-opt-level = 2
-
-# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
-[profile.wasm-dev.package.semio-framework-replication]
-opt-level = 2
-
-# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
-[profile.wasm-dev.package.semio-framework-pack]
-opt-level = 2
-
 # 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
+[profile.prototype]
+inherits = "dev"
+opt-level = 0
+lto = false
+codegen-units = 256
+incremental = true
+
 [profile.release]
 opt-level = 3
 lto = "thin"
@@ -376,14 +419,15 @@ strip = "debuginfo"
 incremental = false
 trim-paths = "object"
 
-# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. wasm32-wasip2 plugin components only — os-dev's
-# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Inherits ship-oriented
-# `[profile.release]` above, then overrides for wasm size/runtime (see below).
+# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2): wasm32-wasip2 plugin and extension components and
+# the wasm-bindgen browser modules. `describe`, provenance, receipts, module materialization and the trusted catalog all
+# act on these exact bytes; nothing else is ever described for commit or shipped. Inherits ship-oriented
+# `[profile.release]` above, then overrides for wasm size/runtime:
 #
 # - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
-#   few extra percent of size; the wasm-opt -Oz post-pass (see buildPlugin/transpilePluginComponent)
-#   gets the "z"-class shrink without paying that runtime cost in every plugin.
-# - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
+#   few extra percent of size; the wasm-opt -Oz post-pass of module materialization gets the "z"-class
+#   shrink without paying that runtime cost in every plugin.
+# - lto "thin" (not "fat"): fat LTO re-links every plugin cdylib individually — 2-4x slower per plugin
 #   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
 # - codegen-units = 16: measured on the raster hub (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT,
 #   2026-10-13): 317 s / 8.2 GB peak vs 612 s / 10.6 GB at 1, for +11% raw but only +2.4% brotli bytes on the wire
@@ -393,9 +437,7 @@ trim-paths = "object"
 # - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
 #   session state would only cost disk in the shared build-dir (`.cargo/config.toml` `build.build-dir`).
 # - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
-#   `Location` strings (panic = "unwind" is intentionally NOT overridden here — wasm32-wasip2's
-#   target spec already defaults to panic-strategy "abort", so plugins already abort-on-panic and
-#   `catch_unwind` already never catches on this target; setting it explicitly would be a no-op).
+#   `Location` strings (wasm32-wasip2 already aborts on panic, so `panic` is not overridden).
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"
@@ -405,6 +447,37 @@ strip = "symbols"
 incremental = false
 trim-paths = "object"
 
+# 🔁️ The single-plugin browser iteration loop only (`bun nx run workspace:components iterate <plugin-id>`): never in a
+# release graph, never described for commit, never shipped. Inherits the shipped profile's target settings and trades
+# size and speed for compile latency — incremental, no LTO, 256 codegen units, assertions on, symbols kept. Its bytes
+# reach no receipt but a local `wasm-prototype` one and stay under the local-only `ITERATE_COMPONENT_MAX_BYTES` (512 MiB).
+[profile.wasm-prototype]
+inherits = "wasm-release"
+debug = 1
+opt-level = 1
+lto = false
+codegen-units = 256
+incremental = true
+debug-assertions = true
+overflow-checks = true
+strip = "none"
+
+# 🎚️ An iterated plugin still meets the framework's 8 ms interactive-step contract: below `opt-level = 2` a lowpoly
+# render turn tessellates its seeded mesh in 10-11.5 ms and the runtime traps it with `plugin.internal.interactive-ceiling`.
+[profile.wasm-prototype.package.semio-framework-os-flow]
+opt-level = 2
+
+# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
+[profile.wasm-prototype.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
+[profile.wasm-prototype.package.semio-framework-replication]
+opt-level = 2
+
+# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
+[profile.wasm-prototype.package.semio-framework-pack]
+opt-level = 2
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced
@@ -427,21 +500,3 @@ semicolon_if_nothing_returned = "warn"
 unnecessary_wraps = "warn"
 redundant_clone = "warn"
 # phase B (enable after the T2/T3 waves land): unwrap_used = "warn"
-
-[profile.wasm-dev.package.semio-hub-norm]
-strip = "symbols"
-
-[profile.wasm-dev.package.semio-hub-stdio]
-strip = "symbols"
-
-[profile.wasm-dev.package.semio-hub-stdio-semio]
-strip = "symbols"
-
-[profile.wasm-dev.package.semio-hub-gis]
-strip = "symbols"
-
-[profile.wasm-dev.package.semio-hub-vcs]
-strip = "symbols"
-
-[profile.wasm-dev.package.semio-hub-demonstrator]
-strip = "symbols"

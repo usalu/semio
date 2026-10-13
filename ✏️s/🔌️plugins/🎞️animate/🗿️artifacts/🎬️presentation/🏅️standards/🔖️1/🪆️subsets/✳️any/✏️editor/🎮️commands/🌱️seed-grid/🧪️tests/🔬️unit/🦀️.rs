@@ -30,7 +30,7 @@ async fn set_active_example_demo_emits_a_reset_effect_after_seed() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <PresentationSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
+    let loaded = <PresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
     assert_eq!(loaded, crate::demo_presentation_snapshot(), "resetting to demo loads THE demo deck (source figure + its 3x5 tile crops), not the tile-less default document");
 }
 

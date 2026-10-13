@@ -1,10 +1,10 @@
 //! 📊️ Ordered declaration hints and independent contiguous native cell occurrences.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableSnapshot,SemioTableColumn,SemioTableRow,SemioTableCellKind};
-use crate::standards::v1::subsets::value::io::sqlite::snapshot::{project_value_tree,reconstruct_value_forest,ValueSqliteTables};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
+use crate::schema::snapshot::{SemioTableSnapshot, SemioTableColumn, SemioTableRow, SemioTableCellKind};
+use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::{project_value_tree, reconstruct_value_forest, ValueSqliteTables};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase}};
 use semio_framework_os_kernel::sqlite_snapshot::transfer;
 
 use store::sqlite_snapshot::SqliteDatabaseLimits;
@@ -19,7 +19,7 @@ pub(crate)fn admit_binary(body:&[u8],control:&mut semio_framework_value::NativeD
 /// 📃️ Counts actual document primitive cells before typed construction.
 pub(crate)fn admit_document(body:&str,control:&mut semio_framework_value::NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<(),ValueError>{semantic::document(body,control,limits)}
 /// 📊️ Visits independent declarations and every cell without imposing a rectangular shape.
-pub(crate)fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioTableSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_table_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,column)in snapshot.columns.iter().enumerate(){out.insert("semio_table_column",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&column.name),Cell::Text(kind(column.kind))])?;}
  for(ordinal,row)in snapshot.rows.iter().enumerate(){let id=out.insert("semio_table_row",&[Cell::Integer(1),Cell::Integer(number(ordinal)?)])?;for(column,value)in row.cells.iter().enumerate(){let value_id=project_value_tree(value,VALUES,None,out)?;out.insert("semio_table_cell",&[Cell::Integer(id),Cell::Integer(number(column)?),Cell::Integer(value_id)])?;}}Ok(())
@@ -73,7 +73,7 @@ if !values.get_mut().is_empty(){return Err(ValueError::new(ValueRefusalKind::Inv
 
 impl SemioTableSnapshot{
 /// 📏️ Bounds explicitly owned native fields before encoding.
-pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{crate::standards::v1::subsets::value::io::sqlite::snapshot::native_values(&row.cells,b)?;}Ok(())}
+pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.columns.len())?;for column in &self.columns{b.text(&column.name)?;b.scalars(1)?;}b.entities(self.rows.len())?;for row in &self.rows{semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::native_values(&row.cells,b)?;}Ok(())}
 }
 
 fn ordered<'a>(rows:&'a[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<&'a SqliteRow>,ValueError>{
@@ -85,13 +85,10 @@ fn identities(rows:&[SqliteRow],columns:usize,control:&mut SqliteSnapshotControl
  transfer::heap_sort(&mut ids,SqliteSnapshotPhase::ReconstructSnapshot,control,|a,b,_|Ok(a.cmp(b)))?;for(at,id)in ids.iter().enumerate(){if at>0&&ids[at-1]==*id{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"duplicate Semio table row identity"));}if(at+1)%256==0{control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,at+1,rows.len())?;}}Ok(ids)
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;

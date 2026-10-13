@@ -1,7 +1,7 @@
 //! 📐️ STEP exchange headers, typed argument ownership and entity references.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 use crate::standards::v_ap214::subsets::base::schema::snapshot::{StepSnapshot,StepHeader,StepFileDescription,StepFileName,StepFileSchema,StepEntity,StepComplexType,StepTypedValue, StepValue};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn,read_binary64,ieee754_is_null,validate_ieee754_row},*}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn,read_binary64,ieee754_is_null,validate_ieee754_row},*}};
 #[path = "📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
 #[path = "🛬️reconstruction/🦀️.rs"]

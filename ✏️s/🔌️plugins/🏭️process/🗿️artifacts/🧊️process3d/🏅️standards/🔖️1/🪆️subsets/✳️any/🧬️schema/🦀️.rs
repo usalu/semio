@@ -3,8 +3,8 @@
 use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🧩️ Builds one capability parameter for the authored domain catalogs.
 fn parameter(id: &str, label: &str, value: f64) -> CapabilityParameter {
@@ -33,15 +33,15 @@ pub struct Process3dArtifact {
     pub stock_payload: Stock,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
+    pub stock_solid: store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    pub steps: store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>,
     #[state(artifact)]
     pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
+    pub tool_solids: Vec<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>,
 }
 //#endregion 🔖️Artifact
 

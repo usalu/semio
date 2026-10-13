@@ -5,7 +5,7 @@ use protocol::Mutation;
 #[test]
 fn mask_link_changes_preserve_nested_composite_pixels_and_exact_undo() {
     use crate::standards::v1::subsets::any::schema::{raster_image_test_snapshot,snapshot::retire_raster_snapshot};
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     for owner in ["paint","group"] {
         let mut document=raster_image_test_snapshot();
         let mask=serde_json::json!({"enabled":true,"linked":true,"invert":false,"width":4,"height":4,"imageKey":"semio-emblem","transform":{"x":0.0,"y":0.0,"a":1.0,"b":1.0,"c":-1.0,"d":1.0}});
@@ -123,8 +123,8 @@ async fn layer_transform_controls_publish_independent_reversible_edits(){
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧬️schema/🧬️mutations/📐️change-layer-transform/🧪️tests/🔣️.json")).unwrap();
     for kind in ["pixel","group"] {
         let mut source=empty_raster_snapshot();source.layers.push(create_layer_of_kind(kind));let id=layer_node_id(&source.layers[0]).to_owned();
-        let envelope=store::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None);
-        let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
+        let envelope=store::os_store::document_materialize::create_document_envelope::<RasterSnapshot,RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"transform-controls",source,None);
+        let files=store::os_store::text_format::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
         let mut app=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();let mut history=vec![app.snapshot().unwrap()];
         for row in fixture["controls"].as_array().unwrap(){
             context::dispatch(&mut app,RasterCommand::PatchLayer(PatchLayer {layer_id:id.clone(),field:row["field"].as_str().unwrap().into(),value:row["value"].to_string()})).await;

@@ -7,7 +7,7 @@ fn original_projection_retirement_keeps_the_exact_issuer_and_all_physical_receip
  for row in corpus["cases"].as_array().unwrap(){
   let registry=store::SnapshotReadRegistryHandle::new();let source=Arc::new(row["owner"].as_str().unwrap().to_owned());let pointer=Arc::as_ptr(&source);
   let lease=registry.try_issue(Arc::clone(&source)).unwrap_or_else(|_|panic!("original projection read issue failed"));let(index,generation)=(lease.index,lease.generation);
-  let read=store::SnapshotRead::new(Arc::clone(&source),lease);let mut root=SnapshotReadProjection::new(Arc::clone(&source));
+  let read=crate::os_store::snapshot_read::SnapshotRead::new(Arc::clone(&source),lease);let mut root=SnapshotReadProjection::new(Arc::clone(&source));
   assert!(!root.has_original_issuer());assert!(root.bind(read).is_ok());assert!(root.has_original_issuer());assert_eq!(root.get()as*const String,pointer);
   let mut cursor=Cursor{root,active:ManuallyDrop::new(None)};
   let (denied,heap)=observe(||cursor.step(RetainedCloneGrant::default()).unwrap());assert_eq!(denied,Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(cursor.root.get()as*const String,pointer);

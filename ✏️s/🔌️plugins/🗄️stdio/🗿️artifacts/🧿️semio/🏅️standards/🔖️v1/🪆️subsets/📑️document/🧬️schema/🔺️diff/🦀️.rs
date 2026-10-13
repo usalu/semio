@@ -21,11 +21,11 @@
 //! fails with `Option<T>: DslField` is not satisfied. `DiffBinary,DiffCodec,DiffText` is hand-rolled below, following
 //! the svg/gif/docx template exactly.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedAdded, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedAdded, NamedModified, NamedTripleDiff};
 
 
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
+use crate::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -932,15 +932,15 @@ impl MutationDiff<SemioDocumentSnapshot> for SemioDocumentDiff {
     fn apply(&self, base: &SemioDocumentSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioDocumentSnapshot> {
         let mut out = base.clone();
         if let Some(sd) = &self.styles {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |added| added.item.id.clone(), ["styles"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.styles, sd, |item| item.id.clone(), |added| added.item.id.clone(), ["styles"])?;
             apply_named(&mut out.styles, sd, |s| s.id.clone(), apply_style);
         }
         if let Some(id) = &self.images {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |added| added.item.id.clone(), ["images"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&out.images, id, |item| item.id.clone(), |added| added.item.id.clone(), ["images"])?;
             apply_named(&mut out.images, id, |i| i.id.clone(), apply_image);
         }
         if let Some(bd) = &self.blocks {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(bd, out.blocks.len(), ["blocks"])?;
             apply_indexed(&mut out.blocks, bd, apply_block);
         }
         Ok(out)
@@ -1012,7 +1012,7 @@ pub(crate) fn snapshot_b() -> SemioDocumentSnapshot {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioDocumentDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-document"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioDocumentDiff> {
     vec![SemioDocumentDiff::default(), SemioDocumentDiff { styles: Some(Default::default()), images: Some(Default::default()), blocks: Some(Default::default()) }]

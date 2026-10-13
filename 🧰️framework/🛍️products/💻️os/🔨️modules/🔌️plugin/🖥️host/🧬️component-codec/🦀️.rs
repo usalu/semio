@@ -3,8 +3,8 @@
 //! native host that links no Rust codec for that kind — a wgpu shell that mounted the component —
 //! identifies and validates the kind's documents the way the hub's trusted catalog does.
 
-use super::{CompiledHandle, GuestRuntimes};
-use semio_framework_os_kernel::os_store::{ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, VcsError};
+use super::{CompiledHandle, GuestRuntimes, OwnedCompiledGuest};
+use semio_framework_os_kernel::os_store::{text_format::ArtifactTextFiles, codec_registry::ComponentDocumentCodec, codec_registry::ComponentDocumentCodecFuture, VcsError};
 use std::sync::{Arc, OnceLock};
 
 /// ⛽️ One guest codec call's bound: the fuel cap is the runaway bound and the wall bounds the gap
@@ -17,7 +17,7 @@ pub const GUEST_CODEC_BUDGET: semio_framework::kernel::Budget = semio_framework:
 /// and kept: it is a pure function of the component and the schema.
 pub struct OwnedComponentDocumentCodec {
     runtime: Arc<GuestRuntimes>,
-    compiled: CompiledHandle,
+    compiled: OwnedCompiledGuest,
     schema: String,
     pack_schema_hash: OnceLock<[u8; 32]>,
 }
@@ -32,6 +32,7 @@ impl OwnedComponentDocumentCodec {
         if schema.is_empty() {
             return Err(super::PluginHostError::Plugin("component codec needs a document schema".into()));
         }
+        let compiled = super::owned_compiled(&compiled)?.clone();
         Ok(Self { runtime, compiled, schema, pack_schema_hash: OnceLock::new() })
     }
 

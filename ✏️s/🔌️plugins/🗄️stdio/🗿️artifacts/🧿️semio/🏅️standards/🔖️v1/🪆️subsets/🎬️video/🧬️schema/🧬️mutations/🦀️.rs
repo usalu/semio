@@ -9,7 +9,7 @@
 
 
 
-use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
+use crate::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
 
 
 
@@ -27,7 +27,7 @@ use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, dif
 
 
 
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 
 use protocol::{Mutation};
 

@@ -2,7 +2,7 @@
 import {type PolicyModSpan,policyMaskLiterals,policyTestModSpans,policyLineInTestMod,interactivityCfgTestItemSpans} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/🔎️source/🟦️.ts";
 import {type InteractivityToolRunRequirement,INTERACTIVITY_TOOL_RUN_TRIGGER,interactivityToolRunWithin,interactivityToolRunScopePath,interactivityToolRunCode,interactivityToolRunEnclosing,interactivityToolRunLocalLifecycleFailures,interactivityToolRunLegacyTraceFailures,interactivityToolRunDeclarationFailures,interactivityToolRunReservedActionFailures} from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/📋️policy/⏯️tool-run/🟦️.ts";
 import { exactCargoGeneratedOutputHasLiveLease } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
-import { resolveTestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
+import { resolveTestLevel, testLevelRank } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { buildBudgetMs } from "./🧰️framework/🔨️modules/🏃️process/⏱️budget/🟦️.ts";
 import { TEST_LEVELS, type TestLevel } from "./🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { NativeDependenciesScript } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📦️dependencies/🏗️native/📜️script.ts";
@@ -48,10 +48,11 @@ import { microsecondsFromMilliseconds } from "./🧰️framework/🔨️modules/
 /**
  * 🧭️ Monorepo command router: `bun ./📜️script.ts <verb> [segments…]` (e.g. `📜️script.ts dev storybook`, `📜️script.ts dev mcp stdio os`).
  */
-import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioShipEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { dispatchOwnedScriptRoute, canonicalFilenameForKind, canonicalFilenamesForKind, canonicalPrimaryFilenameForKind, createTaxonomyPathMatcher, createFixedContractResolver, coverageDir, coverageEnabled, daemonBudgetOpts, devToolingEnv, discoverOwners, discoverPackages, discoverPackageProblems, dispatchPolicyArgv, dispatchSubcommand, defineLint, fixedContractFilename, fixedDirectoryContractIdsForPath, fixedFilenameContractIdsForPath, loadTaxonomy, resolveSchemaFacetKind, schemaFacetFormatEntries, semanticDirectoryKindId, enforceCoverageThreshold, getWorkspaceRoot, getRepoMetaDir, getMapCacheDir, getSemioRoot, HUB_DATA_DIR_NAME, MAP_CACHE_DIR_NAME, REPO_META_DIR_NAME, SPACE_DATA_DIR_NAME, goCoverageArgs, goLevelTestArgs, goProfileToLcov, mergeLcov, orchestratorBudgetOpts, parseLcov, renderLcov, resolveCliBin, resolveMcpBin, runCmd, runCmdStatus, runCanonicalGoBuild, runCanonicalGoTests, runProbe, runRepositoryTestCommand, spawnDaemon, summarizeCoverage, semioReleaseEnv, semioNxParallelFlag, installMicroCommitGitHooks, runCommit, runMicroCommit, runWorkspaceScriptMain, TechnologyLinter, tryRun, type BreachRecord, type PackageRole, type LcovFileRecord } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { Script, ScriptRouter } from "./🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { checkDerivedConfig, writeDerivedConfig } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/📝️derived-config/🟦️.ts";
 import { repoCacheDirectory } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { canonicalArchitectureEnvironment } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { artifactFacetPathIsDeclared, buildSemanticCensus, fileKindIdForSourcePath, createRustMutationCodecOwnershipInspector, inspectRustMutationAggregateSpan, inspectRustMutationMetadataFacts, inspectRustModuleGraphFacts, inspectRustModuleGraph, inspectRustRunnableTests, inspectRustStructure, inspectRustChildKindMetadata, inspectRustSourceIdentities, createRustMutationInputInspector, resolveRustPathAttributes, renderSemanticCensusJson, renderSemanticCensusMarkdown, renderSemanticDuplicatesJson, renderSemanticDuplicatesMarkdown, taxonomyRelativePathIsExcluded, taxonomyImplementationFilesystemFindings, workspaceAuthorityPath, noFollowDirectoryAncestry, semanticOwnedInputFileSnapshot, inventorySchemaScopes, renderSchemaCatalog, renderSchemaCatalogDocument, renderSchemaCheckReport, schemaRustEntryDiagnostics, type SchemaRustEntryDump, type SchemaScopeDiagnostic, type SchemaScopeInventory, loadCatalogTaxonomy, mutationPayloadSchemaRelativePath, mutationPayloadSchemaProblems, jsonDocumentDuplicateKeys, mutationOwnerIdentity, subsetDirectoryNameForId, subsetIdForDirectoryName } from "./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings, type PathEmojiEntry } from "./🧰️framework/🔨️modules/🪪️identity/🛣️path/🟦️.ts";
@@ -1985,7 +1986,7 @@ function toolJobMemberStoreOwnerExact(store: string, semio: string): boolean {
     exactInstall.body.includes("self.mutation_retirement_factory = Some(owners.mutation_retirement)") &&
     exactInstall.body.includes("self.owned_disposer = Some(owners.store_disposer)") &&
     semio.includes("semio_subset_table!(member_owners);") &&
-    semio.includes("impl dsl::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>") &&
+    semio.includes("impl dsl::os_store::document_store_owners::MemberStoreOwner<subsets::$module::schema::mutations::$mutation>") &&
     semio.includes("dsl::MemberStoreOwners::new(") &&
     semio.includes("SemioOwnedValueRetirementFactory") &&
     semio.includes("SemioMutationRetirementFactory") &&
@@ -2052,11 +2053,11 @@ function toolJobArtifactEnvelopeOwnedCodecExact(store: string, rust: Map<string,
   const directEnvelopeSerde = [...rust.entries()].filter(
     ([file, source]) =>
       !file.includes("/🧪️tests/") &&
-      file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs" &&
+      !(OS_STORE_ROOT_SOURCES as readonly string[]).includes(file) &&
       directEnvelopePattern.test(source),
   );
   const placeholderEnvelopeIngress = [...rust.entries()].filter(
-    ([file, source]) => file !== "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs" && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
+    ([file, source]) => !(OS_STORE_ROOT_SOURCES as readonly string[]).includes(file) && source.includes("reject_whole_buffer_artifact_envelope_ingress"),
   );
   return (
     store.includes("pub struct OwnedSchemaDecodePages") &&
@@ -2186,7 +2187,7 @@ function toolJobArtifactEnvelopeRejectionTransferExact(storeEvidence: string | P
 function toolJobPresentationEnvelopeCallerRetainedExact(presentation: string, wasm: string, plugin: string): boolean {
   return (
     presentation.includes("pub struct PresentationEnvelopeOwnedFieldCatalog") &&
-    presentation.includes("impl store::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog") &&
+    presentation.includes("impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<PresentationSnapshot, PresentationMutation> for PresentationEnvelopeOwnedFieldCatalog") &&
     presentation.includes("pub struct PresentationEnvelopeMaterializeHandle") &&
     presentation.includes("session: std::mem::ManuallyDrop<Option<semio_framework_job::WorkerJobSession<PresentationEnvelopeMaterializeJob>>>") &&
     presentation.includes("session.try_submit_step(pool, semio_framework_job::Lane::Interactive)") &&
@@ -2212,7 +2213,7 @@ function toolJobPresentationEnvelopeCallerRetainedExact(presentation: string, wa
     presentation.includes("let (diff, messages) = mutation.diff(current).into_parts()") &&
     presentation.includes("match diff.apply(current)") &&
     !presentation.includes("envelope.try_into_fresh_snapshot()") &&
-    plugin.includes("fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>>") &&
+    plugin.includes("fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>>") &&
     plugin.includes("envelope_decode_jobs: ArtifactFixedRegistry<ActiveArtifactEnvelopeDecode<A::Snapshot, A::Mutation>>") &&
     plugin.includes("pub fn submit_artifact_envelope_decode(") &&
     plugin.includes("pub fn try_publish_artifact_envelope_decode(") &&
@@ -2264,7 +2265,7 @@ function toolJobWriterEnvelopeCallerRetainedExact(writer: string, editor: string
     wasm.includes("pub fn seal_envelope_load(") &&
     wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
     wasm.includes("pub fn poll_envelope_load(") &&
-    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     wasm.includes("pub fn cancel_envelope_load(") &&
@@ -2330,7 +2331,7 @@ function toolJobJackEnvelopeCallerRetainedExact(store: string, jack: string, edi
     wasm.includes("pub fn seal_envelope_load(") &&
     wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
     wasm.includes("pub fn poll_envelope_load(") &&
-    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     wasm.includes("pub fn cancel_envelope_load(") &&
@@ -2390,7 +2391,7 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     rewrite.includes("TrinityRewriteCallerPageOwner::new(owner)") &&
     rewrite.includes("source.clone()") &&
     rewrite.includes("source.copy_to(&mut bytes[..len])") &&
-    rewrite.includes("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]") &&
+    rewrite.includes("let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]") &&
     rewrite.includes("ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)") &&
     rewrite.includes("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len") &&
     rewrite.includes("pub fn retry_envelope_page(") &&
@@ -2405,11 +2406,11 @@ function toolJobTrinityRewriteEnvelopeCallerRetainedExact(store: string, jack: s
     rewrite.includes("trinity_rewrite_rejected_page_close_retires_one_owner_per_grant") &&
     rewrite.indexOf("construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len") < rewrite.indexOf("source.copy_to(&mut bytes[..len])") &&
     rewrite.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
-    rewrite.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    rewrite.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     rewrite.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     rewrite.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     rewrite.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
-    rewrite.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    rewrite.includes("close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
     plugin.includes("pub fn preflight_artifact_envelope_ingress_page(") &&
     plugin.includes("pub fn construct_and_admit_artifact_envelope_ingress_page<Build>(") &&
@@ -2494,7 +2495,7 @@ function toolJobGisMapEnvelopeCallerRetainedExact(store: string, gisMap: string,
     wasm.includes("pub fn seal_envelope_load(") &&
     wasm.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
     wasm.includes("pub fn poll_envelope_load(") &&
-    wasm.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    wasm.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     wasm.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     wasm.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     wasm.includes("pub fn cancel_envelope_load(") &&
@@ -2525,8 +2526,8 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     "RemoveLayerAsset(payload)",
   ];
   const credits = editor.indexOf("begin_artifact_envelope_ingress(pages, ");
-  const page = editor.indexOf("let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]");
-  const construct = editor.indexOf("store::ArtifactEnvelopeDecodePage::try_from_array(bytes, ");
+  const page = editor.indexOf("let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES]");
+  const construct = editor.indexOf("store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, ");
   const admit = editor.indexOf("admit_artifact_envelope_ingress_page(handle, page)");
   const rasterOwnedMapSerializeBound = /impl(?:\s*<[^>]*>)?\s*(?:serde::)?Serialize\s+for\s+RasterOwnedMap\b/s.test(raster);
   const rasterOwnedMapWholeSerializeMap = /serialize_map\s*\(\s*Some\s*\(\s*self\.length\s*\)\s*\)/s.test(raster);
@@ -2546,7 +2547,7 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
   const rasterMountedVectorComposites = (raster.match(/raster_document_json_to_svg\(snapshot\)/g) ?? []).length;
   const rasterMountedTypedDeclines = (raster.match(/Err\(RASTER_(?:PDF|DWG)_EXPORT_UNSUPPORTED\.to_string\(\)\)/g) ?? []).length;
   const rasterMountedOutputGuards = (raster.match(/snapshot\.require_empty_output_shell\(\)\.map_err\(str::to_owned\)\?;/g) ?? []).length;
-  const rasterMountedOutputCallers = (raster.match(/Ok\(<RasterSnapshot as store::ArtifactDsl>::print_dsl\(snapshot\)\.into_bytes\(\)\)/g) ?? []).length;
+  const rasterMountedOutputCallers = (raster.match(/Ok\(<RasterSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl\(snapshot\)\.into_bytes\(\)\)/g) ?? []).length;
   const rasterOutputFixtureStart = raster.indexOf("fn raster_populated_snapshot_output_max_plus_one_nested_cancel_fault_panic_and_close_are_exact()");
   const rasterOutputFixtureEnd = raster.indexOf("fn raster_maximum_combined_layer_and_value_depth_retires_to_terminal()", rasterOutputFixtureStart);
   const rasterOutputFixture = rasterOutputFixtureStart >= 0 && rasterOutputFixtureEnd > rasterOutputFixtureStart ? raster.slice(rasterOutputFixtureStart, rasterOutputFixtureEnd) : "";
@@ -2744,18 +2745,18 @@ function toolJobRasterEnvelopeCallerRetainedExact(store: string, raster: string,
     editor.includes("raster_document_store_initialization_job(envelope, operation, generation)") &&
     editor.includes("-> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle") &&
     editor.includes("assert_eq!(handle.generation, base_generation)") &&
-    editor.includes("chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    editor.includes("chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     credits >= 0 &&
     page > credits &&
     construct > page &&
     admit > construct &&
     editor.includes("seal_artifact_envelope_ingress(handle)") &&
-    editor.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    editor.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     editor.includes("advance_artifact_envelope_load(handle)") &&
     editor.includes("acknowledge_artifact_store_replacement(handle)") &&
     editor.includes("duplicate Raster load acknowledgement is a no-op") &&
     editor.includes("cancel_artifact_envelope_load(handle)") &&
-    editor.includes("close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    editor.includes("close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     editor.includes("raster_live_envelope_submit_pump_swap_displaced_store_and_exact_ack_succeed") &&
     editor.includes("raster_live_envelope_cancel_closes_retained_pages_without_publication") &&
     plugin.includes("envelope_ingress: ArtifactFixedRegistry<ActiveArtifactEnvelopeIngress>") &&
@@ -3036,7 +3037,7 @@ function toolJobDrawingEnvelopeCallerRetainedExact(store: string, drawing: strin
     editor.includes("begin_artifact_envelope_ingress(maximum_pages, maximum_bytes)") &&
     editor.includes("admit_artifact_envelope_ingress_page(handle.runtime_handle(), page)") &&
     editor.includes("seal_artifact_envelope_ingress(handle.runtime_handle())") &&
-    editor.includes("app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
+    editor.includes("app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)") &&
     editor.includes("advance_artifact_envelope_load(handle.runtime_handle())") &&
     editor.includes("acknowledge_artifact_store_replacement(handle.runtime_handle())") &&
     editor.includes("cancel_artifact_envelope_load(handle.runtime_handle())") &&
@@ -6366,7 +6367,7 @@ async function toolJobCoverageRun(root: string): Promise<ToolJobCoverageReport> 
   const glue = policyReadFileSafe(root, "🧰️framework/📦️packages/🦀️rust/🦀️.rs");
   const plugin = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs");
   const artifactRetainedCommand = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧵️retained-command/🦀️.rs");
-  const store = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs");
+  const store = policyReadOsStoreSource(root);
   const presenceRetirement = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/♻️retirement/🦀️.rs");
   const vcs = policyReadFileSafe(root, "🧰️framework/🛍️products/💻️os/🔨️modules/🌿️vcs/🦀️.rs");
   const causal = policyReadFileSafe(root, "🧰️framework/🔨️modules/📡️replication/🔗️causal/🦀️.rs");
@@ -6891,7 +6892,7 @@ export function verifyComposedChildRefAssetCount(root: string): number {
 
 /**
  * 🔎️Scans every committed `*.dsl.semio` for child rows of the DSL shape
- * `<slot>=[<hex child_id>,<hex target uri>]` that `store::artifact_child_to_record` writes, and
+ * `<slot>=[<hex child_id>,<hex target uri>]` that `store::os_store::artifact_child::artifact_child_to_record` writes, and
  * returns the rows whose target uri names an artifact id other than the row's own `child_id`.
  * Rows matching `COMPOSED_CHILD_REF_WAIVERS` come back carrying their waiver reason rather than
  * being dropped, so the census always shows the whole truth.
@@ -8270,7 +8271,7 @@ export class VerifyScript extends Script {
       return;
     }
     if (args.includes("--p2a1-only")) {
-      const store = policyReadRustSourceEvidence(this.root, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs");
+      const store = policyReadOsStoreEvidence(this.root);
       const mutations = args.includes("--self-test") ? toolJobArtifactEnvelopeRejectionTransferSelfTests(store) : 0;
       if (!toolJobArtifactEnvelopeRejectionTransferExact(store)) throw new Error("[verify interactivity tool-jobs p2a1] Store rejection-transfer contract failed.");
       console.log(`[verify interactivity tool-jobs p2a1] live-source clean; hostile-mutations=${mutations}.`);
@@ -8493,7 +8494,7 @@ export class VerifyScript extends Script {
     // Quick level here: the full repo-wide sweep (parse→print→reparse fixpoint, canonicalize
     // idempotence over every real 📚️examples fixture — @semio-tech/s-fixture-sweep-rs) runs at
     // `test dsl`/`test dsl exhaustive`; the gate only needs the engine crates' own quick-level unit tests.
-    runCmd("bun", ["nx", "run-many", "-t", "test-quick", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", "@semio-tech/dsl-rs", ...semioNxParallelFlag()], {
+    runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/dsl-rs", "@semio-tech/dsl-schema-rs", "@semio-tech/dsl-derive-rs", ...semioNxParallelFlag(), "--", "quick"], {
       cwd: this.root,
       ...orchestratorBudgetOpts(),
     });
@@ -8510,9 +8511,6 @@ export class VerifyScript extends Script {
     console.log("[verify] gate passed.");
   }
 
-  /** 📊️Every `project.json` with a `test` target must also declare `test-quick`/`test-long`/`test-exhaustive` —
-   * otherwise `nx run-many -t test-exhaustive` silently skips that project and the exhaustive-level coverage
-   * gate under-counts it. Guards against the gap this ticket closed (26/07/26/NINETY-FIVE-PERCENT-EXHAUSTIVE-TEST-COVERAGE) reopening one project.json at a time. */
   /** 📖️ Every `StoryScope.sourceRoots`/`storyGlobs` entry across `.storybook/📖️stories/🧭️coordination/🟦️.ts`'s `STORY_SCOPES`
    * (both `HAND_CURATED_SCOPES` and the package-catalog-derived `GENERATED_SCOPES`) must resolve to a real
    * on-disk path — catches exactly the "stale de-emojified sourceRoot" class of bug the W0 finding in
@@ -13512,11 +13510,6 @@ export class FormatScript extends Script {
 //#endregion 🔖️FormatScript
 
 //#region 🔖️TestScript
-/** 🎚️Nx target name for a level — `fundamental` keeps the bare `test` target; others get a `test-<level>` suffix. */
-function testTargetForLevel(level: TestLevel): string {
-  return level === "fundamental" ? "test" : `test-${level}`;
-}
-
 /**
  * 🔣️The SSOT taxonomy, read once. The root script must not know WHERE a module lives or WHICH
  * subcommands it offers — both are declared vocabulary, so adding a phase or relocating the testing
@@ -13593,7 +13586,8 @@ export class TestScript extends Script {
     }
 
     if (rest.length) throw new Error(`Unknown workspace test selection: ${rest.join(" ")}`);
-    if (process.env.NX_TASK_TARGET_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as Nx prerequisites and asserts nothing on its own; run \`bun nx run workspace:${level === "fundamental" ? "test" : `test-${level}`}\``);
+    if (process.env.NX_TASK_TARGET_PROJECT !== "workspace") throw new Error(`test ${level} runs every project's tests as Nx prerequisites; run \`bun nx run workspace:test -- ${level}\``);
+    if (testLevelRank(level) >= testLevelRank("long")) await this.runStorybookPlaywright();
     if (level === "exhaustive" && coverageEnabled()) this.enforceCoverageGate();
     console.log(`[test] ${level} prerequisites completed through Nx`);
   }
@@ -14266,12 +14260,12 @@ export class StdioScript extends Script {
     }
     if (gate === "long") {
       for (const structuralGate of ["quick", "schema-parity", "standards-coverage", "codec", "mutation-law", "inference"] as const) stdioRunStructuralGate(this.root, structuralGate);
-      runCmd("bun", ["nx", "run-many", "-t", "test-long", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag(), "--", "long"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "exhaustive") {
       this.run(["long"]);
-      runCmd("bun", ["nx", "run-many", "-t", "test-exhaustive", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag()], { cwd: this.root, ...orchestratorBudgetOpts() });
+      runCmd("bun", ["nx", "run-many", "-t", "test", "-p", "@semio-tech/stdio-plugin", "@semio-tech/stdio-js", ...semioNxParallelFlag(), "--", "exhaustive"], { cwd: this.root, ...orchestratorBudgetOpts() });
       return;
     }
     if (gate === "runtime") {
@@ -14291,211 +14285,10 @@ export class StdioScript extends Script {
 }
 //#endregion 🔖️StdioLedgerScript
 
-//#region 🔖️StorybookDiscoveryGuard
-const UI_STORYBOOK_DISCOVERY_BASELINE = { entries: 231, stories: 170, docs: 61, inputs: 61 } as const;
-const STORYBOOK_MDX_SKIP_DIRS = new Set(["node_modules", "compose", ".🧬semio", ".git", ".nx", "target", "dist", "storybook-static"]);
 
-/** 📖️ Rejects MDX inputs inside the retired-transform non-Compose ownership boundary. */
-function assertNoOwnedStorybookMdx(root: string): void {
-  const mdx: string[] = [];
-  const walk = (dir: string): void => {
-    for (const entry of readdirSync(dir, { withFileTypes: true })) {
-      if (entry.isDirectory() && STORYBOOK_MDX_SKIP_DIRS.has(entry.name)) continue;
-      const full = join(dir, entry.name);
-      if (entry.isDirectory()) walk(full);
-      else if (entry.isFile() && entry.name.endsWith(".mdx")) mdx.push(relative(root, full));
-    }
-  };
-  walk(root);
-  if (mdx.length > 0)
-    throw new Error(
-      `[storybook] owned MDX transforms are retired, but ${mdx.length} owned MDX input(s) exist:\n${mdx
-        .sort()
-        .map((file) => `  ${file}`)
-        .join("\n")}`,
-    );
-}
 
-/** 📊️ Freezes the UI Storybook's TS/TSX discovery after its owned MDX-transform retirement. */
-function assertUiStorybookDiscovery(root: string): void {
-  if ((process.env.STORYBOOK_SCOPE ?? "") !== "ui") return;
-  const index = JSON.parse(readFileSync(join(root, process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static", "index.json"), "utf8")) as { entries?: Record<string, { type?: string; importPath?: string }> };
-  const entries = Object.values(index.entries ?? {});
-  const stories = entries.filter((entry) => entry.type === "story").length;
-  const docs = entries.filter((entry) => entry.type === "docs").length;
-  const inputs = new Set(entries.map((entry) => entry.importPath).filter((path): path is string => Boolean(path)));
-  const unsupported = [...inputs].filter((path) => !/\.(?:ts|tsx)$/u.test(path));
-  const actual = { entries: entries.length, stories, docs, inputs: inputs.size };
-  if (unsupported.length > 0 || Object.entries(UI_STORYBOOK_DISCOVERY_BASELINE).some(([key, value]) => actual[key as keyof typeof actual] !== value)) {
-    throw new Error(`[storybook] UI discovery changed: expected ${JSON.stringify(UI_STORYBOOK_DISCOVERY_BASELINE)}, got ${JSON.stringify(actual)}${unsupported.length > 0 ? `; non-TS/TSX inputs: ${unsupported.join(", ")}` : ""}`);
-  }
-  console.log(`[storybook] UI discovery guard passed (${stories} stories, ${docs} docs, ${inputs.size} TS/TSX inputs, 0 MDX).`);
-}
-//#endregion 🔖️StorybookDiscoveryGuard
+Helpers
 
-//#region 🔖️BuildScript
-export class BuildScript extends Script {
-  async run(segments: string[]): Promise<void> {
-    const slice = segments[0];
-    if (slice === "canvas") {
-      if (segments.length !== 2 || segments[1] !== "fonts") throw Error("Expected build canvas fonts");
-      const cwd = join(this.root, "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust");
-      const { repositoryProcessOwnerContextV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🟦️.ts");
-      const { repositoryCargoArtifactBuildPolicyV1 } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts");
-      const {repositoryCargoPreparationStorageV1, prepareCargoWorkspaceInvocation } = await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🟦️.ts");
-      const { runOwnedCommand } = await import("./🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");
-      prepareCargoWorkspaceInvocation(repositoryCargoPreparationStorageV1(this.root),this.root,["build", "--manifest-path", join(cwd, "Cargo.toml")],this.root,process.env);
-      const env = devToolingEnv({ SEMIO_PROCESS_OWNER_CONTEXT: JSON.stringify(repositoryProcessOwnerContextV1(cwd)), SEMIO_CARGO_ARTIFACT_POLICY: JSON.stringify(repositoryCargoArtifactBuildPolicyV1(cwd, this.root)) });
-      await runOwnedCommand(process.execPath, [join(cwd, "📜️script.ts"), "build"], cwd, "canvas-font-assets:build", buildBudgetMs(), { env });
-      return;
-    }
-    const single: Record<string, string> = {
-      assets: "@semio-tech/assets:build",
-      storybook: "workspace:build-storybook",
-      "repo-cli": "@semio-tech/repo-client:build",
-      "repo-server": "@semio-tech/repo-coordinator:build",
-      "repo-vscode": "@semio-tech/repo-vscode:build-vsix",
-    };
-
-    // nx orchestrators: exempt — leaves individually budgeted.
-    if (!slice) {
-      console.log("[build] Nx completed the workspace build graph.");
-      return;
-    }
-    if (slice === "storybook") {
-      assertNoOwnedStorybookMdx(this.root);
-      runCmd(process.execPath, ["x", "storybook", "build", "-c", ".storybook", "--output-dir", process.env.STORYBOOK_OUTPUT_DIR ?? "storybook-static"], { cwd: this.root });
-      assertUiStorybookDiscovery(this.root);
-      return;
-    }
-    const target = single[slice];
-    if (!target) {
-      console.error(`[build] unknown slice ${JSON.stringify(slice)}`);
-      process.exit(1);
-    }
-    runCmd("bun", ["nx", "run", target], { cwd: this.root, ...orchestratorBudgetOpts() });
-  }
-}
-//#endregion 🔖️BuildScript
-
-//#region 🔖️CppScriptHelpers
-const WINDOWS_CMAKE_GENERATOR = "Visual Studio 18 2026";
-
-function vswhereExecutable(): string {
-  const programFilesX86 = process.env["ProgramFiles(x86)"] ?? "C:\\Program Files (x86)";
-  return join(programFilesX86, "Microsoft Visual Studio", "Installer", "vswhere.exe");
-}
-
-function queryVisualStudio2026InstallPath(): string | undefined {
-  if (process.platform !== "win32") return undefined;
-  const vswhere = vswhereExecutable();
-  if (!existsSync(vswhere)) return undefined;
-  const result = runProbe(vswhere, ["-latest", "-version", "[18.0,19.0)", "-products", "*", "-requires", "Microsoft.VisualStudio.Component.VC.Tools.x86.x64", "-property", "installationPath"]);
-  if (result.status !== 0) return undefined;
-  const installPath = result.stdout.trim();
-  return installPath || undefined;
-}
-//#endregion 🔖️CppScriptHelpers
-
-//#region 🔖️CppScript
-export class CppScript extends Script {
-  run(segments: string[]): void {
-    const preset = this.resolvePreset(segments.slice(1));
-    dispatchSubcommand(
-      segments,
-      {
-        setup: () => this.runSetup(),
-        configure: () => this.runConfigure(preset),
-        build: () => this.runBuild(preset),
-        test: () => this.runTest(preset),
-        all: () => console.log("[cpp] Nx configure/build/test prerequisites completed"),
-      },
-      "bun ./📜️script.ts cpp [setup|configure|build|test|all] [preset]",
-      "all",
-    );
-  }
-
-  private resolvePreset(segments: string[]): string {
-    const explicit = segments.find((segment) => !segment.startsWith("-"));
-    if (explicit) return explicit;
-    if (process.env.CMAKE_PRESET) return process.env.CMAKE_PRESET;
-    if (process.platform === "win32") return "windows";
-    if (process.platform === "darwin") return "macos";
-    return "linux";
-  }
-
-  private runSetup(): void {
-    this.ensureTool("cmake", "cmake");
-    if (process.platform !== "win32") this.ensureTool("ninja", "ninja");
-    if (process.platform === "win32") this.ensureWindowsMsvc();
-  }
-
-  private runConfigure(preset: string): void {
-    this.purgeStaleCmakeCache(preset);
-    runCmd(this.resolveTool("cmake"), ["--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
-  }
-
-  private runBuild(preset: string): void {
-    runCmd(this.resolveTool("cmake"), ["--build", "--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
-  }
-
-  private runTest(preset: string): void {
-    runCmd(this.resolveTool("ctest"), ["--preset", preset], { cwd: this.root, env: this.cppEnv(), budgetMs: buildBudgetMs() });
-  }
-
-  private ensureTool(command: string, uvTool: string): void {
-    if (this.hasTool(command)) return;
-    if (this.hasTool("uv")) {
-      runCmd(this.resolveTool("uv"), ["tool", "install", "--upgrade", uvTool], { cwd: this.root });
-      if (this.hasTool(command)) return;
-    }
-    console.error(`[cpp] ${command} is required. Run the native bootstrap or rebuild the devcontainer.`);
-    process.exit(1);
-  }
-
-  private hasTool(command: string): boolean {
-    try {
-      return runProbe(this.resolveTool(command), ["--version"], { env: this.cppEnv() }).status === 0;
-    } catch {
-      return false;
-    }
-  }
-
-  private resolveTool(command: string): string {
-    const extension = process.platform === "win32" ? ".exe" : "";
-    const candidates = [command, join(homedir(), ".local", "bin", `${command}${extension}`), join(homedir(), ".local", "bin", command)];
-    return candidates.find((candidate) => existsSync(candidate)) ?? command;
-  }
-
-  private cppEnv(): NodeJS.ProcessEnv {
-    return {
-      ...devToolingEnv(),
-      CMAKE_BUILD_PARALLEL_LEVEL: process.env.CMAKE_BUILD_PARALLEL_LEVEL ?? "4",
-    };
-  }
-
-  private ensureWindowsMsvc(): void {
-    if (process.platform !== "win32") return;
-    if (queryVisualStudio2026InstallPath()) return;
-    console.error("[cpp] Visual Studio 2026 with the Desktop development with C++ workload is required.");
-    console.error("[cpp] On native Windows run: bun ./📜️script.ts setup native");
-    process.exit(1);
-  }
-
-  private purgeStaleCmakeCache(preset: string): void {
-    const cacheDir = join(getRepoMetaDir(this.root), "⚡️cache", "cmake", preset);
-    const cacheFile = join(cacheDir, "CMakeCache.txt");
-    if (!existsSync(cacheFile)) return;
-    const content = readFileSync(cacheFile, "utf8");
-    const generatorMatch = content.match(/^CMAKE_GENERATOR:INTERNAL=(.+)$/m);
-    const cachedGenerator = generatorMatch?.[1]?.trim();
-    if (process.platform === "win32" && cachedGenerator && cachedGenerator !== WINDOWS_CMAKE_GENERATOR) {
-      console.log(`[cpp] Removing stale CMake cache for preset "${preset}" (generator ${cachedGenerator}).`);
-      rmSync(cacheDir, { recursive: true, force: true });
-    }
-  }
-}
-//#endregion 🔖️CppScript
 
 //#region 🔖️PublishScript
 export class PublishScript extends Script {
@@ -14544,14 +14337,10 @@ export class CommitScript extends Script {
 /** 🧩️One `framework/os/dev` plugin registry row ([[🔌️plugins.json]]) — only the fields `os run`'s preflight needs. */
 type OsPluginArtifact = { pluginId: string; cratePath: string; wasmOut: string };
 
-/**
- * 🔍️Plugin ids from the generated plugin registry with no component deliverable under their crate's
- * `dist/component-{dev,release}` — same resolution order as `resolve_plugin_paths` in `semio-framework-os-run`.
- */
-const PLUGIN_COMPONENT_PROFILE_DIRS = ["dist/component-dev", "dist/component-release"] as const;
-
+/** 🔍️ Whether one registry row's shipped component exists under its crate's `dist/components` — the same path as
+ * `resolve_plugin_paths` in `semio-framework-os-run`. */
 function pluginWasmArtifactExists(repoRoot: string, entry: OsPluginArtifact): boolean {
-  return PLUGIN_COMPONENT_PROFILE_DIRS.some((profileDir) => existsSync(join(repoRoot, entry.cratePath, profileDir, entry.wasmOut)));
+  return existsSync(join(repoRoot, entry.cratePath, COMPONENT_PROFILE_POLICIES[SHIPPED_COMPONENT_PROFILE].directory, entry.wasmOut));
 }
 
 function missingPluginWasmArtifacts(repoRoot: string): string[] {
@@ -14577,7 +14366,7 @@ export class OsScript extends Script {
         const missing = missingPluginWasmArtifacts(repoRoot);
         if (missing.length > 0) {
           console.error(`[os.run] missing built plugin artifact(s): ${missing.join(", ")}`);
-          for (const pluginId of missing) console.error(`[os.run]   build it: bun nx run @semio-tech/framework-os-dev:build -- ${pluginId}`);
+          for (const pluginId of missing) console.error(`[os.run]   build it: bun nx run workspace:components describe ${pluginId}`);
           process.exit(1);
         }
       }
@@ -15042,9 +14831,61 @@ export class SchemaScript extends Script {
 }
 //#endregion 🔖️SchemaScript
 
+//#region 🔖️ComponentsScript
+/** 🧩️ `components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype]` writes the committed semantic descriptor
+ * pairs from freshly built bytes (`describe --write`; shipped bytes through one build driver run); `components iterate <plugin-id>` is the single-plugin `wasm-prototype`
+ * browser loop; `components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>` proves a semantic descriptor is
+ * equal under both profiles. Every subcommand is cancellable (SIGINT/SIGTERM).
+ * @see ./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts */
+class ComponentsScript extends Script {
+  async run(segments: string[]): Promise<void> {
+    const [subcommand, ...rest] = segments;
+    const controller = new AbortController(), cancel = (): void => controller.abort(Error("components cancelled"));
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    try {
+      if (subcommand === "describe") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")).describeComponentsV1(this.repoRoot, rest, controller.signal);
+      if (subcommand === "profile-independence") return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts")).profileIndependenceV1(this.repoRoot, rest, controller.signal);
+      if (subcommand === "iterate" && rest.length === 1) return await (await import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts")).iterateComponentV1(rest[0]!);
+      throw new Error("usage: components describe <plugin-id…>|--all [--profile wasm-release|wasm-prototype] | components iterate <plugin-id> | components profile-independence [--sample <n>] [--seed <n>]|<plugin-id…>");
+    } finally {
+      process.removeListener("SIGINT", cancel);
+      process.removeListener("SIGTERM", cancel);
+    }
+  }
+}
+//#endregion 🔖️ComponentsScript
+
+//#region 🔖️ReleaseScript
+/** 🚀️ `release` (`workspace:release`): the one release build driver over every discovered component. It owns every component Cargo pass (one per workspace) and
+ * the jobs this project's `release` target declares (descriptor emitter, fonts, browser support) under one jobserver, memory admission and telemetry, and
+ * streams each component through describe, transpile, `wasm-opt`, its module probe and publication as Cargo links it; `SEMIO_RELEASE_GENERATION=fresh`
+ * compiles cold into a new generation.
+ * @see ./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts */
+class ReleaseScript extends Script {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("The release driver accepts no arguments; SEMIO_RELEASE_GENERATION=fresh selects a cold generation");
+    const [{ releaseGenerationKindV1, runReleaseDriverV1 }, { cargoDirectories, releasePipelinePlanV1 }, { componentDriverStagesV1 }] = await Promise.all([import("./🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧩️component-pass/🟦️.ts"), import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts"), import("./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts")]);
+    const { plan, jobEnvironment } = releasePipelinePlanV1(this.repoRoot, JSON.parse(readFileSync(join(this.repoRoot, "📋️project.json"), "utf8")).targets.release.metadata.semio.release);
+    const controller = new AbortController(), cancel = (): void => controller.abort(Error("Release build cancelled"));
+    process.once("SIGINT", cancel);
+    process.once("SIGTERM", cancel);
+    this.invocation.control.signal.addEventListener("abort", cancel, { once: true });
+    try {
+      await runReleaseDriverV1({ plan, cwd: this.repoRoot, cacheRoot: repoCacheDirectory(this.repoRoot), shared: cargoDirectories(this.repoRoot), generation: releaseGenerationKindV1(process.env), leaseDirectory: repoCacheDirectory(this.repoRoot, "agents", "resource-leases"), environment: process.env, signal: controller.signal, stages: componentDriverStagesV1(this.repoRoot), jobEnvironment });
+    } finally {
+      process.removeListener("SIGINT", cancel);
+      process.removeListener("SIGTERM", cancel);
+      this.invocation.control.signal.removeEventListener("abort", cancel);
+    }
+  }
+}
+//#endregion 🔖️ReleaseScript
+
 //#region 🔖️Dispatch
 const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("os", OsScript)
+  .register("components", ComponentsScript)
   .register("semio", SemioScript)
   .register("examples", ExamplesScript)
   .register("setup", SetupScript)
@@ -15075,8 +14916,9 @@ const router = new ScriptRouter(WORKSPACE_ROOT, WORKSPACE_ROOT)
   .register("test", TestScript)
   .register("bench", BenchScript)
   .register("stdio", StdioScript)
-  .register("build", BuildScript)
-  .register("cpp", CppScript)
+  .registerLazy("build", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts")).BuildScript)
+  .register("release", ReleaseScript)
+  .registerLazy("cpp", async () => (await import("./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts")).CppScript)
   .register("publish", PublishScript)
   .register("clean", CleanScript)
   .register("micro-commit", MicroCommitScript)
@@ -16122,7 +15964,7 @@ function policyDiscoverOpsFiles(repoRoot: string): string[] {
   return found.sort();
 }
 
-/** 🏷️`.ops` op-log structural line keywords (see `vcs::print_document_text`/`parse_document_text`). */
+/** 🏷️`.ops` op-log structural line keywords (see `vcs::os_store::text_format::print_document_text`/`parse_document_text`). */
 const POLICY_OPS_STRUCTURAL_KEYWORDS = ["@doc", "@edit", "@change", "@checkpoint", "@alternative", "@active"];
 
 /**
@@ -16165,7 +16007,7 @@ function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
           line: lineNo,
           priority: "medium",
           reason: "Every .ops line must be a recognized @doc/@edit/@change/@checkpoint/@alternative/@active structural line or a 2-space-indented mutation-text line (op grammar) under an @edit block.",
-          solution: `Fix ${relPath}:${lineNo} to match the .ops grammar (see vcs::print_document_text/parse_document_text).`,
+          solution: `Fix ${relPath}:${lineNo} to match the .ops grammar (see vcs::os_store::text_format::print_document_text/parse_document_text).`,
         });
       }
     });
@@ -17173,6 +17015,43 @@ function policyRustProductionSource(evidence: string | PolicyRustSourceEvidence)
 
 function policyRustTestSource(evidence: string | PolicyRustSourceEvidence): string {
   return typeof evidence === "string" ? evidence : evidence.tests.map((entry) => entry.source).join("\n");
+}
+
+/**
+ * 🏪️ The os Store's production source: its root plus the vocabulary, ledger, codec and composition modules wave E1 decomposed
+ * that root into (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️23/BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT/📓️2026-10-13-wave-e1-os-kernel.md`).
+ * Store-wide policies read them as one text, so they scan exactly the production source the single root file held.
+ */
+const OS_STORE_ROOT_SOURCES = [
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📒️ledger/♻️retirement/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📬️command/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔁️replay/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🪆️child/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️backbone/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧬️schema/📜️space-history/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧾️document/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🧬️owned-schema/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🚪️io/📝️text/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/🦀️.rs",
+  "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👥️presence/🦀️.rs",
+] as const;
+
+function policyReadOsStoreSource(repoRoot: string): string {
+  return OS_STORE_ROOT_SOURCES.map((path) => policyReadFileSafe(repoRoot, path)).join("\n");
+}
+
+/** 🏪️ Rust evidence of the os Store: the decomposed production source of {@link OS_STORE_ROOT_SOURCES} plus the root's declared canonical tests. */
+function policyReadOsStoreEvidence(repoRoot: string): PolicyRustSourceEvidence {
+  const evidence = policyReadRustSourceEvidence(repoRoot, OS_STORE_ROOT_SOURCES[0]);
+  return { production: { path: evidence.production.path, source: policyReadOsStoreSource(repoRoot) }, tests: evidence.tests };
 }
 
 function policyReadRustSourceEvidence(repoRoot: string, sourcePath: string): PolicyRustSourceEvidence {
@@ -18931,8 +18810,8 @@ function policyDeclarativeRegistrationBreaches(repoRoot: string): BreachRecord[]
 /** 🎫️Ticket-cited exceptions — empty; an entry requires a ticket citation in a comment beside it. */
 const POLICY_PLUGIN_DEP_ALLOWLIST = new Set<string>();
 
-/** ✅️What a plugin legitimately needs per 📓️w0-d-sdk-surface.md §3.1: the plugin SDK, the os-kernel crate, 3d where genuinely used, and schema. Everything else pointing into 🧰️framework/ is a bypass of the curated SDK surface. */
-const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-schema"]);
+/** ✅️What a plugin legitimately needs per 📓️w0-d-sdk-surface.md §3.1: the plugin SDK, the os-kernel crate, the 3d crates (base plus the four brep crates of the wave E4 cut) where genuinely used, and schema. Everything else pointing into 🧰️framework/ is a bypass of the curated SDK surface. */
+const POLICY_PLUGIN_DEP_FRAMEWORK_ALLOWLIST = new Set(["semio-framework-plugin", "semio-framework-os-kernel", "semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine", "semio-framework-schema"]);
 /** ✅️serde-family third-party crates are always allowed regardless of how they're declared (version-pinned, not path-pointed at 🧰️framework, so they never reach this rule's path filter anyway — kept for defense in depth). */
 const POLICY_PLUGIN_DEP_SERDE_RE = /^serde(_json|-wasm-bindgen)?$/;
 
@@ -19029,8 +18908,8 @@ function policyPluginDependencyAllowlistBreaches(repoRoot: string): BreachRecord
           line: lineNo,
           priority: "medium",
           reason: isOsHost
-            ? "APA/M3: semio-framework-os is the OS HOST crate — plugins may depend only on semio-framework-plugin, the os-kernel crate, semio-framework-3d, semio-framework-schema, and serde-family third-party crates; the host crate's types/fns must be re-exported through the SDK instead (📓️w0-d-sdk-surface.md §3.2)."
-            : "APA/M3: the plugin dependency allowlist is semio-framework-plugin + the os-kernel crate + semio-framework-3d (where genuinely used) + semio-framework-schema + serde-family — every other framework crate is a bypass of the curated SDK surface (📓️w0-d-sdk-surface.md §3.1).",
+            ? "APA/M3: semio-framework-os is the OS HOST crate — plugins may depend only on semio-framework-plugin, the os-kernel crate, semio-framework-3d and its semio-framework-3d-brep-* crates, semio-framework-schema, and serde-family third-party crates; the host crate's types/fns must be re-exported through the SDK instead (📓️w0-d-sdk-surface.md §3.2)."
+            : "APA/M3: the plugin dependency allowlist is semio-framework-plugin + the os-kernel crate + semio-framework-3d and semio-framework-3d-brep-* (where genuinely used) + semio-framework-schema + serde-family — every other framework crate is a bypass of the curated SDK surface (📓️w0-d-sdk-surface.md §3.1).",
           solution: isOsHost
             ? symbols.length > 0
               ? `Remove "${crateName}" from ${relPath} and add explicit re-exports for [${symbols.join(", ")}] to semio_framework_plugin's tail block instead (M3).`
@@ -22824,14 +22703,14 @@ function policyDialectLiteralPathBreaches(repoRoot: string): BreachRecord[] {
 
 /**
  * 🎫 Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT, W1 Task 4
- * blocking finding: `store::register_document_codec` (🧰️framework/…/🏪️store/🦀️.rs) is a
+ * blocking finding: `store::os_store::codec_registry::register_document_codec` (🧰️framework/…/🏪️store/🦀️.rs) is a
  * plain `HashMap::insert` keyed by the codec's schema id string — registering two DIFFERENT codecs
  * under the SAME id does not panic, it silently overwrites (last-registered-wins), with zero
  * runtime diagnostic (empirically confirmed by W1's own regression test). This is a real risk once
  * many parallel agents each mint their own schema-id constant (13 semio subsets + 7 new formats +
  * 28 pre-existing artifacts, all sharing one process-wide registry) — a typo'd copy-paste collision
  * would silently load the wrong codec at runtime with zero build or test signal. This rule
- * statically resolves every `register_document_codec(store::ArtifactCodec::of::<…>(<id-expr>))`
+ * statically resolves every `register_document_codec(store::artifact_codec::<…>(<id-expr>))`
  * call site's id expression — a string literal, or a `const _: &str` referenced bare or fully
  * path-qualified (both forms are used across the crate) — across the WHOLE stdio crate, and flags
  * any resolved id string claimed by more than one call site. Mirrors `policyDialectLiteralPathBreaches`
@@ -22856,7 +22735,7 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
   }
 
   // Pass 2: every register_document_codec call site's id expression, resolved to a literal value.
-  const CALL_RE = /register_document_codec\(\s*store::ArtifactCodec::of::<[\s\S]*?>\(\s*([\w:]+|"[^"]*")\s*\)\s*\)/g;
+  const CALL_RE = /register_document_codec\(\s*store::artifact_codec::<[\s\S]*?>\(\s*([\w:]+|"[^"]*")\s*\)\s*\)/g;
   const claims = new Map<string, { relPath: string; line: number }[]>();
   for (const relPath of files) {
     const content = policyReadFileSafe(repoRoot, relPath);
@@ -22884,7 +22763,7 @@ function policyStdioCodecIdUniquenessBreaches(repoRoot: string): BreachRecord[] 
         scope: site.relPath,
         priority: "high",
         reason:
-          "store::register_document_codec silently overwrites on a duplicate id (plain HashMap::insert, no panic) — two codecs sharing an id means the second-registered one silently and invisibly wins at runtime, with zero build or test signal.",
+          "store::os_store::codec_registry::register_document_codec silently overwrites on a duplicate id (plain HashMap::insert, no panic) — two codecs sharing an id means the second-registered one silently and invisibly wins at runtime, with zero build or test signal.",
         solution: `Give each of ${locations} its own distinct schema id constant/value.`,
       });
     }
@@ -25008,7 +24887,7 @@ export function policyDissolvedKindRedefinitionBreaches(repoRoot: string): Breac
         priority: "high",
         reason:
           "Ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM dissolved every plugin-local duplicate of these 18 neutral content shapes into stdio's frozen 🧿️semio roster; a plugin redeclaring the same type name is the exact regression the migration wave eliminated (design doc: '9+ mesh types, 4 brep topologies… duplicate kind ids').",
-        solution: `Import store::ArtifactChild<${typeName}> from stdio instead of redefining ${typeName} in ${relPath}, or if this is a deliberate, justified exception, add "${key}" to POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST citing why.`,
+        solution: `Import store::os_store::artifact_child::ArtifactChild<${typeName}> from stdio instead of redefining ${typeName} in ${relPath}, or if this is a deliberate, justified exception, add "${key}" to POLICY_DISSOLVED_KIND_REDEFINITION_ALLOWLIST citing why.`,
       });
     }
   }

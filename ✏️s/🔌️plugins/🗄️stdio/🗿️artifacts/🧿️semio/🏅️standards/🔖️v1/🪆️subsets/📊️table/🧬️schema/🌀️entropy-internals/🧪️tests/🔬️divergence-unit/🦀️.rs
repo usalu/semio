@@ -9,7 +9,7 @@ mod tests {
 
     #[test]
     fn kl_is_non_negative_for_random_distributions() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         for _ in 0..200 {
             let k = 2 + rng.next_below(5);
             let mut p: Vec<f64> = (0..k).map(|_| rng.next_f64() + 0.01).collect();
@@ -114,7 +114,7 @@ mod tests {
 
     #[test]
     fn energy_distance_is_non_negative() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
         let x: Vec<f64> = (0..30).map(|_| rng.next_gaussian()).collect();
         let y: Vec<f64> = (0..30).map(|_| rng.next_gaussian() + 2.0).collect();
         assert!(energy_distance(&x, &y).unwrap() > 0.0);

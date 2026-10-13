@@ -108,23 +108,10 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test"
-      }
-    },
-    "test-fundamental": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test fundamental"
-      }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick"
       }
     },
     "test-macro-staging": {
@@ -169,48 +156,6 @@
         "command": "bun ./📜️script.ts test macro",
         "forwardAllArgs": false
       }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": false
-      },
-      "dependsOn": [
-        "build"
-      ],
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default",
-        {
-          "dependentTasksOutputFiles": "**/*.pdf",
-          "transitive": true
-        }
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": false
-      },
-      "dependsOn": [
-        "build"
-      ],
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "default",
-        "^default",
-        {
-          "dependentTasksOutputFiles": "**/*.pdf",
-          "transitive": true
-        }
-      ]
     },
     "build-viz": {
       "executor": "nx:run-commands",

@@ -1717,19 +1717,42 @@ export function fileKindIdForFilename(filename: string, taxonomy: Taxonomy = loa
   return matches.length === 1 ? matches[0]![0] : null;
 }
 
-/** 🧩️ Resolves a source path to one physical file kind through the longest registered extension chain. */
+const fileKindIdsByFilename = new WeakMap<Taxonomy, Map<string, string | null>>();
+
+/** 🧩️ Resolves a source path to one physical file kind through the longest registered extension chain, once per taxonomy and filename. */
 export function fileKindIdForSourcePath(path: string, taxonomy: Taxonomy = loadTaxonomy()): string | null {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
   const filename = normalized.slice(normalized.lastIndexOf("/") + 1).toLowerCase();
+  let memo = fileKindIdsByFilename.get(taxonomy);
+  if (!memo) fileKindIdsByFilename.set(taxonomy, memo = new Map());
+  if (memo.has(filename)) return memo.get(filename)!;
+  const kindId = longestExtensionFileKindId(filename, taxonomy);
+  memo.set(filename, kindId);
+  return kindId;
+}
+
+function longestExtensionFileKindId(filename: string, taxonomy: Taxonomy): string | null {
   const terminalCandidates = Object.entries(taxonomy.fileKinds).flatMap(([kindId, kind]) => kind.extensionChains.filter((extension) => filename.endsWith(extension)).map((extension) => ({ kindId, extension })));
   const longest = Math.max(0, ...terminalCandidates.map((candidate) => candidate.extension.length));
   const longestKindIds = [...new Set(terminalCandidates.filter((candidate) => candidate.extension.length === longest).map((candidate) => candidate.kindId))];
   return longestKindIds.length === 1 ? longestKindIds[0]! : null;
 }
 
-/** 🎟️ Resolves an owner-scoped evidence suffix without admitting it as a global file kind. */
+const scopedFileKindIds = new WeakMap<Taxonomy, Map<string, string | null>>();
+
+/** 🎟️ Resolves an owner-scoped evidence suffix without admitting it as a global file kind, once per taxonomy, path and parent kind. */
 export function scopedFileKindIdForSourcePath(path: string, taxonomy: Taxonomy = loadTaxonomy(), context: Readonly<{ parentDirectoryKindId?: string }> = {}): string | null {
   const normalized = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize(taxonomy.unicodeNormalization.form);
+  let memo = scopedFileKindIds.get(taxonomy);
+  if (!memo) scopedFileKindIds.set(taxonomy, memo = new Map());
+  const key = `${normalized}\0${context.parentDirectoryKindId ?? ""}`;
+  if (memo.has(key)) return memo.get(key)!;
+  const kindId = resolveScopedFileKindId(normalized, taxonomy, context);
+  memo.set(key, kindId);
+  return kindId;
+}
+
+function resolveScopedFileKindId(normalized: string, taxonomy: Taxonomy, context: Readonly<{ parentDirectoryKindId?: string }>): string | null {
   const filename = normalized.slice(normalized.lastIndexOf("/") + 1);
   const matches = Object.entries(taxonomy.scopedFileKinds).filter(([, spec]) => taxonomyPathPatternMatches(normalized, spec.pathPattern)
     && (spec.parentDirectoryKindId === undefined || spec.parentDirectoryKindId === context.parentDirectoryKindId)
@@ -1945,8 +1968,20 @@ function canonicalSemanticDirectoryName(name: string, taxonomy: Taxonomy): strin
   return normalized;
 }
 
-/** 📁️ Resolves one canonical semantic directory name to its unique global or owner-local registry identifier. */
+const semanticDirectoryKindIds = new WeakMap<Taxonomy, Map<string, string | null>>();
+
+/** 📁️ Resolves one canonical semantic directory name to its unique global or owner-local registry identifier, once per taxonomy, name and context. */
 export function semanticDirectoryKindId(name: string, taxonomy: Taxonomy = loadTaxonomy(), context: SemanticDirectoryMatchContext = {}): string | null {
+  let memo = semanticDirectoryKindIds.get(taxonomy);
+  if (!memo) semanticDirectoryKindIds.set(taxonomy, memo = new Map());
+  const key = `${name}\0${context.parentKindId ?? ""}\0${(context.ancestorKindIds ?? []).join("\0")}`;
+  if (memo.has(key)) return memo.get(key)!;
+  const kindId = resolveSemanticDirectoryKindId(name, taxonomy, context);
+  memo.set(key, kindId);
+  return kindId;
+}
+
+function resolveSemanticDirectoryKindId(name: string, taxonomy: Taxonomy, context: SemanticDirectoryMatchContext): string | null {
   const normalized = canonicalSemanticDirectoryName(name, taxonomy);
   const identity = leadingEmojiIdentity(normalized);
   const roleName = identity.emoji ? `${identity.first}${identity.rest}` : normalized;
@@ -2355,6 +2390,8 @@ export interface SemanticPathProjectionAuthorityOptions {
   readonly sourceRoot: string;
   readonly nodes: readonly SemanticProjectionAuthorityNode[];
   readonly occupiedPaths?: readonly string[];
+  /** 🚪️ Paths at or below this root are not occupants (the projection's own source), so one shared `occupiedPaths` array serves every root. */
+  readonly occupiedExclusionRoot?: string;
   readonly layout?: "source" | "destination";
 }
 
@@ -2409,7 +2446,23 @@ function projectionCanonicalKey(path: string, comparison: "nfc" | "case-fold" | 
   return normalized.replaceAll("\uFE0F", "");
 }
 
-function artifactProjectionPathProblems(paths: readonly Readonly<{ path: string; nodeKind: "directory" | "file" }>[], occupiedPaths: readonly string[], taxonomy: Taxonomy): string[] {
+const projectionOccupancyIndexes = new WeakMap<readonly string[], ReadonlyMap<string, readonly string[]>>();
+
+/** 🗝️ Every occupied path under each of its raw and canonical comparison keys, built once per occupied-path array. */
+function projectionOccupancyIndex(occupiedPaths: readonly string[]): ReadonlyMap<string, readonly string[]> {
+  const cached = projectionOccupancyIndexes.get(occupiedPaths);
+  if (cached) return cached;
+  const index = new Map<string, string[]>();
+  for (const path of occupiedPaths) for (const key of new Set([path, projectionCanonicalKey(path, "nfc"), projectionCanonicalKey(path, "case-fold"), projectionCanonicalKey(path, "vs16-fold")])) {
+    const rows = index.get(key);
+    if (rows) rows.push(path);
+    else index.set(key, [path]);
+  }
+  projectionOccupancyIndexes.set(occupiedPaths, index);
+  return index;
+}
+
+function artifactProjectionPathProblems(paths: readonly Readonly<{ path: string; nodeKind: "directory" | "file" }>[], occupiedPaths: readonly string[], taxonomy: Taxonomy, occupiedExclusionRoot?: string): string[] {
   const problems: string[] = [];
   for (const comparison of ["nfc", "case-fold", "vs16-fold"] as const) {
     const seen = new Map<string, string>();
@@ -2420,9 +2473,9 @@ function artifactProjectionPathProblems(paths: readonly Readonly<{ path: string;
       seen.set(key, entry.path);
     }
   }
-  const occupied = new Set(occupiedPaths.flatMap((path) => [path, projectionCanonicalKey(path, "nfc"), projectionCanonicalKey(path, "case-fold"), projectionCanonicalKey(path, "vs16-fold")]));
+  const occupied = projectionOccupancyIndex(occupiedPaths), occupant = (candidate: string): boolean => occupiedExclusionRoot === undefined || candidate !== occupiedExclusionRoot && !candidate.startsWith(`${occupiedExclusionRoot}/`);
   for (const { path } of paths) {
-    if ([path, projectionCanonicalKey(path, "nfc"), projectionCanonicalKey(path, "case-fold"), projectionCanonicalKey(path, "vs16-fold")].some((key) => occupied.has(key))) problems.push(`Projected destination ${JSON.stringify(path)} is occupied.`);
+    if ([path, projectionCanonicalKey(path, "nfc"), projectionCanonicalKey(path, "case-fold"), projectionCanonicalKey(path, "vs16-fold")].some((key) => occupied.get(key)?.some(occupant))) problems.push(`Projected destination ${JSON.stringify(path)} is occupied.`);
     if (new TextEncoder().encode(path).length > taxonomy.collisionPolicy.maxPathBytes) problems.push(`Projected destination ${JSON.stringify(path)} exceeds maxPathBytes ${taxonomy.collisionPolicy.maxPathBytes}.`);
   }
   return problems;
@@ -2648,7 +2701,7 @@ export function semanticPathProjectionAuthority(options: SemanticPathProjectionA
   candidateMappings.sort((left, right) => projectionByteCompare(left.sourcePath, right.sourcePath));
   const destinationDirectories = root.destinationRoot ? projectionDirectories(root.destinationRoot, candidateMappings.map(({ destinationPath }) => destinationPath)) : [];
   const destinationNodes = [...destinationDirectories.map((path) => ({ path, nodeKind: "directory" as const })), ...candidateMappings.map(({ destinationPath: path }) => ({ path, nodeKind: "file" as const }))];
-  problems.push(...artifactProjectionPathProblems(destinationNodes, options.occupiedPaths ?? [], taxonomy));
+  problems.push(...artifactProjectionPathProblems(destinationNodes, options.occupiedPaths ?? [], taxonomy, options.occupiedExclusionRoot));
   const accepted = problems.length === 0;
   return {
     contractId: options.contractId,
@@ -2723,17 +2776,25 @@ export interface TaxonomyPathMatcher {
 
 /** 🧵️ Reuses successful pure compilations only for this validation or query invocation. */
 export function createTaxonomyPathMatcher(): TaxonomyPathMatcher {
-  const expressions = new Map<string, RegExp>();
+  const expressions = new Map<string, RegExp>(), expressionsByPattern = new Map<string, RegExp>();
+  let lastPath: string | undefined, lastNormalizedPath = "";
   return Object.freeze({
     matches(path: string, pattern: string): boolean {
-      const normalizedPath = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
-      const normalizedPattern = pattern.normalize("NFC");
-      let expression = expressions.get(normalizedPattern);
-      if (!expression) {
-        expression = taxonomyPatternExpression(normalizedPattern);
-        expressions.set(normalizedPattern, expression);
+      if (path !== lastPath) {
+        lastPath = path;
+        lastNormalizedPath = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
       }
-      return expression.test(normalizedPath);
+      let expression = expressionsByPattern.get(pattern);
+      if (!expression) {
+        const normalizedPattern = pattern.normalize("NFC");
+        expression = expressions.get(normalizedPattern);
+        if (!expression) {
+          expression = taxonomyPatternExpression(normalizedPattern);
+          expressions.set(normalizedPattern, expression);
+        }
+        expressionsByPattern.set(pattern, expression);
+      }
+      return expression.test(lastNormalizedPath);
     },
   });
 }
@@ -7253,6 +7314,7 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
     return cursor;
   };
   const helperCache = new Map<string, boolean>(), helperInProgress = new Set<string>();
+  let functionDeclarations: Map<string, number[]> | undefined;
   /** 🪜️ One bounded hop into a same-file free function's own tail expression. Bails (never proves) on
    * anything but exactly one textual `fn NAME` match, keeping this sound without call-site tracing. */
   const helperReturnsNonRepo = (name: string, depth: number): boolean => {
@@ -7260,8 +7322,15 @@ export function inspectRustNonRepoJoinBaseSpans(source: string): ReadonlySet<num
     if (helperInProgress.has(name)) return false;
     helperInProgress.add(name);
     let result = false;
-    const matches: number[] = [];
-    for (let index = 0; index < tokens.length; index++) if (tokens[index]?.text === "fn" && tokens[index + 1]?.text === name) matches.push(index);
+    if (!functionDeclarations) {
+      functionDeclarations = new Map();
+      for (let index = 0; index + 1 < tokens.length; index++) if (tokens[index]!.text === "fn") {
+        const declared = tokens[index + 1]!.text, rows = functionDeclarations.get(declared);
+        if (rows) rows.push(index);
+        else functionDeclarations.set(declared, [index]);
+      }
+    }
+    const matches = functionDeclarations.get(name) ?? [];
     if (matches.length === 1) {
       const cursor = matches[0]! + 2, paramsClose = tokens[cursor]?.text === "(" ? pairs.get(cursor) : undefined;
       const braceStart = paramsClose === undefined ? -1 : rustFindTopLevel(tokens, pairs, paramsClose + 1, tokens.length, new Set(["{", ";"]));

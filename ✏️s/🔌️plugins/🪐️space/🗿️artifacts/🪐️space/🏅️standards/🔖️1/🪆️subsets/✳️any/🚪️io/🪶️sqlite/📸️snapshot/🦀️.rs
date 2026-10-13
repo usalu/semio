@@ -1,6 +1,6 @@
 //! 🪐️ Literal ordered Space metadata, timestamp words and per-occurrence dialect identities.
 use crate::{SSpaceSnapshot,SpaceArtifactRow,SpaceArtifactDialect};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,NativeEncodingBound}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:&'static str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 

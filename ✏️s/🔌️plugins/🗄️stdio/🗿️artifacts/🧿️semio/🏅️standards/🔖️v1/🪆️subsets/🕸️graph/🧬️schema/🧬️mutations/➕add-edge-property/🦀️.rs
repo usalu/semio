@@ -1,9 +1,9 @@
 //! ➕ `add-edge-property` — attaches one keyed property entry to an edge at a FINAL-state index within that edge's
 //! `properties` (the edge twin of `add-node-property`, reusing `🔢️value`'s `SemioValueEntry`).
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphEdgeId, SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 /// ➕ `add-edge-property` payload — the edge, the index the entry lands at and the entry.

@@ -4,7 +4,7 @@
 //! 🔖 `IoFidelity::Lossy`: the file carries the surface geometry, not the terrain document
 //! (`exaggeration` and the imported feature overlay are not part of any mesh format).
 use crate::{gis_terrain_mesh_from_snapshot, GisTerrainSnapshot};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::{encode_mesh, SemioMeshFormat};
+use {semio_s_artifact_stdio_semio_mesh_export::encode_mesh, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat};
 
 pub fn register() {}
 

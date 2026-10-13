@@ -6,10 +6,10 @@
 //! `from: 0, to: 2` over a three-run sequence lands the run last rather than second-to-last — the
 //! whole point of this case.
 
-use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTextDiff;
+use crate::schema::mutations::SemioTextMutation;
+use crate::schema::snapshot::SemioTextSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-runs/🧭️moves/📸️snapshot/➡️after/🔣️.json");
@@ -46,7 +46,7 @@ async fn the_undo_reorder_moves_the_run_back_to_the_head() {
     let mutation = reorder_runs();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(crate::standards::v1::subsets::text::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
+    assert_eq!(undo, vec![SemioTextMutation::ReorderRuns(crate::schema::mutations::reorder_runs::ReorderRuns { from: 2, to: 0 })], "the undo must address the landed index #2 and send it back to #0");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-runs applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-runs applies to the reordered state");
@@ -92,7 +92,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed reorder-runs diff decodes");
-    let list = decoded.runs.as_ref().expect("an applied reorder-runs diff carries a runs list");
+    let _list = decoded.runs.as_ref().expect("an applied reorder-runs diff carries a runs list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "reorder-runs/moves-the-first-run-to-the-end: committed diff JSON is not canonical");

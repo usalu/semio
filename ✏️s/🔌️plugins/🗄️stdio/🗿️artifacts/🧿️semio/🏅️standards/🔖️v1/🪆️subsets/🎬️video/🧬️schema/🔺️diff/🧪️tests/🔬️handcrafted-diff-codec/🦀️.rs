@@ -1,10 +1,10 @@
 use super::*;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffBinary,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn snapshot_a() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
@@ -23,7 +23,7 @@ pub(crate) fn snapshot_a() -> SemioVideoSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 pub(crate) fn snapshot_b() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Audio,

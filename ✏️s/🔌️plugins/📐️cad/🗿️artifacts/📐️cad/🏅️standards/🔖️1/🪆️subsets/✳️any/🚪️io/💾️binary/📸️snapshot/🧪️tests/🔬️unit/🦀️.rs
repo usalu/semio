@@ -14,7 +14,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     let mut scene = sample_scene();
     store::os_store::test_support::assert_pack_schema_identity(&scene);
-    scene.drawings.push(store::ArtifactChild::new("drawing-1".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("other-id!s.stdio.semio@v1/drawing").expect("uri")));
+    scene.drawings.push(store::os_store::artifact_child::ArtifactChild::new("drawing-1".into(), semio_framework_artifact_reference::ArtifactRef::parse_uri("other-id!s.stdio.semio@v1/drawing").expect("uri")));
     assert_eq!(decode(&encode(&scene)).unwrap(),scene);
     scene.drawings.last_mut().unwrap().target.dialect.subset="model".into();
     assert!(decode(&encode(&scene)).is_err(), "a drawing child from the model domain must not decode");
@@ -34,7 +34,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
     use crate::host::owned::new_cad_store;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = new_cad_store(create_document_envelope(CAD_DOCUMENT_SCHEMA, "cad-demo", empty_cad_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     let sample = sample_model_child("command-envelope-1");

@@ -6,31 +6,31 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::cad::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::cad::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_entity_record};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_entity_record};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_entity};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_entity};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point2};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point2};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{dec_block};
-use crate::standards::v1::subsets::cad::io::text::snapshot::{enc_block};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
+use crate::io::text::snapshot::dec_entity_record;
+use crate::io::text::snapshot::enc_entity_record;
+use semio_s_artifact_stdio_semio_drawing::io::text::snapshot::dec_layer;
+use semio_s_artifact_stdio_semio_drawing::io::text::snapshot::enc_layer;
+use crate::io::text::snapshot::dec_entity;
+use crate::io::text::snapshot::enc_entity;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point2;
+use crate::io::text::snapshot::dec_block;
+use crate::io::text::snapshot::enc_block;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
-use crate::standards::v1::subsets::cad::io::text::mutations::{print_cad_mutation};
+use crate::io::text::mutations::print_cad_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioCadMutation) -> u8 {
     match m {
@@ -90,6 +90,7 @@ impl OpBinary for SemioCadMutation {
     }
 }
 }
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioCadMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

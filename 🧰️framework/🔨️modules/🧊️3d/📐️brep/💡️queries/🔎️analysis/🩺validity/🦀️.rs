@@ -2,9 +2,9 @@
 //! selected shape reaches (a verdict on one handle is never spoiled by an unrelated broken body).
 
 use super::ShapeScope;
-use crate::brep::queries::validation::{issue_reaches, validate_body};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::Body;
+use crate::validation::{issue_reaches, validate_body};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::Body;
 
 /// 🚦 How serious one issue is; `warning-` codes never make a shape invalid.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]

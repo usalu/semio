@@ -17,7 +17,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
  use semio_framework_value::ValueRefusalKind;
  let output=crate::test_artifact_root::test_artifact_root().join("real-count-workspace-lease");std::fs::create_dir_all(&output).unwrap();
  let mut repo=PathBuf::from(env!("CARGO_MANIFEST_DIR"));while !repo.join("nx.json").is_file(){assert!(repo.pop())}
- let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/component-dev/semio_framework_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
+ let component=std::fs::read(repo.join("🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust/dist/components/semio_framework_plugin_host_test_component.wasm")).expect("actual Count component prerequisite");
  let document_id=artifact_document_id_for_test("real-count-workspace-lease");
  let profile=count_trusted_catalog_fixture::verified_count_profile(&output.join("verified-profile"),&component,&document_id).await.expect("production trusted loader accepts actual Count descriptor/component");
  let selection=profile.selection().clone();let mut state=test_state().await;
@@ -41,7 +41,7 @@ async fn real_count_component_lease_uses_authenticated_hub_authority_and_erased_
   assert_eq!(admitted.lease.scope,scope_for_worker);assert_eq!(admitted.lease.package,selection.package);assert_eq!(admitted.lease.artifact,selection.artifact);assert_eq!(admitted.lease.surface,selection.surface);assert_eq!(admitted.lease.grant,selection.grant);assert_eq!(admitted.lease.component.sha256,component_hash);assert_eq!(admitted.lease.component.blake3,component_blake3);assert_eq!(admitted.lease.component.byte_length,component_length);assert_eq!(admitted.lease.descriptor.sha256,selection.package.descriptor_byte_sha256);
   assert!(workspace.bind_hub_session_document(&document_id,&pack,&spr).expect("real lease publication and actual guest codec registration"));
   let binding=workspace.plugin_artifact_binding(&document_id).expect("actual retained document binding");assert_eq!(binding.plugin_id,"neutral-host-fixture");
-  let codec=semio_framework_async::block_on(directory::os_store::document_codec("fixture.neutral-host-fixture.counter")).unwrap().unwrap();assert!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type.is_none(),"real guest erasure must not use a local Count TypeId");
+  let codec=semio_framework_async::block_on(directory::os_store::codec_registry::document_codec("fixture.neutral-host-fixture.counter")).unwrap().unwrap();assert!(codec.snapshot_sqlite.as_ref().unwrap().snapshot_type.is_none(),"real guest erasure must not use a local Count TypeId");
   semio_framework_async::block_on(async{
    let dialect=ArtifactDialect{artifact_kind:"fixture.neutral-host-fixture.counter".into(),standard:"1".into(),subset:"*".into()};let sqlite=ArtifactDialect::from(SQLITE_SNAPSHOT);
    let export=io_route(&dialect,&sqlite,1).await.expect("actual guest public export").value;let import=io_route(&sqlite,&dialect,1).await.expect("actual guest public import").value;

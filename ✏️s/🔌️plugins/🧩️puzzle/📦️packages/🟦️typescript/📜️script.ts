@@ -240,8 +240,8 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
   if (!exactFactory || !exactContracts(contracts, appGroups.filter((group) => group.status === "migrated")) || !exactArray(proofIds, migrated)) return false;
   if (owner.owner === "Puzzle3dPlayApp") {
     return production.includes("struct Puzzle3dConfigStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation")
       && production.includes("fn build_config_store_one_item_preparation_factory()")
       && production.includes("Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))")
       && production.includes("PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 32_768")
@@ -263,19 +263,19 @@ function ownerOracle(owner: PublicationOwner, source: string): boolean {
       && production.includes("base.return_to_registry()")
       && production.includes("fn terminal_is_empty(&self)")
       && production.includes("struct Puzzle3dArtifactStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation")
       && production.includes("fn build_artifact_store_one_item_preparation_factory()")
       && production.includes("Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))");
   }
   if (owner.owner === "Puzzle2dPlayApp") {
     return production.includes("struct Puzzle2dConfigStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation")
       && production.includes("Some(std::sync::Arc::new(Puzzle2dConfigStorePreparationFactory))")
       && production.includes("struct Puzzle2dArtifactStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory")
-      && production.includes("impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory")
+      && production.includes("impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation")
       && production.includes("Some(std::sync::Arc::new(Puzzle2dArtifactStorePreparationFactory))")
       && production.includes("PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536")
       && production.includes("request.operation != request.authority.operation()")

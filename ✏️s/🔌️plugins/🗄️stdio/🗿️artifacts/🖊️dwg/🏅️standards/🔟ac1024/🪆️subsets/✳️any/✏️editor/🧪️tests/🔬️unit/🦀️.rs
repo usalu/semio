@@ -1,4 +1,4 @@
-use crate::apply_mutation;
+use semio_s_artifact_stdio_contract::apply_mutation;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -18,12 +18,12 @@ async fn editor_and_viewer_share_one_dialect() {
     semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<DwgAc1024Editor, crate::viewer::dwg_ac1024::DwgAc1024Viewer>().await;
 }
 
-semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DwgAc1024Editor, || semio_framework_plugin::App { definition: super::create_dwg_ac1024_editor(), examples: Vec::new() }, "../../🏅️standards/🔟ac1024/🪆️subsets/✳️any");
+semio_framework_plugin::history_edit_acceptance_law!("stdio", super::DwgAc1024Editor, || semio_framework_plugin::App { definition: super::create_dwg_ac1024_editor(), examples: Vec::new() }, "../../..");
 
 #[semio_framework_async_macros::async_test]
 async fn details_edits_resolve_to_the_kind_of_the_addressed_block() {
     
-    let base = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
+    let base = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot();
     let title = editing::SnapshotEditEvent::SetValue { path: "/summary/title".into(), value: semio_framework_value::DslValue::String("renamed".into()) };
     let emit = <DwgAc1024Editor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&title, &base).expect("a summary edit resolves");
     let [mutation @ DwgMutation::SetSummary(_)] = emit.artifact_mutations.as_slice() else { panic!("a summary edit raises the summary kind") };

@@ -18,7 +18,7 @@
     "build": {
       "executor": "nx:run-commands",
       "cache": true,
-      "outputs": ["{projectRoot}/dist/build"],
+      "outputs": ["{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"],
       "inputs": [
         "production",
         "^production",

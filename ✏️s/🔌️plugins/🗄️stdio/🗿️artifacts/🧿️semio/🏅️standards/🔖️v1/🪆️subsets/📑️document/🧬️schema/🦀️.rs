@@ -1,7 +1,7 @@
 //! 🧬️ SemioDocumentArtifact schema — full artifact state, mirrors `SemioDocumentSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
+use crate::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

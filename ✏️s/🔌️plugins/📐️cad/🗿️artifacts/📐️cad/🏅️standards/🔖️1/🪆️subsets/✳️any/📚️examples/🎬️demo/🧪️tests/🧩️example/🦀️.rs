@@ -10,7 +10,7 @@ async fn primary_asset_is_nonempty() {
 /// drift re-hashes the children) would otherwise load four silently empty panes.
 #[test]
 fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
-    let snapshot = <crate::CadSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../🖼️assets/🗣️.dsl.semio")).expect("demo asset parses");
+    let snapshot = <crate::CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../🖼️assets/🗣️.dsl.semio")).expect("demo asset parses");
     let forest = crate::standards::v1::subsets::any::schema::inferences::forest_play_scene();
     for pane in crate::CadPaneId::all() {
         assert_eq!(crate::cad_pane_model(&snapshot, pane).map(|child| child.child_id.as_str()), crate::cad_pane_model(&forest, pane).map(|child| child.child_id.as_str()), "{pane:?} pane child id");
@@ -21,7 +21,7 @@ fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
         let scene = crate::cad_bundled_pane_scene(&child.child_id).unwrap_or_else(|| panic!("{pane:?} pane resolves its bundled genesis scene"));
         assert!(!crate::cad_scene_pane_objects(&scene, pane).is_empty(), "{pane:?} pane carries objects");
         let pack = crate::cad_genesis_child_pack(&snapshot, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
-        let model = <semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
+        let model = <semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
         assert_eq!(crate::standards::v1::subsets::any::schema::geometry::objects_from_model_snapshot(&model), crate::cad_scene_pane_objects(&scene, pane), "{pane:?} pane genesis objects survive the model bridge exactly");
     }
 }
@@ -31,7 +31,7 @@ fn demo_asset_is_the_concrete_forest_and_every_pane_resolves() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../🖼️assets/🗣️.dsl.semio");
-    let snapshot = <crate::CadSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::CadInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
@@ -71,11 +71,11 @@ impl SubsetRoundtripSpec for CadAnyRoundtrip {
     }
 
     async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-        Ok(<Self::Snapshot as store::ArtifactPack>::encode_pack(snapshot))
+        Ok(<Self::Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot))
     }
 
     async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
-        <Self::Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
+        <Self::Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| e.to_string())
     }
 
     async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {

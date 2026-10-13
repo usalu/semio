@@ -1,8 +1,8 @@
 //! 🧪️ Actual window wrapper backing stays in custody until independently funded retirement.
 use semio_framework_value::{RetainedCloneGrant,retirement::{RetireOwned,controlled::ControlledRetirement,OwnedValueRetirementFactory}};
 use std::sync::Arc;
-pub(crate) fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
-pub(crate) fn close_with<T:RetireOwned>(value:T,mut pump:impl FnMut()){
+fn close_original<T:RetireOwned>(value:T){close_with(value,||{});}
+fn close_with<T:RetireOwned>(value:T,mut pump:impl FnMut()){
  let mut owner=ControlledRetirement::new(value).map_err(|(error,_)|error).unwrap();
  for _ in 0..1000000{if owner.terminal_is_empty(){return;}let copy=owner.next_copy_byte_demand().unwrap();let release=owner.next_release_byte_demand().unwrap();owner.step(RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:copy.max(4096),maximum_capacity_bytes:owner.next_capacity_byte_demand(if copy>0{copy}else{release}).unwrap(),maximum_release_bytes:release,maximum_depth:owner.next_depth_demand().unwrap()}).unwrap();pump();}
  panic!("original test owner did not reach physical terminal emptiness");

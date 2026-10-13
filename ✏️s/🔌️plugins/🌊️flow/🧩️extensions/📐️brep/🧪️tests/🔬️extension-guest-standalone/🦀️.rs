@@ -121,7 +121,7 @@ fn geometry_test_mesh_signature(chunks:Vec<String>)->(Vec<[i64;6]>,Vec<[i64;6]>,
         let mesh=super::decode_mesh_pack(&super::decode_base64(&chunk).unwrap()).unwrap();assert_eq!(mesh.positions.len(),mesh.normals.len());
         for (point,normal) in mesh.positions.chunks_exact(3).zip(mesh.normals.chunks_exact(3)) {corners.push([quantize(point[0]),quantize(point[1]),quantize(point[2]),quantize(normal[0]),quantize(normal[1]),quantize(normal[2])]);}
         for line in mesh.edge_positions.chunks_exact(6) {let a=[quantize(line[0]),quantize(line[1]),quantize(line[2])];let b=[quantize(line[3]),quantize(line[4]),quantize(line[5])];let (a,b)=if a<=b {(a,b)}else {(b,a)};edges.push([a[0],a[1],a[2],b[0],b[1],b[2]]);}
-        let point=|id:u32|{let offset=id as usize*3;semio_framework_3d::brep::representation::vector::Vec3::new(mesh.positions[offset]as f64,mesh.positions[offset+1]as f64,mesh.positions[offset+2]as f64)};
+        let point=|id:u32|{let offset=id as usize*3;semio_framework_3d_brep_representation::vector::Vec3::new(mesh.positions[offset]as f64,mesh.positions[offset+1]as f64,mesh.positions[offset+2]as f64)};
         for ids in mesh.indices.chunks_exact(3) {let (a,b,c)=(point(ids[0]),point(ids[1]),point(ids[2]));area+=(b-a).cross(c-a).norm()/2.0;volume+=a.dot(b.cross(c))/6.0;triangles+=1;}
     }
     corners.sort_unstable();edges.sort_unstable();(corners,edges,triangles,area,volume)

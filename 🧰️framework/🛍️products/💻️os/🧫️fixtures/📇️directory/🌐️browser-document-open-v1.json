@@ -19,18 +19,31 @@
       "spaceId": "raum:ä",
       "documentId": "plan:東京"
     },
-    "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
+    "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
     "catalog": {
       "generationId": "5788ccf56af6fcf64abda0c77498f053c69235782405b22d8651f1c06c8205c4"
     },
     "package": {
-      "pluginId": "s.gis:地図",
-      "packageId": "s.gis.gismap:codec",
+      "pluginId": "gis",
+      "packageId": "semio:gis",
       "version": "1.0.0:β",
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "executionProtocol": { "appChannelVersion": 23 }
+      "executionProtocol": { "appChannelVersion": 23 },
+      "componentReceipt": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "gis",
+        "packageId": "semio:gis",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "wasmBytes": 4096,
+        "semanticDescriptorSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
     },
     "component": {
       "sha256": "2222222222222222222222222222222222222222222222222222222222222222",
@@ -68,7 +81,7 @@
     },
     "checkpoint": {
       "checkpointId": "480a3b0f144e38a0527e4f6341af445098284a18a53017ba5e9a8c1bcdd60d33",
-      "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
+      "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
       "baselineFrontier": {
         "documentId": "plan:東京",
         "headEditOrdinal": 2,
@@ -126,18 +139,31 @@
       "spaceId": "raum:ä",
       "documentId": "plan:東京"
     },
-    "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
+    "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
     "catalog": {
       "generationId": "5788ccf56af6fcf64abda0c77498f053c69235782405b22d8651f1c06c8205c4"
     },
     "package": {
-      "pluginId": "s.gis:地図",
-      "packageId": "s.gis.gismap:codec",
+      "pluginId": "gis",
+      "packageId": "semio:gis",
       "version": "1.0.0:β",
       "componentSha256": "2222222222222222222222222222222222222222222222222222222222222222",
       "componentBlake3": "4444444444444444444444444444444444444444444444444444444444444444",
       "descriptorByteSha256": "5555555555555555555555555555555555555555555555555555555555555555",
-      "executionProtocol": { "appChannelVersion": 23 }
+      "executionProtocol": { "appChannelVersion": 23 },
+      "componentReceipt": {
+        "schema": "semio.plugin.component-receipt/v1",
+        "pluginId": "gis",
+        "packageId": "semio:gis",
+        "profile": "wasm-release",
+        "target": "wasm32-wasip2",
+        "wasmSha256": "2222222222222222222222222222222222222222222222222222222222222222",
+        "wasmBytes": 4096,
+        "semanticDescriptorSha256": "5555555555555555555555555555555555555555555555555555555555555555",
+        "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+        "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+        "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+      }
     },
     "artifact": {
       "kind": "s.gis:gismap",
@@ -166,7 +192,7 @@
     },
     "checkpoint": {
       "checkpointId": "480a3b0f144e38a0527e4f6341af445098284a18a53017ba5e9a8c1bcdd60d33",
-      "descriptorDigestV1": "03504036d9aecf653a38d807d2a852f18d13bcf612cb9d7e612c46540c430cac",
+      "descriptorDigestV1": "831781b18dfd55bb3f7c539834736d89986c3a973ac739854ff8fd4b31478dfd",
       "baselineFrontier": {
         "documentId": "plan:東京",
         "headEditOrdinal": 2,

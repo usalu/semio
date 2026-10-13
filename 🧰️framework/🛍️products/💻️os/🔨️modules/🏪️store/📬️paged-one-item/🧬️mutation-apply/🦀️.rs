@@ -4,7 +4,7 @@
 use super::{PagedOneItemEdit, PagedOneItemEditStep, PagedOneItemPreparationFactory};
 use crate::os_spr::{apply_diff, MutationDiff, OpBinary};
 use crate::snapshot_clone_preparation::RetainedEditCustody;
-use crate::{ArtifactCanonicalJsonTree, ArtifactStoreOneItemPreparationFactory, Mutation};
+use crate::{ArtifactCanonicalJsonTree, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory, Mutation};
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::{controlled::ControlledRetirement, RetireOwned};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};

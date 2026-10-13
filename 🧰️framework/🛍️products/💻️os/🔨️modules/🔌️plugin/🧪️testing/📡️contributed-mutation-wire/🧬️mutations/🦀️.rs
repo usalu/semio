@@ -7,13 +7,13 @@ use serde::{Deserialize, Serialize};
 
 #[path = "➕️add-value/🦀️.rs"]
 mod add_value;
-pub(crate) use add_value::AddValue;
+use add_value::AddValue;
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, ToValue, FromValue, dsl::Mutations)]
 #[serde(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[value(tag = "operation", rename_all = "camelCase", deny_unknown_fields)]
 #[mutations(snapshot = WireTestSnapshot, diff = WireTestDiff, schema = "wiretest.contributed.document")]
-pub(crate) enum WireTestMutation {
+enum WireTestMutation {
     AddValue(AddValue),
 }
 

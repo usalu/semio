@@ -1671,7 +1671,7 @@
     "RemodelingAssetChild": {
       "type": "object",
       "title": "RemodelingAssetChild",
-      "description": "store::ArtifactChild<SemioImageSnapshot> — an owned child handle; only childId and target cross the wire.",
+      "description": "store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot> — an owned child handle; only childId and target cross the wire.",
       "additionalProperties": false,
       "required": [
         "childId",
@@ -1763,7 +1763,7 @@
     "RemodelingMeshChild": {
       "type": "object",
       "title": "RemodelingMeshChild",
-      "description": "store::ArtifactChild<SemioMeshSnapshot> — an owned child handle; only childId and target cross the wire.",
+      "description": "store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> — an owned child handle; only childId and target cross the wire.",
       "additionalProperties": false,
       "required": [
         "childId",

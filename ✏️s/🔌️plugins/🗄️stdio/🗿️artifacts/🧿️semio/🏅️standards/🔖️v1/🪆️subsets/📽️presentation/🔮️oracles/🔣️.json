@@ -1010,5 +1010,13 @@
       "notes": "Applied set-text-box-blocks (payload {\"slide_index\": 0, \"shape_index\": 0, \"blocks\": [{\"kind\": \"paragraph\", \"style_id\": null, \"runs\": [{\"text\": \"F1 mutated block\", \"style\": {\"bold\": false, \"italic\": false, \"underline\": false, \"size\": null, \"font\": null, \"color\": null, \"link\": null}}]}], \"mutation\": \"setTextBoxBlocks\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
   ],
-  "oracleHostPackages": []
+  "oracleHostPackages": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-semio-document",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/📑️document/📦️packages/🦀️rust",
+      "rationale": "🧱️ Presentation slides embed semio documents; the subject builds them through the document subset crate."
+    }
+  ]
 }

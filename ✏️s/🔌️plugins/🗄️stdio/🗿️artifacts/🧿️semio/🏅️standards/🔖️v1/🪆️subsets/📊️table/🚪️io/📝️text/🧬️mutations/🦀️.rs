@@ -7,20 +7,18 @@
 //! `None`, the digits for `Some(n)` — a comma-separated positional field can represent absence as
 //! an empty slot without ambiguity.
 
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableMutation;
 
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
-use crate::standards::v1::subsets::table::schema::mutations::{
-    create_column::CreateColumn, delete_column::DeleteColumn, edit_cell::EditCell, insert_row::InsertRow, remove_row::RemoveRow, rename_column::RenameColumn, reorder_columns::ReorderColumns, reorder_rows::ReorderRows,
-};
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_cell_kind};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_cell_kind};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use {crate::schema::mutations::create_column::CreateColumn, crate::schema::mutations::delete_column::DeleteColumn, crate::schema::mutations::edit_cell::EditCell, crate::schema::mutations::insert_row::InsertRow, crate::schema::mutations::remove_row::RemoveRow, crate::schema::mutations::rename_column::RenameColumn, crate::schema::mutations::reorder_columns::ReorderColumns, crate::schema::mutations::reorder_rows::ReorderRows};
+use crate::io::text::snapshot::dec_row;
+use crate::io::text::snapshot::enc_row;
+use crate::io::text::snapshot::dec_cell_kind;
+use crate::io::text::snapshot::enc_cell_kind;
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -126,8 +124,8 @@ impl protocol::OpText for SemioTableMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioTableMutation> {
-    use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableRow};
-    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::schema::snapshot::{SemioTableCellKind, SemioTableRow};
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     vec![
         SemioTableMutation::CreateColumn(CreateColumn { name: "notes".into(), kind: SemioTableCellKind::Str, index: Some(1) }),
         SemioTableMutation::CreateColumn(CreateColumn { name: "extra".into(), kind: SemioTableCellKind::Int, index: None }),
@@ -151,17 +149,17 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::table::schema::mutations::*;
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::standards::v1::subsets::table::schema::mutations::create_column;
-use crate::standards::v1::subsets::table::schema::mutations::delete_column;
-use crate::standards::v1::subsets::table::schema::mutations::edit_cell;
-use crate::standards::v1::subsets::table::schema::mutations::insert_row;
-use crate::standards::v1::subsets::table::schema::mutations::remove_row;
-use crate::standards::v1::subsets::table::schema::mutations::rename_column;
-use crate::standards::v1::subsets::table::schema::mutations::reorder_columns;
-use crate::standards::v1::subsets::table::schema::mutations::reorder_rows;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::snapshot::SemioTableSnapshot;
+use crate::schema::mutations::create_column;
+use crate::schema::mutations::delete_column;
+use crate::schema::mutations::edit_cell;
+use crate::schema::mutations::insert_row;
+use crate::schema::mutations::remove_row;
+use crate::schema::mutations::rename_column;
+use crate::schema::mutations::reorder_columns;
+use crate::schema::mutations::reorder_rows;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioTableSnapshot,
 /// SemioTableMutation>` payload struct declared in the corresponding triad leaf's
 /// `🦠️mutation/🦀️.rs`. This plugin crate reaches the derive through the `dsl` extern-crate

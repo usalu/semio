@@ -1,8 +1,8 @@
 //! 📐️ Borrowed CAD primitives count all layer, block, geometry and exact numeric cells.
 use super::{SemioCadSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio CAD native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio CAD complete cell extent overflow"))}
@@ -38,7 +38,7 @@ fn binary_record(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&m
  };census.row(bytes)
 }
 /// 📦️ Reads the actual CAD primitive order without constructing layer or block collections.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|{
@@ -74,7 +74,7 @@ fn document_record(value:&str,census:&mut Census,control:&mut NativeDecodeContro
  };census.row(bytes)
 }
 /// 📝️ Counts every original CAD spelling, signed layer color and exact geometric class.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","layers","blocks","entities"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{

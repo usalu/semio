@@ -74,6 +74,6 @@ impl OriginalActorCloseReply{
 mod guest_entry;
 pub use guest_entry::{OriginalActorEntryFailure,OriginalActorGuestEntry,OriginalActorFixedCall,OriginalActorFixedKind,OriginalActorFixedReceipt};
 
-#[cfg(all(any(feature="component-guest",feature="component-extension-guest"),target_arch="wasm32",target_env="p2"))]
+#[cfg(all(target_arch="wasm32",target_env="p2"))]
 #[path="🌉️call/🎭️exports/🦀️.rs"]
 pub mod exports;

@@ -1,5 +1,5 @@
 //! 🛫️ The authored native owner must emit exact ordinary bytes with cumulative admission and real interior cancellation.
-use store::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 pub(crate) fn assert_output<T:ArtifactDsl+ArtifactPack+ArtifactSqliteSnapshot>(snapshot:&T,semantic_value_bytes:usize){
  assert!(semantic_value_bytes>0);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let actual=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap();let expected=match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(snapshot.encode_pack()),SnapshotEncoding::Text=>store::io::IoPayload::Text(snapshot.print_dsl())};assert!(actual==expected,"controlled native wire differs");let count=match &actual{store::io::IoPayload::Binary(bytes)=>bytes.len(),store::io::IoPayload::Text(text)=>text.len()};assert!(count>65536);

@@ -75,7 +75,7 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -224,14 +224,14 @@ pub fn iconed_tree_item_with_action(
 /// whole document" gesture (`ArtifactStore::reset`, applied host-side) every wholesale document-swap
 /// command (`🎮️commands/🗿️artifact`, `🎮️commands/🪵️stock`, `🎮️commands/📤️media`, `import_media`'s
 /// `geometry:in`) uses instead of the banned whole-snapshot mutation. The spr is a fresh, edit-free
-/// op-log (`store::empty_document_spr`, the `🏗️fem` shape) — never a live `ArtifactEnvelope` minted
+/// op-log (`store::os_store::text_format::empty_document_spr`, the `🏗️fem` shape) — never a live `ArtifactEnvelope` minted
 /// just to print it: such an envelope owns a bounded retirement authority, and dropping it at the end
 /// of this function trapped the guest (`artifact envelope terminal shell reached Drop before its
 /// app-owned bounded retirement authority detached every nested owner`) the moment the react shell
 /// dispatched its boot `setActiveExample`.
 pub fn reset_process3d_document_effect(document: &Process3dSnapshot) -> Effect {
     let pack = <Process3dSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("process3d", crate::PROCESS_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -748,7 +748,7 @@ struct Process3dConfigStorePreparationFactory;
 
 struct Process3dConfigStorePreparation {
     owners: store::OneItemOwners<Process3dConfig, Process3dConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
@@ -765,7 +765,7 @@ fn process3d_config_mutation_retained_bytes(mutation: &Process3dConfigMutation) 
     }
 }
 
-fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = process3d_config_mutation_retained_bytes(mutation);
     let envelope = match mutation {
         Process3dConfigMutation::SetContributions(Process3dConfigSetContributions{ .. }) => PROCESS3D_CONFIG_CONTRIBUTIONS_BYTES,
@@ -774,7 +774,7 @@ fn admit_process3d_config_mutation(mutation: &Process3dConfigMutation) -> Result
     if retained_bytes > envelope {
         return Err("Process3d config mutation exceeds its fixed retained preparation envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_process3d_config(base: &Process3dConfig, mutation: &Process3dConfigMutation) -> Result<(Process3dConfig, Vec<Process3dConfigMutation>), String> {
@@ -813,7 +813,7 @@ fn prepare_process3d_config(base: &Process3dConfig, mutation: &Process3dConfigMu
     Ok((post, vec![inverse]))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Process3dConfigMutation>>>,
@@ -822,30 +822,30 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dCon
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Process3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Process3dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Process3d config preparation rejected its lane".into());
         }
         admit_process3d_config_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &Process3dConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Process3dConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Process3dConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation, Process3dConfigMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation, Process3dConfigMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
     ) -> Result<
-        (Box<dyn store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress),
-        (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation, Process3dConfigMutation>),
+        (Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress),
+        (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Process3dConfig, Process3dConfigMutation, Process3dConfigMutation>),
     > {
-        if request.lane != store::HistoryLane::Document
+        if request.lane != store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d config preparation rejected its original publication authority"), request));
         }
@@ -857,15 +857,15 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dConfig, Process3dCon
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Process3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(Process3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMutation> for Process3dConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if let Some(error) = self.owners.failure.as_ref() {
             return Err(error.clone());
@@ -874,7 +874,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Process3d config preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Process3d config preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Process3d config preparation lost its mutation owner"))?;
@@ -898,20 +898,20 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dConfig, Process3dConfigMutation>> {
         self.owners.prepared.take()
     }
 
@@ -923,7 +923,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dConfig, Process3dConfigMuta
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -972,7 +972,7 @@ struct Process3dArtifactPreparationFactory;
 
 struct Process3dArtifactPreparation {
     owners: store::OneItemOwners<Process3dSnapshot, Process3dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
 }
@@ -985,7 +985,7 @@ fn process3d_text_bytes(value: &str) -> Result<usize, semio_framework_value::Val
     Ok(value.len())
 }
 
-fn process3d_child_bytes<S>(child: &store::ArtifactChild<S>) -> Result<usize, semio_framework_value::ValueError> {
+fn process3d_child_bytes<S>(child: &store::os_store::artifact_child::ArtifactChild<S>) -> Result<usize, semio_framework_value::ValueError> {
     Ok(process3d_text_bytes(&child.child_id)?.saturating_add(process3d_text_bytes(&child.target.to_uri())?))
 }
 
@@ -1147,7 +1147,7 @@ fn prepare_process3d_document(base: &Process3dSnapshot, mutation: &Process3dMuta
     Ok((post, inverse))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Process3dMutation>>>,
@@ -1156,31 +1156,31 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Process3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Process3dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Process3d document preparation rejected its lane".into());
         }
         process3d_mutation_retained_bytes(mutation).map_err(semio_framework_value::ValueError::into_message)?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, PROCESS3D_DOCUMENT_GRANT_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, PROCESS3D_DOCUMENT_GRANT_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &Process3dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Process3dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Process3dArtifactPreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation, Process3dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation, Process3dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
     ) -> Result<
-        (Box<dyn store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress),
-        (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation, Process3dMutation>),
+        (Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress),
+        (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Process3dSnapshot, Process3dMutation, Process3dMutation>),
     > {
         if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Process3d document preparation rejected its original publication authority"), request));
         }
@@ -1193,17 +1193,17 @@ impl store::ArtifactStoreOneItemPreparationFactory<Process3dSnapshot, Process3dM
             Err(error) => return Err((error, request)),
         };
         Ok((
-            Box::new(Process3dArtifactPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false }),
+            Box::new(Process3dArtifactPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes: 0, cancelled: false }),
             progress,
         ))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation> for Process3dArtifactPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if let Some(error) = self.owners.failure.as_ref() {
             return Err(error.clone());
@@ -1212,13 +1212,13 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Process3d document preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         if self.owners.candidate.is_none() {
             let base = self.owners.base.as_ref().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Process3d document preparation lost its exact base root"))?.get();
             process3d_document_bytes(base)?;
             if grant.maximum_copy_bytes < PROCESS3D_DOCUMENT_GRANT_BYTES {
-                return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+                return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
             }
             let mutation = self.owners.mutation.take().ok_or_else(|| ValueError::literal(ValueRefusalKind::InvariantViolated, "Process3d document preparation lost its mutation owner"))?;
             match prepare_process3d_document(base, &mutation) {
@@ -1230,11 +1230,11 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
                 }
             }
             self.retained_bytes = PROCESS3D_DOCUMENT_GRANT_BYTES;
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()));
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: PROCESS3D_DOCUMENT_GRANT_BYTES as u64, digest: [0; 32] };
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.authority.is_none() {
             return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "Process3d document preparation lost its Store authority"));
@@ -1248,20 +1248,20 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Process3dSnapshot, Process3dMutation>> {
         self.owners.prepared.take()
     }
 
@@ -1273,7 +1273,7 @@ impl store::ArtifactStoreOneItemPreparation<Process3dSnapshot, Process3dMutation
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -1418,11 +1418,11 @@ impl ArtifactEditor for Process3dPlayApp {
 
     const DOCUMENT_SCHEMA: &'static str = crate::PROCESS_3D_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Process3dArtifactPreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Process3dConfigStorePreparationFactory))
     }
 
@@ -1481,16 +1481,16 @@ impl ArtifactEditor for Process3dPlayApp {
     }
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::process3d_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::host::owned::process3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 

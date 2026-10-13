@@ -4,7 +4,7 @@ use semio_framework_value::retained_clone::RetainedCloneSource;
 use semio_framework_value::retirement::SharedValueRetirementFactory;
 use crate::schema::snapshot::{PngTextChunk,PngTextKind,PngNativePaint};
 
-fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
 fn retire_owned_value<T:semio_framework_value::retirement::RetireOwned>(value:T){
@@ -129,7 +129,7 @@ fn retained_png_publication_metadata_intents_match_neutral_targets() {
         let snapshot=PngSnapshot::from_value(value(&row["snapshot"])).unwrap();
         let target=PngSnapshot::from_value(value(&row["expected"])).unwrap();
         let mutation=PngMutation::ReplaceImage(ReplaceImage{image:target.image});
-        assert!(PngPublication.preflight(&mutation,store::HistoryLane::Document).is_ok());
+        assert!(PngPublication.preflight(&mutation,store::os_store::store_schema::HistoryLane::Document).is_ok());
         let source=owned_source(snapshot.clone());let mutation=owned_source(mutation);let mut post=snapshot;let mut cursor=PngPublicationCursor::new();let grant=RetainedCloneGrant {maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_depth:64, maximum_release_bytes: 4096 };let mut turns=0;let mut paused=false;
         loop {
             turns+=1;assert!(turns<100000);

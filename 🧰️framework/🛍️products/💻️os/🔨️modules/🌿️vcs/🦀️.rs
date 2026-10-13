@@ -19,6 +19,9 @@ use crate::os_spr::{Edit, Mutation, MutationApplyError, MutationDiff};
 mod genesis;
 pub use genesis::{ArtifactGenesis, ArtifactGenesisWitness};
 
+#[path = "♻️retirement/🦀️.rs"]
+mod retirement;
+
 
 
 //#region 🔖️Schemas
@@ -58,11 +61,11 @@ pub struct Author {
 // `change_to_json_string_matches_serde_json_byte_for_byte` and
 // `content_addressed_checkpoint_id_composition_pins_are_deterministic_and_backward_compatible`
 // tests both compare `Change` against a real `serde_json` oracle, matching this ticket's own
-// established oracle-preservation pattern (`store::ArtifactCursorOwners`,
+// established oracle-preservation pattern (`crate::os_store::store_schema::ArtifactCursorOwners`,
 // `📓️os-kernel-serde-final.md`). `ArtifactHistoryLedger`/`ArtifactHistoryIter`/`ArtifactVcs`/
 // `ArtifactVcsRead` stay fully serde-free (dropped outright, prior wave);
 // `Author`/`CompositionPin`/`Checkpoint`/`Alternative` now join them (see `Author`'s own docstring
-// above). `store::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
+// above). `crate::os_store::store_schema::ArtifactEnvelopeRead`'s hand-off reason was already stale before any of this
 // (converted off `Serialize` onto `ToValue` outright, see `📓️store-serde-final.md`).
 #[derive(Clone, Debug, PartialEq, Eq, semio_framework_value::ToValue, semio_framework_value::FromValue)]
 #[cfg_attr(test, derive(serde::Serialize, serde::Deserialize))]
@@ -136,8 +139,11 @@ pub struct Alternative {
 
 /// 📄 Slots in one history page. One page is the largest contiguous slot allocation.
 pub const ARTIFACT_HISTORY_PAGE_SLOTS: usize = 64;
-/// 📄 Directory pages addressed by one chunk. The chunk is one pointer array and is never reallocated.
-pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = 512;
+/// 📏️ The largest physical release one history catalog close step performs: a directory chunk or one value page.
+pub const ARTIFACT_HISTORY_RELEASE_PAGE_BYTES: usize = 4096;
+/// 📄 Directory pages addressed by one chunk. The chunk's pointer array, count and link fill exactly one release page,
+/// and the chunk is never reallocated.
+pub const ARTIFACT_HISTORY_DIRECTORY_PAGES: usize = (ARTIFACT_HISTORY_RELEASE_PAGE_BYTES - 2 * size_of::<usize>()) / size_of::<usize>();
 /// 📄 Page size of every artifact history ledger. The name is the page, not a session ceiling.
 pub const ARTIFACT_HISTORY_LEDGER_CAPACITY: usize = ARTIFACT_HISTORY_PAGE_SLOTS;
 const ARTIFACT_HISTORY_CONTIGUOUS_CEILING: usize = 64 * 1024;
@@ -145,6 +151,7 @@ const ARTIFACT_HISTORY_CONTIGUOUS_CEILING: usize = 64 * 1024;
 /// 📄 Dense append/pop catalog paged so a full page opens another fixed page instead of growing one buffer.
 pub struct HistoryPageStack<T> {
     head: Option<Box<HistoryPageChunk<T>>>,
+    detached: Option<Box<HistoryValuePage<T>>>,
     pages: u32,
     len: usize,
 }
@@ -154,6 +161,8 @@ struct HistoryPageChunk<T> {
     count: u16,
     next: Option<Box<HistoryPageChunk<T>>>,
 }
+
+const _: () = assert!(size_of::<HistoryPageChunk<()>>() <= ARTIFACT_HISTORY_RELEASE_PAGE_BYTES);
 
 struct HistoryValuePage<T> {
     slots: Box<[Option<T>]>,
@@ -210,7 +219,7 @@ fn history_chunk_ref<T>(chunk: &HistoryPageChunk<T>, remaining: usize) -> &Histo
 
 impl<T> HistoryPageStack<T> {
     /// 🪶️ Creates an empty retained catalog without allocating resident pages.
-    pub fn empty() -> Self { Self { head: None, pages: 0, len: 0 } }
+    pub fn empty() -> Self { Self { head: None, detached: None, pages: 0, len: 0 } }
     /// 🧮 Quotes the exact original first stack page and its directory.
     pub fn initial_page_birth_demand(&self) -> Result<semio_framework_value::RetirementDemand, ValueError> {
         if self.pages != 0 { return Ok(Default::default()); }
@@ -246,7 +255,7 @@ impl<T> HistoryPageStack<T> {
     }
 
     pub fn try_new() -> Result<Self, &'static str> {
-        let mut stack = Self { head: None, pages: 0, len: 0 };
+        let mut stack = Self::empty();
         stack.open_page().map_err(|_| "history catalog page allocation failed")?;
         Ok(stack)
     }
@@ -291,6 +300,9 @@ impl<T> HistoryPageStack<T> {
     }
 
     pub fn try_push(&mut self, value: T) -> Result<(), T> {
+        if let Some(page) = self.detached.take() {
+            history_place_page(&mut self.head, self.pages as usize - 1, page);
+        }
         if self.len == self.capacity() && self.open_page().is_err() {
             return Err(value);
         }
@@ -329,28 +341,37 @@ impl<T> HistoryPageStack<T> {
         self.len.checked_sub(1).and_then(|index| self.get(index))
     }
 
-    /// 📏️ Borrows one empty page's exact native backing and final directory allocation extent.
+    /// 📏️ Borrows the exact extent the next empty-catalog release step frees: the last value page, or the directory
+    /// chunk that page alone still occupies. Either fits one [`ARTIFACT_HISTORY_RELEASE_PAGE_BYTES`] release page.
     pub fn next_empty_page_release_byte_demand(&self) -> Option<usize> {
         if self.len != 0 { return None; }
         if self.pages == 0 { return Some(0); }
-        let page = size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(size_of::<HistoryValuePage<T>>())?;
-        page.checked_add(if (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { size_of::<HistoryPageChunk<T>>() } else { 0 })
+        if self.detached.is_none() && (self.pages as usize - 1) % ARTIFACT_HISTORY_DIRECTORY_PAGES == 0 { return Some(size_of::<HistoryPageChunk<T>>()); }
+        size_of::<Option<T>>().checked_mul(ARTIFACT_HISTORY_PAGE_SLOTS)?.checked_add(size_of::<HistoryValuePage<T>>())
     }
 
-    /// ♻️ Releases one fixed empty page; callers retire entries before releasing resident storage.
+    /// ♻️ Releases one physical extent of an empty catalog: a chunk whose only remaining page is first detached, so the
+    /// chunk and that page leave in separate steps; callers retire entries before releasing resident storage.
     pub fn release_empty_page(&mut self) -> bool {
         if self.len != 0 || self.pages == 0 { return false; }
+        if let Some(page) = self.detached.take() {
+            drop(page);
+            self.pages -= 1;
+            return true;
+        }
         let page = self.pages as usize - 1;
         let chunk_index = page / ARTIFACT_HISTORY_DIRECTORY_PAGES;
         let chunk = history_descend_chunk(self.head.as_mut().expect("resident empty catalog"), chunk_index);
-        drop(chunk.pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].take());
-        chunk.count -= 1;
-        let empty_chunk = chunk.count == 0;
-        self.pages -= 1;
-        if empty_chunk {
-            if chunk_index == 0 { drop(self.head.take()); }
-            else { drop(history_descend_chunk(self.head.as_mut().expect("resident catalog prefix"), chunk_index - 1).next.take()); }
+        let taken = chunk.pages[page % ARTIFACT_HISTORY_DIRECTORY_PAGES].take();
+        if page % ARTIFACT_HISTORY_DIRECTORY_PAGES != 0 {
+            chunk.count -= 1;
+            drop(taken);
+            self.pages -= 1;
+            return true;
         }
+        self.detached = taken;
+        if chunk_index == 0 { drop(self.head.take()); }
+        else { drop(history_descend_chunk(self.head.as_mut().expect("resident catalog prefix"), chunk_index - 1).next.take()); }
         true
     }
 
@@ -1639,27 +1660,27 @@ pub enum VcsError {
     Deserialize(String),
     Backbone(String),
     /// 🧬️ A migration/replay/merge was attempted across two envelopes/mutations whose
-    /// `dialect` coordinates don't match (see `store::ArtifactEnvelope::dialect`, `26/08/10` D4
+    /// `dialect` coordinates don't match (see `crate::os_store::store_schema::ArtifactEnvelope::dialect`, `26/08/10` D4
     /// evolution slice). Not yet raised by any call site in this pass — additive only.
     DialectMismatch(String),
-    /// 🧬️ An operation needs a dialect migration to run first (see `store::migrate_document`)
+    /// 🧬️ An operation needs a dialect migration to run first (see `crate::os_store::codec_registry::migrate_document`)
     /// before it can proceed. Not yet raised by any call site in this pass — additive only.
     MigrationRequired(String),
     /// 🧬️ A registered dialect migration ran but failed. Not yet raised by any call site in
     /// this pass — additive only.
     MigrationFailed(String),
     /// 🔁️ A composition-pin graph traversal (parent → child → …) found a cycle back to an
-    /// ancestor — an owned-child forest must stay acyclic. Raised by `store::CompositionGraph::
-    /// would_cycle_owns`/`would_cycle_links` via `store::CompositionCoordinator::dispatch_group`'s
+    /// ancestor — an owned-child forest must stay acyclic. Raised by `crate::os_store::composition_coordinator::CompositionGraph::
+    /// would_cycle_owns`/`would_cycle_links` via `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s
     /// phase-1 validation (`UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` `🔖️CompositionCoordinator`, wave B2).
     CompositionCycle(String),
     /// 🚫️ An operation would violate composition's single-ownership invariant (e.g.
     /// adopting a child that already has a different owner, or dispatching to a child a group's
-    /// stated parent does not actually own). Raised by `store::CompositionGraph::insert_owns` and
-    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
+    /// stated parent does not actually own). Raised by `crate::os_store::composition_coordinator::CompositionGraph::insert_owns` and
+    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 ownership check.
     OwnershipViolation(String),
     /// 🛂️ A structural failure rejected an operation during
-    /// `store::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
+    /// `crate::os_store::composition_coordinator::CompositionCoordinator::dispatch_group`'s phase-1 pass (or the object-safe
     /// `store::SpaceMember::preview_wire`/`dispatch_wire` bridge that pass uses) — the group is
     /// aborted with zero side effects anywhere. Reserved for structural failures only (ticket
     /// `26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS` §C6): an ordinary

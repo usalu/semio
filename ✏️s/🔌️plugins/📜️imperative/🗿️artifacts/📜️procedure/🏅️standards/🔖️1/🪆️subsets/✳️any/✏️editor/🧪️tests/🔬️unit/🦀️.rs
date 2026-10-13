@@ -31,9 +31,9 @@ pub(crate) mod context {
     /// 🧸️ The live program and seed composed from the app's `flow` and `text` member stores (design §20.15: the parent holds
     /// only the two child handles).
     pub async fn live_scene(app: &ImperativeApp) -> crate::ProcedureScene {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-        use store::{ArtifactPack, SpaceMember};
+        use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+        use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
+        use store::{os_store::serialization::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("procedure parent projection");
         let flow = app.child_store("flow", &snapshot.flow.child_id).await.expect("procedure flow child").document_pack_bytes().await.expect("procedure flow child pack");
         let text = app.child_store("text", &snapshot.text.child_id).await.expect("procedure text child").document_pack_bytes().await.expect("procedure text child pack");
@@ -113,7 +113,7 @@ use crate::editor::procedure::unit_tests::context::{dispatch, imperative_app, im
 use semio_framework_plugin::artifact_app_laws::meta;
 use semio_framework_plugin::{EditorApp, PluginApp};
 use std::collections::BTreeMap;
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 const RETAINED_ROUTES: &str = include_str!("../../🧫️fixtures/🛣️retained-command-routes.json");
 
@@ -149,7 +149,7 @@ fn set_active_example_is_host_only_and_both_composed_children_mint_genesis_packs
     let definition = create_imperative_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    let demo = <crate::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
+    let demo = <crate::ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a procedure snapshot");
     // 🧬️ The two composed slots carry DIFFERENT snapshot types (`SemioFlowSnapshot`/`SemioTextSnapshot`),
     // so they are stated one by one rather than iterated over a heterogeneous array.
     for (slot, artifact_id, child_id) in [("flow", demo.flow.target.artifact_id.as_str(), demo.flow.child_id.as_str()), ("text", demo.text.target.artifact_id.as_str(), demo.text.child_id.as_str())] {
@@ -396,8 +396,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let mut instance_a = imperative_app().await;
     let mut instance_b = imperative_app().await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://imperative-convergence", "mem://imperative-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
     instance_a.dispatch_typed(ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
     context::settle(&mut instance_a).await;
@@ -420,7 +420,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 async fn ingest_operations_is_idempotent_for_imperative() {
     let mut sender = imperative_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://imperative-idempotent", "mem://imperative-idempotent").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     let genesis = live_scene(&sender).await.path.steps.len();
     dispatch(&mut sender, ImperativeCommand::AddStep(add_step::AddStep { kind: "math.add".into(), index: None })).await;
     assert_eq!(live_scene(&sender).await.path.steps.len(), genesis + 1, "the sender applied its edit");

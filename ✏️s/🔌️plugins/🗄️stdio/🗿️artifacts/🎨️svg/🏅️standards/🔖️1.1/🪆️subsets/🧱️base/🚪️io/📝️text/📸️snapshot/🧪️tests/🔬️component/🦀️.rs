@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{XmlDeclaration, XmlQuote};
 use crate::schema::snapshot::{SvgNode};
 
 fn assert_owned_literal_roundtrip(snapshot:&SvgSnapshot){
-    use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding}};
     let text=crate::standards::v1_1::subsets::base::io::text::snapshot::encode_snapshot(snapshot);
     assert_eq!(crate::standards::v1_1::subsets::base::io::text::snapshot::decode_snapshot(&text).expect("literal structured text state"),*snapshot);
     let mut binary=Vec::new();
@@ -140,11 +140,11 @@ async fn schema_facets_reject_source_and_raw_doctype_shadow_state() {
 #[semio_framework_async_macros::async_test]
 async fn artifact_dsl_routes_native_svg_by_its_semio_envelope() {
     const NATIVE: &str = r#"<svg xmlns="http://www.w3.org/2000/svg"/>"#;
-    let imported = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(NATIVE).expect("envelope-less native markup is imported, not refused");
+    let imported = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(NATIVE).expect("envelope-less native markup is imported, not refused");
     assert_eq!(imported, SvgSnapshot::import_utf8(NATIVE.as_bytes()).expect("import_utf8 of the same markup"), "the envelope-less branch IS the lossless native import");
 
-    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
-    assert!(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(), "native svg markup under a semio preamble is not this artifact's structured state DSL");
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+    assert!(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::semio_format::wrap_text(&envelope, NATIVE)).is_err(), "native svg markup under a semio preamble is not this artifact's structured state DSL");
 }
 
 //#region PathGrammar

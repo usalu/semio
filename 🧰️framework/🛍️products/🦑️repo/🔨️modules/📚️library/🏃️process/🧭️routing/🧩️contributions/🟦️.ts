@@ -40,7 +40,7 @@ export async function dispatchOwnedScriptRoute(repoRoot: string, segments: reado
   const selected = resolveOwnedScriptRoute(ownedScriptRoutes(repoRoot), segments);
   if (!selected) return false;
   const { route, args } = selected;
-  await runRepositoryCommand(process.execPath, ["nx", "run", `${route.project}:${route.target}`, "--skip-nx-cache", ...(args.length ? ["--", ...args] : [])], repoRoot, `owned-command:${route.project}:${route.target}`);
+  await runRepositoryCommand(process.execPath, ["nx", "run", `${route.project}:${route.target}`, ...(args.length ? ["--", ...args] : [])], repoRoot, `owned-command:${route.project}:${route.target}`);
   return true;
 }
 

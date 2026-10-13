@@ -4,34 +4,10 @@
 //! here (not in `🦀️.rs`, a closer-only hot file) via `#[path=...]` relative to this file's own
 //! directory. Registration flows through `🎹️composer::register`.
 
-#[cfg(feature = "conversion-animation")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
-pub mod gif_deserializer;
-#[cfg(feature = "conversion-animation")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🎞️gif/🔖️89a/✳️any/🦀️.rs"]
-pub mod gif_serializer;
-#[cfg(feature = "conversion-animation")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
-pub mod gltf_deserializer;
-#[cfg(feature = "conversion-animation")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🧊️gltf/🔖️2.0/✳️any/🦀️.rs"]
-pub mod gltf_serializer;
-#[cfg(feature = "conversion-animation")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
-pub mod mp4_deserializer;
-#[cfg(feature = "conversion-animation")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
-pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-animation")]
-    use crate::standards::v1::subsets::animation::io::{
-        gif_deserializer::SemioAnimationFromGif, gif_serializer::SemioAnimationToGif, gltf_deserializer::SemioAnimationFromGltf, gltf_serializer::SemioAnimationToGltf, mp4_deserializer::SemioAnimationFromMp4, mp4_serializer::SemioAnimationToMp4,
-    };
-    use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-    use crate::standards::v1::subsets::animation::io::SemioAnimationAnalyzer;
-    #[cfg(feature = "conversion-animation")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of, io::ComposerEntry};
+    use crate::schema::snapshot::SemioAnimationSnapshot;
+    use crate::io::SemioAnimationAnalyzer;
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -102,8 +78,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioAnimationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_semio_animation_invariants(&snapshot),
@@ -124,14 +100,12 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::animation::schema::semio_animation_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") }, store::ArtifactCodec::of::<SemioAnimationSnapshot, crate::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation>(
-            crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_animation_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") }, store::artifact_codec::<SemioAnimationSnapshot, crate::schema::mutations::SemioAnimationMutation>(
+            crate::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-animation")]
-        register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -140,15 +114,10 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::animation::schema::semio_animation_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioAnimationSnapshot, crate::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation>(crate::standards::v1::subsets::animation::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") })
+            .schemas([crate::schema::semio_animation_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioAnimationSnapshot, crate::schema::mutations::SemioAnimationMutation>(crate::schema::snapshot::STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::animation::schema::inferences::semio_animation_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-animation")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(bridge_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_animation_artifact_inference_descriptor()]);
         builder
     }
 
@@ -157,32 +126,13 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::animation::schema::inferences::semio_animation_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_animation_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
-    /// 🌉️ animation↔gltf / animation↔mp4 / animation↔gif bridge entries (W4) -- forward + reverse rows
-    /// per pair, giving all 4 IoKeys per pair per the master plan's io architecture note.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-animation")]
-    fn bridge_entries() -> &'static [ComposerEntry] {
-        static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES
-            .get_or_init(|| {
-                vec![
-                    deserializer_entry_of::<SemioAnimationFromGltf>(),
-                    serializer_entry_of::<SemioAnimationToGltf>(),
-                    deserializer_entry_of::<SemioAnimationFromMp4>(),
-                    serializer_entry_of::<SemioAnimationToMp4>(),
-                    deserializer_entry_of::<SemioAnimationFromGif>(),
-                    serializer_entry_of::<SemioAnimationToGif>(),
-                ]
-            })
-            .as_slice()
-    }
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(all(test, feature = "conversion-animation"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
@@ -199,9 +149,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::animation::schema::diff::SemioAnimationDiff;
-    use crate::standards::v1::subsets::animation::schema::mutations::{SemioAnimationMutation};
-    use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+    use crate::schema::diff::SemioAnimationDiff;
+    use crate::schema::mutations::SemioAnimationMutation;
+    use crate::schema::snapshot::SemioAnimationSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -220,10 +170,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioAnimationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioAnimationMutation as protocol::Mutation<SemioAnimationSnapshot>>::diff(&mutation, &self.snapshot);
@@ -244,7 +194,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::animation::schema::snapshot::{SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -284,14 +234,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioAnimationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioAnimationSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioAnimationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

@@ -140,8 +140,8 @@ class ProbeSqliteSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Probe SQLite source law has no arguments");
     const source=join(this.root,"..","..","🏠️workspace","🪶️sqlite","🧪️tests","🟦️.ts");
-    await runRepositoryCommand(process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",scriptInvocationBudget(this.invocation,buildBudgetMs()),{env:process.env,signal:this.invocation.control.signal});
-    await runRepositoryCommand(process.execPath, ["test",source], this.repoRoot, "mcp:probe-sqlite-source", scriptInvocationBudget(this.invocation,buildBudgetMs()), { env:process.env,signal:this.invocation.control.signal });
+    await runRepositoryCommand(this.invocation,process.execPath,[Bun.resolveSync("typescript/bin/tsc",this.root),"--noEmit","--strict","--skipLibCheck","--allowImportingTsExtensions","--resolveJsonModule","--esModuleInterop","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--types","bun",source],this.repoRoot,"mcp:probe-sqlite-types",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
+    await runRepositoryCommand(this.invocation,process.execPath,["test",source],this.repoRoot,"mcp:probe-sqlite-source",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env:process.env});
   }
 }
 

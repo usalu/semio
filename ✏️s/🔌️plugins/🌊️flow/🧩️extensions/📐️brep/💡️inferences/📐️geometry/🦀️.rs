@@ -69,7 +69,7 @@ fn geometry_admit<T:RetireOwned>(source:&mut Option<T>,active:&mut Option<Box<dy
 fn geometry_operator_quality_ref(registry:&neural_engine::Registry,operator:&str)->Option<&'static str>{
  let info=registry.operator_info(operator)?;if let Some(operation)=operator.strip_prefix("brep.mesh."){return Some(super::mesh::operation_quality(operation))}
  if !super::NODE_KERNEL_METHOD.iter().any(|(id,_)|*id==operator)&&info.group.iter().any(|group|group=="Schemas")&&operator.rsplit('.').next().is_some_and(|schema|registry.schema(schema).is_some()){return Some("SchemaValue")}
- let (_,method)=super::NODE_KERNEL_METHOD.iter().find(|(id,_)|*id==operator)?;use semio_framework_3d::brep::engine::OpQuality;Some(match super::operation_quality(method){OpQuality::ExactAnalytic=>"ExactAnalytic",OpQuality::ExactNumericalWithinTolerance=>"ExactNumericalWithinTolerance",OpQuality::ApproximateBRep=>"ApproximateBRep",OpQuality::MeshDerivedBRep=>"MeshDerivedBRep",OpQuality::PreviewOnly=>"PreviewOnly",OpQuality::Unsupported=>"Unsupported"})
+ let (_,method)=super::NODE_KERNEL_METHOD.iter().find(|(id,_)|*id==operator)?;use semio_framework_3d_brep_representation::contract::OpQuality;Some(match super::operation_quality(method){OpQuality::ExactAnalytic=>"ExactAnalytic",OpQuality::ExactNumericalWithinTolerance=>"ExactNumericalWithinTolerance",OpQuality::ApproximateBRep=>"ApproximateBRep",OpQuality::MeshDerivedBRep=>"MeshDerivedBRep",OpQuality::PreviewOnly=>"PreviewOnly",OpQuality::Unsupported=>"Unsupported"})
 }
 
 pub const GEOMETRY_INFERENCE_CONTRACT: ArtifactInferencePayloadContract = ArtifactInferencePayloadContract {

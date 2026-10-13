@@ -13,17 +13,7 @@ id = "actor"
 [lints]
 workspace = true
 
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.custom]
-wasm-opt = false
-
 [lib]
-crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [[test]]
@@ -57,7 +47,7 @@ semio-framework-value-derive = { path = "../../../🌱️value/✨️derive/📦
 # wgpu-web hosts). Excluded from `wasm32-wasip2` because `target_arch = "wasm32"` is TRUE for the
 # WASI component target too — declaring these under the bare arch gate linked `wasm-bindgen` (and,
 # via the `wasm_bindgen_futures` alias, this crate's own first-party async runtime) into the shipped
-# plugin component. The wasip2 guest path is `semio-framework-plugin`'s `component-guest` feature,
+# plugin component. The wasip2 guest path is `semio-framework-plugin` on `wasm32-wasip2`,
 # not this bridge.
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]
 semio-framework-async = { workspace = true }

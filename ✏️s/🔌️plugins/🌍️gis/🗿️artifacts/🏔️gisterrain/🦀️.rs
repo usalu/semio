@@ -9,8 +9,8 @@ extern crate semio_framework_os_kernel as vcs;
 /// 📸️ Persisted GIS terrain snapshot — defined in `📸️ snapshot/🧬️ schema`, re-exported here.
 pub use crate::schema::snapshot::GisTerrainSnapshot;
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔹Constants
 /// 🏔️ Schema for undoable GIS terrain documents.
@@ -26,7 +26,7 @@ pub const GISTERRAIN_DIALECT: semio_framework_artifact_reference::Dialect = semi
 // 🧱️ `mesh_artifact_kind()` (the shared `3d.mesh` interchange kind duplicate) REMOVED — ticket
 // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`. `3d.mesh` is a duplicate kind id being deleted
 // repo-wide: mesh is now canonically `s.stdio.semio@v1/mesh` (composed via `GisTerrainSnapshot.mesh:
-// Option<store::ArtifactChild<SemioMeshSnapshot>>` below, never a standalone `ArtifactKindSpec`).
+// Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>` below, never a standalone `ArtifactKindSpec`).
 // lowpoly independently declared the identical id and removed its own copy first (see that
 // plugin's `🦀️.rs`, same region); this removes gis's copy, the other place this ticket's
 // design doc (`📓️design-full-plan.md` §4: "gis→terrain C:mesh … kills `3d.mesh` dup") flagged it.
@@ -59,12 +59,12 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 /// 🕸️ Deterministic content-addressed CHILD handle for the terrain's composed mesh — same
 /// `(child_id, target)` for identical `(exaggeration, imported_map)`, a different pair
 /// once either actually changes. Mirrors `💠️lowpoly`'s `mesh_child_handle`/`📐️cad`'s
-/// `cad_model_child_handle` (same `store::ArtifactChild::new` + `ArtifactDialect` shape).
-pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+/// `cad_model_child_handle` (same `store::os_store::artifact_child::ArtifactChild::new` + `ArtifactDialect` shape).
+pub fn gis_terrain_mesh_child_handle(content_key: &str) -> store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> {
     let child_id = store::content_id("gisterrain-mesh", content_key.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🔑️ Construction seed for an initial terrain mesh; persisted identity survives later edits.

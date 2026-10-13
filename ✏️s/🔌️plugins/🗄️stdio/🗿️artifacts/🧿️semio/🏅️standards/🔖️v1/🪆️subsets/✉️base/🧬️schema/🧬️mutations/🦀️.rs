@@ -25,31 +25,29 @@
 //! (still carries its own `NoMutation`/`Default`), so its representative case uses `::default()`
 //! until its own lane migrates it.
 
-use crate::standards::v1::subsets::animation::schema::{mutations::SemioAnimationMutation, snapshot::SemioAnimationSnapshot};
+use {semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
 #[cfg(test)]
-use crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate;
-use crate::standards::v1::subsets::audio::schema::{mutations::SemioAudioMutation, snapshot::SemioAudioSnapshot};
-use crate::standards::v1::subsets::base::schema::diff::SemioDiff;
-use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::standards::v1::subsets::brep::schema::{mutations::SemioBrepMutation, snapshot::SemioBrepSnapshot};
-use crate::standards::v1::subsets::cad::schema::{mutations::SemioCadMutation, snapshot::SemioCadSnapshot};
-use crate::standards::v1::subsets::document::schema::{mutations::SemioDocumentMutation, snapshot::SemioDocumentSnapshot};
-use crate::standards::v1::subsets::drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot};
-use crate::standards::v1::subsets::flow::schema::{mutations::SemioFlowMutation, snapshot::SemioFlowSnapshot};
-use crate::standards::v1::subsets::graph::schema::{mutations::SemioGraphMutation, snapshot::SemioGraphSnapshot};
-use crate::standards::v1::subsets::image::schema::{mutations::SemioImageMutation, snapshot::SemioImageSnapshot};
-use crate::standards::v1::subsets::kit::schema::{mutations::SemioKitMutation, snapshot::SemioKitSnapshot};
-use crate::standards::v1::subsets::mesh::schema::{mutations::SemioMeshMutation, snapshot::SemioMeshSnapshot};
-use crate::standards::v1::subsets::model::schema::{mutations::SemioModelMutation, snapshot::SemioModelSnapshot};
-use crate::standards::v1::subsets::object::schema::{mutations::SemioObjectMutation, snapshot::SemioObjectSnapshot};
-use crate::standards::v1::subsets::presentation::schema::{mutations::SemioPresentationMutation, snapshot::SemioPresentationSnapshot};
-use crate::standards::v1::subsets::table::schema::{mutations::SemioTableMutation, snapshot::SemioTableSnapshot};
-use crate::standards::v1::subsets::text::schema::{mutations::SemioTextMutation, snapshot::SemioTextSnapshot};
-use crate::standards::v1::subsets::value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot};
-use crate::standards::v1::subsets::video::schema::{mutations::SemioVideoMutation, snapshot::SemioVideoSnapshot};
+use semio_s_artifact_stdio_semio_audio::schema::mutations::set_sample_rate;
+use {semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation, semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot};
+use crate::schema::diff::SemioDiff;
+use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+use {semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot};
+use {semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation, semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot};
+use {semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation, semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot};
+use {semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot};
+use {semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot};
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation, semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot};
+use {semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot};
+use {semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation, semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot};
+use {semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation, semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot};
+use {semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot};
+use {semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation, semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot};
+use {semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation, semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot};
+use {semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation, semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot};
+use {semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation, semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot};
+use {semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
+use {semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation, semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot};
 use protocol::Mutation;
-
-
 
 //#region 🔖️Mutation
 #[path = "🎞️apply-animation/🦀️.rs"]
@@ -165,67 +163,19 @@ pub fn inverse_semio_mutation(mutation: &SemioMutation, base: &SemioSnapshot) ->
     })
 }
 
-/// 🚦️ The messages in `outcome` that genuinely REFUSE the mutation — `Error` and `Fatal` only,
-/// rendered for a failure report. The frozen mutation-outcome contract
-/// (`26/08/16/MUTATION-OUTCOMES-MERGE-POLICIES-AND-FIRST-CLASS-CONFLICTS/📋️contract-freeze.md` §C2)
-/// makes `Info`/`Warning` ADVISORY: they ride along with a diff that WAS applied in full, and the
-/// contract's own worked example is `.info("mutation.cascade", …)` — which `🧊️brep`'s
-/// `delete-vertex` and `🕸️graph`'s `delete-node` both raise on every well-formed body, naming the
-/// edges the deletion also had to remove. A caller that reads "any message" as "rejected" therefore
-/// reports a refusal that never happened and fails a scenario the codec answered correctly.
-///
-/// Generic over the diff type and declared ONCE here rather than eighteen times, because the
-/// question is the envelope's, not any one arm's: every `mutate-semio-*` adapter needs it, and none
-/// of them can name this crate's private `protocol` extern-crate alias to ask it directly.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_mutation_refusals<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
-    outcome.messages().iter().filter(|message| message.level >= semio_framework_diagnostic::Severity::Error).map(|message| format!("{:?} {:?}: {}", message.level, message.code, message.message)).collect()
-}
-
-/// 🚦️ The FAULT CODES of the refusing messages in `outcome`, in order — the same `Error`/`Fatal`
-/// filter [`semio_mutation_refusals`] applies, reduced to the frozen `mutation.*` code alone. The
-/// envelope's own routing law is stated in terms of codes (a mismatched arm must raise exactly
-/// `mutation.target-missing`), and `✉️mutate-semio-base` cannot read `MutationMessage::code` itself
-/// because `protocol` is a private extern-crate alias of this crate.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn semio_mutation_refusal_codes<D>(outcome: &protocol::MutationOutcome<D>) -> Vec<String> {
-    outcome.messages().iter().filter(|message| message.level >= semio_framework_diagnostic::Severity::Error).map(|message| message.code.0.clone()).collect()
-}
-
 /// 🏷️ Free-function face of the envelope's own subset discriminator — the tag `KINDS` spells for
 /// each wrapper variant and the only observable an owner-root test can read back out of a routed
 /// envelope without naming any of the eighteen arms' snapshot types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
-    crate::standards::v1::subsets::base::schema::snapshot::subset_tag(&snapshot.subset)
+    crate::schema::snapshot::subset_tag(&snapshot.subset)
 }
 
-
-
-
 //#endregion 🔖️Mutation
-
-
-
 
 //#endregion 🔖️MutationTrait
 
 //#region OpCodecs
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 //#endregion OpCodecs
 
@@ -238,20 +188,20 @@ pub fn semio_subset_tag(snapshot: &SemioSnapshot) -> &'static str {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioMutation> {
     vec![
-        SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(crate::standards::v1::subsets::brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
-        SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(crate::standards::v1::subsets::mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),
+        SemioMutation::ApplyBrep(apply_brep::ApplyBrep { mutation: SemioBrepMutation::DeleteVertex(semio_s_artifact_stdio_semio_brep::schema::mutations::delete_vertex::DeleteVertex { id: "v-absent".into() }) }),
+        SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::DeleteMesh(semio_s_artifact_stdio_semio_mesh::schema::mutations::delete_mesh::DeleteMesh { id: "mesh-absent".into() }) }),
         SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
-            mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: crate::standards::v1::subsets::base::schema::geometry::SemioPoint2::default() }),
+            mutation: SemioDrawingMutation::DragNodes(semio_s_artifact_stdio_semio_drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2::default() }),
         }),
-        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(crate::standards::v1::subsets::animation::schema::mutations::remove_timeline::RemoveTimeline { index: 99 }) }),
-        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(crate::standards::v1::subsets::presentation::schema::mutations::remove_slide::RemoveSlide { index: 99 }) }),
-        SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(crate::standards::v1::subsets::text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
-        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(crate::standards::v1::subsets::table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
+        SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(semio_s_artifact_stdio_semio_animation::schema::mutations::remove_timeline::RemoveTimeline { index: 99 }) }),
+        SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(semio_s_artifact_stdio_semio_presentation::schema::mutations::remove_slide::RemoveSlide { index: 99 }) }),
+        SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::RemoveRun(semio_s_artifact_stdio_semio_text::schema::mutations::remove_run::RemoveRun { index: 99 }) }),
+        SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::RemoveRow(semio_s_artifact_stdio_semio_table::schema::mutations::remove_row::RemoveRow { index: 99 }) }),
         SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
-            mutation: SemioGraphMutation::DeleteNode(crate::standards::v1::subsets::graph::schema::mutations::delete_node::DeleteNode { id: crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId::new("absent") }),
+            mutation: SemioGraphMutation::DeleteNode(semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode { id: semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId::new("absent") }),
         }),
-        SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::DeleteBrep(crate::standards::v1::subsets::object::schema::mutations::delete_brep::DeleteBrep {}) }),
-        SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::RemoveType(crate::standards::v1::subsets::kit::schema::mutations::remove_type::RemoveType { id: "absent".into() }) }),
+        SemioMutation::ApplyObject(apply_object::ApplyObject { mutation: SemioObjectMutation::DeleteBrep(semio_s_artifact_stdio_semio_object::schema::mutations::delete_brep::DeleteBrep {}) }),
+        SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::RemoveType(semio_s_artifact_stdio_semio_kit::schema::mutations::remove_type::RemoveType { id: "absent".into() }) }),
     ]
 }
 //#endregion 🔖️Demo

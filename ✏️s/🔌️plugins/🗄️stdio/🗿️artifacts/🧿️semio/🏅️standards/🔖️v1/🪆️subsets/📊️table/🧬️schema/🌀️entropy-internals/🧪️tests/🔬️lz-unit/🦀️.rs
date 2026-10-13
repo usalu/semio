@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn lz76_repetitive_much_lower_than_random_of_same_length() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(7);
         let n = 500;
         let repetitive: Vec<u32> = (0..n).map(|i| (i % 3) as u32).collect();
         let random: Vec<u32> = (0..n).map(|_| rng.next_below(8) as u32).collect();
@@ -62,7 +62,7 @@ mod tests {
 
     #[test]
     fn lempel_ziv_complexity_large_sample_does_not_warn() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let s: Vec<u32> = (0..200).map(|_| rng.next_below(4) as u32).collect();
         let est = lempel_ziv_complexity(&s, false).unwrap();
         assert!(est.warnings.is_empty());
@@ -76,7 +76,7 @@ mod tests {
     #[test]
     fn lz78_repetitive_input_compresses_shorter_than_random() {
         let repetitive = b"abababababababab".to_vec();
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(42);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(42);
         let random: Vec<u8> = (0..repetitive.len()).map(|_| rng.next_below(256) as u8).collect();
         let comp = Lz78Compressor;
         assert!(comp.compressed_len(&repetitive) <= comp.compressed_len(&random));
@@ -95,9 +95,9 @@ mod tests {
         let text: Vec<u8> = b"the quick brown fox jumps over the lazy dog ".repeat(8);
         let d_self = ncd(&text, &text, &comp).unwrap();
 
-        let mut rng_a = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1234);
+        let mut rng_a = crate::schema::entropy_internals::numeric::Xorshift64::new(1234);
         let a: Vec<u8> = (0..text.len()).map(|_| rng_a.next_below(256) as u8).collect();
-        let mut rng_b = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(999_999);
+        let mut rng_b = crate::schema::entropy_internals::numeric::Xorshift64::new(999_999);
         let b: Vec<u8> = (0..text.len()).map(|_| rng_b.next_below(256) as u8).collect();
         let d_diff = ncd(&a, &b, &comp).unwrap();
 
@@ -118,7 +118,7 @@ mod tests {
 
         #[test]
         fn lz76_is_non_decreasing_in_sequence_length_for_a_growing_random_stream() {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(11);
             let full: Vec<u32> = (0..300).map(|_| rng.next_below(5) as u32).collect();
             let mut prev = lz76_complexity(&full[..1]);
             for len in [10, 50, 100, 200, 300] {
@@ -131,7 +131,7 @@ mod tests {
         #[test]
         fn lz78_concatenation_never_shrinks_relative_to_either_half() {
             let comp = Lz78Compressor;
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(55);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(55);
             for _ in 0..20 {
                 let n = 20 + rng.next_below(80);
                 let x: Vec<u8> = (0..n).map(|_| rng.next_below(256) as u8).collect();

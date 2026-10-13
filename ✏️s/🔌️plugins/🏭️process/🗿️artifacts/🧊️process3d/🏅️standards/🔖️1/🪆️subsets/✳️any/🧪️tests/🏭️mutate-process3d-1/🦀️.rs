@@ -334,7 +334,7 @@ mod subject {
     /// 🔁️ The real committed document through this subset's own two codecs. The semantic half is
     /// `law::round_trip_preserves`: parsing, printing back and parsing again must not move the
     /// projection. The byte half is `law::carrier_is_exact` rather than the wave's usual
-    /// no-pass-through tripwire, and deliberately so — `store::ArtifactDsl`'s own documented LAW is that
+    /// no-pass-through tripwire, and deliberately so — `store::os_store::serialization::ArtifactDsl`'s own documented LAW is that
     /// canonical `print_dsl` output is a `parse_dsl` fixpoint, so the correct answer for a second
     /// printing IS byte identity and anything else is the defect. Neither printing is compared against
     /// the committed file, which the same law explicitly allows to normalize on the way in. The pack

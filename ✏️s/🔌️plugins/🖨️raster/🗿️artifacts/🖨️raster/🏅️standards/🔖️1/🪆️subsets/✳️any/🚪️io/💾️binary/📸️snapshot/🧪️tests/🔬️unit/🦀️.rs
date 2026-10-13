@@ -35,7 +35,7 @@ async fn pack_round_trips_and_agrees_with_dsl() {
 #[semio_framework_async_macros::async_test]
 async fn pack_round_trips_representative_document() {
     let mut assets = RasterOwnedMap::new();
-    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }).with_local_owner(std::sync::Arc::new(semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot::default()))).expect("bounded fixture operation succeeds");
+    assets.insert("asset-1".into(), crate::image_asset_child_handle("asset-1", &RasterImageAsset { mime: "image/png".into(), data: b"abc".to_vec() }).with_local_owner(std::sync::Arc::new(semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot::default()))).expect("bounded fixture operation succeeds");
     let mut params = RasterOwnedMap::new();
     params.insert("brightness".into(), semio_framework_value::DslValue::float(0.06)).expect("bounded fixture operation succeeds");
     params.insert("label".into(), semio_framework_value::DslValue::String("Warm \"Curve\"".to_string())).expect("bounded fixture operation succeeds");
@@ -98,10 +98,10 @@ async fn pack_round_trips_representative_document() {
         ],
     };
     store::os_store::test_support::assert_dsl_pack_equivalence_cold(&document, crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot);
-    let spec = <RasterSnapshot as store::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
+    let spec = <RasterSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("raster declares its pack record spec");
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let decoded = decode(&encode(&document)).expect("decode");
-    let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
+    let image = |snapshot: &RasterSnapshot| snapshot.assets.iter().next().and_then(|(_, child)| child.local_owner::<semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot>()).map(|image| image.as_ref().clone());
     let (before, after) = (image(&document), image(&decoded));
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(decoded);
     crate::standards::v1::subsets::any::schema::snapshot::retire_raster_snapshot(document);
@@ -117,7 +117,7 @@ async fn pack_round_trips_representative_document() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let envelope = create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-command-envelope-demo", crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_document(), None);
     let mut store = ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");

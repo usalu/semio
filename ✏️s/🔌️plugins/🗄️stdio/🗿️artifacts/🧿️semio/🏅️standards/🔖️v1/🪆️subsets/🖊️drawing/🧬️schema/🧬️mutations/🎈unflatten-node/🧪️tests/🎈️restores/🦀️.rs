@@ -7,11 +7,11 @@
 //! restore data — it is the undo half of `flatten`, and its OWN inverse captures the node it
 //! overwrites, because `flatten` restores only a node that was the flattening of `original`.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
-use protocol::{Mutation, MutationDiff};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎈unflatten-node/🎈️restores/📸️snapshot/➡️after/🔣️.json");
@@ -70,7 +70,7 @@ async fn the_undo_restores_a_node_that_was_not_the_flattening() {
     let base = expected_after();
     let replacement = DrawNode::Group { transform: SemioTransform::identity(), children: vec![DrawNode::Group { transform: SemioTransform::identity(), children: Vec::new() }] };
     let SemioDrawingMutation::UnflattenNode(payload) = mutation() else { panic!("the committed payload is an unflatten") };
-    let mutation = SemioDrawingMutation::UnflattenNode(crate::standards::v1::subsets::drawing::schema::mutations::unflatten_node::UnflattenNode { at: payload.at, original: replacement });
+    let mutation = SemioDrawingMutation::UnflattenNode(crate::schema::mutations::unflatten_node::UnflattenNode { at: payload.at, original: replacement });
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward unflatten applies");
     assert_ne!(current, base, "the replacement moves the drawing");
     for step in &mutation.inverse(&base).expect("valid retained mutation inverse fixture") {
@@ -123,11 +123,11 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let layer_diff = &layers.modified[0].diff;
     assert!(layer_diff.id.is_none() && layer_diff.name.is_none() && layer_diff.visible.is_none(), "a node-level edit must not touch the layer's own scalar fields");
     let root = layer_diff.root.as_ref().expect("the layer diff must carry a root node diff");
-    let crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
+    let crate::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
     let children = root_group.children.as_ref().expect("the root group diff must carry a children triple");
     assert!(root_group.transform.is_none(), "editing a child must not rewrite the root group's own transform");
     assert_eq!(children.modified.len(), 1, "exactly one child is rewritten");
-    assert!(matches!(children.modified[0].diff, crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Replace { .. }), "restoring a hierarchy goes through Replace, never through the per-field Group arm");
+    assert!(matches!(children.modified[0].diff, crate::schema::diff::DrawNodeDiff::Replace { .. }), "restoring a hierarchy goes through Replace, never through the per-field Group arm");
     assert!(children.removed.is_empty() && children.added.is_empty(), "the node keeps its position — only its contents are rewritten");
     assert!(decoded.styles.is_none(), "the style table must stay untouched");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");

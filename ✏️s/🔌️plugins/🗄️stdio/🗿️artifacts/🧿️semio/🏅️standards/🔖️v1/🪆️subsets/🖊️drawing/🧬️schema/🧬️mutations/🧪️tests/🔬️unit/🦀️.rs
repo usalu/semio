@@ -1,15 +1,15 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::schema::diff::NodePath;
+use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioDrawingSnapshot {
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
-        styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None }],
+        styles: vec![DrawStyle { name: "s1".into(), fill: Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(1.0), opacity: None }],
         layers: vec![DrawLayer {
             id: "l0".into(),
             name: "base".into(),
@@ -109,9 +109,9 @@ async fn move_and_drag_nodes_round_trip() {
 async fn rotate_and_scale_round_trip() {
     let base = fixture();
     let root_path = NodePath { layer: 0, path: vec![] };
-    let rotate_m = SemioDrawingMutation::RotateNode(rotate_node::RotateNode { at: root_path.clone(), new_rotation: crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion { x: 0.0, y: 0.0, z: 1.0, w: 0.0 } });
+    let rotate_m = SemioDrawingMutation::RotateNode(rotate_node::RotateNode { at: root_path.clone(), new_rotation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion { x: 0.0, y: 0.0, z: 1.0, w: 0.0 } });
     let _ = round_trip(&base, &rotate_m);
-    let scale_m = SemioDrawingMutation::ScaleNode(scale_node::ScaleNode { at: root_path, new_scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 1.0 } });
+    let scale_m = SemioDrawingMutation::ScaleNode(scale_node::ScaleNode { at: root_path, new_scale: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 1.0 } });
     let _ = round_trip(&base, &scale_m);
 }
 
@@ -190,9 +190,9 @@ async fn replace_fill_and_change_stroke_round_trip() {
     let after_fill = round_trip(&base, &fill_m);
     assert_eq!(after_fill.styles[0].fill, None);
 
-    let color_m = SemioDrawingMutation::ChangeStrokeColor(change_stroke_color::ChangeStrokeColor { style_name: "s1".into(), new_color: Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }) });
+    let color_m = SemioDrawingMutation::ChangeStrokeColor(change_stroke_color::ChangeStrokeColor { style_name: "s1".into(), new_color: Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }) });
     let after_color = round_trip(&base, &color_m);
-    assert_eq!(after_color.styles[0].stroke, Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }));
+    assert_eq!(after_color.styles[0].stroke, Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }));
 
     let width_m = SemioDrawingMutation::ChangeStrokeWidth(change_stroke_width::ChangeStrokeWidth { style_name: "s1".into(), new_width: Some(5.0) });
     let after_width = round_trip(&base, &width_m);
@@ -231,7 +231,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 #[test]
 fn drawing_geometry_is_owned_by_schema_and_matches_tiny_skia() {
-    use crate::standards::v1::subsets::drawing::schema::geometry::{compose_affine, transform_point};
+    use crate::schema::geometry::{compose_affine, transform_point};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../🧫️fixtures/📐️intrinsic-geometry/🔣️.json")).unwrap();
     let matrix=|key:&str|-> [f64;6]{std::array::from_fn(|at|fixture[key][at].as_f64().unwrap())};
     let (outer,inner)=(matrix("outer"),matrix("inner"));

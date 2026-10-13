@@ -18,6 +18,6 @@ pub fn serialize(from: &ObjSnapshot) -> Result<TxtSnapshot, store::PackError> {
 /// 📤️ Encode as txt DSL.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize_text(from: &ObjSnapshot) -> Result<String, store::PackError> {
-    Ok(store::ArtifactDsl::print_dsl(&serialize(from)?))
+    Ok(store::os_store::serialization::ArtifactDsl::print_dsl(&serialize(from)?))
 }
 //#endregion 🔖️Codec

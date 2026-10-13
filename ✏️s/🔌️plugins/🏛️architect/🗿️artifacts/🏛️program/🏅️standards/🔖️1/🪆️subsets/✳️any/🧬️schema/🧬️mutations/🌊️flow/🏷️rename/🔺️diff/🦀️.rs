@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🌊flows` per Wave C.
 
 use super::RenameFlowRequirement;
-use crate::diff::{ProgramFlowsDelta, ProgramFlowsPatchEntry};
-use crate::registers::FlowRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramFlowsDelta, ProgramFlowsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::FlowRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameFlowRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

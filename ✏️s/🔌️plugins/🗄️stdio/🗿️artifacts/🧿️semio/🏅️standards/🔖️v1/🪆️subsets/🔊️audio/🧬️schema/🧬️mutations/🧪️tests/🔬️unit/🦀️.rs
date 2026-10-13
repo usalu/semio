@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::audio::io::binary::mutations::{wire_tag,COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL};
-use crate::standards::v1::subsets::audio::io::text::mutations::print_audio_mutation;
+use crate::io::binary::mutations::{wire_tag, COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL};
+use crate::io::text::mutations::print_audio_mutation;
 use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -32,7 +32,7 @@ fn round_trips(base: &SemioAudioSnapshot, mutation: SemioAudioMutation) {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn all_variants(base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
+fn all_variants(_base: &SemioAudioSnapshot) -> Vec<SemioAudioMutation> {
     vec![
         SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 48_000 }),
         SemioAudioMutation::SetFormat(set_format::SetFormat { format: SemioAudioFormat::Float32 }),
@@ -52,7 +52,7 @@ async fn mutation_diff_law() {
     let base = base_snapshot();
     for mutation in all_variants(&base) {
         let mut snap = base.clone();
-        let (__next, returned_diff) = crate::applied(&snap, &mutation);
+        let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&snap, &mutation);
         snap = __next;
         let expected_diff = mutation.diff(&base);
         assert_eq!(returned_diff, expected_diff, "returned diff must equal mutation.diff(base) for {mutation:?}");
@@ -77,7 +77,7 @@ async fn mutation_apply_inverse_round_trips_every_variant() {
 async fn remove_channel_out_of_range_is_noop_not_panic() {
     let base = base_snapshot();
     let mut snap = base.clone();
-    snap = crate::applied(&snap, &SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: 99 })).0;
+    snap = semio_s_artifact_stdio_semio_base::applied(&snap, &SemioAudioMutation::RemoveChannel(remove_channel::RemoveChannel { index: 99 })).0;
     assert_eq!(snap, base);
 }
 

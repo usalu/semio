@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Block2dSnapshot;
 use crate::*;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -129,7 +129,7 @@ fn independent_edit(bytes: &[u8], sql: &str) -> Vec<u8> {
 }
 #[test]
 fn sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_word() {
-    use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
     for word in words() {
         let expected = full(word);
         let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|expected.to_sqlite_database(sqlite_control)).unwrap();
@@ -149,7 +149,7 @@ fn sqlite_snapshot_block2d_independent_edited_physical_database_preserves_every_
 }
 #[test]
 fn sqlite_snapshot_block2d_independent_malformed_entities_refuse() {
-    use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
     let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|full(0).to_sqlite_database(sqlite_control)).unwrap();
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     for edit in [
@@ -167,7 +167,7 @@ fn sqlite_snapshot_block2d_independent_malformed_entities_refuse() {
 }
 #[test]
 fn sqlite_snapshot_block2d_row_frontier_and_real_four_phase_cancellation() {
-    use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
     let mut expected = full(0);
     expected.node_kind.description = "😀".repeat(32768);
     let limits = SqliteDatabaseLimits { max_rows: 10, ..SqliteDatabaseLimits::default() };
@@ -232,7 +232,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::block2d::Block2dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::block2d::Block2dViewer>>),}
 }
-struct PublicOwned(Option<Block2dSnapshot>);impl PublicOwned{fn new(value:Block2dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block2dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block2dSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}}}
+struct PublicOwned(Option<Block2dSnapshot>);impl PublicOwned{fn new(value:Block2dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Block2dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Block2dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Block2dSnapshot,b:&Block2dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("block").label("Populated public SQLite").version("0.0.1").package_id("semio:block").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}

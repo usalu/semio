@@ -5,19 +5,19 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::object::schema::diff::*;
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::object::io::text::snapshot::{dec_child_opt};
-use crate::standards::v1::subsets::object::io::text::snapshot::{enc_child_opt};
-use crate::standards::v1::subsets::model::io::text::diff::{dec_transform};
-use crate::standards::v1::subsets::model::io::text::diff::{enc_transform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_transform;
 
 /// 🧾️ `<hex-flag><line>` per field, `\n`-joined, empty string = no-op diff — real, not decorative.
 /// `t=`/`b=`/`m=`/`p=` prefixes; a field absent from the diff simply has no line.

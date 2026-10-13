@@ -1,6 +1,6 @@
 //! 🪶️ Unmounted authored SQLite mapping adds paid literal-field copies after its owning baseline.
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection}, validate_sqlite_database_schema, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection}, validate_sqlite_database_schema, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 

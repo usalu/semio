@@ -16,7 +16,7 @@ mod tests {
         // pairs unpredictably, is the correct high-entropy comparison against a smooth gradient.
         let width = 16;
         let height = 16;
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(9);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(9);
         let noise: Vec<f64> = (0..width * height).map(|_| rng.next_f64()).collect();
         let gradient: Vec<f64> = (0..width * height).map(|i| (i % width) as f64).collect();
         let cfg = SpatialConfig::new(SpatialMethod::Glcm { dx: 1, dy: 0 }, 4).unwrap();
@@ -27,7 +27,7 @@ mod tests {
 
     #[test]
     fn global_entropy_of_uniform_random_image_is_near_max() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let width = 32;
         let height = 32;
         let pixels: Vec<f64> = (0..width * height).map(|_| rng.next_f64()).collect();

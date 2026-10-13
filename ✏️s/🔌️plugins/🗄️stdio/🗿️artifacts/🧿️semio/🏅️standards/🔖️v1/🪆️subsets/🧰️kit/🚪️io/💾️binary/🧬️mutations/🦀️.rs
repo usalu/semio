@@ -3,7 +3,7 @@
 //! opaque trailing `bytes` chain — reuses the already-real `../../📝️text/🧬️mutations/🦀️.rs` text codec's
 //! argument tail, same convention every sibling subset uses.
 
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::schema::mutations::SemioKitMutation;
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

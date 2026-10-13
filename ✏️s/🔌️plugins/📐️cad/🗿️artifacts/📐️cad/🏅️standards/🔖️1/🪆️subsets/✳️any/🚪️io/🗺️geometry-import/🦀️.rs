@@ -1,9 +1,9 @@
 //! 📥️ Native mesh and fixture projection into owned CAD geometry.
 use crate::standards::v1::subsets::any::schema::geometry::*;
 use semio_framework_plugin::{ArtifactSerializer, MeshData};
-use semio_framework_3d::brep::engine::{Brep,BrepKernel};
+use semio_framework_3d_brep_engine::{Brep, BrepKernel};
 use semio_s_artifact_stdio_obj::standards::v3_0::engine::encode_obj;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::obj::v3_0::any::SemioMeshToObj;
 fn mesh_to_obj_text(mesh: &MeshData) -> Option<String> {
     let semio_mesh = semio_mesh_snapshot_from_mesh_data(mesh)?;
     let obj_snapshot = ::semio_framework_async::poll::resolve_ready(SemioMeshToObj::serialize(&semio_mesh)).ok()?;
@@ -69,8 +69,8 @@ use std::sync::{Arc,OnceLock};
 const CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON: &str = include_str!("../../📚️examples/🖼️assets/🎮️play/🔣️.json");
 
 /// 🌲️ Face loops for the shape-pane solid in the Hexagonal Cut Concrete Forest Left play fixture.
-pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3d::brep::engine::SolidFaceLoops, String> {
-    use semio_framework_3d::brep::engine::{Brep, BrepError, GeometryHandle};
+pub fn concrete_forest_left_shape_solid_face_loops() -> Result<semio_framework_3d_brep_engine::SolidFaceLoops, String> {
+    use semio_framework_3d_brep_engine::{Brep, BrepError, GeometryHandle};
     let root = semio_framework_pack_json::parse(CONCRETE_FOREST_LEFT_SHAPE_MODEL_JSON, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let geometry_value = root.pointer("/models/0/model/geometry").map(semio_framework_pack_json::to_dsl_value);
     let geometry = parse_geometry(geometry_value.as_ref());

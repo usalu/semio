@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::drawing::io::binary::mutations::*;
-use crate::standards::v1::subsets::drawing::schema::mutations::demo_mutation_cases;
+use crate::io::binary::mutations::*;
+use crate::schema::mutations::demo_mutation_cases;
 use protocol::OpBinary;
 
 #[semio_framework_async_macros::async_test]

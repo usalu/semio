@@ -9,7 +9,7 @@
 //! The `.op.semio`/`.spr.semio`/`.dsl.semio`/`.pack.semio`/`.patch.semio` encodings are derived
 //! from this JSON by `fixtures generate` and are asserted by the shared codec-matrix harness.
 
-use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../../🧫️fixtures/🧬️mutations/♿️accessibility/🗑️delete/🗑️deletes-a/📸️snapshot/⬅️before/🔣️.json");

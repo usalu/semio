@@ -4,19 +4,15 @@
 //! (`🔤️text`'s own hex/bracket-encoded value convention, reused so this facet's grammar can lean on
 //! the shared `hex` macro instead of a quoted-string production).
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use crate::schema::mutations::SemioGraphMutation;
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::graph::schema::mutations::{
-    add_node_port::AddNodePort, add_node_property::AddNodeProperty, change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode,
-    drag_nodes::DragNodes, move_node::MoveNode, remove_node_port::RemoveNodePort, remove_node_property::RemoveNodeProperty, rename_node::RenameNode, resize_node::ResizeNode,
-    set_node_property::SetNodeProperty, add_edge_property::AddEdgeProperty, remove_edge_property::RemoveEdgeProperty, set_edge_property::SetEdgeProperty,
-};
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value_entry};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value_entry};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use {crate::schema::mutations::add_node_port::AddNodePort, crate::schema::mutations::add_node_property::AddNodeProperty, crate::schema::mutations::change_node_kind::ChangeNodeKind, crate::schema::mutations::change_node_label::ChangeNodeLabel, crate::schema::mutations::create_edge::CreateEdge, crate::schema::mutations::create_node::CreateNode, crate::schema::mutations::delete_edge::DeleteEdge, crate::schema::mutations::delete_node::DeleteNode, crate::schema::mutations::drag_nodes::DragNodes, crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::remove_node_port::RemoveNodePort, crate::schema::mutations::remove_node_property::RemoveNodeProperty, crate::schema::mutations::rename_node::RenameNode, crate::schema::mutations::resize_node::ResizeNode, crate::schema::mutations::set_node_property::SetNodeProperty, crate::schema::mutations::add_edge_property::AddEdgeProperty, crate::schema::mutations::remove_edge_property::RemoveEdgeProperty, crate::schema::mutations::set_edge_property::SetEdgeProperty};
+use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphPort};
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -68,7 +64,7 @@ fn dec_edge_id(s: &str) -> Result<GraphEdgeId, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_point2_fields(p: &SemioPoint2) -> String {
-    crate::standards::v1::subsets::graph::io::text::snapshot::enc_point2_fields(p)
+    crate::io::text::snapshot::enc_point2_fields(p)
 }
 /// 📍️ An optional insert index: `-` when absent (append), else its decimal digits.
 fn enc_at(at: Option<usize>) -> String {
@@ -80,19 +76,19 @@ fn dec_at(s: &str) -> Result<Option<usize>, String> {
 }
 /// 🔢️ A width/height in the exact native float spelling `dec_f64_hex` reads back bit for bit.
 fn enc_native_f64(value: f64) -> String {
-    enc_str(&crate::standards::v1::subsets::base::schema::geometry::native::NativeF64(value).to_string())
+    enc_str(&semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64(value).to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_f64_hex(s: &str) -> Result<f64, String> {
-    crate::standards::v1::subsets::graph::io::text::snapshot::dec_f64_hex(s)
+    crate::io::text::snapshot::dec_f64_hex(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_port(p: &SemioGraphPort) -> String {
-    crate::standards::v1::subsets::graph::io::text::snapshot::enc_port(p)
+    crate::io::text::snapshot::enc_port(p)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_port(s:&str)->Result<SemioGraphPort,String>{crate::standards::v1::subsets::graph::io::text::snapshot::dec_port(s)}
+fn dec_port(s:&str)->Result<SemioGraphPort,String>{crate::io::text::snapshot::dec_port(s)}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_property(p: &SemioValueEntry) -> String {
     enc_semio_value_entry(p)
@@ -136,7 +132,7 @@ fn print_graph_mutation(m: &SemioGraphMutation) -> String {
         SemioGraphMutation::RemoveNodePort(p) => format!("removeNodePort:{},{}", enc_node_id(&p.node_id), p.index),
         SemioGraphMutation::AddNodeProperty(p) => format!("addNodeProperty:{},{},{}", enc_node_id(&p.node_id), p.index, enc_property(&p.property)),
         SemioGraphMutation::RemoveNodeProperty(p) => format!("removeNodeProperty:{},{}", enc_node_id(&p.node_id), enc_str(&p.key)),
-        SemioGraphMutation::CreateEdge(p) => format!("createEdge:{},{},{},{},{},{},{},[{}],{}", enc_edge_id(&p.id), enc_node_id(&p.source), enc_node_id(&p.target), enc_str(&p.kind), enc_str(&p.label),crate::standards::v1::subsets::graph::io::text::snapshot::enc_optional(p.source_port.as_deref()),crate::standards::v1::subsets::graph::io::text::snapshot::enc_optional(p.target_port.as_deref()),p.properties.iter().map(enc_property).collect::<Vec<_>>().join(","), enc_at(p.at)),
+        SemioGraphMutation::CreateEdge(p) => format!("createEdge:{},{},{},{},{},{},{},[{}],{}", enc_edge_id(&p.id), enc_node_id(&p.source), enc_node_id(&p.target), enc_str(&p.kind), enc_str(&p.label),crate::io::text::snapshot::enc_optional(p.source_port.as_deref()),crate::io::text::snapshot::enc_optional(p.target_port.as_deref()),p.properties.iter().map(enc_property).collect::<Vec<_>>().join(","), enc_at(p.at)),
         SemioGraphMutation::DeleteEdge(p) => format!("deleteEdge:{}", enc_edge_id(&p.id)),
         SemioGraphMutation::DragNodes(p) => format!("dragNodes:[{}],{},{}", p.targets.iter().map(enc_node_id).collect::<Vec<_>>().join(","), enc_str(&p.dx.to_string()), enc_str(&p.dy.to_string())),
         SemioGraphMutation::SetNodeProperty(p) => format!("setNodeProperty:{},{}", enc_node_id(&p.node_id), enc_property(&SemioValueEntry { key: p.key.clone(), value: p.value.clone() })),
@@ -203,7 +199,7 @@ fn parse_graph_mutation(line: &str) -> Result<SemioGraphMutation, String> {
         "createEdge" => {
             let parts = split_top_level(rest, ',');
             let [id, source, target, kind, label, source_port, target_port, properties, at] = parts.as_slice() else { return Err(format!("createEdge: expected 9 fields, got {}", parts.len())) };
-            Ok(SemioGraphMutation::CreateEdge(CreateEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)?,source_port:crate::standards::v1::subsets::graph::io::text::snapshot::dec_optional(source_port)?,target_port:crate::standards::v1::subsets::graph::io::text::snapshot::dec_optional(target_port)?,properties:dec_properties(properties)?, at: dec_at(at)? }))
+            Ok(SemioGraphMutation::CreateEdge(CreateEdge { id: dec_edge_id(id)?, source: dec_node_id(source)?, target: dec_node_id(target)?, kind: dec_str(kind)?, label: dec_str(label)?,source_port:crate::io::text::snapshot::dec_optional(source_port)?,target_port:crate::io::text::snapshot::dec_optional(target_port)?,properties:dec_properties(properties)?, at: dec_at(at)? }))
         }
         "deleteEdge" => Ok(SemioGraphMutation::DeleteEdge(DeleteEdge { id: dec_edge_id(rest)? })),
         "dragNodes" => {
@@ -262,7 +258,7 @@ impl protocol::OpText for SemioGraphMutation {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
-    use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphPortKind;
+    use crate::schema::snapshot::SemioGraphPortKind;
     vec![
         SemioGraphMutation::CreateNode(CreateNode {
             id: GraphNodeId::new("n1"),
@@ -282,17 +278,17 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioGraphMutation> {
         SemioGraphMutation::AddNodeProperty(AddNodeProperty {
             node_id: GraphNodeId::new("n1"),
             index: 0,
-            property: SemioValueEntry { key: "weight".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
+            property: SemioValueEntry { key: "weight".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Int { lexeme: "7".into() } },
         }),
         SemioGraphMutation::RemoveNodeProperty(RemoveNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into() }),
         SemioGraphMutation::CreateEdge(CreateEdge { id: GraphEdgeId::new("e1"), source: GraphNodeId::new("n1"), target: GraphNodeId::new("n2"), kind: "flow".into(), label: "Main".into(),source_port:None,target_port:None,properties:Vec::new(), at: None }),
         SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new("e1") }),
         SemioGraphMutation::DragNodes(DragNodes { targets: vec![GraphNodeId::new("n1"), GraphNodeId::new("n2")], dx: 12.5, dy: -4.0 }),
-        SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Float { lexeme: "0.25".into() } }),
+        SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new("n1"), key: "weight".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Float { lexeme: "0.25".into() } }),
         SemioGraphMutation::ResizeNode(ResizeNode { id: GraphNodeId::new("n1"), width: 120.5, height: 0.1 }),
         SemioGraphMutation::RenameNode(RenameNode { id: GraphNodeId::new("n1"), new_id: GraphNodeId::new("origin") }),
-        SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Str { value: "feeds".into() } }),
-        SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new("e1"), index: 1, property: SemioValueEntry { key: "since".into(), value: crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Int { lexeme: "1972".into() } } }),
+        SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Str { value: "feeds".into() } }),
+        SemioGraphMutation::AddEdgeProperty(AddEdgeProperty { edge_id: GraphEdgeId::new("e1"), index: 1, property: SemioValueEntry { key: "since".into(), value: semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue::Int { lexeme: "1972".into() } } }),
         SemioGraphMutation::RemoveEdgeProperty(RemoveEdgeProperty { edge_id: GraphEdgeId::new("e1"), key: "label".into() }),
     ]
 }
@@ -307,27 +303,27 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::graph::schema::mutations::*;
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::standards::v1::subsets::graph::schema::mutations::add_edge_property;
-use crate::standards::v1::subsets::graph::schema::mutations::add_node_port;
-use crate::standards::v1::subsets::graph::schema::mutations::add_node_property;
-use crate::standards::v1::subsets::graph::schema::mutations::change_node_kind;
-use crate::standards::v1::subsets::graph::schema::mutations::change_node_label;
-use crate::standards::v1::subsets::graph::schema::mutations::create_edge;
-use crate::standards::v1::subsets::graph::schema::mutations::create_node;
-use crate::standards::v1::subsets::graph::schema::mutations::delete_edge;
-use crate::standards::v1::subsets::graph::schema::mutations::delete_node;
-use crate::standards::v1::subsets::graph::schema::mutations::drag_nodes;
-use crate::standards::v1::subsets::graph::schema::mutations::move_node;
-use crate::standards::v1::subsets::graph::schema::mutations::remove_node_port;
-use crate::standards::v1::subsets::graph::schema::mutations::remove_edge_property;
-use crate::standards::v1::subsets::graph::schema::mutations::remove_node_property;
-use crate::standards::v1::subsets::graph::schema::mutations::rename_node;
-use crate::standards::v1::subsets::graph::schema::mutations::resize_node;
-use crate::standards::v1::subsets::graph::schema::mutations::set_edge_property;
-use crate::standards::v1::subsets::graph::schema::mutations::set_node_property;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::mutations::add_edge_property;
+use crate::schema::mutations::add_node_port;
+use crate::schema::mutations::add_node_property;
+use crate::schema::mutations::change_node_kind;
+use crate::schema::mutations::change_node_label;
+use crate::schema::mutations::create_edge;
+use crate::schema::mutations::create_node;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_node;
+use crate::schema::mutations::drag_nodes;
+use crate::schema::mutations::move_node;
+use crate::schema::mutations::remove_node_port;
+use crate::schema::mutations::remove_edge_property;
+use crate::schema::mutations::remove_node_property;
+use crate::schema::mutations::rename_node;
+use crate::schema::mutations::resize_node;
+use crate::schema::mutations::set_edge_property;
+use crate::schema::mutations::set_node_property;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioGraphSnapshot, SemioGraphMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Eleven
 /// triads, in dispatch order: node lifecycle (`create-node`/`delete-node`), node scalar fields

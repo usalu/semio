@@ -6,8 +6,8 @@
 
 use super::*;
 
-fn brep_invocation(response_action: &str, request_json: &str) -> crate::app::ExtensionInvocation {
-    crate::app::ExtensionInvocation::new("brep", "tessellate", request_json, response_action)
+fn brep_invocation(response_action: &str, request_json: &str) -> crate::app_emission::ExtensionInvocation {
+    crate::app_emission::ExtensionInvocation::new("brep", "tessellate", request_json, response_action)
 }
 
 /// 📦️ The shape the SHELL puts on the ABI — `encodePackValue(JSON.parse(outputJson))`.
@@ -136,7 +136,7 @@ async fn the_echoed_correlation_drops_a_request_body_the_shell_could_not_have_se
         ("windowId".to_string(), semio_framework_value::DslValue::String("preview".to_string())),
         ("inputJson".to_string(), semio_framework_value::DslValue::String(body)),
     ]));
-    let req = queue_extension_invocation(2, &crate::app::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
+    let req = queue_extension_invocation(2, &crate::app_emission::ExtensionInvocation::new("math", "evaluate", &request_json, "flowEvalResolve")).expect("continuation admission");
     let _ = REGISTRY.with(|registry| registry.drain());
     let (_, _, args) = take_extension_response(req, Ok(packed_answer(r#"{"value":1}"#))).expect("a minted continuation must answer its own completion");
     assert_eq!(args.get("nodeHash").and_then(semio_framework_value::DslValue::as_u64), Some(77), "bounded correlation survives: {args:?}");

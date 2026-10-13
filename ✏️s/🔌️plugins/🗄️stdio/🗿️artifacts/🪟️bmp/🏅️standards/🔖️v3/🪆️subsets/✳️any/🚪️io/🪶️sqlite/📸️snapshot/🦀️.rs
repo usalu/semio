@@ -1,6 +1,6 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
 use crate::standards::v_v3::subsets::any::schema::snapshot::BmpSnapshot;
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,SqliteSnapshotPhase,ValueError}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,SqliteSnapshotPhase,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
 pub(in crate::standards::v_v3::subsets::any::io) fn admit(snapshot:&BmpSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{backing::admit(snapshot,phase,control)}
 impl ArtifactSqliteSnapshot for BmpSnapshot{

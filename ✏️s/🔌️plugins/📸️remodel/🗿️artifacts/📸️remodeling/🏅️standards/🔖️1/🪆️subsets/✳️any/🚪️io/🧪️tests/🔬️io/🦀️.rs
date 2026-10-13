@@ -205,7 +205,7 @@ async fn semio_mesh_to_mesh_data_recovers_the_representable_buffers() {
 
 #[semio_framework_async_macros::async_test]
 async fn png_export_round_trips_a_stored_texture_asset() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame};
+    use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame};
     let scene = default_remodeling_scene();
     let pixels: Vec<u8> = (0..4 * 4 * 4).map(|i| (i % 256) as u8).collect();
     let image = SemioImageSnapshot { width: 4, height: 4, colorspace: SemioColorspace::Rgba, bit_depth: 8, frames: vec![SemioImageFrame { delay_ms: 0, rgba8: pixels.clone() }], ..SemioImageSnapshot::default() };

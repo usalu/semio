@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
 use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::io::{bmp_layout, decode_bmp, encode_bmp};
     use semio_s_artifact_stdio_bmp::schema::snapshot::BmpProfile;
     use semio_s_artifact_stdio_bmp::standards::v_v3::subsets::any::schema::operations::bmp_rgba8_preview;

@@ -12,7 +12,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 #[mutation_leaf(contract=::protocol)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
-pub(crate) struct SetSlotChildren {
+struct SetSlotChildren {
     pub children: Vec<String>,
 }
 

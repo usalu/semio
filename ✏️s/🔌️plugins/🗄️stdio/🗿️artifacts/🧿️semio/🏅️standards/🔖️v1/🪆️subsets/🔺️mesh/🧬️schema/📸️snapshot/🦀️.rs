@@ -5,7 +5,7 @@
 //! `SemioPrimitive`, `SemioMaterial`, `SemioTexture` (`SemioPrimitive` was RESERVED at W1b —
 //! this file is where it lands).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
 
 
 

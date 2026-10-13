@@ -9,7 +9,7 @@ async fn restore_archive(app: &mut impl semio_framework_plugin::PluginApp, opera
             protocol::DocumentArchiveLoadState::Fault | protocol::DocumentArchiveLoadState::Cancelled => return Err(format!("drawing archive restore failed: {status:?}")),
             _ => {}
         }
-        app.maintenance_step(1, store::OWNED_SCHEMA_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+        app.maintenance_step(1, store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
         std::thread::yield_now();
     }
     Err("drawing archive restore exceeded its work bound".into())

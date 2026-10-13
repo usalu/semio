@@ -12,7 +12,7 @@ use semio_s_artifact_block_3d::standards::v1::subsets::any::schema::mutations::{
     change_object_kind_label::change_object_kind_label, create_representation::create_representation, create_vortex::create_vortex, move_camera3d::move_camera3d, rename_object_kind::rename_object_kind, scale_camera3d::scale_camera3d,
 };
 use semio_s_artifact_block_3d::{Block3dMutation, Block3dSnapshot, Block3dVortexTemplate, BlockAttribute, BlockRepresentation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use std::sync::Arc;
 use typed_input_law::{typed_command_retirement_law, typed_input_retirement_law};
 

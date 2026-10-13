@@ -8,7 +8,7 @@ use semio_framework_dsl_record::__rt::DecodedFieldOwner;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase as Phase,ValueError,ValueRefusalKind as K,artifact::{Cell,RowWriter,Reconstruction},transfer::{reserve,heap_sort,compare_text},validate_sqlite_database_schema_controlled};
 use std::{fmt::Write,ops::Range};
 const SQL:&str=include_str!("🗄️.sql");
-impl protocol::ArtifactSqliteSnapshot for ChartSnapshot{
+impl protocol::os_store::serialization::ArtifactSqliteSnapshot for ChartSnapshot{
  const SQLITE_SCHEMA:&'static str=SQL;
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase>{to_database(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self>{from_database(database,control)}

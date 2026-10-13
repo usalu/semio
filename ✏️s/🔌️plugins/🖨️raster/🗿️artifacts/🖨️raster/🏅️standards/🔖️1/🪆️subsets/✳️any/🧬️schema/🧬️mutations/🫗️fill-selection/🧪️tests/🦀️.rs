@@ -214,9 +214,9 @@ fn a_payload_outside_its_bounds_is_an_invariant_breach() {
 #[semio_framework_async_macros::async_test]
 async fn the_store_folds_a_fill_like_the_leaf() {
     let fill = clipped(fill_selection("paint", "mask", [0.5, 0.5, 0.5, 1.0]), &[(2, 5, 200)]);
-    let mut store = crate::mutations::RasterStore::new(store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "fill-selection", base(false), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::mutations::RasterStore::new(store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "fill-selection", base(false), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(crate::host::owned::raster_document_store_owners()).map_err(|(error, _)| error).expect("the Raster owner catalog installs on a fresh store");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![fill.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the fill applies");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![fill.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the fill applies");
     let before = base(false);
     let expected = apply_raster_mutation(&before, &fill).expect("the leaf applies");
     let projected = store.snapshot().expect("the store projects");

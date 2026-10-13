@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../../../../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🧭️ Owns generic React lint, test, typecheck and canonical architecture routes. */
 import { dirname } from "node:path";
@@ -33,7 +34,7 @@ class CanonicalArchitectureScript extends BundleScript {
 
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runOwnedCommand("bun", ["x", "tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root, "ui-react-typecheck", cmdBudgetMs(), { env: process.env });
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "ui-react:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 

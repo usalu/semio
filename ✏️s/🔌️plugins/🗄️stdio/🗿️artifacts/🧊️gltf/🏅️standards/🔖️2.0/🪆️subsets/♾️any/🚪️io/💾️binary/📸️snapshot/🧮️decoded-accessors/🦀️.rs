@@ -1,5 +1,6 @@
 //! 🧮️ Prepares decoded glTF geometry input at the physical accessor boundary.
-use crate::schema::snapshot::{GltfSnapshot,GltfDecodedSnapshot};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDecodedSnapshot;
 use crate::standards::v2_0::subsets::any::schema::inferences::{GltfInference,GltfGeometricInference};
 
 /// ⛽️ Reports each accessor boundary and refuses cancellation before decoding the next owner.
@@ -8,7 +9,7 @@ pub fn project_gltf_inference<'a>(snapshot:&'a GltfSnapshot,progress:&mut impl F
     let total=snapshot.document.accessors.len()+snapshot.buffers.len();
     for index in 0..snapshot.document.accessors.len() {
         if !progress(index,total) { return Err("glTF inference projection cancelled".into()); }
-        accessors.push(crate::standards::v2_0::subsets::any::io::decode_accessor(&snapshot.document,&snapshot.buffers,index));
+        accessors.push(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor(&snapshot.document,&snapshot.buffers,index));
     }
     let mut buffer_fingerprints=Vec::with_capacity(snapshot.buffers.len());
     for (index,bytes) in snapshot.buffers.iter().enumerate() {

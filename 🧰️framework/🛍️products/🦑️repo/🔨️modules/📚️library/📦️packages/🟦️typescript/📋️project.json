@@ -134,6 +134,16 @@
     ]
   },
   "targets": {
+    "test-tool-run-policy-source": {
+      "executor":"nx:run-commands",
+      "cache":false,
+      "dependsOn":[],
+      "outputs":[],
+      "options":{
+        "cwd":"{projectRoot}",
+        "command":"bun ./📜️script.ts test-tool-run-policy-source"
+      }
+    },
     "test-cargo-nextest-configuration": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -718,13 +728,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick"
-      }
-    },
     "test-transaction-v2": {
       "executor": "nx:run-commands",
       "options": {
@@ -1072,20 +1075,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test run-vitest-config-argument-tokens"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long"
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive"
       }
     },
     "test-cargo-native-owner-discovery": {
@@ -2015,6 +2004,22 @@
       "options": {
         "command": "bun ./📜️script.ts test nx-native-child-issuance",
         "forwardAllArgs": false
+      }
+    },
+    "test-native-prerequisites": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test native-prerequisites"
+      }
+    },
+    "test-decoder-absence": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test decoder-absence"
       }
     }
   }

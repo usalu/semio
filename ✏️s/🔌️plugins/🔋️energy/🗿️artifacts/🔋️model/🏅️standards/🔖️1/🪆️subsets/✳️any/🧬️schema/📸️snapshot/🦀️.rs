@@ -48,7 +48,7 @@ impl Default for EnergyModelSnapshot {
     }
 }
 
-// 🌱️ Hand-written, not derived — `structure`/`zones` are `store::ArtifactChild<S>` and
+// 🌱️ Hand-written, not derived — `structure`/`zones` are `store::os_store::artifact_child::ArtifactChild<S>` and
 // `referenced_model` is `Option<store::ArtifactLink>`, neither of which has a
 // `#[derive(ToValue, FromValue)]`-reachable impl (fan-out playbook trap #3; `ArtifactLink` mirrors
 // the same framework-exempt shape). `model: crate::model::Model` goes through `ToValue`/`FromValue`

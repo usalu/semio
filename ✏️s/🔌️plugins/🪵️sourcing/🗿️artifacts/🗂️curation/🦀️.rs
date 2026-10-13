@@ -16,7 +16,7 @@ extern crate semio_framework_os_kernel as vcs;
 extern crate semio_framework_schema as framework_schema;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 pub use crate::schema::mutations::SourcingMutation;
 
@@ -206,13 +206,13 @@ pub fn stock_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[ObjectK
 /// 🪪️ Content-addressed child handle for a stock list's shared catalog half — hashes the deterministic
 /// JSON of the derived `SemioKitType` list so peers replaying the same stock converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `lowpoly`'s `mesh_child_handle`.
-pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn catalog_child_handle(stock: &[ObjectKind]) -> store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot> {
     let catalog = catalog_snapshot_from_stock(stock);
     let canonical = semio_framework_pack_json::to_json_string(&catalog.types);
     let child_id = store::content_id("catalog", canonical.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🏗️ Builds a `CurationSnapshot` from a full stock list, minting its content-addressed `catalog`
@@ -254,7 +254,7 @@ pub fn genesis_catalog_pack(document: &CurationSnapshot, slot: &str, child_id: &
         return None;
     }
     let stock = stock_of(document);
-    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
+    (catalog_child_handle(&stock).child_id == child_id).then(|| <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&catalog_snapshot_from_stock(&stock)))
 }
 
 /// 🧬️ The bounded projection of the curation's composed `catalog` handle, as both surfaces hand it to

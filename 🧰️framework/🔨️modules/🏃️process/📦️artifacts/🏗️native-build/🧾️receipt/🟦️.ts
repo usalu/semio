@@ -1,4 +1,6 @@
-import { resolve } from "node:path";
+import { createHash } from "node:crypto";
+import { homedir } from "node:os";
+import { relative, resolve, sep } from "node:path";
 import type { FileObservationControlV1, FileObservationProgressV1 } from "../../../../📁️filesystem/🧾️observation/🟦️.ts";
 
 /** 🧾️ Schema id of a completed Cargo invocation provenance receipt document.
@@ -15,12 +17,15 @@ export const CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1 = 128 * 1024 * 1024;
  * hundred MiB of artifacts and tens of thousands of inputs once, then rechecks them before publication. */
 export const CARGO_PROVENANCE_PHYSICAL_BUDGET_V1 = Object.freeze({ maxBytes: 16 * 1024 * 1024 * 1024, maxWork: 4194304, chunkBytes: 1024 * 1024, deadlineMs: 600000 });
 
-/** 🔐️ Builds the one finite physical observation control every provenance producer hands to the receipt writer. */
-export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number; readonly deadlineMs?: number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
-  const started = performance.now(), deadlineMs = authority.deadlineMs ?? CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs;
+/** 🔐️ Builds the one finite physical observation control every provenance producer hands to the receipt writer. `scale` is the number of
+ * component invocations one invocation stands for (a release driver pass links many components at once); bytes, work and deadline grow with it. */
+export function cargoProvenancePhysicalControlV1(authority: { readonly cancelled: () => boolean; readonly remainingMs?: () => number; readonly deadlineMs?: number; readonly scale?: number; readonly onProgress: (progress: FileObservationProgressV1) => void }): FileObservationControlV1 {
+  const scale = authority.scale ?? 1;
+  if (!Number.isSafeInteger(scale) || scale < 1) throw Error("Physical provenance scale must be a positive integer");
+  const started = performance.now(), deadlineMs = (authority.deadlineMs ?? CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.deadlineMs) * scale;
   return Object.freeze({
-    maxBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxBytes,
-    maxWork: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxWork,
+    maxBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxBytes * scale,
+    maxWork: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.maxWork * scale,
     chunkBytes: CARGO_PROVENANCE_PHYSICAL_BUDGET_V1.chunkBytes,
     cancelled: authority.cancelled,
     remainingMs: () => Math.min(authority.remainingMs?.() ?? Infinity, deadlineMs - (performance.now() - started)),
@@ -47,6 +52,62 @@ export function cargoProvenanceProgressSinkV1(sink: (progress: FileObservationPr
     admitted = at;
     sink(progress);
   };
+}
+
+/** 🗺️ The roots a provenance path is normalized against, most specific first, so a digest is free of the machine's absolute layout. */
+export type CargoProvenanceRootsV1 = Readonly<{ repository: string; build: string; cargoHome: string; home?: string }>;
+
+/** 🧭️ Whether `path` lies strictly inside `root`. */
+function insideV1(root: string, path: string): boolean {
+  const offset = relative(resolve(root), resolve(path));
+  return offset !== "" && !offset.startsWith("..") && !offset.startsWith(sep) && !/^[A-Za-z]:/u.test(offset);
+}
+
+/** 🧭️ A path as `$BUILD/…`, `$CARGO_HOME/…`, `$REPO/…` or `$HOME/…`, with `/` separators. */
+export function cargoProvenancePathV1(path: string, roots: CargoProvenanceRootsV1): string {
+  const ordered: readonly (readonly [string, string])[] = [["$BUILD", roots.build], ["$CARGO_HOME", roots.cargoHome], ["$REPO", roots.repository], ["$HOME", roots.home ?? homedir()]];
+  for (const [name, root] of ordered) if (insideV1(root, path)) return `${name}/${relative(resolve(root), resolve(path)).split(sep).join("/")}`;
+  return path.split(sep).join("/");
+}
+
+/** 🧭️ A repository-relative `/` path when `path` is an in-repository source outside the build directory, otherwise `null`. */
+export function cargoProvenanceSourceV1(path: string, roots: CargoProvenanceRootsV1): string | null {
+  return insideV1(roots.repository, path) && !insideV1(roots.build, path) ? relative(resolve(roots.repository), resolve(path)).split(sep).join("/") : null;
+}
+
+/** #️⃣ SHA-256 of rows ordered by their UTF-8 bytes (fields joined by NUL) and serialized as one JSON array: equal rows give equal digests in every implementation. */
+export function cargoProvenanceRowsDigestV1(rows: readonly (readonly string[])[]): string {
+  return createHash("sha256").update(JSON.stringify([...rows].sort((left, right) => Buffer.compare(Buffer.from(left.join("\0")), Buffer.from(right.join("\0")))))).digest("hex");
+}
+
+/** 🍃️ The provenance leaf of one compiled unit: every input it read and every artifact it wrote, path-normalized, as one rows digest. */
+export function cargoUnitLeafV1(unit: Readonly<{ inputs: readonly CargoInputObservationV1[]; artifacts: readonly CargoArtifactObservationV1[] }>, roots: CargoProvenanceRootsV1): string {
+  return cargoProvenanceRowsDigestV1([...unit.inputs.map((row) => ["input", cargoProvenancePathV1(row.path, roots), row.kind ?? "", row.sha256 ?? ""]), ...unit.artifacts.map((row) => ["artifact", cargoProvenancePathV1(row.path, roots), row.sha256 ?? ""])]);
+}
+
+/** 🍃️ The provenance leaf of one build-script run: its resource capture and every resource it witnessed, path-normalized, as one rows digest. */
+export function cargoBuildRunLeafV1(row: Readonly<{ path: string; sha256: string; resources: readonly CargoResourceWitnessV1[] }>, roots: CargoProvenanceRootsV1): string {
+  return cargoProvenanceRowsDigestV1([["capture", cargoProvenancePathV1(row.path, roots), row.sha256], ...row.resources.map((witness) => ["resource", cargoProvenancePathV1(String((witness.input as { path?: unknown }).path ?? ""), roots), String((witness.input as { kind?: unknown }).kind ?? ""), String(witness.sha256 ?? "")])]);
+}
+
+/** 🌳️ The RFC 6962 Merkle tree hash over leaf digests ordered by their bytes: a leaf hashes as `SHA-256(0x00 ‖ leaf)`, a node as `SHA-256(0x01 ‖ left ‖ right)`,
+ * a list splits at the largest power of two below its length, and the empty list hashes as `SHA-256("")`.
+ * @see https://www.rfc-editor.org/rfc/rfc6962#section-2.1 */
+export function cargoProvenanceMerkleRootV1(leaves: readonly string[]): string {
+  if (leaves.some((leaf) => !/^[0-9a-f]{64}$/u.test(leaf))) throw Error("Provenance leaves must be SHA-256 hex digests");
+  const sorted = [...leaves].sort().map((leaf) => Buffer.from(leaf, "hex"));
+  const tree = (nodes: readonly Buffer[]): Buffer => {
+    if (nodes.length === 1) return createHash("sha256").update(Buffer.from([0])).update(nodes[0]!).digest();
+    let split = 1;
+    while (split * 2 < nodes.length) split *= 2;
+    return createHash("sha256").update(Buffer.from([1])).update(tree(nodes.slice(0, split))).update(tree(nodes.slice(split))).digest();
+  };
+  return (sorted.length === 0 ? createHash("sha256").digest() : tree(sorted)).toString("hex");
+}
+
+/** 🔑️ The identity that joins a Cargo unit-graph node to the unit Cargo announced: package, target, its kinds, platform (`null` for the host) and features. */
+export function cargoUnitIdentityV1(unit: Readonly<{ packageId: string; target: string; kinds: readonly string[]; platform: string | null; features: readonly string[] }>): string {
+  return JSON.stringify([unit.packageId, unit.target, [...unit.kinds].sort(), unit.platform, [...unit.features].sort()]);
 }
 
 /** 📜️ The source files a Cargo dep-info file (`<artifact>.d`) names for its target, with Cargo's

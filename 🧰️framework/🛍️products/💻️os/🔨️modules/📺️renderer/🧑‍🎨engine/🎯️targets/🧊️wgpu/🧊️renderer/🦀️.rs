@@ -4415,7 +4415,7 @@ pub(crate) mod kernel_runtime {
         Payload, JOB_PROGRESS_ACTIVE_CAPACITY,
     };
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
+    use semio_framework_plugin_host::{GuestRuntime, GuestRuntimes, PackageRef}; use semio_framework_plugin_interpreter::OwnedRuntime;
     use std::collections::HashMap;
     use std::future::Future;
     use std::mem::ManuallyDrop;
@@ -4971,7 +4971,7 @@ pub(crate) mod kernel_runtime {
                 Event::Message { source: MessageEndpoint::Shell { instance }, payload } if !payload.is_empty() && payload.len() <= semio_framework_plugin::document_backbone_binding::DOCUMENT_BACKBONE_BINDING_CONTROL_MAXIMUM_BYTES => {
                     Ok(Self { kind: Some(QueuedKernelEventKind::MessageShell), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(instance.0), message_payload: Some(payload) })
                 }
-                Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
+                Event::Message { source: MessageEndpoint::Backbone { uri }, payload } if !payload.is_empty() && payload.len() <= store_sync::os_store::backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES => {
                     Ok(Self { kind: Some(QueuedKernelEventKind::MessageBackbone), surface_visible: None, surface_body_key: None, surface_view_state: None, message_endpoint: Some(uri), message_payload: Some(payload) })
                 }
                 rejected => {
@@ -6574,7 +6574,7 @@ pub(crate) mod kernel_runtime {
         /// 🐣️ Compiles `wasm_path` (once per content hash), activates `app_id` on it and opens its first
         /// instance. `artifact_schema` is the document schema the app edits, empty for an app that edits
         /// none: the mounted component becomes that kind's codec in this process
-        /// ([`semio_framework_os_kernel::os_store::register_component_document_codec`]).
+        /// ([`semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec`]).
         pub(crate) async fn create_app(&self, wasm_path: PathBuf, plugin_id: String, app_id: String, artifact_schema: String) -> Result<u32, crate::program_bridge::ProgramFault> {
             match self.submit(KernelRequest::CreateApp { owner: CreateAppRequestOwner::new(wasm_path, plugin_id, app_id, artifact_schema) }).await {
                 KernelOutcome::Created(result) => result,
@@ -8364,7 +8364,7 @@ pub(crate) mod kernel_runtime {
             let compiled = self.compile_serving_others(package_ref.clone(), bytes.to_vec()).await?;
             if !artifact_schema.is_empty() {
                 let codec = semio_framework_plugin_host::OwnedComponentDocumentCodec::try_new(self.guest_runtime.clone(), compiled.clone(), artifact_schema).map_err(|error| error.to_string())?;
-                semio_framework_os_kernel::os_store::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
+                semio_framework_os_kernel::os_store::codec_registry::register_component_document_codec(Arc::new(codec)).map_err(|error| error.to_string())?;
             }
             let instance_id = self.next_instance_id;
             self.next_instance_id += 1;
@@ -9941,7 +9941,7 @@ pub mod scale_bench {
     use semio_framework::kernel::{AppInstanceId, Budget as TurnBudget, CapabilityChange, CapabilityId, Effect, Event, QuotaSchema};
     use semio_framework_actor::{ActivationEvent as ActorActivationTrigger, ActorId, ActorKind, Envelope, JobCheckpoint, JobOperation, Kernel, Lane, Origin, PackageHash, PackageId, Payload};
     use semio_framework_plugin_host::shard::ShardOutcome;
-    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, OwnedRuntime, PackageRef};
+    use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, GuestRuntimes, PackageRef}; use semio_framework_plugin_interpreter::OwnedRuntime;
     use serde::Deserialize;
     use serde_json::json;
     use std::collections::HashMap;
@@ -19198,7 +19198,7 @@ mod native_socket_sqlite_tests;
 mod native_socket_sqlite;
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
+impl store::os_store::serialization::ArtifactDsl for NativeSocketProbeSnapshot {
     const EXTENSION: &'static str = "native-socket-probe";
 
     fn parse_dsl(text: &str) -> Result<Self, store::os_store::TextError> {
@@ -19211,17 +19211,15 @@ impl store::os_store::ArtifactDsl for NativeSocketProbeSnapshot {
 }
 
 #[cfg(not(target_arch = "wasm32"))]
-impl store::os_store::ArtifactPack for NativeSocketProbeSnapshot {
+impl store::os_store::serialization::ArtifactPack for NativeSocketProbeSnapshot {
     /// 🪪️ Declares this probe's real production IO identity independently from editor factories.
-    fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::ArtifactCodec)>{
-        Some((native_socket_sqlite::DIALECT,store::os_store::ArtifactCodec::of::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
+    fn native_snapshot_registration()->Option<(semio_framework_artifact_reference::Dialect,store::os_store::serialization::ArtifactCodec)>{
+        Some((native_socket_sqlite::DIALECT,store::os_store::artifact_codec::<Self,NativeSocketProbeMutation>(native_socket_sqlite::SCHEMA)))
     }
 
-    /// 📣️ Publishes both original document and native snapshot registries.
-    fn publish_native_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{native_socket_sqlite::publish()}
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::os_store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::os_store::PackEncodeOptions) -> Result<Vec<u8>, store::os_store::PackError> {
@@ -19421,7 +19419,7 @@ pub async fn run_socket_grant_probe() -> i32 {
 
     const PROBE_SCHEMA: &str = native_socket_sqlite::SCHEMA;
     let Some(credential) = claimed_local_hub_credential("native") else { return 1 };
-    if <NativeSocketProbeSnapshot as store::os_store::ArtifactPack>::publish_native_snapshot().is_err() { return 1; }
+    if store::io::publish_native_snapshot::<NativeSocketProbeSnapshot>().is_err() { return 1; }
     let pool = renderer_worker_pool();
     let runtime = Arc::new(TokioHostRuntime::with_pool(pool.clone()));
     let scope = runtime.open_scope_now(ScopeOwner::Service("native_socket_grant_probe"), None);

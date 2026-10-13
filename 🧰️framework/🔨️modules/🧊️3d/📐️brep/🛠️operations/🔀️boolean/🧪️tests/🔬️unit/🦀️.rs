@@ -1,7 +1,7 @@
 use super::*;
-use crate::brep::operations::primitives::{make_box, make_cylinder, make_sphere};
-use crate::brep::operations::transform::transform_solid;
-use crate::brep::representation::vector::matrix::Affine3;
+use crate::primitives::{make_box, make_cylinder, make_sphere};
+use crate::transform::transform_solid;
+use semio_framework_3d_brep_representation::vector::matrix::Affine3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn translate_solid(body: &mut Body, solid: SolidId, delta: Vec3, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -302,15 +302,15 @@ async fn analytic_primitives_are_structurally_valid() {
         let mut rec = OpRecorder::new();
         let solid = match name {
             "sphere" => make_sphere(&mut body, 1.0, &mut rec),
-            "torus" => crate::brep::operations::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec),
+            "torus" => crate::primitives::make_torus(&mut body, 2.0, 0.5, &mut rec),
             "cylinder" => make_cylinder(&mut body, 1.0, 2.0, &mut rec),
-            "cone" => crate::brep::operations::primitives::make_cone(&mut body, 1.0, 2.0, &mut rec),
+            "cone" => crate::primitives::make_cone(&mut body, 1.0, 2.0, &mut rec),
             _ => make_box(&mut body, 1.0, 1.0, 1.0, &mut rec),
         }
         .unwrap();
         let issues = validate_body(&body);
         assert!(issues.is_empty(), "{name}: {:?}", issues.iter().map(|i| format!("{}:{}:{}", i.entity, i.code, i.message)).collect::<Vec<_>>());
-        let signed = crate::brep::queries::mass_properties::solid_signed_volume(&body, solid, 1e-4).unwrap();
+        let signed = semio_framework_3d_brep_queries::mass_properties::solid_signed_volume(&body, solid, 1e-4).unwrap();
         assert!((signed - expected).abs() <= 5e-3 * expected, "{name}: signed volume {signed}, expected {expected}");
     }
 }

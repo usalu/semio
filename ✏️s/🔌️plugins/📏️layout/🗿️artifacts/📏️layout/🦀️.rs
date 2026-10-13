@@ -14,7 +14,7 @@ use protocol::{Identified, Patchable};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Constants
 pub const LAYOUT_DOCUMENT_SCHEMA: &str = "layout.layout";
@@ -52,13 +52,13 @@ pub const LAYOUT_DIALECT: Dialect = Dialect { artifact_kind: "s.layout.layout", 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[value(rename_all = "camelCase", deny_unknown_fields, retire_with="crate::standards::v1::subsets::any::schema::snapshot::drawing_child::retire")]
 pub struct LayoutDrawingChild {
-    pub handle: store::ArtifactChild<SemioDrawingSnapshot>,
+    pub handle: store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot>,
     pub content: SemioDrawingSnapshot,
 }
 
 impl semio_framework_dsl_record::BorrowedDslRecord for LayoutDrawingChild {
     const RECORD: semio_framework_dsl_record::BorrowedRecordSpec = semio_framework_dsl_record::BorrowedRecordSpec { keyword: None, layout: semio_framework_dsl_record::RecordLayout::Inline, fields: &[
-        semio_framework_dsl_record::BorrowedFieldSpec { id: 0, key: "handle", position: None, shape: <store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::BorrowedDslField>::SHAPE, optional: false, flatten: false, defines: None, is_call_name: false },
+        semio_framework_dsl_record::BorrowedFieldSpec { id: 0, key: "handle", position: None, shape: <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::BorrowedDslField>::SHAPE, optional: false, flatten: false, defines: None, is_call_name: false },
         semio_framework_dsl_record::BorrowedFieldSpec { id: 1, key: "content", position: None, shape: semio_framework_dsl_record::BorrowedShape::Value, optional: false, flatten: false, defines: None, is_call_name: false },
     ] };
 }
@@ -76,7 +76,7 @@ impl semio_framework_schema_composition::ChildFieldRefs for LayoutDrawingChild {
 }
 
 fn layout_drawing_child_spec() -> semio_framework_dsl_record::RecordSpec {
-    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "handle", <store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::shape()), semio_framework_dsl_record::FieldSpec::new(1, "content", semio_framework_dsl_record::Shape::Value)])
+    semio_framework_dsl_record::RecordSpec::new(None, semio_framework_dsl_record::RecordLayout::Inline, vec![semio_framework_dsl_record::FieldSpec::new(0, "handle", <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::shape()), semio_framework_dsl_record::FieldSpec::new(1, "content", semio_framework_dsl_record::Shape::Value)])
 }
 
 fn layout_drawing_child_spec_producer()->semio_framework_dsl_record::RecordSpecProducer{standards::v1::subsets::any::schema::snapshot::drawing_child::producer()}
@@ -100,7 +100,7 @@ impl semio_framework_dsl_record::DslField for LayoutDrawingChild {
     }
     fn from_value(value: &semio_framework_dsl_record::FieldValue) -> Result<Self, String> {
         let semio_framework_dsl_record::FieldValue::Record(record) = value else { return Err(format!("expected Record, found {value:?}")) };
-        let handle = <store::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::from_value(record.get(0).ok_or("missing handle")?)?;
+        let handle = <store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot> as semio_framework_dsl_record::DslField>::from_value(record.get(0).ok_or("missing handle")?)?;
         let Some(semio_framework_dsl_record::FieldValue::Value(content)) = record.get(1) else { return Err("expected content value".into()) };
         Ok(Self { handle, content: semio_framework_value::FromValue::from_value(content.clone()).map_err(|error| error.to_string())? })
     }
@@ -112,7 +112,7 @@ pub fn background_drawing_child_handle(_source_tag: &str, content: &SemioDrawing
     let child_id = store::content_id("background-drawing", content_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    LayoutDrawingChild { handle: store::ArtifactChild::new(child_id, target), content: content.clone() }
+    LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new(child_id, target), content: content.clone() }
 }
 //#endregion 🔖️ComposedTypes
 
@@ -124,7 +124,7 @@ pub fn background_drawing_content(snapshot: &LayoutSnapshot) -> Option<SemioDraw
 
 /// ✏️ The central apply of one plan-text edit: the text node at `index` (depth-first over the layers) now reads `text`; `false` when the plan has no such node.
 pub fn set_drawing_text(content: &mut SemioDrawingSnapshot, index: u32, text: &str) -> bool {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
     fn replace(node: &mut DrawNode, index: &mut u32, text: &str) -> bool {
         match node {
             DrawNode::Text { value, .. } => {

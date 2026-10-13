@@ -1,0 +1,190 @@
+{
+ "order": [
+  "ownership",
+  "window",
+  "declaration",
+  "publication",
+  "jobs",
+  "reactor",
+  "instance"
+ ],
+ "files": [
+  [
+   "^🧬️schema/",
+   "ownership"
+  ],
+  [
+   "^🏗️builder/",
+   "instance"
+  ],
+  [
+   "^🛂️describe/",
+   "reactor"
+  ],
+  [
+   "^💡️inference/🚪️gateway/",
+   "reactor"
+  ],
+  [
+   "^💡️inference/",
+   "declaration"
+  ],
+  [
+   "^🪟️window-kits/",
+   "window"
+  ],
+  [
+   "^⏪️time-travel/",
+   "jobs"
+  ],
+  [
+   "^⏯️tool-run/",
+   "jobs"
+  ],
+  [
+   "^⏳️operation-progress/",
+   "jobs"
+  ],
+  [
+   "^♻️cancellation/",
+   "jobs"
+  ],
+  [
+   "^♻️lifecycle/",
+   "publication"
+  ],
+  [
+   "^⚛️reactor/💼️jobs/",
+   "jobs"
+  ],
+  [
+   "^⚛️reactor/",
+   "reactor"
+  ],
+  [
+   "^🌐host/",
+   "reactor"
+  ],
+  [
+   "^🌱️initialization/",
+   "publication"
+  ],
+  [
+   "^🎚️config/",
+   "publication"
+  ],
+  [
+   "^📝️draft/",
+   "publication"
+  ],
+  [
+   "^🫧️transient/",
+   "publication"
+  ],
+  [
+   "^👥️presence/",
+   "publication"
+  ],
+  [
+   "^🎞️media/",
+   "jobs"
+  ],
+  [
+   "^🎮️command/",
+   "jobs"
+  ],
+  [
+   "^👷️job/",
+   "jobs"
+  ],
+  [
+   "^📡️backbone/",
+   "publication"
+  ],
+  [
+   "^📬️completion/",
+   "jobs"
+  ],
+  [
+   "^🕹️interaction/",
+   "window"
+  ],
+  [
+   "^🖱️context-menu/",
+   "window"
+  ],
+  [
+   "^🚪️io/",
+   "jobs"
+  ],
+  [
+   "^🛠️tool-machine/",
+   "jobs"
+  ],
+  [
+   "^🧩️composition/",
+   "publication"
+  ],
+  [
+   "^🧩️extension/📨️invoke/",
+   "jobs"
+  ],
+  [
+   "^🧩️extension/",
+   "reactor"
+  ],
+  [
+   "^🧵️instance/",
+   "reactor"
+  ],
+  [
+   "^🧵️retained-command/",
+   "jobs"
+  ],
+  [
+   "^🧵️task/",
+   "jobs"
+  ],
+  [
+   "^🪜️",
+   "publication"
+  ],
+  [
+   "^🪟️window/",
+   "window"
+  ],
+  [
+   "^📦️packages/",
+   "reactor"
+  ],
+  [
+   "^🧪️tests/",
+   "laws"
+  ],
+  [
+   "^📜️declaration/",
+   "declaration"
+  ]
+ ],
+ "names": [],
+ "methods": [
+  [
+   ".*",
+   "reactor"
+  ]
+ ],
+ "modules": {
+  "store_lifecycle": "ownership",
+  "transient_publication": "ownership",
+  "declarations": "instance",
+  "presence_retirement": "declaration",
+  "child_emit_preparation": "declaration",
+  "tool_cancellation": "declaration",
+  "completion_fault": "declaration",
+  "completion_retirement": "declaration",
+  "completion_refusal_retirement": "declaration",
+  "owned_context": "declaration",
+  "reserved_job_session": "ownership",
+  "host": "declaration"
+ }
+}

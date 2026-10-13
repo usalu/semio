@@ -28,7 +28,7 @@
 pub mod profile;
 
 //#region 🔖️Wit
-#[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub mod guest {
     //! 🧩️ WASI P2 component exports for `world actor` — see the module-level doc above for why this
     //! crate does its own `generate!` instead of depending on `semio-framework-plugin`.
@@ -305,15 +305,15 @@ pub mod guest {
     }
 }
 
-/// 🕰️ `pure::now-ms` outside a real wasm32-wasip2 component-guest build (native `cargo check
+/// 🕰️ `pure::now-ms` outside a real wasm32-wasip2 component build (native `cargo check
 /// --all-targets`, unit tests) — wall-clock time, so `cpu`/`hang` unit tests measure real elapsed
 /// milliseconds the same way the guest export does.
-#[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+#[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub fn now_ms() -> i64 {
     use std::time::{SystemTime, UNIX_EPOCH};
     SystemTime::now().duration_since(UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
 }
 
-#[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub use guest::now_ms;
 //#endregion 🔖️Wit

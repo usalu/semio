@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn pinned() -> BimSectionWindowConfig {
     BimSectionWindowConfig { view: "v-section".into(), framed: true, viewport: store::Viewport2d { x: 4.0, y: -1.0, zoom: 30.0 } }

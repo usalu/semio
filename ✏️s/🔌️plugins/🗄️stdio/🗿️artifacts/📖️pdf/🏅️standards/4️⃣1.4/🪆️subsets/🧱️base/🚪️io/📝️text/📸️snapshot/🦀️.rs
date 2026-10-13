@@ -13,10 +13,10 @@ pub type PdfSnapshotText = String;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v1_4::subsets::base::schema::snapshot::*;
-use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::ArtifactDsl for PdfSnapshot {
+impl store::os_store::serialization::ArtifactDsl for PdfSnapshot {
     const EXTENSION: &'static str = "pdf";
     fn envelope_id() -> &'static str {
         "stdio.pdf"
@@ -24,7 +24,7 @@ impl store::ArtifactDsl for PdfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
@@ -34,14 +34,14 @@ impl store::ArtifactDsl for PdfSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 }
 
 mod source_fixtures {
-use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 use crate::standards::v1_4::subsets::base::schema::snapshot::*;
 /// 📄️ The demo `stdio.pdf` document — the single source of truth for `📚️examples/🎬️demo/🖼️assets/
 /// 🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this snapshot's `print_dsl`/

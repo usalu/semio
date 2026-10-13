@@ -60,12 +60,12 @@ pub fn resolve_ready<T>(future: impl std::future::Future<Output = T>) -> T {
 
 /// 📐️ The brep kernel's own operator pack.
 fn install_brep(registry: &mut Registry) {
-    semio_s_plugin_flow_extension_brep::register(registry, geometry_session());
+    semio_s_plugin_flow_brep::register(registry, geometry_session());
 }
 
 /// 🧮️ The math kernel's own operator pack.
 fn install_math(registry: &mut Registry) {
-    semio_s_plugin_flow_extension_math::register(registry);
+    semio_s_plugin_flow_math::register(registry);
 }
 
 /// 🔌️ The operator sets as the EXTENSION ACTOR itself owns them — the private registry the
@@ -80,11 +80,11 @@ pub(crate) fn install(registry: &mut Registry) {
 pub fn installed() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_framework_plugin::register_artifact_inference_service(semio_s_plugin_flow_extension_brep::geometry_inference::geometry_inference_service()).expect("packaged geometry inference admission");
+        semio_framework_plugin::register_artifact_inference_service(semio_s_plugin_flow_brep::geometry_inference::geometry_inference_service()).expect("packaged geometry inference admission");
         register_linked_flow_extension_installer(BREP_EXTENSION_FLOW_ID, install_brep);
         register_linked_flow_extension_installer(MATH_EXTENSION_FLOW_ID, install_math);
-        install_flow_extension_manifest(BREP_EXTENSION_PLUGIN_ID, &resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json())).expect("contributed brep extension admission");
-        install_flow_extension_manifest(MATH_EXTENSION_PLUGIN_ID, &semio_s_plugin_flow_extension_math::extension_manifest_json()).expect("contributed math extension admission");
+        install_flow_extension_manifest(BREP_EXTENSION_PLUGIN_ID, &resolve_ready(semio_s_plugin_flow_brep::extension_manifest_json())).expect("contributed brep extension admission");
+        install_flow_extension_manifest(MATH_EXTENSION_PLUGIN_ID, &semio_s_plugin_flow_math::extension_manifest_json()).expect("contributed math extension admission");
     });
 }
 
@@ -96,8 +96,8 @@ pub fn installed() {
 /// laws and the viewer laws push the identical closure.
 pub fn staged_flow_extension_contributions_json(extra: &[(&str, String)]) -> String {
     let entries: Vec<semio_framework::manifest::ProgramContributionEntry> = [
-        (BREP_EXTENSION_PLUGIN_ID, resolve_ready(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
-        (MATH_EXTENSION_PLUGIN_ID, semio_s_plugin_flow_extension_math::extension_manifest_json()),
+        (BREP_EXTENSION_PLUGIN_ID, resolve_ready(semio_s_plugin_flow_brep::extension_manifest_json())),
+        (MATH_EXTENSION_PLUGIN_ID, semio_s_plugin_flow_math::extension_manifest_json()),
     ]
     .into_iter()
     .chain(extra.iter().map(|(plugin_id, manifest_json)| (*plugin_id, manifest_json.clone())))

@@ -3,7 +3,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn box_muller_gaussian(n: usize, seed: u64) -> Vec<f64> {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(seed);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(seed);
         (0..n).map(|_| rng.next_gaussian()).collect()
     }
 
@@ -50,7 +50,7 @@ mod tests {
 
     #[test]
     fn uniform_entropy_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(6);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(6);
         let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
         let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
         assert!(est.value.abs() < 0.05, "got {}", est.value);
@@ -58,7 +58,7 @@ mod tests {
 
     #[test]
     fn histogram_entropy_reasonable_for_uniform() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(7);
         let x: Vec<f64> = (0..5000).map(|_| rng.next_f64()).collect();
         let est = entropy_continuous(&x, &ContinuousMethod::Histogram(BinsSpec::Sturges), LogBase::Nats).unwrap();
         assert!(est.value.abs() < 0.2, "got {}", est.value);
@@ -95,7 +95,7 @@ mod tests {
         #[test]
         fn exponential_entropy_matches_closed_form() {
             // 🔐️ differential entropy of Exp(1) is 1 nat.
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(9);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(9);
             let x: Vec<f64> = (0..5000).map(|_| -rng.next_f64().max(1e-12).ln()).collect();
             let est = entropy_continuous(&x, &ContinuousMethod::Vasicek { m: 0 }, LogBase::Nats).unwrap();
             assert!((est.value - 1.0).abs() < 0.05, "got {}", est.value);

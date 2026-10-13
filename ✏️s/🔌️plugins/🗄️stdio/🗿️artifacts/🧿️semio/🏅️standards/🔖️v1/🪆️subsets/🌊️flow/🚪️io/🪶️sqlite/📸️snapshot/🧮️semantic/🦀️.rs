@@ -1,8 +1,8 @@
 //! 🌊️ Borrowed Flow primitives count exact coordinates, ordered parameters and port-addressed edges.
 use super::{SemioFlowSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Flow native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Flow complete cell extent overflow"))}
@@ -20,7 +20,7 @@ impl Census{
 fn text(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{Ok(control.borrow_text(native::bytes(reader)?)?.len())}
 fn coordinate(value:f64)->usize{if value.is_nan(){11}else if value.is_infinite(){32}else{22}}
 /// 📦️ Counts the real binary field order without allocating a node or parameter.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
   let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
@@ -37,7 +37,7 @@ pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlit
  })
 }
 /// 📝️ Counts actual hexadecimal text and exact IEEE spellings with unchanged field defaults.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","nodes","edges"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   let mut nodes=native::Items::new(fields[1].unwrap_or("[]"))?;let count=nodes.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;

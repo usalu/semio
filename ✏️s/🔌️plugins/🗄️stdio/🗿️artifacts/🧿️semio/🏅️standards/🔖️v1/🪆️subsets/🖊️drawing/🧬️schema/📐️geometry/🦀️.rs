@@ -1,7 +1,7 @@
 //! 📐️ Owned drawing geometry, affine transforms, and path evaluation.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::snapshot::PathSegment;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::schema::snapshot::PathSegment;
 
 pub type Affine = [f64; 6];
 
@@ -24,16 +24,16 @@ pub fn semio_transform_affine(t: &SemioTransform) -> [f64; 6] {
 
 //#region 🔖️Flatten
 /// ✏️ One flattened subpath in local coordinates.
-pub(crate) struct Subpath {
-    pub(crate) points: Vec<[f64; 2]>,
-    pub(crate) closed: bool,
+pub struct Subpath {
+    pub points: Vec<[f64; 2]>,
+    pub closed: bool,
 }
 
 fn steps_for(length_in_pixels: f64) -> usize {
     (length_in_pixels / 2.0).ceil().clamp(1.0, 512.0) as usize
 }
 
-pub(crate) fn distance(a: [f64; 2], b: [f64; 2]) -> f64 {
+pub fn distance(a: [f64; 2], b: [f64; 2]) -> f64 {
     ((b[0] - a[0]).powi(2) + (b[1] - a[1]).powi(2)).sqrt()
 }
 
@@ -177,7 +177,7 @@ pub fn flatten_segments(segments: &[PathSegment], pixel_scale: f64) -> Vec<(Vec<
     flatten(segments, pixel_scale).into_iter().map(|subpath| (subpath.points, subpath.closed)).collect()
 }
 
-pub(crate) fn flatten(segments: &[PathSegment], pixel_scale: f64) -> Vec<Subpath> {
+pub fn flatten(segments: &[PathSegment], pixel_scale: f64) -> Vec<Subpath> {
     let mut subpaths: Vec<Subpath> = Vec::new();
     let mut current: Vec<[f64; 2]> = Vec::new();
     let mut start = [0.0, 0.0];

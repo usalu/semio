@@ -4,7 +4,7 @@
 //! player would compute clip length). A pure whole-snapshot scalar (one max-`t` fold) — no
 //! `InferredField` needed.
 
-use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::schema::snapshot::SemioAnimationSnapshot;
 
 //#region 🔖️Duration
 /// ⏱️ Semio animation's keyframe-derived playback duration.

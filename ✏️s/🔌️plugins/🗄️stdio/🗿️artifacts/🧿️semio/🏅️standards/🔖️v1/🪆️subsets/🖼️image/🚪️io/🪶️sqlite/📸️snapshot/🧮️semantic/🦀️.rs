@@ -1,8 +1,8 @@
 //! 🖼️ Borrowed Image primitives count every INTEGER sample and nullable ICC byte before native ownership.
 use super::{SemioImageSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use super::native_decoding::{Items,pair};
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Image native field differs from its authored shape")}
@@ -25,7 +25,7 @@ fn hex(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{if !value
 fn colorspace(value:u8)->Result<usize>{match value{0=>Ok(3),1=>Ok(4),2=>Ok(9),3=>Ok(15),4=>Ok(7),_=>Err(invalid())}}
 fn document_colorspace(value:Option<&str>)->Result<usize>{match value{None|Some("r")=>Ok(3),Some("a")=>Ok(4),Some("g")=>Ok(9),Some("y")=>Ok(15),Some("i")=>Ok(7),_=>Err(invalid())}}
 /// 📦️ Counts every frame byte as its authored five-INTEGER sample row.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
   let schema=text(&mut reader,control)?;reader.read_u32_le().map_err(|_|invalid())?;reader.read_u32_le().map_err(|_|invalid())?;let colorspace=colorspace(reader.read_u8().map_err(|_|invalid())?)?;reader.read_u8().map_err(|_|invalid())?;
@@ -38,15 +38,15 @@ pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlit
  })
 }
 /// 📝️ Preserves the original Image list grammar, u32 lexemes and nullable ICC presence.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","width","height","colorspace","bitDepth","icc","frames","metadata"],control)?;
   let schema=native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?;
-  for index in[1,2]{crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32(fields[index].ok_or_else(invalid)?).map_err(|_|invalid())?;}
-  let colorspace=document_colorspace(fields[3])?;if let Some(value)=fields[4]{crate::standards::v1::subsets::image::io::text::snapshot::parse_u8(value).map_err(|_|invalid())?;}
+  for index in[1,2]{semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32(fields[index].ok_or_else(invalid)?).map_err(|_|invalid())?;}
+  let colorspace=document_colorspace(fields[3])?;if let Some(value)=fields[4]{crate::io::text::snapshot::parse_u8(value).map_err(|_|invalid())?;}
   let icc=match fields[5]{None|Some("[0]")=>0,Some(value)=>{let(tag,value)=pair(value,control)?;if tag!="1"{return Err(invalid())}hex(value,control)?}};let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(add(32,schema)?,colorspace)?,icc)?)?;
   let mut frames=Items::new(fields[6].unwrap_or("[]"))?;let count=frames.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;
-  while let Some(value)=frames.next(control)?{let(delay,rgba)=pair(value,control)?;crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32(delay).map_err(|_|invalid())?;census.row(32)?;let count=hex(rgba,control)?;census.samples(count,control)?;control.step()?;}
+  while let Some(value)=frames.next(control)?{let(delay,rgba)=pair(value,control)?;semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32(delay).map_err(|_|invalid())?;census.row(32)?;let count=hex(rgba,control)?;census.samples(count,control)?;control.step()?;}
   let mut metadata=Items::new(fields[7].unwrap_or("[]"))?;let count=metadata.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;
   while let Some(value)=metadata.next(control)?{let(key,value)=pair(value,control)?;census.row(add(add(24,native::hex_text_extent(key,control)?)?,native::hex_text_extent(value,control)?)?)?;control.step()?;}control.checkpoint()
  })

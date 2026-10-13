@@ -8,7 +8,7 @@
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use super::DwgAnalyzer;
-    use crate::DwgSnapshot;
+    use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1018"), subset: SubsetId("*") };

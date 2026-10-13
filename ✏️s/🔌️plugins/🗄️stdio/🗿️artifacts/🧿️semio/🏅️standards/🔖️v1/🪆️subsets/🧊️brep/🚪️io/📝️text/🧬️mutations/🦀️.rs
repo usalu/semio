@@ -6,44 +6,44 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::brep::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
-use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_solid_shell};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_solid_shell};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_shell_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_shell_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_surface};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_surface};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_curve};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_curve};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_bool};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{parse_f64};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_point3};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_point3};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use crate::schema::diff::SemioBrepDiff;
+use crate::io::text::snapshot::dec_solid_shell;
+use crate::io::text::snapshot::enc_solid_shell;
+use crate::io::text::snapshot::dec_shell_face;
+use crate::io::text::snapshot::enc_shell_face;
+use crate::io::text::snapshot::dec_surface;
+use crate::io::text::snapshot::enc_surface;
+use crate::io::text::snapshot::dec_curve;
+use crate::io::text::snapshot::enc_curve;
+use crate::io::text::snapshot::enc_bool;
+use crate::io::text::snapshot::parse_f64;
+use crate::io::text::snapshot::dec_point3;
+use crate::io::text::snapshot::enc_point3;
+use crate::io::text::snapshot::dec_list;
+use crate::io::text::snapshot::enc_list;
+use crate::io::text::snapshot::dec_str;
+use crate::io::text::snapshot::enc_str;
+use crate::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
 /// needed, and flow's own mutations facet needs for the same reason).
 use protocol::{OpBinary, OpText};
-use crate::standards::v1::subsets::brep::schema::mutations::create_edge;
-use crate::standards::v1::subsets::brep::schema::mutations::create_face;
-use crate::standards::v1::subsets::brep::schema::mutations::create_shell;
-use crate::standards::v1::subsets::brep::schema::mutations::create_solid;
-use crate::standards::v1::subsets::brep::schema::mutations::create_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_edge;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_face;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_shell;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_solid;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::move_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::replace_curve;
-use crate::standards::v1::subsets::brep::schema::mutations::replace_surface;
+use crate::schema::mutations::create_edge;
+use crate::schema::mutations::create_face;
+use crate::schema::mutations::create_shell;
+use crate::schema::mutations::create_solid;
+use crate::schema::mutations::create_vertex;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_face;
+use crate::schema::mutations::delete_shell;
+use crate::schema::mutations::delete_solid;
+use crate::schema::mutations::delete_vertex;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_curve;
+use crate::schema::mutations::replace_surface;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Thirteen
 /// triads: vertex lifecycle (`create-vertex`/`delete-vertex`), edge lifecycle
@@ -90,7 +90,7 @@ pub(crate) fn print_brep_mutation(m: &SemioBrepMutation) -> String {
         SemioBrepMutation::CreateEdge(p) => format!("create-edge id={} start={} end={} curve={} tol={}{}", enc_str(&p.id), enc_str(&p.start_vertex), enc_str(&p.end_vertex), enc_curve(&p.curve), NativeF64(p.tol), enc_at(p.at)),
         SemioBrepMutation::DeleteEdge(p) => format!("delete-edge id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateFace(p) => {
-            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}{}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| crate::standards::v1::subsets::brep::io::text::snapshot::enc_loop_id(s)), enc_surface(&p.surface), enc_bool(p.orientation), NativeF64(p.tol), enc_at(p.at))
+            format!("create-face id={} outer={} inner={} surface={} orientation={} tol={}{}", enc_str(&p.id), enc_str(&p.outer_loop), enc_list(&p.inner_loops, |s: &String| crate::io::text::snapshot::enc_loop_id(s)), enc_surface(&p.surface), enc_bool(p.orientation), NativeF64(p.tol), enc_at(p.at))
         }
         SemioBrepMutation::DeleteFace(p) => format!("delete-face id={}", enc_str(&p.id)),
         SemioBrepMutation::CreateShell(p) => format!("create-shell id={} faces={}{}", enc_str(&p.id), enc_list(&p.faces, enc_shell_face), enc_at(p.at)),
@@ -118,9 +118,9 @@ pub(crate) fn parse_brep_mutation(line: &str) -> Result<SemioBrepMutation, Strin
         "create-face" => Ok(SemioBrepMutation::CreateFace(create_face::CreateFace {
             id: dec_str(arg("id")?)?,
             outer_loop: dec_str(arg("outer")?)?,
-            inner_loops: dec_list(arg("inner")?, crate::standards::v1::subsets::brep::io::text::snapshot::dec_loop_id)?,
+            inner_loops: dec_list(arg("inner")?, crate::io::text::snapshot::dec_loop_id)?,
             surface: dec_surface(arg("surface")?)?,
-            orientation: crate::standards::v1::subsets::brep::io::text::diff::parse_bool(arg("orientation")?)?,
+            orientation: crate::io::text::diff::parse_bool(arg("orientation")?)?,
             tol: parse_f64(arg("tol")?)?,
             at: dec_at(&args)?,
         })),

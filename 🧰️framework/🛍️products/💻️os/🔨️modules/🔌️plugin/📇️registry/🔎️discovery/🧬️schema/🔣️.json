@@ -185,8 +185,7 @@
         "contributes",
         "activationEvents",
         "extensionPoints",
-        "executionMode",
-        "hashes"
+        "executionMode"
       ],
       "properties": {
         "pluginId": {
@@ -291,29 +290,6 @@
         "executionMode": {
           "type": "string",
           "minLength": 1
-        },
-        "hashes": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "wasmSha256",
-            "coreWasmSha256",
-            "descriptorSha256"
-          ],
-          "properties": {
-            "wasmSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "coreWasmSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "descriptorSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
         }
       }
     },
@@ -334,8 +310,7 @@
         "activationEvents",
         "extensionPoints",
         "directoryName",
-        "executionMode",
-        "hashes"
+        "executionMode"
       ],
       "properties": {
         "pluginId": {
@@ -440,29 +415,6 @@
         "executionMode": {
           "type": "string",
           "minLength": 1
-        },
-        "hashes": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "wasmSha256",
-            "coreWasmSha256",
-            "descriptorSha256"
-          ],
-          "properties": {
-            "wasmSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "coreWasmSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            },
-            "descriptorSha256": {
-              "type": "string",
-              "pattern": "^[a-f0-9]{64}$"
-            }
-          }
         }
       }
     }

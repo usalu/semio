@@ -1,4 +1,5 @@
 use super::*;
+use semio_framework_plugin_interpreter::validate_cold_page;
 
 #[cfg(test)]
 #[path = "🧪️tests/📥️cold-pair/🦀️.rs"]
@@ -30,14 +31,6 @@ fn cursor(value: wit_reactor::ColdDocumentPairCursor) -> Result<ColdDocumentPair
         return Err(invalid("cold-pair cursor is invalid"));
     }
     Ok(ColdDocumentPairCursor { lifetime, transfer_generation: value.transfer_generation, page_index: value.page_index, page_count: value.page_count })
-}
-
-pub(super) fn validate_cold_page(page: &ColdDocumentPairPage) -> Result<(), TurnFault> {
-    let expected = page.header.page_length(page.page_index).map_err(invalid)?;
-    if page.bytes.len() != expected || page.header.baseline_frontier.chain_sha256 == [0; 32] {
-        return Err(invalid("cold-pair page length or verified frontier is invalid"));
-    }
-    Ok(())
 }
 
 pub(super) fn kernel_cold_page_to_wit(page: &ColdDocumentPairPage) -> Result<wit_reactor::ColdDocumentPairPage, TurnFault> {

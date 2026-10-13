@@ -17,7 +17,7 @@ impl SnapshotReadRegistryHandle {
         let Ok(mut state) = self.state.try_lock() else {
             return Err(owner);
         };
-        if state.free_len == 0 || state.slots.is_empty() {
+        if state.free_len == 0 || !state.slots.resident() {
             return Err(owner);
         }
         let generation = match state.next_generation.checked_add(1) {

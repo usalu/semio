@@ -29,11 +29,11 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn from_binary_and_from_text_round_trip_through_the_builder() {
         let snapshot = SemioAudioBuilderConstruction::new(22_050, SemioAudioFormat::Pcm24).add_channel(SemioAudioChannel { samples: vec![0.1] }).build().expect("build");
-        let bytes = <SemioAudioSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <SemioAudioSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let via_binary = SemioAudioBuilderConstruction::from_binary(&bytes).expect("from_binary").build().expect("build");
         assert_eq!(via_binary, snapshot);
 
-        let text = <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+        let text = <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
         let via_text = SemioAudioBuilderConstruction::from_text(&text).expect("from_text").build().expect("build");
         assert_eq!(via_text, snapshot);
     }

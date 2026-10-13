@@ -1,0 +1,542 @@
+{
+ "version": 1,
+ "timeline": {
+  "valid": [
+   {
+    "v": 1,
+    "atMs": 0,
+    "cpuPercent": 90.5,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   }
+  ],
+  "invalid": [
+   {
+    "v": 1,
+    "atMs": 0,
+    "cpuPercent": 101,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 0,
+    "cpuPercent": 50,
+    "cores": 0,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   }
+  ]
+ },
+ "cpu": [
+  {
+   "previous": {
+    "idle": 100,
+    "total": 200
+   },
+   "next": {
+    "idle": 130,
+    "total": 300
+   },
+   "percent": 70
+  },
+  {
+   "previous": {
+    "idle": 5,
+    "total": 5
+   },
+   "next": {
+    "idle": 5,
+    "total": 5
+   },
+   "percent": 0
+  }
+ ],
+ "critical": {
+  "units": [
+   {
+    "key": "a@a|host|p|lib",
+    "pass": "pass-0",
+    "profile": "p",
+    "target": "host",
+    "crate": "a",
+    "package": "a",
+    "version": "0.1.0",
+    "crateTypes": [
+     "lib"
+    ],
+    "primary": false,
+    "artifact": "/d/a-1",
+    "dependencies": [],
+    "buildScriptOutDir": null,
+    "predictedBytes": 644245094,
+    "requestMs": 0,
+    "admittedMs": 0,
+    "startMs": 0,
+    "endMs": 100,
+    "rmetaMs": 40,
+    "peakRssBytes": 100000000,
+    "userMs": 100,
+    "sysMs": 0,
+    "exit": 0
+   },
+   {
+    "key": "b@b|host|p|lib",
+    "pass": "pass-0",
+    "profile": "p",
+    "target": "host",
+    "crate": "b",
+    "package": "b",
+    "version": "0.1.0",
+    "crateTypes": [
+     "lib"
+    ],
+    "primary": false,
+    "artifact": "/d/b-1",
+    "dependencies": [
+     {
+      "artifacts": [
+       "/d/a-1"
+      ],
+      "edge": "rmeta"
+     }
+    ],
+    "buildScriptOutDir": null,
+    "predictedBytes": 644245094,
+    "requestMs": 40,
+    "admittedMs": 40,
+    "startMs": 40,
+    "endMs": 200,
+    "rmetaMs": 90,
+    "peakRssBytes": 160000000,
+    "userMs": 160,
+    "sysMs": 0,
+    "exit": 0
+   },
+   {
+    "key": "c@build_script_build|host|p|bin",
+    "pass": "pass-0",
+    "profile": "p",
+    "target": "host",
+    "crate": "build_script_build",
+    "package": "c",
+    "version": "0.1.0",
+    "crateTypes": [
+     "bin"
+    ],
+    "primary": false,
+    "artifact": "/d/build_script_build-1",
+    "dependencies": [],
+    "buildScriptOutDir": null,
+    "predictedBytes": 644245094,
+    "requestMs": 0,
+    "admittedMs": 0,
+    "startMs": 0,
+    "endMs": 30,
+    "rmetaMs": null,
+    "peakRssBytes": 30000000,
+    "userMs": 30,
+    "sysMs": 0,
+    "exit": 0
+   },
+   {
+    "key": "c@c|host|p|lib",
+    "pass": "pass-0",
+    "profile": "p",
+    "target": "host",
+    "crate": "c",
+    "package": "c",
+    "version": "0.1.0",
+    "crateTypes": [
+     "lib"
+    ],
+    "primary": false,
+    "artifact": "/d/c-1",
+    "dependencies": [
+     {
+      "artifacts": [
+       "/d/a-1"
+      ],
+      "edge": "rmeta"
+     }
+    ],
+    "buildScriptOutDir": "/o/c",
+    "predictedBytes": 644245094,
+    "requestMs": 120,
+    "admittedMs": 120,
+    "startMs": 120,
+    "endMs": 300,
+    "rmetaMs": 150,
+    "peakRssBytes": 180000000,
+    "userMs": 180,
+    "sysMs": 0,
+    "exit": 0
+   },
+   {
+    "key": "k@k|wasm32-wasip2|p|cdylib",
+    "pass": "pass-0",
+    "profile": "p",
+    "target": "wasm32-wasip2",
+    "crate": "k",
+    "package": "k",
+    "version": "0.1.0",
+    "crateTypes": [
+     "cdylib"
+    ],
+    "primary": true,
+    "artifact": "/d/k-1",
+    "dependencies": [
+     {
+      "artifacts": [
+       "/x/b-1",
+       "/d/b-1"
+      ],
+      "edge": "full"
+     },
+     {
+      "artifacts": [
+       "/d/c-1"
+      ],
+      "edge": "full"
+     }
+    ],
+    "buildScriptOutDir": null,
+    "predictedBytes": 644245094,
+    "requestMs": 300,
+    "admittedMs": 300,
+    "startMs": 300,
+    "endMs": 500,
+    "rmetaMs": null,
+    "peakRssBytes": 200000000,
+    "userMs": 200,
+    "sysMs": 0,
+    "exit": 0
+   }
+  ],
+  "runs": [
+   {
+    "pass": "pass-0",
+    "package": "c",
+    "outDir": "/o/c",
+    "endMs": 120
+   }
+  ],
+  "segments": [
+   {
+    "id": "/d/build_script_build-1",
+    "edge": "root",
+    "readyMs": 0,
+    "startMs": 0,
+    "endMs": 30
+   },
+   {
+    "id": "run:/o/c",
+    "edge": "full",
+    "readyMs": 30,
+    "startMs": 30,
+    "endMs": 120
+   },
+   {
+    "id": "/d/c-1",
+    "edge": "run",
+    "readyMs": 120,
+    "startMs": 120,
+    "endMs": 300
+   },
+   {
+    "id": "/d/k-1",
+    "edge": "full",
+    "readyMs": 300,
+    "startMs": 300,
+    "endMs": 500
+   }
+  ],
+  "remainingMs": {
+   "/d/k-1": 200,
+   "/d/c-1": 380,
+   "/d/b-1": 360,
+   "run:/o/c": 470,
+   "/d/build_script_build-1": 500,
+   "/d/a-1": 480
+  }
+ },
+ "idle": {
+  "rows": [
+   {
+    "v": 1,
+    "atMs": 0,
+    "cpuPercent": 90,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 10000,
+    "cpuPercent": 50,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 2,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 20000,
+    "cpuPercent": 40,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 2,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 30000,
+    "cpuPercent": 30,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 40000,
+    "cpuPercent": 20,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 50000,
+    "cpuPercent": 95,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   },
+   {
+    "v": 1,
+    "atMs": 60000,
+    "cpuPercent": 40,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 1
+   },
+   {
+    "v": 1,
+    "atMs": 70000,
+    "cpuPercent": 30,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 1
+   },
+   {
+    "v": 1,
+    "atMs": 80000,
+    "cpuPercent": 20,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 1
+   },
+   {
+    "v": 1,
+    "atMs": 90000,
+    "cpuPercent": 10,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 1
+   },
+   {
+    "v": 1,
+    "atMs": 100000,
+    "cpuPercent": 99,
+    "cores": 10,
+    "memoryTotalBytes": 34359738368,
+    "memoryAvailableBytes": null,
+    "swapUsedBytes": null,
+    "swapOutBytesPerSecond": null,
+    "rustcRunning": 1,
+    "admissionWaiting": 0,
+    "rustcRssBytes": 0,
+    "frozen": false,
+    "tokensHeld": 1,
+    "stagesRunning": 0,
+    "stagesWaiting": 0
+   }
+  ],
+  "windows": [
+   {
+    "startMs": 10000,
+    "endMs": 40000,
+    "meanCpuPercent": 35,
+    "cause": "memory-blocked"
+   },
+   {
+    "startMs": 60000,
+    "endMs": 90000,
+    "meanCpuPercent": 25,
+    "cause": "stage-blocked"
+   }
+  ]
+ },
+ "fanOut": [
+  {
+   "library": "a@a (p)",
+   "components": 1,
+   "meanComponentMs": 200,
+   "costMs": 200
+  },
+  {
+   "library": "b@b (p)",
+   "components": 1,
+   "meanComponentMs": 200,
+   "costMs": 200
+  },
+  {
+   "library": "c@c (p)",
+   "components": 1,
+   "meanComponentMs": 200,
+   "costMs": 200
+  }
+ ],
+ "report": {
+  "headings": [
+   "## Summary",
+   "## Phases",
+   "## Passes",
+   "## Critical path",
+   "## Top 20 units by CPU",
+   "## Top 20 units by peak",
+   "## Idle windows",
+   "## Relink fan-out (L9)",
+   "## Stage overlap"
+  ]
+ },
+ "timings": {
+  "tokens": 2,
+  "physicalGiB": 22,
+  "crates": [
+   "base",
+   "left",
+   "right",
+   "top"
+  ],
+  "toleranceMs": 1500,
+  "toleranceFraction": 0.25
+ }
+}

@@ -1,8 +1,8 @@
 //! 💥️ `delete-brep` — clears the object's `brep` CHILD slot. Idempotent (a no-op if already
 //! empty); the inverse captures the escrowed handle from BASE so undo restores it exactly.
 
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

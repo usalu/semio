@@ -21,7 +21,7 @@ fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse()
     assert_ne!(base, edited);
     let mutation = BmpMutation::ReplaceImage(ReplaceImage { image: edited.image.clone() });
     let factory = <BmpEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the BMP document lane declares a preparation factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
@@ -48,7 +48,7 @@ fn publication_preparation_turns_are_bounded_by_pages_and_paged_paints_restore()
     use semio_framework_value::retained_clone::RETAINED_CLONE_BULK_PAGE_BYTES;
     use semio_s_artifact_stdio_bmp::schema::mutations::PaintDirectRegion;
     use semio_s_artifact_stdio_bmp::schema::operations::bmp_revision;
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let sample_bytes = std::mem::size_of::<semio_s_artifact_stdio_bmp::schema::snapshot::BmpNativeSample>();
     let mut turns_by_size = Vec::new();
     for (width, height, region) in [(128u32, 64u32, (3u32, 5u32, 2u32, 2u32)), (512, 256, (3, 5, 2, 2)), (128, 64, (10, 4, 64, 40))] {

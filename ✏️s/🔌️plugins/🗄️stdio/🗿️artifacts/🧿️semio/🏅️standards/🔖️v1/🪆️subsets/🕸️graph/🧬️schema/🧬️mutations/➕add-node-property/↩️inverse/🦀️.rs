@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `AddNodeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{remove_node_property::RemoveNodeProperty, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use {crate::schema::mutations::remove_node_property::RemoveNodeProperty, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `remove-node-property` of the attached key; nothing when the add would not apply (no node, or

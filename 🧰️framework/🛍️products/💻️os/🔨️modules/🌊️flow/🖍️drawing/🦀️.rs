@@ -1099,4 +1099,7 @@ fn drawing_base64_encode(data: &[u8]) -> String {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️drawing-kernel/🦀️.rs"]
 mod drawing_kernel_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️path-segment-json/🦀️.rs"]
+mod path_segment_json_tests;
 // #endregion 🔖️Tests

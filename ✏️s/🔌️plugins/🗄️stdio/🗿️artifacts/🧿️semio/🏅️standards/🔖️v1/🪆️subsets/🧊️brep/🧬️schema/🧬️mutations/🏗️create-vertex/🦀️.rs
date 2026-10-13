@@ -1,8 +1,8 @@
 //! 🏗️ `create-vertex` — brings a new id-keyed vertex into existence at `point`. A duplicate `id` already present in `base` is a no-op (never a duplicate id).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

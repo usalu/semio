@@ -22,7 +22,7 @@ mod tests {
 
     #[test]
     fn multiscale_entropy_reports_requested_scales_for_long_series() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
         let inner = MsInner::Permutation(OrdinalConfig::new(3, 1).unwrap());
         let cfg = MultiscaleConfig::new(5, Grain::Mean, inner).unwrap();
@@ -45,7 +45,7 @@ mod tests {
 
         #[test]
         fn white_noise_multiscale_entropy_differs_from_pink_like_noise() {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
             let n = 4000;
             let white: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
             // 🔐️ a crude 1/f-like signal via running-sum (integrated white noise).
@@ -56,7 +56,7 @@ mod tests {
             })
             .take(n)
             .collect();
-            let inner = MsInner::SampleEntropy(RegularityConfig::new(2, crate::standards::v1::subsets::table::schema::entropy_internals::Tolerance::Auto).unwrap());
+            let inner = MsInner::SampleEntropy(RegularityConfig::new(2, crate::schema::entropy_internals::Tolerance::Auto).unwrap());
             let cfg = MultiscaleConfig::new(4, Grain::Mean, inner).unwrap();
             let white_result = multiscale_entropy(&white, &cfg, LogBase::Nats).unwrap();
             let pink_result = multiscale_entropy(&pink, &cfg, LogBase::Nats).unwrap();

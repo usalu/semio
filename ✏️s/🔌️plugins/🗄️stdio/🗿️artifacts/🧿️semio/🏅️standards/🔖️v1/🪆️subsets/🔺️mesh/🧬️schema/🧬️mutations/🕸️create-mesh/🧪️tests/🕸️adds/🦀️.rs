@@ -6,10 +6,10 @@
 //! the id-keyed add (a local fix over the shared engine, which could only ever append), and the
 //! index is `base.meshes.len()`, i.e. the end.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️adds/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️adds/📸️snapshot/➡️after/🔣️.json");

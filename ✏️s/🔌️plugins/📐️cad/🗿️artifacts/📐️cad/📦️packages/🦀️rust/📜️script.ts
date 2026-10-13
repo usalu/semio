@@ -14,18 +14,18 @@ class OwnedVerifyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length === 1 && segments[0] === "activation-source") {
       const tests = resolve(this.root, "../../🧪️tests/🚀️activation/🟦️.ts");
-      await runRepositoryCommand(process.execPath, ["test", tests], this.repoRoot, "cad-owned-activation-source");
+      await runRepositoryCommand(this.invocation,process.execPath,["test", tests],this.repoRoot,"cad-owned-activation-source",{version:1,maximumElapsedMilliseconds:0,output:null});
       return;
     }
     if (segments.length === 1 && segments[0] === "reference-owner-syntax") {
       const tests = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📎️references/🧪️tests/🟦️.ts");
-      await runRepositoryCommand(process.execPath, ["test", tests], this.repoRoot, "cad-unmounted-reference-owner-syntax");
+      await runRepositoryCommand(this.invocation,process.execPath,["test", tests],this.repoRoot,"cad-unmounted-reference-owner-syntax",{version:1,maximumElapsedMilliseconds:0,output:null});
       return;
     }
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const subset = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any");
       const sources = ["🧬️schema/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🟦️.ts", "🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"].map(file => resolve(subset, file));
-      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...sources], this.repoRoot, "cad-snapshot-sqlite-public-types");
+      await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", ...sources],this.repoRoot,"cad-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
       return;
     }
 if (segments[0] === "cad-document-contract") {

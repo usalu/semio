@@ -1,8 +1,8 @@
 //! 📦️ Borrowed placement words and independent child targets admit complete relational cells.
 use super::{SemioObjectSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Object native field differs from its declared shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Object complete cell extent overflow"))}
@@ -31,13 +31,13 @@ fn text_child(value:&str,subset:&str,census:&mut Census,control:&mut NativeDecod
  census.row(add(24,id)?)?;census.row(add(add(add(add(8,artifact)?,kind)?,standard)?,subset)?)
 }
 /// 🧊️ Counts the original ten raw binary64 words and three optional child pairs.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}let schema=text(&mut reader,control)?;if schema!="stdio.semio.object"{return Err(invalid())}let mut bytes=add(8,schema.len())?;control.begin_stage(13)?;
  for _ in 0..10{let word=reader.read_bytes(8).map_err(|_|invalid())?;let word=f64::from_le_bytes(word.try_into().map_err(|_|invalid())?);bytes=add(bytes,float_bytes(word))?;control.step()?;}
  let mut census=Census{limits,rows:0,bytes:0};census.row(bytes)?;for subset in["brep","mesh","value"]{binary_child(&mut reader,subset,&mut census,control)?;control.step()?;}if reader.remaining()!=0{return Err(invalid())}control.checkpoint()})
 }
 /// 📝️ Preserves exact float words, omitted optional children and independent local identities.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{let fields=native::fields(body,["schema","transform","brep","mesh","properties"],control)?;let schema=hex(fields[0].ok_or_else(invalid)?,Some("stdio.semio.object"),control)?;let words:[&str;10]=native::record(fields[1].ok_or_else(invalid)?,control)?;let mut bytes=add(8,schema)?;control.begin_stage(13)?;
  for word in words{bytes=add(bytes,float_bytes(native::float(word,control)?))?;control.step()?;}
  let mut census=Census{limits,rows:0,bytes:0};census.row(bytes)?;for(field,subset)in fields[2..].iter().zip(["brep","mesh","value"]){text_child(field.unwrap_or("[]"),subset,&mut census,control)?;control.step()?;}control.checkpoint()})

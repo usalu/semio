@@ -2,12 +2,12 @@
 
 use geo::BoundingRect;
 use semio_framework_os_kernel as store;
-use semio_framework_os_kernel::{ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactPack, DslValue, FromValue, Mutation, MutationDiff};
 use semio_framework_plugin::{ArtifactInferenceExecutionRequest, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode};
 use semio_s_artifact_gis_gismap::{gis_map_inference_service, gis_map_snapshot_with_derived_children, infer_gis_map_controlled, GisMapSnapshot};
 use semio_hub_gis::native_codecs::native_codec_factory_receipts;
 
-fn assert_zero_history<P, M>(parsed: store::ParsedDocumentText<P, M>, document_id: &str, dialect: &semio_framework::ArtifactDialect) {
+fn assert_zero_history<P, M>(parsed: store::os_store::text_format::ParsedDocumentText<P, M>, document_id: &str, dialect: &semio_framework::ArtifactDialect) {
     let envelope = parsed.envelope.into_owners();
     assert_eq!(envelope.id, document_id);
     assert_eq!(envelope.dialect.as_ref(), Some(dialect));
@@ -29,8 +29,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
     let snapshot = GisMapSnapshot::default();
     let pack = snapshot.encode_pack();
     let (envelope, _) = store::semio_format::unwrap_binary(&pack).unwrap();
-    assert_eq!(envelope.envelope_id(), <GisMapSnapshot as store::ArtifactDsl>::envelope_id());
-    assert_ne!(envelope.envelope_id(), <GisMapSnapshot as store::ArtifactDsl>::EXTENSION);
+    assert_eq!(envelope.envelope_id(), <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id());
+    assert_ne!(envelope.envelope_id(), <GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION);
     assert_eq!(GisMapSnapshot::decode_pack(&pack).unwrap(), snapshot);
     let receipts = native_codec_factory_receipts().expect("complete inert GIS closure");
     assert_eq!(receipts.len(), fixture["receipts"].as_array().unwrap().len());
@@ -52,8 +52,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         assert_eq!(codec.pack_schema_hash, identity.pack_schema_hash);
         assert_ne!(codec.pack_schema_hash, [0; 32]);
         let declared = match identity.schema {
-            "gis.map" => store::ArtifactCodec::bare::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(identity.schema),
-            "gis.terrain" => store::ArtifactCodec::bare::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(identity.schema),
+            "gis.map" => store::bare_artifact_codec::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(identity.schema),
+            "gis.terrain" => store::bare_artifact_codec::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(identity.schema),
             _ => panic!("unhandled GIS schema"),
         };
         assert_eq!(codec.schema, declared.schema);
@@ -86,8 +86,8 @@ async fn gis_native_receipts_bind_literal_two_codec_closure_without_identity_or_
         }
         .expect("package-owned GIS genesis");
         match identity.schema {
-            "gis.map" => assert_zero_history(store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
-            "gis.terrain" => assert_zero_history(store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
+            "gis.map" => assert_zero_history(store::os_store::text_format::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
+            "gis.terrain" => assert_zero_history(store::os_store::text_format::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&files.pack, &files.spr).await.unwrap(), document_id, &dialect),
             _ => unreachable!(),
         }
         for row in document_ids["cases"].as_array().unwrap().iter().filter(|row| row["accepted"] == false) {
@@ -213,16 +213,16 @@ async fn gis_guest_genesis_is_byte_for_byte_the_linked_codec_pair_on_one_generat
         // snapshot and mutation types and reprinting it must return the identical pack, spr and ops.
         let reprinted = match schema {
             "gis.map" => {
-                let parsed = store::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&guest.pack, &guest.spr).await.unwrap();
+                let parsed = store::os_store::text_format::parse_document_pack::<GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>(&guest.pack, &guest.spr).await.unwrap();
                 let envelope = parsed.into_envelope();
-                let printed = store::print_document_pack(&envelope).await;
+                let printed = store::os_store::text_format::print_document_pack(&envelope).await;
                 drop(envelope.into_owners());
                 printed
             }
             "gis.terrain" => {
-                let parsed = store::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&guest.pack, &guest.spr).await.unwrap();
+                let parsed = store::os_store::text_format::parse_document_pack::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>(&guest.pack, &guest.spr).await.unwrap();
                 let envelope = parsed.into_envelope();
-                let printed = store::print_document_pack(&envelope).await;
+                let printed = store::os_store::text_format::print_document_pack(&envelope).await;
                 drop(envelope.into_owners());
                 printed
             }

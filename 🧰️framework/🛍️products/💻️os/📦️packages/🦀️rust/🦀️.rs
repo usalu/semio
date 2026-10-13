@@ -211,6 +211,9 @@ pub mod os_identity;
 #[path = "../../🔨️modules/🔌️plugin/📇️registry/📦️deployment/🧬️schema/🦀️.rs"]
 pub mod os_plugin_module_schema;
 
+#[path = "../../🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🦀️.rs"]
+pub mod os_component_receipt;
+
 #[path = "../../🔨️modules/📇️directory/🦀️.rs"]
 pub mod os_directory;
 

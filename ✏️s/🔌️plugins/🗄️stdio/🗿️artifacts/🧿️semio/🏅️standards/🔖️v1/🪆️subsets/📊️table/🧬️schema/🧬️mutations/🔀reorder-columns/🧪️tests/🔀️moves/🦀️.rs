@@ -6,10 +6,10 @@
 //! `cells`. Moving the LAST column to the front is the case that would break loudest if the row
 //! half of that cascade were missing, which is why it is the one committed here.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔀reorder-columns/🔀️moves/📸️snapshot/➡️after/🔣️.json");
@@ -51,7 +51,7 @@ async fn the_undo_reorder_returns_the_column_to_its_base_index() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
-        vec![SemioTableMutation::ReorderColumns(crate::standards::v1::subsets::table::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
+        vec![SemioTableMutation::ReorderColumns(crate::schema::mutations::reorder_columns::ReorderColumns { name: "area".to_string(), to_index: 2 })],
         "the undo must send the column back to the index it originally occupied in base"
     );
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-columns applies");

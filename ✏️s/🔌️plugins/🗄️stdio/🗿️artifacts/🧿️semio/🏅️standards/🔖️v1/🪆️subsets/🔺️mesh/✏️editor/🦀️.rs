@@ -2,10 +2,10 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioMeshEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::editor::semio_mesh::modes::edit;
-use crate::editor::semio_mesh::modes::edit::windows::main;
-use crate::standards::v1::subsets::mesh::schema::mutations::{SemioMeshMutation};
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::editor::modes::edit;
+use crate::editor::modes::edit::windows::main;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::ArtifactCommandInputs;
@@ -141,11 +141,11 @@ fn move_vertex_mutation(snapshot: &SemioMeshSnapshot, args: &SemioMeshSetVertexA
     let (mesh_index, primitive_index) = resolve_unique_mesh_target(snapshot, &args.mesh_id, &args.primitive_id)?;
     let primitive = &snapshot.meshes[mesh_index].primitives[primitive_index];
     let current = primitive.positions.get(args.vertex_index).ok_or_else(|| Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)))?;
-    let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
+    let new_point = semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
     if *current == new_point {
         return Ok(None);
     }
-    Ok(Some(SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex { mesh_id: args.mesh_id.clone(), primitive_id: args.primitive_id.clone(), vertex_index: args.vertex_index, new_point })))
+    Ok(Some(SemioMeshMutation::MoveVertex(crate::schema::mutations::move_vertex::MoveVertex { mesh_id: args.mesh_id.clone(), primitive_id: args.primitive_id.clone(), vertex_index: args.vertex_index, new_point })))
 }
 
 impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork {
@@ -217,11 +217,11 @@ impl ArtifactCommandWork<EditorApp<SemioMeshEditor>> for SemioMeshSetVertexWork 
             return Err(Fault::from(format!("vertex {} does not exist in primitive '{}'", args.vertex_index, args.primitive_id)));
         };
         self.complete = true;
-        let new_point = crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
+        let new_point = semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: args.point[0], y: args.point[1], z: args.point[2] };
         if *current == new_point {
             return Ok(ArtifactCommandWorkStep::Complete(Emit::default()));
         }
-        Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![SemioMeshMutation::MoveVertex(crate::standards::v1::subsets::mesh::schema::mutations::move_vertex::MoveVertex {
+        Ok(ArtifactCommandWorkStep::Complete(Emit::mutations(vec![SemioMeshMutation::MoveVertex(crate::schema::mutations::move_vertex::MoveVertex {
             mesh_id: args.mesh_id.clone(),
             primitive_id: args.primitive_id.clone(),
             vertex_index: args.vertex_index,
@@ -240,7 +240,7 @@ fn semio_mesh_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommand
 //#endregion 🔖️Command
 
 #[path = "🧭️edit-rules/🦀️.rs"]
-pub(crate) mod edit_rules;
+pub mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

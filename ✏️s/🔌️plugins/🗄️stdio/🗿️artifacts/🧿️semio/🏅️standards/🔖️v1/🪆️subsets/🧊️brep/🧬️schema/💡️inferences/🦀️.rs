@@ -15,12 +15,12 @@
 //! (already real, kernel-scope functions) are now reachable from here honestly, no
 //! straight-line-approximation shim.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_framework_3d::brep::engine::contract::MeshTransfer;
-use semio_framework_3d::brep::queries::mass_properties::solid_mass_properties;
-use semio_framework_3d::brep::queries::tessellation::tessellate_solid;
-use semio_framework_3d::brep::representation::topology::Body;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_framework_3d_brep_representation::contract::MeshTransfer;
+use semio_framework_3d_brep_queries::mass_properties::solid_mass_properties;
+use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_representation::topology::Body;
+use crate::schema::snapshot::SemioBrepSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::validation_report::{BrepValidationDiagnostic, BrepValidationReport};
@@ -34,7 +34,7 @@ pub const BREP_INFERENCE_DEFAULT_DEFLECTION: f64 = 0.1;
 
 /// 🧩️ Tessellates every solid in `body` and merges them into ONE [`MeshTransfer`] (index/vertex
 /// offsets adjusted per solid, `face_groups`/`edge_groups` keyed by each entity's own
-/// [`semio_framework_3d::brep::representation::topology::history::PersistentLabel`]
+/// [`semio_framework_3d_brep_representation::topology::history::PersistentLabel`]
 /// so a picked triangle/segment still resolves to the right face/edge regardless of which solid it
 /// came from) — the inference field is a single `MeshTransfer` (not one per solid), so a
 /// multi-solid document's whole tessellated scene is exactly one dependency-hash-chained value.
@@ -51,8 +51,8 @@ pub fn tessellate_document(body: &Body, deflection: f64) -> MeshTransfer {
         merged.index.extend(mesh.index.into_iter().map(|i| i + vertex_offset));
         merged.edges.extend(mesh.edges);
         merged.points.extend(mesh.points);
-        merged.face_groups.extend(mesh.face_groups.into_iter().map(|g| semio_framework_3d::brep::engine::contract::FaceGroup { start: g.start + index_offset, count: g.count, entity_id: g.entity_id }));
-        merged.edge_groups.extend(mesh.edge_groups.into_iter().map(|g| semio_framework_3d::brep::engine::contract::EdgeGroup { start: g.start + edge_segment_offset, count: g.count, entity_id: g.entity_id }));
+        merged.face_groups.extend(mesh.face_groups.into_iter().map(|g| semio_framework_3d_brep_representation::contract::FaceGroup { start: g.start + index_offset, count: g.count, entity_id: g.entity_id }));
+        merged.edge_groups.extend(mesh.edge_groups.into_iter().map(|g| semio_framework_3d_brep_representation::contract::EdgeGroup { start: g.start + edge_segment_offset, count: g.count, entity_id: g.entity_id }));
         merged.face_infos.extend(mesh.face_infos);
         merged.edge_infos.extend(mesh.edge_infos);
     }
@@ -115,7 +115,7 @@ impl protocol::Inference<SemioBrepSnapshot> for SemioBrepInference {
     fn infer(snapshot: &SemioBrepSnapshot) -> Result<Self, semio_framework_value::ValueError> {
         Ok({
         let validation_report = store::infer_field::<SemioBrepSnapshot, BrepValidationReport>(snapshot, None).remove("document").unwrap_or_default();
-        let (tessellation, mass_properties) = match crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot) {
+        let (tessellation, mass_properties) = match crate::schema::snapshot::body::body_from_snapshot(snapshot) {
             Ok(body) => (tessellate_document(&body, BREP_INFERENCE_DEFAULT_DEFLECTION), document_mass_properties(&body, BREP_INFERENCE_DEFAULT_DEFLECTION)),
             Err(_) => (MeshTransfer::default(), BrepMassProperties::default()),
         };

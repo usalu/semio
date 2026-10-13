@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn preview_lifecycle_matches_language_neutral_third_party_oracle() {

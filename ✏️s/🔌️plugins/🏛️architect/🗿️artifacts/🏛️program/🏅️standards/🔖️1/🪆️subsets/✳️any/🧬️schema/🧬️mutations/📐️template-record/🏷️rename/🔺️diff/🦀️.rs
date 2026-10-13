@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📐templates` per Wave C.
 
 use super::RenameTemplateRecord;
-use crate::diff::{ProgramTemplatesDelta, ProgramTemplatesPatchEntry};
-use crate::registers::TemplateRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramTemplatesDelta, ProgramTemplatesPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::TemplateRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameTemplateRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

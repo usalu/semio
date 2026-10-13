@@ -29,7 +29,7 @@ default = ["sqlite", "native-artifact-execution"]
 sqlite = ["dep:rusqlite", "db/sqlite"]
 postgres = ["dep:sqlx_core", "dep:sqlx_postgres", "db/postgres"]
 neo4j = ["dep:neo4rs", "db/neo4j"]
-native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio", "dep:semio-hub-stdio", "semio-hub-stdio/full-artifact-catalog", "dep:semio-hub-gis", "dep:semio-hub-vcs"]
+native-artifact-execution = ["dep:semio-s-artifact-stdio-json", "dep:semio-s-artifact-stdio-semio-drawing", "dep:semio-s-artifact-stdio-semio-value", "dep:semio-hub-stdio-catalog", "dep:semio-hub-gis", "dep:semio-hub-vcs"]
 # 🏗️ Test-only, cross-target: compiles the real GIS Map profile builder in
 # `🌎️hub/🧪️tests/🔏️trusted-catalog-profile/` so the `os-hub` BINARY target's own laws can
 # construct a verified catalog and frozen Map binding. `#[cfg(test)]` cannot serve another target, so
@@ -55,12 +55,14 @@ semio-framework-hash = { path = "../../../🧰️framework/🔨️modules/🔏�
 # level, and an injectable sink. `AGENTS.md` forbids a runtime dependency on `tracing`, and a
 # second, hub-local logger would be exactly the drift the shared module exists to prevent.
 semio-framework-trace = { workspace = true }
-semio-hub-stdio = { workspace = true, optional = true }
+semio-hub-stdio-catalog = { workspace = true, optional = true }
 semio-s-artifact-stdio-json = { workspace = true, optional = true }
-semio-s-artifact-stdio-semio = { workspace = true, optional = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true, optional = true }
+semio-s-artifact-stdio-semio-value = { workspace = true, optional = true }
 semio-hub-gis = { workspace = true, optional = true }
 semio-hub-vcs = { workspace = true, optional = true }
 semio-framework-plugin-host = { path = "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter = { workspace = true }
 # 🧬️ The os-kernel-free named-export registry (`📋️execution-contract.md` §C): every `🧬️schema/🦀️.rs`
 # of this crate registers its scope's exports through it, so registration is production code and not
 # a test artefact. It is a leaf crate — depending on it introduces no os-kernel edge.

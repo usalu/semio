@@ -383,7 +383,7 @@ test("schema raw-coordinate freezing binds exact parsed bytes catalog owner and 
   const functions = tree.statements.filter((node) => ts.isFunctionDeclaration(node) && ["isFrozenSourceCoordinateToken", "jsonStringCoordinates"].includes(node.name?.text ?? ""));
   expect(functions).toHaveLength(2);
   const compiled = ts.transpileModule(functions.map((node) => node.getText(tree)).join("\n"), { compilerOptions: { target: ts.ScriptTarget.ES2022, module: ts.ModuleKind.None } }).outputText;
-  const names = ["frozenEvidenceCoordinateAuthority", "frozenPlanCoordinateAuthority", "sourceRelative", "relative", "sha256", "canonicalJson", "exactOwnedFileCatalog", "semanticPackageProjectionCatalog", "parseSemanticOwnedCurrentSourceRevisions", "frozenCoordinateCache"];
+  const names = ["frozenEvidenceRecord", "frozenPlanCoordinateAuthority", "sourceRelative", "relative", "sha256", "canonicalJson", "exactOwnedFileCatalog", "semanticPackageProjectionCatalog", "parseSemanticOwnedCurrentSourceRevisions", "frozenCoordinateCache"];
   const predicate = new Function(...names, compiled + ";return isFrozenSourceCoordinateToken;")(() => null, () => ({ coordinates: new Set() }), (path: string) => path.replaceAll("\\", "/"), relative, sha, canonicalJson, (repo: string, taxonomy: any) => discovery.semanticExactOwnedFileCatalog(repo, taxonomy.discoverySchema), () => null, discovery.parseSemanticOwnedCurrentSourceRevisions, new WeakMap());
   for (const row of vector.frozenBindingCases) {
     const candidate = candidateTaxonomy(), binding = candidate.semanticOwnedFileProjectionContracts[vector.contractId].currentSourceRevisions[vector.revisionId];

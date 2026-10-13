@@ -10,7 +10,7 @@ fn role_words(source: &mut dyn ObjectSource, value: &PdfObject) -> Vec<u8> { mat
 fn role_text(source: &mut dyn ObjectSource, value: &PdfObject) -> String { match source.semantic_role(value, PdfStreamRoleKind::MetadataText) { Some(PdfStreamRoleValue::MetadataText { text }) => text, _ => String::new() } }
 fn base_encoding_from_name(name: &str) -> Option<PdfBaseEncoding> { match name { "StandardEncoding" => Some(PdfBaseEncoding::Standard), "WinAnsiEncoding" => Some(PdfBaseEncoding::WinAnsi), "MacRomanEncoding" => Some(PdfBaseEncoding::MacRoman), "MacExpertEncoding" => Some(PdfBaseEncoding::MacExpert), _ => None } }
 use colour::{array_n, extra_entries, lift_colour_space, lift_ext_g_state, lift_shading, matrix_of, numbers_of, rect_of};
-#[cfg(test)] use colour::{lift_function};
+#[cfg(test)] use colour::lift_function;
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap, HashSet};

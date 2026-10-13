@@ -1,7 +1,8 @@
 //! 🏷️ Authoritative PDF/UA mutation for setting the document title conformance axis.
 
 use super::PdfUaMutation;
-use crate::standards::v1_7::subsets::base::schema::{diff::{PdfDiff, PdfInfoDiff, PdfSet}, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::diff::{PdfDiff, PdfInfoDiff, PdfSet};
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

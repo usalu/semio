@@ -1,6 +1,6 @@
 //! 🖼️ Authored overlapping-model bitmap fields and ordered problem entities.
 use crate::standards::v1::subsets::any::schema::snapshot::{BitmapSnapshot,BitmapInput,BitmapOutputSpec,BitmapOverlappingModel,BitmapColor,BitmapPinnedPixel};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,NativeEncodingBound}}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteSnapshotControl,SqliteSnapshotPhase,SqliteValue,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,RowWriter,Reconstruction,NativeEncodingBound}}};
 use std::collections::BTreeSet;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}

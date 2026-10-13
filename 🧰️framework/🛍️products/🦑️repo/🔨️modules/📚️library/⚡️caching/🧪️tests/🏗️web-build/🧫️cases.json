@@ -1,0 +1,9 @@
+{
+  "modes": [
+    {"mode": "prototype", "minify": false, "cssMinify": false, "sourcemap": true, "profile": "wasm-prototype"},
+    {"mode": "release", "minify": "esbuild", "cssMinify": true, "sourcemap": false, "profile": "wasm-release"}
+  ],
+  "invalidModes": ["dev", "ship", "production", "", null],
+  "source": "const message = 'build-mode-oracle'; console.log(message); document.body.dataset.mode = message;",
+  "owner": "fixture:web-build"
+}

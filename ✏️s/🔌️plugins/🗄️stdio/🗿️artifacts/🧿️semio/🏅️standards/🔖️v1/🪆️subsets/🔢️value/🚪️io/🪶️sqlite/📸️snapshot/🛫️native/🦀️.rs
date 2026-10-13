@@ -1,10 +1,10 @@
 //! 🌳️ Writes explicit lexeme-preserving Semio values with ordered entries and bounded recursion.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry,SemioValueNode,SemioValueSnapshot};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
-pub(crate) fn encode(snapshot:&SemioValueSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.value.dsl v1\n","stdio.semio.value.pack v1",control,|control|crate::standards::v1::subsets::value::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,_|fields(snapshot,writer),native_owner)}
-pub(crate) fn value(value:&SemioValue,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding,depth:usize)->Result<(),ValueError>{
+pub(crate) fn encode(snapshot:&SemioValueSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.value.dsl v1\n","stdio.semio.value.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(snapshot,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,_|fields(snapshot,writer),native_owner)}
+pub fn value(value:&SemioValue,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding,depth:usize)->Result<(),ValueError>{
  if depth>=64{return Err(ValueError::new(ValueRefusalKind::DepthLimit,"Semio native value output exceeds depth 64"))}writer.entities(1)?;
  let (binary,text)=match value{SemioValue::Null=>(0,b'Z'),SemioValue::Bool{..}=>(1,b'B'),SemioValue::Int{..}=>(2,b'I'),SemioValue::Float{..}=>(3,b'F'),SemioValue::Str{..}=>(4,b'S'),SemioValue::Bytes{..}=>(5,b'Y'),SemioValue::List{..}=>(6,b'L'),SemioValue::Map{..}=>(7,b'M'),SemioValue::Ref{..}=>(8,b'R')};
  writer.byte(if encoding==SnapshotEncoding::Binary{binary}else{text})?;
@@ -20,6 +20,6 @@ pub(crate) fn value(value:&SemioValue,writer:&mut Writer<'_,'_,'_>,encoding:Snap
  SemioValue::Map{entries}=>writer.list(entries,encoding,|writer,item|entry(item,writer,encoding,depth+1))
  }
 }
-pub(crate) fn entry(entry:&SemioValueEntry,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding,depth:usize)->Result<(),ValueError>{writer.string(&entry.key,encoding)?;writer.delimiter(b":",encoding)?;value(&entry.value,writer,encoding,depth)}
+pub fn entry(entry:&SemioValueEntry,writer:&mut Writer<'_,'_,'_>,encoding:SnapshotEncoding,depth:usize)->Result<(),ValueError>{writer.string(&entry.key,encoding)?;writer.delimiter(b":",encoding)?;value(&entry.value,writer,encoding,depth)}
 fn node(node:&SemioValueNode,writer:&mut Writer<'_,'_,'_>)->Result<(),ValueError>{writer.string(&node.id.value,SnapshotEncoding::Text)?;writer.bytes(b":")?;value(&node.value,writer,SnapshotEncoding::Text,0)}
-pub(crate) fn fields(snapshot:&SemioValueSnapshot,writer:&mut Writer<'_,'_,'_>)->Result<(),ValueError>{writer.entities(1)?;writer.bytes(b"[")?;writer.string(&snapshot.schema,SnapshotEncoding::Text)?;writer.bytes(b",")?;value(&snapshot.root,writer,SnapshotEncoding::Text,0)?;writer.bytes(b",")?;writer.list(&snapshot.nodes,SnapshotEncoding::Text,|writer,item|node(item,writer))?;writer.bytes(b"]")}
+pub fn fields(snapshot:&SemioValueSnapshot,writer:&mut Writer<'_,'_,'_>)->Result<(),ValueError>{writer.entities(1)?;writer.bytes(b"[")?;writer.string(&snapshot.schema,SnapshotEncoding::Text)?;writer.bytes(b",")?;value(&snapshot.root,writer,SnapshotEncoding::Text,0)?;writer.bytes(b",")?;writer.list(&snapshot.nodes,SnapshotEncoding::Text,|writer,item|node(item,writer))?;writer.bytes(b"]")}

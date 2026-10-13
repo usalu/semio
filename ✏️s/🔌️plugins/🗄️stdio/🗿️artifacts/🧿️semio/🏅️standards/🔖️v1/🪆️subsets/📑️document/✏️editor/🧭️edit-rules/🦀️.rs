@@ -1,8 +1,8 @@
 //! 🧭️ The document editor's edit rules: which snapshot pointer raises which ONE concrete document mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{build, complete_by, ent, edited, event_path, fault, field, ins, item, keyed, named, position, record, rem, resolve, segments, unsupported, Entries, Reshape};
-use crate::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation;
-use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, complete_by, ent, edited, event_path, fault, field, ins, item, keyed, named, position, record, rem, resolve, segments, unsupported, Entries, Reshape};
+use crate::schema::mutations::SemioDocumentMutation;
+use crate::schema::snapshot::SemioDocumentSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, Selector, SnapshotEditEvent};

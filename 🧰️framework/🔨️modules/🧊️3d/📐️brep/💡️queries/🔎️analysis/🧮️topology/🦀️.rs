@@ -1,10 +1,10 @@
 //! 🧮️ Topology counts with Euler characteristic and genus, and the closed / manifold / watertight verdict.
 
 use super::{ScopeMembers, ShapeKind, ShapeScope};
-use crate::brep::queries::validation::is_point_edge;
-use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::Body;
+use crate::validation::is_point_edge;
+use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::Body;
 use std::collections::{BTreeMap, BTreeSet};
 
 /// 🧮️ Entity counts of a shape. `edges` counts every edge; `degenerate_edges` of them collapse to a point

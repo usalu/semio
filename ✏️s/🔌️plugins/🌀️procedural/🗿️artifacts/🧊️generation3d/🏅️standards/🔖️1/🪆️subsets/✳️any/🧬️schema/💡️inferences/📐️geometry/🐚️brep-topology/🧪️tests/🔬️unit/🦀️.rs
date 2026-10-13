@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use semio_framework_3d::brep::engine::ShapeValue;
+use semio_framework_3d_brep_engine::ShapeValue;
 use super::*;
 use std::collections::BTreeMap;
 
@@ -67,7 +67,7 @@ fn the_label_is_the_root_label_of_the_value() {
 fn a_vertex_widget_places_the_vertex_at_the_point() {
     let (_, evaluation) = run("brep.topology.vertex", vec![("point", GeometryValue::Point([1.0, 2.0, 3.0]))], 1);
     let GeometryValue::Shape(vertex) = &evaluation.outputs["shape"] else { panic!("shape") };
-    let semio_framework_3d::brep::engine::ShapeRoot::Vertex(id) = vertex.root else { panic!("vertex") };
+    let semio_framework_3d_brep_engine::ShapeRoot::Vertex(id) = vertex.root else { panic!("vertex") };
     let position = vertex.body.vertices.get(id).expect("vertex").position;
     assert_eq!([position.x, position.y, position.z], [1.0, 2.0, 3.0]);
 }

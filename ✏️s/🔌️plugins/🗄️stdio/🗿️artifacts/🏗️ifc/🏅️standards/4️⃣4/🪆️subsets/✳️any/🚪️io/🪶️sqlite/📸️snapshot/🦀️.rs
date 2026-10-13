@@ -1,6 +1,6 @@
 //! 🏗️ IFC4 headers, ordered value ownership and exact entity references.
 use crate::standards::v4::subsets::any::schema::snapshot::{IfcSnapshot,IfcHeader,IfcEntity,IfcComplexType,IfcTypedValue, IfcValue};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn},*}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,FloatColumn},*}};
 #[path="📏️encoding/💰️backing/🦀️.rs"]
 mod native_backing;
 #[path="🛬️reconstruction/🦀️.rs"]

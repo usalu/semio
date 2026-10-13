@@ -1,4 +1,5 @@
 //! ⏪️ Original actor retirement quotes and admits each retained physical frontier independently.
+use crate::__value::retirement::controlled::ControlledRetirement;
 use super::*;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,FactoryAuthority,FactoryOwnedRetirement,close_factory_ticket,factory_ticket_demands};
 use std::mem::{size_of,size_of_val};
@@ -46,17 +47,17 @@ impl<A:ArtifactApp> TimeTravelLedger<A> {
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
 #[cfg(test)]
-pub(crate) use tests::assert_session_original;
+use tests::assert_session_original;
 #[cfg(test)]
-pub(crate) use tests::assert_pending_command_original;
+use tests::assert_pending_command_original;
 #[cfg(test)]
-pub(crate) use tests::assert_discard_publication_original;
+use tests::assert_discard_publication_original;
 #[cfg(test)]
-pub(crate) use tests::native_original_actor_grant;
+use tests::native_original_actor_grant;
 impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+::protocol::Mutation<P>+OpBinary+OpText+Send+'static {
  pub(crate) fn original_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(demand)=self.discard_effects_retirement_demands(body)?{return Ok(demand)}
-  if let Some(owner)=self.snapshot_close.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
+  if let Some(owner)=self.snapshot_close.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
   if self.snapshot_aliases.iter().any(Option::is_some){self.snapshot_issuers.as_ref().ok_or_else(||original_refusal("derived snapshot retains its original missing issuers"))?;return Ok(RetirementDemand{capacity_bytes:ArtifactStore::<P,Mu>::history_read_retirement_birth_bytes(),depth:2,..Default::default()});}
   if self.snapshot_issuers.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
   if let Some(owner)=self.snapshot_issuer_close.iter().flatten().next(){return nested(owner.demands(body)?);}
@@ -73,11 +74,11 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToVal
   if let Some(step)=self.discard_effects_retirement_step(grant)?{return Ok(Some(step))}
   if grant.maximum_items==0{return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
   let demand=self.original_retirement_demands(grant.maximum_copy_bytes)?;if !permits(grant,demand){return Ok(Some(RetainedCloneStep::Progress(Default::default())));}
-  if self.snapshot_close.is_some(){return store::artifact_retirement_box_close_step(&mut self.snapshot_close,grant).map(|step|Some(progress(step)));}
+  if self.snapshot_close.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.snapshot_close,grant).map(|step|Some(progress(step)));}
   if let Some(slot)=self.snapshot_aliases.iter_mut().find(|slot|slot.is_some()){
    let(snapshots,mutations)=self.snapshot_issuers.as_ref().unwrap();
    let child=RetainedCloneGrant{maximum_depth:grant.maximum_depth-1,..grant};
-   let Some((owner,receipt))=store::admit_original_snapshot_alias(slot,snapshots,mutations,child)?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};
+   let Some((owner,receipt))=store::os_store::snapshot_read::admit_original_snapshot_alias(slot,snapshots,mutations,child)?else{return Ok(Some(RetainedCloneStep::Progress(Default::default())))};
    *self.snapshot_close=Some(owner);return Ok(Some(RetainedCloneStep::Progress(receipt)));
   }
   if let Some((snapshots,mutations))=self.snapshot_issuers.take(){self.snapshot_issuer_close=[Some(FactoryAuthority::new(snapshots)),Some(FactoryAuthority::new(mutations))];return Ok(Some(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})));}

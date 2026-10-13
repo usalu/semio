@@ -1,0 +1,30 @@
+{
+  "version": 1,
+  "configs": {
+    "valid": [
+      { "version": 1, "tokens": 10, "style": "fifo" },
+      { "version": 1, "tokens": 1, "style": "semaphore" }
+    ],
+    "invalid": [
+      { "version": 1, "tokens": 0, "style": "fifo" },
+      { "version": 1, "tokens": 2.5, "style": "fifo" },
+      { "version": 1, "tokens": 4, "style": "pipe" },
+      { "version": 2, "tokens": 4, "style": "fifo" },
+      { "version": 1, "tokens": 4, "style": "fifo", "extra": true }
+    ]
+  },
+  "makeflags": [
+    { "style": "fifo", "tokens": 10, "endpoint": "/g/jobserver.fifo", "makeflags": "-j10 --jobserver-auth=fifo:/g/jobserver.fifo" },
+    { "style": "semaphore", "tokens": 4, "endpoint": "semio-jobserver-7-ab", "makeflags": "-j4 --jobserver-auth=semio-jobserver-7-ab" }
+  ],
+  "auth": [
+    { "environment": { "CARGO_MAKEFLAGS": "-j --jobserver-fds=fifo:/x --jobserver-auth=fifo:/x" }, "auth": "fifo:/x" },
+    { "environment": { "MAKEFLAGS": "-j4 --jobserver-auth=3,4" }, "auth": "3,4" },
+    { "environment": { "MAKEFLAGS": " --jobserver-auth=fifo:/a --jobserver-auth=fifo:/b" }, "auth": "fifo:/b" },
+    { "environment": { "MFLAGS": "-j2" }, "auth": null },
+    { "environment": { "CARGO_MAKEFLAGS": "-j --jobserver-auth=fifo:/c", "MAKEFLAGS": "--jobserver-auth=fifo:/d" }, "auth": "fifo:/c" }
+  ],
+  "pool": { "tokens": 3, "attempts": 5 },
+  "oracle": { "tokens": 4, "workers": 8, "holdMs": 25, "rounds": 4, "maxConcurrent": 4 },
+  "gnuMake": { "minimumVersion": [4, 4], "tokens": 3, "recipes": 8, "recipeMs": 300 }
+}

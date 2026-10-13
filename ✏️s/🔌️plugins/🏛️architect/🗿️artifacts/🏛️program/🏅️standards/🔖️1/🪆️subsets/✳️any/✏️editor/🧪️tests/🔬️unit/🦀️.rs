@@ -74,7 +74,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -143,7 +143,7 @@ pub(crate) mod context {
 
 use super::*;
 use crate::editor::architect::catalog::analysis_kind_from_str;
-use crate::registers::{AdjacencyKind, AnalysisKind};
+use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind};
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
 use semio_framework_plugin::PluginApp;
 use serde_json::json;
@@ -531,8 +531,8 @@ async fn demo_example_load_settles_through_the_host_document_archive_door() {
         ("knowledge", snapshot.knowledge.child_id.clone(), snapshot.knowledge_payload.len()),
         ("benchmarks", snapshot.benchmarks.child_id.clone(), snapshot.benchmarks_payload.len()),
     ] {
-        let derived = crate::genesis_program_child_pack(&snapshot, slot, &child_id).unwrap_or_else(|| panic!("the loaded snapshot still derives its own {slot} member"));
-        let table = <semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot as store::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
+        let derived = crate::standards::v1::subsets::any::schema::snapshot::genesis_program_child_pack(&snapshot, slot, &child_id).unwrap_or_else(|| panic!("the loaded snapshot still derives its own {slot} member"));
+        let table = <semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&derived).unwrap_or_else(|error| panic!("the derived {slot} member decodes: {error}"));
         assert_eq!(table.rows.len(), rows, "the genesis-derived {slot} member must carry one row per loaded record");
     }
     artifact_app_laws::close_registered_fixture_app(&mut *app, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);

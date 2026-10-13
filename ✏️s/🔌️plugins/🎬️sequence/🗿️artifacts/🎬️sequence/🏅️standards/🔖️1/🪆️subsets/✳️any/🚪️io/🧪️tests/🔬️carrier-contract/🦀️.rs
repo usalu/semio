@@ -15,7 +15,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(fixture.into_inner()));
         let payload = export::md::v_commonmark::any::SequenceIntoMd::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("markdown export").value;
         let IoPayload::Binary(bytes) = &payload else { panic!("binary markdown snapshot") };
-        let md = <MdSnapshot as store::ArtifactPack>::decode_pack(bytes).expect("markdown snapshot codec");
+        let md = <MdSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).expect("markdown snapshot codec");
         let [MdBlock::CodeBlock { info: Some(info), literal }] = md.blocks.as_slice() else { panic!("one JSON code block") };
         assert_eq!(info, "json");
         assert_eq!(serde_json::from_str::<serde_json::Value>(literal).expect("independent markdown oracle"), row["fixture"]);
@@ -23,7 +23,7 @@ async fn sequence_carrier_contracts_match_the_json_oracle() {
         assert_eq!(neural_engine::ColdOwner::new(restored.to_host_snapshot()), neural_engine::ColdOwner::new(snapshot.to_host_snapshot()));
         let csv_payload = export::csv::v_rfc4180::any::SequenceIntoCsv::serialize(&snapshot, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("csv export").value;
         let IoPayload::Binary(bytes) = &csv_payload else { panic!("binary csv snapshot") };
-        let csv = <CsvSnapshot as store::ArtifactPack>::decode_pack(bytes).expect("csv snapshot codec");
+        let csv = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).expect("csv snapshot codec");
         assert!(csv.has_header, "raw CSV carrier decoding applies its default header metadata");
         assert_eq!(csv.records.len(), row["fixture"]["steps"].as_array().expect("steps").len());
         for (record, step) in csv.records.iter().zip(row["fixture"]["steps"].as_array().expect("steps")) {
@@ -85,7 +85,7 @@ async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native
     for row in vectors["cases"].as_array().expect("cases") {
         let snapshot = neural_engine::ColdOwner::new(SequenceSnapshot::from_host_snapshot(semio_framework_pack_json::from_json_str::<SequenceHostSnapshot>(&row["fixture"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral snapshot")));
         let payload = super::snapshot_pack(&snapshot);
-        assert_eq!(payload, <SequenceSnapshot as store::ArtifactPack>::encode_pack(&snapshot));
+        assert_eq!(payload, <SequenceSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot));
         let effect = crate::editor::sequence::reset_sequence_document_effect(&snapshot);
         let semio_framework_plugin::Effect::LoadDocument { pack: effect_pack, spr } = effect else { panic!("load effect") };
         assert_eq!(effect_pack, payload);
@@ -93,7 +93,7 @@ async fn artifact_io_reset_payload_and_registered_text_route_preserve_the_native
         let export = io_route(&native, &text, 1).await.expect("text export route").value;
         let exported = io_run(&export, IoPayload::Binary(payload.clone())).await.expect("registered text export").value;
         let IoPayload::Text(body) = &exported else { panic!("raw carrier text") };
-        assert_eq!(body, &<SequenceSnapshot as store::ArtifactDsl>::print_dsl(&snapshot));
+        assert_eq!(body, &<SequenceSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot));
         let import = io_route(&text, &native, 1).await.expect("text import route").value;
         let restored = io_run(&import, exported).await.expect("registered text import").value;
         assert_eq!(restored, IoPayload::Binary(payload));

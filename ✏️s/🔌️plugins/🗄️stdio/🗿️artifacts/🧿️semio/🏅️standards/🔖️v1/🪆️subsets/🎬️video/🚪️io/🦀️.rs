@@ -5,28 +5,10 @@
 //! file's own directory — the same mechanism `🦀️.rs` itself uses one level up. Registration
 //! flows through `🎹️composer::register` (see that module), matching the repo-wide convention.
 
-#[cfg(feature = "conversion-video-avi")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️.rs"]
-pub mod avi_deserializer;
-#[cfg(feature = "conversion-video-avi")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/📼️avi/🔖️1.0/✳️any/🦀️.rs"]
-pub mod avi_serializer;
-#[cfg(feature = "conversion-video-mp4")]
-#[path = "📥️import/🧩️deserializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
-pub mod mp4_deserializer;
-#[cfg(feature = "conversion-video-mp4")]
-#[path = "📤️export/🧵️serializers/🗿️artifacts/🎥️mp4/🔖️isobmff/✳️any/🦀️.rs"]
-pub mod mp4_serializer;
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-video-avi")]
-    use crate::standards::v1::subsets::video::io::{avi_deserializer::SemioVideoFromAvi, avi_serializer::SemioVideoToAvi};
-    #[cfg(feature = "conversion-video-mp4")]
-    use crate::standards::v1::subsets::video::io::{mp4_deserializer::SemioVideoFromMp4, mp4_serializer::SemioVideoToMp4};
-    use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
-    use crate::standards::v1::subsets::video::io::SemioVideoAnalyzer;
-    #[cfg(feature = "conversion-video")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of};
+    use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStreamKind};
+    use crate::io::SemioVideoAnalyzer;
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") };
@@ -109,8 +91,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_semio_video_invariants(&snapshot),
@@ -132,14 +114,12 @@ pub mod derived_composition {
     /// Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") }, store::ArtifactCodec::of::<SemioVideoSnapshot, crate::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(
-            crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_video_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") }, store::artifact_codec::<SemioVideoSnapshot, crate::schema::mutations::SemioVideoMutation>(
+            crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-video")]
-        register_composer_entries(bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -148,15 +128,10 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::video::schema::semio_video_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioVideoSnapshot, crate::standards::v1::subsets::video::schema::mutations::SemioVideoMutation>(crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") })
+            .schemas([crate::schema::semio_video_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioVideoSnapshot, crate::schema::mutations::SemioVideoMutation>(crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("video") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-video")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<semio_framework_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(bridge_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_video_artifact_inference_descriptor()]);
         builder
     }
 
@@ -165,31 +140,13 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::video::schema::inferences::semio_video_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_video_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
-    /// 🌉️ video↔mp4 / video↔avi bridge entries (W4) -- forward (writes video, reads the format) +
-    /// reverse (writes the format, reads video) rows, giving all 4 IoKeys per the master plan's io
-    /// architecture note. Leaked to `'static` once, matching every other stdio composer's
-    /// `OnceLock<Vec<ComposerEntry>>` entries-table convention (e.g. mp4/isobmff's own subset
-    /// composer).
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-video")]
-    fn bridge_entries() -> &'static [semio_framework_plugin::io::ComposerEntry] {
-        static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES.get_or_init(|| {
-            let mut entries = Vec::new();
-            #[cfg(feature = "conversion-video-mp4")]
-            { entries.push(deserializer_entry_of::<SemioVideoFromMp4>()); entries.push(serializer_entry_of::<SemioVideoToMp4>()); }
-            #[cfg(feature = "conversion-video-avi")]
-            { entries.push(deserializer_entry_of::<SemioVideoFromAvi>()); entries.push(serializer_entry_of::<SemioVideoToAvi>()); }
-            entries
-        }).as_slice()
-    }
     //#endregion 🔖️Register
 
     //#region 🧪️Tests
-    #[cfg(all(test, feature = "conversion-video"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
@@ -206,9 +163,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::video::schema::diff::SemioVideoDiff;
-    use crate::standards::v1::subsets::video::schema::mutations::{SemioVideoMutation};
-    use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+    use crate::schema::diff::SemioVideoDiff;
+    use crate::schema::mutations::SemioVideoMutation;
+    use crate::schema::snapshot::SemioVideoSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -227,10 +184,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioVideoMutation as protocol::Mutation<SemioVideoSnapshot>>::diff(&mutation, &self.snapshot);
@@ -251,7 +208,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioVideoSnapshot, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -291,14 +248,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

@@ -1,4 +1,5 @@
 //! 🗑️ Original typed Store effects prepare their custody before the Session publishes Discard.
+use crate::bounded_ownership::ArtifactFixedRegistry;
 use super::*;
 use std::mem::{ManuallyDrop,size_of_val};
 use semio_framework_value::{ErasedSnapshotRetirement,FactoryAuthority,ArtifactOwnedValueRetirementFactory,retirement::{RetireOwned,controlled::ControlledRetirement}};
@@ -30,7 +31,7 @@ impl<P,Mu> TimeTravelStoreState<P,Mu> where P:Clone+semio_framework_value::ToVal
  pub(super) fn commit_discard_effects(&mut self,stage:TimeTravelStage){
   let mut frame=self.discard_effects.take().expect("validated original Discard effects");assert_eq!(frame.prepared,5);assert_eq!(frame.bound.3,stage);let label_of=self.label_of;let mut original=std::mem::replace(self,Self::new(label_of));if stage==TimeTravelStage::Reviewing{self.finished=original.finished.take();self.head=original.head.take()}*frame.residue=Some(original);frame.closing=true;self.discard_effects=Some(frame);
  }
- pub(super) fn publish_discard(&mut self,store:&ArtifactStore<P,Mu>,cursor:&mut semio_framework_time_travel::TimeTravelDiscardCursor,session:&mut TimeTravelSession,editor:&mut Option<TimeTravelEditor>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ pub(crate) fn publish_discard(&mut self,store:&ArtifactStore<P,Mu>,cursor:&mut semio_framework_time_travel::TimeTravelDiscardCursor,session:&mut TimeTravelSession,editor:&mut Option<TimeTravelEditor>,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if session.base.content_revision!=store.content_revision_now(){return Err(refusal("Discard original Store base changed before publication"))}
   let stage=cursor.prepared_stage().ok_or_else(||refusal("Discard prospective original stage is absent"))?;let (ready,receipt)=self.prepare_discard_effects(store,stage,grant)?;if !ready{return Ok(receipt)}
   let parent_copy=0usize;let child_demand=cursor.commit_demands(session)?;let copied_bytes=parent_copy.checked_add(child_demand.copy_bytes).ok_or_else(||refusal("Discard original publication header overflow"))?;let depth=child_demand.depth.checked_add(1).ok_or_else(||refusal("Discard original publication depth overflow"))?;if grant.maximum_items==0||grant.maximum_depth<depth||grant.maximum_copy_bytes<copied_bytes||grant.maximum_capacity_bytes<child_demand.capacity_bytes||grant.maximum_release_bytes<child_demand.release_bytes{return Ok(Default::default())}
@@ -75,7 +76,7 @@ impl<P,Mu> TimeTravelDiscardStoreEffects<P,Mu> where P:Clone+semio_framework_val
 }
 impl<P,Mu:Mutation<P>> Drop for TimeTravelDiscardStoreEffects<P,Mu>{fn drop(&mut self){let empty=self.residue.is_none()&&self.frames.iter().all(Option::is_none)&&self.input.is_none()&&self.editor.is_none()&&self.factory.is_none()&&self.factory_close.is_none();assert!(std::thread::panicking()||empty,"Discard effect custody abandoned original Store owners");if empty{unsafe{ManuallyDrop::drop(&mut self.residue);ManuallyDrop::drop(&mut self.frames);ManuallyDrop::drop(&mut self.factory)}}}}
 
-pub(super) struct DiscardMemberPublication<'a>{pub owners:&'a mut dyn TimeTravelOwners,pub cursor:&'a mut semio_framework_time_travel::TimeTravelDiscardCursor,pub session:&'a mut TimeTravelSession,pub editor:&'a mut Option<TimeTravelEditor>,pub review_children:&'a mut Option<TimeTravelReviewChildren>,pub children:&'a mut Option<ChildContentView>,pub retirements:&'a mut ArtifactFixedRegistry<ChildContentRetirement>,pub child_generation:&'a mut u64,pub view_copy_bytes:usize,pub grant:RetainedCloneGrant}
+pub(crate) struct DiscardMemberPublication<'a>{pub owners:&'a mut dyn TimeTravelOwners,pub cursor:&'a mut semio_framework_time_travel::TimeTravelDiscardCursor,pub session:&'a mut TimeTravelSession,pub editor:&'a mut Option<TimeTravelEditor>,pub review_children:&'a mut Option<TimeTravelReviewChildren>,pub children:&'a mut Option<ChildContentView>,pub retirements:&'a mut ArtifactFixedRegistry<ChildContentRetirement>,pub child_generation:&'a mut u64,pub view_copy_bytes:usize,pub grant:RetainedCloneGrant}
 impl store::MemberStoreVisitor for DiscardMemberPublication<'_>{
  type Output=Result<RetainedCloneProgress,ValueError>;
  fn visit<P,Mu>(self,store:&ArtifactStore<P,Mu>)->Self::Output where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+semio_framework_schema_composition::ArtifactCompositionFields+Send+Sync+'static,Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+protocol::SemanticMutation<P>+OpBinary+OpText+Send+'static {

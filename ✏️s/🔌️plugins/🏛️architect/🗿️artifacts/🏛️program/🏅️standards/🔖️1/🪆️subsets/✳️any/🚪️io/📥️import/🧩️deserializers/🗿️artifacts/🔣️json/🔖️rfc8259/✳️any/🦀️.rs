@@ -3,8 +3,8 @@
 //! 🩹️ `stdio_gap`/foreign-lag fix — see the paired export leaf's doc comment (same wave,
 //! `JsonSnapshot.value: serde_json::Value` -> stdio's own `JsonValue`). Mirrors it with the
 //! reverse structural converter and stdio's own real `parse_json_text` for `deserialize_bytes`.
-use crate::ProgramSnapshot;
-use crate::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::JsonSnapshot;
 

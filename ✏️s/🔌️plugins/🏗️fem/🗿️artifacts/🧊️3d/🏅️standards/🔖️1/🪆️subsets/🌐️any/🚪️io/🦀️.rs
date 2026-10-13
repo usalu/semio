@@ -110,7 +110,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec::<Fem3dSnapshot, Fem3dMutation>(FEM_3D_SCHEMA.to_string()),
         },
         entries: entries(),
     }
@@ -153,10 +153,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <Fem3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Fem3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <Fem3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -207,14 +207,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Fem3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <Fem3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Fem3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Fem3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

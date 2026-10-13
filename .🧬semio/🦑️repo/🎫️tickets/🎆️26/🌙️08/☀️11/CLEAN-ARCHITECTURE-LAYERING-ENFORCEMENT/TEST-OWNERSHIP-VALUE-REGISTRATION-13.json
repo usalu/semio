@@ -1,0 +1,12 @@
+{
+  "launchRows": [
+    {
+      "name": "⚖️test🌱️value🔐️shared-factory-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test-shared-factory-retirement --skip-nx-cache"
+    },
+    {
+      "name": "⚖️test🌱️value📥️forward-deque-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache -- long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture"
+    }
+  ]
+}

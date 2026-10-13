@@ -1,7 +1,7 @@
 //! 🧫️ The published Host Count owner requires its own semantic SQLite capability.
 use crate::{Snapshot,Mutation};
 use semio_framework_os_kernel as store;
-use store::{ArtifactDsl,ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
 use store::sqlite_snapshot::*;
 use semio_framework_value::ValueRefusalKind;
 const KIND:&str="fixture.neutral-host-fixture.counter";
@@ -9,16 +9,16 @@ const SQL:&str=include_str!("../../🪶️sqlite/🗄️.sql");
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()}
 fn counts()->Vec<i32>{corpus()["counts"].as_array().unwrap().iter().map(|value|i32::try_from(value.as_i64().unwrap()).unwrap()).collect()}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:KIND.into(),standard:"1".into(),subset:"*".into()}}
-fn codec()->store::ArtifactSqliteSnapshotCodec{
- store::ArtifactCodec::bare::<Snapshot,Mutation>(KIND).snapshot_sqlite.expect("the actual published Count owner must opt its bare native codec into semantic SQLite")
+fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{
+ store::bare_artifact_codec::<Snapshot,Mutation>(KIND).snapshot_sqlite.expect("the actual published Count owner must opt its bare native codec into semantic SQLite")
 }
 fn original_native_grant()->semio_framework_value::RetainedCloneGrant{
  let request:semio_framework_plugin::sqlite_wire::SnapshotInput=serde_json::from_str(include_str!("../../../../../../../🧬️schema/🪶️sqlite/🧫️fixtures/🔣️.json")).unwrap();request.native.native().unwrap()
 }
-fn export_native(codec:&store::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&store::io::IoPayload,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<SqliteDatabase>{
+fn export_native(codec:&store::os_store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,payload:&store::io::IoPayload,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<SqliteDatabase>{
  let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeDecodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotDecodeOwner::new(&mut native,grant);(codec.export)(schema,dialect,payload,sql,&mut owner)
 }
-fn import_native(codec:&store::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:SqliteDatabase,encoding:SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<store::io::IoPayload>{
+fn import_native(codec:&store::os_store::serialization::ArtifactSqliteSnapshotCodec,schema:&str,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:SqliteDatabase,encoding:SnapshotEncoding,sql:&mut SqliteSnapshotControl<'_>)->semio_framework::io_schema::IoResult<store::io::IoPayload>{
  let grant=original_native_grant();let mut observe=|_|true;let mut native=semio_framework_value::NativeEncodeControl::new(grant.maximum_capacity_bytes,&mut observe);let mut owner=store::io::control::NativeSnapshotEncodeOwner::new(&mut native,grant);(codec.import)(schema,dialect,database,encoding,sql,&mut owner)
 }
 fn database(count:i32)->SqliteDatabase{

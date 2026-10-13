@@ -7,7 +7,8 @@ fn config_round_trip_has_no_process_identity() {
     let json = semio_framework_pack_json::to_json_string(&config);
     let restored: Puzzle3dConfig = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("config deserializes");
     assert_eq!(config, restored);
-    let mutation = Puzzle3dConfigMutation::Snapshot { config };
+    assert!(!json.contains("runtimeSessionId"));
+    let mutation = Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId { value: config.active_example_id.clone() });
     let encoded = protocol::OpBinary::encode_op(&mutation).expect("mutation encodes");
     assert!(!String::from_utf8_lossy(&encoded).contains("runtimeSessionId"));
 }

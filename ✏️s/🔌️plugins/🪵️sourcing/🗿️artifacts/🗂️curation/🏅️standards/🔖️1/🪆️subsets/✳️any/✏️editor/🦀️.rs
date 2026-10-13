@@ -62,7 +62,7 @@ use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
 use semio_framework_plugin::retained_command::{ArtifactCommandWork, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactoryError};
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Io
@@ -498,7 +498,7 @@ struct SourcingCurationConfigPreparationFactory;
 
 struct SourcingCurationConfigPreparation {
     owners: store::OneItemOwners<SourcingCurationConfig, SourcingCurationConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     retained_bytes: usize,
 }
@@ -573,24 +573,24 @@ fn prepare_sourcing_curation_config(base: &SourcingCurationConfig, mutation: &So
     Ok((post, vec![inverse]))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<SourcingCurationConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<SourcingCurationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &SourcingCurationConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &SourcingCurationConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Sourcing Config preparation rejected its lane".into());
         }
         sourcing_curation_config_mutation_retained_bytes(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_CONFIG_GRANT_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_CONFIG_GRANT_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &SourcingCurationConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &SourcingCurationConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SourcingCurationConfigPreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>)> {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<SourcingCurationConfig, SourcingCurationConfigMutation, SourcingCurationConfigMutation>)> {
         if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -603,49 +603,49 @@ impl store::ArtifactStoreOneItemPreparationFactory<SourcingCurationConfig, Sourc
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(SourcingCurationConfigPreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             retained_bytes: 0,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<SourcingCurationConfig, SourcingCurationConfigMutation> for SourcingCurationConfigPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         if self.owners.candidate.is_none() {
             let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its exact base root"))?.get();
             sourcing_curation_config_bytes(base).map_err(refusal_of)?;
             let bytes = SOURCING_CURATION_CONFIG_GRANT_BYTES;
-            if grant.maximum_copy_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_copy_bytes < bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its mutation owner"))?;
             let (post, inverse) = prepare_sourcing_curation_config(base, mutation)?;
             let mutation = self.owners.mutation.take().expect("observed original mutation owner");
             *self.owners.candidate = Some((post, inverse, mutation));
             self.retained_bytes = bytes;
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
         }
-        if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its Store authority"))?;
         let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Config preparation lost its candidate"))?;
         let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<SourcingCurationConfig, SourcingCurationConfigMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<SourcingCurationConfig, SourcingCurationConfigMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<SourcingCurationConfig, SourcingCurationConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<SourcingCurationConfig, SourcingCurationConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -678,7 +678,7 @@ struct SourcingCurationArtifactPreparationFactory;
 
 struct SourcingCurationArtifactPreparation {
     owners: store::OneItemOwners<CurationSnapshot, SourcingMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     retained_bytes: usize,
 }
@@ -729,24 +729,24 @@ fn prepare_sourcing_curation_document(base: &CurationSnapshot, mutation: &Sourci
     Ok((post, inverse))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<SourcingMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<SourcingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &SourcingMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &SourcingMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Sourcing Curation preparation rejected its lane".into());
         }
         sourcing_curation_mutation_retained_bytes(mutation)?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_DOCUMENT_GRANT_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, SOURCING_CURATION_DOCUMENT_GRANT_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &SourcingMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &SourcingMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SourcingCurationArtifactPreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>)> {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CurationSnapshot, SourcingMutation, SourcingMutation>)> {
         if self.preflight(&request.mutation, request.lane).is_err()
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
@@ -759,49 +759,49 @@ impl store::ArtifactStoreOneItemPreparationFactory<CurationSnapshot, SourcingMut
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(SourcingCurationArtifactPreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
             retained_bytes: 0,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CurationSnapshot, SourcingMutation> for SourcingCurationArtifactPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled || self.owners.is_closing() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         if self.owners.candidate.is_none() {
             let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its exact base root"))?.get();
             sourcing_curation_document_bytes(base).map_err(refusal_of)?;
             let bytes = SOURCING_CURATION_DOCUMENT_GRANT_BYTES;
-            if grant.maximum_copy_bytes < bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+            if grant.maximum_copy_bytes < bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
             let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its mutation owner"))?;
             let (post, inverse) = prepare_sourcing_curation_document(base, mutation)?;
             let mutation = self.owners.mutation.take().expect("observed original mutation owner");
             *self.owners.candidate = Some((post, inverse, mutation));
             self.retained_bytes = bytes;
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: bytes as u64, digest: [0; 32] };
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()));
         }
-        if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+        if grant.maximum_copy_bytes < self.retained_bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         let authority = self.owners.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its Store authority"))?;
         let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Sourcing Curation preparation lost its candidate"))?;
         let prepared = match authority.prepare_one_item(authority.next_edit(forward, inverse), std::sync::Arc::new(post)) {
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CurationSnapshot, SourcingMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -828,11 +828,11 @@ impl ArtifactEditor for SourcingCurationApp {
 
     type Command = SourcingCurationCommand;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(SourcingCurationArtifactPreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(SourcingCurationConfigPreparationFactory))
     }
 
@@ -1038,7 +1038,7 @@ impl ArtifactEditor for SourcingCurationApp {
 /// fresh, edit-free op-log for `document` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(document: &CurationSnapshot) -> semio_framework::kernel::Effect {
     let pack = <CurationSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("curation", SOURCING_CURATION_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("curation", SOURCING_CURATION_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

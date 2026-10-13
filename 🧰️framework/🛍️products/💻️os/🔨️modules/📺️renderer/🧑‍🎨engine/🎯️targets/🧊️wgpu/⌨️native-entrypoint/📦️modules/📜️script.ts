@@ -7,12 +7,15 @@ import { pathToFileURL } from "node:url";
 import { BundleScript, ScriptRouter } from "../../../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { moduleDirectoryName } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE } from "../../../../../../🔌️plugin/📇️registry/📦️deployment/🧬️schema/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE } from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { nativeRuntimeDirectory, publishNativeRuntime } from "./🟦️.ts";
+import { buildComponentClosureV1 } from "../../../../../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts";
 
 const ownerPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript";
 const registryPath = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry";
 
-/** 📥️ Consumes only the outer graph's completed component, descriptor and session producers. */
+/** 📥️ Builds exactly the session's components through the build driver, then publishes the native runtime from their modules and the session. */
 class PublishScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, selectedProfile] = args, profile = selectedProfile as "dev" | "release", repo = this.repoRoot, controller = new AbortController(), cancel = () => controller.abort();
@@ -23,12 +26,14 @@ class PublishScript extends BundleScript {
       const catalog = readGeneratedCatalogProjection(join(repo,registryPath,"dist/sessions",variant)).entries;
       const session = (await import(pathToFileURL(join(repo, registryPath, "dist/sessions", variant, "🎮️playground-session/🟦️.ts")).href)).PLAYGROUND_SESSION;
       if (session.variant !== variant || !Array.isArray(session.plugins)) throw new Error("Native session identity mismatch");
+      await buildComponentClosureV1(repo, new Set(session.plugins.map((plugin: { pluginId: string }) => plugin.pluginId)), { signal: AbortSignal.any([controller.signal, this.invocation.control.signal]) });
       const modules = session.plugins.map((plugin: { pluginId: string }) => {
         const entry = catalog.find((row: { pluginId: string }) => row.pluginId === plugin.pluginId);
         if (!entry) throw new Error(`Missing native catalog component: ${plugin.pluginId}`);
         const crate = resolve(repo, entry.cratePath), path = relative(repo, crate);
         if (isAbsolute(path) || path.split(/[\\/]/).includes("..") || !/^[a-z0-9_]+\.wasm$/.test(entry.wasmOut)) throw new Error("Invalid native component input path");
-        return { pluginId: plugin.pluginId, wasm: join(crate, "dist", `component-${profile}`, entry.wasmOut), descriptor: join(pluginModulesRootIn(repo, profile), moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES), "🔣️.json") };
+        const page = join(pluginModulesRootIn(repo), moduleDirectoryName(plugin.pluginId, COMPONENT_MODULE_DIRECTORIES));
+        return { pluginId: plugin.pluginId, wasm: join(crate, COMPONENT_PROFILE_POLICIES[SHIPPED_COMPONENT_PROFILE].directory, entry.wasmOut), descriptor: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), descriptorPack: join(page, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), receipt: join(page, TRUSTED_PLUGIN_MODULE_RECEIPT_FILE) };
       });
       await publishNativeRuntime(join(repo, ownerPath), variant, profile, modules, controller.signal);
       console.log(`Published native ${variant} ${profile}: ${modules.length} completed components`);

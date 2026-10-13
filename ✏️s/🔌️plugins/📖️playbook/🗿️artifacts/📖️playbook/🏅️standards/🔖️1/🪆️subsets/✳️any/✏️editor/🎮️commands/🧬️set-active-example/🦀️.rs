@@ -26,7 +26,7 @@ pub struct SetActiveExample {
 /// `.dsl.semio` asset IS this app's canonical demo document; every other id loads the empty playbook.
 pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PlaybookSnapshot>, _cfg: &ConfigView<'_, PlaybookConfig>) -> Result<Emit<PlaybookMutation, PlaybookConfigMutation>, Fault> {
     let next = if payload.example_id.as_str() == crate::examples::demo::ID {
-        <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).map_err(|error| Fault::from(format!("playbook-example-unparsable: {error}")))?
+        <PlaybookSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).map_err(|error| Fault::from(format!("playbook-example-unparsable: {error}")))?
     } else {
         crate::empty_playbook_snapshot()
     };

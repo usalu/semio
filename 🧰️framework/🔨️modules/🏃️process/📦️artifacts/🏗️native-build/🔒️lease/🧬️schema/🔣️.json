@@ -33,61 +33,7 @@
           "test": "debug",
           "bench": "release"
         },
-        "pollMs": 1000,
-        "prebuild": {
-          "namespace": "semio.cargo.prebuild/v1",
-          "directory": "cargo-prebuild",
-          "planEnvironment": "SEMIO_CARGO_PREBUILD_PLAN",
-          "jobsEnvironment": "SEMIO_CARGO_PREBUILD_JOBS",
-          "progressMs": 30000,
-          "logLimitBytes": 134217728,
-          "tailLines": 80,
-          "reserveBytes": 6442450944,
-          "bytesPerJob": 10737418240,
-          "pollMs": 500,
-          "heavyUnitBytes": 21474836480
-        }
-      }
-    },
-    "PrebuildPlan": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": [
-        "version",
-        "workspaces"
-      ],
-      "properties": {
-        "version": {
-          "const": 1
-        },
-        "workspaces": {
-          "type": "array",
-          "minItems": 1,
-          "items": {
-            "type": "object",
-            "additionalProperties": false,
-            "required": [
-              "manifest",
-              "packages"
-            ],
-            "properties": {
-              "manifest": {
-                "type": "string",
-                "minLength": 1,
-                "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
-              },
-              "packages": {
-                "type": "array",
-                "minItems": 1,
-                "uniqueItems": true,
-                "items": {
-                  "type": "string",
-                  "pattern": "^[A-Za-z0-9_-]{1,128}$"
-                }
-              }
-            }
-          }
-        }
+        "pollMs": 1000
       }
     }
   }

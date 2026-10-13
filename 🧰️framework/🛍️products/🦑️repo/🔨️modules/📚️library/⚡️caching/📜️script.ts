@@ -88,6 +88,19 @@ async function testWorkspaceOwnership(invocation: ScriptInvocation, root: string
 /** 🧪️ Routes the full cache suite, the focused portable command-source contract or the build-dir provenance laws. */
 class TestScript extends BundleScript {
   async run(args: string[]): Promise<void> {
+    if (args[0] === "build-mode") {
+      if (args.length !== 1) throw Error("Expected test build-mode");
+      const { testNxBuildModes } = await import("./🧪️tests/🎚️build-mode/🟦️.ts");
+      await testNxBuildModes(this.repoRoot);
+      return;
+    }
+    if (args[0] === "web-build") {
+      if (args.length !== 1) throw Error("Expected test web-build");
+      const output = process.env.SEMIO_TEST_ARTIFACT_DIR;
+      if (!output) throw Error("SEMIO_TEST_ARTIFACT_DIR is required");
+      await (await import("./🧪️tests/🏗️web-build/🟦️.ts")).proveWebBuild(this.repoRoot, output);
+      return;
+    }
     if (args[0] === "cache-policy") {
       if (args.length !== 1) throw new Error("Expected test cache-policy");
       const { proveCachePolicy } = await import("./🧪️tests/⚡️cache-contracts/🟦️.ts");

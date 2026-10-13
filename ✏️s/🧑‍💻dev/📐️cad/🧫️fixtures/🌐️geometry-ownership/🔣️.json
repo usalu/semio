@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "kernelPackage": "semio-framework-3d",
+  "kernelPackage": "semio-framework-3d-brep-engine",
   "sessionPackage": "semio-s-spatial-kernel-semio-session",
   "kernelRoot": "🧰️framework/🔨️modules/🧊️3d/📐️brep",
   "sessionManifest": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust/Cargo.toml",
@@ -55,7 +55,7 @@
     },
     {
       "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/✂️intersect",
-      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/🛠️operations/✂️intersect"
+      "to": "🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/✂️intersect"
     },
     {
       "from": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧬️schema/🔺️diff/↔️offset",

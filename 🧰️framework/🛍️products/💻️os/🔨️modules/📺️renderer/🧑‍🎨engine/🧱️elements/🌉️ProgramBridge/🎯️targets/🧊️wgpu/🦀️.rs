@@ -523,7 +523,7 @@ use semio_framework_value::ToValue;
     }
 
     pub async fn receive_document_backbone(client: &KernelClient, instance_id: u32, uri: &str, payload: Vec<u8>) -> Result<Vec<Effect>, ProgramFault> {
-        store::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())?;
+        store::os_store::backbone::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())?;
         let outcome = client.exchange_events(instance_id, vec![Event::Message { source: MessageEndpoint::Backbone { uri: uri.to_string() }, payload }]).await?;
         if let Some(AppFrame::Error { fault, report, .. }) = outcome.frames.iter().find(|frame| matches!(frame, AppFrame::Error { .. })) {
             return Err((app_frame_error_message(fault, report)).into());
@@ -1243,7 +1243,7 @@ mod browser_ephemeral {
     }
 }
 
-/// 🧬️ The browser's [`ComponentDocumentCodec`](semio_framework_os_kernel::os_store::ComponentDocumentCodec):
+/// 🧬️ The browser's [`ComponentDocumentCodec`](semio_framework_os_kernel::os_store::codec_registry::ComponentDocumentCodec):
 /// the mounted program's jco component answering `world actor`'s `codec` interface through the JS
 /// bridge (`codecPackSchemaHash`/`codecPrintMirror`, `🐚️plugin-bridge/🟦️.ts`), on a live instance's shard
 /// actor — the twin of the native `OwnedComponentDocumentCodec` a wgpu shell registers in `create_app`. With it
@@ -1252,7 +1252,7 @@ mod browser_ephemeral {
 #[cfg(target_arch = "wasm32")]
 mod browser_component_codec {
     use super::{call_js, Array, JsCast, JsValue, Rc};
-    use semio_framework_os_kernel::os_store::{self, ArtifactTextFiles, ComponentDocumentCodec, ComponentDocumentCodecFuture, VcsError};
+    use semio_framework_os_kernel::os_store::{self, text_format::ArtifactTextFiles, codec_registry::ComponentDocumentCodec, codec_registry::ComponentDocumentCodecFuture, VcsError};
     use std::cell::RefCell;
     use std::collections::HashMap;
     use std::sync::{Arc, OnceLock};
@@ -1262,10 +1262,10 @@ mod browser_component_codec {
     }
 
     /// 📝️ Makes the program behind `handle` the codec of `schema`: a later mount of the kind's owner
-    /// replaces an earlier one, exactly as [`os_store::register_component_document_codec`] does.
+    /// replaces an earlier one, exactly as [`os_store::codec_registry::register_component_document_codec`] does.
     pub(super) fn register(handle: Rc<JsValue>, schema: String) -> Result<(), String> {
         BRIDGES.with(|bridges| bridges.borrow_mut().insert(schema.clone(), handle));
-        os_store::register_component_document_codec(Arc::new(BrowserComponentDocumentCodec { schema, pack_schema_hash: OnceLock::new() })).map_err(|error| error.to_string())
+        os_store::codec_registry::register_component_document_codec(Arc::new(BrowserComponentDocumentCodec { schema, pack_schema_hash: OnceLock::new() })).map_err(|error| error.to_string())
     }
 
     /// 🧬️ One kind's codec; the bridge is looked up per call (JS handles live on this isolate only).
@@ -1657,13 +1657,13 @@ fn browser_document_generation(surface_id: &str, revision: u64) -> u64 {
 fn invocation_pack_base64(invocation_json: &str) -> Result<String, String> {
     let parsed = semio_framework_pack_json::parse(invocation_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let value = semio_framework_pack_json::to_dsl_value(&parsed);
-    Ok(dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value)))
+    Ok(dsl::os_pack::pack_rt::pack_value_to_base64(&dsl::os_pack::pack_rt::encode_wire_value(&value)))
 }
 
 #[cfg(target_arch = "wasm32")]
 fn view_state_pack_base64(view_state: &ViewModel) -> String {
     let value = semio_framework_value::ToValue::to_value(view_state);
-    dsl::os_store::pack_rt::pack_value_to_base64(&dsl::os_store::pack_rt::encode_wire_value(&value))
+    dsl::os_pack::pack_rt::pack_value_to_base64(&dsl::os_pack::pack_rt::encode_wire_value(&value))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -1783,19 +1783,19 @@ pub async fn load_wasm_plugins(plugin_filter: &str, modules_root: &std::path::Pa
     close_native_json_pages(&mut pages);
     let mut entries = Vec::new();
     for module in runtime?.modules {
-        let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id, &module.wasm_sha256).await?;
+        let descriptor = read_descriptor_manifest(&modules_root.join(module.descriptor_path), &module.plugin_id).await?;
         entries.push(ProgramBridgeEntry::from_wasm(module.plugin_id, Some(descriptor.package_id), Some(module.wasm_sha256), modules_root.join(module.wasm_path), descriptor.manifest)?);
     }
     Ok(entries)
 }
 
-/// 🧩️ One program from a hub-resolved execution target: the verified component and descriptor files the
-/// shell's resolution stored (`ExecutionTargetModuleStore`), bound to the lease's component digest. The hub
-/// serves the descriptor as the canonical pack of its `PackageDescriptor`; it is admitted only when it
-/// decodes, re-encodes to exactly its own bytes, is version 1 and names this plugin and exactly that digest
-/// — the same admission the semio MCP remote workspace applies to the same bytes.
+/// 🧩️ One program from a hub-resolved execution target: the verified component and semantic descriptor files the
+/// shell's resolution stored (`ExecutionTargetModuleStore`), bound by the lease package's shipped `ComponentReceiptV1`.
+/// The hub serves the descriptor as the canonical pack of its `PackageDescriptor`; it is admitted only when it decodes,
+/// re-encodes to exactly its own bytes, is version 1, names this plugin, and the receipt binds exactly that package and
+/// those descriptor bytes — the same admission the semio MCP remote workspace applies to the same bytes.
 #[cfg(not(target_arch = "wasm32"))]
-pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, component_sha256: &str) -> Result<ProgramBridgeEntry, String> {
+pub async fn load_resolved_program(plugin_id: &str, component: &std::path::Path, descriptor: &std::path::Path, receipt: &semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1) -> Result<ProgramBridgeEntry, String> {
     use crate::native_runtime_modules::NativeJsonPages;
     use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
@@ -1809,25 +1809,26 @@ use semio_framework_value::ToValue;
     if store::pack_rt::encode_wire_value(&value) != bytes || store::pack_rt::encode_wire_value(&package.to_value()) != bytes {
         return Err("hub execution-target descriptor is not its exact canonical package projection".into());
     }
-    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || package.hashes.wasm_sha256 != component_sha256 {
+    if package.descriptor_version != 1 || package.manifest.plugin_id != plugin_id || receipt.binds(plugin_id, &package.package_id, &receipt.wasm_sha256, &semio_framework_hash::sha256_hex(&bytes)).is_err() {
         return Err((format!("hub execution-target descriptor identity mismatch: {plugin_id}")).into());
     }
-    ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(component_sha256.to_string()), component.to_path_buf(), package.manifest)
+    ProgramBridgeEntry::from_wasm(plugin_id.to_string(), Some(package.package_id), Some(receipt.wasm_sha256.clone()), component.to_path_buf(), package.manifest)
 }
 
 /// 📏️ The native runtime manifest's own bound (`NativeRuntimeManifest::read` refuses more).
 #[cfg(not(target_arch = "wasm32"))]
 const NATIVE_RUNTIME_MANIFEST_MAX_BYTES: u64 = 1024 * 1024;
 
-/// 🧾️ Reads the matching completed descriptor across borrowed native payload pages.
+/// 🧾️ Reads the matching completed semantic descriptor across borrowed native payload pages; the runtime manifest's own
+/// `wasmSha256` is the component identity it is loaded under.
 #[cfg(not(target_arch = "wasm32"))]
-async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str, wasm_sha256: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
+async fn read_descriptor_manifest(path: &std::path::Path, plugin_id: &str) -> Result<semio_framework::manifest::PackageDescriptor, String> {
     use crate::native_runtime_modules::NativeJsonPages;
     let mut pages = read_native_json_pages(path, semio_framework_os_kernel::os_directory::DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES).await?;
     let descriptor = serde_json::from_reader::<_, semio_framework::manifest::PackageDescriptor>(NativeJsonPages::new(pages.iter().flat_map(|page| (0..page.page_count()).filter_map(move |index| page.page(index)))));
     close_native_json_pages(&mut pages);
     let descriptor = descriptor.map_err(|error| format!("Native descriptor {}: {error}", path.display()))?;
-    if descriptor.manifest.plugin_id != plugin_id || descriptor.hashes.wasm_sha256 != wasm_sha256 {
+    if descriptor.manifest.plugin_id != plugin_id {
         return Err((format!("Native descriptor identity mismatch: {plugin_id}")).into());
     }
     Ok(descriptor)

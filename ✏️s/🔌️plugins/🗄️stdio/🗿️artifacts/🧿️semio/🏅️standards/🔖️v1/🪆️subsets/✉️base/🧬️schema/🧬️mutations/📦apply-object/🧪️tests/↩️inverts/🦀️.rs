@@ -1,8 +1,8 @@
 //! 🧪️ `apply-object` inverse law on its committed wrapped-arm vector: the wrapped mutation is undone by its own inverse rows, replayed
 //! last-to-first, and those rows' diffs sum to the negative of the forward diff.
 
-use crate::standards::v1::subsets::base::io::text::mutations::decode_semio_mutation_json;
-use crate::standards::v1::subsets::base::io::text::snapshot::decode_semio_snapshot_json;
+use crate::io::text::mutations::decode_semio_mutation_json;
+use crate::io::text::snapshot::decode_semio_snapshot_json;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/📦️apply-object-applied/⬅️before.json");
 const MUTATION: &str = include_str!("../../../../../🧫️fixtures/📦️apply-object-applied/🦠️mutation.json");

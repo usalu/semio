@@ -4,8 +4,8 @@
 //! functions the `dsl::Mutations` derive's synthesized leaves delegate into, per the stdio
 //! mutation-leaf migration recipe.
 
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
 
 
 
@@ -24,7 +24,7 @@ use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layo
 
 
 
-use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
+use crate::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.
@@ -178,8 +178,8 @@ fn layout_at<'a>(base: &'a SemioPresentationSnapshot, id: &str) -> Option<&'a Sl
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioPresentationMutation> {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use crate::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 
     let frame = SlideFrame { origin: SemioPoint2 { x: 1.5, y: 2.5 }, width: 3.5, height: 4.5 };
     vec![

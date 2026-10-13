@@ -5,15 +5,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{encode_option, decode_option};
-use crate::standards::v1::subsets::mesh::schema::diff::*;
+use crate::io::text::snapshot::{encode_option, decode_option};
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -92,10 +92,7 @@ pub(crate) fn dec_bytes(s: &str) -> Result<Vec<u8>, String> {
     hex_decode(s)
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_f32(s: &str) -> Result<f32, String> {
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::{parse_f32, enc_rgba, dec_rgba};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
@@ -139,18 +136,6 @@ pub(crate) fn dec_uv(s: &str) -> Result<SemioUv, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [u, v] = parts.as_slice() else { return Err(format!("uv: expected 2 fields, got {}", parts.len())) };
     Ok(SemioUv { u: parse_f64(u)?, v: parse_f64(v)? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_rgba(c: &SemioRgba) -> String {
-    format!("[{},{},{},{}]", c.r, c.g, c.b, c.a)
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_rgba(s: &str) -> Result<SemioRgba, String> {
-    let parts = split_top_level(strip_brackets(s)?, ',');
-    let [r, g, b, a] = parts.as_slice() else { return Err(format!("rgba: expected 4 fields, got {}", parts.len())) };
-    Ok(SemioRgba { r: parse_f32(r)?, g: parse_f32(g)?, b: parse_f32(b)?, a: parse_f32(a)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

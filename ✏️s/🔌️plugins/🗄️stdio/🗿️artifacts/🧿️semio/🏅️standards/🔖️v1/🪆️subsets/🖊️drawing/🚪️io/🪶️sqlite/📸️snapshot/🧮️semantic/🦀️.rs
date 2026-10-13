@@ -1,8 +1,8 @@
 //! 🖊️ Borrowed Drawing primitives count actual canvas, style, layer, path and scene cells.
 use super::{SemioDrawingSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Drawing native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Drawing complete cell extent overflow"))}
@@ -45,7 +45,7 @@ fn binary_node(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mut
  }control.step()?;Ok(())}))
 }
 /// 📦️ Counts original Drawing binary records before typed construction.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};
   let mut bytes=add(8,text(&mut reader,control)?)?;bytes=add(bytes,binary_words(&mut reader,2)?)?;bytes=add(bytes,binary_option(&mut reader,control,binary_rgba)?)?;census.row(bytes)?;
@@ -86,7 +86,7 @@ fn document_node(value:&str,census:&mut Census,control:&mut NativeDecodeControl<
  }control.step()?;Ok(())}))
 }
 /// 📝️ Counts Drawing native field records using the actual binary32 and binary64 parsers.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","canvas","styles","layers"],control)?;let mut census=Census{limits,rows:0,bytes:0};
   let mut bytes=add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?;let[width,height,background]=native::record(fields[1].ok_or_else(invalid)?,control)?;bytes=add(bytes,document_f64(width,control)?)?;bytes=add(bytes,document_f64(height,control)?)?;bytes=add(bytes,document_option(background,control,document_rgba)?)?;census.row(bytes)?;

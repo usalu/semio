@@ -16,8 +16,8 @@ pub type Generation2dFixtureStore = store::ArtifactStore<Generation2dSnapshot, G
 
 /// 🏗️ A document store over `snapshot` carrying the artifact's own owner catalog.
 pub async fn document_store(snapshot: Generation2dSnapshot) -> Generation2dFixtureStore {
-    let mut store = Generation2dFixtureStore::new(store::create_document_envelope(crate::GENERATION_2D_SCHEMA, "generation2d", snapshot, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Generation2dSnapshot, Generation2dMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    let mut store = Generation2dFixtureStore::new(store::os_store::document_materialize::create_document_envelope(crate::GENERATION_2D_SCHEMA, "generation2d", snapshot, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Generation2dSnapshot, Generation2dMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     store
 }
 

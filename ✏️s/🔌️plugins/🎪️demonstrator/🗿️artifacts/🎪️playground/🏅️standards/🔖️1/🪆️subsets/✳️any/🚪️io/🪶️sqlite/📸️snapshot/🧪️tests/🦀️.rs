@@ -1,7 +1,7 @@
 #[path = "../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::PlaygroundSnapshot;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -54,7 +54,7 @@ fn sqlite_snapshot_playground_authored_single_table_is_independently_queryable()
 #[test]
 fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent() {
     use semio_framework_os_kernel::sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl};
-    let codec = store::ArtifactCodec::bare::<PlaygroundSnapshot, crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(crate::PLAYGROUND_DOCUMENT_SCHEMA);
+    let codec = store::bare_artifact_codec::<PlaygroundSnapshot, crate::standards::v1::subsets::any::schema::mutations::PlaygroundMutation>(crate::PLAYGROUND_DOCUMENT_SCHEMA);
     let provider = codec.snapshot_sqlite.expect("Playground declared snapshot capability missing");
     assert_eq!(provider.snapshot_type, Some(std::any::TypeId::of::<PlaygroundSnapshot>()));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.demonstrator.playground".into(), standard: "1".into(), subset: "*".into() };
@@ -77,7 +77,7 @@ fn sqlite_snapshot_playground_actual_erased_native_formats_use_queryable_parent(
 
 #[test]
 fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes() {
-    use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
     let source = PlaygroundSnapshot { schema: fixture()["nativeCases"][2]["schema"].as_str().unwrap().into() };
     let limits = SqliteDatabaseLimits { max_rows: fixture()["controls"]["domainRows"].as_u64().unwrap() as usize, ..SqliteDatabaseLimits::default() };
     let database = original_owners::with_sqlite_recipient(limits,&mut |_| true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
@@ -117,7 +117,7 @@ fn sqlite_snapshot_playground_owned_rows_are_literal_and_refuse_hostile_shapes()
 
 #[test]
 fn sqlite_snapshot_playground_controlled_copies_refuse_inside_all_four_phases() {
-    use store::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+    use store::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
     let f = fixture();
     let source = PlaygroundSnapshot { schema: f["largeTextUnit"].as_str().unwrap().repeat(f["largeTextRepeats"].as_u64().unwrap() as usize) };
     let database = original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_| true,|sqlite_control|source.to_sqlite_database(sqlite_control)).unwrap();
@@ -184,7 +184,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
     use store::{
         io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot},
         sqlite_snapshot::*,
-        ArtifactSqliteSnapshot,
+        os_store::serialization::ArtifactSqliteSnapshot,
     };
     semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("demonstrator")
         .label("Playground Typed SQLite Declaration")
@@ -223,7 +223,7 @@ async fn sqlite_snapshot_playground_typed_io_and_independent_edit_use_final_meta
 /// 📏️ Uses SQLite's actual UTF8 storage to demand every field at its exact native semantic ceiling.
 #[test]
 fn sqlite_snapshot_playground_independent_exact_semantic_native_limits(){
- use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database}};
+ use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database}};
  use std::{io::Write,process::{Command,Stdio}};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();let sources=corpus["nativeCases"].as_array().unwrap().iter().map(|case|PlaygroundSnapshot{schema:case["schema"].as_str().unwrap().into()}).chain(std::iter::once(PlaygroundSnapshot{schema:corpus["largeTextUnit"].as_str().unwrap().repeat(corpus["largeTextRepeats"].as_u64().unwrap()as usize)}));
  for source in sources{

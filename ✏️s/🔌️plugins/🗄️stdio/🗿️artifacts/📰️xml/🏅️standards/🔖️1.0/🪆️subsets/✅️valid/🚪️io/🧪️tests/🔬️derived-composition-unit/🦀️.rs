@@ -34,8 +34,8 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_recheck_flags_only_soft_diagnostics_for_a_clean_document() {
         let text = conforming_xml_text();
-        let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parses");
-        let bytes = <XmlSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let snapshot = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parses");
+        let bytes = <XmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let diagnostics = XmlValidValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "wire recheck must never report a hard violation for a composer-clean document: {diagnostics:?}");
     }
@@ -74,16 +74,16 @@ mod tests {
 
         async fn parse_native(asset: &store::os_store::test_support::ExampleAsset<'_>) -> Result<Self::Snapshot, String> {
             let text = asset.text.ok_or_else(|| "xml valid requires dsl text".to_string())?;
-            <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+            <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
         }
 
         async fn export_native(snapshot: &Self::Snapshot) -> Result<Vec<u8>, String> {
-            Ok(store::ArtifactDsl::print_dsl(snapshot).into_bytes())
+            Ok(store::os_store::serialization::ArtifactDsl::print_dsl(snapshot).into_bytes())
         }
 
         async fn reimport_native(bytes: &[u8]) -> Result<Self::Snapshot, String> {
             let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-            <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+            <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
         }
 
         async fn infer(snapshot: &Self::Snapshot) -> Result<Self::Inference, semio_framework_value::ValueError> {
@@ -97,14 +97,14 @@ mod tests {
 
         async fn validate_payload(bytes: &[u8]) -> Result<(), Vec<String>> {
             let text = std::str::from_utf8(bytes).map_err(|e| vec![e.to_string()])?;
-            let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
+            let snapshot = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| vec![e.to_string()])?;
             let hard: Vec<String> = check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect();
             if hard.is_empty() { Ok(()) } else { Err(hard) }
         }
 
         async fn validate_negative(bytes: &[u8]) -> Result<Vec<String>, String> {
             let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
-            let snapshot = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())?;
+            let snapshot = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())?;
             Ok(check_valid_conformance(&snapshot).into_iter().filter(|d| matches!(d.severity, Severity::Error | Severity::Fatal)).map(|d| d.code.0).collect())
         }
     }

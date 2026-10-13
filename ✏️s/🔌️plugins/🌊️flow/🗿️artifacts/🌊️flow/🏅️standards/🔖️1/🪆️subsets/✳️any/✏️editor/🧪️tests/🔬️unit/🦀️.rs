@@ -4,7 +4,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::SemioMembers;
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     
     pub type FlowApp = VcsArtifactApp<EditorApp<FlowPlayApp>, SemioMembers>;
     
@@ -152,7 +152,7 @@ pub(crate) mod context {
     /// 🪆️ The scene the window renders and every verb edits: the composed content child, decoded from its own store —
     /// never the parent's genesis owner (see `crate::flow_composed_snapshot`).
     pub async fn composed_scene(app: &FlowApp) -> semio_framework_artifact_flow_flow::FlowHostSnapshot {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+        use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
         use store::SpaceMember;
         let snapshot = app.snapshot().expect("snapshot");
         let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &snapshot.content.child_id).await.expect("composed content child").document_pack_bytes().await.expect("content child pack")).expect("content child snapshot");
@@ -224,14 +224,14 @@ fn retained_content_child_factory_is_exact_and_legacy_closed() {
 #[semio_framework_async_macros::async_test]
 async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires() {
     use semio_framework_plugin::app::TypedOperationResultLane;
-    use store::{ArtifactPack, SpaceMember};
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
 
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🧵️add-widget-retained/🔣️.json")).expect("retained addWidget fixture");
     let mut app = flow_app_with_registry().await;
     PluginApp::bind_instance_id(&mut *app, 1).await;
     let parent_before = app.snapshot().expect("Flow parent before retained addWidget");
     let child_id = parent_before.content.child_id.clone();
-    let child_before = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+    let child_before = semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
         &app.child_store("content", &child_id).await.expect("Flow child before retained addWidget").document_pack_bytes().await.expect("Flow child pack before retained addWidget"),
     )
     .expect("decode Flow child before retained addWidget");
@@ -251,7 +251,7 @@ async fn retained_add_widget_dispatches_one_acknowledged_child_group_and_retires
     assert!(!PluginApp::has_pending_typed_operations(&*app));
     let parent_after = app.snapshot().expect("Flow parent after retained addWidget");
     assert_eq!(parent_after.content, parent_before.content, "retained addWidget must preserve the exact parent content coordinate");
-    let child_after = semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
+    let child_after = semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot::decode_pack(
         &app.child_store("content", &child_id).await.expect("Flow child after retained addWidget").document_pack_bytes().await.expect("Flow child pack after retained addWidget"),
     )
     .expect("decode Flow child after retained addWidget");
@@ -529,8 +529,8 @@ async fn undo_restores_fixture_after_add_widget() {
 async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
     use semio_framework_plugin::app::TypedOperationResultLane;
     use semio_framework_plugin::artifact_app_laws::{settle_history_verb, settle_registered_typed_operation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{ArtifactPack, SpaceMember};
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
 
     let mut app = flow_app_with_registry().await;
     let receiver = meta("local").instance_id;
@@ -553,8 +553,8 @@ async fn retained_move_media_node_preserves_absolute_drop_and_undo() {
 
 /// 🧩️ The `content` child's node count — the authoritative witness for every `Child`-lane verb.
 async fn flow_child_node_count(app: &FlowApp, child_id: &str) -> usize {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{ArtifactPack, SpaceMember};
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
 
     SemioFlowSnapshot::decode_pack(&app.child_store("content", child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack"))
         .expect("Flow content child snapshot")
@@ -603,8 +603,8 @@ async fn host_from_snapshot_deletes_edge_selected_by_synapse_domain() {
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_on_disjoint_edits() {
     use semio_framework_plugin::artifact_app_laws::settle_registered_typed_operation;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-    use store::{ArtifactPack, MemoryBackbone, SpaceMember};
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+    use store::{os_store::serialization::ArtifactPack, os_store::backbone::MemoryBackbone, SpaceMember};
     async fn probe(app: &FlowApp) -> Vec<(String, i64, i64)> {
         let child_id = app.snapshot().expect("Flow parent snapshot").content.child_id.clone();
         let child = SemioFlowSnapshot::decode_pack(&app.child_store("content", &child_id).await.expect("Flow content child").document_pack_bytes().await.expect("Flow content child pack")).expect("decode Flow content child");
@@ -629,8 +629,8 @@ async fn two_instances_converge_on_disjoint_edits() {
     instance_a.bind_instance_id(metadata_a.instance_id).await;
     instance_b.bind_instance_id(metadata_b.instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-convergence", "mem://flow-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
     instance_a.dispatch_typed(FlowCommand::AddWidget(add_widget::AddWidget { kind: "inputNote".into(), neuron_kind: None, x: Some(40.0), y: Some(41.0), label: None, action: None, format: None }), &metadata_a, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut *instance_a, metadata_a.instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");

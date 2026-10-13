@@ -522,7 +522,7 @@ pub trait DslVariants: Sized {
     fn to_named_record_controlled(&self,control:&mut NativeEncodeControl<'_>)->Result<(String,RecordValue),ValueError>{control.checkpoint()?;Err(ValueError::new(ValueRefusalKind::UnsupportedOwner,"variant owner has no controlled native projection implementation"))}
     /// ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
-    /// `crate::os_spr::OpText::parse_op`/`crate::os_store::ArtifactDsl::parse_dsl` already return, and the derive's
+    /// `crate::os_spr::OpText::parse_op`/`crate::os_store::serialization::ArtifactDsl::parse_dsl` already return, and the derive's
     /// `#[dsl(statements)]` field codegen composes it without any conversion at every nesting depth.
     fn from_named_record(keyword: &str, record: &RecordValue) -> Result<Self, TextError>;
     /// 🌲️ Retires a completed tagged value through its domain owner.

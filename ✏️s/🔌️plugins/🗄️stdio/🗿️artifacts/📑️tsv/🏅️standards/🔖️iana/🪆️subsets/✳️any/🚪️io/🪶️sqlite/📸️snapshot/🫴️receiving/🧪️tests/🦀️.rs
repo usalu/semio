@@ -18,7 +18,7 @@ fn sqlite_snapshot_tsv_receiving_original_subset_validation_uses_both_original_c
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding);
  eprintln!("[DEBUG] TSV original subset receiving validation matches eight neutral directional cases with exact borrowed pointers, original native and SQL cancellation, zero physical allocation/release and literal unsupported policy");
 }
-use store::ArtifactSqliteSnapshot as _;
+use store::os_store::serialization::ArtifactSqliteSnapshot as _;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use std::{cell::Cell,sync::atomic::{AtomicUsize,Ordering}};

@@ -2,7 +2,7 @@ use crate::host::owned::new_cad_store;
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::mutations::create_shape_model::CreateShapeModel;
 use crate::{empty_cad_snapshot, sample_scene_fixture::sample_model_child, CAD_DOCUMENT_SCHEMA};
-use store::{create_document_envelope, ArtifactCommand};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn encode_decode_op_round_trips_a_representative_operation() {

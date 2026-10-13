@@ -1396,10 +1396,11 @@ function verifiedPanelSurfacesV1(tabs: PackValue | undefined, windows: readonly 
   return Object.freeze(panels);
 }
 
-/** 📜️ Strictly admits the raw descriptor bytes: canonical re-encoding equality first, then exact
- * equality between the decoded package descriptor and the verified lease fields. A sibling JSON
- * manifest or a caller-selected URL is never descriptor authority, and the render surfaces it
- * answers come from those verified bytes alone. */
+/** 📜️ Strictly admits the raw semantic descriptor bytes: canonical re-encoding equality first, then exact equality between
+ * the decoded package descriptor and the verified lease fields. The descriptor names no bytes — the lease package's shipped
+ * `ComponentReceiptV1` binds it to the component, and a descriptor carrying any byte binding of its own is refused. A sibling
+ * JSON manifest or a caller-selected URL is never descriptor authority, and the render surfaces it answers come from those
+ * verified bytes alone. */
 function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExecutionTargetLeaseFieldsV1): DocumentRenderSurfacesV1 {
   const decoded = decodePackValue(bytes);
   const canonical = encodePackValue(decoded);
@@ -1411,7 +1412,6 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
   const descriptor = record(decoded);
   const executionProtocol = record(descriptor.executionProtocol);
   const manifest = record(descriptor.manifest);
-  const hashes = record(descriptor.hashes);
   const apps = Array.isArray(manifest.apps) ? (manifest.apps as readonly PackValue[]).map(record) : [];
   const artifactKinds = Array.isArray(manifest.artifactKinds) ? (manifest.artifactKinds as readonly PackValue[]).map(record) : [];
   const hostedArtifactKinds = Array.isArray(manifest.hostedArtifactKinds) ? (manifest.hostedArtifactKinds as readonly PackValue[]).map(record) : [];
@@ -1442,7 +1442,7 @@ function parseVerifiedPackageDescriptorV1(bytes: Uint8Array, fields: DocumentExe
     packUIntSafeOrNull(executionProtocol.appChannelVersion) !== fields.package.executionProtocol.appChannelVersion ||
     manifest.pluginId !== fields.package.pluginId ||
     manifest.version !== fields.package.version ||
-    hashes.wasmSha256 !== fields.component.sha256 ||
+    descriptor.hashes !== undefined ||
     app === undefined ||
     dialect === undefined ||
     app.id !== fields.surface.surfaceId ||

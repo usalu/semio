@@ -34,12 +34,15 @@ class TestScript extends BundleScript {
       return;
     }
     const suites: Readonly<Record<string, { source: string; budgetMs: number; testNamePattern?: string }>> = {
+      "build-mode": { source: "🏗️build/🎚️mode/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       capture: { source: "📥️capture/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       command: { source: "🧭️routing/🎛️command/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "command-boundary": { source: "🧭️routing/🎛️command/🧪️tests/🚧️boundary/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "command-cold": { source: "🧭️routing/🎛️command/🧪️tests/❄️cold/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
+      "managed-build-mode": { source: "🏗️build/🧪️tests/🏗️managed/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "native-build-mode": { source: "🏗️build/🧪️tests/🏗️native/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "wasm-build": { source: "📦️artifacts/🕸️wasm-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
-      "native-artifacts": { source: "📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
+      "native-artifacts": { source: "📦️artifacts/🏗️native-build/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.quick },
       "exact-cargo-laws": { source: "🧪️testing/🦀️cargo/🎯️exact/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "owner-context": { source: "📋️context/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
       "vitest-driver": { source: "🧪️testing/🧪️vitest/🧪️tests/🟦️.ts", budgetMs: TEST_LEVEL_BUDGET_MS.fundamental },
@@ -56,7 +59,7 @@ class TestScript extends BundleScript {
     const suite = suites[segments[0]!];
     if (!suite) throw Error(`Unknown process contract suite: ${segments[0]}`);
     if (["routing", "command", "capture"].includes(segments[0]!)) await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", resolve(this.root, suite.source)], this.repoRoot, "process:" + segments[0] + ":types", scriptInvocationBudget(this.invocation, suite.budgetMs), { signal: this.invocation.control.signal });
-    const sources = [resolve(this.root, suite.source), ...(segments[0] === "capture" ? [resolve(this.root, "📥️capture/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "exact-cargo-laws" ? [resolve(this.root, "🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "native-artifacts" ? [resolve(this.root, "📦️artifacts/🏗️native-build/🧾️receipt/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "owned-execution" ? [resolve(this.root, "🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts"),resolve(this.root, "🎛️owned-execution/🧪️tests/📬️output/🟦️.ts")] : [])];
+    const sources = [resolve(this.root, suite.source), ...(segments[0] === "capture" ? [resolve(this.root, "📥️capture/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "exact-cargo-laws" ? [resolve(this.root, "🧪️testing/🦀️cargo/🎯️exact/📥️invocation/🧪️tests/🟦️.ts")] : []), ...(segments[0] === "native-artifacts" ? ["🧾️receipt", "🎰️jobserver", "🎟️admission", "📈️telemetry", "🗃️stage-cache", "🧩️component-pass"].map((facet) => resolve(this.root, `📦️artifacts/🏗️native-build/${facet}/🧪️tests/🟦️.ts`)) : []), ...(segments[0] === "owned-execution" ? [resolve(this.root, "🎛️owned-execution/🧪️tests/📤️stdout/🟦️.ts"),resolve(this.root, "🎛️owned-execution/🧪️tests/📬️output/🟦️.ts")] : [])];
     await runOwnedCommand(process.execPath, ["test", ...sources, ...(suite.testNamePattern ? ["--test-name-pattern", suite.testNamePattern] : [])], this.repoRoot, `process:${segments[0]}`, scriptInvocationBudget(this.invocation, suite.budgetMs), { env: { ...process.env, SEMIO_TEST_ARTIFACT_DIR: output }, signal: this.invocation.control.signal });
   }
 }

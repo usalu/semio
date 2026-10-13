@@ -28,7 +28,6 @@ fn descriptor() -> PackageDescriptor {
         quotas: kernel::QuotaSchema::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),
-        hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     }
 }
 
@@ -48,4 +47,15 @@ fn package_descriptor_first_party_codec_preserves_serde_wire_and_required_fields
         let error = PackageDescriptor::from_value(DslValue::Object(missing)).expect_err("missing required descriptor field must fail");
         assert!(error.to_string().contains(required), "{error}");
     }
+}
+
+#[test]
+fn package_descriptor_is_semantic_and_refuses_a_byte_binding() {
+    let DslValue::Object(mut fields) = descriptor().to_value() else { panic!("descriptor must encode as an object") };
+    let binding = DslValue::Object(vec![("wasmSha256".into(), DslValue::String("11".repeat(32)))]);
+    fields.push(("hashes".into(), binding));
+    let error = PackageDescriptor::from_value(DslValue::Object(fields.clone())).expect_err("a descriptor names no bytes; its ComponentReceiptV1 does");
+    assert!(error.to_string().contains("hashes"), "{error}");
+    let serde_wire = serde_json::Value::from(&DslValue::Object(fields));
+    assert!(serde_json::from_value::<PackageDescriptor>(serde_wire).is_err(), "the serde projection refuses the binding as well");
 }

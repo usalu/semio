@@ -185,28 +185,11 @@ opt-level = 3
 [profile.dev.package.wit-parser]
 opt-level = 3
 
-[profile.dev.package.semio-framework-plugin-host]
+[profile.dev.package.semio-framework-plugin-interpreter]
 opt-level = 3
 
 [profile.dev.package.semio-framework-hash]
 opt-level = 3
-
-[profile.wasm-dev]
-inherits = "dev"
-codegen-units = 1
-incremental = false
-
-[profile.wasm-dev.package.semio-framework-os-flow]
-opt-level = 2
-
-[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
-opt-level = 2
-
-[profile.wasm-dev.package.semio-framework-replication]
-opt-level = 2
-
-[profile.wasm-dev.package.semio-framework-pack]
-opt-level = 2
 
 [profile.release]
 opt-level = 3
@@ -216,14 +199,44 @@ strip = "debuginfo"
 incremental = false
 trim-paths = "object"
 
+# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2); its rationale and measurements live beside the same
+# definition in the repository root `Cargo.toml`.
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"
 lto = "thin"
-codegen-units = 1
+codegen-units = 16
 strip = "symbols"
 incremental = false
 trim-paths = "object"
 
-[profile.wasm-release.package.semio-framework-os-kernel]
-codegen-units = 1
+# 🔁️ The single-plugin browser iteration loop only (`bun nx run workspace:components iterate <plugin-id>`): never in a
+# release graph, never described for commit, never shipped. Inherits the shipped profile's target settings and trades
+# size and speed for compile latency — incremental, no LTO, 256 codegen units, assertions on, symbols kept. Its bytes
+# reach no receipt but a local `wasm-prototype` one and stay under the local-only `ITERATE_COMPONENT_MAX_BYTES` (512 MiB).
+[profile.wasm-prototype]
+inherits = "wasm-release"
+opt-level = 1
+lto = false
+codegen-units = 256
+incremental = true
+debug-assertions = true
+overflow-checks = true
+strip = "none"
+
+# 🎚️ An iterated plugin still meets the framework's 8 ms interactive-step contract: below `opt-level = 2` a lowpoly
+# render turn tessellates its seeded mesh in 10-11.5 ms and the runtime traps it with `plugin.internal.interactive-ceiling`.
+[profile.wasm-prototype.package.semio-framework-os-flow]
+opt-level = 2
+
+# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
+[profile.wasm-prototype.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
+[profile.wasm-prototype.package.semio-framework-replication]
+opt-level = 2
+
+# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
+[profile.wasm-prototype.package.semio-framework-pack]
+opt-level = 2

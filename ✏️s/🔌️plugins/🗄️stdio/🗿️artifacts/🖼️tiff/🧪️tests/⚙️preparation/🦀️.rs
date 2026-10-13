@@ -16,7 +16,7 @@ fn config_apply_preparation_publishes_the_post_config_and_a_restoring_inverse() 
     let base = Config::default();
     let mutation = ConfigMutation::from_value(DslValue::object([("kind".into(), DslValue::String("set-selected-ifd".into())), ("selected_ifd".into(), DslValue::uint(2))])).expect("a config mutation decodes");
     let factory = <TiffAnyEditor as ArtifactEditor>::build_config_store_one_item_preparation_factory().expect("the TIFF config lane declares a preparation factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
     assert_ne!(*law.post, base);
     assert_eq!(law.inverse.len(), 1);

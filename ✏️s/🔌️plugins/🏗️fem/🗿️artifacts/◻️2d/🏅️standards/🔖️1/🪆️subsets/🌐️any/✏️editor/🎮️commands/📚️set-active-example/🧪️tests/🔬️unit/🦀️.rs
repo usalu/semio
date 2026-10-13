@@ -16,7 +16,7 @@ fn set_active_example_loads_the_demo_fixture_2d() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <crate::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <crate::Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(!loaded.nodes.is_empty(), "expected the default fixture's nodes");
 }
 
@@ -31,7 +31,7 @@ fn set_active_example_unknown_id_resets_to_empty_document_2d() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <crate::Fem2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let loaded = <crate::Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert_eq!(loaded, crate::standards::v1::subsets::any::io::text::snapshot::empty_fem2d_snapshot());
 }
 

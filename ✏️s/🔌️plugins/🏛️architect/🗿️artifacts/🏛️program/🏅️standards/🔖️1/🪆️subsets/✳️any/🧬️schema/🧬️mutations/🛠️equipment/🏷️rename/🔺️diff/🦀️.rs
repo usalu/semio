@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛠️equipment` per Wave C.
 
 use super::RenameEquipment;
-use crate::diff::{ProgramEquipmentDelta, ProgramEquipmentPatchEntry};
-use crate::registers::EquipmentPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramEquipmentDelta, ProgramEquipmentPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::EquipmentPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameEquipment, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

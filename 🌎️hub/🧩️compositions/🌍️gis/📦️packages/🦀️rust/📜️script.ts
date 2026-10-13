@@ -7,7 +7,7 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { strict as assert } from "node:assert";
 import Ajv from "ajv";
-import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests, runCmd, devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests, runCmd, devToolingEnv } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { ComponentColdMapPatchCheckScript, ComponentColdMapPatchNativeCheckScript } from "../../🧪️tests/🌉️component-cold-map-patch/🟦️.ts";
@@ -37,7 +37,7 @@ class TestScript extends BundleScript {
  * receipts (`os_pack::schema_hash`); the same test, run without the write mode, is the projection-equals-receipts law. */
 class NativeCodecProjectionScript extends BundleScript {
   run(): void {
-    runCmd("cargo", ["test", "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-hub-gis", "--no-default-features", "--test", "native_codecs", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
+    runCmd("cargo", ["test", "--manifest-path", resolve(this.root, "Cargo.toml"), "-p", "semio-hub-gis", "--test", "native_codecs", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
   }
 }
 
@@ -77,5 +77,4 @@ const router = new ScriptRouter(import.meta.dir)
   .register("durable-three-store-assembly-native-check", DurableThreeStoreAssemblyNativeCheckScript)
   .register("component-cold-map-patch-check", ComponentColdMapPatchCheckScript)
   .register("component-cold-map-patch-native-check", ComponentColdMapPatchNativeCheckScript);
-registerPlaygroundSiteBuildCommands(router);
 if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

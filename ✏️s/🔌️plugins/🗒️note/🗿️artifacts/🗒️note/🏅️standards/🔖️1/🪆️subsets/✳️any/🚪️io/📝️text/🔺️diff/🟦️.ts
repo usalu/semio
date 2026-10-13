@@ -1,6 +1,6 @@
 import type { NoteDiff } from "../../../🧬️schema/🔺️diff/🟦️.ts";
 
-/** 🔺️ note.diff text facade. `NoteDiff` never implements `store::ArtifactDsl` anywhere in the note
+/** 🔺️ note.diff text facade. `NoteDiff` never implements `store::os_store::serialization::ArtifactDsl` anywhere in the note
  * plugin — the sibling `🦀️.rs` documents this explicitly: this facet exists only to
  * register `note.diff`'s handcrafted grammar for LSP/tooling (design.md §2's `LanguagePair`: "a
  * registered grammar with no literal runtime parser backing it" is legal). There is nothing on the

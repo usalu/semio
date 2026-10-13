@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📌requirements` per Wave C.
 
 use super::RenameRequirement;
-use crate::diff::{ProgramRequirementsDelta, ProgramRequirementsPatchEntry};
-use crate::registers::RequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramRequirementsDelta, ProgramRequirementsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::RequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

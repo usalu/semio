@@ -9,11 +9,12 @@ import { requireRecord, requireStringArray, requireString, requireLiteral, requi
 import { type TaxonomyNodeKind, type TaxonomyScopedGitPathspec, taxonomyScopedGitPathspec, type TaxonomySourceIndexEntry, sourceAdmissionRecord, sourceAdmissionSafePath, sourceAdmissionRepositoryFences, sourceAdmissionByteCompare, sourceAdmissionContainingRepository } from "./🚪️source-admission/🟦️.ts";
 import { type TaxonomyProgress, TaxonomyCancellationError, report } from "./🏃️operation/🟦️.ts";
 import { type SemanticExactDescendantContract, type SemanticDescendantKindNode, type LoadedTaxonomy, type FileKindSpec, type GeneratorContractSpec, type PackageBoundaryRule, type FixedFilenameContract, type FixedDirectoryContract, type FixedContractScope, type ConfigurableEntryContract, type PackageGlueGrammar, type SemanticDistributedJsonManifestCatalogContract, type SemanticExactOwnerVectorsCatalogContract, type SemanticProjectionCaptureField, type SemanticPathProjectionContract, loadTaxonomy, type GeneratorInputTaxonomy, type SemanticPathProjectionReferenceConsumerContract, TAXONOMY_RELATIVE_PATH } from "./🔣️taxonomy/🟦️.ts";
-import { normalizeRelative, splitLeadingEmoji, sourceRelative, SEGMENTER, isEmojiGrapheme, emojiFold, inScope } from "./🛣️path/🟦️.ts";
-import { sha256, assertLexicalInputOutsideOpaque, lstatOrNull, assertNoFollowAncestors, LEXICAL_OPAQUE_ROOTS, noFollowDirectoryChain } from "./📁️input/🟦️.ts";
+import { normalizeRelative, splitLeadingEmoji, sourceRelative, SEGMENTER, isEmojiGrapheme, emojiFold, inScope, utf8Compare } from "./🛣️path/🟦️.ts";
+import { sha256, assertLexicalInputOutsideOpaque, createLexicalInputSession, lstatOrNull, assertNoFollowAncestors, LEXICAL_OPAQUE_ROOTS, noFollowDirectoryChain } from "./📁️input/🟦️.ts";
 import { sourceAdmissionPrepareOptions, sourceAdmissionCheckCancellation, collectTaxonomySourceAdmission, sourceAdmissionAssertLexical, sourceAdmissionGitRows, sourceAdmissionCapture, sourceAdmissionScopedOptions, type SourceAdmissionCapture } from "./🚪️source-admission/📁️io/🟦️.ts";
 import { execFileSync, spawnSync } from "node:child_process";
 import { randomUUID } from "node:crypto";
+import { availableParallelism } from "node:os";
 import { chmodSync, closeSync, copyFileSync, existsSync, fsyncSync, linkSync, lstatSync, mkdirSync, openSync, readFileSync, readdirSync, readlinkSync, renameSync, rmdirSync, rmSync, symlinkSync, writeFileSync, writeSync } from "node:fs";
 import type { Stats } from "node:fs";
 import { canonicalJson } from "../🧾️serialization/🔣️json/🟦️.ts";
@@ -29,6 +30,9 @@ import { validateFrozenMarkdownCoordinateEvidenceContracts, type FrozenMarkdownC
 import { cargoPackageRootBuildScriptPath, classifyPackageSource, classifyPackageSourceDisposition, fixedSourceDispositionDecision, implementationLeafBasenameFinding, jsonDocumentDuplicateKeys, mutationCatalogSourceOwner, mutationCatalogSourceOwnersProblems, mutationOwnerIdentity, mutationOwnerRelativePath, mutationPayloadSchemaProblems, subsetIdForDirectoryName, targetInsidePackageBoundaryFinding, taxonomyFileKindIsImplementation } from "../🔍️discovery/🟦️.ts";
 import { pathEmojiStatuteFindings, reservedDocumentationBasename } from "../../../../../🔨️modules/🪪️identity/🛣️path/🟦️.ts";
 import { basename, dirname, isAbsolute, join, posix, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { moduleSourceClosureDigest, openRecordStore, pruneRecordStoreNamespaces, recordKey, type RecordStore } from "../⚡️caching/🗃️records/🟦️.ts";
+import { repoCacheDirectory } from "../⚡️caching/🟦️.ts";
 import { artifactPathProjectionCatalogRoots, createTaxonomyPathMatcher, renderArtifactPathProjectionRoot, semanticArtifactEmptyFacetProjectionAuthority, semanticExactOwnedFileCatalog, semanticExactOwnedFileProjectionAuthority, semanticOwnedFileHistoryProjectionAuthority, semanticOwnedFileProjectionAuthority, semanticOwnedPrimaryFileProjectionAuthority, semanticPathProjectionAuthority, semanticPathProjectionReferenceConsumers, type SemanticExactOwnedFileCase, type SemanticExactOwnedFileCatalog, type SemanticFacetPrimaryFileProjectionContract, type SemanticPathProjectionReferenceConsumerForm, type SemanticProjectionAuthorityNode } from "../🔍️discovery/🟦️.ts";
 //#endregion 🔌️Adapters
 
@@ -739,7 +743,7 @@ export function parseTaxonomyPlan(value: unknown): TaxonomyPlan {
 }
 
 function generatorPathCompare(left: string, right: string): number {
-  return Buffer.from(left).compare(Buffer.from(right));
+  return utf8Compare(left, right);
 }
 
 function generatorPreviewJson(manifest: TaxonomyGeneratorPreviewManifest): string {
@@ -841,22 +845,55 @@ function splitLeadingEmojiIdentity(value: string): { sequence: string; first: st
   return { sequence, first, rest: value.slice(sequence.length) };
 }
 
+/** 🗂️ Directory kinds by folded emoji and by locale-folded id, and semantic member kinds by folded member name, each in declaration order, built once per loaded taxonomy. */
+interface DirectoryKindIndex {
+  readonly kindsByEmoji: ReadonlyMap<string, readonly LoadedTaxonomy["directoryKinds"][number][]>;
+  readonly memberKindsByName: ReadonlyMap<string, readonly (readonly [string, LoadedTaxonomy["schema"]["semanticDirectoryMemberKinds"][string]])[]>;
+  readonly kindsByFoldedId: ReadonlyMap<string, readonly LoadedTaxonomy["directoryKinds"][number][]>;
+}
+
+const directoryKindIndexes = new WeakMap<LoadedTaxonomy, DirectoryKindIndex>();
+
+/** 🧮️ Indexes {@link matchDirectoryKind}'s emoji and member-name comparisons so each directory costs O(1) lookups instead of a scan of every kind and member name. */
+function directoryKindIndex(taxonomy: LoadedTaxonomy): DirectoryKindIndex {
+  const cached = directoryKindIndexes.get(taxonomy);
+  if (cached) return cached;
+  const kindsByEmoji = new Map<string, LoadedTaxonomy["directoryKinds"][number][]>(), kindsByFoldedId = new Map<string, LoadedTaxonomy["directoryKinds"][number][]>(), memberKindsByName = new Map<string, (readonly [string, LoadedTaxonomy["schema"]["semanticDirectoryMemberKinds"][string]])[]>();
+  for (const kind of taxonomy.directoryKinds) {
+    const key = emojiFold(kind.emoji), rows = kindsByEmoji.get(key);
+    if (rows) rows.push(kind);
+    else kindsByEmoji.set(key, [kind]);
+    const id = kind.id.normalize("NFC").toLocaleLowerCase("und"), named = kindsByFoldedId.get(id);
+    if (named) named.push(kind);
+    else kindsByFoldedId.set(id, [kind]);
+  }
+  for (const entry of Object.entries(taxonomy.schema.semanticDirectoryMemberKinds)) for (const key of new Set(entry[1].memberNames.map(emojiFold))) {
+    const rows = memberKindsByName.get(key);
+    if (rows) rows.push(entry);
+    else memberKindsByName.set(key, [entry]);
+  }
+  const index = { kindsByEmoji, memberKindsByName, kindsByFoldedId };
+  directoryKindIndexes.set(taxonomy, index);
+  return index;
+}
+
 function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId?: string, ancestorKindIds: readonly string[] = []): { kind: { readonly id: string; readonly emoji: string } | null; slug: string; ambiguous: readonly string[] } {
   const normalized = name.normalize("NFC");
   const identity = splitLeadingEmojiIdentity(normalized);
   const leading = { emoji: identity.first, rest: identity.rest };
   const contextAllows = (kind: LoadedTaxonomy["directoryKinds"][number]): boolean => (kind.parentKindIds?.length ?? 0) === 0 || (parentKindId !== undefined && kind.parentKindIds?.includes(parentKindId) === true);
+  const index = directoryKindIndex(taxonomy);
   if (leading.emoji) {
-    const global = taxonomy.directoryKinds.filter((kind) => emojiFold(kind.emoji) === emojiFold(leading.emoji) && ((leading.rest.length === 0 && kind.allowEmojiOnly) || kind.slugRegex.test(leading.rest)));
-    const exact = global.filter((kind) => contextAllows(kind) && kind.id.normalize("NFC").toLocaleLowerCase("und") === leading.rest.toLocaleLowerCase("und"));
+    const global = (index.kindsByEmoji.get(emojiFold(leading.emoji)) ?? []).filter((kind) => (leading.rest.length === 0 && kind.allowEmojiOnly) || kind.slugRegex.test(leading.rest));
+    const named = index.kindsByFoldedId.get(leading.rest.toLocaleLowerCase("und")) ?? [];
+    const exact = global.filter((kind) => contextAllows(kind) && named.includes(kind));
     if (exact.length === 1) return { kind: exact[0], slug: leading.rest, ambiguous: [] };
     if (exact.length > 1) return { kind: null, slug: leading.rest, ambiguous: exact.map((entry) => entry.id) };
     const contextual = parentKindId === undefined ? [] : global.filter((kind) => kind.parentKindIds?.includes(parentKindId) === true);
     const ordinary = contextual.length > 0 ? contextual : global.filter((kind) => (kind.parentKindIds?.length ?? 0) === 0);
     if (ordinary.length === 1) return { kind: ordinary[0], slug: leading.rest, ambiguous: [] };
     const contexts = [parentKindId, ...ancestorKindIds].filter((kindId, index, rows): kindId is string => Boolean(kindId) && rows.indexOf(kindId) === index);
-    const overlays = Object.entries(taxonomy.schema.semanticDirectoryMemberKinds)
-      .filter(([, spec]) => spec.memberNames.some((memberName) => emojiFold(memberName) === emojiFold(`${identity.first}${identity.rest}`)))
+    const overlays = (index.memberKindsByName.get(emojiFold(`${identity.first}${identity.rest}`)) ?? [])
       .map(([id, spec]) => ({ id, distance: contexts.findIndex((kindId) => spec.ownerKindIds.includes(kindId)) }))
       .filter((entry) => entry.distance >= 0)
       .sort((left, right) => left.distance - right.distance || left.id.localeCompare(right.id));
@@ -867,7 +904,7 @@ function matchDirectoryKind(name: string, taxonomy: LoadedTaxonomy, parentKindId
     }
     return { kind: null, slug: leading.rest, ambiguous: ordinary.map((entry) => entry.id) };
   }
-  const exact = taxonomy.directoryKinds.filter((kind) => contextAllows(kind) && kind.inferWithoutEmoji !== false && kind.id.normalize("NFC").toLocaleLowerCase("und") === normalized.toLocaleLowerCase("und"));
+  const exact = (index.kindsByFoldedId.get(normalized.toLocaleLowerCase("und")) ?? []).filter((kind) => contextAllows(kind) && kind.inferWithoutEmoji !== false);
   if (exact.length === 1) return { kind: exact[0], slug: normalized, ambiguous: [] };
   if (exact.length > 1) return { kind: null, slug: normalized, ambiguous: exact.map((entry) => entry.id) };
   const matching = taxonomy.directoryKinds.filter((kind) => kind.inferWithoutEmoji !== false && kind.slugRegex.test(normalized));
@@ -1164,29 +1201,96 @@ function ignoredGeneratorRows(repoRoot: string, taxonomy: LoadedTaxonomy, scope?
 }
 //#endregion 🔐️Source Admission IO
 
-function contentOf(repoRoot: string, row: CandidatePath, sourceRead: TaxonomyCapturedSourceRead): { readonly kind: TaxonomyNodeKind; readonly hash: string; readonly mode: number; readonly size: number; readonly symlinkTarget?: string; readonly bytes?: Uint8Array; readonly violation?: TaxonomyViolation } {
+function contentOf(repoRoot: string, row: CandidatePath, sourceRead: TaxonomyCapturedSourceRead): { readonly stat?: Stats; readonly observedAt?: number; readonly kind: TaxonomyNodeKind; readonly hash: string; readonly mode: number; readonly size: number; readonly symlinkTarget?: string; readonly bytes?: Uint8Array; readonly violation?: TaxonomyViolation } {
   if (row.mode === "040000") return { kind: "directory", hash: "", mode: 0, size: 0 };
   const path = absolutePath(repoRoot, row.path);
   if (!existsSync(path) && row.mode !== "120000") return { kind: "file", hash: row.objectId ?? sha256(""), mode: 0, size: 0, violation: violation("tracked-path-missing", row.path, "Tracked path is missing from the worktree") };
   try {
-    const stat = lstatSync(path);
+    const observedAt = Date.now(), stat = lstatSync(path);
     if (stat.isSymbolicLink() || row.mode === "120000") {
       const target = readlinkSync(path);
       return { kind: "symlink", hash: sha256(target), mode: stat.mode & 0o7777, size: Buffer.byteLength(target), symlinkTarget: target };
     }
     if (stat.isDirectory()) return { kind: "directory", hash: "", mode: stat.mode & 0o7777, size: 0 };
     const bytes = sourceRead(path);
-    return { kind: "file", hash: sha256(bytes), mode: stat.mode & 0o7777, size: bytes.byteLength, bytes };
+    return { stat, observedAt, kind: "file", hash: sha256(bytes), mode: stat.mode & 0o7777, size: bytes.byteLength, bytes };
   } catch (error) {
     return { kind: row.mode === "120000" ? "symlink" : "file", hash: row.objectId ?? sha256(""), mode: 0, size: 0, violation: violation("path-read-failed", row.path, error instanceof Error ? error.message : String(error)) };
   }
 }
 
+/** 📇️ One leaf's content identity for classification: {@link contentOf}'s answer, with the bytes read and their exact-UTF-8 test run only on
+ * demand. Through a record store, a regular file whose stamp (device, inode, size, times, mode) was recorded non-racily names its digest
+ * and UTF-8 exactness without being read at all. */
+interface LeafContent {
+  readonly stat?: Stats;
+  readonly observedAt?: number;
+  readonly kind: TaxonomyNodeKind;
+  readonly hash: string;
+  readonly mode: number;
+  readonly size: number;
+  readonly symlinkTarget?: string;
+  readonly violation?: TaxonomyViolation;
+  readonly bytes: () => Uint8Array | undefined;
+  readonly utf8: () => boolean | null;
+}
+
+const LEAF_STAMP_NAMESPACE = "taxonomy-leaf-stamp-v1";
+const TEXT_LIMIT_BYTES = 16 * 1024 * 1024;
+
+/** 🔤️ Whether bytes decode as exact UTF-8, or `null` above the text size limit where no leaf is read as text. */
+function exactUtf8(bytes: Uint8Array): boolean | null {
+  if (bytes.byteLength > TEXT_LIMIT_BYTES) return null;
+  try { new TextDecoder("utf-8", { fatal: true }).decode(bytes); return true; } catch { return false; }
+}
+
+function leafContentOf(repoRoot: string, row: CandidatePath, sourceRead: TaxonomyCapturedSourceRead, store: RecordStore | null): LeafContent {
+  const direct = (): LeafContent => {
+    const content = contentOf(repoRoot, row, sourceRead);
+    let utf8: boolean | null | undefined;
+    return { ...content, bytes: () => content.bytes, utf8: () => utf8 === undefined ? utf8 = content.bytes ? exactUtf8(content.bytes) : null : utf8 };
+  };
+  const path = absolutePath(repoRoot, row.path);
+  if (!store || row.mode === "040000" || row.mode === "120000" || !existsSync(path)) return direct();
+  let observedAt: number, stat: Stats;
+  try { observedAt = Date.now(); stat = lstatSync(path); } catch { return direct(); }
+  if (!stat.isFile()) return direct();
+  const key = recordKey(LEAF_STAMP_NAMESPACE, repoRoot, row.path, String(stat.dev), String(stat.ino), String(stat.size), String(stat.mtimeMs), String(stat.ctimeMs), String(stat.mode & 0o7777)), hit = store.get(key);
+  if (hit !== undefined) {
+    try {
+      const record = JSON.parse(Buffer.from(hit).toString("utf8")) as { readonly hash: string; readonly utf8: boolean | null };
+      let bytes: Uint8Array | undefined;
+      const read = (): Uint8Array => {
+        try { return sourceRead(path); } catch (error) { throw new Error(`Leaf changed during inventory: ${row.path}: ${error instanceof Error ? error.message : String(error)}`); }
+      };
+      return { stat, observedAt, kind: "file", hash: record.hash, mode: stat.mode & 0o7777, size: stat.size, bytes: () => bytes ??= read(), utf8: () => record.utf8 };
+    } catch {}
+  }
+  let bytes: Uint8Array;
+  try { bytes = sourceRead(path); } catch { return direct(); }
+  const hash = sha256(bytes), utf8 = exactUtf8(bytes);
+  if (stat.mtimeMs < observedAt - LEAF_STAMP_RACY_MS && stat.ctimeMs < observedAt - LEAF_STAMP_RACY_MS && bytes.byteLength === stat.size) store.put(key, Buffer.from(JSON.stringify({ hash, utf8 }), "utf8"));
+  return { stat, observedAt, kind: "file", hash, mode: stat.mode & 0o7777, size: bytes.byteLength, bytes: () => bytes, utf8: () => utf8 };
+}
+
+/** 🧠️ One JSON-exact classification result through the record store under a key naming every input it reads; computed without a store. */
+function storedClassification<T>(store: RecordStore | null, key: () => string, compute: () => T): T {
+  if (!store) return compute();
+  const recordKeyValue = key(), hit = store.get(recordKeyValue);
+  if (hit !== undefined) {
+    try { return JSON.parse(Buffer.from(hit).toString("utf8")) as T; } catch {}
+  }
+  const value = compute(), text = JSON.stringify(value);
+  if (text !== undefined && JSON.stringify(JSON.parse(text)) === text) store.put(recordKeyValue, Buffer.from(text, "utf8"));
+  return value;
+}
+
 function packageLocation(path: string, taxonomy: LoadedTaxonomy): { readonly owner: string; readonly packageRoot: string; readonly ecosystemId: string | null; readonly rule: PackageBoundaryRule | null } | null {
   const parts = path.split("/");
   const packageIndex = parts.findIndex((part) => {
+    if (!part.endsWith("packages")) return false;
     const leading = splitLeadingEmojiIdentity(part);
-    return leading.rest === "packages" && taxonomy.directoryKinds.some((kind) => kind.id === "packages" && emojiFold(kind.emoji) === emojiFold(leading.first));
+    return leading.rest === "packages" && (directoryKindIndex(taxonomy).kindsByEmoji.get(emojiFold(leading.first)) ?? []).some((kind) => kind.id === "packages");
   });
   if (packageIndex >= 0) {
     const owner = parts.slice(0, packageIndex).join("/");
@@ -1255,10 +1359,56 @@ function fixedScopeMatches(contract: FixedContract, path: string, packageInfo: R
   return true;
 }
 
+/** 📇️ One fixed-contract table indexed once: its entries in declaration order, the positions of entries whose final pattern segment is a literal keyed by that NFC segment, and the positions of every other entry. */
+interface FixedContractLeafIndex<T> {
+  readonly entries: readonly (readonly [string, T])[];
+  readonly byLeaf: ReadonlyMap<string, readonly number[]>;
+  readonly anyLeaf: readonly number[];
+}
+
+const fixedContractLeafIndexes = new WeakMap<object, FixedContractLeafIndex<unknown>>();
+const fixedContractSpecificities = new WeakMap<object, ReadonlyMap<string, FixedSpecificity>>();
+
+/** 🍃️ The literal final segment every path matching `pattern` must end with under the taxonomy glob grammar, or null when that segment may vary. */
+function fixedContractLiteralLeaf(pattern: string): string | null {
+  const normalized = pattern.normalize("NFC"), slash = normalized.lastIndexOf("/"), leaf = normalized.slice(slash + 1), prefix = slash < 0 ? "" : normalized.slice(0, slash);
+  if (!leaf || /[*?[\]]/u.test(leaf) || normalized.includes("[")) return null;
+  return slash < 0 || !prefix.endsWith("**") || prefix === "**" || prefix.endsWith("/**") ? leaf : null;
+}
+
+/** 🗃️ Prepares {@link FixedContractLeafIndex} for `contracts` once per parsed taxonomy table. */
+function fixedContractLeafIndex<T extends { readonly pathPattern: string }>(contracts: Readonly<Record<string, T>>): FixedContractLeafIndex<T> {
+  const cached = fixedContractLeafIndexes.get(contracts) as FixedContractLeafIndex<T> | undefined;
+  if (cached) return cached;
+  const entries = Object.entries(contracts), byLeaf = new Map<string, number[]>(), anyLeaf: number[] = [];
+  entries.forEach(([, contract], index) => {
+    const leaf = fixedContractLiteralLeaf(contract.pathPattern);
+    if (leaf === null) anyLeaf.push(index);
+    else byLeaf.set(leaf, [...(byLeaf.get(leaf) ?? []), index]);
+  });
+  const index = { entries, byLeaf, anyLeaf };
+  fixedContractLeafIndexes.set(contracts, index);
+  return index;
+}
+
+/** 🪴️ The entries of one table that can match `path` at all — those whose literal final segment equals the path's, plus every entry whose final segment may vary — in declaration order. */
+function fixedContractCandidates<T extends { readonly pathPattern: string }>(contracts: Readonly<Record<string, T>>, path: string): readonly (readonly [string, T])[] {
+  const index = fixedContractLeafIndex(contracts), normalizedPath = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
+  const leafCandidates = index.byLeaf.get(normalizedPath.slice(normalizedPath.lastIndexOf("/") + 1));
+  return (leafCandidates ? [...index.anyLeaf, ...leafCandidates].sort((left, right) => left - right) : index.anyLeaf).map((position) => index.entries[position]!);
+}
+
+/** 🎚️ One table's contract specificities by id, computed once. */
+function fixedContractSpecificity<T extends FixedContract>(contracts: Readonly<Record<string, T>>, id: string): FixedSpecificity {
+  let specificities = fixedContractSpecificities.get(contracts);
+  if (!specificities) fixedContractSpecificities.set(contracts, specificities = new Map(Object.entries(contracts).map(([key, contract]) => [key, fixedSpecificity(contract)])));
+  return specificities.get(id)!;
+}
+
 function matchingFixedContracts<T extends FixedContract>(path: string, contracts: Readonly<Record<string, T>>, taxonomy: LoadedTaxonomy, packageInfo: ReturnType<typeof packageLocation>, parentKindId?: string, parentFixedDirectoryContractId?: string, siblingFixedFilenameContractIds: readonly string[] = []): { readonly selected: readonly [string, T] | null; readonly ambiguous: readonly string[] } {
-  const matches = Object.entries(contracts)
+  const matches = fixedContractCandidates(contracts, path)
     .filter(([, contract]) => taxonomy.pathMatcher.matches(path, contract.pathPattern) && fixedScopeMatches(contract, path, packageInfo, parentKindId, parentFixedDirectoryContractId, siblingFixedFilenameContractIds))
-    .map(([id, contract]) => ({ id, contract, specificity: fixedSpecificity(contract) }))
+    .map(([id, contract]) => ({ id, contract, specificity: fixedContractSpecificity(contracts, id) }))
     .sort((left, right) => compareFixedSpecificity(left.specificity, right.specificity) || left.id.localeCompare(right.id));
   if (matches.length === 0) return { selected: null, ambiguous: [] };
   const top = matches.filter((entry) => equalFixedSpecificity(entry.specificity, matches[0].specificity));
@@ -1413,7 +1563,7 @@ function packageImplementationDestination(
 function directoryHash(path: string, children: readonly Pick<TaxonomyInventoryEntry, "sourcePath" | "nodeKind" | "mode" | "contentHash">[]): string {
   const prefix = path ? `${path}/` : "";
   const rows = [...children]
-    .sort((a, b) => Buffer.from(a.sourcePath).compare(Buffer.from(b.sourcePath)))
+    .sort((a, b) => utf8Compare(a.sourcePath, b.sourcePath))
     .map((entry) => `${entry.nodeKind}\u0000${entry.mode ?? ""}\u0000${entry.sourcePath.slice(prefix.length)}\u0000${entry.contentHash}`);
   return sha256(rows.join("\u0000"));
 }
@@ -1495,35 +1645,48 @@ function packageRootManifestBasenames(taxonomy: LoadedTaxonomy): ReadonlySet<str
 }
 
 /** 🗂️ True when `ancestor` or any directory between it and `path`'s owning historical-evidence boundary root (inclusive) directly contains a package-root manifest — i.e. `path` sits inside an embedded package boundary (a ticket-embedded crate, or — equally — a hypothetical package rooted directly under `💬️prompts/`) and must stay a live reference regardless of any historical-document population match. Only reached by {@link historicalDocumentEvidence} for a non-`ticket-report` population match: a `📓️` narrative report can never `open()` a file, so proximity to a manifest cannot make it live and this function is never consulted for one, however deeply the manifest shadows the rest of the directory. Deliberately not narrowed to the manifest's own ecosystem's source extensions: a co-located non-source file in a ticket-embedded package directory can be a genuinely live, load-bearing generator/build script with its own real repo-path references (verified concretely — `…/FULL-STDIO-ARTIFACT-STANDARDS-CODECS-INFERENCES-AND-MUTATIONS/generate_w1_a_gltf_create_scene.mjs`, a co-located `.mjs` sibling of that ticket's `Cargo.toml`, joins `process.cwd()` with a real repo-relative path and writes generated source under it at run time), so "shares a directory with the manifest" is the safe, already-tested boundary — narrowing it by extension would silently stop protecting exactly this kind of file. */
-function historicalEvidenceBoundaryOwns(path: string, boundaryRoot: string, taxonomy: LoadedTaxonomy, repoRoot: string): boolean {
+function historicalEvidenceBoundaryOwns(path: string, boundaryRoot: string, taxonomy: LoadedTaxonomy, repoRoot: string, manifestDirectories: Map<string, boolean> = new Map()): boolean {
   const manifests = packageRootManifestBasenames(taxonomy);
   for (let dir = posix.dirname(path); dir === boundaryRoot || dir.startsWith(`${boundaryRoot}/`); dir = posix.dirname(dir)) {
-    let entries: readonly string[];
-    try { entries = readdirSync(absolutePath(repoRoot, dir)); } catch { entries = []; }
-    if (entries.some((name) => manifests.has(name))) return true;
+    let owns = manifestDirectories.get(dir);
+    if (owns === undefined) {
+      let entries: readonly string[];
+      try { entries = readdirSync(absolutePath(repoRoot, dir)); } catch { entries = []; }
+      owns = entries.some((name) => manifests.has(name));
+      manifestDirectories.set(dir, owns);
+    }
+    if (owns) return true;
     if (dir === boundaryRoot) break;
   }
   return false;
 }
 
+const historicalLeafExpressions = new Map<string, RegExp>();
+
 /** 🗂️ True when `path` is a whole-document historical-evidence population (`🔣️taxonomy.json#historicalDocumentEvidencePopulations`) — a ticket's own 📓️-slugged narrative report, ticket workspace (evidence snapshots, scratch scripts, working notes), a Cursor plan snapshot, or a developer's own `💬️prompts/` transcript — and therefore excluded from every reference-candidate scan (never a reference source, never rewritten, never blocks a move). Document kind alone is the discriminator, not ticket lifecycle status — and kind is exactly what separates the two negatives below: the `ticket-report` population is prose by construction (`^📓️.+\.md$`), so it is exempt outright once matched; every other population (`ticket-workspace` most of all, whose `^.+$` leaf admits any file, evidence snapshot, scratch script or generator alike) can be code and stays subject to the package-boundary negative, because a `Cargo.toml`/`package.json`/… beside it means the file may genuinely be live, load-bearing source or a build script, not narrative. Never overrides a real machine-read contract: refuses whenever `path` itself matches any `fixedFilenameContracts` pattern; for every non-`ticket-report` population, refuses whenever `path` also sits inside a directory (up to the ticket root, or up to `💬️prompts/` itself for a prompt log) that owns a package-root manifest — so a ticket-embedded Cargo/Node/Go package (or, equally, a hypothetical one dropped directly under `💬️prompts/`) keeps its ordinary live-reference treatment. */
-export function historicalDocumentEvidence(path: string, taxonomy: LoadedTaxonomy, repoRoot: string): boolean {
+export function historicalDocumentEvidence(path: string, taxonomy: LoadedTaxonomy, repoRoot: string, manifestDirectories?: Map<string, boolean>): boolean {
   const populations = taxonomy.discoverySchema.historicalDocumentEvidencePopulations;
-  const matches = (population: { directoryPattern: string; leafPattern: string }) => taxonomy.pathMatcher.matches(path, population.directoryPattern) && new RegExp(population.leafPattern, "u").test(posix.basename(path));
+  const leafExpression = (pattern: string): RegExp => {
+    let expression = historicalLeafExpressions.get(pattern);
+    if (!expression) historicalLeafExpressions.set(pattern, expression = new RegExp(pattern, "u"));
+    return expression;
+  };
+  const matches = (population: { directoryPattern: string; leafPattern: string }) => taxonomy.pathMatcher.matches(path, population.directoryPattern) && leafExpression(population.leafPattern).test(posix.basename(path));
   const ticketReport = populations["ticket-report"];
   const isNarrativeReport = Boolean(ticketReport && matches(ticketReport));
   const populated = isNarrativeReport || Object.values(populations).some(matches);
   if (!populated) return false;
-  if (Object.values(taxonomy.discoverySchema.fixedFilenameContracts).some((contract) => taxonomy.pathMatcher.matches(path, contract.pathPattern))) return false;
+  if (fixedContractCandidates(taxonomy.discoverySchema.fixedFilenameContracts, path).some(([, contract]) => taxonomy.pathMatcher.matches(path, contract.pathPattern))) return false;
   if (isNarrativeReport) return true;
   const boundaryRoot = HISTORICAL_TICKET_ROOT_PATTERN.exec(path)?.[0] ?? HISTORICAL_PROMPT_LOG_ROOT_PATTERN.exec(path)?.[0];
-  if (boundaryRoot && historicalEvidenceBoundaryOwns(path, boundaryRoot, taxonomy, repoRoot)) return false;
+  if (boundaryRoot && historicalEvidenceBoundaryOwns(path, boundaryRoot, taxonomy, repoRoot, manifestDirectories)) return false;
   return true;
 }
 
 function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTaxonomy, context?: ReferenceCandidatePathContext, cancelFile?: string): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
-  const ignored = (path: string): boolean => isExcluded(path, taxonomy) || Boolean(context?.exactEvidencePaths.includes(path) || context?.transactionRoots.some((root) => path === root || path.startsWith(`${root}/`))) || historicalDocumentEvidence(path, taxonomy, repoRoot);
+  const manifestDirectories = new Map<string, boolean>();
+  const ignored = (path: string): boolean => isExcluded(path, taxonomy) || Boolean(context?.exactEvidencePaths.includes(path) || context?.transactionRoots.some((root) => path === root || path.startsWith(`${root}/`))) || historicalDocumentEvidence(path, taxonomy, repoRoot, manifestDirectories);
   const paths = new Set<string>();
   for (const row of gitRows(repoRoot, taxonomy)) if (!ignored(row.path)) paths.add(row.path);
   checkCancellation(repoRoot, cancelFile);
@@ -1534,7 +1697,7 @@ function repositoryReferenceCandidatePaths(repoRoot: string, taxonomy: LoadedTax
 
 function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, taxonomy: LoadedTaxonomy, cancelFile?: string, observe?: (path: string, stat: Stats | null, bytes?: Uint8Array) => void, progress?: TaxonomyPlanOptions["progress"], operation: TaxonomyProgress["operation"] = "plan"): readonly string[] {
   checkCancellation(repoRoot, cancelFile);
-  const directories = new Set<string>(), roots = new Set<string>();
+  const directories = new Set<string>(), roots = new Set<string>(), admit = createLexicalInputSession();
   let callingGitDirectory: string | undefined;
   for (const path of paths) for (let parent = posix.dirname(path); parent && parent !== "."; parent = posix.dirname(parent)) directories.add(parent);
   const ordered = [...directories].sort((left, right) => left.split("/").length - right.split("/").length || generatorPathCompare(left, right));
@@ -1543,7 +1706,7 @@ function referenceCoordinateRoots(repoRoot: string, paths: Iterable<string>, tax
     report(progress, operation, "incoming-coordinate-roots", index, ordered.length, path);
     checkCancellation(repoRoot, cancelFile);
     if (isExcluded(path, taxonomy) || path.split("/").includes(".git") || ancestorReferenceCoordinateRoot(path, roots)) continue;
-    const marker = assertLexicalInputOutsideOpaque(repoRoot, `${path}/.git`, "Reference repository marker"), stat = lstatOrNull(marker);
+    const marker = admit(repoRoot, `${path}/.git`, "Reference repository marker"), stat = lstatOrNull(marker);
     if (!stat) { observe?.(`${path}/.git`, null); continue; }
     if (stat.isSymbolicLink()) throw new Error(`Reference repository marker is a symlink: ${path}/.git`);
     if (stat.isFile()) {
@@ -1591,16 +1754,14 @@ function incomingReferenceLexicalAdmission(targets: Iterable<string>): (content:
   };
 }
 
-/** 👁️ One incoming-reference candidate as the snapshot reads it: a symlink with its target, a textual file with its bytes (its frozen
- * evidence coordinates checked), or `undefined` for anything else. */
-function incomingReferenceObservation(repoRoot: string, path: string, taxonomy: LoadedTaxonomy): Readonly<{ stat: Stats; target?: string; bytes?: Buffer }> | undefined {
-  const absolute = assertLexicalInputOutsideOpaque(repoRoot, path, "Incoming reference candidate"), stat = lstatOrNull(absolute);
+/** 👁️ One incoming-reference candidate as the snapshot reads it: a symlink with its target, a textual file with its bytes, or `undefined`
+ * for anything else. An invalid frozen evidence document is reported by the reference planner, never thrown here. */
+function incomingReferenceObservation(repoRoot: string, path: string, taxonomy: LoadedTaxonomy, admit: typeof assertLexicalInputOutsideOpaque): Readonly<{ stat: Stats; target?: string; bytes?: Buffer }> | undefined {
+  const absolute = admit(repoRoot, path, "Incoming reference candidate"), stat = lstatOrNull(absolute);
   if (!stat || stat.isDirectory()) return undefined;
   if (stat.isSymbolicLink()) return { stat, target: readlinkSync(absolute) };
   if (!stat.isFile() || !textualPath(path)) return undefined;
-  const bytes = readFileSync(absolute);
-  frozenEvidenceCoordinateAuthority(path, bytes, taxonomy);
-  return { stat, bytes };
+  return { stat, bytes: readFileSync(absolute) };
 }
 
 /** 🔦️ Reads the incoming-reference candidates once for every inventory of a multi-scope run (see {@link IncomingReferenceScan}); keeps a
@@ -1611,10 +1772,10 @@ function incomingReferenceScan(inventories: readonly TaxonomyInventory[], taxono
   const repoRoot = inventories[0]!.repoRoot;
   const paths = repositoryReferenceCandidatePaths(repoRoot, taxonomy, referenceInventoryContexts.get(inventories[0]!), options.cancelFile);
   const coordinateRoots = referenceCoordinateRoots(repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
-  const admits = incomingReferenceLexicalAdmission(changing), observed = new Map<string, Readonly<{ stat: Stats; target?: string; bytes?: Buffer }>>();
+  const admits = incomingReferenceLexicalAdmission(changing), observed = new Map<string, Readonly<{ stat: Stats; target?: string; bytes?: Buffer }>>(), admit = createLexicalInputSession();
   for (const [, path] of referenceCandidatesWithProgress(paths, "plan", options.progress)) {
     checkCancellation(repoRoot, options.cancelFile);
-    const row = incomingReferenceObservation(repoRoot, path, taxonomy);
+    const row = incomingReferenceObservation(repoRoot, path, taxonomy, admit);
     if (row && (row.target !== undefined || admits(row.bytes!.toString("utf8")))) observed.set(path, row);
   }
   return { paths, coordinateRoots, observed };
@@ -1655,12 +1816,12 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
   validateObservedFrozenEvidenceNodes(inventory.repoRoot, knownPaths, taxonomy);
   const coordinateRoots = scan?.coordinateRoots ?? referenceCoordinateRoots(inventory.repoRoot, paths, taxonomy, options.cancelFile, undefined, options.progress, "plan");
   const known = referencePathIndex(knownPaths, inventory.repoRoot, coordinateRoots, undefined, options.cancelFile, changing), admitted = new Set(inventory.entries.map((entry) => entry.sourcePath));
-  const admitsText = incomingReferenceLexicalAdmission(changing);
-  const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>();
+  const admitsText = incomingReferenceLexicalAdmission(changing), reach = referenceResolutionReach(changing), store = referenceTokenStore(inventory.repoRoot), opaqueLeaves = opaqueLeafNames(taxonomy);
+  const entries: TaxonomyInventoryEntry[] = [], contents = new Map<string, string>(), admit = createLexicalInputSession();
   for (const [index, path] of referenceCandidatesWithProgress(scan ? [...scan.observed.keys()] : paths, "plan", options.progress)) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
     if (admitted.has(path)) continue;
-    const observed = scan ? scan.observed.get(path)! : incomingReferenceObservation(inventory.repoRoot, path, taxonomy);
+    const observed = scan ? scan.observed.get(path)! : incomingReferenceObservation(inventory.repoRoot, path, taxonomy, admit);
     if (!observed) continue;
     const stat = observed.stat;
     if (observed.target !== undefined) {
@@ -1670,7 +1831,9 @@ function incomingReferenceSnapshot(inventory: TaxonomyInventory, taxonomy: Loade
       const bytes = observed.bytes, content = bytes.toString("utf8");
       if (!admitsText(content)) continue;
       report(options.progress, "plan", "incoming-parse", index + 1, paths.length, path);
-      const relevant = referenceTokensIncludingUnsupported(path, content, known).some((token) => {
+      const analysis = storedReferenceAnalysis(store, inventory.repoRoot, path, sha256(bytes), opaqueLeaves, () => ({ text: content, matches: true }));
+      if (!referenceDigestMayResolveInto(analysis.digest, reach)) continue;
+      const relevant = referenceTokensIncludingUnsupported(path, content, known, analysis).some((token) => {
         if (token.unsupportedReason && token.physicalTargets?.some((target) => changing.has(target))) return true;
         const target = resolveReferenceTokenPath(path, token, known);
         return target !== null && changing.has(target) && !isFrozenSourceCoordinateToken(path, bytes, token, target, taxonomy, inventory.repoRoot);
@@ -1752,11 +1915,22 @@ function argumentTokens(content: string, fragment: string, fragmentStart: number
   return rows;
 }
 
-function embeddedArgumentTokens(content: string, value: string, valueStart: number, adapter: TaxonomyReferenceAdapter, label: string): ReferenceToken[] {
+const EMBEDDED_ARGUMENT_WORD = /[^\s"'`]+/gu;
+const EMBEDDED_ESCAPED_ARGUMENT_WORD = /\\(?:u[\dA-Fa-f]{4}|[^])|[^\s"'`\\]+/gu;
+const EMBEDDED_ARGUMENT_PATH = /(?:\.\.?\/|(?<![^\s"'`([,;=:@])\/)[^\s\\"'`()\],;]+/gu;
+
+/** 🧩️ Splits one command-like string into argv words, each yielding its path candidate plus the `./`, `../` and word-boundary `/`
+ * fragments inside it. A `/` that continues a word (`${workspaceFolder}/x`, `a/b`) is a separator, never a root. With
+ * `escaped` the value is a raw JSON string body: every escape sequence (`\"`, `\t`, `\u00e9`, ...) delimits words, so no candidate spans one. */
+function embeddedArgumentTokens(content: string, value: string, valueStart: number, adapter: TaxonomyReferenceAdapter, label: string, escaped: boolean): ReferenceToken[] {
   if (!/\s|(?:^|\s)--?[\w-]+=|\$\{(?:workspaceFolder|workspaceRoot)\}/u.test(value)) return [];
   const rows: ReferenceToken[] = [];
-  for (const match of value.matchAll(/[^\s"'`]+/gu)) {
-    if (match.index === undefined) continue;
+  for (const match of value.matchAll(escaped ? EMBEDDED_ESCAPED_ARGUMENT_WORD : EMBEDDED_ARGUMENT_WORD)) {
+    if (match.index === undefined || match[0].startsWith("\\")) continue;
+    for (const fragment of match[0].matchAll(EMBEDDED_ARGUMENT_PATH)) {
+      const start = valueStart + match.index + fragment.index!;
+      rows.push({ adapter, structuredLocation: lineLocation(content, start, label), start, end: start + fragment[0].length, value: fragment[0] });
+    }
     let candidate = match[0].replace(/^[[(]+|[\]),;]+$/gu, "");
     let offset = match[0].indexOf(candidate);
     const assignment = candidate.match(/^--?[\w-]+=(.+)$/u);
@@ -1773,11 +1947,6 @@ function embeddedArgumentTokens(content: string, value: string, valueStart: numb
     const start = valueStart + match.index + offset;
     rows.push({ adapter, structuredLocation: lineLocation(content, start, label), start, end: start + candidate.length, value: candidate });
   }
-  for (const match of value.matchAll(/(?:\.\.?\/|\/)[^\s\\"'`()\],;]+/gu)) {
-    if (match.index === undefined) continue;
-    const start = valueStart + match.index;
-    rows.push({ adapter, structuredLocation: lineLocation(content, start, label), start, end: start + match[0].length, value: match[0] });
-  }
   return [...new Map(rows.map((entry) => [`${entry.start}\u0000${entry.end}\u0000${entry.value}`, entry])).values()].sort((left, right) => left.start - right.start || left.value.localeCompare(right.value));
 }
 
@@ -1788,6 +1957,8 @@ function artifactRootForPath(path: string): string | null {
   const standards = segments.findIndex((segment) => emojiFold(segment) === emojiFold("🏅️standards"));
   return standards > 0 ? segments.slice(0, standards).join("/") : null;
 }
+
+const TOML_TABLE_HEADER = /^\s*\[([^\]]+)\]\s*$/gmu;
 
 function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): ReferenceToken[] {
   const rows: ReferenceToken[] = [];
@@ -1813,22 +1984,27 @@ function jsonTokens(path: string, content: string, adapter: "json" | "jsonc"): R
     const workspaceFile = !key && raw === value ? value.match(/^\{workspaceRoot\}\/([^*]+)$/u) : null;
     if (workspaceFile) rows.push({ adapter, structuredLocation: `${key ? "/@key" : "/@value"}[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value, targetValues: [workspaceFile[1]], rewriteKind: "path-prefix", rewriteData: { prefix: "{workspaceRoot}/", suffix: "" } });
     if (!key && raw !== value && /^\{workspaceRoot\}\/[^*]+$/u.test(value)) rows.push({ adapter, structuredLocation: `/@value[${Math.max(0, ordinal - 1)}]/workspace-file@${start}`, start, end: start + raw.length, value: raw, rewriteKind: "path-prefix", unsupportedReason: "Escaped workspace projection file reference has no proven decoded-to-raw offset map" });
-    if (!key && embeddedArgv) rows.push(...embeddedArgumentTokens(content, raw, start, adapter, "embedded-argv"));
+    if (!key && embeddedArgv) rows.push(...embeddedArgumentTokens(content, raw, start, adapter, "embedded-argv", true));
   }
   return rows;
 }
 
 function tomlTokens(path: string, content: string): ReferenceToken[] {
   const adapter: TaxonomyReferenceAdapter = "toml";
-  const rows: ReferenceToken[] = [];
+  const rows: ReferenceToken[] = [], headers = [...content.matchAll(TOML_TABLE_HEADER)];
   for (const match of content.matchAll(/"([^"\r\n]+)"|'([^'\r\n]+)'/gu)) {
     if (match.index === undefined) continue;
     const value = match[1] ?? match[2];
     const start = match.index + match[0].indexOf(value);
     const entrypoint = value.match(/^([A-Za-z_]\w*(?:\.[A-Za-z_]\w*)+):([A-Za-z_]\w*)$/u);
-    const prefix = content.slice(0, start);
-    const section = [...prefix.matchAll(/^\s*\[([^\]]+)\]\s*$/gmu)].at(-1)?.[1];
-    const lineStart = prefix.lastIndexOf("\n") + 1;
+    let low = 0, high = headers.length;
+    while (low < high) {
+      const middle = (low + high) >>> 1;
+      if (headers[middle]!.index! + headers[middle]![0].length <= start) low = middle + 1;
+      else high = middle;
+    }
+    const section = low > 0 ? headers[low - 1]![1] : undefined;
+    const lineStart = content.lastIndexOf("\n", start - 1) + 1;
     const key = content.slice(lineStart, start).match(/^\s*([A-Za-z0-9_.-]+)\s*=\s*["']/u)?.[1];
     const label = section && key ? `${section}.${key}` : "toml-string";
     rows.push(entrypoint
@@ -1845,14 +2021,19 @@ function tomlTokens(path: string, content: string): ReferenceToken[] {
  * `reference-syntax-unsupported` because this scanner previously only ever offered the WHOLE span as
  * a token. Extracting the same trailing word here, with its true narrower start/end, lets that
  * fallback candidate's span/value match and be properly rewritten in place instead. */
-function rustTokens(path: string, content: string, index?: ReferencePathIndex): ReferenceToken[] {
-  // 🪪️ `owner_file: "<repo-relative path>"` is `bounded_first_step_tool_proofs!`'s self-declared
-  // authority field (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`) — 36 editor
-  // `🦀️.rs` files each name their OWN path here as a plain literal, never through `.join()`,
-  // so none of the join-chain detectors above ever see it; mirrors the existing `#[path=…]`/`include!`
-  // bare-literal style rather than inventing a second one.
+function rustTokens(path: string, content: string, index?: ReferencePathIndex): readonly ReferenceToken[] {
+  const standalone = rustStandaloneTokens(content);
+  return index ? indexedReferenceTokens(path, content, index, standalone) : standalone.tokens;
+}
+
+/** 🦀️ The index-free rust reference tokens: the literal path forms, then (spliced at `rustManifestAt` once the path index is known) the
+ * manifest-relative joins, then assertion messages, catalog joins, `mod` declarations and comment paths. The literal forms include
+ * `owner_file: "<repo-relative path>"`, `bounded_first_step_tool_proofs!`'s self-declared authority field
+ * (`🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs`): editor `🦀️.rs` files name their own path there as a plain literal, never
+ * through `.join()`, so no join-chain detector sees it; it mirrors the `#[path=…]`/`include!` bare-literal style. */
+function rustStandaloneTokens(content: string): StandaloneReferenceTokens {
   const rows = regexTokens(content, "rust", "rust-string-path", [/#\s*\[\s*path\s*=\s*"([^"]+)"/gu, /\b(?:include|include_str|include_bytes)!\s*\(\s*"([^"]+)"/gu, /\bowner_file\s*:\s*"([^"]+)"/gu]);
-  if (index) rows.push(...rustManifestReferenceTokens(path, content, index));
+  const rustManifestAt = rows.length, inspection = rustManifestInspection(content), rustManifest = inspection.references.length > 0 || inspection.arguments.length > 0 || inspection.candidates.length > 0;
   for (const message of inspectRustAssertionMessageSpans(content)) for (const token of unsupportedReferenceTokens(message.value, "rust")) {
     const start = message.start + token.start;
     rows.push({ adapter: "rust", structuredLocation: lineLocation(content, start, `rust-assertion-message:${message.macroName}`), start, end: message.start + token.end, value: token.value });
@@ -1897,7 +2078,7 @@ function rustTokens(path: string, content: string, index?: ReferencePathIndex): 
       rows.push({ adapter: "rust", structuredLocation: lineLocation(content, tokenStart, "artifact-catalog-comment"), start: tokenStart, end: tokenStart + catalog[1].length, value: catalog[1], rewriteKind: "artifact-catalog-prose", rewriteData: { form: "category-glob", category: catalog[2]!, members: catalog[3] ? "json" : "directory" } });
     }
   }
-  return rows;
+  return { tokens: rows, rustManifestAt, rustManifest, ...(rustManifest ? { rustInspection: inspection } : {}) };
 }
 
 function pythonTokens(_path: string, content: string): ReferenceToken[] {
@@ -2020,6 +2201,8 @@ interface TypeScriptCollectionSyntax {
   readonly pairs: ReadonlyMap<number, number>;
 }
 
+const TYPESCRIPT_COLLECTION_OPERATOR = /(?:\.\.\.|===|!==|>>>=|>>>|>>=|<<=|\*\*=|&&=|\|\|=|\?\?=|=>|==|!=|<=|>=|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&|\|\||\?\?|\?\.|\*\*|<<|>>)/uy;
+
 /** 🔬️ Reads bounded source tokens and balanced delimiters without evaluating code or decoding editable spans. */
 function typescriptCollectionSyntax(content: string): TypeScriptCollectionSyntax | null {
   const tokens: TypeScriptCollectionToken[] = [], pairs = new Map<number, number>(), stack: number[] = [];
@@ -2062,7 +2245,8 @@ function typescriptCollectionSyntax(content: string): TypeScriptCollectionSyntax
       cursor++;
       while (/[A-Za-z]/u.test(content[cursor] ?? "")) cursor++;
     } else {
-      const operator = /^(?:\.\.\.|===|!==|>>>=|>>>|>>=|<<=|\*\*=|&&=|\|\|=|\?\?=|=>|==|!=|<=|>=|\+\+|--|\+=|-=|\*=|\/=|%=|&=|\|=|\^=|&&|\|\||\?\?|\?\.|\*\*|<<|>>)/u.exec(content.slice(cursor))?.[0];
+      TYPESCRIPT_COLLECTION_OPERATOR.lastIndex = cursor;
+      const operator = TYPESCRIPT_COLLECTION_OPERATOR.exec(content)?.[0];
       if (!operator && !/[{}()[\].,;:?~!+\-*/%<>=&|^]/u.test(first)) return null;
       cursor += operator?.length ?? 1;
     }
@@ -2433,6 +2617,36 @@ function markdownInlineTokens(content: string): ReferenceToken[] {
   return rows;
 }
 
+const MARKDOWN_WHITESPACE_RUN = /\s*/uy, MARKDOWN_TEXT_RUN = /\S+/uy, MARKDOWN_LINE_TERMINATOR = /[\n\r\u2028\u2029]/gu;
+
+/** 🔖️ Link reference definitions (`[label]: destination`) exactly as `regexTokens` reads `/^\s*\[[^\]]+\]:\s*(\S+)/gmu`, in one linear pass: that
+ * pattern's unbounded `\s*` and `[^\]]+` rescan to the next `]` from every line start, which is quadratic on long documents. A line start
+ * whose whitespace run ends at the same position as an earlier failed one fails identically, and once no `]` follows a `[`, none ever will. */
+function markdownReferenceDefinitionTokens(content: string): ReferenceToken[] {
+  const rows: ReferenceToken[] = [], nextLineStart = (from: number): number => {
+    MARKDOWN_LINE_TERMINATOR.lastIndex = from;
+    const terminator = MARKDOWN_LINE_TERMINATOR.exec(content);
+    return terminator ? terminator.index + 1 : -1;
+  };
+  for (let lineStart = 0; lineStart >= 0 && lineStart <= content.length;) {
+    MARKDOWN_WHITESPACE_RUN.lastIndex = lineStart;
+    const label = lineStart + MARKDOWN_WHITESPACE_RUN.exec(content)![0].length;
+    if (content[label] !== "[" || label + 1 >= content.length || content[label + 1] === "]") { lineStart = nextLineStart(Math.max(label, lineStart)); continue; }
+    const close = content.indexOf("]", label + 1);
+    if (close < 0) break;
+    if (content[close + 1] !== ":") { lineStart = nextLineStart(label); continue; }
+    MARKDOWN_WHITESPACE_RUN.lastIndex = close + 2;
+    const destination = close + 2 + MARKDOWN_WHITESPACE_RUN.exec(content)![0].length;
+    MARKDOWN_TEXT_RUN.lastIndex = destination;
+    const text = MARKDOWN_TEXT_RUN.exec(content);
+    if (!text) { lineStart = nextLineStart(label); continue; }
+    const whole = content.slice(lineStart, destination + text[0].length), start = lineStart + whole.indexOf(text[0]);
+    rows.push({ adapter: "markdown", structuredLocation: lineLocation(content, start, "markdown-link"), start, end: start + text[0].length, value: text[0] });
+    lineStart = nextLineStart(destination + text[0].length);
+  }
+  return rows;
+}
+
 /** 🗒️ Resolves real repo-relative paths named as plain single-backtick inline code or a bare
  * path-only list item, outside every opaque Markdown block (fenced/indented code, blockquotes,
  * HTML) — reusing {@link markdownSourceCoordinateSpans}'s already-proven span discipline (built for
@@ -2451,6 +2665,196 @@ function markdownCommentPathReferenceAuthority(content: string): ReferenceToken[
   return rows;
 }
 
+/** 🧩️ One file's reference tokens that need no path index, where rust manifest-relative tokens splice in, and whether any can exist. */
+interface StandaloneReferenceTokens { readonly tokens: readonly ReferenceToken[]; readonly rustManifestAt: number; readonly rustManifest: boolean; readonly rustInspection?: RustManifestInspection }
+
+/** 🧱️ The index-free part of {@link referenceTokens}: a pure function of path and content, so it can be stored by content digest. */
+function standaloneReferenceTokens(path: string, content: string): StandaloneReferenceTokens {
+  if (path.toLowerCase().endsWith(".rs")) return rustStandaloneTokens(content);
+  const tokens = referenceTokens(path, content);
+  return { tokens, rustManifestAt: tokens.length, rustManifest: false };
+}
+
+/** 🔗️ {@link referenceTokens} with a path index, assembled from its standalone part plus the index-dependent rust manifest tokens. */
+function indexedReferenceTokens(path: string, content: string, index: ReferencePathIndex, standalone: StandaloneReferenceTokens): readonly ReferenceToken[] {
+  return standalone.rustManifest ? [...standalone.tokens.slice(0, standalone.rustManifestAt), ...rustManifestReferenceTokens(path, content, index, standalone.rustInspection), ...standalone.tokens.slice(standalone.rustManifestAt)] : standalone.tokens;
+}
+
+const REFERENCE_DIGEST_NAMESPACE = "taxonomy-reference-digest-v1";
+let sourceClosureRevision: string | undefined;
+
+/** 🧬️ This module's source closure digest: every record computed by its code is keyed or namespaced by it. */
+function normalizationRevision(): string {
+  return sourceClosureRevision ??= moduleSourceClosureDigest(fileURLToPath(import.meta.url));
+}
+const referenceTokenStores = new Map<string, RecordStore | null>();
+
+/** 🗃️ The persistent reference digest store of one repository, or `null` when its directory is not Git-ignored there (a cache must never
+ * become an inventory input). Its namespace is this module's source closure digest, so any change to the tokenizers starts empty. */
+function referenceTokenStore(repoRoot: string): RecordStore | null {
+  if (referenceTokenStores.has(repoRoot)) return referenceTokenStores.get(repoRoot)!;
+  const root = repoCacheDirectory(repoRoot, "taxonomy", "reference-digests");
+  let ignored = false;
+  try { ignored = spawnSync("git", ["check-ignore", "-q", "--no-index", sourceRelative(relative(repoRoot, join(root, "probe")))], { cwd: repoRoot, stdio: "ignore" }).status === 0; } catch {}
+  let store: RecordStore | null = null;
+  if (ignored) {
+    const namespace = normalizationRevision().slice(0, 32);
+    pruneRecordStoreNamespaces(root, namespace);
+    store = openRecordStore(join(root, namespace));
+  }
+  referenceTokenStores.set(repoRoot, store);
+  return store;
+}
+
+/**
+ * 🧾️ Everything the inventory and the planner's skip test need from one file's index-free reference tokens, without the tokens:
+ * - `queries`: each distinct resolution input of a supported token (`["p", ...physicalTargets]` or `["v", ...targetValues ?? [value]]`);
+ * - `unsupportedQueries`: the same for the standalone tokens that carry an `unsupportedReason`, which the planner still resolves;
+ * - `opaque`: every supported token whose values pass {@link opaqueReferenceCandidate} for the digest's opaque leaves (query index, adapter,
+ *   location, values), the only tokens {@link lexicalOpaqueReferenceTarget} can report;
+ * - `supported`, `unsupported`: the reach signatures of the supported and the unsupported tokens (see {@link referenceTokenMayResolveInto});
+ * - `rustManifest`: whether index-dependent rust manifest tokens can exist, which are then derived live from the content.
+ */
+interface ReferenceDigest {
+  readonly queries: readonly (readonly string[])[];
+  readonly unsupportedQueries: readonly (readonly string[])[];
+  readonly opaque: readonly (readonly [query: number, adapter: string, location: string, values: readonly string[]])[];
+  readonly supported: Readonly<{ leaves: readonly string[]; nullLeaf: boolean; python: boolean }>;
+  readonly unsupported: Readonly<{ leaves: readonly string[]; nullLeaf: boolean; python: boolean }>;
+  readonly rustManifest: boolean;
+  readonly rustInspection?: RustManifestInspection;
+}
+
+/** 🔎️ The resolution input of one token: its physical targets when it has them (`["p", ...]`), otherwise its target values (`["v", ...]`). */
+function referenceTokenQuery(token: ReferenceToken): string[] {
+  return token.physicalTargets !== undefined ? ["p", ...token.physicalTargets] : ["v", ...(token.targetValues ?? [token.value])];
+}
+
+/** 🪪️ A token that {@link resolveReferenceTokenPath} resolves exactly like every token with this resolution input. */
+function referenceQueryToken(query: readonly string[]): ReferenceToken {
+  return query[0] === "p" ? { adapter: "rust", structuredLocation: "", start: 0, end: 0, value: "", physicalTargets: query.slice(1) } : { adapter: "rust", structuredLocation: "", start: 0, end: 0, value: query[1]!, targetValues: query.slice(1) };
+}
+
+/** 🎯️ True when some standalone token of the digested file, resolved from `path` through `index`, names a key of `targets`, or carries an
+ * `unsupportedReason` and physical targets among them: exactly the tokens a staying file can turn into edits or unsupported-syntax violations.
+ * Only queries that pass `reachable` (a conservative pre-test the planner applies to every token before resolving it) are resolved. */
+function referenceDigestResolvesInto(path: string, digest: ReferenceDigest, index: ReferencePathIndex, targets: ReadonlyMap<string, string>, reachable: (token: ReferenceToken) => boolean): boolean {
+  for (const query of digest.unsupportedQueries) if (query[0] === "p" && query.slice(1).some((target) => targets.has(target))) return true;
+  for (const query of [...digest.queries, ...digest.unsupportedQueries]) {
+    const token = referenceQueryToken(query);
+    if (!reachable(token)) continue;
+    const target = resolveReferenceTokenPath(path, token, index);
+    if (target !== null && targets.has(target)) return true;
+  }
+  return false;
+}
+
+/** 🔬️ A {@link ReferenceDigest} plus, when it was just computed rather than read from the store, the standalone and unsupported tokens it
+ * was computed from, so a caller that needs the tokens too never tokenizes the same content twice. */
+interface ReferenceAnalysis { readonly digest: ReferenceDigest; readonly standalone?: StandaloneReferenceTokens; readonly unsupported?: readonly ReferenceToken[] }
+
+/** 🧮️ Computes one file's {@link ReferenceDigest} (a pure function of path, content, repository root and the opaque leaf names) together
+ * with the tokens it summarizes. */
+function referenceAnalysis(path: string, content: string, repoRoot: string, opaqueLeaves: readonly string[]): Required<ReferenceAnalysis> {
+  const standalone = standaloneReferenceTokens(path, content), queries: string[][] = [], queryIndexes = new Map<string, number>(), opaque: [number, string, string, string[]][] = [];
+  const unsupportedQueries = new Map<string, string[]>();
+  const supported: ReferenceReachSignature = { leaves: new Set(), nullLeaf: false, python: false }, unsupported: ReferenceReachSignature = { leaves: new Set(), nullLeaf: false, python: false };
+  for (const token of standalone.tokens) {
+    addReferenceTokenReach(supported, token, repoRoot);
+    const query = referenceTokenQuery(token), identity = JSON.stringify(query);
+    if (token.unsupportedReason) { unsupportedQueries.set(identity, query); continue; }
+    let index = queryIndexes.get(identity);
+    if (index === undefined) { queryIndexes.set(identity, index = queries.length); queries.push(query); }
+    const values = token.targetValues ?? [token.value];
+    if (values.some((value) => opaqueReferenceCandidate(value, opaqueLeaves))) opaque.push([index, token.adapter, token.structuredLocation, [...values]]);
+  }
+  const unsupportedTokens = unsupportedReferenceTokens(content, referenceAdapter(path));
+  for (const token of unsupportedTokens) addReferenceTokenReach(unsupported, token, repoRoot);
+  const plain = (signature: ReferenceReachSignature) => ({ leaves: [...signature.leaves], nullLeaf: signature.nullLeaf, python: signature.python });
+  return { digest: { queries, unsupportedQueries: [...unsupportedQueries.values()], opaque, supported: plain(supported), unsupported: plain(unsupported), rustManifest: standalone.rustManifest, ...(standalone.rustInspection ? { rustInspection: standalone.rustInspection } : {}) }, standalone, unsupported: unsupportedTokens };
+}
+
+/** 📦️ {@link referenceAnalysis} through the store, keyed by path, content digest and opaque leaves: a hit carries only the digest. `content`
+ * yields the text and whether its bytes still have that digest (a digest computed from other bytes is returned but never stored). */
+function storedReferenceAnalysis(store: RecordStore | null, repoRoot: string, path: string, contentHash: string, opaqueLeaves: readonly string[], content: () => Readonly<{ text: string; matches: boolean }>): ReferenceAnalysis {
+  const key = recordKey(REFERENCE_DIGEST_NAMESPACE, repoRoot, path, contentHash, ...opaqueLeaves), hit = store?.get(key);
+  if (hit !== undefined) {
+    try { return { digest: JSON.parse(Buffer.from(hit).toString("utf8")) as ReferenceDigest }; } catch {}
+  }
+  const source = content(), analysis = referenceAnalysis(path, source.text, repoRoot, opaqueLeaves);
+  if (store && source.matches) store.put(key, Buffer.from(JSON.stringify(analysis.digest), "utf8"));
+  return analysis;
+}
+
+/** 🧵️ The `key<TAB>digest` record lines of the given leaves whose bytes still have their inventoried digest; the digest worker's entry. */
+export function referenceDigestRecordLines(repoRoot: string, rows: readonly (readonly [path: string, contentHash: string])[], opaqueLeaves: readonly string[], advance: () => void): string {
+  const lines: string[] = [];
+  for (const [path, contentHash] of rows) {
+    try {
+      const bytes = readFileSync(absolutePath(repoRoot, path));
+      if (sha256(bytes) === contentHash) lines.push(`${recordKey(REFERENCE_DIGEST_NAMESPACE, repoRoot, path, contentHash, ...opaqueLeaves)}\t${JSON.stringify(referenceAnalysis(path, bytes.toString("utf8"), repoRoot, opaqueLeaves).digest)}`);
+    } catch {}
+    advance();
+  }
+  return lines.join("\n");
+}
+
+/**
+ * 🧶️ Fills the store with the reference digests of every leaf it lacks using up to `workers` threads that claim the leaves, largest first,
+ * from one shared cursor (so a few huge files never leave the other threads idle) and publish their records through files; the caller
+ * blocks on shared status words, reporting progress and honouring cancellation. Too few misses to amortize worker start-up leave the work
+ * to the caller's sequential path.
+ */
+function precomputeReferenceDigests(store: RecordStore, repoRoot: string, rows: readonly (readonly [path: string, contentHash: string, size: number])[], opaqueLeaves: readonly string[], workers: number, progress?: TaxonomyInventoryOptions["progress"], cancelFile?: string): void {
+  const missing = rows.filter(([path, contentHash]) => !store.has(recordKey(REFERENCE_DIGEST_NAMESPACE, repoRoot, path, contentHash, ...opaqueLeaves))).sort((left, right) => right[2] - left[2]).map(([path, contentHash]) => [path, contentHash] as const);
+  const count = Math.min(workers, Math.floor(missing.length / 256));
+  if (count < 2) return;
+  const directory = repoCacheDirectory(repoRoot, "taxonomy", "work");
+  mkdirSync(directory, { recursive: true });
+  const cursor = new SharedArrayBuffer(4);
+  const tasks = Array.from({ length: count }, (_, index) => {
+    const status = new Int32Array(new SharedArrayBuffer(8)), out = join(directory, `digests-${process.pid}-${randomUUID()}-${index}.tsv`), worker = new Worker(new URL("./🧵️digests/🟦️.ts", import.meta.url).href);
+    worker.postMessage({ repoRoot, rows: missing, opaqueLeaves, out, status: status.buffer, cursor });
+    return { status, out, worker };
+  });
+  try {
+    report(progress, "inventory", "reference-digests", 0, missing.length);
+    while (tasks.some((task) => Atomics.load(task.status, 0) === 0)) {
+      for (const task of tasks) if (Atomics.load(task.status, 0) === 0) Atomics.wait(task.status, 0, 0, 250);
+      checkCancellation(repoRoot, cancelFile);
+      report(progress, "inventory", "reference-digests", tasks.reduce((sum, task) => sum + Atomics.load(task.status, 1), 0), missing.length);
+    }
+    const failed = tasks.find((task) => Atomics.load(task.status, 0) === 2);
+    if (failed) throw new Error(`Reference digest worker failed: ${readFileSync(`${failed.out}.error`, "utf8")}`);
+    for (const task of tasks) for (const line of readFileSync(task.out, "utf8").split("\n")) {
+      const tab = line.indexOf("\t");
+      if (tab > 0) store.put(line.slice(0, tab), Buffer.from(line.slice(tab + 1), "utf8"));
+    }
+  } finally {
+    for (const task of tasks) {
+      task.worker.terminate();
+      rmSync(task.out, { force: true });
+      rmSync(`${task.out}.error`, { force: true });
+    }
+  }
+}
+
+/** 🧲️ False only when no token of the file can resolve into the reach's target set. `rootedNullLeaves` is false when no ancestor of the file
+ * is a target: a value without a promisable final segment (`.`, `..`, `./`) only ever resolves to an ancestor of the referencing file's
+ * directory, of its coordinate root (itself such an ancestor) or to the repository root, so it can then be ignored. */
+function referenceDigestMayResolveInto(digest: ReferenceDigest, reach: ReferenceResolutionReach, rootedNullLeaves = true): boolean {
+  const relevant = (signature: ReferenceDigest["supported"]): boolean => referenceSignatureMayResolveInto({ ...signature, nullLeaf: signature.nullLeaf && rootedNullLeaves }, reach);
+  return digest.rustManifest || relevant(digest.supported) || relevant(digest.unsupported);
+}
+
+/** 🌳️ True when the repository root or some ancestor directory of `path` is in `targets`. */
+function ancestorInTargets(path: string, targets: ReadonlyMap<string, string> | ReadonlySet<string>): boolean {
+  for (let parent = posix.dirname(path); ; parent = posix.dirname(parent)) {
+    if (targets.has(parent === "." ? "" : parent)) return true;
+    if (parent === "." || parent === "/" || parent === "") return false;
+  }
+}
+
 function referenceTokens(path: string, content: string, index?: ReferencePathIndex): readonly ReferenceToken[] {
   const lower = path.toLowerCase();
   if (lower.endsWith(".rs")) return rustTokens(path, content, index);
@@ -2466,10 +2870,10 @@ function referenceTokens(path: string, content: string, index?: ReferencePathInd
   if (/\.ya?ml$/u.test(lower)) {
     const direct = regexTokens(content, "yaml", "yaml-value", [/^\s*(?:-\s*)?[\w.-]+\s*:\s*["']?([^"'\s][^\r\n#]*?)["']?\s*(?:#.*)?$/gmu, /^\s*-\s*["']?([^"'\s][^\r\n#]*?)["']?\s*(?:#.*)?$/gmu]);
     const embeddedArgv = /(?:workflow|action|launch|task|project|(?:^|\/)ci(?:\/|$))/iu.test(path);
-    return embeddedArgv ? [...direct, ...direct.flatMap((token) => embeddedArgumentTokens(content, token.value, token.start, "yaml", "embedded-argv"))] : direct;
+    return embeddedArgv ? [...direct, ...direct.flatMap((token) => embeddedArgumentTokens(content, token.value, token.start, "yaml", "embedded-argv", false))] : direct;
   }
   if (/\.(?:xml|html|htm)$/u.test(lower)) return [...regexTokens(content, "xml", "xml-attribute", [/(?:href|src|path|include|file|link|hintpath)\s*=\s*["']([^"']+)["']/giu]), ...htmlTokens(content, "xml")];
-  if (/\.(?:md|mdx)$/u.test(lower)) return [...markdownInlineTokens(content), ...regexTokens(content, "markdown", "markdown-link", [/^\s*\[[^\]]+\]:\s*(\S+)/gmu]), ...htmlTokens(content, "markdown"), ...markdownCommentPathReferenceAuthority(content)];
+  if (/\.(?:md|mdx)$/u.test(lower)) return [...markdownInlineTokens(content), ...markdownReferenceDefinitionTokens(content), ...htmlTokens(content, "markdown"), ...markdownCommentPathReferenceAuthority(content)];
   return [];
 }
 
@@ -2518,6 +2922,23 @@ function rustContextFiles(path: string, index: ReferencePathIndex): readonly str
   return files;
 }
 
+const exactPathsByLeafs = new WeakMap<ReferencePathIndex, ReadonlyMap<string, readonly string[]>>();
+
+/** 🌿️ The index's exact paths grouped by final segment in iteration order: a path equal to or ending in `/<suffix>` shares the suffix's final segment, so a suffix query reads one group instead of every path. */
+function exactPathsByLeaf(index: ReferencePathIndex): ReadonlyMap<string, readonly string[]> {
+  let groups = exactPathsByLeafs.get(index);
+  if (!groups) {
+    const byLeaf = new Map<string, string[]>();
+    for (const path of index.exact) {
+      const leaf = path.slice(path.lastIndexOf("/") + 1), rows = byLeaf.get(leaf);
+      if (rows) rows.push(path);
+      else byLeaf.set(leaf, [path]);
+    }
+    exactPathsByLeafs.set(index, groups = byLeaf);
+  }
+  return groups;
+}
+
 function unprovenRustReferenceTargets(referencePath: string, value: string, index: ReferencePathIndex): readonly string[] {
   const cache = rustUnprovenReferenceTargets.get(index) ?? new Map<string, readonly string[]>();
   rustUnprovenReferenceTargets.set(index, cache);
@@ -2526,7 +2947,8 @@ function unprovenRustReferenceTargets(referencePath: string, value: string, inde
   if (cached) return cached;
   const decoded = unsupportedReferenceTokens(`"${value}"`, "rust")[0]?.targetValues?.[0] ?? value, suffix = decoded.replace(/^(?:\.\.?\/)+/u, "");
   const explicitEscape = /^(?:\.\.\/|\/|[A-Za-z]:[\\/])/u.test(decoded);
-  const targets = [...index.exact].filter((candidate) => (!coordinateRoot || candidate.startsWith(`${coordinateRoot}/`) || explicitEscape) && suffix !== "" && (candidate === suffix || candidate.endsWith(`/${suffix}`)));
+  const leaf = suffix.slice(suffix.lastIndexOf("/") + 1);
+  const targets = (leaf ? exactPathsByLeaf(index).get(leaf) ?? [] : [...index.exact]).filter((candidate) => (!coordinateRoot || candidate.startsWith(`${coordinateRoot}/`) || explicitEscape) && suffix !== "" && (candidate === suffix || candidate.endsWith(`/${suffix}`)));
   cache.set(key, targets);
   return targets;
 }
@@ -2558,12 +2980,12 @@ function rustReferenceGraph(path: string, index: ReferencePathIndex): RustRefere
   const cached = views.get(coordinateRoot);
   if (cached) return cached;
   const files = rustContextFiles(path, index);
-  const contents = new Map<string, string | undefined>(), hashes = new Map<string, string>(), unreadableInputs = new Map<string, Error>();
+  const contents = new Map<string, string | undefined>(), hashes = new Map<string, string>(), unreadableInputs = new Map<string, Error>(), admit = createLexicalInputSession();
   const read = (candidate: string): string | undefined => {
     checkCancellation(index.repoRoot!, index.cancelFile);
     if (contents.has(candidate)) return contents.get(candidate);
     let absolute: string;
-    try { absolute = assertLexicalInputOutsideOpaque(index.repoRoot!, candidate, "Rust module ownership", true); }
+    try { absolute = admit(index.repoRoot!, candidate, "Rust module ownership", true); }
     catch (error) { unreadableInputs.set(candidate, error instanceof Error ? error : new Error(String(error))); contents.set(candidate, undefined); return undefined; }
     const stat = lstatOrNull(absolute);
     if (!stat) { contents.set(candidate, undefined); return undefined; }
@@ -2755,10 +3177,23 @@ function rustFiniteManifestTargets(path: string, content: string, candidates: Re
   return result;
 }
 
-function rustManifestReferenceTokens(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
-  const references = inspectRustManifestPathReferences(content);
-  const arguments_ = inspectRustJoinArgumentSpans(content);
-  const candidates = inspectRustManifestPathCandidates(content);
+/** 🔬️ The content-pure syntax facts rust manifest-relative tokens are built from: join references, join argument spans, finite loop
+ * candidates, and (only when there are argument spans) the spans whose base is proven not to be the repository. */
+interface RustManifestInspection {
+  readonly references: readonly ReturnType<typeof inspectRustManifestPathReferences>[number][];
+  readonly arguments: readonly ReturnType<typeof inspectRustJoinArgumentSpans>[number][];
+  readonly candidates: readonly ReturnType<typeof inspectRustManifestPathCandidates>[number][];
+  readonly nonRepoBases: readonly number[];
+}
+
+/** 🔬️ Computes one rust source's {@link RustManifestInspection}. */
+function rustManifestInspection(content: string): RustManifestInspection {
+  const references = inspectRustManifestPathReferences(content), arguments_ = inspectRustJoinArgumentSpans(content), candidates = inspectRustManifestPathCandidates(content);
+  return { references, arguments: arguments_, candidates, nonRepoBases: arguments_.length > 0 ? [...inspectRustNonRepoJoinBaseSpans(content)] : [] };
+}
+
+function rustManifestReferenceTokens(path: string, content: string, index: ReferencePathIndex, inspection: RustManifestInspection = rustManifestInspection(content)): readonly ReferenceToken[] {
+  const { references, arguments: arguments_, candidates } = inspection;
   if (references.length === 0 && arguments_.length === 0 && candidates.length === 0) return [];
   const view = !rustReferenceNeedsOwnership(path, references, index, candidates) ? null : rustReferenceGraph(path, index), contexts = view?.graph.contexts.get(path) ?? [];
   for (const [candidate, error] of view?.unreadableInputs ?? []) if (candidate === path || basename(candidate) === "Cargo.toml" && (posix.dirname(candidate) === "." || path.startsWith(`${posix.dirname(candidate)}/`))) throw error;
@@ -2798,7 +3233,7 @@ function rustManifestReferenceTokens(path: string, content: string, index: Refer
   // time — that's not an unprovable reference, it's a proven non-reference, so it must not be
   // recorded at all (never emitted, not merely marked resolved). An unrecognized base is untouched
   // by this set and still falls through to the `rust-path-join-unproven` block below unchanged.
-  const nonRepoBases = arguments_.length > 0 ? inspectRustNonRepoJoinBaseSpans(content) : new Set<number>();
+  const nonRepoBases = new Set(inspection.nonRepoBases);
   for (const argument of arguments_) if (!nonRepoBases.has(argument.start) && !rows.some((row) => row.start === argument.start && row.end === argument.end)) rows.push({ adapter: "rust", structuredLocation: lineLocation(content, argument.start, "rust-path-join-unproven"), ...argument, physicalTargets: unprovenRustReferenceTargets(path, argument.value, index), unsupportedReason: "Rust join argument has no proven immutable manifest-relative base" });
   return rows;
 }
@@ -2809,9 +3244,9 @@ function rustReferenceInterpretationCovers(token: ReferenceToken, candidate: Ref
   return token.physicalInterpretation === "rust-finite-manifest-targets" && token.rewriteKind === undefined && Boolean(token.unsupportedReason) && (token.physicalTargets?.length ?? 0) > 0 && token.start === candidate.start && token.end === candidate.end && token.value === candidate.value;
 }
 
-function referenceTokensIncludingUnsupported(path: string, content: string, index: ReferencePathIndex): readonly ReferenceToken[] {
-  const supported = referenceTokens(path, content, index);
-  return [...supported, ...unsupportedReferenceTokens(content, referenceAdapter(path)).filter((candidate) => candidate.adapter !== "rust" || !supported.some((token) => rustReferenceInterpretationCovers(token, candidate)))];
+function referenceTokensIncludingUnsupported(path: string, content: string, index: ReferencePathIndex, analysis?: ReferenceAnalysis): readonly ReferenceToken[] {
+  const supported = analysis?.standalone ? indexedReferenceTokens(path, content, index, analysis.standalone) : referenceTokens(path, content, index);
+  return [...supported, ...(analysis?.unsupported ?? unsupportedReferenceTokens(content, referenceAdapter(path))).filter((candidate) => candidate.adapter !== "rust" || !supported.some((token) => rustReferenceInterpretationCovers(token, candidate)))];
 }
 
 function addUniqueIndex(index: Map<string, string | null>, key: string, value: string): void {
@@ -2845,11 +3280,34 @@ function referencePathIndex(paths: Iterable<string>, repoRoot?: string, coordina
  * root", and this order only changes the outcome when both an unrelated root/coordinate-root file
  * and a same-named sibling exist. Every other token shape (containing a `/`, or an explicit
  * absolute/`./`/`../` form) keeps the root-or-coordinate-root-first order. */
+const referenceLeafNameSets = new WeakMap<ReferencePathIndex, ReadonlySet<string>>();
+
+/** 🍂️ The final segment of every key {@link resolveReferencePath} can return through its exact, NFC or extensionless lookups, built once per index. */
+function referenceLeafNames(index: ReferencePathIndex): ReadonlySet<string> {
+  let names = referenceLeafNameSets.get(index);
+  if (!names) {
+    const leaves = new Set<string>(), add = (key: string): void => { leaves.add(key.slice(key.lastIndexOf("/") + 1)); };
+    for (const key of index.exact) add(key);
+    for (const key of index.nfc.keys()) add(key);
+    for (const key of index.extensionless.keys()) add(key);
+    referenceLeafNameSets.set(index, names = leaves);
+  }
+  return names;
+}
+
+/** 🍁️ The NFC final segment every candidate built from `path` must end with, or null when normalization can replace it (an empty, `.` or `..` tail) so no leaf can be promised. */
+function referenceLeaf(path: string): string | null {
+  const normalized = posix.normalize(path.replaceAll("\\", "/")).replace(/\/+$/u, ""), leaf = normalized.slice(normalized.lastIndexOf("/") + 1);
+  return leaf === "" || leaf === "." || leaf === ".." ? null : leaf.normalize("NFC");
+}
+
 function resolveReferencePath(referencePath: string, token: string, index: ReferencePathIndex): string | null {
   const split = splitTokenSuffix(token);
   const absoluteRoot = index.repoRoot?.replaceAll("\\", "/").replace(/\/+$/u, "");
   const absoluteLocal = absoluteRoot && split.path.startsWith(`${absoluteRoot}/`) ? split.path.slice(absoluteRoot.length + 1) : null;
   if (!split.path || absoluteLocal === null && /^(?:[a-z][a-z0-9+.-]*:|#|@|\$|\{)/i.test(split.path) || /[*{}]/.test(split.path)) return null;
+  const leaf = referenceLeaf(absoluteLocal ?? split.path);
+  if (leaf !== null && !referenceLeafNames(index).has(leaf)) return /^[\w.]+$/.test(split.path) ? index.pythonModule.get(split.path.normalize("NFC")) || null : null;
   const candidates: string[] = [];
   if (!index.coordinateRootByReference.has(referencePath)) index.coordinateRootByReference.set(referencePath, ancestorReferenceCoordinateRoot(referencePath, index.coordinateRootSet));
   const coordinateRoot = index.coordinateRootByReference.get(referencePath);
@@ -2871,6 +3329,63 @@ function resolveReferencePath(referencePath: string, token: string, index: Refer
   return null;
 }
 
+/** 🎯️ The final segments a token must name to resolve into a target set: each target's own, NFC and extensionless leaf (exactly the keys
+ * {@link referenceLeafNames} admits), plus whether a dotted module token could reach a Python target. */
+interface ReferenceResolutionReach { readonly leaves: ReadonlySet<string>; readonly python: boolean }
+
+function referenceResolutionReach(targets: Iterable<string>): ReferenceResolutionReach {
+  const leaves = new Set<string>(), add = (key: string): void => { leaves.add(key.slice(key.lastIndexOf("/") + 1)); };
+  let python = false;
+  for (const target of targets) {
+    const normalized = target.normalize("NFC");
+    add(target);
+    add(normalized);
+    add(normalized.replace(/\.[^/.]+(?:\.[^/.]+)*$/u, ""));
+    python ||= normalized.endsWith(".py");
+  }
+  return { leaves, python };
+}
+
+/** 🪪️ What a token can resolve to, as {@link resolveReferenceTokenPath} reads it: the final segments its physical targets or candidate
+ * values name, whether some value has no promisable final segment, and whether some value can take the Python module route. */
+interface ReferenceReachSignature { readonly leaves: Set<string>; nullLeaf: boolean; python: boolean }
+
+/** ➕️ Visits one token's reach, mirroring {@link resolveReferencePath}'s value admission and leaf derivation exactly: every final segment
+ * a candidate value or physical target names (`null` when normalization can replace it) and whether the value could take the Python route;
+ * stops as soon as `visit` returns true and reports whether it did. */
+function visitReferenceTokenReach(token: ReferenceToken, repoRoot: string | undefined, visit: (leaf: string | null, python: boolean) => boolean): boolean {
+  if (token.physicalTargets !== undefined) return token.physicalTargets.some((value) => visit(referenceLeaf(value), false));
+  const absoluteRoot = repoRoot?.replaceAll("\\", "/").replace(/\/+$/u, "");
+  for (const value of token.targetValues ?? [token.value]) {
+    const split = splitTokenSuffix(value), absoluteLocal = absoluteRoot && split.path.startsWith(`${absoluteRoot}/`) ? split.path.slice(absoluteRoot.length + 1) : null;
+    if (!split.path || absoluteLocal === null && /^(?:[a-z][a-z0-9+.-]*:|#|@|\$|\{)/i.test(split.path) || /[*{}]/.test(split.path)) continue;
+    if (visit(referenceLeaf(absoluteLocal ?? split.path), /^[\w.]+$/.test(split.path))) return true;
+  }
+  return false;
+}
+
+/** ➕️ Adds one token's reach to a signature. */
+function addReferenceTokenReach(signature: ReferenceReachSignature, token: ReferenceToken, repoRoot: string | undefined): void {
+  visitReferenceTokenReach(token, repoRoot, (leaf, python) => {
+    if (leaf === null) signature.nullLeaf = true;
+    else signature.leaves.add(leaf);
+    signature.python ||= python;
+    return false;
+  });
+}
+
+/** 🧲️ False only when no token behind a signature can resolve into the reach's target set. */
+function referenceSignatureMayResolveInto(signature: Readonly<{ leaves: Iterable<string>; nullLeaf: boolean; python: boolean }>, reach: ReferenceResolutionReach): boolean {
+  if (signature.nullLeaf || signature.python && reach.python) return true;
+  for (const leaf of signature.leaves) if (reach.leaves.has(leaf)) return true;
+  return false;
+}
+
+/** 🎯️ False only when {@link resolveReferenceTokenPath} provably cannot return a member of the reach's target set for this token. */
+function referenceTokenMayResolveInto(token: ReferenceToken, reach: ReferenceResolutionReach, index: ReferencePathIndex): boolean {
+  return visitReferenceTokenReach(token, index.repoRoot, (leaf, python) => leaf === null || reach.leaves.has(leaf) || python && reach.python);
+}
+
 function resolveReferenceTokenPath(referencePath: string, token: ReferenceToken, index: ReferencePathIndex): string | null {
   if (token.physicalTargets !== undefined) {
     const matches = [...new Set(token.physicalTargets.map((value) => index.exact.has(value) ? value : index.nfc.get(value.normalize("NFC"))).filter((value): value is string => typeof value === "string"))];
@@ -2880,10 +3395,28 @@ function resolveReferenceTokenPath(referencePath: string, token: ReferenceToken,
   return matches.length === 1 ? matches[0] : null;
 }
 
+const opaqueLeafNameLists = new WeakMap<object, readonly string[]>();
+
+/** 🚧️ The last segment of every opaque exclusion: a path can only normalize into an exclusion if it names that segment itself, because the referencing file is never inside one. */
+function opaqueLeafNames(taxonomy: Pick<LoadedTaxonomy, "exclusions">): readonly string[] {
+  let names = opaqueLeafNameLists.get(taxonomy.exclusions);
+  if (!names) opaqueLeafNameLists.set(taxonomy.exclusions, names = taxonomy.exclusions.map((entry) => normalizeRelative(entry.path).split("/").filter(Boolean).at(-1) ?? "").filter(Boolean));
+  return names;
+}
+
+/** 🕳️ The opaque exclusion a token lexically targets from a referencing file outside every exclusion, if any. */
+/** 🚪️ True when one token value could name an opaque exclusion: a plain path containing one of the exclusions' last segments. */
+function opaqueReferenceCandidate(value: string, opaqueLeaves: readonly string[]): boolean {
+  const path = splitTokenSuffix(value).path;
+  if (!path || /^(?:[a-z][a-z0-9+.-]*:|#|@|\$|\{)/iu.test(path) || /[*{}]/u.test(path)) return false;
+  const comparable = path.normalize("NFC");
+  return opaqueLeaves.some((leaf) => comparable.includes(leaf));
+}
+
 function lexicalOpaqueReferenceTarget(referencePath: string, token: ReferenceToken, taxonomy: LoadedTaxonomy): string | null {
   for (const value of token.targetValues ?? [token.value]) {
+    if (!opaqueReferenceCandidate(value, opaqueLeafNames(taxonomy))) continue;
     const path = splitTokenSuffix(value).path;
-    if (!path || /^(?:[a-z][a-z0-9+.-]*:|#|@|\$|\{)/iu.test(path) || /[*{}]/u.test(path)) continue;
     const candidates = [path.replace(/^\//u, ""), posix.join(dirname(referencePath), path)];
     for (const candidate of candidates) {
       try {
@@ -2947,15 +3480,78 @@ function rewriteReferenceToken(referencePath: string, sourceReferencePath: strin
   return rewriteReferenceValue(referencePath, token.value, oldTarget, newTarget, sourceReferencePath, repoRoot);
 }
 
+/** 📐️ The `[index, matched text, captured value]` of every match of `/"((?:\\.|[^"\\\r\n])+)"|'…'|`…`/gu` in one linear pass: from each quote, the
+ * body runs to the first unescaped same quote; an escape cannot cross a line terminator and the body cannot hold `\r`/`\n` or be empty. */
+function quotedLiteralMatches(content: string): [number, string, string][] {
+  const rows: [number, string, string][] = [];
+  for (let index = 0; index < content.length; index++) {
+    const quote = content[index];
+    if (quote !== '"' && quote !== "'" && quote !== "`") continue;
+    let cursor = index + 1, closed = false;
+    while (cursor < content.length) {
+      const character = content[cursor]!;
+      if (character === quote) { closed = cursor > index + 1; break; }
+      if (character === "\r" || character === "\n") break;
+      if (character === "\\") {
+        const escaped = content.codePointAt(cursor + 1);
+        if (escaped === undefined || escaped === 0x0a || escaped === 0x0d || escaped === 0x2028 || escaped === 0x2029) break;
+        cursor += escaped > 0xffff ? 3 : 2;
+        continue;
+      }
+      cursor++;
+    }
+    if (!closed) continue;
+    rows.push([index, content.slice(index, cursor + 1), content.slice(index + 1, cursor)]);
+    index = cursor;
+  }
+  return rows;
+}
+
+const PATH_RUN_EXCLUDED = new Set([..."\"'`()],;"]), PATH_LOOKAHEAD = new Set([..."\"'`),;]"]), PATH_PREFIXES = new Set([..."(=,:"]);
+const REGEX_WHITESPACE = new Set([..."\t\n\v\f\r \u00a0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200a\u2028\u2029\u202f\u205f\u3000\ufeff"]);
+const LINE_TERMINATORS = new Set(["\n", "\r", "\u2028", "\u2029"]);
+
+/**
+ * 📏️ The `[index, matched text, captured value]` of every match of the unsupported path grammar
+ * `/(?:^|[\s(=,:])((?:\.\.?\/|\/)?[^\s"'`()\],;]+\/[^\s"'`()\],;]+|[A-Za-z0-9_.@-]+\.[A-Za-z0-9.]+)(?=$|[\s"'`),;\]])/gmu` in one linear pass. From
+ * each start (a line start, or just after one of `\s ( = , :`), the slashed form is the maximal run of path characters when it holds a `/` with a
+ * character on both sides and ends at input end or a lookahead character; otherwise the dotted form is the maximal `[A-Za-z0-9_.@-]` run when
+ * it ends there too and its trailing `[A-Za-z0-9.]` suffix holds a `.` after its first character and before its last.
+ */
+function pathLiteralMatches(content: string): [number, string, string][] {
+  const rows: [number, string, string][] = [];
+  const lookahead = (index: number): boolean => index >= content.length || PATH_LOOKAHEAD.has(content[index]!) || REGEX_WHITESPACE.has(content[index]!);
+  const word = (code: number): boolean => code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 95 || code === 46 || code === 64 || code === 45;
+  const suffix = (code: number): boolean => code >= 48 && code <= 57 || code >= 65 && code <= 90 || code >= 97 && code <= 122 || code === 46;
+  const valueEnd = (start: number): number => {
+    let end = start;
+    while (end < content.length && !PATH_RUN_EXCLUDED.has(content[end]!) && !REGEX_WHITESPACE.has(content[end]!)) end++;
+    if (end > start && lookahead(end)) { const slash = content.indexOf("/", start + 1); if (slash >= 0 && slash < end - 1) return end; }
+    let last = start;
+    while (last < content.length && word(content.charCodeAt(last))) last++;
+    if (last - start < 3 || !lookahead(last)) return -1;
+    let first = last;
+    while (first > start && suffix(content.charCodeAt(first - 1))) first--;
+    for (let dot = Math.max(first, start + 1); dot < last - 1; dot++) if (content.charCodeAt(dot) === 46) return last;
+    return -1;
+  };
+  for (let position = 0; position < content.length;) {
+    let start = -1, end = -1;
+    if (position === 0 || LINE_TERMINATORS.has(content[position - 1]!)) { end = valueEnd(position); if (end >= 0) start = position; }
+    if (start < 0 && (PATH_PREFIXES.has(content[position]!) || REGEX_WHITESPACE.has(content[position]!))) { end = valueEnd(position + 1); if (end >= 0) start = position + 1; }
+    if (start < 0) { position++; continue; }
+    rows.push([position, content.slice(position, end), content.slice(start, end)]);
+    position = end;
+  }
+  return rows;
+}
+
 function unsupportedReferenceTokens(content: string, adapter: TaxonomyReferenceAdapter): readonly ReferenceToken[] {
   const rows: ReferenceToken[] = [];
-  const patterns = [/"((?:\\.|[^"\\\r\n])+)"|'((?:\\.|[^'\\\r\n])+)'|`((?:\\.|[^`\\\r\n])+)`/gu, /(?:^|[\s(=,:])((?:\.\.?\/|\/)?[^\s"'`()\],;]+\/[^\s"'`()\],;]+|[A-Za-z0-9_.@-]+\.[A-Za-z0-9.]+)(?=$|[\s"'`),;\]])/gmu];
-  for (const pattern of patterns) {
-    for (const match of content.matchAll(pattern)) {
-      if (match.index === undefined) continue;
-      const value = match[1] ?? match[2] ?? match[3];
+  for (const matches of [quotedLiteralMatches(content), pathLiteralMatches(content)]) {
+    for (const [index, text, value] of matches) {
       if (!value || /^\/\//u.test(value) || /^[\\/]+$/u.test(value) || /^(?:\/{2,}|\.{1,2}\/?|\*+)$/u.test(value) || !/[\\/]/u.test(value) && !/^\.{1,2}$/u.test(value) && !/\.[A-Za-z0-9][A-Za-z0-9.-]*$/u.test(value)) continue;
-      const start = match.index + match[0].indexOf(value);
+      const start = index + text.indexOf(value);
       const decoded = value.replace(/\\(?:u\{([a-f0-9]{1,6})\}|u([a-f0-9]{4})|x([a-f0-9]{2})|([\\/"'`]))/giu, (sequence, point: string | undefined, unit: string | undefined, byte: string | undefined, escaped: string | undefined) => {
         const numeric = point ?? unit ?? byte;
         if (!numeric) return escaped ?? sequence;
@@ -2985,26 +3581,77 @@ function referenceAdapter(path: string): TaxonomyReferenceAdapter {
   return "markdown";
 }
 
+/** 📍️ The code-unit offset a reference edit's structured location ends with. */
+function referenceEditOffset(edit: ReferenceEdit): number {
+  const value = edit.structuredLocation.match(/@(\d+)$/)?.[1];
+  if (value === undefined) throw new Error(`Reference edit lacks a structured offset at ${edit.path}:${edit.structuredLocation}`);
+  return Number.parseInt(value, 10);
+}
+
+/** 🧱️ Names why a file's planned edits cannot all apply to its preimage in one pass (a preimage that differs from the bytes at its
+ * offset, or two edits sharing bytes), or `null` when {@link applyEditsToContent} is exact; the planner reports it as a violation. */
+function referenceEditConflict(content: string, edits: readonly ReferenceEdit[]): string | null {
+  const spans = edits.map((edit) => ({ edit, start: referenceEditOffset(edit) })).sort((a, b) => a.start - b.start || utf8Compare(a.edit.structuredLocation, b.edit.structuredLocation));
+  for (let index = 0; index < spans.length; index++) {
+    const { edit, start } = spans[index]!, previous = spans[index - 1];
+    if (content.slice(start, start + edit.oldValue.length) !== edit.oldValue) return `${edit.structuredLocation}: planned preimage ${JSON.stringify(edit.oldValue)} differs from the file bytes at its offset`;
+    if (previous && start < previous.start + previous.edit.oldValue.length) return `${edit.structuredLocation} (${JSON.stringify(edit.oldValue)} -> ${JSON.stringify(edit.newValue)}) overlaps ${previous.edit.structuredLocation} (${JSON.stringify(previous.edit.oldValue)} -> ${JSON.stringify(previous.edit.newValue)}); one byte span cannot take two rewrites`;
+  }
+  return null;
+}
+
 function applyEditsToContent(content: string, edits: readonly ReferenceEdit[]): string {
   let result = content;
-  const offset = (edit: ReferenceEdit): number => {
-    const value = edit.structuredLocation.match(/@(\d+)$/)?.[1];
-    if (value === undefined) throw new Error(`Reference edit lacks a structured offset at ${edit.path}:${edit.structuredLocation}`);
-    return Number.parseInt(value, 10);
-  };
-  const sorted = [...edits].sort((a, b) => offset(b) - offset(a) || b.structuredLocation.localeCompare(a.structuredLocation));
-  for (const edit of sorted) {
-    const start = offset(edit);
-    const end = start + edit.oldValue.length;
+  const sorted = edits.map((edit) => ({ edit, start: referenceEditOffset(edit) })).sort((a, b) => b.start - a.start || b.edit.structuredLocation.localeCompare(a.edit.structuredLocation));
+  const pieces: string[] = [];
+  let floor = content.length, index = 0;
+  for (; index < sorted.length; index++) {
+    const { edit, start } = sorted[index]!, end = start + edit.oldValue.length;
+    if (end > floor) break;
+    if (content.slice(start, end) !== edit.oldValue) throw new Error(`Reference edit preimage mismatch at ${edit.path}:${edit.structuredLocation}`);
+    pieces.push(content.slice(end, floor), edit.newValue);
+    floor = start;
+  }
+  pieces.push(content.slice(0, floor));
+  result = pieces.reverse().join("");
+  for (; index < sorted.length; index++) {
+    const { edit, start } = sorted[index]!, end = start + edit.oldValue.length;
     if (result.slice(start, end) !== edit.oldValue) throw new Error(`Reference edit preimage mismatch at ${edit.path}:${edit.structuredLocation}`);
     result = `${result.slice(0, start)}${edit.newValue}${result.slice(end)}`;
   }
   return result;
 }
 
-function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy, progress?: TaxonomyInventoryOptions["progress"], cancelFile?: string): void {
-  const known = referencePathIndex(entries.keys());
+/** 🕰️ The stamp a leaf carried when the inventory read and hashed it, and whether those bytes were exact UTF-8. */
+interface LeafStamp { readonly dev: number; readonly ino: number; readonly size: number; readonly mtimeMs: number; readonly ctimeMs: number; readonly mode: number; readonly observedAt: number; readonly utf8: boolean }
+
+const inventoryLeafStamps = new WeakMap<TaxonomyInventory, ReadonlyMap<string, LeafStamp>>();
+
+/** ⏱️ Stamps this close to their observation may still change within one timestamp tick, so they never prove content (racy-git rule). */
+const LEAF_STAMP_RACY_MS = 2000;
+
+/** 🪪️ True when a leaf provably still holds the exact UTF-8 bytes the inventory hashed: it carries the identical stamp, observed long enough
+ * after its last change. Anything else, including a path that is no longer admissible, must be re-read. */
+function leafStampCurrent(repoRoot: string, path: string, stamp: LeafStamp | undefined, admit: typeof assertLexicalInputOutsideOpaque): boolean {
+  if (!stamp?.utf8 || stamp.mtimeMs > stamp.observedAt - LEAF_STAMP_RACY_MS || stamp.ctimeMs > stamp.observedAt - LEAF_STAMP_RACY_MS) return false;
+  let current: Stats | null;
+  try { current = lstatOrNull(admit(repoRoot, path, "Reference preimage", true)); } catch { return false; }
+  return current !== null && current.isFile() && current.dev === stamp.dev && current.ino === stamp.ino && current.size === stamp.size && current.mtimeMs === stamp.mtimeMs && current.ctimeMs === stamp.ctimeMs && (current.mode & 0o7777) === stamp.mode;
+}
+
+/** 📖️ A memoized lazy read of one leaf as UTF-8 text, flagging whether its bytes still have the inventoried digest. */
+function leafContent(repoRoot: string, path: string, contentHash: string): () => Readonly<{ text: string; matches: boolean }> {
+  let loaded: Readonly<{ text: string; matches: boolean }> | undefined;
+  return () => {
+    if (!loaded) { const bytes = readFileSync(absolutePath(repoRoot, path)); loaded = { text: bytes.toString("utf8"), matches: sha256(bytes) === contentHash }; }
+    return loaded;
+  };
+}
+
+function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy, progress?: TaxonomyInventoryOptions["progress"], cancelFile?: string, store: RecordStore | null = null, workers = 1): void {
+  const known = referencePathIndex(entries.keys()), opaqueLeaves = opaqueLeafNames(taxonomy);
   const files = [...entries.values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && (entry.size ?? 0) <= 16 * 1024 * 1024);
+  if (store) precomputeReferenceDigests(store, repoRoot, files.filter((entry) => !isExcluded(entry.sourcePath, taxonomy)).map((entry) => [entry.sourcePath, entry.contentHash, entry.size ?? 0] as const), opaqueLeaves, workers, progress, cancelFile);
   report(progress, "inventory", "references", 0, files.length);
   for (let index = 0; index < files.length; index++) {
     checkCancellation(repoRoot, cancelFile);
@@ -3013,14 +3660,28 @@ function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableIn
       report(progress, "inventory", "references", index + 1, files.length, entry.sourcePath);
       continue;
     }
-    let content: string;
+    let digest: ReferenceDigest, manifest: readonly ReferenceToken[];
     try {
-      content = readFileSync(absolutePath(repoRoot, entry.sourcePath), "utf8");
+      const content = leafContent(repoRoot, entry.sourcePath, entry.contentHash);
+      digest = storedReferenceAnalysis(store, repoRoot, entry.sourcePath, entry.contentHash, opaqueLeaves, content).digest;
+      manifest = digest.rustManifest ? rustManifestReferenceTokens(entry.sourcePath, content().text, known, digest.rustInspection) : [];
     } catch {
       report(progress, "inventory", "references", index + 1, files.length, entry.sourcePath);
       continue;
     }
-    for (const token of referenceTokens(entry.sourcePath, content, known)) {
+    const resolved = digest.queries.map((query) => resolveReferenceTokenPath(entry.sourcePath, referenceQueryToken(query), known));
+    for (const target of resolved) {
+      if (!target || !entries.has(target)) continue;
+      entry.referencesOut.push(target);
+      entries.get(target)?.referencesIn.push(entry.sourcePath);
+    }
+    for (const [query, adapter, location, values] of digest.opaque) {
+      const target = resolved[query];
+      if (target && entries.has(target)) continue;
+      const opaque = lexicalOpaqueReferenceTarget(entry.sourcePath, { adapter: adapter as TaxonomyReferenceAdapter, structuredLocation: location, start: 0, end: 0, value: values[0]!, targetValues: values }, taxonomy);
+      if (opaque) entry.violations.push(violation("opaque-reference-target", entry.sourcePath, `${adapter} ${location} lexically targets excluded ${opaque}`, "warning"));
+    }
+    for (const token of manifest) {
       if (token.unsupportedReason) continue;
       const target = resolveReferenceTokenPath(entry.sourcePath, token, known);
       if (!target || !entries.has(target)) {
@@ -3034,10 +3695,47 @@ function referenceGraph(repoRoot: string, entries: ReadonlyMap<string, MutableIn
     report(progress, "inventory", "references", index + 1, files.length, entry.sourcePath);
   }
   checkCancellation(repoRoot, cancelFile);
+  store?.flush();
   for (const entry of entries.values()) {
     entry.referencesIn = [...new Set(entry.referencesIn)].sort();
     entry.referencesOut = [...new Set(entry.referencesOut)].sort();
   }
+}
+
+const inventoryEntryIndexes = new WeakMap<readonly TaxonomyInventoryEntry[], Readonly<{ bySource: ReadonlyMap<string, TaxonomyInventoryEntry>; byNormalized: ReadonlyMap<string, TaxonomyInventoryEntry> }>>();
+
+/** 🗂️ The first inventory entry per source path and per normalized path, built once per entry list, so a lookup answers exactly what `entries.find` answered. */
+function inventoryEntryIndex(inventory: TaxonomyInventory): Readonly<{ bySource: ReadonlyMap<string, TaxonomyInventoryEntry>; byNormalized: ReadonlyMap<string, TaxonomyInventoryEntry> }> {
+  const cached = inventoryEntryIndexes.get(inventory.entries);
+  if (cached) return cached;
+  const bySource = new Map<string, TaxonomyInventoryEntry>(), byNormalized = new Map<string, TaxonomyInventoryEntry>();
+  for (const entry of inventory.entries) {
+    if (!bySource.has(entry.sourcePath)) bySource.set(entry.sourcePath, entry);
+    if (!byNormalized.has(entry.normalizedPath)) byNormalized.set(entry.normalizedPath, entry);
+  }
+  const index = { bySource, byNormalized };
+  inventoryEntryIndexes.set(inventory.entries, index);
+  return index;
+}
+
+function inventoryEntriesBySourcePath(inventory: TaxonomyInventory): ReadonlyMap<string, TaxonomyInventoryEntry> { return inventoryEntryIndex(inventory).bySource; }
+
+function inventoryEntriesByNormalizedPath(inventory: TaxonomyInventory): ReadonlyMap<string, TaxonomyInventoryEntry> { return inventoryEntryIndex(inventory).byNormalized; }
+
+const referenceEditPathIndexes = new WeakMap<readonly ReferenceEdit[], ReadonlyMap<string, readonly ReferenceEdit[]>>();
+
+/** 🗃️ A file's planned edits in their list order, grouped once per edit list, so a lookup answers exactly what `edits.filter(edit.path === path)` answered. */
+function referenceEditsByPath(edits: readonly ReferenceEdit[]): ReadonlyMap<string, readonly ReferenceEdit[]> {
+  const cached = referenceEditPathIndexes.get(edits);
+  if (cached) return cached;
+  const index = new Map<string, ReferenceEdit[]>();
+  for (const edit of edits) {
+    const group = index.get(edit.path);
+    if (group) group.push(edit);
+    else index.set(edit.path, [edit]);
+  }
+  referenceEditPathIndexes.set(edits, index);
+  return index;
 }
 
 function referenceEditIdentity(edit: ReferenceEdit): string {
@@ -3200,12 +3898,33 @@ function externalProjectionReferenceEntries(inventory: TaxonomyInventory, moves:
   return rows;
 }
 
+interface ExactOwnerMoveIndex {
+  readonly moving: ReadonlySet<string>;
+  readonly owners: readonly SemanticExactOwnedFileCatalog["cases"][number][];
+  readonly authoredMoves: ReadonlyMap<string, TaxonomyMove>;
+  readonly markdownSources: ReadonlySet<string>;
+}
+
+const exactOwnerMoveIndexes = new WeakMap<readonly TaxonomyMove[], WeakMap<SemanticExactOwnedFileCatalog, ExactOwnerMoveIndex>>();
+
+/** 🧭️ The README-owner moves and catalog cases every exact-owner token check consults, derived once per move list and catalog. */
+function exactOwnerMoveIndex(catalog: SemanticExactOwnedFileCatalog, moves: readonly TaxonomyMove[]): ExactOwnerMoveIndex {
+  let byCatalog = exactOwnerMoveIndexes.get(moves);
+  if (!byCatalog) exactOwnerMoveIndexes.set(moves, byCatalog = new WeakMap());
+  const cached = byCatalog.get(catalog);
+  if (cached) return cached;
+  const moving = new Set(moves.filter((move) => move.rationaleRule === "readme-license-owner-projection-v1").map((move) => move.sourcePath)), authoredMoves = new Map<string, TaxonomyMove>();
+  for (const move of moves) if (moving.has(move.sourcePath) && !authoredMoves.has(move.sourcePath)) authoredMoves.set(move.sourcePath, move);
+  const index = { moving, owners: catalog.cases.filter((entry) => moving.has(entry.sourcePath)), authoredMoves, markdownSources: new Set(catalog.cases.filter((entry) => entry.referenceOwnerIds.includes("markdown-relative-reference-adapter")).map((entry) => entry.sourcePath)) };
+  byCatalog.set(catalog, index);
+  return index;
+}
+
 function exactOwnedReferenceTokens(path: string, content: string, catalog: SemanticExactOwnedFileCatalog | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): Readonly<{ tokens: readonly ReferenceToken[]; problems: readonly string[] }> {
   if (!catalog) return { tokens: [], problems: [] };
-  const moving = new Set(moves.filter((move) => move.rationaleRule === "readme-license-owner-projection-v1").map((move) => move.sourcePath));
-  const owners = catalog.cases.filter((entry) => moving.has(entry.sourcePath));
+  const { owners, authoredMoves } = exactOwnerMoveIndex(catalog, moves);
   const tokens: ReferenceToken[] = [], problems: string[] = [];
-  const authoredMove = moves.find((move) => move.sourcePath === path && moving.has(move.sourcePath));
+  const authoredMove = authoredMoves.get(path);
   const authoredContract = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   if (authoredMove && authoredContract?.contractKind === "exact-owner-path-catalog") {
     const result = semanticExactOwnedDocumentCorrectionAuthority(catalog, authoredContract, { path, finalPath: authoredMove.destinationPath, content, mode: authoredMove.sourcePreimage.mode, moving: true });
@@ -3264,7 +3983,9 @@ function externalExactOwnedReferenceEntries(inventory: TaxonomyInventory, moves:
 }
 
 function exactOwnedMarkdownTarget(referencePath: string, token: ReferenceToken, catalog: SemanticExactOwnedFileCatalog | null, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): string | null {
-  if (token.rewriteKind === "exact-owner-reference" || token.adapter !== "markdown" || !catalog?.cases.some((entry) => entry.sourcePath === referencePath && entry.referenceOwnerIds.includes("markdown-relative-reference-adapter")) || !moves.some((move) => move.sourcePath === referencePath && move.rationaleRule === "readme-license-owner-projection-v1")) return null;
+  if (token.rewriteKind === "exact-owner-reference" || token.adapter !== "markdown" || !catalog) return null;
+  const index = exactOwnerMoveIndex(catalog, moves);
+  if (!index.markdownSources.has(referencePath) || !index.moving.has(referencePath)) return null;
   const value = splitTokenSuffix(token.value).path;
   if (!value || /^(?:[a-z][a-z0-9+.-]*:|\/|#|\$|\{)/iu.test(value) || /[*{}]/u.test(value)) return null;
   try {
@@ -3273,10 +3994,17 @@ function exactOwnedMarkdownTarget(referencePath: string, token: ReferenceToken, 
   } catch { return null; }
 }
 
+const artifactEmptyFacetReferenceMoves = new WeakMap<readonly TaxonomyMove[], WeakMap<LoadedTaxonomy, TaxonomyMove | null>>();
+
+/** 🫙️ The first move the artifact empty-facet reference consumer rewrites for, found once per move list and taxonomy. */
 function artifactEmptyFacetReferenceMove(moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): TaxonomyMove | undefined {
+  let byTaxonomy = artifactEmptyFacetReferenceMoves.get(moves);
+  if (!byTaxonomy) artifactEmptyFacetReferenceMoves.set(moves, byTaxonomy = new WeakMap());
+  if (byTaxonomy.has(taxonomy)) return byTaxonomy.get(taxonomy) ?? undefined;
   const contract = taxonomy.schema.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"];
-  if (contract?.contractKind !== "semantic-facet-primary-file") return undefined;
-  return moves.find((move) => move.rationaleRule === contract.rationaleRule && move.sourcePath.startsWith(`${contract.referenceConsumer.ownerRoot}/`));
+  const move = contract?.contractKind !== "semantic-facet-primary-file" ? undefined : moves.find((candidate) => candidate.rationaleRule === contract.rationaleRule && candidate.sourcePath.startsWith(`${contract.referenceConsumer.ownerRoot}/`));
+  byTaxonomy.set(taxonomy, move ?? null);
+  return move;
 }
 
 function externalArtifactEmptyFacetReferenceEntries(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], taxonomy: LoadedTaxonomy): readonly TaxonomyInventoryEntry[] {
@@ -3464,21 +4192,56 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     generatedOwnerSources.add(removal.sourcePath);
   }
   const candidates = [...new Map([...inventory.entries, ...incoming.entries, ...externalProjectionReferenceEntries(inventory, moves, artifactContexts, taxonomy), ...ownerConsumers, ...facetConsumers].map((entry) => [entry.sourcePath, entry])).values()].filter((entry) => entry.nodeKind === "file" && textualPath(entry.sourcePath) && !generatedOwnerSources.has(entry.sourcePath) && generatorContractsForOutputPath(entry.sourcePath, taxonomy).length === 0).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath));
+  const store = referenceTokenStore(inventory.repoRoot), stamps = inventoryLeafStamps.get(inventory), admit = createLexicalInputSession(), reach = referenceResolutionReach(destinationBySource.keys()), opaqueLeaves = opaqueLeafNames(taxonomy);
+  const facetContract = taxonomy.schema.semanticOwnedFileProjectionContracts["artifact-empty-facet-primary-markdown-v1"];
+  const contentGated = new Set<string>([
+    ...frozenEvidenceContractIndex(taxonomy).keys(),
+    ...(ownerCatalog ? ["repo-cli-dev-docs-go", "commonmark-scratch-rust-reader"].flatMap((id) => ownerCatalog.referenceOwners[id] ? [ownerCatalog.referenceOwners[id].ownerPath] : []) : []),
+    ...(facetContract?.contractKind === "semantic-facet-primary-file" ? [facetContract.referenceConsumer.path] : []),
+    ...packages.flatMap((row) => row.mappings.map((mapping) => mapping.sourcePath)),
+    ...policyStates.keys(),
+  ]);
   for (let index = 0; index < candidates.length; index++) {
     checkCancellation(inventory.repoRoot, options.cancelFile);
     const entry = candidates[index];
     if (isExcluded(entry.sourcePath, taxonomy)) continue;
-    let content: string;
+    const incomingContent = incoming.contents.get(entry.sourcePath);
+    let loaded: string | undefined;
+    const load = (): string => {
+      if (loaded !== undefined) return loaded;
+      const text = incomingContent ?? readFileSync(admit(inventory.repoRoot, entry.sourcePath, "Reference preimage", true), "utf8");
+      if (sha256(text) !== entry.contentHash || Buffer.byteLength(text) !== entry.size) throw new Error(`Reference preimage changed since inventory: ${entry.sourcePath}`);
+      return loaded = text;
+    };
+    const finalReferencePath = moveBySource.get(entry.sourcePath)?.destinationPath ?? entry.normalizedPath;
+    let analysis: ReferenceAnalysis;
     try {
-      content = incoming.contents.get(entry.sourcePath) ?? readFileSync(assertLexicalInputOutsideOpaque(inventory.repoRoot, entry.sourcePath, "Reference preimage", true), "utf8");
-      if (sha256(content) !== entry.contentHash || Buffer.byteLength(content) !== entry.size) throw new Error(`Reference preimage changed since inventory: ${entry.sourcePath}`);
+      if (incomingContent !== undefined || !leafStampCurrent(inventory.repoRoot, entry.sourcePath, stamps?.get(entry.sourcePath), admit)) load();
+      analysis = storedReferenceAnalysis(store, inventory.repoRoot, entry.sourcePath, entry.contentHash, opaqueLeaves, () => ({ text: load(), matches: true }));
     } catch (error) {
       unresolved.push(violation("reference-preimage-unreadable", entry.sourcePath, error instanceof Error ? error.message : String(error)));
       continue;
     }
-    const finalReferencePath = moveBySource.get(entry.sourcePath)?.destinationPath ?? entry.normalizedPath;
+    const staying = finalReferencePath === entry.sourcePath && artifactContexts.length === 0, rootedNullLeaves = !staying || ancestorInTargets(entry.sourcePath, destinationBySource);
+    const digest = analysis.digest;
+    const unsupportedMayResolve = (): boolean => referenceDigestMayResolveInto({ ...digest, rustManifest: false, supported: { leaves: [], nullLeaf: false, python: false } }, reach, rootedNullLeaves);
+    const reachable = (token: ReferenceToken): boolean => !staying || rootedNullLeaves || visitReferenceTokenReach(token, known.repoRoot, (leaf, python) => leaf !== null && reach.leaves.has(leaf) || python && reach.python);
+    if (staying && !contentGated.has(entry.sourcePath) && (!referenceDigestMayResolveInto(digest, reach, rootedNullLeaves) || !digest.rustManifest && !unsupportedMayResolve() && !referenceDigestResolvesInto(entry.sourcePath, digest, known, destinationBySource, reachable))) {
+      report(options.progress, "plan", "references", index + 1, candidates.length, entry.sourcePath);
+      continue;
+    }
+    let content: string;
+    try { content = load(); } catch (error) {
+      unresolved.push(violation("reference-preimage-unreadable", entry.sourcePath, error instanceof Error ? error.message : String(error)));
+      continue;
+    }
     const contentBytes = Buffer.from(content);
-    const frozenEvidence = frozenEvidenceCoordinateAuthority(entry.sourcePath, contentBytes, taxonomy);
+    const frozenRecord = frozenEvidenceRecord(entry.sourcePath, contentBytes, taxonomy);
+    if (frozenRecord?.problem) {
+      unresolved.push(violation("frozen-coordinate-evidence-invalid", entry.sourcePath, frozenRecord.problem));
+      continue;
+    }
+    const frozenEvidence = frozenRecord?.coordinates ?? null;
     const fileEdits: ReferenceEdit[] = [];
     const fileTargets = new Map<string, string>();
     const ownedTokens = exactOwnedReferenceTokens(entry.sourcePath, content, ownerCatalog, moves, taxonomy);
@@ -3488,9 +4251,9 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     if (policyTokens?.active && policyTokens.contentHash !== entry.contentHash) { unresolved.push(violation("policy-state-authority-invalid", entry.sourcePath, "Dependency policy preimage changed during planning")); continue; }
     const exactTokens = { tokens: [...ownedTokens.tokens, ...facetTokens.tokens, ...packageTokens.tokens, ...(policyTokens?.tokens ?? [])], problems: [...ownedTokens.problems, ...facetTokens.problems, ...packageTokens.problems] };
     for (const problem of exactTokens.problems) unresolved.push(violation("owner-reference-authority-invalid", entry.sourcePath, problem));
-    const genericTokens = referenceTokens(entry.sourcePath, content, known).filter((token) => !exactTokens.tokens.some((exact) => exact.start <= token.start && exact.end >= token.end));
+    const genericTokens = (analysis.standalone ? indexedReferenceTokens(entry.sourcePath, content, known, analysis.standalone) : referenceTokens(entry.sourcePath, content, known)).filter((token) => !exactTokens.tokens.some((exact) => exact.start <= token.start && exact.end >= token.end));
     const tokens = [...new Map([...genericTokens, ...exactTokens.tokens].map((token) => [`${token.start}\u0000${token.end}\u0000${token.value}\u0000${(token.targetValues ?? []).join("\u0000")}`, token])).values()].sort((left, right) => left.start - right.start || left.end - right.end || left.structuredLocation.localeCompare(right.structuredLocation));
-    const supported = tokens.map((token) => ({ token, target: exactOwnedMarkdownTarget(entry.sourcePath, token, ownerCatalog, moves, taxonomy) ?? resolveReferenceTokenPath(entry.sourcePath, token, known) }));
+    const supported = tokens.map((token) => ({ token, target: exactOwnedMarkdownTarget(entry.sourcePath, token, ownerCatalog, moves, taxonomy) ?? (reachable(token) ? resolveReferenceTokenPath(entry.sourcePath, token, known) : null) }));
     for (const { token, target: oldTarget } of supported) {
       if (token.unsupportedReason && token.physicalTargets !== undefined && (finalReferencePath !== entry.sourcePath || token.physicalTargets.some((target) => destinationBySource.has(target)))) {
         unresolved.push(violation("reference-syntax-unsupported", entry.sourcePath, `${token.structuredLocation}: ${token.unsupportedReason}`));
@@ -3536,8 +4299,10 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       fileEdits.push(edit);
       if (oldTarget) fileTargets.set(referenceEditIdentity(edit), oldTarget);
     }
-    for (const candidate of unsupportedReferenceTokens(content, referenceAdapter(entry.sourcePath))) {
-      if (supported.some(({ token }) => rustReferenceInterpretationCovers(token, candidate))) continue;
+    const rustSupported = supported.filter(({ token }) => token.adapter === "rust");
+    for (const candidate of !staying || unsupportedMayResolve() ? analysis.unsupported ?? unsupportedReferenceTokens(content, referenceAdapter(entry.sourcePath)) : []) {
+      if (!reachable(candidate)) continue;
+      if (candidate.adapter === "rust" && rustSupported.some(({ token }) => rustReferenceInterpretationCovers(token, candidate))) continue;
       const oldTarget = resolveReferenceTokenPath(entry.sourcePath, candidate, known);
       if (!oldTarget || !destinationBySource.has(oldTarget) && finalReferencePath === entry.sourcePath || isFrozenSourceCoordinateToken(entry.sourcePath, contentBytes, candidate, oldTarget, taxonomy, inventory.repoRoot)) continue;
       if (frozenEvidence !== null) {
@@ -3555,6 +4320,11 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     }
     if (fileEdits.length > 0) {
       const deduplicated = [...new Map(fileEdits.map((edit) => [`${edit.structuredLocation}:${edit.newValue}`, edit])).values()].sort(referenceEditCompare);
+      const conflict = referenceEditConflict(content, deduplicated);
+      if (conflict) {
+        unresolved.push(violation("reference-edit-conflict", entry.sourcePath, conflict));
+        continue;
+      }
       edits.push(...deduplicated);
       for (const edit of deduplicated) {
         const target = fileTargets.get(referenceEditIdentity(edit));
@@ -3566,8 +4336,9 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
     }
     report(options.progress, "plan", "references", index + 1, candidates.length, entry.sourcePath);
   }
+  const entryBySource = inventoryEntriesBySourcePath(inventory);
   for (const move of moves) {
-    const entry = inventory.entries.find((candidate) => candidate.sourcePath === move.sourcePath);
+    const entry = entryBySource.get(move.sourcePath);
     if (entry?.fileKind) {
       const role = taxonomy.schema.fileKinds[entry.fileKind]?.role;
       const unaccounted = entry.referencesIn.filter((source) => !accountedIncoming.has(`${entry.sourcePath}\u0000${source}`));
@@ -3575,6 +4346,7 @@ function buildReferenceEdits(inventory: TaxonomyInventory, moves: readonly Taxon
       if (role === "generated" && entry.referencesIn.length > 0) unresolved.push(violation("generated-reference-rewrite-unresolved", entry.sourcePath, "Generated target requires an explicit regeneration contract before its incoming references can move"));
     }
   }
+  store?.flush();
   const semanticLocationMatches = (actual: string, expected: string): boolean => actual === expected || actual.startsWith(`${expected}:`) || actual.startsWith(`${expected}@`);
   return { edits: edits.sort(referenceEditCompare), editTargets, resultHashes, resultSizes, unresolved: stableViolations(unresolved) };
 }
@@ -3666,10 +4438,19 @@ function provenMutationLeafOwners(repoRoot: string, directories: readonly string
   };
   for (const path of admitted.keys()) if (basename(path) === descriptorName) prove(dirname(path));
   const leafNamesByRoot = new Map<string, readonly string[]>();
+  let childNamesByParent: Map<string, string[]> | undefined;
   const leafNames = (root: string): readonly string[] => {
     const cached = leafNamesByRoot.get(root);
     if (cached) return cached;
-    const names = new Set(directories.filter((directory) => dirname(directory) === root).map((directory) => basename(directory)));
+    if (!childNamesByParent) {
+      childNamesByParent = new Map();
+      for (const directory of directories) {
+        const parent = dirname(directory), siblings = childNamesByParent.get(parent);
+        if (siblings) siblings.push(basename(directory));
+        else childNamesByParent.set(parent, [basename(directory)]);
+      }
+    }
+    const names = new Set(childNamesByParent.get(root) ?? []);
     if (!isExcluded(root, taxonomy) && existsSync(absolutePath(repoRoot, root))) for (const entry of readdirSync(absolutePath(repoRoot, root), { withFileTypes: true })) if (entry.isDirectory()) names.add(entry.name.normalize("NFC"));
     const sorted = [...names].sort();
     leafNamesByRoot.set(root, sorted);
@@ -3736,6 +4517,51 @@ function projectionDirectorySlug(name: string, kindId: string, taxonomy: LoadedT
   return leading.rest;
 }
 
+/** 🌳️ One append-only entry map's keys in code-unit order (every `<root>/` prefix is one contiguous range) with their insertion ordinals; entry maps only ever gain keys, so an unchanged size means unchanged keys. */
+interface EntrySubtreeIndex {
+  readonly size: number;
+  readonly paths: readonly string[];
+  readonly ordinals: ReadonlyMap<string, number>;
+}
+
+const entrySubtreeIndexes = new WeakMap<ReadonlyMap<string, unknown>, EntrySubtreeIndex>();
+
+/** 🌲️ The entries at `root` and below it, in the map's insertion order, found by two binary searches instead of a scan of every entry. */
+function entrySubtree<T>(entries: ReadonlyMap<string, T>, root: string): T[] {
+  let index = entrySubtreeIndexes.get(entries);
+  if (!index || index.size !== entries.size) {
+    const keys = [...entries.keys()];
+    index = { size: keys.length, paths: [...keys].sort(), ordinals: new Map(keys.map((key, ordinal) => [key, ordinal])) };
+    entrySubtreeIndexes.set(entries, index);
+  }
+  const prefix = `${root}/`, paths = index.paths, found = entries.has(root) ? [root] : [];
+  let low = 0, high = paths.length;
+  while (low < high) {
+    const middle = (low + high) >>> 1;
+    if (paths[middle]! < prefix) low = middle + 1;
+    else high = middle;
+  }
+  for (let at = low; at < paths.length && paths[at]!.startsWith(prefix); at++) found.push(paths[at]!);
+  const ordinals = index.ordinals;
+  return found.sort((left, right) => ordinals.get(left)! - ordinals.get(right)!).map((path) => entries.get(path)!);
+}
+
+const memberNameFolds = new WeakMap<object, ReadonlyMap<string, readonly string[]>>();
+
+/** 🔤️ One member registry's names grouped by emoji fold in declaration order, built once per registry so a fold lookup is O(1) instead of a scan of every member name. */
+function memberNamesByFold(registry: { readonly memberNames: readonly string[] }): ReadonlyMap<string, readonly string[]> {
+  const cached = memberNameFolds.get(registry);
+  if (cached) return cached;
+  const folds = new Map<string, string[]>();
+  for (const name of registry.memberNames) {
+    const key = emojiFold(name), rows = folds.get(key);
+    if (rows) rows.push(name);
+    else folds.set(key, [name]);
+  }
+  memberNameFolds.set(registry, folds);
+  return folds;
+}
+
 function projectionSourceAt(
   path: string,
   scope: string | undefined,
@@ -3754,7 +4580,7 @@ function projectionSourceAt(
   const start = segments.length - contract.implementationSegments.length;
   const artifactRoot = physicalPrefix(start);
   const ownerRegistry = taxonomy.schema.semanticDirectoryMemberKinds[contract.sourceOwnerKindId];
-  const ownerMatches = ownerRegistry.memberNames.filter((name) => emojiFold(name) === emojiFold(basename(artifactRoot)));
+  const ownerMatches = memberNamesByFold(ownerRegistry).get(emojiFold(basename(artifactRoot))) ?? [];
   if (ownerMatches.length !== 1 && !(scope && (artifactRoot === scope || artifactRoot.startsWith(`${scope}/`)))) return null;
   const captures = new Map<SemanticProjectionCaptureField, string>();
   for (let index = 0; index < contract.implementationSegments.length; index++) {
@@ -3867,7 +4693,7 @@ function projectionCatalogVectors(path: string, source: Pick<MutationProjectionS
 
 function projectionCatalogEntryForSubset(entries: ReadonlyMap<string, MutableInventoryEntry>, subsetRoot: string, taxonomy: LoadedTaxonomy): MutableInventoryEntry | null {
   const oracleRoot = `${subsetRoot}/${taxonomy.discoverySchema.testOraclesDirName}`;
-  const candidates = [...entries.values()].filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && dirname(entry.sourcePath) === oracleRoot && basename(entry.normalizedPath) === "🔣️.json");
+  const candidates = entrySubtree(entries, oracleRoot).filter((entry) => entry.nodeKind === "file" && entry.fileKind === "json" && dirname(entry.sourcePath) === oracleRoot && basename(entry.normalizedPath) === "🔣️.json");
   return candidates.length === 1 ? candidates[0] : null;
 }
 
@@ -3904,7 +4730,7 @@ function projectionDescendantPath(node: SemanticDescendantKindNode, taxonomy: Lo
 function canonicalProjectedMemberName(name: string, taxonomy: LoadedTaxonomy): string | null {
   const ids = taxonomy.schema.mutationCatalogProjection;
   const sourceKind = taxonomy.schema.semanticProjectedMemberKinds[ids.projectedMemberKindId].sourceMemberKindId;
-  const matches = taxonomy.schema.semanticDirectoryMemberKinds[sourceKind].memberNames.filter((candidate) => emojiFold(candidate) === emojiFold(name.normalize("NFC")));
+  const matches = memberNamesByFold(taxonomy.schema.semanticDirectoryMemberKinds[sourceKind]).get(emojiFold(name.normalize("NFC"))) ?? [];
   return matches.length === 1 ? matches[0] : null;
 }
 
@@ -3924,7 +4750,7 @@ function canonicalProjectedMutationOwner(name: string, identity: string, subsetR
 function projectionBundleProblem(source: MutationProjectionSource, entries: ReadonlyMap<string, MutableInventoryEntry>, kinds: ReadonlyMap<string, string>, contract: SemanticKindDescendantContract, taxonomy: LoadedTaxonomy): string | null {
   const root = entries.get(source.scenarioRoot);
   if (!root) return "scenario root is absent";
-  const actual = [...entries.values()].filter((entry) => entry.sourcePath === source.scenarioRoot || entry.sourcePath.startsWith(`${source.scenarioRoot}/`));
+  const actual = entrySubtree(entries, source.scenarioRoot);
   if (actual.length !== contract.realizedNodeCount) return `bundle has ${actual.length} nodes, expected ${contract.realizedNodeCount}`;
   if (actual.some((entry) => entry.nodeKind === "symlink")) return "bundle contains a symlink";
   const byKey = new Map<string, MutableInventoryEntry>();
@@ -4038,16 +4864,14 @@ function normalizeMutationCasePairs(
         const root = entries.get(source.scenarioRoot)!;
         root.violations = root.violations.filter((row) => row.code !== "directory-kind-unresolved");
         const initialRoot = root.normalizedPath;
-        for (const entry of entries.values()) {
-          if (entry.sourcePath !== source.scenarioRoot && !entry.sourcePath.startsWith(`${source.scenarioRoot}/`)) continue;
+        for (const entry of entrySubtree(entries, source.scenarioRoot)) {
           const suffix = entry.normalizedPath === initialRoot ? "" : entry.normalizedPath.slice(initialRoot.length + 1);
           setProjectedPath(entry, suffix ? `${implementationRoot}/${suffix}` : implementationRoot, taxonomy);
         }
         const fixture = entries.get(fixtureSourceRoot)!;
         fixture.violations = fixture.violations.filter((row) => row.code !== "directory-kind-unresolved");
         const initialFixtureRoot = fixture.normalizedPath;
-        for (const entry of entries.values()) {
-          if (entry.sourcePath !== fixtureSourceRoot && !entry.sourcePath.startsWith(`${fixtureSourceRoot}/`)) continue;
+        for (const entry of entrySubtree(entries, fixtureSourceRoot)) {
           const suffix = entry.normalizedPath === initialFixtureRoot ? "" : entry.normalizedPath.slice(initialFixtureRoot.length + 1);
           setProjectedPath(entry, suffix ? `${fixtureRoot}/${suffix}` : fixtureRoot, taxonomy);
         }
@@ -4057,7 +4881,7 @@ function normalizeMutationCasePairs(
           if (mutation) {
             const initialMutationRoot = mutation.normalizedPath;
             const canonicalMutationRoot = `${subsetRoot}/🧬️schema/🧬️mutations/${mutationName}`.normalize("NFC");
-            const mutationEntries = [...entries.values()].filter((entry) => entry.sourcePath === source.mutationRoot || entry.sourcePath.startsWith(`${source.mutationRoot}/`)).filter((entry) => entry.sourcePath !== testsRoot && !entry.sourcePath.startsWith(`${testsRoot}/`));
+            const mutationEntries = entrySubtree(entries, source.mutationRoot).filter((entry) => entry.sourcePath !== testsRoot && !entry.sourcePath.startsWith(`${testsRoot}/`));
             mutation.violations = mutation.violations.filter((row) => row.code !== "directory-kind-unresolved");
             for (const entry of mutationEntries) {
               const suffix = entry.normalizedPath === initialMutationRoot ? "" : entry.normalizedPath.startsWith(`${initialMutationRoot}/`) ? entry.normalizedPath.slice(initialMutationRoot.length + 1) : entry.sourcePath.slice(source.mutationRoot.length + 1);
@@ -4129,7 +4953,7 @@ function artifactProjectionSourceLocation(path: string, contract: SemanticPathPr
 
 function artifactProjectionAuthorityNodes(repoRoot: string, sourceRoot: string, entries: ReadonlyMap<string, Pick<TaxonomyInventoryEntry, "sourcePath" | "nodeKind">>, taxonomy: LoadedTaxonomy): readonly SemanticProjectionAuthorityNode[] {
   const nodes: SemanticProjectionAuthorityNode[] = [];
-  for (const entry of [...entries.values()].filter((candidate) => candidate.sourcePath === sourceRoot || candidate.sourcePath.startsWith(`${sourceRoot}/`)).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath))) {
+  for (const entry of entrySubtree(entries, sourceRoot).sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath))) {
     if (isExcluded(entry.sourcePath, taxonomy)) throw new Error(`Artifact projection crosses opaque path ${entry.sourcePath}`);
     if (entry.nodeKind !== "file") {
       nodes.push({ path: entry.sourcePath, nodeKind: entry.nodeKind });
@@ -4161,7 +4985,7 @@ function commonProjectionDirectory(paths: readonly string[], floor: string): str
 
 function artifactProjectionDirectoryMappings(sourceRoot: string, destinationRoot: string, mappings: readonly Readonly<{ sourcePath: string; destinationPath: string }>[], entries: ReadonlyMap<string, MutableInventoryEntry>): ReadonlyMap<string, string> {
   const result = new Map<string, string>([[sourceRoot, destinationRoot]]);
-  const directories = [...entries.values()].filter((entry) => entry.nodeKind === "directory" && entry.sourcePath.startsWith(`${sourceRoot}/`)).sort((left, right) => left.sourcePath.split("/").length - right.sourcePath.split("/").length || generatorPathCompare(left.sourcePath, right.sourcePath));
+  const directories = entrySubtree(entries, sourceRoot).filter((entry) => entry.nodeKind === "directory" && entry.sourcePath !== sourceRoot).sort((left, right) => left.sourcePath.split("/").length - right.sourcePath.split("/").length || generatorPathCompare(left.sourcePath, right.sourcePath));
   for (const entry of directories) {
     const descendants = mappings.filter((mapping) => mapping.sourcePath.startsWith(`${entry.sourcePath}/`)).map((mapping) => dirname(mapping.destinationPath));
     if (descendants.length === 0) continue;
@@ -4188,6 +5012,7 @@ function applyArtifactProjectionPath(entry: MutableInventoryEntry, destinationPa
 function projectArtifactCatalogs(repoRoot: string, entries: Map<string, MutableInventoryEntry>, taxonomy: LoadedTaxonomy): void {
   const projectedSources = new Map<string, string>();
   const projectedDestinations = new Map<string, string>();
+  const occupiedPaths = [...entries.keys()];
   for (const { id, contract } of artifactProjectionContracts(taxonomy)) {
     const candidates = [...entries.values()]
       .filter((entry) => entry.nodeKind === "directory")
@@ -4196,8 +5021,7 @@ function projectArtifactCatalogs(repoRoot: string, entries: Map<string, MutableI
       .sort((left, right) => generatorPathCompare(left.entry.sourcePath, right.entry.sourcePath));
     for (const { entry: root, location } of candidates) {
       const nodes = artifactProjectionAuthorityNodes(repoRoot, location.sourceRoot, entries, taxonomy);
-      const occupiedPaths = [...entries.keys()].filter((path) => path !== location.sourceRoot && !path.startsWith(`${location.sourceRoot}/`)).sort(generatorPathCompare);
-      const authority = semanticPathProjectionAuthority({ artifactRoot: location.artifactRoot, contractId: id, sourceRoot: location.sourceRoot, nodes, occupiedPaths }, taxonomy.discoverySchema);
+      const authority = semanticPathProjectionAuthority({ artifactRoot: location.artifactRoot, contractId: id, sourceRoot: location.sourceRoot, nodes, occupiedPaths, occupiedExclusionRoot: location.sourceRoot }, taxonomy.discoverySchema);
       if (authority.problems.length > 0) {
         root.violations.push(violation("projection-authority-invalid", root.sourcePath, `${id}: ${authority.problems.join(" | ")}`));
         continue;
@@ -4223,8 +5047,8 @@ function projectArtifactCatalogs(repoRoot: string, entries: Map<string, MutableI
     const artifactRoots = [...entries.values()].filter((entry) => entry.nodeKind === "directory" && basename(entry.sourcePath) === contract.sourceArtifactMemberName && basename(posix.dirname(entry.sourcePath)) === canonicalDirectoryName(taxonomy, "artifacts", "artifacts"));
     for (const artifact of artifactRoots) {
       const registered = new Map(artifactPathProjectionCatalogRoots(artifact.sourcePath, id, taxonomy.discoverySchema).map((root) => [root.destinationRoot, root]));
-      const destinations = [...entries.values()].filter((entry) => {
-        if (entry.nodeKind !== "directory" || !entry.sourcePath.startsWith(`${artifact.sourcePath}/`)) return false;
+      const destinations = entrySubtree(entries, artifact.sourcePath).filter((entry) => {
+        if (entry.nodeKind !== "directory" || entry.sourcePath === artifact.sourcePath) return false;
         const names = entry.sourcePath.slice(artifact.sourcePath.length + 1).split("/");
         return names.length === contract.destinationSegments.length && contract.destinationSegments.every((segment, index) => "literal" in segment ? names[index] === segment.literal : names[index] !== "");
       });
@@ -4270,7 +5094,7 @@ function projectNestedCargoPackages(repoRoot: string, entries: Map<string, Mutab
     const sourceManifest = `${row.sourceRoot}/Cargo.toml`, destinationManifest = `${row.destinationRoot}/Cargo.toml`;
     if (!entries.has(sourceManifest) && !entries.has(destinationManifest)) continue;
     const destination = entries.has(destinationManifest), root = destination ? row.semanticOwnerRoot : row.sourceRoot;
-    const candidates = [...entries.values()].filter((entry) => (entry.sourcePath === root || entry.sourcePath.startsWith(root + "/")) && !(entry.nodeKind === "directory" && prunableSourceParents.has(entry.sourcePath)));
+    const candidates = entrySubtree(entries, root).filter((entry) => !(entry.nodeKind === "directory" && prunableSourceParents.has(entry.sourcePath)));
     const anchor = entries.get(destination ? destinationManifest : sourceManifest)!;
     try {
       const nodes = candidates.map((entry): SemanticProjectionAuthorityNode => ({ path: entry.sourcePath, nodeKind: entry.nodeKind, ...(entry.nodeKind === "file" ? { content: readFileSync(assertLexicalInputOutsideOpaque(repoRoot, entry.sourcePath, "Nested Cargo source", true), "utf8") } : {}) }));
@@ -4573,10 +5397,13 @@ function projectTicketImportantFiles(repoRoot: string, entries: Map<string, Muta
 }
 
 function validateTicketImportantDirectories(repoRoot: string, entries: Map<string, MutableInventoryEntry>, directoryKindByPath: ReadonlyMap<string, string>, fixedDirectoryContractByPath: ReadonlyMap<string, string>): void {
-  for (const directory of [...entries.values()].filter((entry) => entry.nodeKind === "directory" && ["ticket-important", "ticket-important-history"].includes(directoryKindByPath.get(entry.sourcePath) ?? ""))) {
+  const directories = [...entries.values()].filter((entry) => entry.nodeKind === "directory" && ["ticket-important", "ticket-important-history"].includes(directoryKindByPath.get(entry.sourcePath) ?? ""));
+  const childrenByDirectory = new Map(directories.map((directory) => [directory.sourcePath, [] as MutableInventoryEntry[]]));
+  for (const entry of entries.values()) childrenByDirectory.get(dirname(entry.sourcePath))?.push(entry);
+  for (const directory of directories) {
     const kindId = directoryKindByPath.get(directory.sourcePath)!;
     const ownerPath = dirname(directory.sourcePath);
-    const children = [...entries.values()].filter((entry) => dirname(entry.sourcePath) === directory.sourcePath);
+    const children = childrenByDirectory.get(directory.sourcePath)!;
     const leaf = children.length === 1 && children[0]?.nodeKind === "file" && basename(children[0].sourcePath) === "📝️.md" ? children[0] : undefined;
     const manifestPath = `${ownerPath}/🎫️ticket.json`;
     const manifest = entries.get(manifestPath);
@@ -4656,11 +5483,13 @@ export function inventoryTaxonomyWithCapturedSourceRead(options: TaxonomyInvento
 }
 
 /** 🪵️ Projects only transaction-proven empty source parents into package authority before final classification. */
-function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, sourceRead: TaxonomyCapturedSourceRead = (path) => readFileSync(path), capture?: TaxonomyRepositoryCapture): TaxonomyInventory {
+function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOptions, prunableSourceParents: ReadonlySet<string>, capturedRead?: TaxonomyCapturedSourceRead, capture?: TaxonomyRepositoryCapture): TaxonomyInventory {
+  const sourceRead = capturedRead ?? ((path: string) => readFileSync(path)), stamps = capturedRead ? undefined : new Map<string, LeafStamp>();
   const request = { ...options };
   options = Object.freeze({ ...request, structuralDirectoryNames: request.structuralDirectoryNames && Object.freeze([...request.structuralDirectoryNames]) });
   const prepared = capture && options.scope !== undefined ? sourceAdmissionScopedOptions(capture.source, options.scope) : sourceAdmissionPrepareOptions(options), { repoRoot, scope } = prepared;
   report(options.progress, "inventory", "setup", 0, 1, scope);
+  const leafStore = capturedRead ? null : referenceTokenStore(repoRoot);
   if (options.workers !== undefined && (!Number.isSafeInteger(options.workers) || options.workers < 1)) throw new Error("workers must be a positive integer");
   const taxonomy = capture?.taxonomy ?? loadTaxonomy({ repoRoot, taxonomyPath: prepared.taxonomyPath });
   if (scope && isExcluded(scope, taxonomy)) throw new Error(`Inventory scope is opaque: ${scope}`);
@@ -4692,7 +5521,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   const canonicalDirectoryByPath = new Map<string, string>();
   const directoryKindByPath = new Map<string, string>();
   const fixedDirectoryContractByPath = new Map<string, string>();
-  const directories = [...directoryPaths].sort((a, b) => a.split("/").length - b.split("/").length || Buffer.from(a).compare(Buffer.from(b)));
+  const directories = [...directoryPaths].sort((a, b) => a.split("/").length - b.split("/").length || utf8Compare(a, b));
   const mutationLeaves = provenMutationLeafOwners(repoRoot, directories, admitted, sourceRead, taxonomy);
   report(options.progress, "inventory", "directories", 0, directories.length);
   for (let index = 0; index < directories.length; index++) {
@@ -4723,7 +5552,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
     report(options.progress, "inventory", "directories", index + 1, directories.length, path);
   }
   checkCancellation(repoRoot, options.cancelFile);
-  const leaves = [...admitted.values()].filter((row) => row.mode !== "040000" && !row.explicitDirectory).sort((a, b) => Buffer.from(a.path).compare(Buffer.from(b.path)));
+  const leaves = [...admitted.values()].filter((row) => row.mode !== "040000" && !row.explicitDirectory).sort((a, b) => utf8Compare(a.path, b.path));
   report(options.progress, "inventory", "files", 0, leaves.length);
   const leafPaths = new Set(leaves.map((row) => row.path));
   const authorizedCargoBuildScriptPaths = new Set<string>();
@@ -4749,26 +5578,22 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
   for (let index = 0; index < leaves.length; index++) {
     checkCancellation(repoRoot, options.cancelFile);
     const row = leaves[index];
-    const content = contentOf(repoRoot, row, sourceRead);
+    const content = leafContentOf(repoRoot, row, sourceRead, leafStore);
     const parent = dirname(row.path) === "." ? "" : dirname(row.path);
-    const contentKind: ContentKindHint = content.kind === "file" ? extensionlessContentKind(row.path, content.bytes, taxonomy) : { kindId: null };
+    const contentKind: ContentKindHint = content.kind === "file" ? extensionlessContentKind(row.path, basename(row.path).includes(".") ? undefined : content.bytes(), taxonomy) : { kindId: null };
     const parentContextId = directoryKindByPath.get(parent) ?? fixedDirectoryContractByPath.get(parent);
     const canonical = canonicalFile(row.path, canonicalDirectoryByPath.get(parent) ?? "", parentContextId, ancestorDirectoryKindIds(row.path, directoryKindByPath), directoryKindByPath, fixedDirectoryContractByPath, siblingFixedFilenameContractIdsByParent, authorizedCargoBuildScriptPaths, taxonomy, contentKind.kindId ?? undefined);
     const violations = [...canonical.violations];
     if (content.violation) violations.push(content.violation);
     if (contentKind.violation && !canonical.fixedId) violations.push(contentKind.violation);
-    let text: string | null = null;
-    if (content.kind === "file" && content.bytes !== undefined && content.size <= 16 * 1024 * 1024 && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary"))) {
-      try {
-        text = new TextDecoder("utf-8", { fatal: true }).decode(content.bytes);
-      } catch {
-        text = null;
-      }
-    }
-    const fixedSource = fixedSourceDispositionDecision(canonical.fixedId, text, taxonomy.discoverySchema);
+    const textual = content.kind === "file" && content.violation === undefined && content.size <= TEXT_LIMIT_BYTES && (textualPath(row.path) || (contentKind.kindId !== null && contentKind.kindId !== "binary")) && content.utf8() === true;
+    let decoded: string | undefined;
+    const text = (): string | null => textual ? decoded ??= new TextDecoder("utf-8").decode(content.bytes()) : null;
+    if (stamps && content.stat && content.observedAt !== undefined) stamps.set(row.path, { dev: content.stat.dev, ino: content.stat.ino, size: content.stat.size, mtimeMs: content.stat.mtimeMs, ctimeMs: content.stat.ctimeMs, mode: content.mode, observedAt: content.observedAt, utf8: textual });
+    const fixedSource = canonical.fixedId ? storedClassification(leafStore, () => recordKey("taxonomy-fixed-source-v1", normalizationRevision(), taxonomy.input.contentHash, canonical.fixedId!, content.hash, String(textual)), () => fixedSourceDispositionDecision(canonical.fixedId, text(), taxonomy.discoverySchema)) : fixedSourceDispositionDecision(canonical.fixedId, null, taxonomy.discoverySchema);
     if (fixedSource?.finding === "fixed-source-content-unreadable") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} could not read a UTF-8 body for its declared semantic validator`));
     if (fixedSource?.finding === "fixed-source-disposition-unresolved") violations.push(violation(fixedSource.finding, row.path, `Fixed source contract ${fixedSource.contractId} rejected the body with its declared semantic validator`));
-    const role = classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text, taxonomy);
+    const role = packageLocation(row.path, taxonomy) ? storedClassification(leafStore, () => recordKey("taxonomy-package-role-v1", normalizationRevision(), taxonomy.input.contentHash, row.path, canonical.fileKind ?? "", canonical.fixedId ?? "", content.hash, String(textual)), () => classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, text(), taxonomy)) : classifyPackageRole(row.path, canonical.fileKind, canonical.fixedId, null, taxonomy);
     let normalizedPath = canonical.path;
     if (role === "implementation") {
       const extracted = packageImplementationDestination(row.path, canonical, canonicalDirectoryByPath, directoryKindByPath, taxonomy);
@@ -4833,9 +5658,9 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
     const entry = entries.get(path);
     if (entry) entry.contentHash = directoryHash(path, childrenByParent.get(path) ?? []);
   }
-  referenceGraph(repoRoot, entries, taxonomy, options.progress, options.cancelFile);
+  referenceGraph(repoRoot, entries, taxonomy, options.progress, options.cancelFile, leafStore, options.workers ?? Math.max(1, Math.min(8, availableParallelism() - 1)));
   const frozenEntries: TaxonomyInventoryEntry[] = [...entries.values()]
-    .sort((a, b) => Buffer.from(a.sourcePath).compare(Buffer.from(b.sourcePath)))
+    .sort((a, b) => utf8Compare(a.sourcePath, b.sourcePath))
     .map((entry) => ({
       sourcePath: entry.sourcePath,
       normalizedPath: entry.normalizedPath,
@@ -4888,6 +5713,7 @@ function inventoryTaxonomyWithSourceParentPruning(options: TaxonomyInventoryOpti
     }),
   });
   if (capture) inventoryCaptures.set(inventory, capture);
+  if (stamps) inventoryLeafStamps.set(inventory, stamps);
   report(options.progress, "inventory", "complete", frozenEntries.length, frozenEntries.length);
   return inventory;
 }
@@ -4991,6 +5817,11 @@ function compilerPreviewInputRecords(repoRoot: string, contract: GeneratorContra
   return compilerInputRecords(repoRoot, contract, taxonomy, JSON.parse(Buffer.from(node.bytesBase64, "base64").toString("utf8")), "Compiler preview manifest");
 }
 
+const registryCatalogPathsByView = new WeakMap<RegistryCatalogInputView, WeakMap<object, readonly string[]>>();
+const generatorPrefixCandidatesByView = new WeakMap<RegistryCatalogInputView, WeakMap<object, Map<string, readonly string[]>>>();
+
+/** 🧭️ The current input paths of one generator contract. Over one shared catalog view (one repository snapshot), the registry catalog
+ * input set and every literal-prefix walk are computed once and reused by every contract that names them. */
 export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot">, contract: GeneratorContractSpec, taxonomy: GeneratorInputTaxonomy, cancelFile?: string, view?: RegistryCatalogInputView): readonly string[] {
   const paths = new Set<string>();
   const inputView = view ?? registryCatalogInputView(inventory.repoRoot, taxonomy.discoverySchema);
@@ -5003,9 +5834,23 @@ export function generatorInputPaths(inventory: Pick<TaxonomyInventory, "repoRoot
       readText(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.readText(path); },
       readBytes(path) { checkCancellation(inventory.repoRoot, cancelFile); return catalogView.readBytes(path); },
     };
-    for (const path of registryCatalogInputPaths(inventory.repoRoot, catalogTaxonomy, cancellableView)) paths.add(path);
+    let catalogPaths = view ? registryCatalogPathsByView.get(view)?.get(catalogTaxonomy) : undefined;
+    if (!catalogPaths) {
+      catalogPaths = registryCatalogInputPaths(inventory.repoRoot, catalogTaxonomy, cancellableView);
+      if (view) {
+        let byTaxonomy = registryCatalogPathsByView.get(view);
+        if (!byTaxonomy) registryCatalogPathsByView.set(view, byTaxonomy = new WeakMap());
+        byTaxonomy.set(catalogTaxonomy, catalogPaths);
+      }
+    }
+    for (const path of catalogPaths) paths.add(path);
   }
-  const candidatesByPrefix = new Map<string, readonly string[]>();
+  let candidatesByPrefix = generatorPrefixCandidatesByView.get(inputView)?.get(taxonomy);
+  if (!candidatesByPrefix) {
+    let byTaxonomy = generatorPrefixCandidatesByView.get(inputView);
+    if (!byTaxonomy) generatorPrefixCandidatesByView.set(inputView, byTaxonomy = new WeakMap());
+    byTaxonomy.set(taxonomy, candidatesByPrefix = new Map());
+  }
   for (const pattern of contract.inputPatterns) {
     const segments = pattern.split("/");
     const wildcard = segments.findIndex((segment) => /[*?[]/u.test(segment));
@@ -5071,11 +5916,13 @@ function validatePreviewPreState(manifest: TaxonomyGeneratorPreviewManifest, pre
 }
 
 function generatorPreviewProjection(contractId: GeneratorInputProjection["contractId"], inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], removals: readonly TaxonomyEvidenceRemoval[], taxonomy: LoadedTaxonomy, cancelFile?: string): GeneratorInputProjection {
-  const projectedEdits = [...new Set(edits.map((edit) => edit.path))].sort(generatorPathCompare).map((path) => {
+  const normalizedEntries = inventoryEntriesByNormalizedPath(inventory), editsAt = referenceEditsByPath(edits), moveByDestination = new Map<string, TaxonomyMove>();
+  for (const move of moves) if (!moveByDestination.has(move.destinationPath)) moveByDestination.set(move.destinationPath, move);
+  const projectedEdits = [...editsAt.keys()].sort(generatorPathCompare).map((path) => {
     checkCancellation(inventory.repoRoot, cancelFile);
-    const sourcePath = moves.find((move) => move.destinationPath === path)?.sourcePath ?? inventory.entries.find((entry) => entry.normalizedPath === path)?.sourcePath ?? path;
+    const sourcePath = moveByDestination.get(path)?.sourcePath ?? normalizedEntries.get(path)?.sourcePath ?? path;
     const absolute = assertLexicalInputOutsideOpaque(inventory.repoRoot, sourcePath, "Registry projected edit", true);
-    const bytes = applyEditsToContent(readFileSync(absolute, "utf8"), edits.filter((edit) => edit.path === path));
+    const bytes = applyEditsToContent(readFileSync(absolute, "utf8"), editsAt.get(path)!);
     return { path, bytesBase64: Buffer.from(bytes).toString("base64") };
   });
   return parseGeneratorInputProjection(canonicalJson({ contractId, schemaVersion: 1, moves: moves.map((move) => ({ sourcePath: move.sourcePath, destinationPath: move.destinationPath, nodeKind: move.sourcePreimage.nodeKind })), edits: projectedEdits, removals: removals.map((removal) => removal.sourcePath) }), taxonomy.discoverySchema, contractId);
@@ -5318,23 +6165,33 @@ function markdownSourceCoordinateSpans(content: string): readonly Readonly<{ sta
     if (line.includes("<!--")) { if (!line.slice(line.indexOf("<!--") + 4).includes("-->")) html = "comment"; inline = 0; continue; }
     if (/^ {0,3}</u.test(line)) { html = "block"; inline = 0; continue; }
     if (/^(?: {4}| *\t| {0,3}>)/u.test(line)) { inline = 0; continue; }
-    const first = rows.length;
-    let visible = line;
+    const first = rows.length, blanks: (readonly [number, number])[] = [];
     const list = line.match(/^ {0,3}[-+*][ \t]+([^\s]+)[ \t]*$/u);
     if (list && !inline) { const start = offset + line.indexOf(list[1]); rows.push({ start, end: start + list[1].length, form: "path-list-item" }); }
-    const runs = [...line.matchAll(/`+/gu)];
+    const runs = [...line.matchAll(/`+/gu)], nextSameLength = new Array<number>(runs.length), lastByLength = new Map<number, number>();
+    for (let index = runs.length - 1; index >= 0; index--) {
+      nextSameLength[index] = lastByLength.get(runs[index]![0].length) ?? -1;
+      lastByLength.set(runs[index]![0].length, index);
+    }
     for (let index = 0; index < runs.length; index++) {
-      const run = runs[index], start = run.index!;
-      if (inline) { if (run[0].length === inline) { inline = 0; visible = " ".repeat(start + run[0].length) + visible.slice(start + run[0].length); } continue; }
-      if ((line.slice(0, start).match(/\\+$/u)?.[0].length ?? 0) % 2) continue;
-      const close = runs.findIndex((candidate, candidateIndex) => candidateIndex > index && candidate[0].length === run[0].length);
+      const run = runs[index]!, start = run.index!;
+      if (inline) { if (run[0].length === inline) { inline = 0; blanks.push([0, start + run[0].length]); } continue; }
+      let escapes = 0;
+      while (start - escapes > 0 && line[start - escapes - 1] === "\\") escapes++;
+      if (escapes % 2) continue;
+      const close = nextSameLength[index]!;
       if (close < 0) { inline = run[0].length; continue; }
-      const end = runs[close].index! + runs[close][0].length;
-      visible = visible.slice(0, start) + " ".repeat(end - start) + visible.slice(end);
-      if (run[0].length === 1) rows.push({ start: offset + start + 1, end: offset + runs[close].index!, form: "inline-code" });
+      const end = runs[close]!.index! + runs[close]![0].length;
+      blanks.push([start, end]);
+      if (run[0].length === 1) rows.push({ start: offset + start + 1, end: offset + runs[close]!.index!, form: "inline-code" });
       index = close;
     }
-    if (/[\[\]<>]/u.test(visible)) rows.splice(first);
+    let cursor = 0, delimited = false;
+    for (const [from, to] of blanks.sort((left, right) => left[0] - right[0])) {
+      if (from > cursor && /[\[\]<>]/u.test(line.slice(cursor, from))) { delimited = true; break; }
+      cursor = Math.max(cursor, to);
+    }
+    if (delimited || /[\[\]<>]/u.test(line.slice(cursor))) rows.splice(first);
   }
   return rows;
 }
@@ -5360,7 +6217,9 @@ export function frozenMarkdownCoordinateEvidenceCoordinates(path: string, bytes:
 }
 
 const frozenEvidenceContractIndexes = new WeakMap<LoadedTaxonomy, ReadonlyMap<string, Readonly<{ path: string }>>>();
-const frozenEvidenceCoordinateCache = new WeakMap<Uint8Array, { readonly path: string; readonly taxonomy: LoadedTaxonomy; readonly coordinates: ReadonlySet<string> }>();
+interface FrozenEvidenceRecord { readonly path: string; readonly taxonomy: LoadedTaxonomy; readonly coordinates: ReadonlySet<string>; readonly problem: string | null }
+
+const frozenEvidenceCoordinateCache = new WeakMap<Uint8Array, FrozenEvidenceRecord>();
 
 function frozenEvidenceContractIndex(taxonomy: LoadedTaxonomy): ReadonlyMap<string, Readonly<{ path: string }>> {
   const cached = frozenEvidenceContractIndexes.get(taxonomy);
@@ -5378,14 +6237,29 @@ function validateObservedFrozenEvidenceNodes(repoRoot: string, knownPaths: Reado
   }
 }
 
-function frozenEvidenceCoordinateAuthority(path: string, bytes: Uint8Array, taxonomy: LoadedTaxonomy): ReadonlySet<string> | null {
+/** 🧊️ The declared coordinates of a registered frozen evidence document, or its digest/shape problem with no coordinates at all, so a
+ * planner reports an invalid document instead of aborting while every rewrite of it still fails closed; `null` when none is registered. */
+function frozenEvidenceRecord(path: string, bytes: Uint8Array, taxonomy: LoadedTaxonomy): FrozenEvidenceRecord | null {
   if (!frozenEvidenceContractIndex(taxonomy).has(path)) return null;
   const cached = frozenEvidenceCoordinateCache.get(bytes);
-  if (cached?.path === path && cached.taxonomy === taxonomy) return cached.coordinates;
-  const rows = (frozenCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenCoordinateEvidenceContracts) ?? frozenMarkdownCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts))!;
-  const coordinates = new Set(rows.map((row) => `${row.start}\0${row.end}\0${row.value}`));
-  frozenEvidenceCoordinateCache.set(bytes, { path, taxonomy, coordinates });
-  return coordinates;
+  if (cached?.path === path && cached.taxonomy === taxonomy) return cached;
+  let record: FrozenEvidenceRecord;
+  try {
+    const rows = (frozenCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenCoordinateEvidenceContracts) ?? frozenMarkdownCoordinateEvidenceCoordinates(path, bytes, taxonomy.discoverySchema.frozenMarkdownCoordinateEvidenceContracts))!;
+    record = { path, taxonomy, coordinates: new Set(rows.map((row) => `${row.start}\0${row.end}\0${row.value}`)), problem: null };
+  } catch (error) {
+    if (!(error instanceof Error) || !error.message.startsWith(`frozen-coordinate-evidence-invalid: ${path}: `)) throw error;
+    record = { path, taxonomy, coordinates: new Set(), problem: error.message };
+  }
+  frozenEvidenceCoordinateCache.set(bytes, record);
+  return record;
+}
+
+/** 🔐️ Fail-closed form of {@link frozenEvidenceRecord} for transaction preflight: an invalid registered document aborts. */
+function frozenEvidenceCoordinateAuthority(path: string, bytes: Uint8Array, taxonomy: LoadedTaxonomy): ReadonlySet<string> | null {
+  const record = frozenEvidenceRecord(path, bytes, taxonomy);
+  if (record?.problem) throw new Error(record.problem);
+  return record?.coordinates ?? null;
 }
 
 interface FrozenPlanCoordinateAuthority { readonly planLike: boolean; readonly coordinates: ReadonlySet<string> }
@@ -5416,7 +6290,7 @@ function frozenPlanCoordinateAuthority(path: string, bytes: Uint8Array): FrozenP
 const frozenCoordinateCache = new WeakMap<Uint8Array, { readonly path: string; readonly taxonomy: LoadedTaxonomy; readonly coordinates: ReadonlySet<string>; readonly targets: ReadonlySet<string> }>();
 
 function isFrozenSourceCoordinateToken(path: string, bytes: Uint8Array, token: ReferenceToken, target: string, taxonomy: LoadedTaxonomy, repoRoot: string): boolean {
-  if (frozenEvidenceCoordinateAuthority(path, bytes, taxonomy)?.has(`${token.start}\0${token.end}\0${token.value}`)) return true;
+  if (frozenEvidenceRecord(path, bytes, taxonomy)?.coordinates.has(`${token.start}\0${token.end}\0${token.value}`)) return true;
   if (frozenPlanCoordinateAuthority(path, bytes).coordinates.has(`${token.start}\0${token.end}\0${token.value}`)) return true;
   const owner = taxonomy.schema.semanticOwnedFileProjectionContracts["readme-license-owner-leaves-v1"];
   const taxonomyPath = sourceRelative(relative(repoRoot, taxonomy.path));
@@ -5870,8 +6744,16 @@ function planMoveReferenceAuthority(inventory: TaxonomyInventory, taxonomy: Load
     .sort((left, right) => generatorPathCompare(left.sourcePath, right.sourcePath) || generatorPathCompare(left.destinationPath, right.destinationPath));
   const generatedReferenceMoves = evidenceRemovals.flatMap((entry): TaxonomyMove[] => entry.authority.kind === "exact-owner-generated-source" || entry.authority.kind === "nested-cargo-generated-source" ? [{ operationId: entry.operationId, sourcePath: entry.sourcePath, destinationPath: entry.authority.destinationPath, sourcePreimage: entry.preimage, rationaleRule: entry.authority.kind === "nested-cargo-generated-source" ? "nested-cargo-package-projection-v1" : "readme-license-owner-projection-v1", ownerId: entry.ownerId, referenceEdits: [] }] : []);
   const references = buildReferenceEdits(inventory, [...preliminaryMoves, ...generatedReferenceMoves], taxonomy, options, referencePathIndex(inventory.entries.map((entry) => entry.sourcePath)), evidenceRemovals);
+  const editsByTarget = new Map<string, ReferenceEdit[]>();
+  for (const edit of references.edits) {
+    const target = references.editTargets.get(referenceEditIdentity(edit));
+    if (target === undefined) continue;
+    const group = editsByTarget.get(target);
+    if (group) group.push(edit);
+    else editsByTarget.set(target, [edit]);
+  }
   return {
-    moves: preliminaryMoves.map((move) => ({ ...move, referenceEdits: references.edits.filter((edit) => references.editTargets.get(referenceEditIdentity(edit)) === move.sourcePath) })),
+    moves: preliminaryMoves.map((move) => ({ ...move, referenceEdits: editsByTarget.get(move.sourcePath) ?? [] })),
     edits: references.edits,
     editTargets: references.editTargets,
     resultHashes: references.resultHashes,
@@ -5913,6 +6795,52 @@ function packageGeneratorActivated(repoRoot: string, moves: readonly TaxonomyMov
   return Boolean(destination) || projected === row.mappings.length;
 }
 
+/** 🧭️ A set of mutated paths indexed once for the two questions generator planning asks of every contract: does any mutation overlap a
+ * root (equal, inside or containing it, under {@link pathsOverlap}'s normalization), and does any match a glob (under the path matcher's
+ * normalization, where a glob's literal leading segments bound the candidates). */
+interface MutationIndex {
+  readonly overlapping: (root: string, admit?: (path: string) => boolean) => boolean;
+  readonly matching: (pattern: string, matches: (path: string, pattern: string) => boolean) => boolean;
+}
+
+/** 🔎️ The members of code-unit-sorted `values` equal to `prefix` or below `prefix/`, found by binary search and one bounded scan. */
+function* sortedSubtree(values: readonly string[], prefix: string): Generator<string> {
+  let low = 0, high = values.length;
+  while (low < high) { const middle = (low + high) >>> 1; if (values[middle]! < prefix) low = middle + 1; else high = middle; }
+  for (let index = low; index < values.length; index++) {
+    const value = values[index]!;
+    if (value === prefix || value.startsWith(`${prefix}/`)) yield value;
+    else if (value.slice(0, prefix.length + 1) > `${prefix}/`) break;
+  }
+}
+
+function mutationIndex(paths: Iterable<string>): MutationIndex {
+  const byNormalized = new Map<string, string[]>(), byMatcher = new Map<string, string[]>();
+  for (const path of paths) {
+    const normalized = normalizeRelative(path), matcherForm = path.replaceAll("\\", "/").replace(/^\.\//u, "").normalize("NFC");
+    (byNormalized.get(normalized) ?? byNormalized.set(normalized, []).get(normalized)!).push(path);
+    (byMatcher.get(matcherForm) ?? byMatcher.set(matcherForm, []).get(matcherForm)!).push(path);
+  }
+  const normalized = [...byNormalized.keys()].sort(), matcherForms = [...byMatcher.keys()].sort();
+  const any = (values: readonly string[] | undefined, admit: (path: string) => boolean): boolean => values?.some(admit) ?? false;
+  return {
+    overlapping(root, admit = () => true) {
+      const target = normalizeRelative(root);
+      if (target === "") return [...byNormalized.values()].some((values) => any(values, admit));
+      if (any(byNormalized.get(""), admit)) return true;
+      for (let ancestor = target; ancestor; ancestor = ancestor.includes("/") ? ancestor.slice(0, ancestor.lastIndexOf("/")) : "") if (any(byNormalized.get(ancestor), admit)) return true;
+      for (const value of sortedSubtree(normalized, target)) if (value !== target && any(byNormalized.get(value), admit)) return true;
+      return false;
+    },
+    matching(pattern, matches) {
+      const segments = pattern.normalize("NFC").split("/"), literal = segments.findIndex((segment) => /[*?[]/u.test(segment)), prefix = (literal < 0 ? segments : segments.slice(0, literal)).join("/");
+      const candidates = prefix ? sortedSubtree(matcherForms, prefix) : matcherForms;
+      for (const form of candidates) if (byMatcher.get(form)!.some((path) => matches(path, pattern))) return true;
+      return false;
+    },
+  };
+}
+
 function generatorPlanning(inventory: TaxonomyInventory, moves: readonly TaxonomyMove[], edits: readonly ReferenceEdit[], taxonomy: LoadedTaxonomy, options: TaxonomyPlanOptions, evidenceRemovals: readonly TaxonomyEvidenceRemoval[] = []): GeneratorPlanningResult {
   const jcoActivation = taxonomy.schema.generatorContracts["jco-package-adapter"]?.projectionActivation;
   const packageCatalog = jcoActivation && moves.some((move) => inScope(move.sourcePath, dirname(jcoActivation.sourceManifestPath))) ? semanticPackageProjectionCatalog(inventory.repoRoot, taxonomy.discoverySchema) : null;
@@ -5925,11 +6853,14 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     mutations.add(move.sourcePath);
     mutations.add(move.destinationPath);
   }
+  const normalizedEntries = inventoryEntriesByNormalizedPath(inventory), entriesBySource = inventoryEntriesBySourcePath(inventory);
   for (const edit of edits) {
     mutations.add(edit.path);
-    const source = inventory.entries.find((entry) => entry.normalizedPath === edit.path)?.sourcePath;
+    const source = normalizedEntries.get(edit.path)?.sourcePath;
     if (source) mutations.add(source);
   }
+  const editedPaths = new Set(edits.map((edit) => edit.path)), mutated = mutationIndex(mutations), sortedEntries = [...new Set(inventory.entries.map((entry) => entry.sourcePath))].sort();
+  const catalogMutation = [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema));
   const rows: TaxonomyViolation[] = [];
   const regenerations: TaxonomyRegeneration[] = [];
   const capture = inventoryCaptures.get(inventory);
@@ -5939,14 +6870,14 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
     const [id, contract] = contracts[index];
     if (contract.ownerPath && catalogView.kind(contract.ownerPath) !== "directory") continue;
     const roots = contract.outputRoots.map((root) => root.path).sort(generatorPathCompare);
-    const outputEntries = inventory.entries.filter((entry) => roots.some((root) => entry.sourcePath === root || entry.sourcePath.startsWith(`${root}/`)));
+    const outputEntries = roots.flatMap((root) => [...sortedSubtree(sortedEntries, root)]).map((path) => entriesBySource.get(path)!);
     const outputProblem = outputEntries.some((entry) => !roots.includes(entry.sourcePath) && (entry.sourcePath !== entry.normalizedPath || entry.violations.some((entry) => entry.severity === "error")));
-    const outputMutation = [...mutations].some((path) => roots.some((root) => pathsOverlap(path, root)) && !(id === "external-cargo-locks" && preservedLocks.has(path)));
-    const catalogInputs = contract.inputDiscovery && [...mutations].some((path) => registryCatalogPathMayAffect(path, taxonomy.discoverySchema)) ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView) : undefined;
+    const outputMutation = roots.some((root) => mutated.overlapping(root, (path) => !(id === "external-cargo-locks" && preservedLocks.has(path))));
+    const catalogInputs = contract.inputDiscovery && catalogMutation ? generatorInputInventory(inventory, contract, taxonomy, options.cancelFile, catalogView) : undefined;
     const packageOwnerPath = contract.packageGeneration?.browserProfile.ownerPath;
     const packageOutputVerification = packageOwnerPath && (!inventory.scope || pathsOverlap(inventory.scope, packageOwnerPath));
     const compilerOutputVerification = contract.compilerInputManifest && (!inventory.scope || pathsOverlap(inventory.scope, contract.ownerPath!));
-    const patternMutation = [...mutations].some((path) => contract.inputPatterns.some((pattern) => taxonomy.pathMatcher.matches(path, pattern)));
+    const patternMutation = contract.inputPatterns.some((pattern) => mutated.matching(pattern, taxonomy.pathMatcher.matches));
     let compilerInputs: readonly TaxonomyGeneratorNodeRecord[] | undefined;
     if (contract.compilerInputManifest && (compilerOutputVerification || outputProblem || outputMutation || patternMutation)) {
       try {
@@ -5957,7 +6888,7 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
       }
     }
     const discoveredInputs = catalogInputs ?? compilerInputs;
-    const inputMutation = patternMutation || Boolean(discoveredInputs && (edits.some((edit) => discoveredInputs.some((input) => input.path === edit.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
+    const inputMutation = patternMutation || Boolean(discoveredInputs && (discoveredInputs.some((input) => editedPaths.has(input.path)) || moves.some((move) => discoveredInputs.some((input) => input.path === move.sourcePath || input.path === move.destinationPath || input.nodeKind === "directory" && (inScope(move.sourcePath, input.path) || inScope(move.destinationPath, input.path))))));
     if (!outputProblem && !outputMutation && !inputMutation && !packageOutputVerification && !compilerOutputVerification) continue;
     try { if (!packageGeneratorActivated(inventory.repoRoot, moves, contract, taxonomy, evidenceRemovals)) continue; }
     catch (error) { rows.push(violation("generator-activation-invalid", roots[0], `Generator ${id}: ${error instanceof Error ? error.message : String(error)}`)); continue; }
@@ -6002,15 +6933,23 @@ function generatorPlanning(inventory: TaxonomyInventory, moves: readonly Taxonom
   return { regenerations: regenerations.sort((left, right) => left.contractId.localeCompare(right.contractId) || left.id.localeCompare(right.id)), violations: stableViolations(rows) };
 }
 
-function affectedStateDigest(rows: readonly TaxonomyAffectedStateRow[]): string {
+/** 🧮️ The affected path-state digest over one row per path, plus every path two rows disagree on (first row kept, in path order). */
+function affectedStateSummary(rows: readonly TaxonomyAffectedStateRow[]): Readonly<{ digest: string; conflicts: readonly Readonly<{ path: string; rows: readonly string[] }>[] }> {
   const sorted = [...rows].sort((left, right) => generatorPathCompare(left.path, right.path));
-  const unique = new Map<string, TaxonomyAffectedStateRow>();
+  const unique = new Map<string, TaxonomyAffectedStateRow>(), conflicts = new Map<string, Set<string>>();
   for (const row of sorted) {
     const prior = unique.get(row.path);
-    if (prior && canonicalJson(prior) !== canonicalJson(row)) throw new Error(`Conflicting affected path-state rows at ${row.path}`);
-    unique.set(row.path, row);
+    if (!prior) { unique.set(row.path, row); continue; }
+    const kept = canonicalJson(prior), other = canonicalJson(row);
+    if (kept !== other) conflicts.set(row.path, (conflicts.get(row.path) ?? new Set([kept])).add(other));
   }
-  return sha256(`sha256-affected-path-state-v2\u0000${canonicalJson([...unique.values()])}`);
+  return { digest: sha256(`sha256-affected-path-state-v2\u0000${canonicalJson([...unique.values()])}`), conflicts: [...conflicts].map(([path, states]) => ({ path, rows: [...states] })) };
+}
+
+function affectedStateDigest(rows: readonly TaxonomyAffectedStateRow[]): string {
+  const { digest, conflicts } = affectedStateSummary(rows);
+  if (conflicts.length > 0) throw new Error(`Conflicting affected path-state rows at ${conflicts[0]!.path}`);
+  return digest;
 }
 
 function entryStateRow(path: string, entry?: TaxonomyInventoryEntry): TaxonomyAffectedStateRow {
@@ -6038,7 +6977,7 @@ function destinationAncestorPreimages(repoRoot: string, destinations: readonly s
   return [...rows.values()].sort((left, right) => generatorPathCompare(left.path, right.path));
 }
 
-function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<TaxonomyPlan, "moves" | "embeddedTicketRoots" | "embeddedTicketRootRelocations" | "symlinkTargetEdits" | "evidenceRemovals" | "destinationAncestorPreimages" | "edits" | "regenerations">, resultHashes: ReadonlyMap<string, string>, resultSizes: ReadonlyMap<string, number>): { readonly pre: string; readonly post: string } {
+function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<TaxonomyPlan, "moves" | "embeddedTicketRoots" | "embeddedTicketRootRelocations" | "symlinkTargetEdits" | "evidenceRemovals" | "destinationAncestorPreimages" | "edits" | "regenerations">, resultHashes: ReadonlyMap<string, string>, resultSizes: ReadonlyMap<string, number>): { readonly pre: string; readonly post: string; readonly conflicts: readonly Readonly<{ path: string; side: "pre" | "post"; rows: readonly string[] }>[] } {
   const entries = new Map(inventory.entries.map((entry) => [entry.sourcePath, entry]));
   const authorityStateRow = (path: string): TaxonomyAffectedStateRow => {
     const entry = entries.get(path);
@@ -6087,11 +7026,12 @@ function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<Ta
     const logicalTargetEdit = plan.symlinkTargetEdits.find((candidate) => candidate.sourcePath === edit.logicalTargetSourcePath && candidate.finalPath === edit.logicalTargetFinalPath);
     post.push(logicalPost.state === "symlink" && logicalTargetEdit ? { ...logicalPost, targetHash: logicalTargetEdit.newTargetHash, targetSize: Buffer.byteLength(logicalTargetEdit.newTarget) } : logicalPost.state === "file" && resultHashes.has(edit.logicalTargetFinalPath) ? { ...logicalPost, contentHash: resultHashes.get(edit.logicalTargetFinalPath)!, size: resultSizes.get(edit.logicalTargetFinalPath) ?? logicalPost.size } : logicalPost);
   }
+  const normalizedEntries = inventoryEntriesByNormalizedPath(inventory), editsAt = referenceEditsByPath(plan.edits);
   for (const [path, hash] of new Map(plan.edits.map((edit) => [edit.path, resultHashes.get(edit.path) ?? edit.preimage.contentHash]))) {
-    const entry = entries.get(path) ?? inventory.entries.find((candidate) => candidate.normalizedPath === path);
+    const entry = entries.get(path) ?? normalizedEntries.get(path);
     if (entry?.nodeKind === "file") { pre.push(entryStateRow(entry.sourcePath, entry)); post.push({ path, state: "file", contentHash: hash, mode: entry.mode, size: resultSizes.get(path) ?? entry.size }); }
     else {
-      const preimage = plan.edits.find((edit) => edit.path === path)!.preimage;
+      const preimage = editsAt.get(path)![0]!.preimage;
       pre.push({ path, state: "file", contentHash: preimage.contentHash, mode: preimage.mode, size: preimage.size });
       post.push({ path, state: "file", contentHash: hash, mode: preimage.mode, size: resultSizes.get(path) ?? preimage.size });
     }
@@ -6100,7 +7040,8 @@ function plannedAffectedStateDigests(inventory: TaxonomyInventory, plan: Pick<Ta
     pre.push({ path: `@generator/${regeneration.id}`, state: "generator", contentHash: sha256(canonicalJson(regeneration.preOutputs)) });
     post.push({ path: `@generator/${regeneration.id}`, state: "generator", contentHash: sha256(canonicalJson(regeneration.outputs)) });
   }
-  return { pre: affectedStateDigest(pre), post: affectedStateDigest(post) };
+  const before = affectedStateSummary(pre), after = affectedStateSummary(post);
+  return { pre: before.digest, post: after.digest, conflicts: [...before.conflicts.map((conflict) => ({ ...conflict, side: "pre" as const })), ...after.conflicts.map((conflict) => ({ ...conflict, side: "post" as const }))] };
 }
 
 /** 📜️ Hashes a canonical plan while excluding its self-referential planDigest field. */
@@ -6150,6 +7091,7 @@ export function planTaxonomy(inventory: TaxonomyInventory, options: TaxonomyPlan
     if (!inventory.pathExclusions.includes(normalizeRelative(digest.relativeRoot))) unresolved.push(violation("opaque-digest-unregistered", digest.relativeRoot, "Opaque digest is not registered by taxonomy pathExclusions"));
   }
   const affected = plannedAffectedStateDigests(inventory, { moves, embeddedTicketRoots: embedded.roots, embeddedTicketRootRelocations: embedded.relocations, symlinkTargetEdits: symlinks.edits, evidenceRemovals, destinationAncestorPreimages: destinationAncestors, edits: references.edits, regenerations: generators.regenerations }, references.resultHashes, references.resultSizes);
+  for (const conflict of affected.conflicts) unresolved.push(violation("affected-path-state-conflict", conflict.path, `Planned operations disagree on the ${conflict.side}-state of this path: ${conflict.rows.join(" | ")}`));
   const provisionalBase: TaxonomyPlan = {
     schemaVersion: 2,
     taxonomySchemaVersion: 7,
@@ -6271,6 +7213,7 @@ export function verifyTaxonomy(options: TaxonomyInventoryOptions): TaxonomyVerif
     cancelFile: options.cancelFile,
     progress: options.progress,
   });
+  if (!inventory.scope) referenceTokenStore(inventory.repoRoot)?.retainAccessed();
   return { inventory, plan, ...taxonomyPlanVerdict(plan, options.progress) };
 }
 
@@ -8327,13 +9270,16 @@ function artifactStaleGroups(paths: Iterable<string>, taxonomy: LoadedTaxonomy):
   return [...rows.values()].sort((left, right) => generatorPathCompare(left.ownerRoot, right.ownerRoot) || left.id.localeCompare(right.id));
 }
 
+/** 🎯️ The stale groups whose markers a file's content is checked for: groups it lies inside, or whose projection it consumes. */
+function staleProjectionGroupsAt(path: string, groups: readonly ArtifactStaleGroup[], taxonomy: LoadedTaxonomy): readonly ArtifactStaleGroup[] {
+  if (groups.length === 0) return groups;
+  const consumers = Object.values(taxonomy.schema.semanticPathProjectionReferenceConsumerContracts);
+  return groups.filter((group) => path === group.ownerRoot || path.startsWith(`${group.ownerRoot}/`) || consumers.some((contract) => contract.projectionContractId === group.id && isProjectionConsumerPath(contract, path)));
+}
+
 function staleProjectionContentViolations(path: string, content: string, groups: readonly ArtifactStaleGroup[], taxonomy: LoadedTaxonomy): readonly TaxonomyViolation[] {
   const rows: TaxonomyViolation[] = [];
-  const consumers = Object.values(taxonomy.schema.semanticPathProjectionReferenceConsumerContracts);
-  for (const group of groups) {
-    const internal = path === group.ownerRoot || path.startsWith(`${group.ownerRoot}/`);
-    const external = consumers.some((contract) => contract.projectionContractId === group.id && isProjectionConsumerPath(contract, path));
-    if (!internal && !external) continue;
+  for (const group of staleProjectionGroupsAt(path, groups, taxonomy)) {
     for (const marker of group.markers) for (let index = content.indexOf(marker); index >= 0; index = content.indexOf(marker, index + marker.length)) rows.push(violation("projection-old-token-stale", path, `Old ${group.rationaleRule} token remains at raw offset ${index}`));
   }
   return rows;
@@ -8379,12 +9325,14 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
     const finalPaths = inventory.entries.map((entry) => moveBySource.get(entry.sourcePath) ?? entry.normalizedPath);
     const groups = artifactStaleGroups(finalPaths, taxonomy);
     const rows: TaxonomyViolation[] = [];
+    const editsAt = referenceEditsByPath(plan.edits);
     for (const entry of inventory.entries.filter((candidate) => candidate.nodeKind === "file" && textualPath(candidate.sourcePath))) {
       const path = moveBySource.get(entry.sourcePath) ?? entry.normalizedPath;
+      if (staleProjectionGroupsAt(path, groups, taxonomy).length === 0) continue;
       let content: string;
       try {
         content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolutePath(repoRoot, entry.sourcePath)));
-        const edits = plan.edits.filter((edit) => edit.path === path);
+        const edits = editsAt.get(path) ?? [];
         if (edits.length > 0) content = applyEditsToContent(content, edits);
       } catch (error) {
         if (isTransactionRepositoryAuthorityError(error)) throw error;
@@ -8399,7 +9347,7 @@ function projectionStaleViolations(repoRoot: string, plan: TaxonomyPlan, taxonom
       if (!stat?.isFile() || stat.isSymbolicLink() || stat.size > 16 * 1024 * 1024 || !textualPath(path)) continue;
       try {
         let content = new TextDecoder("utf-8", { fatal: true }).decode(readFileSync(absolute));
-        const edits = plan.edits.filter((edit) => edit.path === path);
+        const edits = editsAt.get(path) ?? [];
         if (edits.length > 0) content = applyEditsToContent(content, edits);
         rows.push(...staleProjectionContentViolations(path, content, groups, taxonomy));
       } catch (error) { if (isTransactionRepositoryAuthorityError(error)) throw error; }

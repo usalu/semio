@@ -1,6 +1,6 @@
 use super::super::*;
 use crate::standards::v1::subsets::any::schema::inferences::evaluate;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 #[test]
 fn example_id_is_stable() {

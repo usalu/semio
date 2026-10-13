@@ -25,11 +25,11 @@ pub(super) fn erased_step<T: store::ErasedSnapshotRetirement + ?Sized>(owner: &m
     Ok(step)
 }
 
-fn completed_demand<P, Mutation>(record: &dyn store::ArtifactEnvelopeCompletedRecord<P, Mutation>, body: usize) -> Result<RetirementDemand, ValueError> {
+fn completed_demand<P, Mutation>(record: &dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, body: usize) -> Result<RetirementDemand, ValueError> {
     Ok(RetirementDemand { copy_bytes: record.next_close_copy_byte_demand()?, capacity_bytes: record.next_close_capacity_byte_demand(body)?, release_bytes: record.next_close_release_byte_demand()?, depth: record.next_close_depth_demand()?.max(1) })
 }
 
-fn completed_step<P, Mutation>(record: &mut dyn store::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+fn completed_step<P, Mutation>(record: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<P, Mutation>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
     let empty = RetainedCloneProgress::default();
     if record.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(empty)); }
     let demand = completed_demand(record, grant.maximum_copy_bytes).map_err(plugin_retirement_fault)?;
@@ -91,7 +91,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         let retirement = match self.envelope_field_decoders.take_returned_ticket(ticket) {
             Ok(retirement) => retirement,
-            Err(store::ArtifactEnvelopeFieldDecoderRegistryFault::Contended | store::ArtifactEnvelopeFieldDecoderRegistryFault::Returned | store::ArtifactEnvelopeFieldDecoderRegistryFault::Stale) => {
+            Err(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistryFault::Contended | store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistryFault::Returned | store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistryFault::Stale) => {
                 return Ok(PluginLifecycleStep::Progress(empty));
             }
             Err(_) => {
@@ -140,7 +140,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         let ticket = match if closing { self.envelope_completed_records.try_next_ticket(cursor) } else { self.envelope_completed_records.try_next_close_ticket(cursor) } {
             Ok(ticket) => ticket,
-            Err(store::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(PluginLifecycleStep::Progress(empty)),
+            Err(store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Contended) => return Ok(PluginLifecycleStep::Progress(empty)),
             Err(_) => {
                 return Err(Fault::new(FaultOrigin::Framework, FaultCode::new("artifact-envelope.completed-registry-invalid"), "completed envelope registry lost its exact generation authority"));
             }
@@ -165,7 +165,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
         }
         let retirement = match self.envelope_completed_records.try_detach(ticket) {
             Ok(retirement) => retirement,
-            Err(store::ArtifactEnvelopeCompletedRecordFault::Contended | store::ArtifactEnvelopeCompletedRecordFault::Stale) => {
+            Err(store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Contended | store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Stale) => {
                 return Ok(PluginLifecycleStep::Progress(empty));
             }
             Err(_) => {

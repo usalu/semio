@@ -1,9 +1,9 @@
 //! 📽️ Borrowed Presentation primitives count real owner partitions, frames and embedded DocBlocks.
 use super::{SemioPresentationSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
-use crate::standards::v1::subsets::document::io::sqlite::snapshot::semantic as doc;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_document::io::sqlite::snapshot::semantic as doc;
 type Result<T>=std::result::Result<T,ValueError>;
 type Census=doc::Census;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Presentation native field differs from its authored shape")}
@@ -38,7 +38,7 @@ fn binary_shapes(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&m
  })
 }
 /// 📦️ Counts actual Presentation binary records, including borrowed text-encoded DocBlock leaves.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census::new(limits);census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|{census.row(add(24,text(reader,control)?)?)?;binary_shapes(reader,census,control)})?;
@@ -69,7 +69,7 @@ fn document_shapes(value:&str,census:&mut Census,control:&mut NativeDecodeContro
  })
 }
 /// 📝️ Counts original Presentation field records and exact decimal unsigned64 frame words.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","masters","layouts","slides"],control)?;let mut census=Census::new(limits);census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{let[id,shapes]=native::record(value,control)?;census.row(add(24,native::hex_text_extent(id,control)?)?)?;document_shapes(shapes,census,control)})?;

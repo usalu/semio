@@ -337,7 +337,7 @@ pub fn capabilities_search_input_schema() -> serde_json::Value {
 
 /// 📐️ MCP's `tools/list` requires an `outputSchema` (when present) to describe a JSON OBJECT at the
 /// top level — a bare `type:"array"` fails the SDK client's own Zod validation of the `Tool` shape
-/// (caught live running `bun nx run @semio-tech/framework-os-mcp:test-quick`, not read off the spec).
+/// (caught live running `bun nx run @semio-tech/framework-os-mcp:test -- quick`, not read off the spec).
 /// The hits themselves are therefore wrapped under a `results` property.
 pub fn capabilities_search_output_shape() -> serde_json::Value {
     serde_json::json!({ "type": "object", "properties": { "results": { "type": "array" }, "total": { "type": "integer" }, "nextCursor": { "type": ["string", "null"] } } })
@@ -1413,7 +1413,7 @@ fn repoint_definition_refs(value: &mut serde_json::Value) {
 /// (`PreparedActionReport.preview`'s free-form `serde_json::Value` field otherwise emits a bare
 /// boolean sub-schema, which the MCP SDK's Zod model rejects outright: `$ZodError` at
 /// `tools[2].outputSchema.properties.preview`, caught live by
-/// `bun nx run @semio-tech/framework-os-mcp:test-quick`).
+/// `bun nx run @semio-tech/framework-os-mcp:test -- quick`).
 pub fn tool_output_schema(export_id: &str) -> serde_json::Value {
     schemas().into_iter().find(|(name, _)| *name == export_id).map(|(_, schema)| schema).unwrap_or_else(|| panic!("{export_id} is not an os.mcp schema export"))
 }

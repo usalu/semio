@@ -13,12 +13,12 @@ pub const REFERENCE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 📖️ Parses VDI 3805 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Vdi3805Snapshot, semio_framework_diagnostic::TextError> {
-    <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Vdi3805Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.vdi3805` DSL text.
 pub fn print_dsl(document: &Vdi3805Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 #[cfg(test)]
@@ -42,9 +42,9 @@ pub fn encode_vdi3805_snapshot_json(snapshot: &Vdi3805Snapshot) -> String { semi
 
 pub fn decode_vdi3805_snapshot_json(text: &str) -> Result<Vdi3805Snapshot, String> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|e| e.to_string()) }
 
-pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| format!("{e:?}")) }
+pub fn decode_vdi3805_dsl(text: &str) -> Result<Vdi3805Snapshot, String> { <Vdi3805Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| format!("{e:?}")) }
 
-pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String { store::ArtifactDsl::print_dsl(snapshot) }
+pub fn encode_vdi3805_dsl(snapshot: &Vdi3805Snapshot) -> String { store::os_store::serialization::ArtifactDsl::print_dsl(snapshot) }
 }
 pub use snapshot_codec::*;
 

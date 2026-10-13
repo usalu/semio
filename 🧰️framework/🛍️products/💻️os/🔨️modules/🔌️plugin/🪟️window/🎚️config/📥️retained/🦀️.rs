@@ -20,13 +20,13 @@ mod physical_ownership_tests {
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../🗂️registry/🧫️fixtures/🔣️.json")).unwrap();
         let law = &fixture["rootMetadata"];
         let ((producer, absent), getter) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| (
-            <RetainedLoadCameraConfig as store::ArtifactPack>::record_spec_producer(),
-            <semio_framework_value::DslValue as store::ArtifactPack>::record_spec_producer(),
+            <RetainedLoadCameraConfig as store::os_store::serialization::ArtifactPack>::record_spec_producer(),
+            <semio_framework_value::DslValue as store::os_store::serialization::ArtifactPack>::record_spec_producer(),
         ));
         assert_eq!(producer.is_some(), law["ownedProducer"].as_bool().unwrap());
         assert_eq!(absent.is_some(), law["schemaLessProducer"].as_bool().unwrap());
         assert_eq!((getter.requested_bytes, getter.released_bytes), (law["getterAllocationBytes"].as_u64().unwrap() as usize, law["getterReleaseBytes"].as_u64().unwrap() as usize));
-        assert_eq!(<RetainedLoadCameraConfig as store::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
+        assert_eq!(<RetainedLoadCameraConfig as store::os_store::serialization::ArtifactDsl>::envelope_id(), law["owner"].as_str().unwrap());
         let mut accepted = |_| true;
         let mut native = semio_framework_value::NativeDecodeControl::new_retained(&mut accepted);
         native.admit_turn_capacity(law["maximumCapacityBytes"].as_u64().unwrap() as usize).unwrap();
@@ -216,7 +216,7 @@ impl WindowConfigPackLoad {
     pub fn progress(&self)->WindowConfigPackLoadProgress{self.inner.as_ref().map_or(self.closed_progress,|inner|inner.progress())}
     pub fn diagnostic(&self)->Option<WindowConfigPackLoadDiagnostic>{self.inner.as_ref().map_or(self.closed_diagnostic,|inner|inner.diagnostic())}
     pub fn request_cancel(&mut self){if let Some(inner)=self.inner.as_mut(){inner.request_cancel();}}
-    pub fn cold_work_grant(&mut self)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(self.inner.as_mut().map_or(0,|inner|inner.demand_bytes())),maximum_capacity_bytes:store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_depth:64}}
+    pub fn cold_work_grant(&mut self)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(self.inner.as_mut().map_or(0,|inner|inner.demand_bytes())),maximum_capacity_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,maximum_depth:64}}
     pub fn terminal_is_empty(&self)->bool{self.inner.is_none()}
     pub fn retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let Some(inner)=self.inner.as_ref()else{return Ok(Default::default());};
@@ -352,7 +352,7 @@ struct RetainedTypedOwners<O: WindowConfigOwner> {
 
 impl<O: WindowConfigOwner> RetainedWindowConfigTypedState<O> {
     fn new(native: &mut semio_framework_value::NativeDecodeControl<'_>) -> Result<Self, WindowConfigPackLoadDiagnostic> {
-        let producer = <O::State as store::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
+        let producer = <O::State as store::os_store::serialization::ArtifactPack>::borrowed_record_spec_producer().ok_or(WindowConfigPackLoadDiagnostic::TypedState)?;
         let spec = producer.decode(native).map_err(|_| WindowConfigPackLoadDiagnostic::TypedState)?;
         let stack = Vec::new();
         let wrappers = Vec::new();
@@ -844,7 +844,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
     }
 
     fn validate_envelope(&mut self, pack: &[u8], grant: RetainedCloneGrant) -> Result<bool, WindowConfigPackLoadDiagnostic> {
-        let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
+        let envelope_id = <O::State as store::os_store::serialization::ArtifactDsl>::envelope_id();
         let expected_token_bytes = envelope_id.len().checked_add(".pack v1".len()).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         let header_bytes = 12usize.checked_add(expected_token_bytes).ok_or(WindowConfigPackLoadDiagnostic::EnvelopeIdentity)?;
         if grant.maximum_items == 0 || grant.maximum_depth == 0 || grant.maximum_copy_bytes < header_bytes.saturating_add(size_of::<RetainedWindowConfigTypedState<O>>()) {
@@ -859,15 +859,15 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
             return Err(WindowConfigPackLoadDiagnostic::EnvelopeIdentity);
         }
         let inner_len = pack.len() - header_bytes;
-        if inner_len > store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES {
+        if inner_len > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES {
             return Err(WindowConfigPackLoadDiagnostic::Capacity);
         }
         let pages = inner_len.div_ceil(store::mounted_pack_rt::RETAINED_PACK_PAGE_BYTES);
         if pages == 0 || pages > store::mounted_pack_rt::RETAINED_PACK_MAXIMUM_PAGES {
             return Err(WindowConfigPackLoadDiagnostic::Capacity);
         }
-        let maximum_items = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
-        let maximum_allocation = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES;
+        let maximum_items = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+        let maximum_allocation = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES;
         let limits =
             || store::mounted_pack_rt::PackLimits { max_file_len: inner_len as u64, max_segment_len: inner_len as u64, max_symbols: maximum_items as u32, max_depth: 64, max_items: maximum_items as u64, max_total_alloc: maximum_allocation as u64 };
         *self.source = Some(store::mounted_pack_rt::RetainedPackSourceCursor::try_new(pages, inner_len, maximum_allocation).map_err(|_| WindowConfigPackLoadDiagnostic::Pack)?);
@@ -899,7 +899,7 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
 
     fn reserve_next(&mut self, maximum_capacity_bytes: usize) -> Result<bool, WindowConfigPackLoadDiagnostic> {
         let allocated = self.retained_allocated_bytes();
-        let remaining = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(allocated);
+        let remaining = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES.saturating_sub(allocated);
         if self.phase == RetainedStatePhase::Ingress {
             let source = self.source.as_mut().ok_or(WindowConfigPackLoadDiagnostic::Pack)?;
             if source.has_reserved_page() {
@@ -1147,9 +1147,9 @@ impl<O: WindowConfigOwner> RetainedWindowConfigStateDecode<O> {
         if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return Ok(RetainedCloneStep::Progress(Default::default()));}
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"window state decoder depth refused"));}
         self.request_cancel();
-        if self.active.is_some(){return store::artifact_retirement_box_close_step(&mut self.active,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
-        if self.state.is_some(){return store::artifact_retirement_admit_owned(&mut self.state,&mut self.active,grant);}
-        if self.typed.is_some(){return store::artifact_retirement_admit_owned(&mut self.typed,&mut self.active,grant);}
+        if self.active.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active,grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+        if self.state.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.state,&mut self.active,grant);}
+        if self.typed.is_some(){return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.typed,&mut self.active,grant);}
         if self.document_byte.take().is_some()||self.catalog_value.take().is_some(){return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}
         let convert=|step|match step{store::mounted_pack_rt::RetainedPackCloseStep::Pending{released_items,released_bytes}=>RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:released_items,released_bytes,..Default::default()}),store::mounted_pack_rt::RetainedPackCloseStep::Complete=>RetainedCloneStep::Progress(Default::default())};
         if let Some(value)=self.value.as_mut(){let step=value.close_step(1,grant.maximum_release_bytes).map_err(|_|ValueError::literal(ValueRefusalKind::InvariantViolated,"window value retirement refused"))?;if matches!(step,store::mounted_pack_rt::RetainedPackCloseStep::Complete){if !value.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::InvariantViolated,"window value false terminal"));}self.value.take();}return Ok(convert(step));}
@@ -1202,13 +1202,13 @@ enum LoadOriginal<O: WindowConfigOwner> {
 
 struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     completed_states:ManuallyDrop<[Option<RetainedWindowConfigStateDecode<O>>;3]>,
-    pending_files:ManuallyDrop<Option<store::ArtifactPackFiles>>,
+    pending_files:ManuallyDrop<Option<store::os_store::serialization::ArtifactPackFiles>>,
     pending_address:ManuallyDrop<Option<String>>,
     opened_actor: ManuallyDrop<Option<protocol::ActorId>>,
     window_id: ManuallyDrop<Option<String>>,
     window_kind_id: ManuallyDrop<Option<String>>,
     expected_id: ManuallyDrop<Option<String>>,
-    files: ManuallyDrop<Option<store::ArtifactPackFiles>>,
+    files: ManuallyDrop<Option<store::os_store::serialization::ArtifactPackFiles>>,
     state_decode: ManuallyDrop<Option<RetainedWindowConfigStateDecode<O>>>,
     initial: ManuallyDrop<Option<O::State>>,
 
@@ -1218,7 +1218,7 @@ struct TypedWindowConfigPackLoad<O: WindowConfigOwner> {
     history_decode: ManuallyDrop<Option<store::RetainedHistoryDecode>>,
     history: ManuallyDrop<Option<store::HistoryLog>>,
     hydration: ManuallyDrop<Option<store::RetainedConfigStoreHydration<O::State, O::Mutation>>>,
-    owners: ManuallyDrop<Option<store::DocumentStoreOwners<O::State, O::Mutation>>>,
+    owners: ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>>>,
     candidate: ManuallyDrop<Option<WindowConfigPartition<O>>>,
     displaced: ManuallyDrop<Option<WindowConfigPartition<O>>>,
     active: Option<ControlledRetirement<LoadOriginal<O>>>,
@@ -1348,7 +1348,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
                     return self.pending();
                 }
                 let spr_len = self.files.as_ref().expect("retained window config SPR input remains").spr.len();
-                let limits = store::RetainedSprLimits { file_bytes: spr_len as u64, frame_body_bytes: spr_len as u64, records: store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64 };
+                let limits = store::RetainedSprLimits { file_bytes: spr_len as u64, frame_body_bytes: spr_len as u64, records: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES as u64 };
                 match store::RetainedHistoryDecode::new_persisted_document(spr_len, limits) {
                     Ok(decoder) => {
                         *self.history_decode = Some(decoder);
@@ -1541,7 +1541,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPackLoad<O> {
         }
         if let Some(partition) = self.displaced.as_ref().or(self.candidate.as_ref()) { return Self::partition_demands(partition, body); }
         if self.current.is_some() || self.validation.is_some() || self.initial.is_some() || self.history.is_some() || self.files.is_some() { return Ok(Self::original_demand()); }
-        if let Some(owner) = self.owners.as_ref() { return if owner.uninstalled_owners_terminal_is_empty() { frame(size_of::<store::DocumentStoreOwners<O::State, O::Mutation>>()) } else { owner.uninstalled_owners_demands(body) }; }
+        if let Some(owner) = self.owners.as_ref() { return if owner.uninstalled_owners_terminal_is_empty() { frame(size_of::<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>>()) } else { owner.uninstalled_owners_demands(body) }; }
         if self.opened_actor.is_some() || self.expected_id.is_some() || self.window_kind_id.is_some() || self.window_id.is_some() { return Ok(Self::original_demand()); }
         Ok(RetirementDemand { depth: 1, ..Default::default() })
     }
@@ -1659,7 +1659,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPackLoad for TypedWindowConfigPackL
     }
 
     fn demand_bytes(&self) -> usize {
-        let envelope_id = <O::State as store::ArtifactDsl>::envelope_id();
+        let envelope_id = <O::State as store::os_store::serialization::ArtifactDsl>::envelope_id();
         12usize.saturating_add(envelope_id.len()).saturating_add(".pack v1".len()).saturating_add(size_of::<RetainedWindowConfigTypedState<O>>())
     }
 

@@ -1,8 +1,8 @@
 //! 🌐️ Explicit installed FEM document to Semio mesh conversion owned by foreign export composition.
 
 use crate::Fem2dSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 //#region 🔖️SemioMeshBridge
 /// 🌉️ Builds a real `SemioMeshSnapshot` from every `FemRegion`'s genuinely triangulated,

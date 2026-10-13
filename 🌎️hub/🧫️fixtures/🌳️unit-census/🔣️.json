@@ -1,0 +1,132 @@
+{
+  "schema": "semio.hub.unit-census/v1",
+  "workspaces": ["🌎️hub"],
+  "target": "wasm32-wasip2",
+  "profiles": ["wasm-prototype", "wasm-release"],
+  "featureVarianceAllowed": [],
+  "cases": [
+    {
+      "name": "one shared dependency with one feature set compiles once",
+      "graphs": [
+        {
+          "package": "app-a",
+          "units": [
+            { "pkg_id": "path+file:///w/app-a#app-a@0.1.0", "target": { "name": "app_a", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["default"], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#leaf@1.0.0", "target": { "name": "leaf", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["derive"], "dependencies": [] }
+          ]
+        },
+        {
+          "package": "app-b",
+          "units": [
+            { "pkg_id": "path+file:///w/app-b#app-b@0.1.0", "target": { "name": "app_b", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#leaf@1.0.0", "target": { "name": "leaf", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["derive"], "dependencies": [] }
+          ]
+        }
+      ],
+      "expected": [
+        { "unit": "app-a@0.1.0 app_a build wasm32-wasip2", "featureSets": { "default": ["app-a"] }, "signatures": 1 },
+        { "unit": "app-b@0.1.0 app_b build wasm32-wasip2", "featureSets": { "": ["app-b"] }, "signatures": 1 },
+        { "unit": "leaf@1.0.0 leaf build wasm32-wasip2", "featureSets": { "derive": ["app-a", "app-b"] }, "signatures": 1 }
+      ],
+      "drift": []
+    },
+    {
+      "name": "a feature requested by one consumer splits the dependency and every dependent above it",
+      "graphs": [
+        {
+          "package": "app-a",
+          "units": [
+            { "pkg_id": "path+file:///w/app-a#app-a@0.1.0", "target": { "name": "app_a", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/mid#mid@0.1.0", "target": { "name": "mid", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 2 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#leaf@1.0.0", "target": { "name": "leaf", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["derive"], "dependencies": [] }
+          ]
+        },
+        {
+          "package": "app-b",
+          "units": [
+            { "pkg_id": "path+file:///w/app-b#app-b@0.1.0", "target": { "name": "app_b", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }, { "index": 2 }] },
+            { "pkg_id": "path+file:///w/mid#mid@0.1.0", "target": { "name": "mid", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 2 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#leaf@1.0.0", "target": { "name": "leaf", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["alloc", "derive"], "dependencies": [] }
+          ]
+        }
+      ],
+      "expected": [
+        { "unit": "app-a@0.1.0 app_a build wasm32-wasip2", "featureSets": { "": ["app-a"] }, "signatures": 1 },
+        { "unit": "app-b@0.1.0 app_b build wasm32-wasip2", "featureSets": { "": ["app-b"] }, "signatures": 1 },
+        { "unit": "leaf@1.0.0 leaf build wasm32-wasip2", "featureSets": { "alloc,derive": ["app-b"], "derive": ["app-a"] }, "signatures": 2 },
+        { "unit": "mid@0.1.0 mid build wasm32-wasip2", "featureSets": { "": ["app-a", "app-b"] }, "signatures": 2 }
+      ],
+      "drift": ["leaf@1.0.0 leaf build wasm32-wasip2"]
+    },
+    {
+      "name": "a build script compile unit is keyed by the platform of the run that executes it",
+      "graphs": [
+        {
+          "package": "app-a",
+          "units": [
+            { "pkg_id": "path+file:///w/app-a#app-a@0.1.0", "target": { "name": "app_a", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }, { "index": 4 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "codec", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": ["std"], "dependencies": [{ "index": 2 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "build-script-build", "kind": ["custom-build"] }, "mode": "run-custom-build", "platform": "wasm32-wasip2", "features": ["std"], "dependencies": [{ "index": 3 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "build-script-build", "kind": ["custom-build"] }, "mode": "build", "platform": null, "features": ["std"], "dependencies": [] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec-derive@1.0.0", "target": { "name": "codec_derive", "kind": ["proc-macro"] }, "mode": "build", "platform": null, "features": [], "dependencies": [{ "index": 5 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "codec", "kind": ["lib"] }, "mode": "build", "platform": null, "features": ["alloc", "std"], "dependencies": [{ "index": 6 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "build-script-build", "kind": ["custom-build"] }, "mode": "run-custom-build", "platform": null, "features": ["alloc", "std"], "dependencies": [{ "index": 7 }] },
+            { "pkg_id": "registry+https://github.com/rust-lang/crates.io-index#codec@1.0.0", "target": { "name": "build-script-build", "kind": ["custom-build"] }, "mode": "build", "platform": null, "features": ["alloc", "std"], "dependencies": [] }
+          ]
+        }
+      ],
+      "expected": [
+        { "unit": "app-a@0.1.0 app_a build wasm32-wasip2", "featureSets": { "": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec-derive@1.0.0 codec_derive build host", "featureSets": { "": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 build-script-build build host", "featureSets": { "alloc,std": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 build-script-build build wasm32-wasip2", "featureSets": { "std": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 build-script-build run-custom-build host", "featureSets": { "alloc,std": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 build-script-build run-custom-build wasm32-wasip2", "featureSets": { "std": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 codec build host", "featureSets": { "alloc,std": ["app-a"] }, "signatures": 1 },
+        { "unit": "codec@1.0.0 codec build wasm32-wasip2", "featureSets": { "std": ["app-a"] }, "signatures": 1 }
+      ],
+      "drift": []
+    }
+  ],
+  "crateTypeCases": [
+    {
+      "name": "a component crate is a cdylib-only root over its rlib library",
+      "graphs": [
+        {
+          "package": "app-component",
+          "units": [
+            { "pkg_id": "path+file:///w/app-component#app-component@0.1.0", "target": { "name": "app_component", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/app#app@0.1.0", "target": { "name": "app", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [] }
+          ]
+        }
+      ],
+      "nonComponentCdylibs": []
+    },
+    {
+      "name": "a library that also declares cdylib is not a component",
+      "graphs": [
+        {
+          "package": "app",
+          "units": [
+            { "pkg_id": "path+file:///w/app#app@0.1.0", "target": { "name": "app", "kind": ["cdylib", "rlib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/kernel#kernel@0.1.0", "target": { "name": "kernel", "kind": ["lib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [] }
+          ]
+        }
+      ],
+      "nonComponentCdylibs": ["app@0.1.0 app build wasm32-wasip2"]
+    },
+    {
+      "name": "a cdylib another unit depends on is not a component",
+      "graphs": [
+        {
+          "package": "host",
+          "units": [
+            { "pkg_id": "path+file:///w/host#host@0.1.0", "target": { "name": "host", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [{ "index": 1 }] },
+            { "pkg_id": "path+file:///w/kernel#kernel@0.1.0", "target": { "name": "kernel", "kind": ["cdylib"] }, "mode": "build", "platform": "wasm32-wasip2", "features": [], "dependencies": [] }
+          ]
+        }
+      ],
+      "nonComponentCdylibs": ["kernel@0.1.0 kernel build wasm32-wasip2"]
+    }
+  ]
+}

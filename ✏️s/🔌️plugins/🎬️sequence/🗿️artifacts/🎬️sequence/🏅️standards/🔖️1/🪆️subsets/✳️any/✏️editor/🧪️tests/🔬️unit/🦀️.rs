@@ -3,7 +3,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::{App, EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
     use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers};
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     /// 🧪️ The registered, MOUNTED fixture app every editor test drives. It is a guard, not a bare
     /// alias: a registered app's `ArtifactStore` refuses `Drop` without its exact terminal-empty
@@ -100,7 +100,7 @@ pub(crate) mod context {
     /// the windows read through `sequence_working_scene_from_children` (flow's `flow_child_node_count`
     /// is the sibling precedent). Cold-owned because it mints fresh step dictionaries nothing else owns.
     pub async fn live_host_snapshot(app: &SequenceApp) -> neural_engine::ColdOwner<SequenceHostSnapshot> {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+        use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
         use store::SpaceMember;
         let snapshot = app.snapshot().expect("Sequence parent projection");
         let child_id = snapshot.content.child_id.clone();
@@ -237,9 +237,9 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     let mut instance_a = new_app_with_registry_wired().await;
     let mut instance_b = new_app_with_registry_wired().await;
-    let (backbone_a, backbone_b) = store::MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://sequence-convergence", "mem://sequence-convergence").await;
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     // 🧩️ Measured on the CHILD, not on the parent projection: `moveStep` publishes on the `Child`
     // lane and leaves the parent's composed handle untouched, so a parent-side probe can never move.
     let genesis = live_host_snapshot(&instance_a).await.steps.iter().map(|step| (step.id.clone(), step.x)).collect::<Vec<_>>();

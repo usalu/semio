@@ -777,71 +777,71 @@
   "deployedComponents": [
     {
       "id": "stdio",
-      "package": "semio-hub-stdio",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-bim",
-      "package": "semio-hub-stdio-bim",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-bim-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🏠️bim/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-binary",
-      "package": "semio-hub-stdio-binary",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-binary-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔢️binary/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-cad",
-      "package": "semio-hub-stdio-cad",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-cad-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🛠️cad/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-image",
-      "package": "semio-hub-stdio-image",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-image-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🖼️image/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-media",
-      "package": "semio-hub-stdio-media",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-media-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-mesh",
-      "package": "semio-hub-stdio-mesh",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-mesh-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🔺️mesh/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-office",
-      "package": "semio-hub-stdio-office",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-office-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-pdf",
-      "package": "semio-hub-stdio-pdf",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-pdf-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     },
     {
       "id": "stdio-semio",
-      "package": "semio-hub-stdio-semio",
-      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml",
+      "package": "semio-hub-stdio-semio-component",
+      "path": "🌎️hub/🧩️compositions/🗄️stdio/🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust/Cargo.toml",
       "role": "hub",
       "componentKind": "plugin"
     }

@@ -7,7 +7,6 @@ rust-version.workspace = true
 description = "Raw wgpu WASM renderer for declarative framework UiNode trees"
 build = "build.rs"
 
-
 [package.metadata.semio]
 role = "framework"
 id = "renderer-wgpu"
@@ -15,7 +14,6 @@ id = "renderer-wgpu"
 [lints]
 workspace = true
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "📚️library/🦀️.rs"
 
 [target.'cfg(not(target_os = "wasi"))'.dependencies]
@@ -111,6 +109,7 @@ semio-framework-schema = { workspace = true }
 # wasm32. Its only users here (`🎠️runtime`, `kernel_runtime`) are already `cfg(not(target_arch = "wasm32"))`;
 # the previous `not(target_os = "wasi")` gate admitted wasm32-unknown-unknown, whose target_os is "unknown".
 semio-framework-plugin-host = { path = "../../../../../../🔌️plugin/🖥️host/📦️packages/🦀️rust", package = "semio-framework-plugin-host" }
+semio-framework-plugin-interpreter = { workspace = true }
 # 🎭️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H3-wgpu-native): the `Kernel`/`ActorId`/`ThreadTransport`
 # vocabulary the native kernel thread (`../../🧊️renderer/🦀️.rs`'s `kernel_runtime` module) drives directly — see
 # `📓️terra-H3-wgpu-native-report.md`.

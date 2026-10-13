@@ -1,4 +1,3 @@
-import { createHash } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,15 +53,16 @@ if (!(bytes instanceof Uint8Array) || bytes.length === 0 || bytes.length > 8 * 1
 process.stdout.write(Buffer.from(bytes).toString("base64"));
 `;
 
-/** 🔏️ Uses the same native pack self-hash convention for the genuine guest descriptor. */
-export function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string, wasmSha256: string, coreWasmSha256: string): { pack: Uint8Array; json: string } {
-  const descriptor = decodePackValue(bytes) as unknown as { manifest?: { pluginId?: string; label?: string }; hashes?: Record<string, string> };
-  if (descriptor?.manifest?.pluginId === "assembly-failed") throw new Error(`Plugin descriptor assembly failed: ${descriptor.manifest.label ?? "no fault message"}`);
-  if (descriptor?.manifest?.pluginId !== pluginId || !descriptor.hashes) throw new Error("Plugin descriptor identity mismatch");
-  if (![wasmSha256, coreWasmSha256].every((hash) => /^[a-f0-9]{64}$/.test(hash))) throw new Error("Invalid plugin artifact digest");
-  descriptor.hashes.wasmSha256 = wasmSha256;
-  descriptor.hashes.coreWasmSha256 = coreWasmSha256;
-  descriptor.hashes.descriptorSha256 = "";
-  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor as PackValue)).digest("hex");
-  return { pack: encodePackValue(descriptor as PackValue), json: JSON.stringify(packValueToExactJson(descriptor as PackValue), null, 2) + "\n" };
+/** 🛂️ Admits the genuine semantic guest descriptor of one materialized module: an assembly-failure stub, a foreign plugin and a
+ * pack carrying any byte binding of its own are refused, since the module's `🧾️receipt.json` alone names its bytes. Answers the
+ * canonical pack and its exact JSON form. */
+export function finalizePluginDescriptor(bytes: Uint8Array, pluginId: string): { pack: Uint8Array; json: string } {
+  const descriptor = decodePackValue(bytes) as unknown as Record<string, unknown> & { manifest?: { pluginId?: string; label?: string } };
+  if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor)) throw new Error("Plugin descriptor is not an object");
+  if (descriptor.manifest?.pluginId === "assembly-failed") throw new Error(`Plugin descriptor assembly failed: ${descriptor.manifest.label ?? "no fault message"}`);
+  if (descriptor.manifest?.pluginId !== pluginId) throw new Error("Plugin descriptor identity mismatch");
+  if ("hashes" in descriptor) throw new Error("Plugin descriptor carries a byte binding; a semantic descriptor names no bytes");
+  const pack = encodePackValue(descriptor as unknown as PackValue);
+  if (!Buffer.from(pack).equals(Buffer.from(bytes))) throw new Error("Plugin descriptor is not its canonical pack");
+  return { pack, json: JSON.stringify(packValueToExactJson(descriptor as unknown as PackValue), null, 2) + "\n" };
 }

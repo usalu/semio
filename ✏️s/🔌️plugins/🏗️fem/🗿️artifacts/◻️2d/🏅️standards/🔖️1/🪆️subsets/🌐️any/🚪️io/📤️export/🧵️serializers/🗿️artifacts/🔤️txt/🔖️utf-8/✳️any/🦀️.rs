@@ -11,7 +11,7 @@ pub struct Fem2dIntoTxt;
 
 /// 🏗 This subset snapshot as UTF-8 DSL text — also the body the zip container leaf embeds.
 pub fn dsl_text(from: &Fem2dSnapshot) -> String {
-    <Fem2dSnapshot as store::ArtifactDsl>::print_dsl(from)
+    <Fem2dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from)
 }
 
 impl Serializer<Fem2dSnapshot> for Fem2dIntoTxt {

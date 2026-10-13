@@ -6,10 +6,10 @@
 //! proves the stroke triads really are decomposed — this diff must mention `strokeWidth` and NOT
 //! `stroke`.
 
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-stroke-width/📐️thickens/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📐change-stroke-width/📐️thickens/📸️snapshot/➡️after/🔣️.json");

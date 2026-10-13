@@ -7,8 +7,8 @@
 //! edge is left with a stale reference — the same honestly-flagged limitation the loop exclusion
 //! already accepts, not something this triad can close without inventing an unaddressed verb.
 
-use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

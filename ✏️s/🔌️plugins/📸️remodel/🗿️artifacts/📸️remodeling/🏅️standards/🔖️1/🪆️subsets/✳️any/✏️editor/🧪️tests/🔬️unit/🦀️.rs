@@ -116,7 +116,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -182,7 +182,7 @@ pub(crate) mod context {
     /// run hands the shell is dispatched back, the way the shell answers its own port.
     pub async fn host_turn(app: &mut RemodelingApp) {
         let meta = meta("local");
-        app.maintenance_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
+        app.maintenance_step(1, semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance grant");
         app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.unwrap_or_else(|fault| panic!("driver turn faulted: {fault:?}"));
         while let Some(page) = app.take_typed_operation_result_page(meta.instance_id) {
             assert!(page.lane != TypedOperationResultLane::Fault, "typed operation fault: {}", String::from_utf8_lossy(page.bytes()));
@@ -444,10 +444,10 @@ async fn retained_route_dispositions_are_exact_and_exhaustive() {
 
 #[semio_framework_async_macros::async_test]
 async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_once() {
-    let envelope = store::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(REMODELING_DOCUMENT_SCHEMA, "remodel-window-preparation-law", RemodelingSnapshot::default(), None);
     let mut document = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("Remodel window preparation-law Store opens");
     document
-        .install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<RemodelingSnapshot, RemodelingMutation>().expect("Remodel document Store owners"))
+        .install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<RemodelingSnapshot, RemodelingMutation>().expect("Remodel document Store owners"))
         .map_err(|(error, _)| error)
         .expect("Remodel document Store owners install");
     let factory = <RemodelingPlayApp as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("Remodel document one-item preparation factory");
@@ -459,30 +459,30 @@ async fn remodel_window_ownership_one_item_preparation_transfers_its_candidate_o
             document.content_revision_now(),
             "remodel-window-preparation-law".into(),
             vec![mutation],
-            store::HistoryLane::Document,
+            store::os_store::store_schema::HistoryLane::Document,
             Some(&factory),
             None,
         )
         .expect("Remodel one-item publication admits its exact factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 16 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_capacity_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_release_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, maximum_depth: 16 };
     let mut published = false;
     for _ in 0..64 {
         match document.advance_apply_batch(&mut publication, grant).expect("Remodel candidate transfer turn") {
-            store::ArtifactStoreOneItemAdvance::Published(_) => {
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_) => {
                 published = true;
                 break;
             }
-            store::ArtifactStoreOneItemAdvance::Blocked => panic!("Remodel one-item preparation blocked after admitting its exact candidate"),
-            store::ArtifactStoreOneItemAdvance::Progress(_) => {}
-            store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("Remodel one-item preparation reached ACK without exposing its exact publication receipt"),
-            store::ArtifactStoreOneItemAdvance::Complete => panic!("Remodel one-item preparation completed before publishing its exact candidate"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => panic!("Remodel one-item preparation blocked after admitting its exact candidate"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_) => {}
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("Remodel one-item preparation reached ACK without exposing its exact publication receipt"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => panic!("Remodel one-item preparation completed before publishing its exact candidate"),
         }
     }
     assert!(published, "Remodel one-item preparation must transfer its candidate exactly once");
     assert!(publication.acknowledge());
     for _ in 0..64 {
-        let demand = publication.retirement_demands(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("Remodel publication close quote");
-        let turn = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let demand = publication.retirement_demands(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("Remodel publication close quote");
+        let turn = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         if matches!(publication.close_step(turn).expect("Remodel publication close"), semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             break;
         }

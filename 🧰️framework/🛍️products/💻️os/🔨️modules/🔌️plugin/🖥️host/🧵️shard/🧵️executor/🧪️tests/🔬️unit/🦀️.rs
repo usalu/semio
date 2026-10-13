@@ -1,6 +1,7 @@
 fn original_retained_turn() -> semio_framework_actor::RetainedTurnInput { let law: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../🔨️modules/🎭️actor/🎟️retained-turn/📃️policy/🧫️fixtures/🔣️.json")).unwrap(); serde_json::from_value(law["input"].clone()).unwrap() }
 use super::*;
-use crate::{GuestRuntime, JobStep, MockGuestRuntime, PackageHash, PackageId, PackageRef};
+use crate::{GuestRuntime, MockGuestRuntime, PackageHash, PackageId, PackageRef};
+use semio_framework_plugin_interpreter::JobStep;
 use semio_framework::kernel::{Budget, Effect, JobPlacement};
 use semio_framework_actor::{ActorId, Envelope, JobOperation, JobReplayRequest, JobTurn, Payload, ShardKind, ShardTable};
 use semio_framework_async::{ProcessKind, WorkerPoolConfig};

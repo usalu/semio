@@ -1,5 +1,6 @@
 //! 🪪️ A shard retains the original caller's receiving ledger, allocation port and return slot.
-use crate::{GuestInstance,GuestRuntime,GuestRuntimes,PluginHostError,TurnFault};
+use crate::{GuestInstance,GuestRuntime,GuestRuntimes};
+use semio_framework_plugin_interpreter::{PluginHostError,TurnFault};
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},native_encoding::{NativeEncodeControl,NativeEncodeAllocation,NativeEncodeAllocationPort,NativeEncodeProgress,NativeEncodeRetirementRecipient,NativeForwardedEncodeReceipt}};
 use semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority,Observer};
 use std::pin::Pin;

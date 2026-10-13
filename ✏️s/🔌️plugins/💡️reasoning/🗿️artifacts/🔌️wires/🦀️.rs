@@ -75,12 +75,12 @@ pub fn empty_wires_snapshot() -> WiresSnapshot {
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` board.
-pub type WiresContentChild = store::ArtifactChild<SemioGraphSnapshot>;
+pub type WiresContentChild = store::os_store::artifact_child::ArtifactChild<SemioGraphSnapshot>;
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+pub use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+pub use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🧾️ Board-node keys the graph node carries natively; every other board key is one keyed node property.
 const WIRES_NATIVE_NODE_KEYS: &[&str] = &["id", "nodeKind", "text", "x", "y", "width", "height"];
@@ -181,9 +181,9 @@ pub fn wires_content_snapshot(nodes: &[DslValue], edges: &[DslValue]) -> SemioGr
 /// 🕸️ The content-addressed handle of the child minted from `content`: equal content, equal `(child_id, target)`. Once
 /// minted the id names that child's store for good; its content then moves only through child leaves.
 pub fn wires_content_handle(content: &SemioGraphSnapshot) -> WiresContentChild {
-    let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as store::ArtifactPack>::encode_pack(content));
+    let child_id = store::content_id("wires-content", &<SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(content));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
-    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🪪️ The child id the demo's parent asset names for its bundled board.
@@ -196,7 +196,7 @@ pub fn wires_bundled_contents() -> &'static [(String, SemioGraphSnapshot)] {
     static CONTENTS: std::sync::OnceLock<Vec<(String, SemioGraphSnapshot)>> = std::sync::OnceLock::new();
     CONTENTS
         .get_or_init(|| {
-            let demo = <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(examples::demo::CONTENT_TEXT).expect("the demo's committed wires board parses");
+            let demo = <SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(examples::demo::CONTENT_TEXT).expect("the demo's committed wires board parses");
             vec![(wires_content_handle(&empty_wires_content()).child_id, empty_wires_content()), (WIRES_DEMO_CONTENT_ID.to_string(), demo)]
         })
         .as_slice()
@@ -209,7 +209,7 @@ pub fn genesis_wires_child_pack(snapshot: &WiresSnapshot, slot: &str, child_id: 
     if slot != WIRES_CONTENT_SLOT || child_id != snapshot.content.child_id {
         return None;
     }
-    wires_bundled_contents().iter().find(|(id, _)| id == child_id).map(|(_, content)| <SemioGraphSnapshot as store::ArtifactPack>::encode_pack(content))
+    wires_bundled_contents().iter().find(|(id, _)| id == child_id).map(|(_, content)| <SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(content))
 }
 //#endregion 🔖️ContentBridge
 

@@ -245,8 +245,8 @@ pub fn connect_edge(scene: &DagScene, source_node_id: &str, source_port_id: &str
 /// is the ABSOLUTE `set-node-property` of that kind field, plus a `resize-node` when the widget refits to a new size.
 /// `raw_value` is the typed command's UI input string verbatim (numeric fields parse it themselves).
 pub fn node_field_leaves(node: &DagNodeSpec, field: &str, raw_value: &str) -> Vec<SemioGraphMutation> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, resize_node::ResizeNode, set_node_property::SetNodeProperty};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+    use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::resize_node::ResizeNode, semio_s_artifact_stdio_semio_graph::schema::mutations::set_node_property::SetNodeProperty};
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
     let id = || GraphNodeId::new(node.id.clone());
     match (field, &node.kind, raw_value.trim().parse::<f64>().ok().filter(|value| value.is_finite())) {
         ("name", _, _) if node.name != raw_value => vec![SemioGraphMutation::ChangeNodeLabel(ChangeNodeLabel { id: id(), new_label: raw_value.into() })],
@@ -268,8 +268,8 @@ pub fn node_field_leaves(node: &DagNodeSpec, field: &str, raw_value: &str) -> Ve
 /// BEFORE its node, so each published row is point-invertible (one `delete-edge` undoes as one `create-edge`, an edge-less
 /// `delete-node` as one `create-node`, each at its base index — the undo is byte-exact).
 pub fn remove_nodes_leaves(scene: &DagScene, node_ids: &[String]) -> Vec<SemioGraphMutation> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{delete_edge::DeleteEdge, delete_node::DeleteNode};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId};
+    use {semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode};
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId};
     let removed: Vec<&str> = scene.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| node.id.as_str()).collect();
     let touches = |edge: &DagHostSnapshotEdge| removed.contains(&split_endpoint(&edge.source).0.as_str()) || removed.contains(&split_endpoint(&edge.target).0.as_str());
     let edges = scene.edges.iter().filter(|edge| touches(edge)).map(|edge| SemioGraphMutation::DeleteEdge(DeleteEdge { id: GraphEdgeId::new(edge.id.clone()) }));

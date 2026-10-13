@@ -9,123 +9,11 @@ extern crate semio_framework_os_kernel as store;
 extern crate semio_framework_schema as framework_schema;
 extern crate semio_framework_value_derive as value_derive;
 
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
-
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 
-pub use schema::diff::PdfDiff;
-pub use schema::mutations::PdfMutation;
-pub use schema::snapshot::PdfSnapshot;
-pub use schema::snapshot::STDIO_PDF17_DOCUMENT_SCHEMA;
-pub use schema::PdfArtifact;
-
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
-
-/// 🧬️ Artifact schema descriptor id.
-pub const PDF_ARTIFACT_SCHEMA_ID: &str = "s.stdio.pdf";
-
-/// ✏️ Replaces the Unicode text projection while preserving every non-text page-content operator.
-pub fn replace_page_unicode_text(page: &schema::snapshot::PdfPage, text: &str) -> Vec<schema::snapshot::PdfOp> {
-    use schema::snapshot::{PdfOp, PdfTextArrayItem, PdfTextString};
-
-    fn replace_text_string(value: &mut PdfTextString, replacement: &mut Option<String>) {
-        let PdfTextString::Text { text } = value else { return };
-        *text = replacement.take().unwrap_or_default();
-    }
-
-    let mut content = page.content.clone();
-    let mut replacement = Some(text.to_string());
-    for operation in &mut content {
-        match operation {
-            PdfOp::ShowText { text } | PdfOp::NextLineShowText { text } | PdfOp::NextLineShowTextSpaced { text, .. } => replace_text_string(text, &mut replacement),
-            PdfOp::ShowTextArray { items } => {
-                for item in items {
-                    if let PdfTextArrayItem::Text { text } = item {
-                        *text = replacement.take().unwrap_or_default();
-                    }
-                }
-            }
-            _ => {}
-        }
-    }
-    if replacement.as_deref().is_some_and(|text| !text.is_empty()) {
-        content.extend([PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text(replacement.take().expect("pending replacement")) }, PdfOp::EndText]);
-    }
-    content
-}
-
-/// 🔐️ The token an agent's omitted `set-page` revision is admitted against: the addressed page text's own token, as its draft
-/// binding carries it; a missing page is refused exactly as the edit itself would refuse it.
-pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, semio_framework_plugin::Fault> {
-    let page_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "page")? as usize;
-    let target = snapshot.pages.get(page_index).ok_or_else(|| {
-        semio_framework_plugin::Fault::new(semio_framework_plugin::FaultOrigin::App, semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
-    })?;
-    Ok(Some(semio_framework_plugin::app::DocumentWindowKit::text_revision(&target.text())))
-}
-
-/// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
-pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<PdfMutation>, semio_framework_plugin::Fault> {
-    if item != 0 {
-        return Err(semio_framework_plugin::Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.invalid-item"),
-            "PDF page drafts require item zero",
-        ));
-    }
-    let page_index = page as usize;
-    let target = snapshot.pages.get(page_index).ok_or_else(|| {
-        semio_framework_plugin::Fault::new(
-            semio_framework_plugin::FaultOrigin::App,
-            semio_framework_plugin::FaultCode::new("stdio.pdf.set-page.stale-target"),
-            format!("PDF page {page_index} no longer exists"),
-        )
-    })?;
-    semio_s_artifact_stdio_contract::require_window_kit_document_revision(&target.text(), revision, "stdio.pdf.set-page.conflict")?;
-    if target.text() == text {
-        return Ok(None);
-    }
-    Ok(Some(PdfMutation::SetPageContent(schema::mutations::SetPageContent { index: page_index, content: replace_page_unicode_text(target, text) })))
-}
-
-#[cfg(test)]
-mod document_text_edit_tests {
-    use super::*;
-    use schema::snapshot::{PdfOp, PdfPage, PdfTextString};
-
-    #[test]
-    fn replacement_preserves_non_text_operations_and_replaces_instead_of_appending() {
-        let mut page = PdfPage::default();
-        page.content = vec![
-            PdfOp::Save,
-            PdfOp::BeginText,
-            PdfOp::ShowText { text: PdfTextString::text("old") },
-            PdfOp::NextLineShowText { text: PdfTextString::text("tail") },
-            PdfOp::EndText,
-            PdfOp::Restore,
-        ];
-        page.content = replace_page_unicode_text(&page, "new\ncontent");
-        assert_eq!(page.text(), "new\ncontent");
-        assert!(matches!(page.content.first(), Some(PdfOp::Save)));
-        assert!(matches!(page.content.last(), Some(PdfOp::Restore)));
-        assert_eq!(page.content.len(), 6);
-    }
-
-    #[test]
-    fn page_text_edit_rejects_missing_stale_and_non_text_addresses() {
-        let mut snapshot = PdfSnapshot::default();
-        snapshot.pages.push(PdfPage::default());
-        let revision = semio_framework_plugin::app::DocumentWindowKit::text_revision("");
-        assert!(page_text_edit_mutation(&snapshot, 1, 0, &revision, "draft").is_err());
-        assert!(page_text_edit_mutation(&snapshot, 0, 1, &revision, "draft").is_err());
-        assert!(page_text_edit_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
-        let Some(PdfMutation::SetPageContent(edit)) = page_text_edit_mutation(&snapshot, 0, 0, &revision, "draft").expect("addressed edit") else { panic!("set page content") };
-        let mut page = snapshot.pages[0].clone();
-        page.content = edit.content;
-        assert_eq!(page.text(), "draft");
-    }
-}
+use standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+use standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+use standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 
 /// 📜 Schema-owned package definition.
 pub const ARTIFACT_DEFINITION_SCHEMA: &str = include_str!("📜️artifact-definition.json");
@@ -140,14 +28,14 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot, standards::v1_4::subsets::base::schema::mutations::PdfMutation>(STDIO_PDF_DOCUMENT_SCHEMA);
     codec.extension = "pdf";
     codec
 }
 
-fn native_codec17() -> store::ArtifactCodec {
-    store::ArtifactCodec::of::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA)
+fn native_codec17() -> store::os_store::serialization::ArtifactCodec {
+    store::artifact_codec::<PdfSnapshot, PdfMutation>(STDIO_PDF17_DOCUMENT_SCHEMA)
 }
 
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
@@ -177,7 +65,7 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     let builder = builder.formats(formats);
     let builder = builder.schemas([standards::v1_4::subsets::base::schema::pdf_artifact_schema_descriptor()]);
     let builder = builder.inferences([standards::v1_7::subsets::base::schema::inferences::pdf17_artifact_inference_descriptor(), standards::v1_4::subsets::base::schema::inferences::pdf_artifact_inference_descriptor()]);
-    let builder = builder.composers(standards::v1_7::subsets::base::io::io_registry::entries());
+    let builder = builder.composers(standards::v1_7::io_registry::entries());
     let builder = builder.composers(standards::v1_4::subsets::base::io::io_registry::entries());
     let builder = builder.subset_validators(pdf_1_7_subset_validators());
     let builder = builder.subset_validators(pdf_1_4_subset_validators());
@@ -196,32 +84,30 @@ pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Re
     builder.try_build()
 }
 
-/// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`), re-derived (not moved) from
-/// the same side-effect-free `subset_validator_entry_of::<V>()` constructor each subset's own
-/// `🚪️io/🦀️.rs` (module-private) `validator_entry()` calls.
+/// 🛡️ `standards::v1_7`'s six real subsets (`a`/`x`/`e`/`ua`/`vt`/`h`): each row serves payload validation and the
+/// owned-snapshot policy the base SQLite codec resolves by dialect (`store::io::validate_registered_snapshot_subset`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pdf_1_7_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
     ENTRIES
         .get_or_init(|| {
             vec![
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::a::io::PdfAValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::x::io::PdfXValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::e::io::PdfEValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::ua::io::PdfUaValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::vt::io::PdfVtValidator>(),
-                semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_7::subsets::h::io::PdfHValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::a::io::PdfAValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::x::io::PdfXValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::e::io::PdfEValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::ua::io::PdfUaValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::vt::io::PdfVtValidator>(),
+                store::io::snapshot_subset_validator_entry_of::<standards::v1_7::subsets::h::io::PdfHValidator>(),
             ]
         })
         .as_slice()
 }
 
-/// 🛡️ `standards::v1_4`'s two real subsets (`a`/`x`), re-derived (not moved) the same way as
-/// `pdf_1_7_subset_validators` above.
+/// 🛡️ `standards::v1_4`'s two real subsets (`a`/`x`), registered the same way as `pdf_1_7_subset_validators` above.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn pdf_1_4_subset_validators() -> &'static [semio_framework_plugin::io::SubsetValidatorEntry] {
     static ENTRIES: std::sync::OnceLock<Vec<semio_framework_plugin::io::SubsetValidatorEntry>> = std::sync::OnceLock::new();
-    ENTRIES.get_or_init(|| vec![semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(), semio_framework_plugin::io::subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>()]).as_slice()
+    ENTRIES.get_or_init(|| vec![store::io::snapshot_subset_validator_entry_of::<standards::v1_4::subsets::a::io::PdfAValidator>(), store::io::snapshot_subset_validator_entry_of::<standards::v1_4::subsets::x::io::PdfXValidator>()]).as_slice()
 }
 
 /// 📌️ `standards::v1_7`'s five `LanguageSpec` rows, copied verbatim from that standard's own
@@ -374,7 +260,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
     use crate::standards::v1_4::subsets::base::io::io_registry as v1_4;
-    use crate::standards::v1_7::subsets::base::io::io_registry as v1_7;
+    use crate::standards::v1_7::io_registry as v1_7;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -541,10 +427,16 @@ pub mod standards {
 
     #[path = "."]
     pub mod v1_7 {
+        #[path = "🏅️standards/7️⃣1.7/🦀️.rs"]
+        mod component;
+        pub use component::*;
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod base {
+                #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🦀️.rs"]
+                mod component;
+                pub use component::*;
                 #[path = "."]
                 pub mod modules {
                     #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🔨️modules/🔤️lexer/🦀️.rs"]
@@ -613,6 +505,9 @@ pub mod standards {
                     pub use component::*;
                     #[path = "."]
                     pub mod import {
+                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📥️import/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[path = "."]
                         pub mod deserializers {
                             #[path = "."]
@@ -646,6 +541,9 @@ pub mod standards {
                     }
                     #[path = "."]
                     pub mod export {
+                        #[path = "🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🚪️io/📤️export/🦀️.rs"]
+                        mod component;
+                        pub use component::*;
                         #[path = "."]
                         pub mod serializers {
                             #[path = "."]
@@ -748,14 +646,6 @@ pub mod standards {
     }
 }
 
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
-// 🔀️ S-6 twin (`.claude/plans/the-current-schemas-are-scalable-journal.md`; W0 recon's
-// "pdf has gif's exact S-6 problem" finding): 1.7 is the real object-graph engine (was
-// dodging this collision under its own `stdio.pdf.1.7` schema id) and is now canonical
-// here; 1.4 (the 87-line `PageDoc` stub) stays reachable at `standards::v1_4::`.
-pub mod schema {
-    pub use super::standards::v1_7::subsets::base::schema::*;
-}
 
 
 #[path = "."]
@@ -1489,7 +1379,7 @@ fn sqlite_snapshot_pdf_native_factories_publish_exact_structural_hashes() {
 
 #[test]
 fn sqlite_snapshot_pdf_owned_assets_describe_each_exact_record() {
-    use store::{ArtifactDsl, ArtifactPack};
+    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     let snapshot14 = standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot { schema: "owned-fields".into(), pages: vec![standards::v1_4::subsets::base::schema::snapshot::PageDoc { width: f64::INFINITY, height: f64::from_bits(0x7ff0000000000001), text: "a\"b\nUnicode 🗄️".into() }] };
     let snapshot17 = PdfSnapshot { schema: "owned-fields".into(), declared_version: "1.7-extension".into(), ..Default::default() };
     let cases = [

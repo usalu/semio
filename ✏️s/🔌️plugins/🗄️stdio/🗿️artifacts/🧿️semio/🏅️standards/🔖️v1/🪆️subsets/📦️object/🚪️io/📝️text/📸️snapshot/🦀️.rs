@@ -5,11 +5,11 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::object::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket child-handle codec — a handle is exactly two strings (`child_id`, the
@@ -38,61 +38,22 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
-    format!("[{},{},{},{}]",enc_str(&r.artifact_id),enc_str(&r.dialect.artifact_kind),enc_str(&r.dialect.standard),enc_str(&r.dialect.subset))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
-    let parts=crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?,',');
-    let[id,kind,standard,subset]=parts.as_slice()else{return Err("reference requires four literal fields".into())};
-    Ok(semio_framework_artifact_reference::ArtifactRef{artifact_id:dec_str(id)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:dec_str(kind)?,standard:dec_str(standard)?,subset:dec_str(subset)?}})
-}
-
-/// 🪪️ One literal child identity and four literal reference fields.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_child<S>(c: &store::ArtifactChild<S>) -> String {
-    format!("[{},{}]", enc_str(&c.child_id), enc_ref(&c.target))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_child<S>(s: &str) -> Result<store::ArtifactChild<S>, String> {
-    let parts = crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?, ',');
-    let [child_id, target] = parts.as_slice() else { return Err(format!("child handle: expected 2 fields, got {}", parts.len())) };
-    Ok(store::ArtifactChild::new(dec_str(child_id)?, dec_ref(target)?))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_child_opt<S>(c: &Option<store::ArtifactChild<S>>) -> String {
-    match c {
-        Some(c) => enc_child(c),
-        None => "[]".to_string(),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_child_opt<S>(s: &str) -> Result<Option<store::ArtifactChild<S>>, String> {
-    if s == "[]" {
-        return Ok(None);
-    }
-    Ok(Some(dec_child(s)?))
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_child_opt, dec_child_opt};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_transform(t: &SemioTransform) -> String {
-    use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
     format!("[{},{},{},{},{},{},{},{},{},{}]", NativeF64(t.translation.x), NativeF64(t.translation.y), NativeF64(t.translation.z), NativeF64(t.rotation.x), NativeF64(t.rotation.y), NativeF64(t.rotation.z), NativeF64(t.rotation.w), NativeF64(t.scale.x), NativeF64(t.scale.y), NativeF64(t.scale.z))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn dec_transform(s: &str) -> Result<SemioTransform, String> {
-    let parts = crate::standards::v1::subsets::base::io::text::snapshot::split_top_level(crate::standards::v1::subsets::base::io::text::snapshot::strip_brackets(s)?, ',');
+    let parts = semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level(semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets(s)?, ',');
     let [tx, ty, tz, rx, ry, rz, rw, sx, sy, sz] = parts.as_slice() else {
         return Err(format!("transform: expected 10 fields, got {}", parts.len()));
     };
-    let f = crate::standards::v1::subsets::base::schema::geometry::native::parse;
-    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    let f = semio_s_artifact_stdio_semio_base::schema::geometry::native::parse;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
     Ok(SemioTransform { translation: SemioPoint3 { x: f(tx)?, y: f(ty)?, z: f(tz)? }, rotation: SemioQuaternion { x: f(rx)?, y: f(ry)?, z: f(rz)?, w: f(rw)? }, scale: SemioPoint3 { x: f(sx)?, y: f(sy)?, z: f(sz)? } })
 }
 
@@ -130,7 +91,7 @@ pub(crate) fn parse_object_snapshot_body(body: &str) -> Result<SemioObjectSnapsh
     Ok(SemioObjectSnapshot { schema: schema.ok_or_else(|| "semio object snapshot: missing schema line".to_string())?, transform: transform.ok_or_else(|| "semio object snapshot: missing transform line".to_string())?, brep, mesh, properties })
 }
 
-impl store::ArtifactDsl for SemioObjectSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioObjectSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA
@@ -145,7 +106,7 @@ impl store::ArtifactDsl for SemioObjectSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = print_object_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -173,19 +134,19 @@ pub fn decode_semio_object_snapshot_json(text: &str) -> Result<SemioObjectSnapsh
 }
 
 /// 📝️ Parses `s.stdio.semio.object` DSL text into a [`SemioObjectSnapshot`] — a named pass-through of this snapshot's own
-/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📦️mutate-semio-object`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/📦️crate/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_object_dsl(text: &str) -> Result<SemioObjectSnapshot, String> {
-    <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioObjectSnapshot`] back as `s.stdio.semio.object` DSL text — the inverse of
 /// [`parse_semio_object_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_object_dsl(snapshot: &SemioObjectSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -193,14 +154,11 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::object::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
-
-
-
 
 }

@@ -58,6 +58,32 @@ function sourceAdmissionLstat(repoRoot: string, path: string): Stats | null {
   return observed;
 }
 
+/** 🪜️ Observes many candidates under one no-follow ancestry snapshot: each directory component is lstat-ed once, every leaf fresh, and `verify` re-proves every observed ancestor unchanged after the last candidate. */
+function sourceAdmissionAncestryObserver(repoRoot: string): { readonly lstat: (root: string, path: string) => Stats | null; readonly verify: () => void } {
+  const ancestors = [...noFollowDirectoryChain(repoRoot)], directories = new Map<string, Stats | null | "unsafe">();
+  return {
+    lstat(_root: string, path: string): Stats | null {
+      sourceAdmissionAssertLexical(path, "Source admission candidate", false);
+      const segments = path.split("/");
+      let absolute = repoRoot;
+      for (let index = 0; index + 1 < segments.length; index++) {
+        absolute = join(absolute, segments[index]);
+        let stat = directories.get(absolute);
+        if (stat === undefined) {
+          const observed = lstatOrNull(absolute);
+          stat = observed && (observed.isSymbolicLink() || !observed.isDirectory()) ? "unsafe" : observed;
+          directories.set(absolute, stat);
+          if (stat !== null && stat !== "unsafe") ancestors.push({ path: absolute, stat });
+        }
+        if (stat === null) return null;
+        if (stat === "unsafe") throw new UnsafeDirectoryAncestorError(`Source admission candidate has unsafe ancestry: ${path}`);
+      }
+      return lstatOrNull(join(absolute, segments[segments.length - 1]));
+    },
+    verify: (): void => verifyNoFollowDirectoryChain(ancestors),
+  };
+}
+
 export function sourceAdmissionPrepareOptions(options: TaxonomySourceInventoryOptions): SourceAdmissionPreparedOptions {
   const request = { ...options };
   options = Object.freeze({ ...request, structuralDirectoryNames: request.structuralDirectoryNames && Object.freeze([...request.structuralDirectoryNames]) });
@@ -266,9 +292,9 @@ function sourceAdmissionStructuralDirectories(repoRoot: string, names: readonly 
   return found.sort(sourceAdmissionByteCompare);
 }
 
-function sourceAdmissionObservation(repoRoot: string, path: string, origins: readonly TaxonomySourceOrigin[], indexEntries: readonly TaxonomySourceIndexEntry[]): TaxonomySourceCandidateObservation {
+function sourceAdmissionObservation(repoRoot: string, path: string, origins: readonly TaxonomySourceOrigin[], indexEntries: readonly TaxonomySourceIndexEntry[], observe: (root: string, path: string) => Stats | null = sourceAdmissionLstat): TaxonomySourceCandidateObservation {
   try {
-    const stat = sourceAdmissionLstat(repoRoot, path);
+    const stat = observe(repoRoot, path);
     if (!stat) return { sourcePath: path, observedKind: "absent", worktreeMode: null, explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
     if (stat.isSymbolicLink()) return { sourcePath: path, observedKind: "symlink", worktreeMode: "120000", explicitDirectory: false, origins, indexEntries, unsafeAncestor: false };
     if (stat.isDirectory()) return { sourcePath: path, observedKind: "directory", worktreeMode: "040000", explicitDirectory: true, origins, indexEntries, unsafeAncestor: false };
@@ -321,14 +347,17 @@ export function collectTaxonomySourceAdmission(taxonomy: LoadedTaxonomy, prepare
   if (prepared.ticketDir) for (const path of sourceAdmissionWalk(repoRoot, prepared.ticketDir, taxonomy, scope, cancelFile, repositoryFences)) add(path, "explicit-ticket");
   sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences); report(prepared.progress, "inventory", "explicit-ticket-admission", 1, 1, scope);
   const candidates: TaxonomySourceCandidateObservation[] = [];
+  let observer: ReturnType<typeof sourceAdmissionAncestryObserver> | undefined;
   report(prepared.progress, "inventory", "source-observation", 0, rows.size, scope);
   for (const [path, row] of rows) {
     sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
-    const observation = sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries);
+    observer ??= sourceAdmissionAncestryObserver(repoRoot);
+    const observation = sourceAdmissionObservation(repoRoot, path, SOURCE_ADMISSION_ORIGINS.filter((origin) => row.origins.has(origin)), row.indexEntries, observer.lstat);
     if (row.directoryMarker && (observation.observedKind !== "directory" || observation.unsafeAncestor)) throw new Error(`Git untracked directory marker no longer matches a directory: ${path}`);
     candidates.push(observation);
     report(prepared.progress, "inventory", "source-observation", candidates.length, rows.size, path);
   }
+  observer?.verify();
   sourceAdmissionCheckCancellation(repoRoot, cancelFile, repositoryFences);
   const input: TaxonomySourceAdmissionInput = { scope: scope ?? null, opaquePrefixes: [...new Set(opaquePrefixes)], generatorOutputRoots, candidates };
   const inputText = JSON.stringify(input);

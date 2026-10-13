@@ -13,7 +13,7 @@ pub const WINDOW_KIND_ID: &str = TextWindowKit::KIND_ID;
 pub const BODY_KEY: &str = TextWindowKit::KIND_ID;
 
 /// 🔢️ The persisted store's one-item ceiling is the honest maximum a whole-buffer edit can publish.
-pub const HEX_EDITOR_MAX_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+pub const HEX_EDITOR_MAX_BYTES: usize = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 //#endregion 🔖️Constants
 
 //#region 🔖️Definition

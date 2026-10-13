@@ -4295,13 +4295,20 @@ dependencies = [
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "semio-framework-geometry",
- "semio-framework-hash",
- "semio-framework-job",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-representation"
+version = "0.1.0"
+dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-number",
- "semio-framework-pack",
- "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -4755,6 +4762,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os",
+]
+
+[[package]]
 name = "semio-framework-os-config"
 version = "0.1.0"
 dependencies = [
@@ -4812,6 +4826,13 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-framework-os-flow-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-flow",
 ]
 
 [[package]]
@@ -4967,6 +4988,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-plugin-interpreter",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
@@ -5002,6 +5024,13 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-framework-os-node-graph-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-node-graph",
 ]
 
 [[package]]
@@ -5051,6 +5080,7 @@ dependencies = [
  "semio-framework-pixels",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-plugin-interpreter",
  "semio-framework-replication",
  "semio-framework-schema",
  "semio-framework-surface",
@@ -5078,6 +5108,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-os-renderer-wgpu-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-renderer-wgpu",
+]
+
+[[package]]
 name = "semio-framework-os-run"
 version = "0.1.0"
 dependencies = [
@@ -5095,6 +5132,7 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-plugin-host",
+ "semio-framework-plugin-interpreter",
  "semio-framework-value",
  "serde",
  "serde_json",
@@ -5238,7 +5276,7 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-os-kernel",
  "semio-framework-pack-json",
- "semio-framework-plugin-host",
+ "semio-framework-plugin-interpreter",
  "semio-framework-value",
  "serde",
  "serde_json",
@@ -5262,6 +5300,7 @@ dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-os-services",
  "semio-framework-pack-json",
+ "semio-framework-plugin-interpreter",
  "semio-framework-trace",
  "semio-framework-ui",
  "semio-framework-ui-contract",
@@ -5299,6 +5338,28 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "serde_json",
+]
+
+[[package]]
+name = "semio-framework-plugin-interpreter"
+version = "0.1.0"
+dependencies = [
+ "semio-framework",
+ "semio-framework-actor",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-diagnostic",
+ "semio-framework-hash",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-trace",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+ "wasmtime",
 ]
 
 [[package]]
@@ -5931,6 +5992,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",

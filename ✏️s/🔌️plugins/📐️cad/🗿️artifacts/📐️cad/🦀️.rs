@@ -17,8 +17,8 @@ extern crate semio_framework_schema as framework_schema;
 mod activation_tests;
 
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
 pub use crate::schema::CadReferenceIndex;
 
 //#region 🔖️Domain
@@ -67,23 +67,23 @@ impl CadPaneId {
 /// 🧩️ Fixed per-pane composed `s.stdio.semio.model` child slot — one of the four fields the
 /// derived `ArtifactSchema` on `CadSnapshot` classifies as a `#[child(...)]` slot. Kept as a plain
 /// helper alias so accessor functions below read uniformly across all four panes.
-pub type CadModelChild = store::ArtifactChild<SemioModelSnapshot>;
+pub type CadModelChild = store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>;
 
 /// 📐️ Composed `s.stdio.semio.drawing` child — cad's forward-declared "engineering assembly"
 /// composition slot (design-full-plan.md §4: `cad | engineering assembly | model, drawing`). Empty
 /// today (cad carries no persisted 2D drawing content yet); real cardinality grows via
 /// `create-drawing`/`delete-drawing` once a caller actually attaches one.
-pub type CadDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
+pub type CadDrawingChild = store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot>;
 
 /// 🧊️ Exact owned topology sibling of a pane model's geometry reference.
-pub type CadBrepChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>;
+pub type CadBrepChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>;
 
 /// 🪪️ Validates one owned CAD child reference before it enters a parent diff.
-pub fn cad_child<S>(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef, expected_subset: &str) -> Result<store::ArtifactChild<S>, String> {
+pub fn cad_child<S>(child_id: &str, target: &semio_framework_artifact_reference::ArtifactRef, expected_subset: &str) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     if child_id.is_empty() || target.artifact_id.is_empty() || target.dialect.artifact_kind != "s.stdio.semio" || target.dialect.standard != "v1" || target.dialect.subset != expected_subset {
         return Err(format!("CAD child target must own a nonempty identity and s.stdio.semio v1 {expected_subset} dialect"));
     }
-    Ok(store::ArtifactChild::new(child_id.to_string(), target.clone()))
+    Ok(store::os_store::artifact_child::ArtifactChild::new(child_id.to_string(), target.clone()))
 }
 
 /// 🧩️ Validates a composed model child handle.
@@ -124,7 +124,7 @@ pub struct CadWorkingScene {
 
 /// 🌉 WRITE direction: a deterministic, content-addressed `s.stdio.semio.model` CHILD HANDLE for
 /// `pane`, minted from `content_json` (mirrors `💠️lowpoly`'s `mesh_child_handle` — same pattern,
-/// same shared `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical
+/// same shared `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical
 /// content mint the same handle. This is a HANDLE only — the target artifact id is a forward
 /// reference; materializing it as a real, persisted, resolvable document is the two-step
 /// host-level gesture (mint the child, dispatch `create-<pane>-model` against the result)
@@ -134,7 +134,7 @@ pub fn cad_model_child_handle(pane: CadPaneId, content_json: &str) -> CadModelCh
     let child_id = store::content_id(&format!("{}-model", cad_model_child_pane_slug(pane)), content_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 fn cad_model_child_pane_slug(pane: CadPaneId) -> &'static str {
@@ -154,7 +154,7 @@ pub fn cad_named_pane_child(document_id: &str, pane: CadPaneId) -> CadModelChild
     let child_id = format!("{document_id}-{}-model", cad_model_child_pane_slug(pane));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🈳️ The composed model child an EMPTY pane of a new document is born with, so the document composes every pane from
@@ -205,9 +205,9 @@ pub const CAD_DRAWINGS_SLOT: &str = "drawings";
 /// child, and a fresh instance plus a creation leaf is a loadable document. A child the snapshot does not declare has
 /// no genesis.
 pub fn cad_genesis_child_pack(snapshot: &CadSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot == "breps" {
-        return snapshot.breps.iter().any(|child| child.child_id == child_id).then(|| <semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as ArtifactPack>::encode_pack(&Default::default()));
+        return snapshot.breps.iter().any(|child| child.child_id == child_id).then(|| <semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as ArtifactPack>::encode_pack(&Default::default()));
     }
     if slot == CAD_DRAWINGS_SLOT {
         return snapshot.drawings.iter().any(|child| child.child_id == child_id).then(|| <SemioDrawingSnapshot as ArtifactPack>::encode_pack(&SemioDrawingSnapshot::default()));
@@ -285,7 +285,7 @@ impl CadComposedPanes {
             let mut geometry = genesis.as_deref().and_then(|scene| cad_scene_pane_geometry(scene, pane)).cloned().unwrap_or_default();
             for child in snapshot.breps.iter().filter(|child| objects.iter().any(|object| object.solid_handle.as_ref() == Some(&child.child_id))) {
                 geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(semio_framework_plugin::MeshData::default()));
-                if let Ok(content) = children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>("breps", &child.child_id) {
+                if let Ok(content) = children.typed_read::<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>("breps", &child.child_id) {
                     geometry.owned_breps.insert(child.child_id.clone(), std::sync::Arc::new((*content).clone()));
                     if let Ok(mesh) = standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&content) {
                         geometry.owned_meshes.insert(child.child_id.clone(), std::sync::Arc::new(mesh));

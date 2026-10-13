@@ -1,4 +1,5 @@
 //! 📮️ Native original effect queue births precede same-pointer handoffs and literal0 closure.
+#[cfg(test)] use crate::tool_run_contract::ToolRunJobPortState;
 use super::*;
 #[test]
 fn original_tool_run_port_dispatch_preserves_same_effect_and_native_queue_receipts(){

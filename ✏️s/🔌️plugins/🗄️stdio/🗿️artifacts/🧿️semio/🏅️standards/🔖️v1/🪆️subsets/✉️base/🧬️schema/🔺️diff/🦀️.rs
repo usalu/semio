@@ -3,25 +3,25 @@
 //! zero reinvention of any subset's own sparse-diff algebra. A genuine cross-kind change has no diff at all: it is a
 //! document load, never a mutation.
 
-use crate::standards::v1::subsets::animation::schema::{diff::SemioAnimationDiff, snapshot::SemioAnimationSnapshot};
-use crate::standards::v1::subsets::audio::schema::{diff::SemioAudioDiff, snapshot::SemioAudioSnapshot};
-use crate::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
-use crate::standards::v1::subsets::brep::schema::{diff::SemioBrepDiff, snapshot::SemioBrepSnapshot};
-use crate::standards::v1::subsets::cad::schema::{diff::SemioCadDiff, snapshot::SemioCadSnapshot};
-use crate::standards::v1::subsets::document::schema::{diff::SemioDocumentDiff, snapshot::SemioDocumentSnapshot};
-use crate::standards::v1::subsets::drawing::schema::{diff::SemioDrawingDiff, snapshot::SemioDrawingSnapshot};
-use crate::standards::v1::subsets::flow::schema::{diff::SemioFlowDiff, snapshot::SemioFlowSnapshot};
-use crate::standards::v1::subsets::graph::schema::{diff::SemioGraphDiff, snapshot::SemioGraphSnapshot};
-use crate::standards::v1::subsets::image::schema::{diff::SemioImageDiff, snapshot::SemioImageSnapshot};
-use crate::standards::v1::subsets::kit::schema::{diff::SemioKitDiff, snapshot::SemioKitSnapshot};
-use crate::standards::v1::subsets::mesh::schema::{diff::SemioMeshDiff, snapshot::SemioMeshSnapshot};
-use crate::standards::v1::subsets::model::schema::{diff::SemioModelDiff, snapshot::SemioModelSnapshot};
-use crate::standards::v1::subsets::object::schema::{diff::SemioObjectDiff, snapshot::SemioObjectSnapshot};
-use crate::standards::v1::subsets::presentation::schema::{diff::SemioPresentationDiff, snapshot::SemioPresentationSnapshot};
-use crate::standards::v1::subsets::table::schema::{diff::SemioTableDiff, snapshot::SemioTableSnapshot};
-use crate::standards::v1::subsets::text::schema::{diff::SemioTextDiff, snapshot::SemioTextSnapshot};
-use crate::standards::v1::subsets::value::schema::{diff::SemioValueTreeDiff, snapshot::SemioValueSnapshot};
-use crate::standards::v1::subsets::video::schema::{diff::SemioVideoDiff, snapshot::SemioVideoSnapshot};
+use {semio_s_artifact_stdio_semio_animation::schema::diff::SemioAnimationDiff, semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot};
+use {semio_s_artifact_stdio_semio_audio::schema::diff::SemioAudioDiff, semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot};
+use crate::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
+use {semio_s_artifact_stdio_semio_brep::schema::diff::SemioBrepDiff, semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot};
+use {semio_s_artifact_stdio_semio_cad::schema::diff::SemioCadDiff, semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot};
+use {semio_s_artifact_stdio_semio_document::schema::diff::SemioDocumentDiff, semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot};
+use {semio_s_artifact_stdio_semio_drawing::schema::diff::SemioDrawingDiff, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot};
+use {semio_s_artifact_stdio_semio_flow::schema::diff::SemioFlowDiff, semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot};
+use {semio_s_artifact_stdio_semio_graph::schema::diff::SemioGraphDiff, semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot};
+use {semio_s_artifact_stdio_semio_image::schema::diff::SemioImageDiff, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot};
+use {semio_s_artifact_stdio_semio_kit::schema::diff::SemioKitDiff, semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot};
+use {semio_s_artifact_stdio_semio_mesh::schema::diff::SemioMeshDiff, semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot};
+use {semio_s_artifact_stdio_semio_model::schema::diff::SemioModelDiff, semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot};
+use {semio_s_artifact_stdio_semio_object::schema::diff::SemioObjectDiff, semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot};
+use {semio_s_artifact_stdio_semio_presentation::schema::diff::SemioPresentationDiff, semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot};
+use {semio_s_artifact_stdio_semio_table::schema::diff::SemioTableDiff, semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot};
+use {semio_s_artifact_stdio_semio_text::schema::diff::SemioTextDiff, semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot};
+use {semio_s_artifact_stdio_semio_value::schema::diff::SemioValueTreeDiff, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
+use {semio_s_artifact_stdio_semio_video::schema::diff::SemioVideoDiff, semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationApplyError;
 use protocol::MutationDiff;

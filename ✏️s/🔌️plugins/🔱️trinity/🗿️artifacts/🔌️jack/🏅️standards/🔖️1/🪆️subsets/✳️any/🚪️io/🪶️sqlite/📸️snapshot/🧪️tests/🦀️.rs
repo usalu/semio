@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::*;
 use semio_framework_value::{FromValue, ToValue, ValueType};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -42,7 +42,7 @@ fn properties() -> Vec<PropertyDef> {
 fn full(word: u64, address: usize) -> JackSnapshot {
     let l = laws();
     let c = &l["childAddresses"][address];
-    let content = store::ArtifactChild::new(
+    let content = store::os_store::artifact_child::ArtifactChild::new(
         c["childId"].as_str().unwrap().into(),
         semio_framework_artifact_reference::ArtifactRef {
             artifact_id: c["artifactId"].as_str().unwrap().into(),
@@ -191,7 +191,7 @@ fn sqlite_snapshot_jack_independent_sqlite_understands_all_authored_entities_and
 #[test]
 fn sqlite_snapshot_jack_actual_erased_both_formats_keep_queryable_parent() {
     use store::sqlite_snapshot::*;
-    let codec = store::ArtifactCodec::bare::<JackSnapshot, crate::TrinityGraphMutation>(crate::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
+    let codec = store::bare_artifact_codec::<JackSnapshot, crate::TrinityGraphMutation>(crate::TRINITY_GRAPH_SCHEMA).snapshot_sqlite.expect("Jack absent parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.jack".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0, 0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -223,7 +223,7 @@ fn independent_jack_file(bytes: &[u8], edit: &str) -> Vec<u8> {
 #[test]
 fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     for word in words() {
         let expected = Owned::new(full(word, 0));
         let mut cb = |_| true;
@@ -247,7 +247,7 @@ fn sqlite_snapshot_jack_all13_tables_and153_rows_survive_independent_edits() {
 #[test]
 fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let mut cb = |_| true;
     let mut control = SqliteSnapshotControl::new(&mut cb, Default::default());
     let v = Owned::new(full(0, 0));
@@ -264,7 +264,7 @@ fn sqlite_snapshot_jack_independently_malformed_semantic_entities_are_refused() 
 #[test]
 fn sqlite_snapshot_jack_exact_row_admission_and_all_four_real_interior_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let value = Owned::new(full(0, 0));
     let mut cb = |_| true;
     let exact = SqliteDatabaseLimits { max_rows: 153, ..Default::default() };

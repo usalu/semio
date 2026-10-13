@@ -7,10 +7,10 @@
 //! restoration observable — and the removed bytes must come back from `base`, since the diff never
 //! carried them.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::SemioMeshSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️delete-texture/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕳️delete-texture/🚫️removes/📸️snapshot/➡️after/🔣️.json");
@@ -116,7 +116,7 @@ async fn committed_diff_applies_to_after() {
 async fn texture_references_refuse_deletion_and_keep_sibling_references_during_inverse() {
     let mut base = before();
     base.materials[0].normal_texture = Some(base.textures[1].id.clone());
-    let targeted = SemioMeshMutation::DeleteTexture(crate::standards::v1::subsets::mesh::schema::mutations::delete_texture::DeleteTexture { id: base.textures[1].id.clone() });
+    let targeted = SemioMeshMutation::DeleteTexture(crate::schema::mutations::delete_texture::DeleteTexture { id: base.textures[1].id.clone() });
     let refused = targeted.diff(&base);
     assert!(!refused.messages().is_empty());
     assert_eq!(protocol::apply_diff(refused.diff(), &base).unwrap(), base);

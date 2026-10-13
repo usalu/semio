@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🗺️set-adjacency` per Wave C.
 
 use super::ConnectAdjacency;
-use crate::diff::ProgramAdjacenciesDelta;
+use crate::standards::v1::subsets::any::schema::diff::ProgramAdjacenciesDelta;
 use crate::standards::v1::subsets::any::schema::normalize_pair;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 🔌️ Error `mutation.target-missing` if either endpoint element is absent or a new pair's `index` lies past the end (empty diff); Warning
 /// `mutation.no-op` if the edge already carries this exact value (empty diff); else `inserted = [{index, normalized edge}]` if the pair is new

@@ -1,8 +1,8 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/registry/descriptor-verification/component.json",
-  "title": "Registry Package Descriptor Admission V1",
-  "description": "Admission policy for the guest-emitted PackageDescriptor consumed by Registry verification; execution protocol is the current host application channel.",
+  "title": "Registry Semantic Package Descriptor Admission V1",
+  "description": "Admission policy for the committed SEMANTIC PackageDescriptor (the guest's own describe() answer) consumed by Registry verification: it carries no byte identity — the binding to shipped bytes lives in the generated ComponentReceiptV1 — and its execution protocol is the current host application channel.",
   "$ref": "#/$defs/PackageDescriptorV1",
   "$defs": {
     "RegistryPackageId": {
@@ -26,8 +26,7 @@
         "execution",
         "executionProtocol",
         "quotas",
-        "contributions",
-        "hashes"
+        "contributions"
       ],
       "properties": {
         "descriptorVersion": {
@@ -285,29 +284,6 @@
           "type": "array",
           "items": {
             "type": "object"
-          }
-        },
-        "hashes": {
-          "type": "object",
-          "additionalProperties": false,
-          "required": [
-            "wasmSha256",
-            "coreWasmSha256",
-            "descriptorSha256"
-          ],
-          "properties": {
-            "wasmSha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
-            },
-            "coreWasmSha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
-            },
-            "descriptorSha256": {
-              "type": "string",
-              "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
-            }
           }
         }
       }

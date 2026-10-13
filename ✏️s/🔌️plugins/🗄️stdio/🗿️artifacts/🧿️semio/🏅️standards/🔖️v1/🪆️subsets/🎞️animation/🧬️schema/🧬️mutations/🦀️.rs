@@ -11,13 +11,10 @@
 //! `NoMutation` is dropped: the derive requires every variant to wrap exactly one leaf payload, and
 //! `no` is not an approved semantic verb.
 
-use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
-/// 🔧️ `MutationDiff` in scope for the `#[cfg(test)] mod tests` block below.
-#[cfg(test)]
-use protocol::MutationDiff;
 
 
 //#region 🔖️Mutation
@@ -173,7 +170,7 @@ fn fixture() -> SemioAnimationSnapshot {
         timelines: vec![AnimTimeline {
             name: Some("walk".into()),
             channels: vec![AnimChannel {
-                target: AnimTarget { node: "hip".into(), property: crate::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Translation },
+                target: AnimTarget { node: "hip".into(), property: crate::schema::snapshot::AnimTargetProperty::Translation },
                 interpolation: AnimInterpolation::Linear,
                 keyframes: vec![AnimKeyframe { t: 0.0, value: AnimValue::Scalar { value: 1.0 } }],
             }],
@@ -193,7 +190,7 @@ pub(crate) fn demo_mutation_cases() -> Vec<SemioAnimationMutation> {
         SetTimelineName(set_timeline_name::SetTimelineName { index: 0, name: None }),
         InsertChannel(insert_channel::InsertChannel { timeline_index: 0, index: 1, channel: base.timelines[0].channels[0].clone() }),
         RemoveChannel(remove_channel::RemoveChannel { timeline_index: 0, index: 0 }),
-        SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::standards::v1::subsets::animation::schema::snapshot::AnimTargetProperty::Rotation } }),
+        SetChannelTarget(set_channel_target::SetChannelTarget { timeline_index: 0, index: 0, target: AnimTarget { node: "spine".into(), property: crate::schema::snapshot::AnimTargetProperty::Rotation } }),
         SetChannelInterpolation(set_channel_interpolation::SetChannelInterpolation { timeline_index: 0, index: 0, interpolation: AnimInterpolation::Step }),
         InsertKeyframe(insert_keyframe::InsertKeyframe { timeline_index: 0, channel_index: 0, index: 1, keyframe: AnimKeyframe { t: 2.0, value: AnimValue::Scalar { value: 5.0 } } }),
         RemoveKeyframe(remove_keyframe::RemoveKeyframe { timeline_index: 0, channel_index: 0, index: 0 }),

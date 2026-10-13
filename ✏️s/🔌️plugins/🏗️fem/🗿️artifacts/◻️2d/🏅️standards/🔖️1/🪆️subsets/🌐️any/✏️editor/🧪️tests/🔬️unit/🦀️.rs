@@ -92,7 +92,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let semio_framework_plugin::Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -138,7 +138,7 @@ pub(crate) mod context {
 use super::*;
 use crate::editor::fem2d::unit_tests::context::{fem2d_app, render};
 use semio_framework_plugin::{ArtifactEditor, EditorApp};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 //#region 🔖️CommandSurface
 /// 🧾️ One representative value per row, in declaration (= binary ordinal) order.
@@ -521,7 +521,7 @@ async fn export_media_document_out_round_trips_via_import_media_document_in() {
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = emit.effects.first().expect("document:in must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let loaded = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
+    let loaded = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode loaded document pack");
     assert_eq!(loaded, snapshot);
 }
 

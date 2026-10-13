@@ -605,3 +605,28 @@ diff --git a/dist/src/project-graph/nx-deps-cache.js b/dist/src/project-graph/nx
      if (cache.version !== '6.0') {
          return true;
      }
+diff --git a/dist/src/tasks-runner/create-task-graph.js b/dist/src/tasks-runner/create-task-graph.js
+--- a/dist/src/tasks-runner/create-task-graph.js
++++ b/dist/src/tasks-runner/create-task-graph.js
+@@ -81,6 +81,7 @@
+             this.continuousDependencies[d].length === 0);
+     }
+     processTask(task, projectUsedToDeriveDependencies, configuration, overrides) {
++        configuration ??= task.target.configuration;
+         const seenKey = `${task.id}-${projectUsedToDeriveDependencies}`;
+         if (this.seen.has(seenKey)) {
+             return;
+@@ -210,6 +211,13 @@
+         };
+     }
+     resolveConfiguration(project, target, configuration) {
++        const policy = project.data.targets?.[target]?.metadata?.semio?.buildMode;
++        if (policy && configuration !== undefined && !policy.modes.includes(configuration)) {
++            throw new Error(`Build configuration must be prototype or release: ${project.name}:${target}:${configuration}`);
++        }
++        if (policy?.fixed && configuration !== undefined && configuration !== policy.fixed) {
++            throw new Error(`Conflicting build mode for ${project.name}:${target}: requires ${policy.fixed}, received ${configuration}`);
++        }
+         const defaultConfiguration = project.data.targets?.[target]?.defaultConfiguration;
+         configuration ??= defaultConfiguration;
+         return (0, project_graph_utils_1.projectHasTargetAndConfiguration)(project, target, configuration)

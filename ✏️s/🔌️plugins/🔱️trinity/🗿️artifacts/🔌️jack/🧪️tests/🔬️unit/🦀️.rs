@@ -1,7 +1,7 @@
 use crate::JackWorkingScene;
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
 trait JackChildOwnerOracle {
     fn expected() -> semio_framework_pack_json::Value;

@@ -1,8 +1,7 @@
-use crate::standards::v1::subsets::document::io::binary::mutations::wire_tag;
-use crate::standards::v1::subsets::document::io::text::mutations::print_document_mutation;
+use crate::io::binary::mutations::wire_tag;
+use crate::io::text::mutations::print_document_mutation;
 use super::*;
-use crate::standards::v1::subsets::document::schema::diff::DocBlockDiff as TestDocBlockDiff;
-use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
+use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -26,14 +25,14 @@ async fn insert_then_remove_block_apply_and_inverse() {
     let base = fixture();
     let insert = SemioDocumentMutation::InsertBlock(insert_block::InsertBlock { path: DocBlockPath::top(1), block: DocBlock::paragraph("inserted") });
     let mut after = base.clone();
-    after = crate::applied(&after, &insert).0;
+    after = semio_s_artifact_stdio_semio_base::applied(&after, &insert).0;
     assert_eq!(after.blocks.len(), 3);
     assert_eq!(after.blocks[1], DocBlock::paragraph("inserted"));
 
     let inverses = Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture");
     let mut restored = after.clone();
     for inv in &inverses {
-        restored = crate::applied(&restored, inv).0;
+        restored = semio_s_artifact_stdio_semio_base::applied(&restored, inv).0;
     }
     assert_eq!(restored, base);
 }
@@ -47,24 +46,24 @@ async fn nested_quote_and_list_path_addressing_apply_and_inverse() {
     let quote_path = DocBlockPath { segments: vec![DocPathSegment::Quote { block_index: 2 }], index: 0 };
     let mutation = SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: quote_path.clone(), run_index: 0, text: "changed quote".into() });
     let mut after = base.clone();
-    after = crate::applied(&after, &mutation).0;
+    after = semio_s_artifact_stdio_semio_base::applied(&after, &mutation).0;
     let DocBlock::Quote { blocks } = &after.blocks[2] else { panic!("quote") };
     let DocBlock::Paragraph { runs, .. } = &blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed quote");
     for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        after = crate::applied(&after, &inv).0;
+        after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 
     let list_path = DocBlockPath { segments: vec![DocPathSegment::ListItem { block_index: 3, item: 0 }], index: 0 };
     let list_mutation = SemioDocumentMutation::SetRunText(set_run_text::SetRunText { path: list_path, run_index: 0, text: "changed item".into() });
     let mut after2 = base.clone();
-    after2 = crate::applied(&after2, &list_mutation).0;
+    after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &list_mutation).0;
     let DocBlock::List { items, .. } = &after2.blocks[3] else { panic!("list") };
     let DocBlock::Paragraph { runs, .. } = &items[0].blocks[0] else { panic!("paragraph") };
     assert_eq!(runs[0].text, "changed item");
     for inv in Mutation::inverse(&list_mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        after2 = crate::applied(&after2, &inv).0;
+        after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &inv).0;
     }
     assert_eq!(after2, base);
 }
@@ -76,11 +75,11 @@ async fn table_path_addressing_sets_nested_cell_content() {
     let path = table_path(2, 0, 0, 0);
     let mutation = SemioDocumentMutation::SetBlockContent(set_block_content::SetBlockContent { path: path.clone(), block: DocBlock::paragraph("changed cell") });
     let mut after = base.clone();
-    after = crate::applied(&after, &mutation).0;
+    after = semio_s_artifact_stdio_semio_base::applied(&after, &mutation).0;
     let DocBlock::Table { rows } = &after.blocks[2] else { panic!("table") };
     assert_eq!(rows[0].cells[0].blocks[0], DocBlock::paragraph("changed cell"));
     for inv in Mutation::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        after = crate::applied(&after, &inv).0;
+        after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 }
@@ -90,23 +89,23 @@ async fn style_and_image_mutations_apply_and_inverse() {
     let base = fixture();
     let insert = SemioDocumentMutation::InsertStyle(insert_style::InsertStyle { style: DocStyle { id: "Heading1".into(), name: "heading 1".into(), based_on: Some("Normal".into()) }, at: None });
     let mut after = base.clone();
-    after = crate::applied(&after, &insert).0;
+    after = semio_s_artifact_stdio_semio_base::applied(&after, &insert).0;
     assert_eq!(after.styles.len(), 2);
     for inv in Mutation::inverse(&insert, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        after = crate::applied(&after, &inv).0;
+        after = semio_s_artifact_stdio_semio_base::applied(&after, &inv).0;
     }
     assert_eq!(after, base);
 
     let insert_img = SemioDocumentMutation::InsertImage(insert_image::InsertImage { image: DocImage { id: "img1".into(), mime: "image/png".into(), bytes: vec![1, 2] }, at: None });
     let mut with_img = base.clone();
-    with_img = crate::applied(&with_img, &insert_img).0;
+    with_img = semio_s_artifact_stdio_semio_base::applied(&with_img, &insert_img).0;
     assert_eq!(with_img.images.len(), 1);
     let set_bytes = SemioDocumentMutation::SetImageBytes(set_image_bytes::SetImageBytes { id: "img1".into(), mime: "image/jpeg".into(), bytes: vec![9] });
     let mut after2 = with_img.clone();
-    after2 = crate::applied(&after2, &set_bytes).0;
+    after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &set_bytes).0;
     assert_eq!(after2.images[0].mime, "image/jpeg");
     for inv in Mutation::inverse(&set_bytes, &with_img).expect("valid retained mutation inverse fixture").into_iter().rev() {
-        after2 = crate::applied(&after2, &inv).0;
+        after2 = semio_s_artifact_stdio_semio_base::applied(&after2, &inv).0;
     }
     assert_eq!(after2, with_img);
 }
@@ -207,7 +206,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
-        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        let (__next, diff_from_apply) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
         via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
@@ -223,9 +222,9 @@ async fn inverse_law() {
         let base = law_fixture(&mutation);
 
         let mut round_tripped = base.clone();
-        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
         for inverse_mutation in <SemioDocumentMutation as Mutation<SemioDocumentSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
+            round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -336,8 +335,8 @@ async fn absorb_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = sweep_b();
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️FieldSweep
@@ -386,10 +385,10 @@ async fn op_text_binary_roundtrip_law() {
 /// 🎯️ Position law: removing ANY style or image (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn removals_invert_at_every_position() {
-    let mut base = crate::standards::v1::subsets::document::schema::snapshot::demo_semio_document_snapshot();
+    let mut base = crate::schema::snapshot::demo_semio_document_snapshot();
     for n in 1..=3 {
-        base.styles.push(crate::standards::v1::subsets::document::schema::snapshot::DocStyle { id: format!("StyleX{n}"), name: format!("style {n}"), based_on: None });
-        base.images.push(crate::standards::v1::subsets::document::schema::snapshot::DocImage { id: format!("imgx{n}"), mime: "image/png".into(), bytes: vec![n as u8] });
+        base.styles.push(DocStyle { id: format!("StyleX{n}"), name: format!("style {n}"), based_on: None });
+        base.images.push(DocImage { id: format!("imgx{n}"), mime: "image/png".into(), bytes: vec![n as u8] });
     }
     for item in base.styles.iter().filter(|style| style.id.starts_with("StyleX")) {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioDocumentMutation::RemoveStyle(remove_style::RemoveStyle { id: item.id.clone() }), &base).await;

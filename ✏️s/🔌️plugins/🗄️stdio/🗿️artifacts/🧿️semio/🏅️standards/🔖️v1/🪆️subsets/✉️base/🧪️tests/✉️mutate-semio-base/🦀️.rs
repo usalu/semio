@@ -16,8 +16,6 @@
 
 use semio_repo_test_host::{digest, Adapter, Json, Outcome};
 
-use semio_s_artifact_stdio_semio::apply_diff;
-
 //#region 🔖️Vectors
 /// 🧫️ The committed wrapped-arm vector each delegated kind is measured on — before-envelope, wrapped
 /// mutation and the arm's own committed result, under this subset's `🧫️fixtures/`.
@@ -162,15 +160,16 @@ mod oracle {
 mod subject {
     use super::{kind_vector, outcome_of, refuses, Vector, DSL_ASSET, PACK_ASSET};
     use semio_repo_test_host::{parse_json, Context, Outcome};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::{diff_semio_mutation, inverse_semio_mutation, semio_mutation_refusal_codes, SemioMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::mutations::{decode_semio_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::binary::snapshot::{encode_semio_envelope_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::binary::snapshot::{decode_semio_envelope_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{decode_semio_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{encode_semio_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{print_semio_envelope_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{parse_semio_envelope_dsl};
+    use {semio_s_artifact_stdio_semio::schema::mutations::{diff_semio_mutation, inverse_semio_mutation, SemioMutation}, semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusal_codes};
+    use semio_s_artifact_stdio_semio::io::text::mutations::decode_semio_mutation_json;
+    use semio_s_artifact_stdio_semio::schema::snapshot::SemioSnapshot;
+    use semio_s_artifact_stdio_semio::io::binary::snapshot::encode_semio_envelope_pack;
+    use semio_s_artifact_stdio_semio::io::binary::snapshot::decode_semio_envelope_pack;
+    use semio_s_artifact_stdio_semio::io::text::snapshot::decode_semio_snapshot_json;
+    use semio_s_artifact_stdio_semio::io::text::snapshot::encode_semio_snapshot_json;
+    use semio_s_artifact_stdio_semio::io::text::snapshot::print_semio_envelope_dsl;
+    use semio_s_artifact_stdio_semio::io::text::snapshot::parse_semio_envelope_dsl;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
 
     fn text(ctx: &Context, uri: &str) -> Result<String, String> {

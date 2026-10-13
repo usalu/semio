@@ -392,26 +392,26 @@ struct Fem2dArtifactPreparationFactory;
 
 struct Fem2dArtifactPreparation {
     owners: store::OneItemOwners<Fem2dSnapshot, Fem2dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Fem2dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Fem2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
     /// 🧺️ One forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`: one per node
     /// and region a `move-selection` restores, one for every other kind).
-    fn preflight(&self, mutation: &Fem2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Fem2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("fem2d-artifact-lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &Fem2dMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        if lane != store::HistoryLane::Document {
+    fn begin_demand(&self, _mutation: &Fem2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "fem2d-artifact-lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Fem2dArtifactPreparation>(), depth: 1 })
@@ -419,40 +419,40 @@ impl store::ArtifactStoreOneItemPreparationFactory<Fem2dSnapshot, Fem2dMutation>
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation, Fem2dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation, Fem2dMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation, Fem2dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Fem2dSnapshot, Fem2dMutation, Fem2dMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         if !fem2d_document_items(request.base.get()).is_some_and(|items| items <= FEM2D_MAXIMUM_DOCUMENT_ITEMS)
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || self.preflight(&request.mutation, request.lane).is_err()
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "fem2d-artifact-request-refused"), request));
         }
         Ok((Box::new(Fem2dArtifactPreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fem2dArtifactPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
         let fault = |message: &'static str| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message);
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() || self.owners.failure.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress::default()));
         }
         let authority = self.owners.authority.as_ref().ok_or_else(|| fault("fem2d-artifact-authority-missing"))?;
         let base = self.owners.base.as_ref().ok_or_else(|| fault("fem2d-artifact-base-owner-missing"))?;
@@ -481,18 +481,18 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
         self.owners.prepared.as_ref()
     }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Fem2dSnapshot, Fem2dMutation>> {
         self.owners.prepared.take()
     }
     fn cancel(&mut self) {
@@ -501,7 +501,7 @@ impl store::ArtifactStoreOneItemPreparation<Fem2dSnapshot, Fem2dMutation> for Fe
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
@@ -742,7 +742,7 @@ impl ArtifactEditor for Fem2dPlayApp {
 
 
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Fem2dArtifactPreparationFactory))
     }
 
@@ -890,7 +890,7 @@ impl ArtifactEditor for Fem2dPlayApp {
         match port {
             "artifact:out" => {
                 let media_type = fem2d_io().artifact_media_type;
-                let bytes = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
+                let bytes = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "results:out" => {
@@ -918,7 +918,7 @@ impl ArtifactEditor for Fem2dPlayApp {
                     return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
                 };
                 let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-                let snapshot = <Fem2dSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+                let snapshot = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
                 Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
             }
             "geometry:in" => {
@@ -1286,8 +1286,8 @@ pub fn results_window_instance_id(view_state: &ViewModel) -> Option<String> {
 /// `commands::set_active_example`) builds this effect instead of an `Emit::mutations([...])`.
 /// The spr is a fresh, edit-free op-log for `scene` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &Fem2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Fem2dSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
+    let pack = <Fem2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("fem2d", crate::FEM_2D_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

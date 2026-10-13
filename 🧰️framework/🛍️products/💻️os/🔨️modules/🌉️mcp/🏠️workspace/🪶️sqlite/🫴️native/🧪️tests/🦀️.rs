@@ -2,7 +2,7 @@
 use super::*;
 use std::cell::Cell;
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
-use store::{ArtifactSqliteSnapshot as _,ArtifactDsl as _};
+use store::{os_store::serialization::ArtifactSqliteSnapshot as _,os_store::serialization::ArtifactDsl as _};
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
 fn grant(value:&serde_json::Value)->RetainedCloneGrant{RetainedCloneGrant{maximum_items:value["maximumItems"].as_u64().unwrap()as usize,maximum_copy_bytes:value["maximumCopyBytes"].as_u64().unwrap()as usize,maximum_capacity_bytes:value["maximumCapacityBytes"].as_u64().unwrap()as usize,maximum_release_bytes:value["maximumReleaseBytes"].as_u64().unwrap()as usize,maximum_depth:value["maximumDepth"].as_u64().unwrap()as usize}}
 fn close_decode(native:&mut NativeDecodeControl<'_>,law:&serde_json::Value){let closing=grant(&law["closeGrant"]);for _ in 0..law["maximumCloseTurns"].as_u64().unwrap(){if !native.has_retirement_owner(){return}let step=native.close_retirement_recipient(closing).unwrap();assert!(step.progress().fits(closing));}panic!("Probe original decode recipient did not reach terminal")}

@@ -53,7 +53,7 @@ impl semio_framework_value::FromValue for DagDiff {
 impl DagDiff {
     /// 🪆️ Enforces the document marker and exact owned-child coordinates.
     pub fn validate(&self) -> Result<(), String> {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if self.schema.as_deref().is_some_and(|value| value != "dag.dag") { return Err("invalid Dag document marker".into()); }
         if let Some(child) = &self.content { validate_semio_child_identity(&child.child_id, &child.target, "graph")?; }
         Ok(())

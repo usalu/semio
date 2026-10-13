@@ -7,7 +7,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv, semioNxParallel } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv, semioNxParallel } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -38,8 +38,7 @@ import { ensureAppleDeveloperDir } from "../../../🧑‍💻dev/⚙️engine/�
  * entry points (`buildPlugins`/`buildPluginsStreaming`) go through `buildPluginCatalog` instead, which
  * pipelines this same pair of stages across many targets. */
 async function buildPlugin(target: PluginBuildTargetV1): Promise<void> {
-  const { artifact } = await buildPluginCargo(target);
-  await materializePlugin(target, artifact);
+  await materializePlugin(target, await buildPluginCargo(target));
   publishShardWorker();
 }
 
@@ -108,7 +107,7 @@ function assertNoStalePublicPluginOutputs(path: string): void {
  * slow per-crate builds in afterward instead of blocking the first byte on all of them. */
 async function preparePluginBuildTargets(filterPlugin?: string): Promise<readonly PluginBuildTargetV1[]> {
   ensureWasmTarget();
-  await ensurePluginRegistry(filterPlugin);
+  await ensurePluginRegistry();
   const catalog = discoverPluginBuildCatalog();
   const targets = resolvePluginBuildTargets(filterPlugin, catalog);
   mkdirSync(pluginOutRoot, { recursive: true });

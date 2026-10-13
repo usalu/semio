@@ -3872,6 +3872,18 @@
         "schema"
       ]
     },
+    "hub-compositions": {
+      "emoji": "🧩️",
+      "slugPattern": "^compositions$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["hub"]
+    },
+    "component-crate": {
+      "emoji": "🧩️",
+      "slugPattern": "^component$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["members-of-hub-compositions", "members-of-plan", "members-of-modules", "members-of-operating-system", "members-of-elements", "distribution-puzzle", "stdio", "text", "windows"]
+    },
     "ui-contract-component": {
       "emoji": "🧩️",
       "slugPattern": "^component$",
@@ -4612,6 +4624,12 @@
       "emoji": "💾️",
       "slugPattern": "^binary$",
       "allowEmojiOnly": false
+    },
+    "representation-codec": {
+      "emoji": "🔤️",
+      "slugPattern": "^codec$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["text", "binary"]
     },
     "serializers": {
       "emoji": "🧵️",
@@ -8070,6 +8088,36 @@
         "members-of-modules"
       ]
     },
+    "process-build": {
+      "emoji": "🏗️",
+      "slugPattern": "^build$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["process"]
+    },
+    "process-build-mode": {
+      "emoji": "🎚️",
+      "slugPattern": "^mode$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["process-build"]
+    },
+    "repo-library-build": {
+      "emoji": "🏗️",
+      "slugPattern": "^build$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["repo-server-library"]
+    },
+    "repo-library-build-storybook": {
+      "emoji": "📖️",
+      "slugPattern": "^storybook$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["repo-library-build"]
+    },
+    "repo-library-build-cmake": {
+      "emoji": "🛠️",
+      "slugPattern": "^cmake$",
+      "allowEmojiOnly": false,
+      "parentKindIds": ["repo-library-build"]
+    },
     "repo-process-owned-execution": {
       "emoji": "🎛️",
       "slugPattern": "^owned-execution$",
@@ -11330,6 +11378,49 @@
         "🗿️artifact-authority",
         "🚧️refusal",
         "🛰️lag-rebootstrap"
+      ],
+      "source": "registry"
+    },
+    "members-of-hub-compositions": {
+      "ownerKindIds": [
+        "hub-compositions"
+      ],
+      "memberNames": [
+        "✒️writer",
+        "➗️mathematical",
+        "🀄️wfc",
+        "🌀️procedural",
+        "🌊️flow",
+        "🌍️gis",
+        "🌿️vcs",
+        "🎞️animate",
+        "🎥️shooting",
+        "🎪️demonstrator",
+        "🎬️sequence",
+        "🏗️fem",
+        "🏙️bim",
+        "🏛️architect",
+        "🏭️process",
+        "💠️lowpoly",
+        "💡️reasoning",
+        "📋️forms",
+        "📏️layout",
+        "📐️cad",
+        "📕️norm",
+        "📖️playbook",
+        "📜️imperative",
+        "📸️remodel",
+        "🔋️energy",
+        "🔱️trinity",
+        "🕸️dag",
+        "🖍️draw",
+        "🖨️raster",
+        "🗄️stdio",
+        "🗒️note",
+        "🧩️puzzle",
+        "🧱️block",
+        "🪐️space",
+        "🪵️sourcing"
       ],
       "source": "registry"
     },
@@ -17898,7 +17989,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-draw-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_extension_draw_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_draw_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact drawing component JS companion",
       "configurability": "unconfigurable",
@@ -17909,7 +18000,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-draw-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_extension_draw_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_draw_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact drawing component declaration",
       "configurability": "unconfigurable",
@@ -17920,7 +18011,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-draw-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_extension_draw_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🎨️flow-extension-draw/semio_s_plugin_flow_draw_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact drawing component core URL",
       "configurability": "unconfigurable",
@@ -18063,7 +18154,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-bim-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_extension_bim_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_bim_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BIM component JS companion",
       "configurability": "unconfigurable",
@@ -18074,7 +18165,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-bim-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_extension_bim_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_bim_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BIM component declaration",
       "configurability": "unconfigurable",
@@ -18085,7 +18176,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-bim-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_extension_bim_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏘️flow-extension-bim/semio_s_plugin_flow_bim_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BIM component core URL",
       "configurability": "unconfigurable",
@@ -18162,7 +18253,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-structure-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_building_structure_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_structure_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building structure component JS companion",
       "configurability": "unconfigurable",
@@ -18173,7 +18264,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-structure-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_building_structure_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_structure_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building structure component declaration",
       "configurability": "unconfigurable",
@@ -18184,7 +18275,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-structure-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_building_structure_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🏟️cad-extension-aec-building-structure/semio_s_plugin_cad_aec_structure_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building structure component core URL",
       "configurability": "unconfigurable",
@@ -18327,7 +18418,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-list-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_extension_list_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_list_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact list component JS companion",
       "configurability": "unconfigurable",
@@ -18338,7 +18429,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-list-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_extension_list_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_list_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact list component declaration",
       "configurability": "unconfigurable",
@@ -18349,7 +18440,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-list-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_extension_list_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📃️flow-extension-list/semio_s_plugin_flow_list_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact list component core URL",
       "configurability": "unconfigurable",
@@ -18525,7 +18616,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-dictionary-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_dictionary_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact dictionary component JS companion",
       "configurability": "unconfigurable",
@@ -18536,7 +18627,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-dictionary-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_dictionary_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact dictionary component declaration",
       "configurability": "unconfigurable",
@@ -18547,7 +18638,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-dictionary-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_extension_dictionary_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📚️flow-extension-dictionary/semio_s_plugin_flow_dictionary_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact dictionary component core URL",
       "configurability": "unconfigurable",
@@ -18591,7 +18682,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-text-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_extension_text_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_text_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact text component JS companion",
       "configurability": "unconfigurable",
@@ -18602,7 +18693,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-text-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_extension_text_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_text_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact text component declaration",
       "configurability": "unconfigurable",
@@ -18613,7 +18704,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-text-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_extension_text_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/📝️flow-extension-text/semio_s_plugin_flow_text_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact text component core URL",
       "configurability": "unconfigurable",
@@ -18690,7 +18781,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-logic-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_extension_logic_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_logic_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact logic component JS companion",
       "configurability": "unconfigurable",
@@ -18701,7 +18792,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-logic-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_extension_logic_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_logic_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact logic component declaration",
       "configurability": "unconfigurable",
@@ -18712,7 +18803,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-logic-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_extension_logic_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔀️flow-extension-logic/semio_s_plugin_flow_logic_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact logic component core URL",
       "configurability": "unconfigurable",
@@ -18789,7 +18880,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-primitive-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_extension_primitive_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_primitive_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact primitive component JS companion",
       "configurability": "unconfigurable",
@@ -18800,7 +18891,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-primitive-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_extension_primitive_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_primitive_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact primitive component declaration",
       "configurability": "unconfigurable",
@@ -18811,7 +18902,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-primitive-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_extension_primitive_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔤️flow-extension-primitive/semio_s_plugin_flow_primitive_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact primitive component core URL",
       "configurability": "unconfigurable",
@@ -18822,7 +18913,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-energy-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_building_energy_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_energy_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building energy component JS companion",
       "configurability": "unconfigurable",
@@ -18833,7 +18924,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-energy-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_building_energy_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_energy_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building energy component declaration",
       "configurability": "unconfigurable",
@@ -18844,7 +18935,7 @@
       "expires": null
     },
     "dev-plugin-component-cad-extension-aec-building-energy-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_building_energy_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🔥️cad-extension-aec-building-energy/semio_s_plugin_cad_aec_energy_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact building energy component core URL",
       "configurability": "unconfigurable",
@@ -19482,7 +19573,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-brep-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_extension_brep_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_brep_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BREP component JS companion",
       "configurability": "unconfigurable",
@@ -19493,7 +19584,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-brep-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_extension_brep_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_brep_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BREP component declaration",
       "configurability": "unconfigurable",
@@ -19504,7 +19595,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-brep-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_extension_brep_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧊️flow-extension-brep/semio_s_plugin_flow_brep_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact BREP component core URL",
       "configurability": "unconfigurable",
@@ -19548,7 +19639,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-math-js": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_extension_math_component.js",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_math_component.js",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact math component JS companion",
       "configurability": "unconfigurable",
@@ -19559,7 +19650,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-math-declaration": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_extension_math_component.d.ts",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_math_component.d.ts",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact math component declaration",
       "configurability": "unconfigurable",
@@ -19570,7 +19661,7 @@
       "expires": null
     },
     "dev-plugin-component-flow-extension-math-wasm": {
-      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_extension_math_component.core.wasm",
+      "pathPattern": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧮️flow-extension-math/semio_s_plugin_flow_math_component.core.wasm",
       "authority": "Bytecode Alliance JCO",
       "reason": "Exact math component core URL",
       "configurability": "unconfigurable",

@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use crate::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioTableSnapshot {
@@ -178,7 +178,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
 /// 🎯️ Position law: removing ANY row (first, middle, last) is undone at its original index, and the inverse sums to the negative diff.
 #[semio_framework_async_macros::async_test]
 async fn remove_row_inverts_at_every_position() {
-    let base = crate::standards::v1::subsets::table::schema::snapshot::demo_table_snapshot();
+    let base = crate::schema::snapshot::demo_table_snapshot();
     assert!(base.rows.len() >= 3, "the law needs a middle row");
     for index in 0..base.rows.len() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::RemoveRow(remove_row::RemoveRow { index }), &base).await;
@@ -188,7 +188,7 @@ async fn remove_row_inverts_at_every_position() {
 /// 🎯️ Position law: moving a row between ANY two positions is undone exactly.
 #[semio_framework_async_macros::async_test]
 async fn reorder_rows_inverts_between_every_pair_of_positions() {
-    let base = crate::standards::v1::subsets::table::schema::snapshot::demo_table_snapshot();
+    let base = crate::schema::snapshot::demo_table_snapshot();
     for from in 0..base.rows.len() {
         for to in 0..base.rows.len() {
             protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioTableMutation::ReorderRows(reorder_rows::ReorderRows { from, to }), &base).await;

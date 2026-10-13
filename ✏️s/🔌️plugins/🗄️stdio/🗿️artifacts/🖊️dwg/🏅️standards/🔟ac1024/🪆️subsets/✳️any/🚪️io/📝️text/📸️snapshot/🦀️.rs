@@ -17,13 +17,12 @@ mod grammar_shape_tests;
 mod snapshot_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use crate::standards::v_ac1024::engine as dwg_engine;
-use crate::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};
 
-impl store::ArtifactDsl for DwgSnapshot {
+impl store::os_store::serialization::ArtifactDsl for DwgSnapshot {
     const EXTENSION: &'static str = "dwg";
     fn envelope_id() -> &'static str {
         "stdio.dwg"
@@ -39,7 +38,7 @@ impl store::ArtifactDsl for DwgSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -50,8 +49,7 @@ impl store::ArtifactDsl for DwgSnapshot {
 mod snapshot_wire_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
-use crate::standards::v_ac1024::engine as dwg_engine;
-use crate::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};

@@ -53,9 +53,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     for kind in fixture["kinds"].as_array().unwrap() {
         let kind = kind.as_str().unwrap();
         let dialect = semio_framework_artifact_reference::ArtifactDialect::parse_coordinate(&format!("s.testkit.sqlite-refusal@1/{kind}")).unwrap();
-        let mut codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>(&format!("semio.testkit.sqlite-refusal.{kind}/v1"));
+        let mut codec = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>(&format!("semio.testkit.sqlite-refusal.{kind}/v1"));
         let original = codec.snapshot_sqlite.as_ref().expect("actual typed snapshot provider");
-        codec.snapshot_sqlite = Some(store::ArtifactSqliteSnapshotCodec {
+        codec.snapshot_sqlite = Some(store::os_store::serialization::ArtifactSqliteSnapshotCodec {
             schema: original.schema.clone(),
             snapshot_type: original.snapshot_type,
             export: sqlite_guest_refusal_export,
@@ -86,7 +86,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             let exported = crate::plugin_runtime::plugin_snapshot_sqlite_export(&mut crate::sqlite_wire::SnapshotInputOwner{wire:Some(input),dialect:None,route:None,payload:None,hop:None},&mut native,&mut snapshot).await.unwrap();
             let crate::sqlite_wire::SnapshotFileResult::Rejected(rejection) = exported else { panic!("refused provider exported a file") };
             sqlite_guest_assert_refusal(&rejection, &expected);
-            let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
+            let mut database = SqliteDatabase::from_schema(<Std1AnySnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA).unwrap();
             let mut progress = |_| true;
             let mut control = SqliteSnapshotControl::new(&mut progress, limits);
             attach_sqlite_snapshot_metadata(&mut database, &dialect, encoding, &mut control).unwrap();

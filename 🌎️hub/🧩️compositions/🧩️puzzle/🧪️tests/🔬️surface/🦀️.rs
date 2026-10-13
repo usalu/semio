@@ -32,7 +32,7 @@ async fn puzzle5d_editor_and_viewer_share_dialect() {
 }
 
 /// 🧬️ LAW (ticket 26/09/23, H12): puzzle's guest `codec` answers — through each owning editor's codec table, no app
-/// constructed — agree with each kind's independently declared native codec (`ArtifactCodec::of::<Snapshot, Mutation>`)
+/// constructed — agree with each kind's independently declared native codec (`artifact_codec::<Snapshot, Mutation>`)
 /// for all three kinds: the same pack-schema hash, the native codec decodes the table's genesis pair, and both print the
 /// same op log of it. (The two `dsl` mirrors are different renderings — the store's document text and the kind's own
 /// DSL — so they are not compared byte for byte.)

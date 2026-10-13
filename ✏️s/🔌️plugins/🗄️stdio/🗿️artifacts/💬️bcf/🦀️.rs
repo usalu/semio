@@ -37,8 +37,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<BcfSnapshot, BcfMutation>(STDIO_BCF_DOCUMENT_SCHEMA);
     codec.extension = "semio";
     codec
 }
@@ -56,8 +56,8 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// replaces the old side-effecting `register()` (dissolved out of the former `⚙️engine`, ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES — the codec now lives in `🚪️io`). Mirrors
 /// `🔋️energy`'s `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so
-/// `.document_codec_bare` stands in for the old `store::register_document_codec(store::
-/// ArtifactCodec::bare::<BcfSnapshot, BcfMutation>(...))` call. `.composers(...)` reaches the
+/// `.document_codec_bare` stands in for the old `store::os_store::codec_registry::register_document_codec(store::
+/// bare_artifact_codec::<BcfSnapshot, BcfMutation>(...))` call. `.composers(...)` reaches the
 /// subset io's own `io_registry` directly (fully qualified, not through the `io` shim), whose
 /// `entries()` returns `&'static [ComposerEntry]` (owned rows) — NOT this file's own shadowing
 /// `io_registry` below, whose `entries()` returns `&'static [&'static ComposerEntry]`

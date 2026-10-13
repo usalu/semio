@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "policy": {
+    "version": 1,
+    "maximumElapsedMilliseconds": 5000,
+    "output": {
+      "maximumBytes": 4096,
+      "maximumLines": 2
+    }
+  },
+  "cases": [
+    {
+      "name": "normal-awaited",
+      "mode": "normal",
+      "expected": "ready"
+    },
+    {
+      "name": "cancel-before-publication",
+      "mode": "cancel",
+      "expected": "refused"
+    },
+    {
+      "name": "publication-refusal-before-acquisition",
+      "mode": "reject",
+      "expected": "refused"
+    },
+    {
+      "name": "finite-child-zero-refusal",
+      "mode": "zero",
+      "expected": "refused"
+    },
+    {
+      "name": "original-line-cap",
+      "mode": "lines",
+      "expected": "refused"
+    }
+  ]
+}

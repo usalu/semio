@@ -1,9 +1,9 @@
 use super::*;
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioImageFrame, SemioImageMetadataEntry};
 
 fn sample_semio() -> SemioImageSnapshot {
     SemioImageSnapshot {
-        width: 2, height: 1, colorspace: crate::standards::v1::subsets::image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8,
+        width: 2, height: 1, colorspace: semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace::Rgba, bit_depth: 8,
         frames: vec![SemioImageFrame { delay_ms: 0, rgba8: vec![255, 0, 0, 255, 0, 255, 0, 255] }],
         icc: None, metadata: vec![SemioImageMetadataEntry { key: "Title".into(), value: "semio fixture".into() }],
         ..SemioImageSnapshot::default()

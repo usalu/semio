@@ -275,5 +275,3 @@ mod retained_store_footprint_tests;
 mod interactive_job_catalog_tests;
 //#endregion 🧪️InteractiveJobCatalogTests
 
-#[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, SpaceApps);

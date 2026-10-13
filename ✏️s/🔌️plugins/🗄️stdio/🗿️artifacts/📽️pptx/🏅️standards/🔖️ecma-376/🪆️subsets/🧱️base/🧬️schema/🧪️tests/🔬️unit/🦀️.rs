@@ -536,8 +536,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(zip.entries.iter().filter(|entry| entry.name.starts_with("ppt/slides/slide") && entry.name.ends_with(".xml")).count(), 7);
     assert_eq!(zip.entries.iter().filter(|entry| entry.name.ends_with(".rels")).count(), 22);
 
-    let packed = store::ArtifactPack::encode_pack(&snapshot);
-    let unpacked = <PptxSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("unpack exact fixture");
+    let packed = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let unpacked = <PptxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("unpack exact fixture");
     assert_eq!(unpacked, snapshot);
     assert_exact_export(&unpacked, &exact_bytes).await;
 
@@ -546,8 +546,8 @@ async fn fixture_survives_logical_io_persistence_diff_and_mutation_pipelines() {
     assert_eq!(from_binary, snapshot);
     assert_exact_export(&from_binary, &exact_bytes).await;
 
-    let dsl = store::ArtifactDsl::print_dsl(&snapshot);
-    let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse exact fixture dsl");
+    let dsl = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    let parsed = <PptxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse exact fixture dsl");
     assert_eq!(parsed, snapshot);
     assert_exact_export(&parsed, &exact_bytes).await;
 
@@ -629,7 +629,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
-        let text = store::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_pptx_snapshot().await);
         let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
         assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
             .expect("selected grammar fragments")
@@ -668,7 +668,7 @@ mod conformance_laws {
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_pptx_snapshot().await;
-        let packed = store::ArtifactPack::encode_pack(&demo);
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk must consume every literal snapshot byte");
@@ -700,13 +700,13 @@ mod conformance_laws {
 
         let demo = demo_pptx_snapshot().await;
 
-        let parsed = <PptxSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <PptxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_pptx_snapshot().await");
-        assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pptx_snapshot().await) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_pptx_snapshot().await) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <PptxSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <PptxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_pptx_snapshot().await");
-        assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot().await) drifted from the shipped .pack.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_pptx_snapshot().await) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

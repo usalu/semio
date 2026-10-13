@@ -6,7 +6,7 @@
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Ids
 pub const WFC3D_DOCUMENT_SCHEMA: &str = "s.wfc.wfc3d";
@@ -42,7 +42,7 @@ pub enum TileMedia3d {
         color: Option<Color>,
     },
     MeshChild {
-        child: store::ArtifactChild<SemioMeshSnapshot>,
+        child: store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>,
     },
 }
 

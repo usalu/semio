@@ -2,13 +2,13 @@
 //! counted phases, one unit of real algorithm work per [`StagedOperation::advance`], monotone
 //! [`StageProgress`], and a single result. The one-shot function of an operation is [`drive`] over
 //! its job, so there is exactly one algorithm per operation (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`,
-//! lane J; the boolean twin is [`crate::brep::operations::boolean::BooleanJob`]).
+//! lane J; the boolean twin is [`crate::boolean::BooleanJob`]).
 
-use crate::brep::operations::boolean::{boolean_job, BooleanAdmission, BooleanJob, BooleanOp, BooleanStep};
-use crate::brep::representation::arena::{FaceId, SolidId};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
+use crate::boolean::{boolean_job, BooleanAdmission, BooleanJob, BooleanOp, BooleanStep};
+use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
 
 /// 📈 Progress of one staged operation. `done` never decreases, `total` is the plan known so far and
 /// is only ever revised upward (a nested job reveals its own size when it is admitted), and a

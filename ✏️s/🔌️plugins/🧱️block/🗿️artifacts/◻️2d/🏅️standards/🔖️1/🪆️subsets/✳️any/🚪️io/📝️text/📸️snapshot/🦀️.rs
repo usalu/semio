@@ -16,12 +16,12 @@ pub const BLOCK2D_CONCRETE_FOREST_RIGHT_EXAMPLE_TEXT: &str = include_str!("../..
 
 /// 📖️ Parses `.block2d` DSL text into a `Block2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Block2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Block2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block2dSnapshot` back to `.block2d` DSL text.
 pub fn print_dsl(document: &Block2dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -44,7 +44,7 @@ use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCompatibilityRule, 
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Block2dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Block2dSnapshot {
     const EXTENSION: &'static str = "block2d";
     fn envelope_id() -> &'static str {
         "block.block2d"
@@ -59,7 +59,7 @@ impl store::ArtifactDsl for Block2dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

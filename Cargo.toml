@@ -12,17 +12,21 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌉️mcp/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🗿️artifacts/🌊️flow/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📖️playbook/🗿️artifacts/📖️playbook/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🎞️Scenes/⏱️camera/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🕸️NodeGraph/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🏃️run/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔁️workflow/🗿️artifacts/🔁️workflow/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🖥️shell/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🗣️dsl/✨️derive/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🛎️services/📦️packages/🦀️rust",
@@ -31,6 +35,7 @@ members = [
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🗂️collection/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🪐️space/🗿️artifacts/🪐️space/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust",
+    "🧰️framework/🛍️products/💻️os/🖥️host/🧩️component/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/📓️print/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🖥️server/📦️packages/🦀️rust",
@@ -293,6 +298,7 @@ exclude = [
     "🌎️hub/🧩️compositions/🗄️stdio/🔮️oracles/📦️packages/🦀️rust",
     "🎓️teaching",
     "🧰️framework",
+    "🧰️framework/🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🎟️admission/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏇️mounted-owner/📦️packages/🦀️rust",
     "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🔮️oracles/📦️package-boundary-classification/📦️packages/🦀️rust",
 ]
@@ -315,6 +321,7 @@ semio-framework-schema-composition = { path = "🧰️framework/🔨️modules/�
 semio-framework-schema-validator = { path = "🧰️framework/🔨️modules/🧬️schema/✅️validator/📦️packages/🦀️rust" }
 semio-framework-plugin-host-test-component = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust" }
 semio-framework-plugin-host = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/📦️packages/🦀️rust" }
+semio-framework-plugin-interpreter = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter/📦️packages/🦀️rust" }
 semio-repo-test-host = { path = "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🦀️rust" }
 semio-framework-os-renderer-wgpu = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust" }
 semio-framework-artifact-infinite-dag = { path = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🗿️artifacts/🕸️dag/📦️packages/🦀️rust" }
@@ -422,7 +429,7 @@ opt-level = 3
 
 # ⚡️ The plugin runtime every native dev host embeds (the semio MCP gateway, the hub, native shells) is
 # optimized even in the dev profile. At `opt-level = 0` the wasmtime component-model machinery around
-# every guest crossing and host call, and cranelift compiling a 129 MB wasm-dev guest, dominated the
+# every guest crossing and host call, and cranelift compiling a 129 MB unoptimized guest, dominated the
 # guest's own work. Measured on the wfc genesis `inference_run` over the semio MCP: 112.7 s with this
 # set unoptimized vs 63.9 s optimized (ticket 26/09/23, `📓️wp-g5.md`), and a first solve after a guest
 # rebuild waited ~9 min for its unoptimized cranelift compile. Only these crates change, so a rebuild
@@ -508,11 +515,11 @@ opt-level = 3
 [profile.dev.package.wit-parser]
 opt-level = 3
 
-# 🧮️ The owned wasm interpreter (`semio-framework-plugin-host::interpreter`) runs every trusted-catalog
+# 🧮️ The owned wasm interpreter (`semio-framework-plugin-interpreter`) runs every trusted-catalog
 # verification `codec.pack-schema-hash` on the hub's startup path. At `opt-level = 0` a debug hub spent
 # >11 min of one core interpreting writer/draw/puzzle during catalog load and the candidate readiness
 # wait gave up (ticket 26/09/23 W1 §4.6, sampled: 100 % in `CoreInstance::execute_machine`).
-[profile.dev.package.semio-framework-plugin-host]
+[profile.dev.package.semio-framework-plugin-interpreter]
 opt-level = 3
 
 # 🔐️ The repository's own SHA-256 carries every hub credential check: a sign-in derives PBKDF2-HMAC-SHA256
@@ -522,38 +529,14 @@ opt-level = 3
 [profile.dev.package.semio-framework-hash]
 opt-level = 3
 
-# 🛡️ WASI component links alone select this mitigation for rust-lld's ElemSection crash.
-# Native dev retains Cargo's parallel codegen policy; publication stays wasm-release.
-[profile.wasm-dev]
-inherits = "dev"
-codegen-units = 1
-# 🧾️ A component's described bytes must be its shipped bytes: `describe` and `component-dev` link the same
-# `cargo rustc --crate-type cdylib` unit, and `incremental` is part of that unit's profile identity, so an
-# inherited `incremental = true` split it by the caller's `CARGO_INCREMENTAL` into two compiles with two
-# different wasm hashes (ticket 26/09/23 W1: descriptor `ce48…`/`2a5c…` vs staged `a740…`).
-incremental = false
-
-# 🎚️ The plugin guest must meet the framework's 8 ms interactive-step contract even in the dev
-# profile: at `opt-level = 0` a lowpoly render turn tessellates its seeded mesh in 10-11.5 ms and
-# the runtime traps it with `plugin.internal.interactive-ceiling`, so the window renders a fault
-# instead of geometry. Scoped to this package rather than raised on the whole profile because the
-# io layer (`semio-s-plugin-stdio`) is not on the render path and is far more expensive to compile.
-[profile.wasm-dev.package.semio-framework-os-flow]
-opt-level = 2
-
-# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
-[profile.wasm-dev.package.semio-framework-os-kernel-neural-engine]
-opt-level = 2
-
-# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
-[profile.wasm-dev.package.semio-framework-replication]
-opt-level = 2
-
-# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
-[profile.wasm-dev.package.semio-framework-pack]
-opt-level = 2
-
 # 🎚️ Answers `capability: evaluate`/`tessellate` for the BREP operators the example drives.
+[profile.prototype]
+inherits = "dev"
+opt-level = 0
+lto = false
+codegen-units = 256
+incremental = true
+
 [profile.release]
 opt-level = 3
 lto = "thin"
@@ -562,14 +545,25 @@ strip = "debuginfo"
 incremental = false
 trim-paths = "object"
 
-# 🪶️ REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT. wasm32-wasip2 plugin components only — os-dev's
-# 📜️script.ts passes `--profile wasm-release` when building plugin crates. Inherits ship-oriented
-# `[profile.release]` above, then overrides for wasm size/runtime (see below).
+# 🛠️ The build-time host tool profile (`semio-framework-plugin-describe`): a release driver job compiles the tool cold once per
+# fresh generation, on the release critical path, and every component's describe waits for it. `release`'s single codegen unit
+# serialises LLVM over each giant crate of its closure (os-kernel 608 s of a 945 s critical path) for runtime the tool never
+# spends there; sixteen units with thin-local LTO cut the cold build to 392 s while the owned interpreter's describe throughput
+# stays equal on shipped components (animate 188 M fuel, stdio-image 395 M fuel; ticket 26/09/23 `📓️2026-10-13-describe-cleanup.md`).
+[profile.host-tool]
+inherits = "release"
+codegen-units = 16
+lto = false
+
+# 🪶️ The ONE shipped component profile (ticket 26/09/23 wave A2): wasm32-wasip2 plugin and extension components and
+# the wasm-bindgen browser modules. `describe`, provenance, receipts, module materialization and the trusted catalog all
+# act on these exact bytes; nothing else is ever described for commit or shipped. Inherits ship-oriented
+# `[profile.release]` above, then overrides for wasm size/runtime:
 #
 # - opt-level "s" (not "z"): "z" measurably slows hot numeric loops in geometry/FEM solvers for a
-#   few extra percent of size; the wasm-opt -Oz post-pass (see buildPlugin/transpilePluginComponent)
-#   gets the "z"-class shrink without paying that runtime cost in every plugin.
-# - lto "thin" (not "fat"): fat LTO re-links ~25 plugin cdylibs individually — 2-4x slower per plugin
+#   few extra percent of size; the wasm-opt -Oz post-pass of module materialization gets the "z"-class
+#   shrink without paying that runtime cost in every plugin.
+# - lto "thin" (not "fat"): fat LTO re-links every plugin cdylib individually — 2-4x slower per plugin
 #   for a low single-digit percent size gain over thin. Thin still gets full cross-crate inlining.
 # - codegen-units = 16: measured on the raster hub (ticket 26/09/23 BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT,
 #   2026-10-13): 317 s / 8.2 GB peak vs 612 s / 10.6 GB at 1, for +11% raw but only +2.4% brotli bytes on the wire
@@ -579,9 +573,7 @@ trim-paths = "object"
 # - incremental = false: deterministic output; release units are rebuilt whole anyway, so incremental
 #   session state would only cost disk in the shared build-dir (`.cargo/config.toml` `build.build-dir`).
 # - trim-paths = "object": strips absolute build-host cargo-registry paths retained in panic
-#   `Location` strings (panic = "unwind" is intentionally NOT overridden here — wasm32-wasip2's
-#   target spec already defaults to panic-strategy "abort", so plugins already abort-on-panic and
-#   `catch_unwind` already never catches on this target; setting it explicitly would be a no-op).
+#   `Location` strings (wasm32-wasip2 already aborts on panic, so `panic` is not overridden).
 [profile.wasm-release]
 inherits = "release"
 opt-level = "s"
@@ -591,6 +583,37 @@ strip = "symbols"
 incremental = false
 trim-paths = "object"
 
+# 🔁️ The single-plugin browser iteration loop only (`bun nx run workspace:components iterate <plugin-id>`): never in a
+# release graph, never described for commit, never shipped. Inherits the shipped profile's target settings and trades
+# size and speed for compile latency — incremental, no LTO, 256 codegen units, assertions on, symbols kept. Its bytes
+# reach no receipt but a local `wasm-prototype` one and stay under the local-only `ITERATE_COMPONENT_MAX_BYTES` (512 MiB).
+[profile.wasm-prototype]
+inherits = "wasm-release"
+debug = 1
+opt-level = 1
+lto = false
+codegen-units = 256
+incremental = true
+debug-assertions = true
+overflow-checks = true
+strip = "none"
+
+# 🎚️ An iterated plugin still meets the framework's 8 ms interactive-step contract: below `opt-level = 2` a lowpoly
+# render turn tessellates its seeded mesh in 10-11.5 ms and the runtime traps it with `plugin.internal.interactive-ceiling`.
+[profile.wasm-prototype.package.semio-framework-os-flow]
+opt-level = 2
+
+# 🎚️ `Evaluator::evaluate_channels_budgeted` — the topological dag walk itself, run once per hop.
+[profile.wasm-prototype.package.semio-framework-os-kernel-neural-engine]
+opt-level = 2
+
+# 🎚️ `DslValue`/`OrderedMap` — the per-neuron `Dictionary` every walk clones, merges and hashes.
+[profile.wasm-prototype.package.semio-framework-replication]
+opt-level = 2
+
+# 🎚️ `pack::json` — the codec that serializes each node's input/output payload on the same hop.
+[profile.wasm-prototype.package.semio-framework-pack]
+opt-level = 2
 
 # 🧹️ RUST-WIDE-CLEAN-REFACTOR-CAMPAIGN baseline. Kept at "warn" (never "deny") in
 # the manifest so live concurrent edits never hard-break; zero-warning is enforced

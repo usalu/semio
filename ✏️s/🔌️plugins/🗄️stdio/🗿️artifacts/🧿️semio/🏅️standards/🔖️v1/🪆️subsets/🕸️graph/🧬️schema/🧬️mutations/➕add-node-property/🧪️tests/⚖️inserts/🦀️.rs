@@ -5,10 +5,10 @@
 //! `mutation.no-op`; otherwise the entry is inserted into the node's nested ordered `properties` at
 //! `min(index, len)`. The property type is `🔢️value`'s own `SemioValueEntry`, reused verbatim — a
 //! `Float` keeps its SOURCE LEXEME as a string, never a JSON number.
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts/📸️snapshot/➡️after/🔣️.json");
@@ -17,10 +17,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕add-node-property/⚖️inserts/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("add-node-property before snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("add-node-property before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("add-node-property after snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("add-node-property after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("add-node-property mutation decodes")
@@ -58,8 +58,8 @@ async fn the_undo_remove_node_property_detaches_the_weight_entry_again() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioGraphSnapshot = crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
+        let decoded: SemioGraphSnapshot = crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "add-node-property/inserts-a-weight-property-ahead-of-the-colour-property: committed {label} JSON is not canonical");
     }

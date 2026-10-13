@@ -9,7 +9,7 @@ pub const KINDS: &[&str] = &["rename-vcs", "change-counter", "change-notes", "ch
 //#endregion 🏷️Roster
 
 //#region 🔖️Store
-pub type VcsEnvelope = store::ArtifactEnvelope<VcsSnapshot, VcsDemoMutation>;
+pub type VcsEnvelope = store::os_store::store_schema::ArtifactEnvelope<VcsSnapshot, VcsDemoMutation>;
 pub type VcsStore = store::ArtifactStore<VcsSnapshot, VcsDemoMutation>;
 
 /// 🔐️ Opens a standalone VCS store WITH its exact owner catalog installed. `ArtifactStore::new`
@@ -19,7 +19,7 @@ pub type VcsStore = store::ArtifactStore<VcsSnapshot, VcsDemoMutation>;
 /// catalog for the app-hosted store; every standalone store goes through here instead.
 pub async fn new_vcs_store(envelope: VcsEnvelope, actor: protocol::ActorId) -> Result<OwnedVcsStore, store::VcsError> {
     let mut store = VcsStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<VcsSnapshot, VcsDemoMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<VcsSnapshot, VcsDemoMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedVcsStore(store))
 }
 

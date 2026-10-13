@@ -9,19 +9,19 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
 
 
-use crate::standards::v1::subsets::image::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
-
-
-
+use crate::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
 
 
 
 
 
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+
+
+
+use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
@@ -190,5 +190,3 @@ mod tests;
 mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
-#[cfg(test)]
-use protocol::{OpText};

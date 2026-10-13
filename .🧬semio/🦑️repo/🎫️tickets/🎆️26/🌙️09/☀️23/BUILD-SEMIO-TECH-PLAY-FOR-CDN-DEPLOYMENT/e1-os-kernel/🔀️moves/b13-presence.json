@@ -1,0 +1,14 @@
+{
+  "target": "👥️presence/🦀️.rs",
+  "module": "presence",
+  "anchor": "//#region 🔖️EphemeralLanes\n",
+  "doc": [
+    "//! 👥️ Presence peers: the bounded peer table and its root custody, peer entries, retirement of returned peer roots, and",
+    "//! the lane item receipt every ephemeral publication reports. The ephemeral lanes of the engine own one table; the",
+    "//! presence read, publication io and rejection leaves read it without naming the engine.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "items": ["PresencePeerRootCustody", "PresencePeersRetirement", "PresencePeersRoot", "LaneItemReceipt", "PRESENCE_PEER_ID_BYTES", "PRESENCE_PEER_SLOTS", "PresencePeerEntry", "PresencePeersCapacityError", "PresencePeersRetiredEntries", "presence_arc_bytes"],
+  "movableTraits": []
+}

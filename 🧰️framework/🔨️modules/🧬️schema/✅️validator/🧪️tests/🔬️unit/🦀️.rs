@@ -13,7 +13,8 @@ fn original_compiled_validator_retires_recursive_pattern_fields_under_full_grant
 fn intrinsic_values_preserve_the_independent_validation_corpus() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
-        let validator = OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&DslValue::from(&case["schema"]), &[]).unwrap();
+        let documents: Vec<DslValue> = case["input"]["documents"].as_array().map_or_else(Vec::new, |documents| documents.iter().map(DslValue::from).collect());
+        let validator = OwnedJsonSchemaValidator::compile_intrinsic_with_documents(&DslValue::from(&case["input"]["schema"]), &documents).unwrap();
         assert_eq!(validator.validate_intrinsic(&DslValue::from(&case["value"])).is_ok(), case["valid"].as_bool().unwrap(), "{}", case["id"]);
     }
     println!("[DEBUG] intrinsic validation oracle=Ajv corpus={}", corpus["cases"].as_array().unwrap().len());
@@ -40,7 +41,8 @@ fn intrinsic_validation_controls_admission_before_copying_values() {
 fn unchanged_subset_corpus_matches_the_independent_oracle() {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     for case in corpus["cases"].as_array().unwrap() {
-        let validator = OwnedJsonSchemaValidator::compile(&case["schema"].to_string()).unwrap();
+        let documents: Vec<String> = case["input"]["documents"].as_array().map_or_else(Vec::new, |documents| documents.iter().map(serde_json::Value::to_string).collect());
+        let validator = OwnedJsonSchemaValidator::compile_with_documents(&case["input"]["schema"].to_string(), &documents.iter().map(String::as_str).collect::<Vec<_>>()).unwrap();
         assert_eq!(validator.is_valid_json(&case["value"].to_string()), case["valid"].as_bool().unwrap(), "{}", case["id"]);
     }
     for case in corpus["comparisons"].as_array().unwrap() {

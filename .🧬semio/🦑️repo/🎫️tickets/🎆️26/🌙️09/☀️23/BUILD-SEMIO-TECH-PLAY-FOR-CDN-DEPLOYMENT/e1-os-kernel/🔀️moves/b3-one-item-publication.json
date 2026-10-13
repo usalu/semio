@@ -1,0 +1,19 @@
+{
+  "target": "🎮️one-item/📬️publication/🦀️.rs",
+  "module": "one_item_publication",
+  "anchor": "\n//#region 📬️OneItemPublication\n",
+  "doc": [
+    "//! 📬️ The retained one-item publication protocol: the preparation trait and its factory, the live authority the Store",
+    "//! mints, the prepared owner and its seal, batch sources and the member one-item wire. Domain preparation owners and",
+    "//! the Store engine both speak it; it names only the one-item vocabulary, the ledger and snapshot-read owners below it.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "📬️OneItemPublication",
+    "🧺️BatchSource",
+    "🧩️MemberOneItemPublication"
+  ],
+  "items": [],
+  "movableTraits": []
+}

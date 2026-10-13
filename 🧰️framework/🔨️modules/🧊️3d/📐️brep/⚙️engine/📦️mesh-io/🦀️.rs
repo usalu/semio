@@ -1,7 +1,7 @@
 //! 📦 STL/OBJ/GLB/mesh mesh import/export bridged to native B-Rep.
 //!
 //! Triangle soups interchange through `semio_framework_mesh_engine` codecs where available; solids
-//! tessellate via [`crate::brep::queries::tessellation`] and import as
+//! tessellate via [`semio_framework_3d_brep_queries::tessellation`] and import as
 //! one planar face per triangle with shared vertices and edges, returning an open shell or a
 //! closed solid. `export_mesh`/`import_mesh`/`export_solid_mesh`/`import_mesh_to_body` take their mesh
 //! codec as a `MeshExporter`/`MeshImporter` parameter (ticket
@@ -24,17 +24,17 @@
 //! used at the time. `MeshTransfer` moved again in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME
 //! wave 1 (W1-A): the parent's own `engine::contract` module now owns it same-crate.
 
-use crate::brep::operations::euler::{add_shell, add_solid};
-use crate::brep::engine::MeshTransfer;
+use semio_framework_3d_brep_operations::euler::{add_shell, add_solid};
+use semio_framework_3d_brep_representation::contract::MeshTransfer;
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_mesh_engine::HistoryFoldIndex;
-use crate::brep::queries::tessellation::tessellate_solid;
-use crate::brep::representation::arena::SolidId;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::{Body,EntityRef};
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_representation::arena::SolidId;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 use semio_framework_mesh_engine::{MeshData};
 use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
 use semio_framework_mesh_engine::io::binary::{mesh_from_stl, mesh_to_stl};
@@ -60,8 +60,8 @@ pub struct MeshImportCursor {
     phase: u8,
     cursor: usize,
     volume: f64,
-    faces: Vec<crate::brep::representation::arena::FaceId>,
-    shell: Option<crate::brep::representation::arena::ShellId>,
+    faces: Vec<semio_framework_3d_brep_representation::arena::FaceId>,
+    shell: Option<semio_framework_3d_brep_representation::arena::ShellId>,
     solid: Option<SolidId>,
     recorder: OpRecorder,
     cancelled: bool,
@@ -70,29 +70,29 @@ pub struct MeshImportCursor {
     retirement: Option<ImportCloseOwner>,
     retirement_stage:u8,
     triangles: usize,
-    vertex_map: HistoryFoldIndex<[u64;3],crate::brep::representation::arena::VertexId>,
-    edge_map: HistoryFoldIndex<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+    vertex_map: HistoryFoldIndex<[u64;3],semio_framework_3d_brep_representation::arena::VertexId>,
+    edge_map: HistoryFoldIndex<([u64;3],[u64;3]),(semio_framework_3d_brep_representation::arena::EdgeId,usize,bool)>,
     boundary_edges: usize,
 }
 struct ImportScratch {
-    positions:Vec<f32>,positions64:Vec<Pnt3>,normals64:Vec<Vec3>,normals:Vec<f32>,indices:Vec<u32>,faces:Vec<crate::brep::representation::arena::FaceId>,
-    vertices:HistoryFoldIndex<[u64;3],crate::brep::representation::arena::VertexId>,
-    edges:HistoryFoldIndex<([u64;3],[u64;3]),(crate::brep::representation::arena::EdgeId,usize,bool)>,
+    positions:Vec<f32>,positions64:Vec<Pnt3>,normals64:Vec<Vec3>,normals:Vec<f32>,indices:Vec<u32>,faces:Vec<semio_framework_3d_brep_representation::arena::FaceId>,
+    vertices:HistoryFoldIndex<[u64;3],semio_framework_3d_brep_representation::arena::VertexId>,
+    edges:HistoryFoldIndex<([u64;3],[u64;3]),(semio_framework_3d_brep_representation::arena::EdgeId,usize,bool)>,
 }
 semio_framework_value::artifact_retire_struct!(ImportScratch {positions,positions64,normals64,normals,indices,faces,vertices,edges});
 enum RemovedImportEntity {
-    Vertex {value:crate::brep::representation::topology::Vertex},
-    Edge {value:crate::brep::representation::topology::Edge},
-    Coedge {value:crate::brep::representation::topology::Coedge},
-    Loop {value:crate::brep::representation::topology::Loop},
-    Face {value:crate::brep::representation::topology::Face},
-    Shell {value:crate::brep::representation::topology::Shell},
-    Solid {value:crate::brep::representation::topology::Solid},
-    Curve3 {value:crate::brep::representation::curve::Curve3},
-    Curve2 {value:crate::brep::representation::curve::Curve2},
-    Surface {value:crate::brep::representation::surface::Surface},
+    Vertex {value:semio_framework_3d_brep_representation::topology::Vertex},
+    Edge {value:semio_framework_3d_brep_representation::topology::Edge},
+    Coedge {value:semio_framework_3d_brep_representation::topology::Coedge},
+    Loop {value:semio_framework_3d_brep_representation::topology::Loop},
+    Face {value:semio_framework_3d_brep_representation::topology::Face},
+    Shell {value:semio_framework_3d_brep_representation::topology::Shell},
+    Solid {value:semio_framework_3d_brep_representation::topology::Solid},
+    Curve3 {value:semio_framework_3d_brep_representation::curve::Curve3},
+    Curve2 {value:semio_framework_3d_brep_representation::curve::Curve2},
+    Surface {value:semio_framework_3d_brep_representation::surface::Surface},
 }
-crate::brep::representation::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
+semio_framework_3d_brep_representation::retire_geometry_variants!(RemovedImportEntity {Vertex {value},Edge {value},Coedge {value},Loop {value},Face {value},Shell {value},Solid {value},Curve3 {value},Curve2 {value},Surface {value}});
 enum ImportCloseOwner { Scratch(ControlledRetirement<ImportScratch>),Entity(ControlledRetirement<RemovedImportEntity>),Recorder(ControlledRetirement<OpRecorder>) }
 impl ImportCloseOwner {
     fn owner(&self)->&dyn semio_framework_value::ErasedSnapshotRetirement {match self {Self::Scratch(value)=>value,Self::Entity(value)=>value,Self::Recorder(value)=>value}}
@@ -208,7 +208,7 @@ impl MeshImportCursor {
         }
     }
     fn advance(&mut self,body:&mut Body)->Result<Option<EntityRef>,KernelError> {
-        use crate::brep::representation::topology::EntityRef;
+        use semio_framework_3d_brep_representation::topology::EntityRef;
         match self.phase {
             0=>{
                 if self.cursor==self.indices.len() {self.cursor=0;self.phase=1;return Ok(None);}
@@ -228,9 +228,9 @@ impl MeshImportCursor {
                     let keys=points.map(|point|[point.x,point.y,point.z].map(|value|if value==0.0 {0}else {value.to_bits()}));
                     for i in 0..3 {let a=keys[i];let b=keys[(i+1)%3];let key=(a.min(b),a.max(b));if let Some((_,uses,direction))=self.edge_map.get(&key) {let forward=a==key.0;if *uses>=2 || (*uses==1 && *direction==forward) {return Err(KernelError::InvalidInput("triangle import requires manifold coherent winding".into()));}}}
                     let mut local=OpRecorder::new();let mut vertices=Vec::with_capacity(3);let mut members=Vec::with_capacity(3);
-                    for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=crate::brep::operations::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
-                    for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=crate::brep::operations::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
-                    let wire=crate::brep::operations::primitives::Wire {members,vertices,closed:true};let face=crate::brep::operations::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
+                    for i in 0..3 {let id=if let Some(id)=self.vertex_map.get(&keys[i]) {*id}else {let id=semio_framework_3d_brep_operations::euler::make_vertex(body,points[i],Tol::DEFAULT,&mut local);self.vertex_map.insert(keys[i],id);id};vertices.push(id);}
+                    for i in 0..3 {let j=(i+1)%3;let key=(keys[i].min(keys[j]),keys[i].max(keys[j]));let forward=keys[i]==key.0;let edge=if let Some((edge,uses,_))=self.edge_map.get_mut(&key) {*uses+=1;self.boundary_edges-=1;*edge}else {let (a,b)=if forward {(i,j)}else {(j,i)};let edge=semio_framework_3d_brep_operations::primitives::line_edge(body,points[a],points[b],vertices[a],vertices[b],Tol::DEFAULT,&mut local);self.edge_map.insert(key,(edge,1,forward));self.boundary_edges+=1;edge};members.push((edge,forward));}
+                    let wire=semio_framework_3d_brep_representation::topology::Wire {members,vertices,closed:true};let face=semio_framework_3d_brep_operations::primitives::make_planar_face_from_wire(body,&wire,p0,normal,&mut local)?;
                     local.own_triangle(body,face);self.recorder.append_disjoint(local);self.faces.push(face);
                 }
                 self.cursor+=3;

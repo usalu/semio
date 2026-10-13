@@ -1,7 +1,7 @@
 //! 🧬️ SemioGraphArtifact schema — full artifact state, mirrors `SemioGraphSnapshot` field for
 //! field (see `🔤️text`'s `SemioTextArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
+use crate::schema::snapshot::{SemioGraphEdge, SemioGraphNode, SemioGraphSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

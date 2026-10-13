@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::standards::v1::subsets::any::io::binary::mutations::{process3d_protocol_error, PROCESS3D_MUTATION_BINARY_FORMAT};
-use store::{ArtifactEnvelopeMutationFieldAuthority as _, ArtifactEnvelopeSnapshotFieldAuthority as _};
+use store::{os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority as _, os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority as _};
 use semio_framework_plugin::ArtifactOwnedDisposer as _;
 use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose, Process3dSnapshot, ProcessMeasure, ProcessStep, StepOrigin, Stock, StockQuantity, WorkingSolid, WorkshopMachine};
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -186,8 +186,8 @@ struct Process3dStoreInitializationAuthority {
     parent_revision: u64,
     history_items: usize,
     machine_growth: usize,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Process3dSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Process3dSnapshot, Process3dMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -511,7 +511,7 @@ impl Process3dStoreInitializationAuthority {
                 }
             }
             Process3dStoreInitializationPhase::AdmitOwners => {
-                match store::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(cx.retained_grant()) {
+                match store::os_store::document_store_owners::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(cx.retained_grant()) {
                     Ok((owners, progress)) => {
                         *self.owners = Some(owners);
                         match cx.consume_retained(progress) {
@@ -662,7 +662,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Process3dSnaps
     }
 }
 
-pub(crate) const PROCESS3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub(crate) const PROCESS3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🎟️ Funds one synchronous fixture turn from exactly the demand its own owner quoted.
 #[cfg(test)]
@@ -676,7 +676,7 @@ enum Process3dReleased {
     String(String),
     Machine(WorkshopMachine),
     Capabilities(Vec<Capability>),
-    Child(store::ArtifactChild<crate::SemioBrepSnapshot>),
+    Child(store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>),
     Timeline(Process3dTimelineOwner),
     Snapshot(Process3dSnapshot),
     Json(semio_framework_pack_json::JsonWriteCursor<semio_framework_value::DslValue>),
@@ -711,7 +711,7 @@ pub(crate) fn process3d_mutation_value_factory() -> std::sync::Arc<dyn store::Ar
 
 pub(crate) const PROCESS3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
 
-const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const PROCESS3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 pub const PROCESS3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 
@@ -909,7 +909,7 @@ impl Process3dOwnerCensusCursor {
                 let bytes = Self::string_bytes(&[&source.stock_id, &source.stock_label])?
                     .checked_add(source.workshop.machines.capacity().saturating_mul(size_of::<WorkshopMachine>()))
                     .and_then(|value| value.checked_add(source.step_payloads.capacity().saturating_mul(size_of::<ProcessStep>())))
-                    .and_then(|value| value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>()))))
+                    .and_then(|value| value.checked_add(source.tool_solids.capacity().saturating_mul(size_of_val(&process3d_empty_child::<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>()))))
                     .ok_or("process3d-owner.bytes-overflow")?;
                 self.totals.admit(10, bytes, 4)?;
                 self.totals.output_pages = PROCESS3D_MAXIMUM_OUTPUT_PAGES;
@@ -1032,9 +1032,9 @@ impl Process3dSnapshotCopyCursor {
 
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body);
         }
-        store::artifact_retirement_owned_birth_demands(&self.candidate)
+        store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.candidate)
     }
 
     fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
@@ -1047,14 +1047,14 @@ impl Process3dSnapshotCopyCursor {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if self.retirement.is_some() {
-            let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)?;
             if self.retirement.is_none() {
                 self.terminal_handoff = true;
             }
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.candidate.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, grant);
         }
         self.terminal_handoff = true;
         Ok(RetainedCloneStep::Complete(empty))
@@ -1083,8 +1083,8 @@ fn process3d_fault_detail(code: &[u8]) -> Vec<u8> {
 #[derive(semio_framework_value::RetireOwned)]
 struct Process3dTimelineOwner {
     steps: Vec<ProcessStep>,
-    tools: Vec<store::ArtifactChild<crate::SemioBrepSnapshot>>,
-    flow: Option<store::ArtifactChild<crate::SemioFlowSnapshot>>,
+    tools: Vec<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>,
+    flow: Option<store::os_store::artifact_child::ArtifactChild<crate::SemioFlowSnapshot>>,
     phase: u8,
 }
 
@@ -1164,9 +1164,9 @@ impl Process3dTimelineCursor {
         if self.retirement.is_some() || self.pending.is_some() {
             let grant = cx.retained_grant();
             let step = if self.retirement.is_some() {
-                store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| "process3d-store.timeline-json-retirement")?
+                store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|_| "process3d-store.timeline-json-retirement")?
             } else {
-                store::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant).map_err(|_| "process3d-store.timeline-json-retirement-admission")?
+                store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant).map_err(|_| "process3d-store.timeline-json-retirement-admission")?
             };
             cx.consume_retained(step.progress()).map_err(|_| "process3d-store.timeline-json-retirement-grant")?;
             return Ok(false);
@@ -1206,11 +1206,11 @@ impl Process3dTimelineCursor {
                 }
             }
             Process3dTimelinePhase::Allocate => {
-                let extent = self.length.checked_mul(size_of::<ProcessStep>() + size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()).ok_or("process3d-store.timeline-allocation-overflow")?;
+                let extent = self.length.checked_mul(size_of::<ProcessStep>() + size_of::<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>()).ok_or("process3d-store.timeline-allocation-overflow")?;
                 if extent > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
                 self.payload.steps = Vec::with_capacity(self.length);
                 self.payload.tools = Vec::with_capacity(self.length);
-                if self.payload.steps.capacity().saturating_mul(size_of::<ProcessStep>()) + self.payload.tools.capacity().saturating_mul(size_of::<store::ArtifactChild<crate::SemioBrepSnapshot>>()) > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
+                if self.payload.steps.capacity().saturating_mul(size_of::<ProcessStep>()) + self.payload.tools.capacity().saturating_mul(size_of::<store::os_store::artifact_child::ArtifactChild<crate::SemioBrepSnapshot>>()) > PROCESS3D_MAXIMUM_DOMAIN_BYTES { return Err("process3d-store.timeline-bytes"); }
                 self.phase = Process3dTimelinePhase::Copy(0);
             }
             Process3dTimelinePhase::Copy(index) => {
@@ -1332,8 +1332,8 @@ impl Process3dTimelineCursor {
         self.phase = Process3dTimelinePhase::Write;
     }
 
-    fn child<S>(id: &str, subset: &str) -> store::ArtifactChild<S> {
-        store::ArtifactChild::new(id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } })
+    fn child<S>(id: &str, subset: &str) -> store::os_store::artifact_child::ArtifactChild<S> {
+        store::os_store::artifact_child::ArtifactChild::new(id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } })
     }
 
     fn commit(&mut self, snapshot: &mut Process3dSnapshot) -> Option<Process3dReleased> {
@@ -1359,10 +1359,10 @@ impl Process3dTimelineCursor {
     /// 📏️ Quotes the one staged original the next close turn retires.
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(retirement) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body);
         }
         if self.pending.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.pending);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending);
         }
         if self.writer.is_some() || self.output.is_some() || !self.payload_is_empty() {
             return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::owned_retirement_birth_bytes::<Process3dReleased>(), depth: 2, ..Default::default() });
@@ -1380,7 +1380,7 @@ impl Process3dTimelineCursor {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if self.retirement.is_some() {
-            let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant)?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)?;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.pending.is_none() {
@@ -1393,7 +1393,7 @@ impl Process3dTimelineCursor {
             }
         }
         if self.pending.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, grant);
         }
         Ok(RetainedCloneStep::Complete(empty))
     }
@@ -1492,7 +1492,7 @@ enum Process3dStoreInitializationPhase {
 }
 
 impl Process3dStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         if process3d_validate_publication_authority(operation, generation).is_err() {
             let _ = process3d_admit_app_publication_authority(operation, generation);
         }
@@ -1547,9 +1547,9 @@ impl Process3dStoreInitializationAuthority {
         use semio_framework_value::retained_clone::RetainedCloneStep;
         let grant = cx.retained_grant();
         let step = if self.active.is_some() {
-            store::artifact_retirement_box_close_step(&mut self.active, grant)?
+            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant)?
         } else if self.released.is_some() {
-            store::artifact_retirement_admit_owned(&mut self.released, &mut self.active, grant)?
+            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.released, &mut self.active, grant)?
         } else if let Some(runtime) = self.runtime.as_mut() {
             match runtime.settle_current_retirement_step(grant)? {
                 RetainedCloneStep::Complete(_) => return Ok(false),
@@ -1580,10 +1580,10 @@ impl Process3dStoreInitializationAuthority {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind};
         if let Some(active) = self.active.as_ref() {
-            return process3d_nested(store::artifact_retirement_box_demands(active, body)?);
+            return process3d_nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if self.released.is_some() {
-            return process3d_nested(store::artifact_retirement_owned_birth_demands(&self.released)?);
+            return process3d_nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.released)?);
         }
         if let Some(candidate) = self.candidate.as_ref() {
             let Some(disposer) = self.candidate_disposer.as_ref() else {
@@ -1610,15 +1610,15 @@ impl Process3dStoreInitializationAuthority {
                 return Ok(demand);
             }
             return if owners.uninstalled_owners_terminal_is_empty() {
-                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>(), depth: 1, ..Default::default() })
+                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>(), depth: 1, ..Default::default() })
             } else {
                 process3d_nested(owners.uninstalled_owners_demands(body)?)
             };
         }
         if self.envelope.is_some() {
             return Ok(RetirementDemand {
-                copy_bytes: size_of::<Option<store::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>(),
-                capacity_bytes: store::bounded_artifact_store_owners_birth_bytes::<Process3dSnapshot, Process3dMutation>(),
+                copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<Process3dSnapshot, Process3dMutation>>>(),
+                capacity_bytes: store::os_store::document_store_owners::bounded_artifact_store_owners_birth_bytes::<Process3dSnapshot, Process3dMutation>(),
                 depth: 1,
                 ..Default::default()
             });
@@ -1650,10 +1650,10 @@ impl Process3dStoreInitializationAuthority {
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.released.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.released, &mut self.active, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.released, &mut self.active, child);
         }
         if self.candidate.is_some() {
             if self.candidate_disposer.is_none() {
@@ -1694,7 +1694,7 @@ impl Process3dStoreInitializationAuthority {
             if self.owners.is_none() {
                 let placement = demand.copy_bytes;
                 let funded = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - placement, ..grant };
-                return match store::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(funded) {
+                return match store::os_store::document_store_owners::bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>(funded) {
                     Ok((owners, mut receipt)) => {
                         *self.owners = Some(owners);
                         receipt.copied_bytes += placement;
@@ -1754,7 +1754,7 @@ impl Drop for Process3dStoreInitializationAuthority {
 }
 
 pub fn process3d_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<Process3dSnapshot, Process3dMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,
@@ -1764,7 +1764,7 @@ pub fn process3d_document_store_initialization_job(
 
 const PROCESS3D_RETAINED_STACK_CAPACITY: usize = 64;
 
-const PROCESS3D_MAXIMUM_OUTPUT_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
+const PROCESS3D_MAXIMUM_OUTPUT_PAGES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
 
 #[cfg(test)]
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1809,18 +1809,18 @@ impl Process3dOwnerTotals {
     }
 }
 
-fn process3d_empty_child<S>() -> store::ArtifactChild<S> {
-    store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
+fn process3d_empty_child<S>() -> store::os_store::artifact_child::ArtifactChild<S> {
+    store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Process3dSnapshotDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Process3dSnapshotDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("process3d-envelope.snapshot-stale-authority", token.start));
         }
@@ -1828,10 +1828,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             return Err(self.diagnostic("process3d-envelope.snapshot-cancelled", token.start));
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Process3dSnapshotDecodeState::AwaitToken {
-            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
+            if !terminal || token.kind != store::os_store::owned_schema_decode::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("process3d-envelope.snapshot-pack-must-be-scalar", token.start));
             }
             let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-pack-length", token.start))?;
@@ -1856,10 +1856,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
                 }
                 self.session().seal().map_err(|_| self.diagnostic("process3d-envelope.snapshot-pack-seal", retained.end))?;
                 self.state = Process3dSnapshotDecodeState::Drive;
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             if self.reserve_pending("process3d-envelope.snapshot-source-allocation", offset, cx)? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
@@ -1873,77 +1873,77 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             } else {
                 self.high = Some(nibble);
             }
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Process3dSnapshotDecodeState::Drive {
             cx.set_stage("process3d-retained-canonical-pack");
             if self.reserve_pending("process3d-envelope.snapshot-retained-allocation", token.start, cx)? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             cx.consume_fuel(1);
             if !self.session().grant().map_err(|_| self.diagnostic("process3d-envelope.snapshot-structural-malformed", token.start))? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let value = self.session().take().ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-handoff-missing", token.start))?;
             *self.value = Some(value);
             self.session().request_cancel();
             self.state = Process3dSnapshotDecodeState::CloseSession;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Process3dSnapshotDecodeState::CloseSession {
             cx.consume_fuel(1);
             let maximum_bytes = self.session().next_retained_release_allocation_bytes().unwrap_or(0);
             if matches!(self.session().close_step(1, maximum_bytes).map_err(|_| self.diagnostic("process3d-envelope.snapshot-session-close", token.start))?, store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }) {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             drop(self.session.take());
             self.token = None;
             self.state = Process3dSnapshotDecodeState::Ready;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
         }
         Err(self.diagnostic("process3d-envelope.snapshot-token-replayed", token.start))
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<Process3dSnapshot>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<Process3dSnapshot>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.state != Process3dSnapshotDecodeState::Ready {
             return Err(self.diagnostic("process3d-envelope.snapshot-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("process3d-envelope.snapshot-owner-missing", 0))?;
         target.publish_snapshot_reserved(reservation, value);
         self.state = Process3dSnapshotDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.depth)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
@@ -1991,7 +1991,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot> for Proces
             self.state = Process3dSnapshotDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| self.diagnostic("process3d-envelope.snapshot-retirement-fault", 0).with_native(error))?;
         if self.retirement.is_none() {
             self.state = Process3dSnapshotDecodeState::Complete;
         }
@@ -2577,7 +2577,7 @@ impl Process3dRetainedMutationReader {
             13 => Some(Process3dMutation::ChangeStockLabel(change_stock_label::ChangeStockLabel { new_label: self.strings[0].take().unwrap_or_default() })),
             14 => Some(Process3dMutation::ReplaceStockSolid(replace_stock_solid::ReplaceStockSolid {
                 new_solid: self.child.take().map_or_else(
-                    || store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }),
+                    || store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }),
                     |mut cursor| cursor.take_partial(),
                 ),
             })),
@@ -2622,16 +2622,16 @@ impl Drop for Process3dRetainedMutationReader {
 struct Process3dMutationDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Process3dMutationDecodeState,
-    hex: std::mem::ManuallyDrop<Option<store::OwnedSchemaHexAuthority<PROCESS3D_OWNER_BYTES>>>,
+    hex: std::mem::ManuallyDrop<Option<store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<PROCESS3D_OWNER_BYTES>>>,
     reader: std::mem::ManuallyDrop<Option<Process3dRetainedMutationReader>>,
     value: std::mem::ManuallyDrop<Option<Process3dMutation>>,
     retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
 }
 
 impl Process3dMutationDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -2644,11 +2644,11 @@ impl Process3dMutationDecodeAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
-    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let native = |error: semio_framework_value::ValueError| self.diagnostic("process3d-envelope.mutation-close-demand", 0).with_native(error);
         if self.reader.is_some() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -2657,38 +2657,38 @@ impl Process3dMutationDecodeAuthority {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: PROCESS3D_OWNER_BYTES, depth: 1, ..Default::default() });
         }
         if let Some(retirement) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, body).map_err(native);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body).map_err(native);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.value).map_err(native);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value).map_err(native);
         }
         Ok(Default::default())
     }
 }
 
-impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Process3dMutationDecodeAuthority {
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Process3dMutationDecodeAuthority {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(maximum_copy_bytes)?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands(0)?.depth)
     }
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("process3d-envelope.mutation-stale-authority", token.start));
         }
@@ -2699,28 +2699,28 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Proces
             if !terminal {
                 return Err(self.diagnostic("process3d-envelope.mutation-pack-must-be-scalar", token.start));
             }
-            *self.hex = Some(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+            *self.hex = Some(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
             self.state = Process3dMutationDecodeState::Hex;
         }
         if self.state == Process3dMutationDecodeState::Hex {
             return match self.hex.as_mut().expect("Process3d mutation hex owner retained").step(source, cx) {
-                store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-                store::OwnedSchemaHexStep::Complete => {
+                store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+                store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                     *self.reader = Some(Process3dRetainedMutationReader::new());
                     self.state = Process3dMutationDecodeState::Structural;
-                    Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+                    Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending)
                 }
-                store::OwnedSchemaHexStep::Cancelled => Err(self.diagnostic("process3d-envelope.mutation-pack-cancelled", token.start)),
-                store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+                store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(self.diagnostic("process3d-envelope.mutation-pack-cancelled", token.start)),
+                store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
             };
         }
         if self.state != Process3dMutationDecodeState::Structural {
             return Err(self.diagnostic("process3d-envelope.mutation-token-replayed", token.start));
         }
-        let bytes = self.hex.as_ref().and_then(store::OwnedSchemaHexAuthority::as_bytes).ok_or_else(|| self.diagnostic("process3d-envelope.mutation-backing-missing", token.start))?;
+        let bytes = self.hex.as_ref().and_then(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::as_bytes).ok_or_else(|| self.diagnostic("process3d-envelope.mutation-backing-missing", token.start))?;
         let complete = self.reader.as_mut().expect("Process3d retained mutation reader exists").step(bytes, cx).map_err(|_| self.diagnostic("process3d-envelope.mutation-structural-malformed", token.start))?;
         if !complete {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         let value = self.reader.as_mut().expect("Process3d retained mutation reader exists").take().ok_or_else(|| self.diagnostic("process3d-envelope.mutation-handoff-missing", token.start))?;
         drop(self.reader.take());
@@ -2730,25 +2730,25 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Proces
         drop(self.hex.take());
         *self.value = Some(value);
         self.state = Process3dMutationDecodeState::Ready;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<Process3dMutation>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget<Process3dMutation>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.state != Process3dMutationDecodeState::Ready {
             return Err(self.diagnostic("process3d-envelope.mutation-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("process3d-envelope.mutation-owner-missing", 0))?;
         target.publish_mutation_reserved(reservation, value);
         self.state = Process3dMutationDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         let empty = RetainedCloneProgress::default();
         if self.terminal_is_empty() {
@@ -2798,7 +2798,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation> for Proces
             self.state = Process3dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(empty));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| self.diagnostic("process3d-envelope.mutation-retirement-fault", 0).with_native(error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| self.diagnostic("process3d-envelope.mutation-retirement-fault", 0).with_native(error))?;
         if self.retirement.is_none() {
             self.state = Process3dMutationDecodeState::Complete;
         }
@@ -2816,44 +2816,44 @@ impl Drop for Process3dMutationDecodeAuthority {
     }
 }
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<Process3dSnapshot, Process3dMutation> for Process3dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Process3dSnapshot, Process3dMutation> for Process3dEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             process3d_snapshot_value_factory(),
             process3d_mutation_value_factory(),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Process3dSnapshot, Process3dMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Process3dSnapshot>> {
         Box::new(Process3dSnapshotDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Process3dMutation>> {
         Box::new(Process3dMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(Process3dRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Process3dMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), process3d_mutation_value_factory())
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Process3dMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), process3d_mutation_value_factory())
     }
 }
 
-pub fn process3d_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<Process3dSnapshot, Process3dMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Process3dEnvelopeOwnedFieldCatalog), process3d_snapshot_value_factory(), process3d_mutation_value_factory())
+pub fn process3d_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Process3dSnapshot, Process3dMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Process3dEnvelopeOwnedFieldCatalog), process3d_snapshot_value_factory(), process3d_mutation_value_factory())
 }
 
 fn process3d_copy_pose(source: &Pose) -> Pose {
@@ -2938,8 +2938,8 @@ fn process3d_copy_stock(source: &Stock) -> Result<Stock, &'static str> {
     Ok(Stock { id: process3d_copy_string(&source.id)?, label: process3d_copy_string(&source.label)?, solid: process3d_copy_solid(&source.solid)?, pose: process3d_copy_pose(&source.pose) })
 }
 
-fn process3d_copy_child<S>(source: &store::ArtifactChild<S>) -> Result<store::ArtifactChild<S>, &'static str> {
-    Ok(store::ArtifactChild::new(
+fn process3d_copy_child<S>(source: &store::os_store::artifact_child::ArtifactChild<S>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, &'static str> {
+    Ok(store::os_store::artifact_child::ArtifactChild::new(
         process3d_copy_string(&source.child_id)?,
         semio_framework_artifact_reference::ArtifactRef {
             artifact_id: process3d_copy_string(&source.target.artifact_id)?,
@@ -3011,9 +3011,9 @@ enum Process3dSnapshotDecodeState {
 struct Process3dSnapshotDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Process3dSnapshotDecodeState,
-    token: Option<store::OwnedSchemaToken>,
+    token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
     session: std::mem::ManuallyDrop<Option<crate::standards::v1::subsets::any::io::binary::snapshot::Process3dMountedPackSession>>,
@@ -3022,7 +3022,7 @@ struct Process3dSnapshotDecodeAuthority {
 }
 
 impl Process3dSnapshotDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -3037,20 +3037,20 @@ impl Process3dSnapshotDecodeAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
-    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let native = |error: semio_framework_value::ValueError| self.diagnostic("process3d-envelope.snapshot-close-demand", 0).with_native(error);
         if let Some(session) = self.session.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
         }
         if let Some(retirement) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, body).map_err(native);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body).map_err(native);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.value).map_err(native);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value).map_err(native);
         }
         Ok(Default::default())
     }
@@ -3068,7 +3068,7 @@ impl Process3dSnapshotDecodeAuthority {
         }
     }
 
-    fn reserve_pending(&mut self, code: &'static str, offset: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, store::OwnedSchemaDecodeDiagnostic> {
+    fn reserve_pending(&mut self, code: &'static str, offset: u64, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let Some(exact) = self.session().next_retained_allocation_bytes().map_err(|_| self.diagnostic(code, offset))? else { return Ok(false) };
         let step = self.session().reserve_retained_allocation(exact).map_err(|_| self.diagnostic(code, offset))?;
         if !step.progressed {
@@ -3170,34 +3170,34 @@ struct Process3dRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for Process3dRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for Process3dRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "process3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
@@ -3253,7 +3253,7 @@ struct Process3dRetainedChildCursor {
 }
 
 impl Process3dRetainedChildCursor {
-    fn step<S>(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+    fn step<S>(&mut self, reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         if self.phase == 0 {
@@ -3267,10 +3267,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         self.string = Process3dRetainedStringCursor::default();
         let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&uri)?;
         self.target = Some(target);
-        Ok(Some(store::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
+        Ok(Some(store::os_store::artifact_child::ArtifactChild::new(self.child_id.take().unwrap_or_default(), self.target.take().expect("Process3d retained child target exists"))))
     }
 
-    fn take_partial<S>(&mut self) -> store::ArtifactChild<S> {
+    fn take_partial<S>(&mut self) -> store::os_store::artifact_child::ArtifactChild<S> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         if self.phase == 0 && self.child_id.is_none() {
@@ -3278,7 +3278,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         } else if self.phase == 1 && self.target.is_none() {
             self.target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&self.string.take_partial()).ok();
         }
-        store::ArtifactChild::new(
+        store::os_store::artifact_child::ArtifactChild::new(
             self.child_id.take().unwrap_or_default(),
             self.target.take().unwrap_or(semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } }),
         )
@@ -3451,7 +3451,7 @@ struct Process3dRetainedStringCursor {
 
 impl Default for Process3dRetainedStringCursor {
     fn default() -> Self {
-        Self { length: 0, shift: 0, remaining: None, bytes: Vec::new(), maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES }
+        Self { length: 0, shift: 0, remaining: None, bytes: Vec::new(), maximum_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES }
     }
 }
 

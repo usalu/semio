@@ -1,5 +1,5 @@
 use crate::standards::v_raw::subsets::any::schema::snapshot::BinarySnapshot;
-use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 
 #[test]
 fn sqlite_snapshot_binary_reconstruction_respects_value_budget() {
@@ -48,13 +48,13 @@ fn sqlite_snapshot_binary_bytes_are_queryable_ordered_integers() {
 
 fn binary_native_control_fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🛬️native-control/🔣️.json")).unwrap()}
 fn binary_native_control_snapshot()->BinarySnapshot{let input=binary_native_control_fixture();let count=usize::try_from(input["workItems"].as_u64().unwrap()).unwrap();let pattern=input["bytePattern"].as_array().unwrap().iter().map(|v|u8::try_from(v.as_u64().unwrap()).unwrap()).collect::<Vec<_>>();BinarySnapshot{schema:input["ownedSchema"].as_str().unwrap().into(),bytes:(0..count).map(|i|pattern[i%4]).collect()}}
-fn binary_native_payload(snapshot:&BinarySnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<BinarySnapshot as store::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<BinarySnapshot as store::ArtifactDsl>::print_dsl(snapshot))}}
+fn binary_native_payload(snapshot:&BinarySnapshot,encoding:store::sqlite_snapshot::SnapshotEncoding)->store::io_schema::IoPayload{match encoding{store::sqlite_snapshot::SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(<BinarySnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)),store::sqlite_snapshot::SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(<BinarySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot))}}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_binary_actual_factory_canonical_external_carrier(){
  use {semio_framework_artifact_reference::ArtifactDialect};
  use store::sqlite_snapshot::SnapshotEncoding;
  semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Binary full owned SQLite").version("0.0.1").package_id("semio:stdio").artifact(crate::declaration(crate::definition().unwrap()).unwrap()).try_build().unwrap();
- let codec=store::document_codec(crate::STDIO_BINARY_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<BinarySnapshot>()));
+ let codec=store::os_store::codec_registry::document_codec(crate::STDIO_BINARY_DOCUMENT_SCHEMA).await.unwrap().unwrap();let provider=codec.snapshot_sqlite.as_ref().expect("actual owning declaration publishes semantic SQLite");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<BinarySnapshot>()));
  let dialect=ArtifactDialect{artifact_kind:"s.stdio.binary".into(),standard:"raw".into(),subset:"*".into()};let snapshot=binary_canonical_carrier_snapshot();let expected=snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();
  for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let payload=binary_native_payload(&snapshot,encoding);let database=with_binary_decoding(|owner|(provider.export)(&codec.schema,&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default()),owner)).unwrap().value;assert_eq!(database,expected);let mut input=Some(database);let payload=with_binary_encoding(|owner|(provider.import)(&codec.schema,&dialect,&mut input,encoding,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default()),owner)).unwrap().value;let restored=binary_decode(&payload,&mut SqliteSnapshotControl::new(&mut |_|true,Default::default())).unwrap();assert_eq!(restored,snapshot);}
 }
@@ -101,7 +101,7 @@ async fn sqlite_snapshot_binary_actual_typed_file_preserves_complete_literal_own
 fn sqlite_snapshot_binary_external_carrier_normalizes_unrepresented_schema(){
  use store::sqlite_snapshot::SnapshotEncoding;
  let snapshot=binary_native_control_snapshot();
- for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=binary_native_payload(&snapshot,encoding);let normal:BinarySnapshot=match &input{store::io_schema::IoPayload::Binary(bytes)=><BinarySnapshot as store::ArtifactPack>::decode_pack(bytes).unwrap(),store::io_schema::IoPayload::Text(text)=><BinarySnapshot as store::ArtifactDsl>::parse_dsl(text).unwrap()};assert_eq!(normal.schema,crate::STDIO_BINARY_DOCUMENT_SCHEMA);assert_ne!(normal.schema,snapshot.schema);assert_eq!(binary_native_payload(&normal,encoding),input);}
+ for encoding in [SnapshotEncoding::Binary,SnapshotEncoding::Text]{let input=binary_native_payload(&snapshot,encoding);let normal:BinarySnapshot=match &input{store::io_schema::IoPayload::Binary(bytes)=><BinarySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).unwrap(),store::io_schema::IoPayload::Text(text)=><BinarySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).unwrap()};assert_eq!(normal.schema,crate::STDIO_BINARY_DOCUMENT_SCHEMA);assert_ne!(normal.schema,snapshot.schema);assert_eq!(binary_native_payload(&normal,encoding),input);}
 }
 
 fn binary_semantic_corpus_snapshot(value:&serde_json::Value)->BinarySnapshot{BinarySnapshot{schema:value["schema"].as_str().unwrap().into(),bytes:value["bytes"].as_array().unwrap().iter().map(|v|u8::try_from(v.as_u64().unwrap()).unwrap()).collect()}}

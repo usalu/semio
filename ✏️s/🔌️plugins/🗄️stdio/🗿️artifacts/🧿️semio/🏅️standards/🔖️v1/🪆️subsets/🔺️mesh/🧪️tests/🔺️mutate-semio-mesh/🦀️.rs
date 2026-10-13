@@ -39,18 +39,18 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::{diff_semio_mesh_mutation, inverse_semio_mesh_mutation, SemioMeshMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::mutations::{decode_semio_mesh_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::binary::snapshot::{decode_mesh_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::binary::snapshot::{encode_mesh_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{print_mesh_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{parse_mesh_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{decode_semio_mesh_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::text::snapshot::{encode_semio_mesh_snapshot_json};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_mesh::schema::mutations::{diff_semio_mesh_mutation, inverse_semio_mesh_mutation, SemioMeshMutation};
+    use semio_s_artifact_stdio_semio_mesh::io::text::mutations::decode_semio_mesh_mutation_json;
+    use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+    use semio_s_artifact_stdio_semio_mesh::io::binary::snapshot::decode_mesh_pack;
+    use semio_s_artifact_stdio_semio_mesh::io::binary::snapshot::encode_mesh_pack;
+    use semio_s_artifact_stdio_semio_mesh::io::text::snapshot::print_mesh_dsl;
+    use semio_s_artifact_stdio_semio_mesh::io::text::snapshot::parse_mesh_dsl;
+    use semio_s_artifact_stdio_semio_mesh::io::text::snapshot::decode_semio_mesh_snapshot_json;
+    use semio_s_artifact_stdio_semio_mesh::io::text::snapshot::encode_semio_mesh_snapshot_json;
 
     //#region 🔖️Input
     /// 🔺️ The real derived model — 271 meshes and 459 primitives read once out of the committed

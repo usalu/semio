@@ -10,7 +10,7 @@
 //! codecs already compute from `SemioSubsetSnapshot`, reused here (not re-derived) as this
 //! envelope's honest "union/dispatch shape" inference per the ticket's own naming guidance.
 
-use crate::standards::v1::subsets::base::schema::snapshot::SemioSnapshot;
+use crate::schema::snapshot::SemioSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::kind::compute_semio_kind;

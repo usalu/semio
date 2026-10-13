@@ -5,10 +5,10 @@
 //! `create-object` one slot over — and the point of committing both is that a kit keeps object
 //! children and model children in two SEPARATE collections that must never bleed into each other.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-model/🏛️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏛️create-model/🏛️attaches/📸️snapshot/➡️after/🔣️.json");

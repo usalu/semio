@@ -224,7 +224,7 @@ impl Default for DocumentAlgorithmLimits{fn default()->Self{Self{max_work:100000
 #[derive(Clone,Debug)]
 pub struct DocumentVectorProgress{pub phase:&'static str,pub preparation:DocumentSceneProgress,pub tracing:Option<DocumentTraceProgress>,pub resolution:Option<DocumentBooleanProgress>,pub work:u64,pub done:bool}
 impl Default for DocumentVectorProgress{fn default()->Self{Self{phase:"preparing",preparation:DocumentSceneProgress{phase:"assets",layers:0,assets:0,segments:0,references:0,source_bytes:0,work:0,done:false},tracing:None,resolution:None,work:0,done:false}}}
-enum DocumentVectorSource<'a>{Borrowed(&'a DrawingSnapshot),SnapshotRead(store::SnapshotRead<DrawingSnapshot>)}
+enum DocumentVectorSource<'a>{Borrowed(&'a DrawingSnapshot),SnapshotRead(store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>)}
 impl DocumentVectorSource<'_>{fn document(&self)->&DrawingSnapshot{match self{Self::Borrowed(document)=>document,Self::SnapshotRead(read)=>read.get()}}}
 #[derive(semio_framework_value::RetireOwned)]
 enum VectorChildRetirement{Preparation(DocumentSceneRetirement),Trace(DocumentTraceRetirement),Text(DocumentTextRetirement),Boolean(DocumentBooleanRetirement)}
@@ -248,7 +248,7 @@ impl<'a> DocumentVectorJob<'a>{
   Ok(Self{preparation:Some(preparation),source:None,traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:vec![VectorChildRetirement::Boolean(boolean_close),VectorChildRetirement::Trace(trace_close)],retired_plans})
  }
  /// 🔐️ Owns the genuine immutable store read while preparation retains only source positions.
- pub fn from_snapshot_read(read:store::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->DocumentVectorJob<'static>{
+ pub fn from_snapshot_read(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,algorithms:DocumentAlgorithmLimits)->DocumentVectorJob<'static>{
   let mut job=DocumentVectorJob{preparation:None,source:Some(DocumentVectorSource::SnapshotRead(read)),traces:None,texts:None,algorithms:None,progress:DocumentVectorProgress::default(),output:None,failure:None,cancelled:false,limits:algorithms,closing:None,discard:None,handoff:None,retired_children:Vec::new(),retired_plans:Vec::new()};
   let admitted=(||->Result<(),DocumentSceneError>{
    if !(1..=1000000000).contains(&algorithms.max_work){return Err(invalid("Invalid document vector work limit"));}
@@ -297,7 +297,7 @@ impl DocumentVectorRetirement<'_>{
  fn private_is_empty(&self)->bool{self.owner.terminal_is_empty()}
  pub fn terminal_is_empty(&self)->bool{self.private_is_empty()&&self.source.is_none()}
  pub fn snapshot_authority_matches(&self,generation:u64,revision:[u8;32])->bool{match &self.source{Some(DocumentVectorSource::SnapshotRead(read))=>read.commit_authority_matches(generation,revision),_=>false}}
- pub fn take_snapshot_read(&mut self)->Option<store::SnapshotRead<DrawingSnapshot>>{if !self.private_is_empty(){return None;}match self.source.take(){Some(DocumentVectorSource::SnapshotRead(read))=>Some(read),other=>{self.source=other;None}}}
+ pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{if !self.private_is_empty(){return None;}match self.source.take(){Some(DocumentVectorSource::SnapshotRead(read))=>Some(read),other=>{self.source=other;None}}}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   if !self.private_is_empty(){return self.owner.step(grant);}
   if grant.maximum_items>0&&grant.maximum_depth>0&&matches!(self.source,Some(DocumentVectorSource::Borrowed(_))){self.source=None;return Ok(RetainedCloneStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress{copied_items:1,..Default::default()}));}
@@ -346,7 +346,7 @@ impl<'a> DocumentRasterJob<'a>{
   Ok(Self{vector:Some(vector),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure:None,cancelled:false,viewport,max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]})
  }
  /// 🔐️ Retains the actual immutable store read through every raster and output handoff.
- pub fn from_snapshot_read(read:store::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,algorithms:DocumentAlgorithmLimits)->DocumentRasterJob<'static>{
+ pub fn from_snapshot_read(read:store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>,limits:DocumentSceneLimits,viewport:DocumentSceneViewport,algorithms:DocumentAlgorithmLimits)->DocumentRasterJob<'static>{
   let failure=crate::schema::scene_raster::validate_scene_input(&viewport.input(Vec::new(),Vec::new())).err().map(|error|invalid(error.to_string()));
   DocumentRasterJob{vector:Some(DocumentVectorJob::from_snapshot_read(read,limits,algorithms)),prepared:DocumentVectorProgress::default(),source:VecDeque::new(),assets:Vec::new(),nodes:Vec::new(),retired_nodes:Vec::new(),retired_paths:Vec::new(),retired_texts:Vec::new(),at:0,work:0,phase:"preparing",raster:None,rendered:None,output:None,failure,cancelled:false,viewport,max_work:algorithms.max_work,vector_retirement:None,raster_retirement:None,handoff:None,pixel_scale:[1.0;2]}
  }
@@ -382,7 +382,7 @@ struct DocumentRasterOwners{source:VecDeque<DocumentSceneNode>,assets:Vec<Raster
 pub struct DocumentRasterRetirement<'a>{vector:Option<DocumentVectorRetirement<'a>>,owner:ControlledRetirement<DocumentRasterOwners>,work:u64}
 impl DocumentRasterRetirement<'_>{
  pub fn terminal_is_empty(&self)->bool{self.owner.terminal_is_empty()&&self.vector.as_ref().is_none_or(DocumentVectorRetirement::terminal_is_empty)}
- pub fn take_snapshot_read(&mut self)->Option<store::SnapshotRead<DrawingSnapshot>>{if !self.owner.terminal_is_empty(){return None;}self.vector.as_mut()?.take_snapshot_read()}
+ pub fn take_snapshot_read(&mut self)->Option<store::os_store::snapshot_read::SnapshotRead<DrawingSnapshot>>{if !self.owner.terminal_is_empty(){return None;}self.vector.as_mut()?.take_snapshot_read()}
  pub fn snapshot_authority_matches(&self,generation:u64,revision:[u8;32])->bool{self.vector.as_ref().is_some_and(|close|close.snapshot_authority_matches(generation,revision))}
  pub fn close_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let step=if !self.owner.terminal_is_empty(){self.owner.step(grant)?}else if let Some(vector)=&mut self.vector{vector.close_step(grant)?}else{RetainedCloneStep::Complete(Default::default())};

@@ -916,8 +916,8 @@ impl MountedModelBuild {
 //#region 🧰️FixedArena
 struct MountedState {
     identity: MountedIdentity,
-    snapshot: Option<store::SnapshotRead<Fem2dSnapshot>>,
-    snapshot_return: Option<store::SnapshotReadReturn>,
+    snapshot: Option<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>,
+    snapshot_return: Option<store::os_store::snapshot_read::SnapshotReadReturn>,
     cancel: semio_framework_job::CancelToken,
     stage: MountedStage,
     admitted_items: usize,
@@ -1031,14 +1031,14 @@ const SESSION_CLOSE_RELEASE_BYTES: usize = largest(&[
     size_of::<AssemblyCsrBuild>(),
     size_of::<PcgJobConstruction>(),
     size_of::<PcgJob>(),
-    size_of::<store::SnapshotRead<Fem2dSnapshot>>(),
-    size_of::<store::SnapshotReadReturn>(),
+    size_of::<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>(),
+    size_of::<store::os_store::snapshot_read::SnapshotReadReturn>(),
     size_of::<PendingSnapshotAdmission>(),
     size_of::<PendingSnapshotFault>(),
 ]);
 
 impl MountedState {
-    fn new(identity: MountedIdentity, snapshot: store::SnapshotRead<Fem2dSnapshot>, admitted_items: usize) -> Self {
+    fn new(identity: MountedIdentity, snapshot: store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>, admitted_items: usize) -> Self {
         Self {
             identity,
             snapshot: Some(snapshot),
@@ -1831,13 +1831,13 @@ impl MountedState {
                             return PluginLifecycleStep::Blocked { reason: "mounted FEM snapshot lease was already returned" };
                         };
                         self.snapshot_return = Some(witness);
-                        return session_pending(1, size_of::<store::SnapshotRead<Fem2dSnapshot>>());
+                        return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotRead<Fem2dSnapshot>>());
                     }
                     if self.snapshot_return.as_ref().is_some_and(|witness| !witness.terminal_is_empty()) {
                         return session_pending(0, 0);
                     }
                     if self.snapshot_return.take().is_some() {
-                        return session_pending(1, size_of::<store::SnapshotReadReturn>());
+                        return session_pending(1, size_of::<store::os_store::snapshot_read::SnapshotReadReturn>());
                     }
                     self.close_cursor += 1;
                 }

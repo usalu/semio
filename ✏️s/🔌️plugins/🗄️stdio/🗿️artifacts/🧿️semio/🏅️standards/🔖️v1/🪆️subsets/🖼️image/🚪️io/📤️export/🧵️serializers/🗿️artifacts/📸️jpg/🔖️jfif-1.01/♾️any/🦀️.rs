@@ -10,7 +10,7 @@
 //! - Only `metadata` entries with `key == "comment"` round-trip (as a `COM` segment); any other
 //!   key has no textual home on `JpgSnapshot` and is dropped.
 
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_jpg::{schema::snapshot::JpgSegment, JpgSnapshot};
 

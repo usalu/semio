@@ -1,13 +1,13 @@
 //! 🧶️ Original text reconstruction retains its complete snapshot and scalar relationship workspace.
 use super::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind,identity};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIdentity,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{RowIdentity,RowIndex,RowIndexStorage,reconstruct_text_into},transfer::{SchemaValidationStorage,validate_database_into,validate_component_into,reserve}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[derive(semio_framework_value::RetireOwned)]
 struct Prefix{snapshot:Option<SemioTextSnapshot>,validation:SchemaValidationStorage,runs:RowIndexStorage,marks:RowIndexStorage,order:Vec<usize>,grouped:Vec<usize>}
 fn empty()->Prefix{Prefix{snapshot:Some(super::native_decoding::empty()),validation:SchemaValidationStorage::empty(),runs:RowIndexStorage::empty(),marks:RowIndexStorage::empty(),order:Vec::new(),grouped:Vec::new()}}
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}
 /// 🪢️ Borrows source rows into one admitted original text prefix before any allocation or checkpoint.
-pub(super)fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared:&str)->Result<SemioTextSnapshot,ValueError>{crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::workspace::reconstruct_projected(control,empty,|prefix,control|{
+pub(super)fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,declared:&str)->Result<SemioTextSnapshot,ValueError>{semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace::reconstruct_projected(control,empty,|prefix,control|{
  let phase=SqliteSnapshotPhase::ReconstructSnapshot;control.check_database(database,phase)?;validate_database_into(&mut prefix.validation,database,declared,phase,control)?;validate_component_into(&mut prefix.validation,database,SemioTextSnapshot::SQLITE_SCHEMA,phase,control)?;
  let document=database.table("semio_text_document")?.single_row()?;identity(document,2)?;if document.rowid!=1{return Err(invalid("Semio text document requires identifier 1"))}
  let runs=RowIndex::new_with_identity(&mut prefix.runs,database,"semio_text_run",5,&[],RowIdentity::Signed,control,"Semio text run document or identity is invalid")?;let marks=RowIndex::new_with_identity(&mut prefix.marks,database,"semio_text_mark",5,&[],RowIdentity::Signed,control,"Semio text mark run, identity or ordinal is invalid")?;runs.ordered_into(&mut prefix.order,2,control,"Semio text run ordinals must be contiguous and zero-based")?;

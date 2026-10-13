@@ -31,14 +31,14 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::{diff_semio_video_mutation, inverse_semio_video_mutation, SemioVideoMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::mutations::{decode_semio_video_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::snapshot::{print_semio_video_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::video::io::text::snapshot::{parse_semio_video_dsl};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_video::schema::mutations::{diff_semio_video_mutation, inverse_semio_video_mutation, SemioVideoMutation};
+    use semio_s_artifact_stdio_semio_video::io::text::mutations::decode_semio_video_mutation_json;
+    use semio_s_artifact_stdio_semio_video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+    use semio_s_artifact_stdio_semio_video::io::text::snapshot::print_semio_video_dsl;
+    use semio_s_artifact_stdio_semio_video::io::text::snapshot::parse_semio_video_dsl;
 
     //#region 🔖️JsonReaders
     fn text(value: &Json, key: &str) -> Result<String, String> {

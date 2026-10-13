@@ -416,13 +416,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
-    let spec = <Puzzle2dPlaySnapshot as store::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
+    let spec = <Puzzle2dPlaySnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle2dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let play = Puzzle2dPlaySnapshot::from_typed(Puzzle2dSnapshot::default());
-    let bytes = store::ArtifactPack::encode_pack(&play);
-    assert_eq!(bytes, store::ArtifactPack::encode_pack(play.typed()));
-    assert_eq!(<Puzzle2dPlaySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&play);
+    assert_eq!(bytes, store::os_store::serialization::ArtifactPack::encode_pack(play.typed()));
+    assert_eq!(<Puzzle2dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
 }
 
 /// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the

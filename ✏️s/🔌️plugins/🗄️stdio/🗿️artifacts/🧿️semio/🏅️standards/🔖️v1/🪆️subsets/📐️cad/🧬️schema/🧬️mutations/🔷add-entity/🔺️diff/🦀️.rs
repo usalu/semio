@@ -9,6 +9,6 @@ pub fn diff(payload: &super::AddEntity, base: &SemioCadSnapshot) -> protocol::Mu
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Entity \"{}\" already exists.", payload.entity.handle), [payload.entity.handle.clone()]);
     }
     let super::AddEntity { entity, at } = payload;
-    protocol::MutationOutcome::new(SemioCadDiff { layers: None, blocks: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(base.entities.len(), |at| at.min(base.entities.len())), item: entity.clone() }] }) })
+    protocol::MutationOutcome::new(SemioCadDiff { layers: None, blocks: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(base.entities.len(), |at| at.min(base.entities.len())), item: entity.clone() }] }) })
 }
 //#endregion 🔖️Diff

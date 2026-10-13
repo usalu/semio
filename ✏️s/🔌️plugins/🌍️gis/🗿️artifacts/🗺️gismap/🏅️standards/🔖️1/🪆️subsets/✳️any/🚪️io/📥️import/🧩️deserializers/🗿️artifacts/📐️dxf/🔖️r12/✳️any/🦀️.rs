@@ -5,7 +5,7 @@
 //! 🔖 `IoFidelity::Lossy`: text, hatches and blocks carry no map feature; feature ids are assigned.
 use crate::standards::v1::subsets::any::schema::gis_map_snapshot_from_drawing;
 use crate::GisMapSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{decode_drawing, SemioDrawingFormat};
+use {semio_s_artifact_stdio_semio_drawing_import::decode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}
 

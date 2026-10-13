@@ -6,10 +6,10 @@ use crate::standards::v1::subsets::any::io::sqlite::snapshot::SequenceSnapshot;
 #[test]
 fn sqlite_snapshot_sequence_demo_matches_the_actual_parent_native_printer(){
  let expected=crate::standards::v1::subsets::any::schema::snapshot::default_persisted_snapshot();
- assert_eq!(store::ArtifactDsl::print_dsl(&expected),include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"));
+ assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&expected),include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio"));
 }
 
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,export_sqlite_database,import_sqlite_database}};
 use semio_framework_plugin::{PluginApp,VcsArtifactApp,EditorApp,ViewerApp,__semio_dispatch_PluginApp,plugin_app_close_prelude::*};
 semio_framework_dispatch_macros::dyn_enum_close!{
  /// 🎬️ The real Sequence editor and viewer declaration closure.
@@ -23,7 +23,7 @@ fn fixture()->SequenceSnapshot{semio_framework_pack_json::from_json_str(&laws()[
 fn database(snapshot:&SequenceSnapshot)->SqliteDatabase{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap()}
 fn restore(database:&SqliteDatabase)->SequenceSnapshot{original_owners::with_sqlite_recipient(SqliteDatabaseLimits::default(),&mut |_|true,|sqlite_control|SequenceSnapshot::from_sqlite_database(database, sqlite_control)).unwrap()}
 fn file(snapshot:&SequenceSnapshot)->Vec<u8>{export_sqlite_database(&database(snapshot),SqliteDatabaseLimits::default(),&mut |_|true).unwrap()}
-fn native(snapshot:&SequenceSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(snapshot))}}
+fn native(snapshot:&SequenceSnapshot,encoding:SnapshotEncoding)->store::io_schema::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(snapshot)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(snapshot))}}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.sequence.sequence".into(),standard:"1".into(),subset:"*".into()}}
 
 #[test]
@@ -54,7 +54,7 @@ fn sqlite_snapshot_sequence_independent_query_and_reference_edits_are_semantic()
  use std::{io::Write,process::{Command,Stdio}};let mut expected=fixture();
  let script=r#"import{Database}from'bun:sqlite';const db=Database.deserialize(new Uint8Array(await Bun.stdin.arrayBuffer()),{safeIntegers:true});if(db.query('PRAGMA integrity_check').get().integrity_check!=='ok'||db.query('PRAGMA foreign_key_check').all().length)throw Error('integrity');const row=db.query('SELECT artifact_id,artifact_kind,standard,subset FROM sequence_content').get();if(row.artifact_id!=='artifact 世界\0'||row.artifact_kind!=='s.stdio.semio'||row.standard!=='v1'||row.subset!=='flow')throw Error('literal identity');db.run('UPDATE sequence_document SET schema=?',['edited 世界']);db.run('UPDATE sequence_content SET id=99,child_id=?,artifact_id=?,artifact_kind=?,standard=?,subset=?',['new child','new artifact','s.stdio.json','rfc8259','*']);await Bun.write(Bun.stdout,db.serialize());db.close();"#;
  let mut child=Command::new("bun").args(["-e",script]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(&file(&expected)).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));
- expected.schema="edited 世界".into();expected.content=store::ArtifactChild::new("new child".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"new artifact".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.json".into(),standard:"rfc8259".into(),subset:"*".into()}});
+ expected.schema="edited 世界".into();expected.content=store::os_store::artifact_child::ArtifactChild::new("new child".into(),semio_framework_artifact_reference::ArtifactRef{artifact_id:"new artifact".into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.json".into(),standard:"rfc8259".into(),subset:"*".into()}});
  assert_eq!(restore(&import_sqlite_database(&output.stdout,SqliteDatabaseLimits::default(),&mut |_|true).unwrap()),expected);
 }
 
@@ -90,7 +90,7 @@ fn sqlite_snapshot_sequence_initial_and_large_text_cancellation_reaches_all_nati
 async fn sqlite_snapshot_sequence_actual_declaration_mount_routes_queryable_files(){
  use store::io::io_mechanism::{io_export_sqlite_snapshot,io_import_sqlite_snapshot};
  semio_framework_plugin::Plugin::<SqliteApps>::builder("sequence").label("Sequence owned SQLite").version("0.0.1").package_id("semio:sequence").declare_artifact(crate::artifact::<SqliteApps>()).try_build().unwrap();
- assert!(store::document_codec(crate::SEQUENCE_DOCUMENT_SCHEMA).await.unwrap().unwrap().snapshot_sqlite.is_some());
+ assert!(store::os_store::codec_registry::document_codec(crate::SEQUENCE_DOCUMENT_SCHEMA).await.unwrap().unwrap().snapshot_sqlite.is_some());
  let expected=public_owner::Owned::new(fixture());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=io_export_sqlite_snapshot(&dialect(),&*expected,encoding,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value;assert!(bytes.starts_with(b"SQLite format 3\0"));let restored=public_owner::Owned::new(io_import_sqlite_snapshot::<SequenceSnapshot>(&dialect(),&bytes,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);assert_eq!(*restored,*expected);let edited=public_owner::verify_and_edit(&bytes,encoding);let restored=public_owner::Owned::new(io_import_sqlite_snapshot::<SequenceSnapshot>(&dialect(),&edited,SqliteDatabaseLimits::default(),&mut |_|true).await.unwrap().value);let mut literal=public_owner::Owned::new(fixture());let public=public_owner::corpus();let value=public["independentEdit"]["value"].as_str().unwrap();literal.schema=value.into();;assert_eq!(*restored,*literal);eprintln!("[DEBUG] sequence actual public six-field metadata / entity ownership / independent SQL edit / explicit retirement encoding={encoding:?}");}
 }
 
@@ -114,18 +114,18 @@ fn sqlite_snapshot_sequence_native_child_carrier_preserves_all_owned_string_doma
  for text in["","id!kind@standard/subset%","世界\0","😀"]{
   let value=serde_json::json!({"schema":text,"content":{"childId":text,"target":{"artifactId":text,"dialect":{"artifactKind":text,"standard":text,"subset":text}}}});
   let expected:SequenceSnapshot=semio_framework_pack_json::from_json_str(&value.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-  let pack=store::ArtifactPack::encode_pack(&expected);
-  let packed=<SequenceSnapshot as store::ArtifactPack>::decode_pack(&pack).unwrap();
+  let pack=store::os_store::serialization::ArtifactPack::encode_pack(&expected);
+  let packed=<SequenceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).unwrap();
   assert_eq!(packed,expected);
-  let printed=store::ArtifactDsl::print_dsl(&expected);
-  let parsed=<SequenceSnapshot as store::ArtifactDsl>::parse_dsl(&printed).unwrap();
+  let printed=store::os_store::serialization::ArtifactDsl::print_dsl(&expected);
+  let parsed=<SequenceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).unwrap();
   assert_eq!(parsed,expected);
  }
 }
 
 #[test]
 fn sqlite_snapshot_sequence_genuine_output_admits_exact_row_and_file_frontiers(){
- use store::{ArtifactSqliteSnapshot as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
+ use store::{os_store::serialization::ArtifactSqliteSnapshot as _,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SnapshotEncoding,export_sqlite_database}};
  use std::{io::Write,process::{Command,Stdio}};
  let snapshot=fixture();let limits=SqliteDatabaseLimits::default();let expected=original_owners::with_sqlite_recipient(limits,&mut |_|true,|sqlite_control|snapshot.to_sqlite_database(sqlite_control)).unwrap();let rows=expected.tables.iter().map(|table|table.rows.len()).sum::<usize>();assert!(rows>0);
  let bytes=export_sqlite_database(&expected,limits,&mut |_|true).unwrap();

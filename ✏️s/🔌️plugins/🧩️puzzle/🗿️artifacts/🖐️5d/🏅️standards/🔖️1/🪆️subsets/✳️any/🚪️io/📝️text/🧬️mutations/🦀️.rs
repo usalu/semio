@@ -84,15 +84,15 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::
 use semio_s_artifact_puzzle_3d::standards::v1::subsets::any::schema::mutations::{puzzle3d_selection_items as puzzle5d_selection_items,puzzle3d_selection_number as puzzle5d_selection_number,puzzle3d_selection_triple as puzzle5d_selection_triple,puzzle3d_targets_invariant as puzzle5d_targets_invariant,quat_from_axis_angle,quat_mul};
 
 
-impl store::ArtifactDsl for Puzzle5dPlaySnapshot {
+impl store::os_store::serialization::ArtifactDsl for Puzzle5dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle5d-play";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
+        <Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
     }
 
     fn print_dsl(&self) -> String {
-        <Puzzle5dSnapshot as store::ArtifactDsl>::print_dsl(self.typed())
+        <Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(self.typed())
     }
 }
 }

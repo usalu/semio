@@ -1,6 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 fn base() -> SequenceWorkingScene {
     let host = neural_engine::ColdOwner::new(crate::snapshot::schema::default_host_snapshot());
@@ -14,7 +14,7 @@ fn content(scene: &SequenceWorkingScene) -> SemioFlowSnapshot {
 fn forward(state: &SemioFlowSnapshot, leaf: &SemioFlowMutation) -> SemioFlowSnapshot {
     let outcome = diff_semio_flow_mutation(leaf, state);
     assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-    semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
+    semio_framework_os_kernel::apply_diff(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
 }
 
 fn assert_leaves_reproduce_the_scene_and_undo_restores_it(before: &SequenceWorkingScene, edit: &SceneEdit) {

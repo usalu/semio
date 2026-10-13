@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RemoveRow`.
 
-use crate::standards::v1::subsets::table::schema::mutations::{insert_row, SemioTableMutation};
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::schema::mutations::{insert_row, SemioTableMutation};
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

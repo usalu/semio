@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::value::io::import::deserializers::artifacts::xml::v1_0::any::semio_value_from_xml_document;
+use semio_s_artifact_stdio_semio_value_import::deserializers::artifacts::xml::v1_0::any::semio_value_from_xml_document;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn round_trip(doc: XmlDocument) -> XmlDocument {

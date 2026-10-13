@@ -793,7 +793,7 @@ pub type Puzzle5dCatalogGrip = Puzzle5dCatalogGripKind;
 // `🔖️CatalogComposition` region, this migration's primary precedent): every kind-catalog row splits
 // into a shared `SemioKitType` half (id/name/category) plus a puzzle5d-owned `*Extra` half carrying
 // everything `SemioKitType` cannot, id-joined back together by `kind_catalogs_of`.
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 /// 🧩️ Puzzle5d-owned overflow for one part-kind catalog row — everything `SemioKitType` cannot
 /// represent. Id-joined 1:1 to a `SemioKitType` (`category = "part"`) in the composed
@@ -1083,13 +1083,13 @@ pub fn kind_catalogs_kit_snapshot(catalogs: &Puzzle5dKindCatalogs) -> SemioKitSn
 /// 🪪️ Content-addressed child handle for a kind-catalogs bundle — hashes the deterministic JSON of
 /// the derived `SemioKitType` list so peers replaying the same catalogs converge on the same
 /// `child_id` (never a random/incrementing id), mirroring `sourcing`'s `catalog_child_handle`.
-pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn kind_catalogs_child_handle(catalogs: &Puzzle5dKindCatalogs) -> store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot> {
     let types = kind_catalogs_kit_types(catalogs);
     let canonical = semio_framework_pack_json::to_json_string(&types);
     let child_id = store::content_id("kind-catalogs", canonical.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️WholeListConverters
 
@@ -1106,7 +1106,7 @@ pub fn validate_kind_catalogs_payload(catalogs: &Puzzle5dKindCatalogs) {
 /// export/inference/mutation paths can resolve the handle immediately. Returns the handle plus the
 /// overflow half — the two fields a `Puzzle5dSnapshot`/`Puzzle5dArtifact`/`Puzzle5dDiff` now carry in
 /// place of the old inline `Puzzle5dKindCatalogs` field.
-pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (Option<store::ArtifactChild<SemioKitSnapshot>>, Option<Puzzle5dKindCatalogsExtra>) {
+pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>, Option<Puzzle5dKindCatalogsExtra>) {
     match catalogs {
         None => (None, None),
         Some(catalogs) => {
@@ -1118,7 +1118,7 @@ pub fn split_and_seed_kind_catalogs(catalogs: Option<Puzzle5dKindCatalogs>) -> (
 
 /// 👁️ The one accessor every render/export/inference/mutation call site funnels through to read the
 /// full reassembled kind-catalogs bundle back in its original `Puzzle5dKindCatalogs` shape.
-pub fn kind_catalogs_of(handle: &Option<store::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
+pub fn kind_catalogs_of(handle: &Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>, extra: &Option<Puzzle5dKindCatalogsExtra>) -> Option<Puzzle5dKindCatalogs> {
     let _ = handle.as_ref()?;
     let extra = extra.clone().unwrap_or_default();
     Some(Puzzle5dKindCatalogs {
@@ -1228,7 +1228,7 @@ use semio_framework_plugin::{ArtifactCapability, ArtifactCapabilityKind, Artifac
         ("s.puzzle.puzzle5d.grammar.4", "grammar", "5d.pack", &[("grammar", "5d.pack")], None),
         ("s.puzzle.puzzle5d.grammar.5", "grammar", "5d.spr", &[("grammar", "5d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Puzzle5dPlayApp>>()` derives
-        // its extension claim from `<Puzzle5dPlaySnapshot as store::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
         // (`…/🧬️mutations/🦀️.rs`, the editor's real `Snapshot` type), which is
         // `"puzzle5d-play"`, not the base `Puzzle5dSnapshot`'s `"puzzle5d"`.
         ("s.puzzle.puzzle5d.codec.document-1", "codec", "puzzle.5d:puzzle5d-play", &[("codec", "puzzle.5d"), ("codec-extension", "9:puzzle.5d:puzzle5d-play")], None),

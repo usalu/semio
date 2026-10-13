@@ -1,8 +1,8 @@
 //! 🧭️ The text editor's edit rules: which snapshot pointer raises which ONE concrete text mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{ent, ins, list_move, positions, rem, INDEX};
-use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, ins, list_move, positions, rem, INDEX};
+use crate::schema::mutations::SemioTextMutation;
+use crate::schema::snapshot::SemioTextSnapshot;
 use semio_framework_plugin::Fault;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};
 

@@ -12,8 +12,8 @@
 //!   subset's own collections (spatial parent pointers, element→spatial containment, relation
 //!   endpoints) is checked by the composer's `SemioModelValidator`.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
-#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
 
 
 use framework_schema::ArtifactSchema;

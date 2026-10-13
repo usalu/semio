@@ -15,23 +15,6 @@
       },
       "cache": false
     },
-    "component-dev": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bun ./📜️script.ts component-dev",
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🧪️testing/🧩️component/📦️packages/🦀️rust"
-      },
-      "metadata": {
-        "workspaceCommand": [
-          "build",
-          "host-test-component"
-        ]
-      },
-      "cache": false,
-      "outputs": [
-        "{projectRoot}/dist/component-dev"
-      ]
-    },
     "test-snapshot-sqlite-source": {
       "executor": "nx:run-commands",
       "cache": false,

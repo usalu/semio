@@ -4,7 +4,7 @@ pub mod apply {
     use crate::editor::architect::behavior::apply_template;
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::{EntityId, ProgramSnapshot};
+    use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 

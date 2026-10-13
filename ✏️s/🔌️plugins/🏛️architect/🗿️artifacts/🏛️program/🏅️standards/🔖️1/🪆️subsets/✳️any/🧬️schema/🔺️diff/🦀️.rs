@@ -5,8 +5,8 @@
 //! composed child tables are derived from. The diff never carries a whole after-snapshot; `apply` derives the composed
 //! child handles from the patched rows.
 
-use crate::kernel::*;
-use crate::registers::*;
+use crate::standards::v1::subsets::any::schema::kernel::*;
+use crate::standards::v1::subsets::any::schema::registers::*;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Diff
@@ -658,7 +658,7 @@ pub struct GovernanceEdit {
 
 //#endregion 🔖️DeltaHelpers
 
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use protocol::list_delta::RowPatch;
 use protocol::{ApplyCapability, DiffAlgebra, MutationApplyResult, MutationDiff};
 
@@ -853,11 +853,11 @@ impl MutationDiff<ProgramSnapshot> for ProgramDiff {
         program_collections!(commit_collection, self, next, capability,);
         if let Some(delta) = &self.knowledge {
             next.knowledge_payload = delta.commit_onto(&next.knowledge_payload, capability).map_err(|error| error.under(["knowledge"]))?;
-            next.knowledge = crate::knowledge_child_from_records(&next.knowledge_payload);
+            next.knowledge = crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&next.knowledge_payload);
         }
         if let Some(delta) = &self.benchmarks {
             next.benchmarks_payload = delta.commit_onto(&next.benchmarks_payload, capability).map_err(|error| error.under(["benchmarks"]))?;
-            next.benchmarks = crate::benchmarks_child_from_records(&next.benchmarks_payload);
+            next.benchmarks = crate::standards::v1::subsets::any::schema::snapshot::benchmarks_child_from_records(&next.benchmarks_payload);
         }
         Ok(next)
     }

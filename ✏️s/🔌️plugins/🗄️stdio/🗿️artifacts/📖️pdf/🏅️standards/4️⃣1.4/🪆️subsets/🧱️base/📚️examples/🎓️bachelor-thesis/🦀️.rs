@@ -17,7 +17,7 @@ pub const DOCUMENT_BYTES: &[u8] = include_bytes!("../../🖼️assets/🎓️bac
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn decoded_summary_json() -> String {
-    match crate::standards::v1_7::subsets::base::io::decode_pdf(DOCUMENT_BYTES) {
+    match crate::standards::v1_7::subsets::base::io::import::decode_pdf(DOCUMENT_BYTES) {
         Ok(snap) => format!(r#"{{"documentName":"bachelor-thesis.pdf","bytes":{},"declaredVersion":"{}","pageCount":{},"objectCount":{}}}"#, DOCUMENT_BYTES.len(), snap.declared_version, snap.pages.len(), snap.objects.len(),),
         Err(e) => format!(r#"{{"documentName":"bachelor-thesis.pdf","bytes":{},"decodeError":"{}"}}"#, DOCUMENT_BYTES.len(), e),
     }

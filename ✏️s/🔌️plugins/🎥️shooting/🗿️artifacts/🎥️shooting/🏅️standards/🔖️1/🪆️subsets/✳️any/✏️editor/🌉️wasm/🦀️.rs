@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::mutations::ShootingMutation;
 use crate::ShootingSnapshot;
 
 //#region 🔖️Store
-pub type ShootingEnvelope = store::ArtifactEnvelope<ShootingSnapshot, ShootingMutation>;
+pub type ShootingEnvelope = store::os_store::store_schema::ArtifactEnvelope<ShootingSnapshot, ShootingMutation>;
 pub type ShootingStore = store::ArtifactStore<ShootingSnapshot, ShootingMutation>;
 //#endregion 🔖️Store
 

@@ -7,10 +7,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::model::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ P2 pilot (model): real hex/bracket-encoded value primitives backing the hand-rolled
@@ -348,7 +348,7 @@ pub(crate) fn parse_semio_model_snapshot_body(body: &str) -> Result<SemioModelSn
 /// 🎁 Real structured text/binary codecs (P2 pilot — model subset upgraded off the old
 /// hex-dump-of-`serde_json` shortcut, following `stdio.semio.flow`'s proven pattern). Wrapped
 /// in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioModelSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioModelSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOMODEL_DOCUMENT_SCHEMA
@@ -364,25 +364,25 @@ impl store::ArtifactDsl for SemioModelSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_semio_model_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 🚪️ The four codec entry points above, reachable from OUTSIDE this crate. `store` is a private
 /// `extern crate semio_framework_os_kernel as store` alias in `🦀️.rs`, so an external caller —
-/// an owner-root test adapter is exactly that — can neither bring `store::ArtifactDsl`/
-/// `store::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
+/// an owner-root test adapter is exactly that — can neither bring `store::os_store::serialization::ArtifactDsl`/
+/// `store::os_store::serialization::ArtifactPack` into scope nor name `store::TextError`/`store::PackError` in a signature.
 /// These four wrappers carry the error across as a plain `String` so the subset's own text and
 /// binary envelopes stay drivable end to end (`kit`'s precedent for the same structural gap).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_model_dsl(text: &str) -> Result<SemioModelSnapshot, String> {
-    <SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+    <SemioModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_model_dsl(snapshot: &SemioModelSnapshot) -> String {
-    <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioModelSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -390,11 +390,11 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::model::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 
 

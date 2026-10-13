@@ -14,17 +14,17 @@
 
 use semio_framework_value::DslValue;
 use semio_framework_plugin::MeshData;
-use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
-use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+use semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer;
+use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
 use std::collections::HashMap;
 // 🌉️ Ticket 26/08/11/SEMIO-ARTIFACT-UNIFIED-IMPORT-EXPORT-AND-MEDIA-FORMAT-RETIREMENT W5a: the
 // hand-rolled `v`/`f`-only OBJ writer this file used to feed the kernel's own `import_obj` reader
 // is now stdio's real `semio/mesh` → `obj` codec (`SemioMeshToObj` + `obj::engine::encode_obj`) —
 // same real mesh→OBJ encoder `⚙️engine/🦀️.rs`'s `export_solids_as` now uses, no
 // reimplementation.
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{ElementClass, GeometryRef, SemioModelElement, SemioModelSnapshot, STDIO_SEMIOMODEL_DOCUMENT_SCHEMA};
 
 //#region 🔖️EphemeralImportTypes
 /// 🧱️ EPHEMERAL — never persisted, never part of `ArtifactSchema`. See module doc comment.
@@ -34,7 +34,7 @@ pub(crate) struct CadGeometry {
     #[value(skip)]
     pub owned_meshes: HashMap<String, std::sync::Arc<MeshData>>,
     #[value(skip)]
-    pub owned_breps: HashMap<String, std::sync::Arc<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>>,
+    pub owned_breps: HashMap<String, std::sync::Arc<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>,
     #[value(default)]
     pub anchors: Vec<DslValue>,
     #[value(default)]
@@ -52,11 +52,11 @@ pub(crate) struct CadGeometry {
 }
 
 /// 🧊️ Projects a current owned topology snapshot into triangles without retaining importer handles.
-pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {
-    let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;
+pub(crate) fn mesh_from_owned_brep(snapshot: &semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot) -> Result<MeshData, String> {
+    let body = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::body_from_snapshot(snapshot).map_err(|error| format!("{error:?}"))?;
     let mut result = MeshData::default();
     for face in body.faces.ids() {
-        let transfer = semio_framework_3d::brep::queries::tessellation::tessellate_face(&body, face, 0.1).map_err(|error| format!("{error:?}"))?;
+        let transfer = semio_framework_3d_brep_queries::tessellation::tessellate_face(&body, face, 0.1).map_err(|error| format!("{error:?}"))?;
         let mut mesh = mesh_data_from_mesh_transfer(&transfer).map_err(|error| format!("{error:?}"))?;
         let offset = (result.positions.len() / 3) as u32;
         for (kind, ids) in [("face", &mut mesh.face_ids), ("edge", &mut mesh.edge_ids), ("vertex", &mut mesh.vertex_ids)] {
@@ -653,7 +653,7 @@ pub(crate) const CAD_PRIMITIVE_PSET: &str = "cad.primitive";
 /// [`cad_object_from_model_element`]. `typology` rides `ElementClass::Other{name}`, `origin`/`orientation`/`scale` the
 /// placement, `solid_handle` `GeometryRef::Brep`, and every authoring field the [`CAD_OBJECT_PSET`] property set.
 pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelElement {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{Property, PropertySet, PsetValue};
+    use semio_s_artifact_stdio_semio_model::schema::snapshot::{Property, PropertySet, PsetValue};
     let [ox, oy, oz] = object.origin;
     let orientation = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
     let scale = object.scale.unwrap_or([1.0, 1.0, 1.0]);
@@ -680,7 +680,7 @@ pub(crate) fn model_element_from_cad_object(object: &CadObject) -> SemioModelEle
 }
 
 /// 🌉️ WRITE direction: a pane's full object list → a `SemioModelSnapshot` ready to become a
-/// composed child's content (see `store::ArtifactChild`/`crate::cad_model_child_handle`).
+/// composed child's content (see `store::os_store::artifact_child::ArtifactChild`/`crate::cad_model_child_handle`).
 pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioModelSnapshot {
     SemioModelSnapshot { schema: STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(), spatial: Vec::new(), elements: objects.iter().map(model_element_from_cad_object).collect(), relations: Vec::new() }
 }
@@ -690,7 +690,7 @@ pub(crate) fn semio_model_snapshot_from_objects(objects: &[CadObject]) -> SemioM
 /// unlocked, one solid slot per brep — never a fabricated echo. A placement a relative child leaf turned or scaled
 /// reads as set even when the object recorded none.
 pub(crate) fn cad_object_from_model_element(element: &SemioModelElement) -> CadObject {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::PsetValue;
+    use semio_s_artifact_stdio_semio_model::schema::snapshot::PsetValue;
     let typology = match &element.class {
         ElementClass::Other { name } => name.clone(),
         ElementClass::Wall => "building.building.wall".into(),

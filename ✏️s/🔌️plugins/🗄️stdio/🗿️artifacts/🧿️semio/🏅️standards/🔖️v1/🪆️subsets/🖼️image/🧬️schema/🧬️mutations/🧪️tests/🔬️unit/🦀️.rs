@@ -2,7 +2,7 @@ use super::*;
 /// 🔧️ `DiffAlgebra` lives at `protocol::command::DiffAlgebra`, not `protocol::DiffAlgebra`
 /// (W2b closer fix — was an unresolved-import compile error).
 use protocol::command::DiffAlgebra;
-use protocol::{MutationDiff, OpBinary, OpText};
+use protocol::{OpBinary, OpText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn frame(seed: u8, len: usize) -> SemioImageFrame {
@@ -40,7 +40,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = protocol::apply_diff(diff_direct.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut via_apply = base.clone();
-        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        let (__next, diff_from_apply) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
         via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
@@ -56,9 +56,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
         for inverse_mutation in <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
+            round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -77,9 +77,9 @@ async fn inverse_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let mut snap = fixture();
-    snap = crate::applied(&snap, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "x".into(), at: None })).0;
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    snap = semio_s_artifact_stdio_semio_base::applied(&snap, &SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".into(), value: "x".into(), at: None })).0;
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️CodecRetentionLaw

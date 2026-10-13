@@ -27,7 +27,7 @@ pub struct EquationArtifact {
     pub equation: EquationExprSnapshot,
 }
 
-// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>` (fan-out playbook trap #3,
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::os_store::artifact_child::ArtifactChild<S>` (fan-out playbook trap #3,
 // same shape as `📸️snapshot/🦀️.rs`'s `EquationSnapshot` impl); every other field goes through `ToValue`/`FromValue`.
 impl ToValue for EquationArtifact {
     fn to_value(&self) -> DslValue {

@@ -1,7 +1,7 @@
 //! ⚡️ Architect program artifact — OpText/OpBinary codecs + grammar for serializing `ProgramMutation`.
 //! Mutation apply/inverse live in `🧬️mutations`.
 
-use crate::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).
@@ -35,8 +35,8 @@ impl protocol::OpText for ProgramMutation {
 mod mutations_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::*;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 📥️ Decodes the internally-tagged (`{"mutation": "<camelCaseVariant>", …}`) projection the
 /// committed `<slug>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` vectors carry.

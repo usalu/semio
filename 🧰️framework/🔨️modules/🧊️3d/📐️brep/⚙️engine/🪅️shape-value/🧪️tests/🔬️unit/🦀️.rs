@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::representation::arena::{ArenaId, Curve3Id, SolidId};
+use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, SolidId};
 use semio_framework_pack_json::{from_json_str, to_json_string, JsonMemberPolicy};
 use serde_json::Value;
 

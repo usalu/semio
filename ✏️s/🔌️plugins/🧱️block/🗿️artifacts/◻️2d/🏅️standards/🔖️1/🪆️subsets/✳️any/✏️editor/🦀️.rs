@@ -279,25 +279,25 @@ struct Block2dStorePreparationFactory;
 
 struct Block2dStorePreparation {
     owners: store::OneItemOwners<Block2dSnapshot, Block2dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutation> for Block2dStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutation> for Block2dStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Block2dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Block2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> { store::admit_artifact_batch_digest(edit, grant) }
 
-    fn preflight(&self, mutation: &Block2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Block2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Block2d Store preparation rejected its lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &Block2dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Block2dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Block2dStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>)> {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Block2dSnapshot, Block2dMutation, Block2dMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         let item_count = request
@@ -309,11 +309,11 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutat
             .saturating_add(request.base.get().compatibility.len())
             .saturating_add(request.base.get().attributes.len())
             .saturating_add(request.base.get().authors.len());
-        if request.lane != store::HistoryLane::Document
+        if request.lane != store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || item_count > BLOCK2D_RETAINED_WORK_ITEMS
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "preparation rejected original publication authority"), request));
@@ -321,23 +321,23 @@ impl store::ArtifactStoreOneItemPreparationFactory<Block2dSnapshot, Block2dMutat
         Ok((Box::new(Block2dStorePreparation {
             owners: store::OneItemOwners::from_request(request),
 
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> for Block2dStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> for Block2dStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::Mutation as _;
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Block2d preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Block2d preparation lost its mutation owner"))?;
@@ -353,17 +353,17 @@ impl store::ArtifactStoreOneItemPreparation<Block2dSnapshot, Block2dMutation> fo
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: 0, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Block2dSnapshot, Block2dMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(maximum_copy_bytes)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -430,7 +430,7 @@ impl ArtifactEditor for Block2dPlayApp {
         Some(semio_framework_plugin::no_transient_store_disposer())
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Block2dStorePreparationFactory))
     }
 
@@ -577,7 +577,7 @@ impl ArtifactEditor for Block2dPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::Kit, form: MediaForm::Type }, |io| io.artifact_media_type);
-            let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+            let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let fragment = crate::standards::v1::subsets::any::io::puzzle_catalog::puzzle2d_manifest_fragment(doc.snapshot);

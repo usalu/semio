@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use crate::serializers::artifacts::svg::v1_1::any::SemioDrawingToSvg;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn p(x: f64, y: f64) -> SemioPoint2 {

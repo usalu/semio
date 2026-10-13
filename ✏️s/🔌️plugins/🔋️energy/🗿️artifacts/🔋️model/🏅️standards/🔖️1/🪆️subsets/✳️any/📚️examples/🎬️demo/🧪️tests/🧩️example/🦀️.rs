@@ -9,7 +9,7 @@ async fn primary_asset_is_nonempty() {
 #[semio_framework_async_macros::async_test]
 async fn asset_carries_the_registered_case_model() {
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     assert_eq!(snapshot.model, super::model());
 }
 
@@ -18,7 +18,7 @@ async fn asset_carries_the_registered_case_model() {
 async fn inference_determinism_law() {
     use protocol::Inference;
     let text = include_str!("../../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
-    let snapshot = <crate::EnergyModelSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
+    let snapshot = <crate::EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("demo fixture parses");
     let inference = crate::standards::v1::subsets::any::schema::inferences::EnergyModelInference::infer(&snapshot).expect("valid materialized inference fixture");
     assert_eq!(inference, crate::standards::v1::subsets::any::schema::inferences::EnergyModelInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }

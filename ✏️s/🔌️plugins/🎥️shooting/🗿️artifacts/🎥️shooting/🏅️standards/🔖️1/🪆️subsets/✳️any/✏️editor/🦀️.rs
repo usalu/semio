@@ -757,11 +757,11 @@ impl ArtifactEditor for ShootingPlayApp {
         Some(shooting_io())
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
@@ -807,7 +807,7 @@ impl ArtifactEditor for ShootingPlayApp {
             "photos:out" => shooting_photo_media(doc.snapshot),
             "artifact:out" => {
                 let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             _ => Err(MediaError::NotImplemented),
@@ -824,7 +824,7 @@ impl ArtifactEditor for ShootingPlayApp {
             return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        let snapshot = <ShootingSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+        let snapshot = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
         Ok(Emit { effects: vec![reset_document_effect(&snapshot)], ..Default::default() })
     }
 
@@ -918,11 +918,11 @@ impl ArtifactEditor for ShootingPlayApp {
 /// all. Every former "replace the whole document" gesture in this package (`import_media`'s
 /// `"artifact:in"` above, `commands::document::{import_snapshot_json,set_active_example,reset_snapshot}`)
 /// builds this effect instead of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log
-/// for `scene` — `store::empty_document_spr`, never a minted `create_document_envelope` (an envelope
+/// for `scene` — `store::os_store::text_format::empty_document_spr`, never a minted `create_document_envelope` (an envelope
 /// dropped without its bounded retirement authority traps the guest on Drop).
 pub fn reset_document_effect(scene: &ShootingSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <ShootingSnapshot as store::ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
+    let pack = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("shooting", SHOOTING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument

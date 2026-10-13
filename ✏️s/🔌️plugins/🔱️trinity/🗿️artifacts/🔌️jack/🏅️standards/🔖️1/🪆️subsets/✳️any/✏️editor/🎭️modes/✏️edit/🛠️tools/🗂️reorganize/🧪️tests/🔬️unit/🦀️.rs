@@ -44,7 +44,7 @@ fn nakagin() -> SemioGraphSnapshot {
 
 /// 🧸️ The live node positions of the app's `content` member store (design §20.15: the parent holds no content).
 fn node_positions(app: &JackApp) -> BTreeMap<String, (f64, f64)> {
-    use store::{ArtifactPack, SpaceMember};
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let member = ::semio_framework_async::poll::resolve_ready(app.child_store("content", &snapshot.content.child_id)).expect("Jack content child");
     let bytes = ::semio_framework_async::poll::resolve_ready(member.document_pack_bytes()).expect("Jack content child pack");
@@ -195,7 +195,7 @@ fn pump_until(app: &mut JackApp, what: &str, done: impl Fn(&JackApp) -> bool) {
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));

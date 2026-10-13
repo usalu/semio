@@ -6,13 +6,13 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::value::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -50,7 +50,7 @@ pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, 
 /// from json's `enc_json_value_bin`/`dec_json_value_bin`. Backs the upgraded `DiffCodec`/`OpBinary`
 /// frames (this file's own `encode_diff`/`decode_diff`, and the sibling `🧬️mutations/🦀️.rs`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_semio_value_bin(value: &SemioValue, out: &mut Vec<u8>) {
+pub fn enc_semio_value_bin(value: &SemioValue, out: &mut Vec<u8>) {
     match value {
         SemioValue::Null => out.push(0),
         SemioValue::Bool { value } => {
@@ -96,7 +96,7 @@ pub(crate) fn enc_semio_value_bin(value: &SemioValue, out: &mut Vec<u8>) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValue, String> {
+pub fn dec_semio_value_bin(reader: &mut store::ByteReader<'_>) -> Result<SemioValue, String> {
     let tag = reader.read_u8().map_err(|e| e.to_string())?;
     match tag {
         0 => Ok(SemioValue::Null),

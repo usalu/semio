@@ -19,7 +19,7 @@ class WorkflowSqliteVerifyScript extends BundleScript{
  async run(segments:string[]):Promise<void>{
   if(segments.length!==1||segments[0]!=="snapshot-sqlite-source")throw Error("Unknown Workflow SQLite verification");
   const snapshot=resolve(this.root,"../../🧬️schema/📸️snapshot");
-  await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"workflow-snapshot-sqlite-public-types");
+  await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(this.root,"../../🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts")],this.repoRoot,"workflow-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
  }
 }
 await runArtifactRustPackageMain(import.meta.dir,"semio-framework-artifact-workflow-workflow",{commands:{"test-snapshot-sqlite":WorkflowSqliteTestScript,verify:WorkflowSqliteVerifyScript}});

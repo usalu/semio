@@ -1,9 +1,7 @@
 //! 📬️ Paged structural edit for one mesh vertex move.
 
 use super::*;
-use crate::{
-    standards::v1::subsets::{base::schema::geometry::SemioPoint3, mesh::schema::mutations::move_vertex},
-};
+use {semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3, crate::schema::mutations::move_vertex};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_s_artifact_stdio_contract::editing::NativeEditPreparationRoute;
@@ -108,10 +106,10 @@ impl PagedOneItemEdit<SemioMeshSnapshot, SemioMeshMutation> for MeshVertexEdit {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
+    use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture};
 
     fn fixture() -> serde_json::Value {
-        serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json"))).expect("retained native fixture")
+        serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../../../../../../../📇️registry/🧬️contract/✏️editing/🧫️fixtures/🧵️retained-native/🔣️.json"))).expect("retained native fixture")
     }
 
     fn snapshot() -> SemioMeshSnapshot {

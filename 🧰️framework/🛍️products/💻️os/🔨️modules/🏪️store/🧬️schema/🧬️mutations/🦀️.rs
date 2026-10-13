@@ -1,5 +1,5 @@
 //! 🧬️ Transparent space-history mutation aggregate.
-use super::super::{SpaceHistoryDiff, SpaceHistorySnapshot};
+use super::space_history_document::{SpaceHistoryDiff, SpaceHistorySnapshot};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 //#region 🔖️Leaves

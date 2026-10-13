@@ -1,8 +1,8 @@
 #[path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use standards::v1::subsets::any::schema::{evaluate_document, mutations::update_climate::UpdateClimate};
 use standards::v1::subsets::any::io::{binary::snapshot::{decode_din18599_pack,encode_din18599_pack},text::snapshot::{decode_din18599_dsl,encode_din18599_dsl,decode_din18599_snapshot_json,encode_din18599_snapshot_json}};
 
@@ -56,7 +56,7 @@ fn update_climate_writes_the_parent_climate_and_re_derives_its_table() {
 fn the_genesis_pack_is_the_snapshot_s_own_climate_table() {
     let edited = cold_document();
     let pack = genesis_din18599_child_pack(&edited, DIN18599_CLIMATE_TABLE_SLOT, &edited.climate_table.child_id).expect("derived climate table");
-    let table = <SemioTableSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("table pack");
+    let table = <SemioTableSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("table pack");
     assert_eq!(din18599_climate_data_from_table(&table), edited.climate);
     assert!(genesis_din18599_child_pack(&edited, "climate", &edited.climate_table.child_id).is_none());
     assert!(genesis_din18599_child_pack(&edited, DIN18599_CLIMATE_TABLE_SLOT, &din18599_climate_table_child(&MonthlyClimate::potsdam_reference()).child_id).is_none());
@@ -67,7 +67,7 @@ fn the_genesis_pack_is_the_snapshot_s_own_climate_table() {
 #[test]
 fn a_reloaded_document_evaluates_with_its_own_climate() {
     use store::sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl};
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let edited = cold_document();
     let report = serde_json::to_value(evaluate_document(&edited)).expect("report");
     assert_ne!(report, serde_json::to_value(evaluate_document(&Din18599Snapshot::default())).expect("potsdam report"), "the cold climate must change the evaluation");

@@ -1,4 +1,5 @@
 //! 🧸️ Native installed Toy producer advances its real transaction and borrowed pages before granted closure.
+#[cfg(test)] use crate::tool_run_contract::ToolRunJobPurpose;
 use super::*;
 #[test]
 fn original_installed_toy_job_preserves_transaction_wire_borrowed_outcomes_and_physical_receipts(){

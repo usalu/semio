@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-value-import"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio semio `value` subset import conversions"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
+# 🧩️ Capability Dependencies
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+# /🧩️ Capability Dependencies
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-framework-async-macros = { workspace = true }

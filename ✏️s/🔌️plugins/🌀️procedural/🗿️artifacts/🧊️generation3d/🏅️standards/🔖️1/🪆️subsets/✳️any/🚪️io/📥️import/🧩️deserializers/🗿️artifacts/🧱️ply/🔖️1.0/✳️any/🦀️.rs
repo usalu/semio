@@ -4,8 +4,8 @@ use crate::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_ply::PlySnapshot;
 use semio_s_artifact_stdio_ply::schema::snapshot::{PlyElement, PlyProperty, PlyRow, PlyValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::ply::v1_0::any::SemioMeshFromPly;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 /// 🔧️ The neuron kind PLY geometry re-enters the flow graph through, after normalization.
 pub const IMPORT_NEURON_KIND: &str = "brep.mesh.construct";

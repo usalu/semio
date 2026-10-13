@@ -89,8 +89,8 @@
     {
       "id": "case-phase-selection",
       "section": "Commands",
-      "markdown": "`--owner <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;\n`--implementation <id>` narrows their subject implementations. `discover` lists all cases.\nFrom the repository root the same phases are reachable as `bun ./📜️script.ts test <phase>`, and every\ncase also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exhaustive`,\n`test-contract`, `test-oracle`, `test-subject`, `test-parity`).",
-      "plainText": "--owner <path>, --case <slug> and --project <name> narrow case-based phases; --implementation <id> narrows their subject implementations. discover lists all cases. From the repository root the same phases are reachable as bun ./📜️script.ts test <phase>, and every case also has generated Nx targets (test, test-quick, test-long, test-exhaustive, test-contract, test-oracle, test-subject, test-parity)."
+      "markdown": "`--owner <path>`, `--owner-root <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;\n`--implementation <id>` narrows their subject implementations. `discover` lists all cases.\nFrom the repository root the same phases are reachable as `bun ./📜️script.ts test <phase>`, and every\ntest owner has one generated Nx project: `lint` runs its contract phase and `test` runs its cases\n(`cases <owner> [level] [--facet <phase>] [--case <slug>]`), the level and selection passed as arguments.",
+      "plainText": "--owner <path>, --owner-root <path>, --case <slug> and --project <name> narrow case-based phases; --implementation <id> narrows their subject implementations. discover lists all cases. From the repository root the same phases are reachable as bun ./📜️script.ts test <phase>, and every test owner has one generated Nx project: lint runs its contract phase and test runs its cases (cases <owner> [level] [--facet <phase>] [--case <slug>]), the level and selection passed as arguments."
     },
     {
       "id": "selector-requirement-versus-routing",

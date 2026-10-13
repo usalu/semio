@@ -6,24 +6,24 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::presentation::io::binary::diff::{encode_option, decode_option};
-use crate::standards::v1::subsets::presentation::schema::diff::*;
+use crate::io::binary::diff::{encode_option, decode_option};
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, enc_named_added};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_added, enc_named_added};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 /// 🧱️ REUSE, don't reinvent — `document::DocBlock`'s own real, already-tested text codec
 /// (`ws-codec-document-report.md`), re-exported here so both this file's own leaf encoders AND
 /// the sibling `🧬️mutations`/`📸️snapshot` facets can import `{enc_block, dec_block}` from THIS
 /// module (matching the pre-existing convention where this file is the one place that owns every
 /// value codec presentation's other facets import from).
-use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
+use semio_s_artifact_stdio_semio_document::io::text::diff::dec_block;
+use semio_s_artifact_stdio_semio_document::io::text::diff::enc_block;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::snapshot::SemioPresentationSnapshot;
+use crate::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;

@@ -1,8 +1,8 @@
 //! 🌊️ Authored Flow operation fields emit their original text grammar directly into paid backing.
-use crate::standards::v1::subsets::flow::schema::mutations::*;
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowNode, FlowEdge, PortRef, SemioFlowSnapshot};
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::flow::io::binary::mutations::wire_tag;
+use crate::schema::mutations::*;
+use crate::schema::snapshot::{FlowNode, FlowEdge, PortRef, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::io::binary::mutations::wire_tag;
 use semio_framework_os_kernel::os_spr::operation_bytes::{OperationByteOutput,OperationByteLimitedOutput};
 use protocol::{PackRefusal,codec::PackEncodeOptions};
 use semio_framework_value::{NativeEncodeControl,ValueError,ValueRefusalKind};

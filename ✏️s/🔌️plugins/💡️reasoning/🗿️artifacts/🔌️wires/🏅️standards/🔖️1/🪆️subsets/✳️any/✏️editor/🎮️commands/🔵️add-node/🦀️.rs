@@ -5,8 +5,8 @@ use crate::{GraphNodeId, SemioGraphMutation, SemioValue, SemioValueEntry, WiresM
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_node::CreateNode;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode;
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetireOwned)]
 #[dsl(keyword = "add-node")]

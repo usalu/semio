@@ -44,7 +44,7 @@
           "projects": [
             "@semio-tech/note-plugin"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ]
     },
@@ -86,7 +86,7 @@
           "projects": [
             "@semio-tech/note-plugin"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ]
     },
@@ -111,7 +111,7 @@
           "projects": [
             "@semio-tech/note-plugin"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ]
     },

@@ -10,6 +10,7 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildRepositoryWasmWebV1({
       rsDir: this.root,
+      componentDir: this.root,
       logPrefix: "trinity/jack/lsp",
       wasmBaseName: "trinity_jack_lsp",
       pkg: {

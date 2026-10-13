@@ -154,8 +154,7 @@ pub fn imperative_module_topic_contribution() -> semio_framework::TopicContribut
     imperative_extension_sdk::imperative_module_topic_contribution("core", "Actions", "zap", imperative_extension_sdk::build_manifest_json("core", "Core", MODULE_VERSION, &registry, Some(&catalogue)))
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]
-fn bundle() -> semio_framework_plugin::ExtensionBundle {
+pub fn bundle() -> semio_framework_plugin::ExtensionBundle {
     let topic_contribution = imperative_module_topic_contribution();
     semio_framework_plugin::ExtensionBundle::new(EXTENSION_ID, "Imperative Effect", MODULE_VERSION)
         .extends("imperative").depends_on("imperative", semio_framework::tree_pin!())
@@ -165,8 +164,6 @@ fn bundle() -> semio_framework_plugin::ExtensionBundle {
         .contributes_topic(topic_contribution.topic, topic_contribution.payload)
 }
 
-#[cfg(all(target_arch = "wasm32", feature = "extension-entry"))]
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 //#endregion 🔖️Bundle
 
 #[cfg(test)]

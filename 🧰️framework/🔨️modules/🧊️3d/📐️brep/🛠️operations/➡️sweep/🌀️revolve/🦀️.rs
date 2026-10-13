@@ -12,23 +12,23 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 /// 🌀 Lateral surface, four parameter curves with ranges, and orientation.
-pub type LateralSurfaceCurves = (crate::brep::representation::arena::SurfaceId, [(crate::brep::representation::arena::Curve2Id, (f64, f64)); 4], bool);
+pub type LateralSurfaceCurves = (semio_framework_3d_brep_representation::arena::SurfaceId, [(semio_framework_3d_brep_representation::arena::Curve2Id, (f64, f64)); 4], bool);
 
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 
-use crate::brep::operations::euler::make_edge;
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::operations::transform::transform_face;
-use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::{Affine3, Frame3};
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::euler::make_edge;
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use crate::transform::transform_face;
+use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3};
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 

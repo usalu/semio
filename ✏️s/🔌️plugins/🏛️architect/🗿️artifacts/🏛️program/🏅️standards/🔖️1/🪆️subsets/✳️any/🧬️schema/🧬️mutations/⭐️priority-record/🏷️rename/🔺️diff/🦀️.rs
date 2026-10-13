@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⭐priorities` per Wave C.
 
 use super::RenamePriorityRecord;
-use crate::diff::{ProgramPrioritiesDelta, ProgramPrioritiesPatchEntry};
-use crate::registers::PriorityRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramPrioritiesDelta, ProgramPrioritiesPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::PriorityRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenamePriorityRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

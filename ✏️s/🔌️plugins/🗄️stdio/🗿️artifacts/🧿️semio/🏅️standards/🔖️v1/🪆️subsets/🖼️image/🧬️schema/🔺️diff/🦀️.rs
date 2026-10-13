@@ -9,18 +9,13 @@
 //! following the docx/gif precedent (`f6-docx-ecma-376-report.md`, `f6-final-summary.md` §4.4). No
 //! `snapshot: Option<SemioImageSnapshot>` full-replace slot anywhere.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-/// 🔧️ Unconditional — the `#[cfg(test)] mod tests` block below calls `print_diff`/`parse_diff`/
-/// `encode_diff`/`decode_diff` via method syntax on `SemioImageDiff`, which needs `DiffCodec` in
-/// scope (the `impl protocol::DiffCodec for SemioImageDiff` block itself compiles fine unqualified,
-/// but callers using method syntax do not get the trait for free) (W2b closer fix).
-use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️FrameDiff
@@ -411,11 +406,11 @@ impl MutationDiff<SemioImageSnapshot> for SemioImageDiff {
             next.icc = v.clone();
         }
         if let Some(d) = &self.frames {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.frames.len(), ["frames"])?;
             frames_apply(&mut next.frames, d);
         }
         if let Some(d) = &self.metadata {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |added| added.item.key.clone(), ["metadata"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.metadata, d, |item| item.key.clone(), |added| added.item.key.clone(), ["metadata"])?;
             metadata_apply(&mut next.metadata, d);
         }
         Ok(next)

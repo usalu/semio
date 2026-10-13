@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "workspace": {
+    "files": {
+      ".gitignore": "dist/\n.nx/workspace-data\n",
+      ".nxignore": "/tickets/**\n",
+      "nx.json": "{}\n",
+      "package.json": "{\"name\":\"root\"}\n",
+      "a/project.json": "{\"name\":\"a\"}\n",
+      "a/src/index.ts": "export const a = 1;\n",
+      "dist/out.js": "built\n",
+      "tickets/note.md": "scratch\n"
+    },
+    "observedFile": "a/src/index.ts"
+  },
+  "scenarios": [
+    { "id": "unchanged", "mutation": { "kind": "none" }, "holds": true },
+    { "id": "observed-content-changed", "mutation": { "kind": "write", "path": "a/src/index.ts", "content": "export const a = 2;\n" }, "holds": false },
+    { "id": "observed-rewritten-identically", "mutation": { "kind": "write", "path": "a/src/index.ts", "content": "export const a = 1;\n" }, "holds": true },
+    { "id": "file-added-to-indexed-directory", "mutation": { "kind": "write", "path": "a/README.md", "content": "new\n" }, "holds": false },
+    { "id": "file-added-to-ignored-directory", "mutation": { "kind": "write", "path": "dist/more.js", "content": "built\n" }, "holds": true },
+    { "id": "file-added-to-nxignored-tree", "mutation": { "kind": "write", "path": "tickets/other.md", "content": "scratch\n" }, "holds": true },
+    { "id": "core-input-edited", "mutation": { "kind": "write", "path": "package.json", "content": "{\"name\":\"renamed\"}\n" }, "holds": false },
+    { "id": "ignore-rule-edited", "mutation": { "kind": "write", "path": ".gitignore", "content": ".nx/workspace-data\n" }, "holds": false },
+    { "id": "graph-rewritten", "mutation": { "kind": "write", "path": ".nx/workspace-data/project-graph.json", "content": "{\"nodes\":{\"x\":{}}}\n" }, "holds": false }
+  ]
+}

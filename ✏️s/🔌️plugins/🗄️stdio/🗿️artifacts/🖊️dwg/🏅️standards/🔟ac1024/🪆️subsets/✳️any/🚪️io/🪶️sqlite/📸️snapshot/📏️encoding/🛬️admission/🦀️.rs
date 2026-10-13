@@ -2,7 +2,7 @@
 use semio_framework_value::{ValueError, ValueRefusalKind};
 use semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits;
 use semio_framework_dsl_record::{FieldValue as V,RecordValue};
-use semio_framework_value::{NativeDecodeControl};
+use semio_framework_value::NativeDecodeControl;
 type R<'a>=Option<&'a RecordValue>;
 fn record(value:Option<&V>)->Result<R<'_>,ValueError>{match value{None|Some(V::Absent)=>Ok(None),Some(V::Record(value))=>Ok(Some(value)),_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"DWG owned native component requires a record"))}}
 fn field(record:R<'_>,id:u16)->Option<&V>{record.and_then(|value|value.get(id))}

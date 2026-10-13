@@ -3,8 +3,8 @@
 //! child's Report replay re-applies the downstream drag onto the edited one exactly like a fresh fold of the edited log, through
 //! the cross-plugin `semio_framework_plugin::app::node_drag_history` law, on the content of the default sequence.
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{drag_nodes::DragNodes, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use {semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 
 fn drag(targets: &[&str], dx: f64, dy: f64) -> SemioFlowMutation {
     SemioFlowMutation::DragNodes(DragNodes { targets: targets.iter().map(|id| id.to_string()).collect(), dx, dy })

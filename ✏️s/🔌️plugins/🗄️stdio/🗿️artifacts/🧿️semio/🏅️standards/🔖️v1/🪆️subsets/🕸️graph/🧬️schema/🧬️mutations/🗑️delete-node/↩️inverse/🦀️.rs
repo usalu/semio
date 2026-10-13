@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteNode`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{create_edge::CreateEdge, create_node::CreateNode, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use {crate::schema::mutations::create_edge::CreateEdge, crate::schema::mutations::create_node::CreateNode, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `create-node` of the whole node record at its BASE index, then one `create-edge` per severed edge at

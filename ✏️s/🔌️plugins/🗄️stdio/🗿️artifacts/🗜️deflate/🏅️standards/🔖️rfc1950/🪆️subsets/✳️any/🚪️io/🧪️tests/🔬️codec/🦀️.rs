@@ -249,8 +249,8 @@ fn raw_deflate_round_trips_random_incompressible_data() {
 fn codec_round_trip() {
     let payload = b"pack-envelope-payload".to_vec();
     let snap = DeflateSnapshot { schema: STDIO_DEFLATE_DOCUMENT_SCHEMA.into(), compression_method: 8, window_bits: 7, compression_level_hint: DeflateLevelHint::Default, dict_id: None, payload: payload.clone() };
-    let pack = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <DeflateSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <DeflateSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded, snap);
     assert_eq!(decoded.payload, payload);
 }

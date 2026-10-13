@@ -5,8 +5,8 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::image::schema::snapshot::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
@@ -210,7 +210,7 @@ pub(crate) fn parse_image_snapshot_body(body: &str) -> Result<SemioImageSnapshot
 
 /// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioImageSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioImageSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA
@@ -226,26 +226,26 @@ impl store::ArtifactDsl for SemioImageSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_image_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioImageSnapshot`] — a
-/// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// thin wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🖼️mutate-semio-image` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🖼️swatch` artifact rather than
 /// a JSON transcription of it) can still drive the same codec production does. Same shape and same
 /// rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_image_dsl(text: &str) -> Result<SemioImageSnapshot, String> {
-    <SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
+/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_image_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_image_dsl(snapshot: &SemioImageSnapshot) -> String {
-    <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -253,9 +253,9 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::image::schema::snapshot::*;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 
 

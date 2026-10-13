@@ -1,7 +1,7 @@
 //! 🧪️ Map codecs and mutations preserve exact durable child identities.
 use crate::{GisMapSnapshot, MapFeature};
 use crate::schema::{GisMapArtifact, diff::{GisMapDiff, GisMapFeaturesDelta}};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn map_document_contract_preserves_all_children_and_dynamic_feature_payloads() {

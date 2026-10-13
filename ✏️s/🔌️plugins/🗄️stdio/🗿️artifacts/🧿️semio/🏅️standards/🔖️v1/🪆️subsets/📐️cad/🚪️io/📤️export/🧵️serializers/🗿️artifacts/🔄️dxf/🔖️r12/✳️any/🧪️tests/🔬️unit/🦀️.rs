@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::cad::schema::snapshot::CadLayer;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::CadLayer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_cad() -> SemioCadSnapshot {

@@ -16,7 +16,7 @@ pub fn diff(payload: &super::SetRunStyle, base: &SemioDocumentSnapshot) -> proto
         if &run.style == style {
             return protocol::MutationOutcome::new(SemioDocumentDiff::default());
         }
-        let style_diff = crate::standards::v1::subsets::document::schema::diff::RunStyleDiff {
+        let style_diff = crate::schema::diff::RunStyleDiff {
             bold: Some(style.bold),
             italic: Some(style.italic),
             underline: Some(style.underline),

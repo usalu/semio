@@ -19,8 +19,8 @@ fn check<T: DslField + FromValue + PartialEq + std::fmt::Debug>(value: &serde_js
         let decoded = parse_exact(&text, &spec, &semio_framework_dsl_record::ParseOptions::default()).unwrap();
         assert_eq!(<T as DslField>::from_value(&FieldValue::Record(decoded)).unwrap(), pose);
     }
-    let packed = crate::os_store::pack_rt::encode_document(&spec, &record, &crate::os_store::PackEncodeOptions::default()).unwrap();
-    let (decoded, _) = crate::os_store::pack_rt::decode_document(&packed, &spec, &crate::os_store::PackDecodeOptions::default()).unwrap();
+    let packed = crate::os_pack::pack_rt::encode_document(&spec, &record, &crate::os_store::PackEncodeOptions::default()).unwrap();
+    let (decoded, _) = crate::os_pack::pack_rt::decode_document(&packed, &spec, &crate::os_store::PackDecodeOptions::default()).unwrap();
     assert_eq!(<T as DslField>::from_value(&FieldValue::Record(decoded)).unwrap(), pose);
 }
 

@@ -12,10 +12,10 @@ pub type HarmonizedCurveControls = (KnotVector, Vec<Vec<f64>>, Vec<Vec<f64>>);
 use super::bezier::RationalBezier3;
 use super::bspline::{basis_functions, de_boor, elevate_bezier_span_multi, elevate_degree, insert_knot, insert_knot_multi, KnotVector};
 use super::{Curve3, NurbsCurve3};
-use crate::brep::representation::polynomial::{isolate_roots, refine_root, Bernstein, Poly};
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use crate::polynomial::{isolate_roots, refine_root, Bernstein, Poly};
+use crate::surface::Surface;
+use crate::vector::matrix::Frame3;
+use crate::vector::{Pnt3, Vec3};
 
 // #region 🔖️Length
 

@@ -134,10 +134,10 @@ struct ProbePreparationFactory {
     retained_bytes: usize,
 }
 
-impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePreparationFactory {
-    fn preflight(&self, mutation: &u8, _lane: fixture_store::HistoryLane) -> Result<fixture_store::ArtifactStoreOneItemFootprint, String> {
+impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePreparationFactory {
+    fn preflight(&self, mutation: &u8, _lane: fixture_store::os_store::store_schema::HistoryLane) -> Result<fixture_store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         if (self.accepts)(mutation) {
-            Ok(fixture_store::ArtifactStoreOneItemFootprint { work_items: fixture_store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes: self.retained_bytes })
+            Ok(fixture_store::os_store::one_item::ArtifactStoreOneItemFootprint { work_items: fixture_store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS, retained_bytes: self.retained_bytes })
         } else {
             Err("probe-refused".into())
         }
@@ -146,42 +146,42 @@ impl fixture_store::ArtifactStoreOneItemPreparationFactory<u8, u8> for ProbePrep
     fn begin_batch_digest(&self,_edit:&mut Option<Box<fixture_store::Edit<u8>>>,_grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<Option<(Box<dyn fixture_store::ArtifactStoreBatchDigest<u8>>,semio_framework_value::retained_clone::RetainedCloneProgress)>,semio_framework_value::ValueError>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no batch digest owner"))
     }
-    fn begin_demand(&self,_mutation:&u8,_lane:fixture_store::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{
+    fn begin_demand(&self,_mutation:&u8,_lane:fixture_store::os_store::store_schema::HistoryLane)->Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand,semio_framework_value::ValueError>{
         Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"))
     }
-    fn begin(&self, request:fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>,_grant:fixture_store::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>)>{
+    fn begin(&self, request:fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>,_grant:fixture_store::os_store::one_item::ArtifactStoreOneItemGrant)->Result<(Box<dyn fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<u8,u8>>,semio_framework_value::retained_clone::RetainedCloneProgress),(semio_framework_value::ValueError,fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<u8,u8,u8>)>{
         Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"preflight-only fixture has no preparation owner"),request))
     }
 }
 
 struct ProbePreparation {
     remaining: usize,
-    checkpoint: fixture_store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: fixture_store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
     closing: bool,
 }
 
-impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
-    fn advance(&mut self, grant: fixture_store::ArtifactStoreOneItemGrant) -> Result<fixture_store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation {
+    fn advance(&mut self, grant: fixture_store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.closing || self.remaining == 0 {
-            return Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         self.remaining -= 1;
         self.checkpoint.cursor += 1;
         self.checkpoint.completed_items += 1;
         self.checkpoint.completed_bytes += 1;
-        Ok(fixture_store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
+        Ok(fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> fixture_store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> fixture_store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&fixture_store::ArtifactStoreOneItemPrepared<u8, u8>> {
+    fn prepared(&self) -> Option<&fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<u8, u8>> {
         None
     }
 
-    fn take_prepared(&mut self) -> Option<fixture_store::ArtifactStoreOneItemPrepared<u8, u8>> {
+    fn take_prepared(&mut self) -> Option<fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<u8, u8>> {
         None
     }
 
@@ -193,7 +193,7 @@ impl fixture_store::ArtifactStoreOneItemPreparation<u8, u8> for ProbePreparation
         self.closing = true;
     }
 
-    fn close_step(&mut self,grant:fixture_store::ArtifactStoreOneItemGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
+    fn close_step(&mut self,grant:fixture_store::os_store::one_item::ArtifactStoreOneItemGrant)->Result<semio_framework_value::retained_clone::RetainedCloneStep,semio_framework_value::ValueError>{
         use semio_framework_value::retained_clone::{RetainedCloneStep,RetainedCloneProgress};
         if self.closing&&self.remaining==0{return Ok(RetainedCloneStep::Complete(Default::default()));}
         if !self.closing||!grant.permits_one()||grant.maximum_copy_bytes<std::mem::size_of::<usize>(){return Ok(RetainedCloneStep::Progress(Default::default()));}
@@ -217,7 +217,7 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let factory: ArtifactPreparationFactory<u8, u8> = routed_native_edit_preparation_factory(Some(NativeEditPreparationRoute::new(|mutation| *mutation == 1 || *mutation == 2, primary)), fallback);
     for row in fixture["routeCases"].as_array().expect("route cases") {
         let mutation = row["mutation"].as_u64().expect("mutation") as u8;
-        let actual = factory.preflight(&mutation, fixture_store::HistoryLane::Document);
+        let actual = factory.preflight(&mutation, fixture_store::os_store::store_schema::HistoryLane::Document);
         match row["expected"].as_str().expect("expected route") {
             "primary" => assert_eq!(actual.expect("primary route").retained_bytes, 11, "{}", row["id"]),
             "fallback" => assert_eq!(actual.expect("fallback route").retained_bytes, 22, "{}", row["id"]),
@@ -230,27 +230,27 @@ fn retained_native_route_refuses_without_fallback_and_lifecycle_is_cancelable() 
     let units = lifecycle["units"].as_u64().expect("units") as usize;
     let cancel_after = lifecycle["cancelAfter"].as_u64().expect("cancel after") as usize;
     let mut preparation = ProbePreparation { remaining: units, checkpoint: Default::default(), cancelled: false, closing: false };
-    let grant = fixture_store::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
+    let grant = fixture_store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items:1,maximum_copy_bytes:std::mem::size_of::<usize>(),maximum_capacity_bytes:0,maximum_release_bytes:0,maximum_depth:1 };
     let mut progress = Vec::new();
     for _ in 0..cancel_after {
-        let fixture_store::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
+        let fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(checkpoint, _) = fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("progress") else {
             panic!("retained preparation did not progress");
         };
         progress.push(checkpoint.cursor as u64);
     }
     assert_eq!(progress, lifecycle["expectedProgress"].as_array().expect("progress").iter().map(|value| value.as_u64().expect("cursor")).collect::<Vec<_>>());
-    fixture_store::ArtifactStoreOneItemPreparation::cancel(&mut preparation);
-    assert_eq!(fixture_store::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("cancel blocks"), fixture_store::ArtifactStoreOneItemPreparationStep::Blocked);
-    fixture_store::ArtifactStoreOneItemPreparation::begin_close(&mut preparation);
+    fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::cancel(&mut preparation);
+    assert_eq!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::advance(&mut preparation, grant).expect("cancel blocks"), fixture_store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
+    fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::begin_close(&mut preparation);
     let mut close_steps = 0usize;
     loop {
         close_steps += 1;
-        if matches!(fixture_store::ArtifactStoreOneItemPreparation::close_step(&mut preparation,grant).expect("bounded close"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
+        if matches!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::close_step(&mut preparation,grant).expect("bounded close"),semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
             break;
         }
     }
     assert_eq!(close_steps, lifecycle["expectedCloseSteps"].as_u64().expect("close steps") as usize);
-    assert!(fixture_store::ArtifactStoreOneItemPreparation::terminal_is_empty(&preparation));
+    assert!(fixture_store::os_store::one_item_publication::ArtifactStoreOneItemPreparation::terminal_is_empty(&preparation));
 
     let text_copy = &fixture["textCopy"];
     let byte_length = text_copy["byteLength"].as_u64().expect("text byte length") as usize;

@@ -1,0 +1,50 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-sourcing-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `sourcing` plugin component: the one cdylib of `semio-hub-sourcing`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:sourcing"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "🪵️sourcing"
+component-kind = "plugin"
+consumes = ["sourcing.module"]
+
+[[package.metadata.semio.playground]]
+variant = "sourcing"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.sourcing.curation@1/*#editor"
+aliases = ["curation"]
+ports = { react = 6081, wgpu = 6181 }
+
+# 🎪️ The `aussuchen` demonstrator row moved to
+# ✏️s/🔌️plugins/🎪️demonstrator/🪪️manifest/🗿️artifact/⚡️implementations/🦀️rust/Cargo.toml — see that
+# crate's docstring (REDUCE-DEMONSTRATOR-IDLE-MEMORY-FOOTPRINT).
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-sourcing = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }

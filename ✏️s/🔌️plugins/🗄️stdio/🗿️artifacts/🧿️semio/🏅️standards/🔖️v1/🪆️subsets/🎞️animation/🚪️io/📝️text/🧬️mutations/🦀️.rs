@@ -22,10 +22,10 @@ pub(crate) const TEXT_KEYWORDS: [(&str, &str); 11] = [
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::animation::schema::mutations::*;
-use crate::standards::v1::subsets::animation::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::mutations::*;
+use crate::schema::diff::{AnimChannelDiff, AnimKeyframeDiff, AnimTimelineDiff, SemioAnimationDiff};
+use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::Mutation;
 /// 🔧️ `MutationDiff` in scope for the `#[cfg(test)] mod tests` block below.
 #[cfg(test)]
@@ -47,13 +47,13 @@ pub fn decode_semio_animation_mutation_json(text: &str) -> Result<SemioAnimation
 /// grammar.
 impl OpText for SemioAnimationMutation {
     fn print_op(&self) -> String {
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_timeline};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_keyframe};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_value};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_interpolation};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_target};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_channel};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_str};
+        use crate::io::text::snapshot::enc_timeline;
+        use crate::io::text::snapshot::enc_keyframe;
+        use crate::io::text::snapshot::enc_value;
+        use crate::io::text::snapshot::enc_interpolation;
+        use crate::io::text::snapshot::enc_target;
+        use crate::io::text::snapshot::enc_channel;
+        use crate::io::text::snapshot::enc_str;
         use SemioAnimationMutation::*;
         match self {
             InsertTimeline(insert_timeline::InsertTimeline { index, timeline }) => format!("IT:{index},{}", enc_timeline(timeline)),
@@ -77,14 +77,14 @@ impl OpText for SemioAnimationMutation {
     }
 
     fn parse_op(line: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_timeline};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_keyframe};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_value};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_interpolation};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_target};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_channel};
-        use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_str};
-        use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+        use crate::io::text::snapshot::dec_timeline;
+        use crate::io::text::snapshot::dec_keyframe;
+        use crate::io::text::snapshot::dec_value;
+        use crate::io::text::snapshot::dec_interpolation;
+        use crate::io::text::snapshot::dec_target;
+        use crate::io::text::snapshot::dec_channel;
+        use crate::io::text::snapshot::dec_str;
+        use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
         use SemioAnimationMutation::*;
         let fail = |e: String| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, e, semio_framework_diagnostic::TextSpan::at(1, 1));
         let parse_usize = |s: &str| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string());

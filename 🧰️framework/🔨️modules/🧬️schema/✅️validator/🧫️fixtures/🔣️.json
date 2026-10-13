@@ -414,6 +414,148 @@
       }
     },
     {
+      "id": "cross-document-valid-0",
+      "value": {
+        "wire": {
+          "bytes": "AAEC"
+        }
+      },
+      "valid": true,
+      "input": {
+        "schema": {
+          "$id": "https://schemas.example.test/root.json",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wire"
+          ],
+          "properties": {
+            "wire": {
+              "$ref": "https://schemas.example.test/sibling.json#/$defs/Wire"
+            }
+          }
+        },
+        "documents": [
+          {
+            "$id": "https://schemas.example.test/sibling.json",
+            "$defs": {
+              "Wire": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {
+                    "$ref": "#/$defs/Bytes"
+                  }
+                }
+              },
+              "Bytes": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-document-invalid-0",
+      "value": {
+        "wire": {
+          "bytes": "not base64!"
+        }
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$id": "https://schemas.example.test/root.json",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wire"
+          ],
+          "properties": {
+            "wire": {
+              "$ref": "https://schemas.example.test/sibling.json#/$defs/Wire"
+            }
+          }
+        },
+        "documents": [
+          {
+            "$id": "https://schemas.example.test/sibling.json",
+            "$defs": {
+              "Wire": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {
+                    "$ref": "#/$defs/Bytes"
+                  }
+                }
+              },
+              "Bytes": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
+      "id": "cross-document-invalid-1",
+      "value": {
+        "wire": {
+          "bytes": "AAEC",
+          "extra": 1
+        }
+      },
+      "valid": false,
+      "input": {
+        "schema": {
+          "$id": "https://schemas.example.test/root.json",
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "wire"
+          ],
+          "properties": {
+            "wire": {
+              "$ref": "https://schemas.example.test/sibling.json#/$defs/Wire"
+            }
+          }
+        },
+        "documents": [
+          {
+            "$id": "https://schemas.example.test/sibling.json",
+            "$defs": {
+              "Wire": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "bytes"
+                ],
+                "properties": {
+                  "bytes": {
+                    "$ref": "#/$defs/Bytes"
+                  }
+                }
+              },
+              "Bytes": {
+                "type": "string",
+                "pattern": "^[A-Za-z0-9+/]*={0,2}$"
+              }
+            }
+          }
+        ]
+      }
+    },
+    {
       "id": "union-valid-0",
       "value": 1,
       "valid": true,

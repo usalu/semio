@@ -282,10 +282,7 @@ struct Transaction {
 #[cfg(feature = "native-artifact-execution")]
 fn durable_decision_event_match(bytes: &[u8], target: &InferenceWalTargetV1, document: &db::ArtifactId) -> Result<(String, String, bool), InferenceErrorV1> {
     use semio_s_artifact_gis_gismap::{GisMapSnapshot, mutations::GisMapMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::{
-        drawing::schema::{mutations::SemioDrawingMutation, snapshot::SemioDrawingSnapshot},
-        value::schema::{mutations::SemioValueMutation, snapshot::SemioValueSnapshot},
-    };
+    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot};
 
     let record = directory::os_store::durable_group::DurableOwnedGroupJournalRecordV1::admit_canonical(bytes.to_vec()).map_err(|error| {
         eprintln!("[WARN] inference wal: committed event is not an admissible durable decision — {error:?}");

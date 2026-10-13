@@ -169,8 +169,8 @@ pub mod io_registry {
 /// 🎲️ The assembly's 2D board as a node-link diagram: each visible part's `part_2d` circle or
 /// rectangle (the 2D board's own shape rule and defaults) labelled with its text, fasteners as links between the parts they join. The png export
 /// draws this picture.
-pub fn puzzle5d_board_drawing(snapshot: &crate::Puzzle5dSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{diagram_drawing, SemioDiagram, SemioDiagramLink, SemioDiagramNode, SemioDiagramShape};
+pub fn puzzle5d_board_drawing(snapshot: &crate::Puzzle5dSnapshot) -> semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot {
+    use semio_s_artifact_stdio_semio_drawing::io::{diagram_drawing, SemioDiagram, SemioDiagramLink, SemioDiagramNode, SemioDiagramShape};
     let nodes = snapshot
         .parts
         .iter()
@@ -224,10 +224,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?, diagnostics: Vec::new() })
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
+            Ok(Self { snapshot: <Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?, diagnostics: Vec::new() })
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -278,14 +278,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

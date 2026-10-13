@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `AddDesign`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::standards::v1::subsets::kit::schema::diff::{SemioKitDiff};
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitDesign};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::snapshot::{SemioKitSnapshot, SemioKitDesign};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -12,7 +12,7 @@ use std::collections::{BTreeMap, BTreeSet};
 const STUDIO_FIXTURE: &str = include_str!("../../⚙️engine/🪐️space/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 const HOME_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
 const SPACE_INDEX_FIXTURE: &str = include_str!("../../../../../✏️s/🔌️plugins/🪐️space/🗿️artifacts/🪐️space/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🧫️fixtures/🧫️retained-command-limits/🔣️.json");
-const COMPONENT_MANIFEST: &str = include_str!("../../📦️packages/🦀️rust/Cargo.toml");
+const COMPONENT_MANIFEST: &str = include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml");
 const IDENTITY_FIXTURE: &str = include_str!("../../🧫️fixtures/🧫️plugin-identity/🔣️.json");
 
 /// 🚦️ Every id the app declares on any surface an interactive dispatch can address, with the
@@ -248,7 +248,7 @@ async fn every_app_instance_constructs_against_its_registered_proof_catalog() {
 /// 🪶️ Pins the two actual persisted Runtime owners independently of the five app surfaces.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_composed_owner_census() {
-    use semio_framework_os_kernel::{ArtifactCodec, ArtifactSqliteSnapshot};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactSqliteSnapshot};
     use directory::io::io_mechanism::{io_route, native_snapshot_sqlite_schema};
     use semio_framework::io_schema::{ArtifactDialect, IoFidelity, SQLITE_SNAPSHOT};
     use semio_s_artifact_space_home::{SHomeSnapshot,SHomeMutation};
@@ -276,15 +276,15 @@ async fn sqlite_snapshot_composed_owner_census() {
         let native=ArtifactDialect::from(dialect);
         let declared=codec.snapshot_sqlite.as_ref().expect("every declared Snapshot owns its semantic SQLite provider");
         let(type_id,sql,typed)=match native.artifact_kind.as_str(){
-            "s.space.home"=>(std::any::TypeId::of::<SHomeSnapshot>(),SHomeSnapshot::SQLITE_SCHEMA,ArtifactCodec::bare::<SHomeSnapshot,SHomeMutation>("s.home")),
-            "s.space.space"=>(std::any::TypeId::of::<SSpaceSnapshot>(),SSpaceSnapshot::SQLITE_SCHEMA,ArtifactCodec::bare::<SSpaceSnapshot,SSpaceMutation>("s.space")),
+            "s.space.home"=>(std::any::TypeId::of::<SHomeSnapshot>(),SHomeSnapshot::SQLITE_SCHEMA,bare_artifact_codec::<SHomeSnapshot,SHomeMutation>("s.home")),
+            "s.space.space"=>(std::any::TypeId::of::<SSpaceSnapshot>(),SSpaceSnapshot::SQLITE_SCHEMA,bare_artifact_codec::<SSpaceSnapshot,SSpaceMutation>("s.space")),
             _=>panic!("undeclared Runtime owner")
         };
         assert_eq!(declared.snapshot_type,Some(type_id));
         assert!(!sql.trim().is_empty());
         assert_eq!(declared.schema.as_ref(),sql);
         assert!(declared.identical_to(typed.snapshot_sqlite.as_ref().unwrap()),"typed owner and declared complete SQL/hooks differ");
-        let installed=semio_framework_os_kernel::document_codec(&codec.schema).await.unwrap().expect("the ordinary composition installs each actual document codec");
+        let installed=semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("the ordinary composition installs each actual document codec");
         assert_eq!(installed.schema,codec.schema);
         assert!(declared.identical_to(installed.snapshot_sqlite.as_ref().expect("installed semantic provider")));
         assert_eq!(native_snapshot_sqlite_schema(&native).unwrap(),sql);

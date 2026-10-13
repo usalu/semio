@@ -1,6 +1,6 @@
 //! 🫧️ Real local-ephemeral publication snapshot fixture.
 
-use crate::store::{ArtifactDsl, ArtifactPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
+use crate::store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 use semio_framework_value_derive::{FromValue, ToValue};
 
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, Default, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]

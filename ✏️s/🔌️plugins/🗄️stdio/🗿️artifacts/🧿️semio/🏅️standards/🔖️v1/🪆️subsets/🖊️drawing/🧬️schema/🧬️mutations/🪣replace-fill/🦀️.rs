@@ -7,9 +7,9 @@
 //! flags. Modeled as `replace` (matching SMO's binding verb name) rather than `change`, since it
 //! is a whole-`Option` swap on a nullable field.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioRgba;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

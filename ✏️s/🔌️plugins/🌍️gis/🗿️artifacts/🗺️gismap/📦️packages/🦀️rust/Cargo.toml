@@ -18,7 +18,7 @@ path = "../../🦀️.rs"
 [features]
 default = []
 mcp-service=["dep:semio-framework-os-mcp","dep:semio-framework"]
-component-app-assembly = ["dep:semio-framework", "dep:semio-framework-surface", "semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-framework-surface", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -46,7 +46,13 @@ semio-s-artifact-stdio-dxf = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-pdf = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-drawing"] }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }

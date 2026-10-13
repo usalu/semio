@@ -13,7 +13,7 @@ mod tests {
                 Part21Instance { id: 3, entities: vec![("PRODUCT_DEFINITION".into(), vec![])] },
             ],
         };
-        <StepSnapshot as store::ArtifactPack>::encode_pack(&StepSnapshot::from_part21_document(&doc))
+        <StepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&StepSnapshot::from_part21_document(&doc))
     }
 
     #[semio_framework_async_macros::async_test]

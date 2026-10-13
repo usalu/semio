@@ -18,7 +18,7 @@ path = "../../🦀️.rs"
 [features]
 default = []
 test-serde = ["semio-s-plugin-block/test-serde"]
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["dep:semio-framework-dispatch-macros", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }

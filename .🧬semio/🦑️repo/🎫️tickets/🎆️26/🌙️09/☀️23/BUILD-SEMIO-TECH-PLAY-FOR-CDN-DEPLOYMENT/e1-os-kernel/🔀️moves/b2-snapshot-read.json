@@ -1,0 +1,18 @@
+{
+  "target": "🔗️read/🦀️.rs",
+  "module": "snapshot_read",
+  "anchor": "//#region 🧬️OpaqueSnapshotRead\n",
+  "doc": [
+    "//! 🔗️ Opaque snapshot reads and the Store's owner catalogs: derived snapshots, replays and history previews, the",
+    "//! snapshot read lease registry, the per-owner retirement factories and displaced-owner reservations, and the",
+    "//! document and member store owner catalogs with their unscheduled completion. Engine-held views (close view and",
+    "//! disposers over a live `ArtifactStore`) stay with the engine; everything here is vocabulary the engine and every",
+    "//! facet above it read in one direction.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": ["🧬️OpaqueSnapshotRead"],
+  "items": ["UNSCHEDULED_CATALOG_STEPS", "ARTIFACT_STORE_UNSCHEDULED_CLOSE_STEPS", "funded_member_store_owners", "complete_unscheduled_catalog", "close_unscheduled_catalog"],
+  "exceptItems": ["ArtifactStoreCloseView", "ArtifactStoreCursorDisposer", "ArtifactStoreOwnedDisposer"],
+  "movableTraits": []
+}

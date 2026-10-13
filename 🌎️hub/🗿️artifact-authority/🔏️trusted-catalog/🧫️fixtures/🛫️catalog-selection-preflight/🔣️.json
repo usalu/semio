@@ -8,7 +8,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -42,7 +42,7 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_hub_gis.wasm",
+          "outputName": "semio_hub_gis_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -77,7 +77,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -131,7 +131,7 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_hub_gis.wasm",
+          "outputName": "semio_hub_gis_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -163,7 +163,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -199,7 +199,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -233,7 +233,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -269,7 +269,7 @@
         {
           "pluginId": "note",
           "componentPackageId": "semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -305,7 +305,7 @@
         {
           "pluginId": "note",
           "componentPackageId": " semio:note",
-          "outputName": "semio_hub_note.wasm",
+          "outputName": "semio_hub_note_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -396,7 +396,7 @@
         {
           "pluginId": "gis",
           "componentPackageId": "semio:gis",
-          "outputName": "semio_hub_gis.wasm",
+          "outputName": "semio_hub_gis_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -435,7 +435,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_hub_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -482,7 +482,7 @@
         {
           "pluginId": "block",
           "componentPackageId": "semio:block",
-          "outputName": "semio_hub_block.wasm",
+          "outputName": "semio_hub_block_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -516,7 +516,7 @@
         {
           "pluginId": "sourcing",
           "componentPackageId": "semio:sourcing",
-          "outputName": "semio_hub_sourcing.wasm",
+          "outputName": "semio_hub_sourcing_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -557,7 +557,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -662,7 +662,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -743,7 +743,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -810,7 +810,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -875,7 +875,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -947,7 +947,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -1017,7 +1017,7 @@
         {
           "pluginId": "stdio",
           "componentPackageId": "semio:stdio",
-          "outputName": "semio_hub_stdio.wasm",
+          "outputName": "semio_hub_stdio_component.wasm",
           "linkedCodecRegistry": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
           "linkedCodecRegistryPresent": true,
           "descriptor": {
@@ -1090,7 +1090,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_hub_cad.wasm",
+          "outputName": "semio_hub_cad_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1131,7 +1131,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_hub_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1192,7 +1192,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_hub_cad.wasm",
+          "outputName": "semio_hub_cad_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1233,7 +1233,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_hub_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1294,7 +1294,7 @@
         {
           "pluginId": "cad",
           "componentPackageId": "semio:cad",
-          "outputName": "semio_hub_cad.wasm",
+          "outputName": "semio_hub_cad_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {
@@ -1335,7 +1335,7 @@
         {
           "pluginId": "demonstrator",
           "componentPackageId": "semio:demonstrator",
-          "outputName": "semio_hub_demonstrator.wasm",
+          "outputName": "semio_hub_demonstrator_component.wasm",
           "linkedCodecRegistry": null,
           "linkedCodecRegistryPresent": false,
           "descriptor": {

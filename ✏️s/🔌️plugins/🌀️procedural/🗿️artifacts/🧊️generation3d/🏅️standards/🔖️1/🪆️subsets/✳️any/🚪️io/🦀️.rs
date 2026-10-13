@@ -16,8 +16,8 @@ pub mod mesh_bridge {
     use semio_framework_artifact_flow_flow::neural::Dictionary;
     use semio_framework_artifact_flow_flow::{CameraJson, FlowHostSnapshot, OrderedMap, OrderedSet, SynapseSpec, Widget, WidgetLayout};
     use semio_framework_plugin::MeshData;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+    use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 
     /// 🏷️ Widget ids the import fixture plants, stable so a re-import overwrites rather than stacks.
     pub const IMPORT_SOURCE_WIDGET: &str = "imported-source";
@@ -65,12 +65,12 @@ pub mod mesh_bridge {
     /// `decode_base64` accepts on a `brep.io.import*` node's `data` channel. Reused from the gltf
     /// artifact's data-uri codec rather than re-derived here.
     pub fn base64_encode(bytes: &[u8]) -> String {
-        semio_s_artifact_stdio_gltf::engine::b64_encode(bytes)
+        semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::b64_encode(bytes)
     }
 
     /// 🔤️ Inverse of [`base64_encode`], for reading an import fixture's planted payload back.
     pub fn base64_decode(text: &str) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-        semio_s_artifact_stdio_gltf::engine::b64_decode(text).map_err(io_error)
+        semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::b64_decode(text).map_err(io_error)
     }
 
     /// 🔺️ Neutral materialized geometry as this repo's own typed mesh document.
@@ -129,7 +129,7 @@ pub mod mesh_bridge {
         let mut materials = Vec::new();
         for (id, data) in &mesh.materials {
             if data.as_object().is_none() { return Err(io_error("generation3d export material must be an owned object")); }
-            let defaults = semio_s_artifact_stdio_gltf::schema::snapshot::GltfPbrMetallicRoughness::default();
+            let defaults = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfPbrMetallicRoughness::default();
             let color = data.get("baseColor");
             if color.is_some_and(|value| value.as_array().is_none_or(|values| values.len() != 4)) { return Err(io_error("generation3d export material requires an RGBA base color")); }
             let channel = |index: usize| match color { None => Ok(defaults.base_color_factor[index] as f32), Some(color) => color.as_array().expect("validated material color")[index].as_f64().filter(|value| value.is_finite() && (0.0..=1.0).contains(value)).map(|value| value as f32).ok_or_else(|| io_error("generation3d export material color is invalid")) };
@@ -320,7 +320,7 @@ pub mod mesh_bridge {
 
     /// 📦️ Encodes the supplied mesh through the canonical STL grammar.
     pub fn stl_ascii_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-        let stl = ::semio_framework_async::poll::resolve_ready(<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl as semio_framework_plugin::ArtifactSerializer>::serialize(mesh))
+        let stl = ::semio_framework_async::poll::resolve_ready(<semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::stl::v_ascii::any::SemioMeshToStl as semio_framework_plugin::ArtifactSerializer>::serialize(mesh))
             .map_err(|error| io_error(error.to_string()))?;
         Ok(semio_s_artifact_stdio_stl::engine::encode_stl_ascii(&stl).into_bytes())
     }
@@ -564,7 +564,7 @@ pub mod document_io {
     use crate::standards::v1::subsets::any::io::import::deserializers::artifacts as import_leaves;
     use crate::Generation3dSnapshot;
     use semio_framework_plugin::io::FormatDescriptor;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+    use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
     /// 🏷️ One row of the user-facing format roster: the id the user picks, the two labels the picker
     /// shows, and the owning stdio artifact's representation this artifact's leaf writes or reads.
@@ -1080,10 +1080,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Generation3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Generation3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -1134,14 +1134,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Generation3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Generation3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

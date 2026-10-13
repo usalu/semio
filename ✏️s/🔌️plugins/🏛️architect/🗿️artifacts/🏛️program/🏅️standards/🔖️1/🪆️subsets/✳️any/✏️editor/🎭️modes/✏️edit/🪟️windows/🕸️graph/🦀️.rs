@@ -2,7 +2,7 @@
 //! node-graph surface, laid out on a circle.
 
 use crate::standards::v1::subsets::any::schema::inferences::undirected_edges;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NodeGraphEdgeRecord;
 use semio_framework_plugin::NodeGraphNodeRecord;

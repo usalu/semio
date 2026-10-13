@@ -3,17 +3,14 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 import { COMPONENT_MODULE_DIRECTORIES } from "../../📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
 /** 🧩️ Semantic plugin build materialization owner. */
 
-import { artifactFiles } from "../../🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 
-import { stageRepositoryArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 
-import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 
 import { constants as fsConstants, createReadStream, createWriteStream, copyFileSync, cpSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, realpathSync, renameSync, rmSync, rmdirSync, statSync, unlinkSync, watch, writeFileSync } from "node:fs";
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -41,11 +38,19 @@ import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODUL
 
 const repoRoot = getWorkspaceRoot();
 
-import { PLUGIN_WASM_TARGET, devStagingProfile, pluginCargoArgs, pluginOutRoot, pluginWasmProfile } from "../📋️plan/🟦️.ts";
+import { PLUGIN_WASM_TARGET, pluginOutRoot } from "../📋️plan/🟦️.ts";
 
 import { publishBuiltExtension } from "../📥️installation/🟦️.ts";
 
-import { assertPluginOutputChildren, describeBuiltPlugin, stagePluginDescriptor } from "../🛂️descriptor/🟦️.ts";
+import { discoverPluginBuildTargets } from "../../📇️registry/🔎️discovery/🟦️.ts";
+
+import { materializeComponentModuleV1 } from "../../🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
+
+import { ITERATE_COMPONENT_PROFILE, type ComponentDeliverableV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
+
+import { publishedDescriptorEmitter } from "../../🖨️describe/🏗️component-build/🟦️.ts";
+
+import { componentStageTargetV1, stageComponentV1 } from "../../🖨️describe/🧩️component-stage/🟦️.ts";
 
 
 
@@ -105,67 +110,35 @@ async function readPackageName(cratePath: string): Promise<string> {
   return match[1]!;
 }
 
-/** 🔑️ The `stageRepositoryArtifacts` ownership key one component's staged module directory carries — byte
- * for byte the key `@semio-tech/framework-plugin-web`'s `materialize <profile> --manifest <Cargo.toml>`
- * writes, so the catalog builder and the per-crate Nx target own the SAME directory in the one staging
- * root instead of each claiming a tree of its own. */
-function componentArtifactOwner(target: PluginBuildTargetV1, profile: "dev" | "release"): string {
-  return `${target.cratePath.split(/[\\/]/).join("/")}/Cargo.toml:browser:${profile}`;
+
+/** 🎯️ One plugin's iterate stage: the `wasm-prototype` build of exactly this crate into its `dist/components-iterate`,
+ * described locally (never committed) and bound by a `wasm-prototype` receipt. Every other plugin keeps its shipped module.
+ * Fine-grain locking (`.cargo/config.toml`) lets concurrent agents and devs share every already-built unit. */
+async function buildPluginCargo(target: PluginBuildTargetV1): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string; readonly deliverable: ComponentDeliverableV1 }> {
+  publishedDescriptorEmitter(repoRoot);
+  const staged = await stageComponentV1(repoRoot, componentStageTargetV1(repoRoot, join(target.cratePath, "Cargo.toml")), ITERATE_COMPONENT_PROFILE, "local");
+  return { target, artifact: staged.deliverable.wasm, deliverable: staged.deliverable };
 }
 
-//#endregion 🛂️DescriptorPublication
-/** 🎯️ Serial component compilation against the ONE shared `cargoTargetDirectory` — descriptor extraction
- * runs after materialization. Fine-grain locking (`.cargo/config.toml`) makes concurrent invocations of
- * this function across agents/devs share every already-built unit, so no caller owns a private target dir. */
-async function buildPluginCargo(target: PluginBuildTargetV1): Promise<{ readonly target: PluginBuildTargetV1; readonly artifact: string }> {
-  const packageName = await readPackageName(target.cratePath);
-  const profile = pluginWasmProfile();
-  const cargoTargetRoot = cargoTargetDirectory(repoRoot);
-  if (runCmdStatus("cargo", pluginCargoArgs(packageName, profile, join(repoRoot, target.cratePath, "Cargo.toml")), { cwd: repoRoot, env: process.env, budgetMs: buildBudgetMs() }) !== 0) {
-    throw new Error(`plugin build failed: ${target.pluginId}`);
-  }
-  const artifact = join(cargoTargetRoot, PLUGIN_WASM_TARGET, cargoProfileDir(profile), `${packageName.replace(/-/g, "_")}.wasm`);
-  return { target, artifact };
-}
-
-/** 🎯️ One target's MATERIALIZE stage: jco transpile, `wasm-opt`, bridge/host-shim file
- * emission, extension publish, hot-swap marker — everything downstream of a finished cargo artifact
- * that touches neither the shared `target/` build-directory lock nor the global `~/.cargo`
- * package-cache lock, so it is safe to run several of these at once (see `buildPluginCatalog`). Does
- * NOT call `publishShardWorker()` — that write is identical content for every target in a catalog run,
- * so callers publish it once rather than redundantly per plugin (still "idempotent: rewritten on every
- * plugin build" per its own doc, just once per BUILD rather than once per PLUGIN). */
-async function materializePlugin(target: PluginBuildTargetV1, artifact: string): Promise<void> {
-  const outDir = join(pluginOutRoot, moduleDirectoryName(target.pluginId, parseModuleDirectories({version: 1, modules: [{pluginId: target.pluginId, directoryName: target.directoryName}]})));
-  mkdirSync(pluginOutRoot, { recursive: true });
-  const jsBase = target.wasmOut.replace(/\.wasm$/, "");
-  const componentBase = `${jsBase}_component`;
-  assertPluginOutputChildren(outDir, componentBase);
-  const temporary = mkdtempSync(`${outDir}.materialize-`);
-  try {
-    writeFileSync(join(temporary, "🟨️.js"), hostShimSource());
-    // 🪶️ Transpile straight from cargo's own build output — plugin-modules never receives a copy of the
-    // full component `.wasm` (see `emitRustArtifacts`'s doc comment). The browser only ever fetches
-    // jco's extracted `${componentBase}.core.wasm`, so shipping the untranspiled component alongside it
-    // was pure duplicate ~60MB-class weight per plugin; native `os run` now reads straight from `target/`.
-    // 🚀️ T-P8: the ASYNC (non-blocking-spawn) transpile — see its doc — is what makes `buildPluginCatalog`'s
-    // bounded-parallel materialize stage actually overlap in wall-clock time, not just in scheduling.
-    await transpilePluginComponentAsync(artifact, temporary, componentBase, pluginWebMaterializeContext());
-    await describeBuiltPlugin(target, artifact, join(temporary, `${componentBase}.js`));
-    if (!stagePluginDescriptor(target, temporary)) throw new Error(`Missing fresh descriptor for ${target.pluginId}`);
-    writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, target.wasmOut));
-    // 🧱️ Published through the SAME `stageRepositoryArtifacts` ownership key `@semio-tech/framework-plugin-web`'s
-    // `materialize-<profile>` uses, so this catalog builder and the per-crate Nx target are two producers of
-    // ONE tree rather than two trees: either may replace a module directory the other staged, and neither
-    // can leave a half-written module visible to a running dev server.
-    await stageRepositoryArtifacts(outDir, componentArtifactOwner(target, devStagingProfile()), artifactFiles(temporary));
-  } finally { rmSync(temporary, { recursive: true, force: true }); }
-  // 🧩️ Publish extension artifacts before the hot-swap marker: the browser reloads `/🧩️extension-modules/...`
-  // from the SSE event, so the install root must already serve the new files.
-  publishBuiltExtension(target, outDir);
+/** 🎯️ One target's MATERIALIZE stage: the shared module materializer over the iterate deliverable (no `wasm-opt`), then
+ * the extension publish and the hot-swap marker. Safe to run beside sibling targets: it touches neither the shared cargo
+ * build directory nor the global package cache. */
+async function materializePlugin(target: PluginBuildTargetV1, built: Readonly<{ deliverable: ComponentDeliverableV1 }>): Promise<void> {
+  const { output } = await materializeComponentModuleV1(repoRoot, target, built.deliverable);
+  publishBuiltExtension(target, output);
   const hotSwapMarker = join(pluginOutRoot, MODULE_HOT_SWAP_FILE);
   writeFileSync(hotSwapMarker, `${JSON.stringify({ pluginId: target.pluginId, rebuiltAt: Date.now() })}\n`);
-  console.log(`built program ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${pluginWasmProfile()}) -> ${outDir}`);
+  console.log(`iterated ${target.pluginId} (${PLUGIN_WASM_TARGET}, ${ITERATE_COMPONENT_PROFILE}) -> ${output}`);
 }
 
-export { buildPluginCargo, componentArtifactOwner, ensureGuestSlimTypstFontsAsset, ensurePreview2ShimVendor, materializePlugin, pluginWebMaterializeContext, preview2ShimVendorDir, publishShardWorker, readPackageName, rewriteExistingPluginShimImports };
+/** 🔁️ `components iterate <plugin-id>`: the single-plugin browser loop — iterate build, local describe, unoptimized module. */
+export async function iterateComponentV1(pluginId: string): Promise<void> {
+  const target = discoverPluginBuildTargets(repoRoot).find((entry) => entry.pluginId === pluginId);
+  if (!target) throw new Error(`components iterate: ${pluginId} names no discovered plugin crate with a deployment directory`);
+  ensurePreview2ShimVendor();
+  ensureGuestSlimTypstFontsAsset();
+  publishShardWorker();
+  await materializePlugin(target, await buildPluginCargo(target));
+}
+
+export { buildPluginCargo, ensureGuestSlimTypstFontsAsset, ensurePreview2ShimVendor, materializePlugin, pluginWebMaterializeContext, preview2ShimVendorDir, publishShardWorker, readPackageName, rewriteExistingPluginShimImports };

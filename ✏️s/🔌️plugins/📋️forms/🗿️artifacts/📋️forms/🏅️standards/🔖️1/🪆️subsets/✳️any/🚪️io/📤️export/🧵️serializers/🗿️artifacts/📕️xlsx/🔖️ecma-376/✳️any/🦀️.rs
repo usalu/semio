@@ -25,7 +25,7 @@ impl Serializer<FormsSnapshot> for FormsIntoXlsx {
             .flat_map(|(row, values)| values.into_iter().enumerate().filter(|(_, value)| !value.is_empty()).map(move |(col, value)| XlsxCell { row: row as u32 + 1, col: col as u32, value: XlsxCellValue::InlineString(value) }))
             .collect();
         let snapshot = build_minimal_xlsx(XlsxWorkbook { sheets: vec![XlsxSheet { name: "Questions".into(), cells }], shared_strings: Vec::new() });
-        Ok(IoOutcome::clean(IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))))
+        Ok(IoOutcome::clean(IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot))))
     }
 }
 

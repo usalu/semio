@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, NoConfigMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{delete_edge::DeleteEdge, delete_node::DeleteNode, SemioGraphMutation};
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 
 /// 🕹️ `selected_node_ids` comes from `interaction.selection("ast").ids` (framework-owned); the framework prunes the
 /// deleted ids from the selection once the document dispatch lands. The deletion is ONE edit of the composed `content`

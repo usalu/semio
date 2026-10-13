@@ -14,7 +14,7 @@ pub fn diff(payload: &super::AddBlockEntity, base: &SemioCadSnapshot) -> protoco
     let super::AddBlockEntity { block_name, entity, at } = payload;
     let block_len = base.blocks.iter().find(|block| block.name == *block_name).map_or(0, |block| block.entities.len());
     protocol::MutationOutcome::new({
-        wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(block_len, |at| at.min(block_len)), item: entity.clone() }] }) })
+        wrap_block_diff(block_name, CadBlockDiff { base_point: None, entities: Some(NamedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(block_len, |at| at.min(block_len)), item: entity.clone() }] }) })
     })
 }
 //#endregion 🔖️Diff

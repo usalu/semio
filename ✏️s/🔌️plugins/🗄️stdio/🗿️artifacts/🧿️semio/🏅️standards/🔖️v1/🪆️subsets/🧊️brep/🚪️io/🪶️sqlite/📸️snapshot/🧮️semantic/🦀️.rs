@@ -1,8 +1,8 @@
 //! 🧊️ Borrowed BRep primitives count literal topology, analytic geometry and every spline array.
 use super::{SemioBrepSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Brep native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Brep complete cell extent overflow"))}
@@ -39,7 +39,7 @@ fn binary_surface(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&
  let(kind,words)=match byte(reader)?{0=>(5,6),1=>(8,7),2=>(4,8),3=>(6,4),4=>(5,8),5=>{census.row(45)?;binary_points(reader,census,control,3)?;binary_numbers(reader,census,control)?;for _ in 0..4{uint32(reader)?;}binary_numbers(reader,census,control)?;binary_numbers(reader,census,control)?;return Ok(())},_=>return Err(invalid())};census.row(add(add(8,kind)?,binary_words(reader,words)?)?)
 }
 /// 📦️ Counts original BRep binary topology and geometry before typed construction.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|census.row(add(add(24,text(reader,control)?)?,binary_words(reader,4)?)?))?;
@@ -80,7 +80,7 @@ fn document_surface(value:&str,census:&mut Census,control:&mut NativeDecodeContr
  };census.row(add(add(8,kind)?,bytes)?)
 }
 /// 📝️ Counts BRep literal topology references, exact IEEE words and original spline array records.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","vertices","edges","loops","faces","shells","solids","coedges","nextLabel"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?,document_label(fields[8].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{let[id,point,tol]=native::record(value,control)?;census.row(add(add(add(24,native::hex_text_extent(id,control)?)?,document_point(point,control,3)?)?,document_f64(tol,control)?)?)})?;

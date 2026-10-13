@@ -1,5 +1,5 @@
 use super::*;
-use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 //#region 🔖️Fixtures

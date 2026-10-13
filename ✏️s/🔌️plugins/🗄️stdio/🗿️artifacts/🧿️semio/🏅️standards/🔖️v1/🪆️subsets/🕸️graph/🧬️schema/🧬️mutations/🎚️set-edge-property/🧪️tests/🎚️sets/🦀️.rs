@@ -1,8 +1,8 @@
 //! 🧪️ `set-edge-property` fixture — `🎚️sets`: the edge's existing `colour` property changes from `red` to `blue`.
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️set-edge-property/🎚️sets/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎚️set-edge-property/🎚️sets/📸️snapshot/➡️after/🔣️.json");
@@ -14,7 +14,7 @@ fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-edge-property fixture decodes")
 }
 fn snapshot(text: &str) -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
 }
 fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).expect("set-edge-property fixture parses")
@@ -32,7 +32,7 @@ async fn applies_to_the_committed_before_snapshot() {
 /// ↩️ The undo is one `set-edge-property` row and restores the byte-identical before-snapshot.
 #[semio_framework_async_macros::async_test]
 async fn the_undo_restores_the_before_snapshot_byte_for_byte() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let base = snapshot(BEFORE);
     let mutation: SemioGraphMutation = decode(MUTATION);
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
@@ -49,7 +49,7 @@ async fn the_undo_restores_the_before_snapshot_byte_for_byte() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for text in [BEFORE, AFTER] {
-        assert_eq!(json(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "set-edge-property/🎚️sets: a committed snapshot is not canonical");
+        assert_eq!(json(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "set-edge-property/🎚️sets: a committed snapshot is not canonical");
     }
     assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "set-edge-property/🎚️sets: the committed mutation is not canonical");
 }
@@ -70,9 +70,9 @@ async fn declared_outcome_and_diff_hold() {
 async fn guard_branches_report_their_frozen_codes() {
     let base = snapshot(BEFORE);
     let codes = |leaf: SemioGraphMutation| -> Vec<String> { leaf.diff(&base).messages().iter().map(|message| message.code.0.to_string()).collect() };
-    use crate::standards::v1::subsets::graph::schema::snapshot::GraphEdgeId;
-    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
-    use crate::standards::v1::subsets::graph::schema::mutations::set_edge_property::SetEdgeProperty;
+    use crate::schema::snapshot::GraphEdgeId;
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+    use crate::schema::mutations::set_edge_property::SetEdgeProperty;
     let set = |edge: &str, key: &str, value: &str| SemioGraphMutation::SetEdgeProperty(SetEdgeProperty { edge_id: GraphEdgeId::new(edge), key: key.into(), value: SemioValue::Str { value: value.into() } });
     assert_eq!(codes(set("e1", "", "x")), ["mutation.invariant"]);
     assert_eq!(codes(set("ghost", "colour", "x")), ["mutation.target-missing"]);

@@ -1,6 +1,6 @@
 import type { CadDiff } from "../../../🧬️schema/🔺️diff/🟦️.ts";
 
-/** 🔺️ cad.diff text facade. `CadDiff` never implements `store::ArtifactDsl` anywhere in the cad
+/** 🔺️ cad.diff text facade. `CadDiff` never implements `store::os_store::serialization::ArtifactDsl` anywhere in the cad
  * plugin — the sibling `🦀️.rs` only implements `apply_to_artifact`/`MutationDiff`; this
  * facet's `📖️.grammar.semio` is registered for LSP/tooling only, the same explicitly
  * documented case as `🗒️note/…/🚪️io/📝️text/🔺️diff/🦀️.rs`. There is nothing on the Rust

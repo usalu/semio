@@ -14,7 +14,7 @@ fn admission_grant(bytes: usize) -> RetainedCloneGrant {
 }
 
 fn wide_grant() -> RetainedCloneGrant {
-    admission_grant(crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES)
+    admission_grant(crate::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES)
 }
 
 #[test]
@@ -48,8 +48,8 @@ fn persisted_hydration_release_store_entry_refuses_foreign_target_without_consum
     eprintln!("[DEBUG] Store-only hydration refuses Envelope before work/allocation; original catalog/pack/snapshot/history identities retained");
     for _ in 0..fixture["maximumCloseTurns"].as_u64().unwrap() {
         if hydration.terminal_is_empty() { break; }
-        let demand = quoted(&hydration, crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
-        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES);
+        let demand = quoted(&hydration, crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+        assert!(demand.copy_bytes.max(demand.capacity_bytes).max(demand.release_bytes) <= crate::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES);
         hydration.close_step(crate::os_store::component::tests::physical_test_close_grant()).unwrap();
     }
     assert!(hydration.terminal_is_empty());
@@ -381,7 +381,7 @@ fn funded_verified_genesis_preserves_original_refusal_and_every_shared_backing_r
 
 #[test]
 fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
-    use crate::os_store::ArtifactEditMessageLedger;
+    use crate::os_store::ledger::ArtifactEditMessageLedger;
     use super::super::ArtifactEditMessageLedgerRetirement;
     let plain: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();
     let row = &plain["messageLedgerBirth"]; let supplied = &row["policy"];
@@ -452,7 +452,7 @@ fn message_ledger_phased_birth_cancellation_preserves_exact_original_pages() {
 #[test]
 fn member_envelope_phased_birth_cancel_cuts_conserve_original_catalog_allocations() {
     use semio_framework_value::retirement::OwnedValueRetirementFactory;
-    use crate::os_store::{empty_document_envelope_from_genesis_owners, ArtifactOwnedValueRetirementFactory};
+    use crate::os_store::{document_materialize::empty_document_envelope_from_genesis_owners, ArtifactOwnedValueRetirementFactory};
     use super::super::ArtifactStoreEnvelopeRetirement;
     use crate::os_vcs::io::binary::genesis::AdmittedArtifactGenesis;
     let plain: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/📏️physical-demand/🔣️.json")).unwrap();

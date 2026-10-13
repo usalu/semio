@@ -35,18 +35,18 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{diff_semio_document_mutation, inverse_semio_document_mutation, SemioDocumentMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::mutations::{decode_semio_document_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::binary::snapshot::{encode_semio_document_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::binary::snapshot::{decode_semio_document_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{decode_semio_document_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{encode_semio_document_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{print_semio_document_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::io::text::snapshot::{parse_semio_document_dsl};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_document::schema::mutations::{diff_semio_document_mutation, inverse_semio_document_mutation, SemioDocumentMutation};
+    use semio_s_artifact_stdio_semio_document::io::text::mutations::decode_semio_document_mutation_json;
+    use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+    use semio_s_artifact_stdio_semio_document::io::binary::snapshot::encode_semio_document_pack;
+    use semio_s_artifact_stdio_semio_document::io::binary::snapshot::decode_semio_document_pack;
+    use semio_s_artifact_stdio_semio_document::io::text::snapshot::decode_semio_document_snapshot_json;
+    use semio_s_artifact_stdio_semio_document::io::text::snapshot::encode_semio_document_snapshot_json;
+    use semio_s_artifact_stdio_semio_document::io::text::snapshot::print_semio_document_dsl;
+    use semio_s_artifact_stdio_semio_document::io::text::snapshot::parse_semio_document_dsl;
 
     const DSL_ASSET: &str = "asset://🗒️memo/🗣️.dsl.semio";
     const PACK_ASSET: &str = "asset://🗒️memo/🎒️.pack.semio";

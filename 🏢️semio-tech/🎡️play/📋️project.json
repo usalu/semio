@@ -56,77 +56,7 @@
       ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare dev",
-        "forwardAllArgs": false
-      }
-    },
-    "catalog-release": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "inputs": [
-        {
-          "dependentTasksOutputFiles": "**/*",
-          "transitive": true
-        }
-      ],
-      "dependsOn": [
-        "@semio-tech/framework-os-dev:prepare-demonstrator-react-release",
-        "@semio-tech/framework-os-dev:prepare-imperative-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-png-react-release",
-        "@semio-tech/framework-os-dev:prepare-lowpoly-react-release",
-        "@semio-tech/framework-os-dev:prepare-remodel-react-release",
-        "@semio-tech/framework-os-dev:prepare-draw-react-release",
-        "@semio-tech/framework-os-dev:prepare-raster-react-release",
-        "@semio-tech/framework-os-dev:prepare-layout-react-release",
-        "@semio-tech/framework-os-dev:prepare-shooting-react-release",
-        "@semio-tech/framework-os-dev:prepare-block2d-react-release",
-        "@semio-tech/framework-os-dev:prepare-wfc2d-react-release",
-        "@semio-tech/framework-os-dev:prepare-fem2d-react-release",
-        "@semio-tech/framework-os-dev:prepare-energy-react-release",
-        "@semio-tech/framework-os-dev:prepare-architect-react-release",
-        "@semio-tech/framework-os-dev:prepare-din4108-react-release",
-        "@semio-tech/framework-os-dev:prepare-note-react-release",
-        "@semio-tech/framework-os-dev:prepare-writer-react-release",
-        "@semio-tech/framework-os-dev:prepare-forms-react-release",
-        "@semio-tech/framework-os-dev:prepare-mathematical-react-release",
-        "@semio-tech/framework-os-dev:prepare-reasoning-wires-react-release",
-        "@semio-tech/framework-os-dev:prepare-dag-react-release",
-        "@semio-tech/framework-os-dev:prepare-trinity-jack-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-mp4-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-step-react-release",
-        "@semio-tech/framework-os-dev:prepare-bim-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-ifc-2x3-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-gltf-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-pdf-1-4-a-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-docx-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-semio-brep-react-release",
-        "@semio-tech/framework-os-dev:prepare-stdio-binary-react-release",
-        "@semio-tech/framework-os-dev:prepare-animate-react-release",
-        "@semio-tech/framework-os-dev:prepare-sequence-react-release",
-        "@semio-tech/framework-os-dev:prepare-vcs-react-release",
-        "@semio-tech/framework-os-dev:prepare-home-react-release"
-      ],
-      "options": {
-        "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/📦️site/📜️script.ts catalog",
-        "forwardAllArgs": false
-      }
-    },
-    "prepare-release": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        {
-          "dependentTasksOutputFiles": "**/*",
-          "transitive": true
-        }
-      ],
-      "dependsOn": ["catalog-release"],
-      "options": {
-        "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare release",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
         "forwardAllArgs": false
       }
     },
@@ -244,29 +174,212 @@
     },
     "build": {
       "executor": "nx:run-commands",
-      "dependsOn": [
-        "prepare-release"
-      ],
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "release": {
+            "prerequisites": [
+              "workspace:deps-wasm-opt",
+              "@semio-tech/plugin-registry:generate"
+            ],
+            "stageAfter": {
+              "describe": [
+                "job:describe-tool"
+              ],
+              "probe": [
+                "job:support"
+              ]
+            },
+            "jobs": [
+              {
+                "id": "describe-tool",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "host-tool",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "font-assets",
+                "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "fonts",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "fonts"
+                ],
+                "after": [
+                  "job:font-assets"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "support",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "support"
+                ],
+                "after": [
+                  "job:fonts"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "flow-wasm",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/🫀️core/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "wasm-release",
+                "profile": "wasm-release",
+                "target": "wasm32-unknown-unknown",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "surface-wasm",
+                "root": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "wasm-release",
+                "profile": "wasm-release",
+                "target": "wasm32-unknown-unknown",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "puzzle-wasm",
+                "root": "🌎️hub/🧩️compositions/🧩️puzzle/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "wasm"
+                ],
+                "after": [],
+                "lane": "wasm-release",
+                "profile": "wasm-release",
+                "target": "wasm32-unknown-unknown",
+                "policies": [
+                  "process",
+                  "cargo",
+                  "wasm"
+                ]
+              },
+              {
+                "id": "map-tiles",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "map-tiles"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "bundle",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "bundle"
+                ],
+                "after": [
+                  "job:flow-wasm",
+                  "job:surface-wasm",
+                  "job:puzzle-wasm",
+                  "job:map-tiles"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process"
+                ]
+              },
+              {
+                "id": "pages",
+                "root": "🏢️semio-tech/🎡️play/🔨️modules/📦️site",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "pages"
+                ],
+                "after": [
+                  "job:bundle",
+                  "job:support",
+                  "components:publish"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "dependsOn": [],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
         "forwardAllArgs": false
       },
-      "cache": true,
-      "outputs": [
-        "{projectRoot}/dist/pages"
-      ]
-    },
-    "build-fresh": {
-      "executor": "nx:run-commands",
       "cache": false,
-      "outputs": [],
-      "dependsOn": [],
-      "options": {
-        "cwd": "🏢️semio-tech/🎡️play",
-        "command": "bun ./🔨️modules/📦️site/📜️script.ts build-fresh",
-        "forwardAllArgs": false
-      }
+      "outputs": [
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/pages"
+      ]
     },
     "test": {
       "executor": "nx:run-commands",
@@ -324,7 +437,9 @@
       "executor": "nx:run-commands",
       "cache": false,
       "outputs": [],
-      "dependsOn": ["workspace:deps-browsers"],
+      "dependsOn": [
+        "workspace:deps-browsers"
+      ],
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test-release",
@@ -341,6 +456,17 @@
       "options": {
         "cwd": "🏢️semio-tech/🎡️play",
         "command": "bun ./🔨️modules/🧪️e2e/📜️script.ts test",
+        "forwardAllArgs": false
+      }
+    },
+    "release-verify": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "dependsOn": [],
+      "options": {
+        "cwd": "🏢️semio-tech/🎡️play",
+        "command": "bun ./🔨️modules/📦️site/📜️script.ts verify",
         "forwardAllArgs": false
       }
     }

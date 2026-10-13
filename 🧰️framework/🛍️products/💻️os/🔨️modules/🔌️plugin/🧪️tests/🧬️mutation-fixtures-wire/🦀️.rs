@@ -22,7 +22,7 @@ macro_rules! fixture_operation_text {
         }
     )+};
 }
-pub(crate) use fixture_operation_text;
+use fixture_operation_text;
 
 fn wire_source<M: OpBinary + store::ArtifactOperationText>(mutation: &M) -> Option<store::ArtifactPreparedOperationSource<'_>> {
     Some(store::ArtifactPreparedOperationSource::Text { header: b"fixture", body: mutation })
@@ -34,7 +34,7 @@ fn wire_schema<P, M: SemanticMutation<P>>(mutation: &M) -> Option<(&str, &str)> 
 }
 
 /// 📬️ The fixture's document preparation authority: bounded retained preparation wrapped in the mutation's own wire.
-pub(crate) fn preparation_factory<P, M>(prefix: &'static str) -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<P, M>>
+fn preparation_factory<P, M>(prefix: &'static str) -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>
 where
     P: Clone + Send + Sync + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + 'static,
     M: Clone + OpBinary + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + Send + Sync + semio_framework_value::retirement::RetireOwned + 'static,
@@ -46,19 +46,19 @@ where
 /// 📐️ The wire-carrying catalog's source birth: the bounded catalog plus the wire-wrapped paged preparation factory.
 fn wired_birth_demand<P, M>() -> Result<RetainedCloneBirthDemand, ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
-    let base = store::bounded_artifact_store_owners_birth_demand::<P, M>()?;
+    let base = store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<P, M>()?;
     let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, M>(RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, M, store::MutationApplyEdit<P, M>>(), depth: 1 })?;
     let capacity_bytes = base.capacity_bytes.checked_add(preparation.capacity_bytes).ok_or_else(|| ValueError::literal(ValueRefusalKind::OwnershipLimit, "fixture catalog original source tree capacity overflow"))?;
     Ok(RetainedCloneBirthDemand { capacity_bytes, depth: base.depth.max(preparation.depth) })
 }
 
 /// 📏️ Quotes the funded wire catalog source for the owner hooks.
-pub(crate) fn document_store_owners_source_demands<P, M>() -> Result<semio_framework_value::RetirementDemand, ValueError>
+fn document_store_owners_source_demands<P, M>() -> Result<semio_framework_value::RetirementDemand, ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
     let birth = wired_birth_demand::<P, M>()?;
@@ -66,20 +66,20 @@ where
 }
 
 /// 🗃️ Admits the bounded document catalog together with the fixture's wire-carrying preparation authority under the caller's grant.
-pub(crate) fn admit_document_store_owners<P, M>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<P, M>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<P, M>>
+fn admit_document_store_owners<P, M>(prefix: &'static str, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<P, M>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, M>>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
-    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, M>(RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, M, store::MutationApplyEdit<P, M>>(), depth: 1 }).map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
-    store::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || preparation_factory::<P, M>(prefix))
+    let preparation = store::operation_wire_preparation_factory_source_birth_demand::<P, M>(RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<P, M, store::MutationApplyEdit<P, M>>(), depth: 1 }).map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+    store::os_store::document_store_owners::bounded_artifact_store_owners_with_one_item_preparation(grant, preparation, || preparation_factory::<P, M>(prefix))
 }
 
 /// 🗃️ Funds the bounded document catalog together with the fixture's wire-carrying preparation authority.
-pub(crate) fn funded_document_store_owners<P, M>(prefix: &'static str) -> Result<store::DocumentStoreOwners<P, M>, ValueError>
+fn funded_document_store_owners<P, M>(prefix: &'static str) -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, M>, ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + semio_framework_value::retained_clone::RetainedClone + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + OpBinary + OpText + SemanticMutation<P> + store::ArtifactOperationText + store::ArtifactCanonicalJsonTree + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
-    store::fund_document_store_owners(wired_birth_demand::<P, M>()?, |grant| admit_document_store_owners::<P, M>(prefix, grant))
+    store::os_store::document_store_owners::fund_document_store_owners(wired_birth_demand::<P, M>()?, |grant| admit_document_store_owners::<P, M>(prefix, grant))
 }

@@ -6,7 +6,7 @@
 use std::hint::black_box;
 use std::time::Instant;
 
-use semio_framework_3d::brep::engine::{Brep, GeometryHandle, Vec3};
+use {semio_framework_3d_brep_engine::{Brep, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
 
 const SAMPLES: usize = 3;
 

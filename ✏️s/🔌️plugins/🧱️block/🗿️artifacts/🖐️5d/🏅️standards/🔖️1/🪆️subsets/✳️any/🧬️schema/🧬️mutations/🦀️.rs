@@ -10,7 +10,7 @@ use crate::Block5dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
-pub type Block5dEnvelope = store::ArtifactEnvelope<Block5dSnapshot, Block5dMutation>;
+pub type Block5dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block5dSnapshot, Block5dMutation>;
 pub type Block5dStore = store::ArtifactStore<Block5dSnapshot, Block5dMutation>;
 //#endregion 🔖️Store
 

@@ -4,7 +4,7 @@ use crate::{CurationSnapshot, SourcingMutation};
 use framework_schema::ArtifactSchema;
 use semio_framework_plugin::world3d_mesh_id_from_url;
 use semio_framework_dispatch_macros::{dyn_enum, dyn_enum_close};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ curation document artifact state. `catalog`/
@@ -15,7 +15,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 pub struct CurationArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    pub catalog: store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
     pub stock_extra: Vec<ObjectKindExtra>,
     #[state(artifact)]

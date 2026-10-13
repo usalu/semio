@@ -4,8 +4,8 @@
 
 use super::*;
 use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, create_drawing_text_layer, layer_base_mut};
-use crate::standards::v1::subsets::any::schema::{default_drawing_document};
-use crate::standards::v1::subsets::any::schema::{create_drawing_path_layer};
+use crate::standards::v1::subsets::any::schema::default_drawing_document;
+use crate::standards::v1::subsets::any::schema::create_drawing_path_layer;
 use crate::{DrawingArtboard, DrawingImageAsset, DrawingLayerNode};
 
 fn find(haystack: &[u8], needle: &[u8], from: usize) -> Option<usize> {

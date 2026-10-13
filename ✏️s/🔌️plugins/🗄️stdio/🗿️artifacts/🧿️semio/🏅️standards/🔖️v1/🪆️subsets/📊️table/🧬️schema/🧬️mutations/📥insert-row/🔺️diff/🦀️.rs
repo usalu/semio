@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `InsertRow`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Inserts one row at `index` (clamped to the end): the `rows` triple names exactly that addition.

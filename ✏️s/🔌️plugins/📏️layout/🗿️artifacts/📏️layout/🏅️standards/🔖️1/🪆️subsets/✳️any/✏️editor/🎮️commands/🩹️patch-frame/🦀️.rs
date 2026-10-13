@@ -388,8 +388,8 @@ mod open_tests {
 
     #[test]
     fn patch_frame_renames_drawing_text() {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
+        use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+        use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, SemioDrawingSnapshot};
         let point = |x: f64, y: f64| SemioPoint2 { x, y };
         let content = SemioDrawingSnapshot {
             schema: "stdio.semio.drawing".into(),

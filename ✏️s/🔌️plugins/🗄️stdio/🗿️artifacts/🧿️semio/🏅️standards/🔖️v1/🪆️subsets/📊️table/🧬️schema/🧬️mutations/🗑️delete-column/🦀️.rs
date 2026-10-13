@@ -1,8 +1,8 @@
 //! 🗑️ `delete-column` — removes a named column and its aligned cell from every row (captures the
 //! full cascade for its inverse, per `📓️taxonomy.md`'s `delete` row).
 
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

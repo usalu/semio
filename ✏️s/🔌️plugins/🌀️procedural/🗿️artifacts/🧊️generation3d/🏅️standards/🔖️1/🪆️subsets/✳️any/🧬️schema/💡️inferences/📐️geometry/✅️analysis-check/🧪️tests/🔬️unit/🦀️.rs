@@ -82,7 +82,7 @@ fn a_report_lists_every_kernel_finding_before_the_verdict() {
     let scope = scope_of(&shape, "shape").expect("scope");
     let mut report = validity(&shape.body, &scope).expect("validity");
     let manifold = manifold_report(&shape.body, &scope).expect("manifold");
-    report.issues.push(semio_framework_3d::brep::queries::analysis::ValidityIssue { entity: "face:7".into(), code: "warning-sliver".into(), message: "thin".into(), severity: IssueSeverity::Warning });
+    report.issues.push(semio_framework_3d_brep_queries::analysis::ValidityIssue { entity: "face:7".into(), code: "warning-sliver".into(), message: "thin".into(), severity: IssueSeverity::Warning });
     assert_eq!(describe(&report, &manifold), "warning warning-sliver face:7: thin\nverdict watertight");
 }
 

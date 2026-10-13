@@ -5,7 +5,7 @@ use crate::editor::architect::chrome::{adjacency_kind_label, element_label};
 use crate::editor::architect::ui_label;
 use crate::editor::architect::{architect_action, ui_value_bool, ui_value_map, ui_value_text};
 use crate::standards::v1::subsets::any::schema::inferences::{adjacency_matrix, detect_adjacency_conflicts};
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::tree_window_item;

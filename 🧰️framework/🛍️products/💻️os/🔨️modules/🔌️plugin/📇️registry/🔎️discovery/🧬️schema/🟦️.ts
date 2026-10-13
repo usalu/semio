@@ -4,7 +4,6 @@ import { parseInstallationDirectoryV1, type InstallationDirectoryV1 } from "../.
 import { validateJsonSchemaSubset } from "../../../../../../../🔨️modules/🧬️schema/✅️validator/🟦️.ts";
 
 export type PluginHostMetadata = { readonly landingAppId: string; readonly hostAppId: string };
-export type PluginDescriptorHashes = { readonly wasmSha256: string; readonly coreWasmSha256: string; readonly descriptorSha256: string };
 export type ComponentSourceOwnerV1 = {
   readonly pluginId: string;
   readonly packageId: string;
@@ -25,7 +24,6 @@ export type CompiledComponentOwnerV1 = ComponentSourceOwnerV1 & {
   readonly activationEvents: readonly string[];
   readonly extensionPoints: readonly string[];
   readonly executionMode: string;
-  readonly hashes: PluginDescriptorHashes;
 };
 export type DeployedRegistryEntryV1 = CompiledComponentOwnerV1 & { readonly directoryName: InstallationDirectoryV1 };
 

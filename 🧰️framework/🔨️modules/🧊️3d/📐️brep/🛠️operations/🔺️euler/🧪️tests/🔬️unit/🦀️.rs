@@ -1,6 +1,6 @@
 use super::*;
-use crate::brep::operations::primitives::{make_planar_face_from_wire, make_rectangle_wire};
-use crate::brep::queries::validation::validate_body;
+use crate::primitives::{make_planar_face_from_wire, make_rectangle_wire};
+use semio_framework_3d_brep_queries::validation::validate_body;
 
 /// ✂️ Builds the topology of a unit tetrahedron (4 vertices, 6 edges, 4 triangular faces, 1
 /// shell, 1 solid) purely through the checked editors above — the flagship "assemble a real
@@ -191,7 +191,7 @@ async fn resolve_edge_containing_param_picks_survivor_after_split() {
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let face =
-        crate::brep::operations::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 2.0, 0.0), Pnt3::new(0.0, 2.0, 0.0)], &mut rec).expect("rect face");
+        crate::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(4.0, 0.0, 0.0), Pnt3::new(4.0, 2.0, 0.0), Pnt3::new(0.0, 2.0, 0.0)], &mut rec).expect("rect face");
     let outer = body.faces.get(face).unwrap().outer.unwrap();
     let edge = body.coedges.get(body.loop_coedges(outer)[0]).unwrap().edge;
     let e = body.edges.get(edge).unwrap().clone();

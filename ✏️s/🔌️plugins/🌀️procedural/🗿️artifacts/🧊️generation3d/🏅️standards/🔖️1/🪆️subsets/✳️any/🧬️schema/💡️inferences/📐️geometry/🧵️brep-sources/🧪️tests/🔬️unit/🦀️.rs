@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d::brep::engine::GeometryHandle;
+use semio_framework_3d_brep_engine::GeometryHandle;
 
 fn value_of(build: impl FnOnce(&mut KernelSession) -> GeometryHandle) -> ShapeValue {
     let mut session = KernelSession::new();

@@ -252,3 +252,204 @@ derive-ext 51. (DONE, pack-json native 16/16 `native_tree`, bun canonical 5/5) S
 
 78. kernel-tests 2026-10-12 (report `📓️2026-10-12-kernel-tests.md`; os-kernel `--lib` 1353 -> 1465 of 1465 ok, one process per test, 0 FAILED / 0 ABORT / 0 TIMEOUT; 31 canonical_edit green; native + wasm32-wasip2 `--lib` checks green): (a) a parent `close_step` must never return a child's `Complete` while it still owns anything (member-open wraps `close_owned_field` and downgrades to `Progress` unless `ownership_is_empty()`), and a parent that drops a terminal child slot must count one moved item, otherwise "Progress(default)" is indistinguishable from an unfunded stall; (b) a clone cursor that cannot fund its next contiguous owner used to return `Progress(default)` forever: the preparation now refuses with `retained-clone.step-grant-too-small`; (c) a multi-forward batch edit must record the chained `edit-chained` digest, never the seal digest (the seal is the single-forward `edit` record), or the incremental revision record differs from a rebuild; (d) a 4096-byte operation page is released in a close turn with an exact receipt, never silently in `Drop`; (e) an `Arc`-shared `SharedUtf8` actor costs no allocation, so quotes exclude it (copy keeps it); (f) every hand-written test owner needs a depth quote of `max(1, child)` and the `prepared` counter of the derive, and a refused encode leaves its partial owner in the recipient, so one encode per owner (or drain between); (g) refusals are `Ok(PreparationRefused)` + `publication.fault()`, a state-changing job step publishes a paid `Yield` (one item), `MutationMeta` is snake_case on the wire, directory slot = `size_of::<OwnedSchemaDecodePage>()` = 4098, and a fold job needs `next_step_grant` copy, not the fuel; (h) macOS boxes a std `Mutex` on first lock (the trace ring): warm it with one `set_stage` before a denied-heap observation. Open: the history-read release law widened 4096 -> 16384 (registry frame 10496, replay backing 5664); `script.ts` types `handoff.closeGrant.maximumBytes` as the literal 4096 while the lifecycle fixture is now 65536; undo digests the whole log (`digested` linear in history).
 79. coordinator 10-13 03:00: codegen units measured (🧪️cgu-experiment.sh, cold builds, private dirs, peak RSS by /usr/bin/time -l). raster wasm-dev: cgu1 918 s / 14.3 GB / 103.7 MB / 93,726 fns vs cgu16 501 s / 6.0 GB / 111.2 MB / 99,029 fns. raster wasm-release: cgu1 612 s / 10.6 GB / 49.7 MB (br 5.01 MB) vs cgu4 54.0 MB (br 5.12) vs cgu16 317 s / 8.2 GB / 55.2 MB (br 5.13, +2.4%). stdio wasm-dev cgu16 links (no ElemSection crash), 736 s / 12.2 GB / 233.9 MB / 265,343 fns (cgu1: 185 MB) — dev size growth threatens the 256 MiB FRESH_COMPONENT_MAX_BYTES for norm (227 MB at cgu1). DECISION: wasm-release codegen-units = 16 in hub + root Cargo.toml, os-kernel cgu1 override removed; wasm-dev pending a norm size check at cgu4 (blocked by wave-0's in-flight csv feature edit).
+
+80. wave0 2026-10-13 (report `📓️2026-10-13-wave0-feature-drift.md`; hub prebuild census 708 -> 388 compile units per profile, stdio-semio 16 -> 8, dwg/pdf/plugin 8 -> 1, os-kernel 3 -> 1; hub wasm32-wasip2 + native workspace checks green; 2d 90/90, ui 1/1 + 199/199 (wgpu), os-flow drawing 43/43): (a) Never re-add per-consumer features to `semio-framework-2d` (`booleans`/`trace`/`serde` are gone; `PathSegment` serde lives in os-flow's `PathSegmentJson` + `#[serde(with = "path_segments")]`), to the 35 stdio format crates or trinity-jack (`component-app-assembly` deleted, apps unconditional), or to the OS host (`space-guest`/`os-host-full` deleted; kernel `sync` arrives only through the host's `cfg(not(all(wasm32, p2)))` target table). (b) A shared dependency's extra features are pinned where every component reaches it: `bytemuck` in `semio-framework-ui`, `syn` `visit`/`visit-mut` in the seven framework proc-macro crates. (c) The hub stdio generator requests `component-app-assembly` only for artifacts whose own manifest declares it (today only stdio-semio). (d) Gate: `bun nx run os-hub:unit-census-check` (`🌎️hub/🧪️tests/🌳️unit-census`, fixture `🌎️hub/🧫️fixtures/🌳️unit-census`) fails on any crate with more than one feature set per profile outside `featureVarianceAllowed` (stdio-semio until the split, semio-hub-stdio until its catalog is a crate), and fails when an allowed package stops varying; `cargo tree` is its oracle. (e) 46 lockfiles (mostly `🏭️bridge`) were far behind their manifests before this wave; `cargo metadata --offline` absorbed it, no version upgrades.
+
+81. wave-a1 2026-10-13 (report `📓️2026-10-13-wave-a1-build-driver.md`; `test-native-artifacts` 61 pass / 1 skip / 0 fail, play fresh contract 7/7, `semio-build-scheduler:test` 4/4, cold 5-component driver demonstration 530 s at 95.5 % machine CPU / 7.5 rustc cores). (a) The prebuild is gone: no `ensureCargoPrebuildV1`, no claim or ready markers, no `SEMIO_CARGO_PREBUILD_*`, no `cargoPrebuildJobsV1` / `PassesV1` / `bytesPerJob`. Components are compiled only by `workspace:release` (`bun ./📜️script.ts release` → `runReleaseDriverV1`), and component nx targets only admit its staged output. Never re-add a pass inside a consumer task: it inherits that task's deadline and memory cap (build #10). (b) A root target is wrapped in `native owner-command` (1 h child cap) because the root has a `Cargo.toml` and every root script closure reaches `🏗️native-build`. A target that owns its own cancellation and stall watchdog declares `metadata.semio.orchestrator: true`; do not raise the policy deadline instead. (c) The fresh build is ONE launch-entry Nx invocation (`📦️build🏢️semio-tech🎡️play🆕️fresh`, env `SEMIO_RELEASE_GENERATION=fresh`). Scripts cannot be launched outside Nx (they need `SEMIO_SCRIPT_PROCESS_INVOCATION`), so a cold generation is a driver property, never a wrapping script. (d) Cargo honours an inherited `--jobserver-auth=fifo:` and ignores `-j`, and hands rustc `CARGO_MAKEFLAGS=-j --jobserver-fds=fifo:P --jobserver-auth=fifo:P`. A wrapper reads the newest `--jobserver-auth` in `CARGO_MAKEFLAGS`, then `MAKEFLAGS`, then `MFLAGS`. Read a shared fifo one byte at a time without blocking: a stream reader steals the pool's tokens. (e) Provenance of a multi-component pass needs `cargoProvenancePhysicalControlV1({ scale })`: 5 components already read 10.1 GB, and the fixed 16 GiB per-invocation budget would refuse the 44-component hub pass. (f) A unit's real dependency edges are its rustc `--extern` paths (`.rmeta` = pipelined, `.rlib`/dylib = full) plus `OUT_DIR` → build-script run. This reproduces cargo `--timings`' critical chain exactly (`base → right → top`, 352 vs 360 ms); `cargo --unit-graph` is not needed. (g) The `repo:test-cargo-build-lease` boundary law depends on the length of the artifact directory: about 58 UTF-16 units fails (owner > 64), about 140 fails (queue > 256), and about 75 passes. Pick the directory accordingly; this is not a lease regression. (h) The GNU make 4.4 fifo oracle is written but skipped: only make 3.81 is installed, and installing 4.4 needs a download approval. The `jobserver` 0.1.35 crate oracle passes (max concurrent 4 = tokens, 28 acquisitions returned).
+
+82. wave-e2 2026-10-13 (report `📓️2026-10-13-wave-e2-plugin.md`; step 1 only, the crate cut is deferred until after WS1). Peers editing `semio-framework-plugin` should know:
+   - (a) **The crate root is wiring now.**
+     - `🔌️plugin/🦀️.rs` is 1,228 lines. Former `app` items live in 37 facet modules declared there per `//#region <Facet>`: `🏛️ownership`, `🪟️window*`, `📜️declaration/*`, `🪪️identity`, `🚪️io`, `💡️inference`, `🏗️builder/🧩️app`, `🪆️child`, `👥️peer`, `♻️lifecycle`, `🗃️document`, `👷️job*`, `🎞️media`, `♻️cancellation`, `🎮️command*`, `🧵️retained-command/🔄️full-operation`, `🧵️instance`, `🧪️testing`.
+     - `plugin_runtime`, `world3d_host` and `engagement` are files: `⚛️reactor/🏃️runtime`, `🪟️window-kits/🌍️world3d`, `🪟️window/🎛️engagement`.
+     - `app` is only the public vocabulary (`pub use super::<module>::*`). New crate code must import from the owning module (`crate::<module>::X`), never through `crate::app::` or `plugin_app_close_prelude` (`🔀️unfacade.py` rewrote 93 files).
+     - Only pub items pass through `app`. `pub(crate)` items are never visible through its globs.
+   - (b) **Every `impl VcsArtifactApp` block lives under `🧵️instance/`.**
+     - The turn modules (`⏪️time-travel`, `⏯️tool-run`, `🛠️tool-machine`, `⏳️operation-progress`, `🔄️full-operation`, `🤝️group`), the three ladders and the store-stage close file are all declared by `artifact_instance`.
+     - Do not add a new instance impl to a facet file. A cut makes that impossible, because inherent impls must stay in the type's crate.
+   - (c) **Source-scan laws must read the owning file**, not the crate root. These now do:
+     - `🔬️app-typed-command-full-operation`, `🤝️cooperative-pump`, `🔬️plugin-runtime-dff-public-action-admission`, `🔬️plugin-runtime-plugin-builder-contract`;
+     - `🖨️describe/🧪️tests/🔬️unit` (`PLUGIN_SDK_SOURCE` = `⚛️reactor/🏃️runtime/🦀️.rs`);
+     - the TS checks `♻️frontier`, `♻️cancellation/📦️lease` and `♻️lifecycle/🏪️stores`.
+   - (d) **Moved items:**
+     - `plugin_grant_funds` → `bounded_ownership`; the receipt file's `mounted_retirement_grant_funds` is gone.
+     - `ArtifactDefinitionError` and `PluginAssemblyError` → `sdk_fault`.
+     - `ActionFactory` → `window_kits`.
+     - `INTERACTION_ACTION_IDS` → `interaction_topology`.
+     - `HISTORY_ACTION_IDS`, `CLIPBOARD_ACTION_IDS` and `is_framework_reserved_action_id` → `reserved_jobs`.
+     - `LAST_MAINTENANCE_STAGE` → `plugin_runtime`.
+   - (e) **Facet order:** ownership < window < declaration < publication < jobs < reactor < instance.
+     - `🧭️facet-imports.py --back` lists every edge against it (R1–R6 in the report). The big one is the app contract naming job and store vocabulary.
+     - Do not add new declaration → jobs/publication imports.
+   - (f) **Visibility debt.** `pub(crate)` went from 1,585 to 2,993, widened only where rustc named an access. Do not widen further without need; C4 in the report narrows it.
+   - (g) **Results.**
+     - Plugin `--lib`: 1,052 ok, 0 regressions against the session baseline (1,051), the 957 baseline and r15.
+     - `test-retained-raw-source`: 16/20. Its 4 failures predate this work (warning-flood `size_of` text, and os-kernel store edits by E1).
+     - Hub wasm check: plugin clean. The failures there are the stdio-semio `base_foundation` split in flight.
+
+83. wave-a2 2026-10-13 (report `📓️2026-10-13-wave-a2-single-profile.md`): one shipped profile, semantic descriptors, receipts.
+   - (a) **Two descriptor forms, one binder.**
+     - Committed pairs, guest `describe()` answers and every registry row are SEMANTIC: there is no `hashes` member. Schemas and fixtures refuse it (`/hashes is not allowed`).
+     - Only `bindDescriptorPackV1` (`🌐️browser-bundle/🛂️descriptor`) produces a BOUND descriptor: materialize, the hub fresh producer, fresh catalog rows.
+     - Never write `hashes` into an owner pair again. Byte identity lives in `<crate>/dist/components/🧾️receipt.json` (`ComponentReceiptV1`, schema-owned profile policy).
+   - (b) **Commands.** `wasm-dev`, `component-dev`, `materialize-dev` and `support-dev`/`-release` are deleted, not aliased.
+     - Per crate: `component` (admits the A1 driver's bytes), `describe` (verify plus receipt), `materialize`; one `support` target.
+     - Commit a changed declaration with `bun nx run workspace:components describe <id…>|--all`.
+     - Iterate one plugin with `workspace:components iterate <id>` (`wasm-iterate`, local describe, never committed).
+     - Check profile independence with `workspace:components profile-independence --sample 8`.
+   - (c) **Narrow outputs.** A component target's output must name the wasm file, not the deliverable directory. The directory form overlapped `describe`'s receipt output: 70 CACHE-03 findings in `repo:policy-check`.
+   - (d) **zsh does not word-split.** `components describe $IDS` passes ONE argument in zsh; use `${=IDS}`. The usage refusal looks like a parser bug, but it is the shell.
+   - (e) **Fleet describe needs a quiescent tree.**
+     - Every component links os-kernel and plugin, and most link stdio-semio. While lanes C, D/E1, E2 and E3 rewrite those, `components describe --all` fails for the whole fleet.
+     - bim, animate and architect were regenerated and verified (receipt findings 0). bim's diff is exactly the removed `hashes` block.
+     - Sequential narrow builds cost 17–32 min per hub component under load. The owned-interpreter describe of a large plugin costs up to 14 min (architect: 18.5 G fuel).
+     - So `components describe --all` belongs AFTER the A1 driver pass: run `bun nx run workspace:release`, then `components describe --all` (each build is then a cargo fresh check), then `plugin-registry:generate`/`check`, `hub trusted-catalog-preflight` and the play gate.
+     - Until then the registry check refuses the 67 still-bound committed pairs, by design.
+   - (f) **Inherited breakage, not A2:**
+     - The describe crate's `cfg(test)` wasmtime host (`operation_*` on `Host`, `HasData`) and the `semio_framework_trace` path in an included interpreter test: its lib-test target does not compile at HEAD.
+     - `os-mcp` and `os-run` are stale against the kernel (`TurnResult.retained_receipt`, `Budget.retained`).
+     - `frameworkOsPlaygroundDefaultPort` is imported by 25 files but no longer exported.
+
+84. wave-e1 2026-10-13 (report `📓️2026-10-13-wave-e1-os-kernel.md`; step 1 only, the cut waits for WS1 and the Store seams S1–S5): os-kernel decoupling.
+   - (a) **The plan's E1 axis is corrected.** Core / canonical edit / history / retirement are not leaves above a core: the engine calls them and they read vocabulary that sat in the same root file. The measured axis is horizontal base layers (spr, pack, vcs, dsl, directory, inference, extension, identity, semio, list-delta, io-control: 22.6 k lines, **0 seams today**) plus a vertical Store stack base → codec → io → engine → history/preparation/composition → sync (`e1-os-kernel/🎯️target-crates.json`, 20 crates, largest the engine at 17.6 k).
+   - (b) **Use the exact HIR graph, not text.** `e1-os-kernel/🔬️redump.sh` + `🔬️hir-owner-graph.py` (`-Zunpretty=hir-tree`, owner-level resolved paths, impl self/trait) and `🧮️crate-assignment.py` against the target JSON report every remaining seam with its items. Text-based symbol matching produced false edges from name collisions.
+   - (c) **Moved, not aliased.**
+     - `pack_rt` now lives in `os_pack` (`🎒️pack/🌉️bridge`). Spell it `os_pack::pack_rt`, never `os_store::pack_rt` (44 files rewritten, derive included).
+     - The declared-rows law moved from spr into `🏪️store/🎮️one-item` (root path unchanged).
+     - The vcs `RetireOwned` impls live in `🌿️vcs/♻️retirement`.
+   - (d) **The store root is decomposed** (31,901 → 13,104 lines) into 19 module files grouped by target crate. Root `pub use` / `pub(crate) use` lines (cfg-gated like their items) keep every path resolving.
+     - Store-wide source scans must read `policyReadOsStoreSource` / `OS_STORE_ROOT_SOURCES` (root `📜️script.ts`) or the owning file, never the root alone.
+     - New laws scanning one item read the file that owns it.
+   - (e) **Generic braces break naive item splitters.** `impl From<PagedList<T, {usize::MAX}>> for …` ended the E2 `rust_items` scan at `{usize::MAX}`, so later items were silently skipped. The E1 copy skips braces inside `<…>`; E2's copy still has the bug.
+   - (f) **`--force-warn unused-imports` keeps sibling-module trait imports alive** that were only method-probe candidates. Drop them and let rustc re-add the needed ones (`🧽️tidy-imports.py`, then `🔁️fix-loop.py`).
+   - (g) **Inherited, not E1:**
+     - `sqlite_snapshot_native_admission`: 4 failures ("no available explicit retirement slot"), identical on a HEAD snapshot.
+     - `os-mcp` and `os-renderer-wgpu` (lib test) API drift.
+     - The TS scan-test failures in canonical (2), owned (6), lifecycle (1), time-travel (13), flow (1) and trinity (16), all at their pre-move baselines.
+   - (h) **Visibility debt:** `pub(crate)` in the Store files went from 15 to 830, widened only where rustc named an access. At the cut, `ArtifactStoreOneItemLiveAuthority` and the prepared seal must get engine-minted constructors, not `pub` fields; the authority law forbids raw fabrication fields.
+
+85. taxonomy-graph-perf 2026-10-13 (report `📓️2026-10-13-taxonomy-graph-perf.md`): taxonomy report and Nx graph construction.
+   - (a) **One file caused A1's 33-minute silence.** The link-reference regex `/^\s*\[[^\]]+\]:\s*(\S+)/gmu` is quadratic: it spent 1,051.7 s on one 968 KB ticket report (and 252 s over all Markdown). It is replaced by the linear `markdownReferenceDefinitionTokens`. Never run a multiline `^\s*…[^x]+` regex over whole documents.
+   - (b) **Full `verify taxonomy report` cannot finish on today's tree, old code or new.** Planning throws on two things:
+     - overlapping reference edits in `.vscode/launch.json` (`Reference edit preimage mismatch … @5180952`);
+     - the drifted frozen-evidence digest of `📚️library/🧫️fixtures/🧼️remaining-package-purity-authority/🔣️.json`.
+     Make the planner report both, or refresh the registered digest, before M0 relies on the gate.
+   - (c) **Inventory went from ≥ 2 h 9 min (unfinished, 19 % into references) to 490 s under load 25–40.** What remains is per-file tokenisation, done twice (inventory and plan). Next: a content-addressed token store and parallel tokenisation.
+   - (d) **Nx inference cache:**
+     - It lives at `<workspace-data>/inference/{emoji-project-json,test-cases}.json`. It is keyed by implementation revision and validated against recorded filesystem facts.
+     - Graph-construction code must read through `👁️observation`'s `observedFs`, `observedRequireResolve` and `observedTypeScriptHost`. Reads that bypass them are not observed, and the cache can go stale.
+     - The admission-walk snapshot is under `⚡️cache/nx-admission/`.
+     - Warm `nx graph` dropped from 76–98 s to 20–34 s. The rest is Nx's plugin-resolution glob and the 200 MB graph write (N2).
+   - (e) **Introspective closure tests** compile extracted declarations.
+     - Adding a helper, or a module-level `const`, to a function they extract means registering it. `taxonomy-graph-perf/🧩️closure-names.py` holds the mapping.
+     - Tests that extract only `function` declarations need variable statements too.
+   - (f) **Inherited, not this lane** (same on the in-place snapshot baseline):
+     - `repo:test-graph-revision` has stale executor and cache expectations;
+     - `🥇️bare-reference-sibling-precedence` keeps `export` in its extracted closure;
+     - `🔄️transaction-v2` needs the run-identity environment;
+     - `resolveCargoPackageName` exceeds its 5 s budget under load.
+   - (g) **Real gate after the change:** `NX_DAEMON=false bun nx run workspace:verify-taxonomy-report --skip-nx-cache` took 619 s under fleet load.
+     - Inventory completes (266,136 entries).
+     - Planning runs through `plan/references`, then throws on the `launch.json` overlap from (b).
+     - This supersedes 86 (i), which saw the pre-change code stopped by the 1 h cap.
+   - (h) **Resident-copy tests must shim every module the copied plugin imports.**
+     - `🧪️test/🧪️tests/🚷️discovery-boundaries` copies the test-cases plugin into a temp tree with a `📚️library/🟨️.mjs` re-export shim.
+     - The new `👁️observation` import needed a second shim; without it the test fails with `ERR_MODULE_NOT_FOUND`. That is fixed, and the test passes 5/5.
+     - Check such copies whenever a graph plugin gains an import.
+
+86. wave-e3 2026-10-13 (report `📓️2026-10-13-wave-e3-pdf-dwg-gltf.md`; step 1 done for pdf, dwg and gltf, step 2 not cut; native + wasm32-wasip2 `--lib` green; lib tests dwg 109/112 = baseline, gltf 265/330 and pdf 936/1018 against baseline 266 and 943, where every differing test is a load-flaky history law that the pre-change binary also fails under the same load; hub wasm workspace check green; hub stdio `editor_catalog` 177/177).
+  - (a) Per-artifact crate cuts are blocked by the composition contract. `CompositionContributionV1` binds every app type and mutation descriptor to `package`, and the hub stdio generator enforces it (`🧩️composition/🟦️.ts` lines 87–88 and 146–147). Moving `*Snapshot` or an editor into a `-model`/`-editor` crate needs S3's `symbolPackages`, never a re-export. Each artifact being its own workspace adds 26–49 manifests and 33–49 lockfiles per cut, which waits for WS1.
+  - (b) Shape the in-crate module paths so the cut is a pure crate-prefix codemod. Read lives in `…::io::import`, write in `…::io::export`, the structural model in `schema::geometry`, the subset facets in the subset leaf `🪆️subsets/<s>/🦀️.rs`, and a standard-wide composer registry in the standard leaf `🏅️standards/<v>/🦀️.rs`.
+  - (c) Root `schema`/`engine` modules and root `pub use` re-exports are shims. Internal files reached the model through them, which shows up as a model → aggregator edge in every census. Canonicalize every path to its owning module (`e3-format-split/🧭️canonical-paths.py`), including external consumers and the `mutate-*` corpus sources. Flatten nested `use crate::{a::{..}}` groups first (`🧩️flatten-uses.py`), because a path-keyed rewrite cannot see their leaves.
+  - (d) Inherent impls on model types (`impl PdfSnapshot { page_text }`) cannot follow the code into a reader crate. Make them free functions in the owning layer. Shared vocabulary goes down into the model: `PdfEngineError`/`PResult`, the PDF text-string codec and `WRITER_TRAILER_KEYS` were what made the model and the reader depend on the COS engine and the writer.
+  - (e) Remaining pdf cycle: the 1.7 base `ArtifactSqliteSnapshot::validate_sqlite_snapshot_subset` (model, orphan-bound) calls the six conformance subsets' `check_*_conformance`. The clean fix is framework-side: resolve the declared `SubsetValidatorEntry` for the dialect. It is not a merge of model and conformance (28.6 k lines, over the L3 fail line).
+  - (f) For gltf, the real split axis is mutations (12.8 k lines) and inferences (6.6 k), not read and write (< 300 lines together).
+  - (g) Upstream fix, cross-lane. `history_edit_acceptance_law!` still named `$crate::app_testing::…` after E2 made `app_testing` `pub(crate)`, which broke every downstream artifact's editor test target (E0603). It now names `$crate::app::history_edit_acceptance::…`, the public cfg-gated glob.
+  - (h) `history_edits_end_to_end` (gltf) and `conflict_history_edits_end_to_end` (pdf17 editors) are load-flaky. Under concurrent load both the before and the after binaries fail them (pdf17e: 2 of 3 each); alone they pass. Never read a 6-parallel failure of these laws as a regression without a serial rerun on both binaries.
+  - (i) `workspace:verify-taxonomy-report` does not finish under fleet load: it is stopped by the 1 h owner-command cap at about 155 k files.
+
+87. wave-n1-n2 2026-10-13 (report `📓️2026-10-13-wave-n1-n2.md`; play build 18 Nx tasks, was ~375; 1029 projects / 8788 targets, was 1414 / 15472; 0 `test-<level>` targets; 5-component cold demo 1428 s with 23 of 33 stages started inside the compile window; warm rerun 54 s, stage cache 20/20, every one of 6624 provenance files read exactly twice).
+   - (a) **Never import the release driver from `📋️native-orchestration`.** Every target of a native project hashes the cargo script's import closure as its fallback input set. A static import of `🧩️component-pass` there made every Cargo `build`/`check`/`test` a driver consumer. Release planning (`releasePipelinePlanV1`) lives in `⚡️caching/🦀️cargo/🟦️.ts`.
+   - (b) **Attribute unit-graph roots by package id, not `src_path`.** A taxonomy crate's source is `📦️packages/🦀️rust/../../🦀️.rs`, outside its manifest directory. Path-prefix attribution found no root, and every publish failed. `cargoPackageDirectoryV1` decodes the `path+file://` package id.
+   - (c) **Hash-once needs one read path per file.**
+     - A resource-read length must come from the digest stream (`CurrentPhysicalPortV1.measure`), not from reading the text.
+     - Files that are both parsed and hashed (compiler-resource `observation.json`, `semio-runtime-resource-inputs.jsonl`) must go through the text read.
+     - Otherwise concurrent invocations read some files three times. Check `provenance/reads.json`: the histogram must be `{2: N}`.
+   - (d) **Post-link cleanup must be a `finalizer` stage.** A failed publish left `<module>.materialize-*` in the plugin-modules root. Dependents of a failed stage never run, so cleanup cannot be an ordinary stage.
+   - (e) **A cold describe cannot overlap compilation.** It waits for the host describe tool, which is the build's critical path (1072 s). Only transpile, `wasm-opt` and probe overlap cold.
+   - (f) **63 of 71 committed descriptor pairs still bind `hashes`.** Verify-mode release refuses them. Regenerate with `components describe --all` (shipped bytes) before the coordinator's full release.
+   - (g) **Test levels are positional arguments** (`nx run X:test -- quick`). Nx forwards them through `run`, `run-many` and `dependsOn {params: "forward"}`, and keys the cache on them. `native cargo test` strips a leading level into `SEMIO_TEST_LEVEL`. Write no new `test-<level>` targets.
+   - (h) **Inherited `repo:test` blockers ahead of the Nx-contract block:**
+     - `graph-revision`: stale owner-command expectations;
+     - tool-fingerprint import ceiling: 27 > 12;
+     - CI baseline import ceiling: 30 > 16, from the `🗂️workspaces/🦀️cargo` closure.
+     The N1/N2 contract vectors were verified with a focused probe over the live inventory instead.
+
+88. lane-c-semio-split 2026-10-13 (report `📓️2026-10-13-lane-c-semio-split.md`; S1–S3 done: 47 feature-free semio crates; census 422 keys / 422 units, all 1 signature, allow-list empty; largest semio unit 1.60 GiB at wasm-release, was 14–20 GiB; lib tests 2953/3026 = baseline; `editor_catalog` 177/177; hub native and wasm32 green)
+   - (a) **A host of a split artifact must declare it through its catalog package.** `declaration(definition, &[])` leaves every composer requirement in the static `artifact-definition.json` unmet (35 for semio). Only `shipped_fleet`'s per-package runtime law notices. The hub generator now emits `<catalogPackage>::declaration(<package>::definition()?)` and adds `catalogPackage` to the hosted dependencies.
+   - (b) **Under package unification, feature-gated conversions were silently absent from per-component builds.** The stdio-semio component selected no `conversion-*` feature. Only workspace-unified test builds passed the fleet law. Explicit `register(&[…])`/`declaration(…, ALL)` makes the hosted set visible in the source.
+   - (c) **A split subject needs subject-only host packages.** The test host links exactly one subject crate (the nearest `📦️packages/🦀️rust`). A subset adapter also names `-base` and the kernel. Declaring those as `oracleHostPackages` would make the oracle role link subject code. Use the new `subjectHostPackages`, which is linked under `sut` only.
+   - (d) **Removing a feature breaks every `required-features` that names it, every `--features` argument and every law fixture.** `full-artifact-catalog` was named in:
+     - the bridge `[[bin]]`;
+     - the bridge script;
+     - three hub-script law groups;
+     - the headless-capture fixture and law (already stale: wrong source path, `semio_s_plugin_stdio::catalog`);
+     - the frontier fixture;
+     - the home-io law.
+
+     Grep the feature name across `*.ts`, `*.json` and `*.toml`, not only the manifests.
+   - (e) **Tests of a crate need the crates they name as direct (dev-)dependencies.** Optional dependencies enabled by a default feature had hidden this for `editor_catalog`/`shipped_fleet`. A generated `Composition Test Dependencies` region now lists them explicitly.
+   - (f) **`cargo fix` after a path codemod is safe only if you re-check at every target.** It works on one target at a time. Native fixes can drop imports used only by wasm-gated code. Re-run the wasm32 check after it. Here 336 fixes left both targets green.
+   - (g) **`bun test <path>` without a leading `./` is a name filter, not a path.** It walks about 7.7 M files, and one run crashed Bun with a segfault. Always pass `./…`.
+   - (h) **Repository-test selection:** `script.ts subject` without `--owner` runs every case (it timed out after 9 min). Use `subject exhaustive --owner <owner> --implementation rust`. The default level `fundamental` reports semio mutate cases as not-exercised.
+
+89. describe-tool-fix 2026-10-13 (report `📓️2026-10-13-describe-tool-fix.md`; describe tool builds through the driver host-tool pass; describe unit tests 13/13; real describe of the shipped animate bytes is byte-identical to the committed pair and its receipt; `test-retained-raw-source` 17/20 -> 20/20).
+   - (a) **WIT `async func` imports live on `HostWithStore`, never on `Host`.** wasmtime 47 `bindgen!` puts every `async func` of an imported interface on `<iface>::HostWithStore<T> for HasSelf<T>` with an `Accessor`. `pure`'s `operation-*` doors were implemented on `pure::Host` in the describe emitter's `cfg(test)` host, which broke the lib-test target. The WIT world did not change; the emitter was stale. Copy the plugin host's shape (`🖥️host/🦀️.rs`, `impl pure::HostWithStore<ActorHostState> for HasSelf<ActorHostState>`).
+   - (b) **Never `#[path]`-mount a module that another dependency crate already compiles and exports.** The describe crate mounted `🧠️interpreter/🦀️.rs` a second time, which also pulled the interpreter's own `cfg(test)` tests, and their `semio_framework_trace` dependency, into the describe crate. Use `semio_framework_plugin_host::interpreter`.
+   - (c) **Source-scan laws match contracts, not spellings.**
+     - Write `size_of` demands as a regex with an optional `(std|core)::mem::` prefix and free spacing (`sizeOfDemand` in `♻️cancellation/📦️lease/🧪️tests/🟦️.ts`).
+     - Read the file that OWNS a fact, not the old crate root or the instance files. E2 moved `scope.claim.is_finished()` to `🎮️command/📥️admission/🦀️.rs` and the owned tool grants to `👷️job/🦀️.rs`.
+     - Take an arity from the type that owns it (`OwnedSemioExport::ALL: [Self; N]`), not from a literal.
+     - Select macro arms structurally (`macro_arms` walks every arm), not by matcher text, because matchers gain parameters (`$mounted_policy:expr`).
+   - (d) **The nx owner-command sets `CARGO_TARGET_DIR` for its children.** A test that assumes the shared target is `<repo>/target` silently stops testing the refusal. Ask `cargoTargetDirectory(repoRoot)` for the path instead (catalog-complete `refuses ambient roots`).
+   - (e) **Semantic registry rows carry no `hashes`.** Test code that builds a `DeployedRegistryEntryV1` with a zero `hashes` block now fails parsing. Drop the member (deployment inventory test).
+   - (f) **Still open, not move-caused:**
+     - The `long` describe differential test drives the retired `SemioActorArtifact` / `SemioDescribeSession` (7-export ABI) and cannot parse a current component. Its Wasmtime half works.
+     - The hub `💡️reasoning` composition has a plugin-identity fixture but no schema; the only schema is in `✏️s/🔌️plugins/💡️reasoning` and refuses the `semio-hub-` package name.
+     - A peer was mid-rewrite of animate's `Cargo.toml` component metadata at 11:28.
+
+90. describe-cleanup 2026-10-13 (report `📓️2026-10-13-describe-cleanup.md`; the retired `SemioActorArtifact`/`SemioDescribeSession` API is deleted; the `long` differential runs the production owned describe against Wasmtime and is byte-identical on 2 shipped components; describe-tool cold build 945 s -> 392 s under `[profile.host-tool]` at equal describe throughput; reasoning identity schema moved to its hub owner; inventory 13/13 under vitest).
+   - (a) **A build-time host tool does not inherit the shipped-binary profile.** `release` (`codegen-units = 1`, thin LTO) serialises LLVM over each giant crate of the tool's closure: os-kernel took 608 s of a 945 s critical path. Build host tools with `--profile host-tool` and declare the same profile on their pipeline job, because admission keys unit history by profile. Measure runtime before and after; describe throughput did not move.
+   - (b) **An oracle-only dependency is a dev-dependency.** Wasmtime served only the describe emitter's `cfg(test)` oracle. As a normal dependency it was compiled for nothing; the release binary never linked it. A dependency crate that still requires it (`plugin-host`) keeps it in the graph, so check `cargo tree -e normal`, not only the manifest.
+   - (c) **A differential test must fail when its suite is empty.** The env-gated `long` test returned silently whenever `SEMIO_OWNED_DIFFERENTIAL_FIXTURES` was unset, so it passed while it drove a dead ABI. It now discovers shipped components and refuses fewer than two.
+   - (d) **A Wasmtime oracle consumes the shipped bytes unmodified.** Stripping custom sections first (`wasm_execution_binary`) was unnecessary and made the oracle test different bytes than production.
+   - (e) **After L1, a component's identity owner is the owner of its `🧩️component` facet.** `cratePath/../..` is the facet, not the composition. Resolve the owner with `componentLibraryManifestV1`. The identity schema sits at `<owner>/🧬️schema/🪪️plugin-identity/🔣️.json`, beside `<owner>/🧫️fixtures/🧫️plugin-identity`.
+   - (f) **A test file runs under the runner its registration declares.** A vitest-registered file may not call `Bun.*`. Use `node:child_process` to spawn Bun when the law needs Bun.
+   - (g) **The nx owner-command drops `CARGO_BUILD_BUILD_DIR`.** `bun nx run …:build` under a private-dir wrapper still compiles into the shared build dir. For private-dir measurements, invoke cargo directly with the job's exact arguments.
+
+91. trusted-catalog-receipts 2026-10-13 (report `📓️2026-10-13-trusted-catalog-receipts.md`)
+   - Status: trusted bundle v4 carries an inline `ComponentReceiptV1`, and `PackageHashes` is deleted everywhere.
+   - Passing: `trusted-stdio-gis-bundle-check --source`, the plan, lease and relay oracles, and the registry, store-worker, GIS and kernel identity suites.
+   - Not compiled: the hub Rust. The kernel, db and plugin-host lanes are mid-refactor.
+   - (a) **A byte identity has exactly one carrier, the receipt.** Anything that compared `descriptor.hashes.wasmSha256` must compare
+     `receipt.wasmSha256` and bind `semanticDescriptorSha256` to the descriptor bytes it actually has.
+     - Native runtime publication did not: it trusted the descriptor JSON. Find the next such reader by grepping `hashes` across
+       `*.ts`, `*.rs` and `*.json`, not only the catalog code.
+   - (b) **Changing a component digest in a fixture now needs three coordinated edits.**
+     - Rebind `package.componentReceipt.wasmSha256`.
+     - Keep `component.byteLength == receipt.wasmBytes`. The receipt minimum is 8 bytes, so 1- and 3-byte synthetic components
+       are invalid. Use the 8-byte preamble `0061736d0d000100`.
+     - Rebind `semanticDescriptorSha256` when the descriptor changes.
+     - "Another component" or "package mismatch" vectors therefore move to a field the receipt does not cover (for example
+       `package.version`) if they test `stale` rather than `denied`.
+   - (c) **Oracles that pin live inventory rot silently.** The bootstrap codec projector pinned 29 stdio codecs and a GIS `hostile`
+     member. Both went stale days ago (pdf 1.7, and hostile rows moved to fixtures), and every full bootstrap oracle failed before
+     reaching its own laws. Derive cardinality from the fixture's profile and bound it; never repeat the live count as a literal.
+   - (d) **A format version is a constant, never a literal in a law.** The os-dev format law grepped `bundle.schema_version != 3`
+     in the loader. It now pins `TRUSTED_BUNDLE_SCHEMA_VERSION` in the schema module, and the dev header (`DevHubCatalogHeaderV1`)
+     declares the same version, so a stale dev catalog republishes.
+   - (e) **`SEMIO_TEST_ARTIFACT_DIR` must contain `🗑️generated`, and the fresh-process law is path sensitive.** Use
+     `.🧬semio/🦑️repo/⚡️cache/tests/fresh-component/🗑️generated`. A scratchpad or `⚡️cache/tc` root refuses the queued-cargo
+     cancellation law or the preparation workspace lookup.
+   - (f) **After L1 the generated registry is stale.** `cratePath/../..` no longer holds `🔣️.json`, so trusted-catalog preflight
+     cannot read bim, animate and architect until the registry is regenerated and the component deliverables are rebuilt under the
+     component crates.

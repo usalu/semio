@@ -32,7 +32,7 @@ pub fn plugin() -> Result<Plugin<ArchitectApps>, PluginAssemblyError> {
         .editor_mutation_roster::<crate::editor::architect::ArchitectPlayApp>()
         .viewer::<crate::viewer::architect::ArchitectViewer>(crate::viewer::architect::create_architect_viewer())
         .viewer_mutation_roster::<crate::viewer::architect::ArchitectViewer>()
-        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::program::artifact_kind().id })
+        .activation(ActivationEvent::OnArtifactKind { kind: crate::artifacts::program::standards::v1::subsets::any::schema::artifact_kind().id })
         .execution(ExecutionMode::Isolated)
         .requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist architect program edits to the open document".into(), optional: false })
         .try_build()

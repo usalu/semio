@@ -1,9 +1,9 @@
 //! 🕸️ Borrowed Graph primitives count exact coordinates, property forests and literal external value references.
 use super::{SemioGraphSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
-use crate::standards::v1::subsets::value::io::sqlite::snapshot::semantic as values;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_value::io::sqlite::snapshot::semantic as values;
 use values::{Census,add};
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Graph native field differs from its authored shape")}
@@ -56,7 +56,7 @@ fn hex_scalar(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{
  })
 }
 /// 📦️ Counts exact four-coordinate words and all nested property entities in actual binary order.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
   let mut census=Census::new(limits);census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;control.begin_stage(count)?;
@@ -79,7 +79,7 @@ fn document_properties(body:&str,census:&mut Census,control:&mut NativeDecodeCon
  control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=items.next(control)?{let(key,value)=value.split_once(':').ok_or_else(invalid)?;census.row(add(32,native::hex_text_extent(key,control)?)?)?;values::value_text(value,None,census,control,limits)?;control.step()?;}control.checkpoint()})
 }
 /// 📝️ Preserves actual hex-encoded numbers, duplicate property keys and external reference text.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","nodes","edges"],control)?;let mut census=Census::new(limits);census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;let mut nodes=native::Items::new(fields[1].unwrap_or("[]"))?;let count=nodes.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;
   while let Some(value)=nodes.next(control)?{

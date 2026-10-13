@@ -104,7 +104,7 @@ async fn space_document_persists_through_backbone_port() {
     // artifact content), not a `space::SpaceSnapshot`-backed catalog entry
     // `seed_os_space_catalog_if_empty` expects. This test exercises the space-manifest persistence
     // path specifically, so it mints its own manifest instead.
-    let port = Arc::new(OsBackbonePorts::Store(store::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
+    let port = Arc::new(OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::LocalStorage(LocalStorageBackbonePort::default())));
     let projection = empty_space_snapshot("Persist Test", SpaceKind::Atelier, SpaceVisibility::Private);
     let demo: OsSpaceDocument = create_backbone_document(S_SPACE_SCHEMA, "persist-test", "Persist Test", projection);
     let _ = seed_os_space_catalog_if_empty(demo, &port).expect("seed");
@@ -246,7 +246,7 @@ fn catalog_home() -> SHomeSnapshot {
 }
 
 fn studio_dsl(name: &str) -> String {
-    <semio_framework_artifact_space_space::SpaceSnapshot as store::ArtifactDsl>::print_dsl(&empty_space_snapshot(name, SpaceKind::Atelier, SpaceVisibility::Private))
+    <semio_framework_artifact_space_space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&empty_space_snapshot(name, SpaceKind::Atelier, SpaceVisibility::Private))
 }
 
 fn catalog_entries_named(name: &str) -> usize {
@@ -553,7 +553,7 @@ async fn the_import_commit_asks_the_host_to_keep_the_imported_studio() {
     assert_eq!((field("documentId"), field("schema"), field("name"), field("storage"), field("target")), (imported.id.clone(), S_SPACE_SCHEMA.to_owned(), name.to_owned(), "folder".to_owned(), String::new()));
     let pack = protocol::base64_standard_decode(field("pack")).expect("the pack is base64");
     let spr = protocol::base64_standard_decode(field("spr")).expect("the spr is base64");
-    let parsed: store::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::parse_document_pack(&pack, &spr)).expect("the kept pair parses");
+    let parsed: store::os_store::text_format::ParsedDocumentText<semio_framework_artifact_space_space::SpaceSnapshot, semio_framework_artifact_space_space::SpaceMutation> = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::parse_document_pack(&pack, &spr)).expect("the kept pair parses");
     let envelope = parsed.into_envelope();
     let same = envelope.id == imported.id && envelope.schema == S_SPACE_SCHEMA;
     envelope.retire_unadopted();

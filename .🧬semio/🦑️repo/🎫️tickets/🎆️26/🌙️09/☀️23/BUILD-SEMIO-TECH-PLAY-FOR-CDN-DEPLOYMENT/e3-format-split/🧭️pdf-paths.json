@@ -1,0 +1,12 @@
+{"root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📖️pdf/🦀️.rs",
+ "crate": "semio_s_artifact_stdio_pdf",
+ "barrels": {
+  "": ["standards::v1_7::subsets::base::schema::snapshot", "standards::v1_7::subsets::base::schema::diff", "standards::v1_7::subsets::base::schema::mutations", "standards::v1_7::subsets::base::schema", "standards::v1_4::subsets::base::schema", "standards::v1_7::subsets::base", "standards::v1_7::subsets::base::io::import", "standards::v1_7::subsets::base::io::export", "standards::v1_7::subsets::base::io", "editor::page"],
+  "schema": ["standards::v1_7::subsets::base::schema"],
+  "standards::v1_7::subsets::base::io": ["standards::v1_7::subsets::base::io", "standards::v1_7::subsets::base::io::import", "standards::v1_7::subsets::base::io::export", "standards::v1_7::subsets::base"],
+  "standards::v1_7::subsets::base::modules::lexer": ["standards::v1_7::subsets::base::modules::lexer", "standards::v1_7::subsets::base::io"],
+  "standards::v1_7::subsets::base::modules::fonts": ["standards::v1_7::subsets::base::modules::fonts", "standards::v1_7::subsets::base::io"]
+ },
+ "aliases": {"semio_s_artifact_stdio_contract": ["apply_mutation", "apply_mutation_checked", "mutation_from_payload_json", "mutation_inverse", "mutation_payload_json", "MutationRefusal"]},
+ "defs": {"standards::v1_7::subsets::base": ["PdfBuilder", "PdfAnalyzer", "PdfComposer", "PdfBuilderFacets"]}
+}

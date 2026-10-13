@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🔑access-rules` per Wave C.
 
 use super::RenameAccessRule;
-use crate::diff::{ProgramAccessRulesDelta, ProgramAccessRulesPatchEntry};
-use crate::registers::AccessRulePatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramAccessRulesDelta, ProgramAccessRulesPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::AccessRulePatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameAccessRule, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

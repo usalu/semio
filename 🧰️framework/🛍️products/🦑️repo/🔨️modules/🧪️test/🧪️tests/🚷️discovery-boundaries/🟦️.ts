@@ -2,7 +2,7 @@ import { expect, test } from "bun:test";
 import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { spawnSync } from "node:child_process";
-import { dirname, join, resolve } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
 import Ajv from "ajv";
 import glob from "fast-glob";
@@ -64,7 +64,10 @@ test("Nx uses the current supplied candidate inventory with independent no-follo
    const ignored=[...vocabulary.implementationLeafPolicy.ignoredPathPatterns.map((pattern:string)=>`${pattern}/**`),...vocabulary.pathEmojiPolicy.reservedSubtreeDirectoryNames.map((segment:string)=>`**/${segment}/**`),...Object.values(vocabulary.pathExclusions).map(entry=>`${(entry as {path:string}).path}**`)];
    const inventory=glob.sync(`**/${vocabulary.testsDirName}/*/${feature}`,{cwd:root,dot:true,followSymbolicLinks:false,ignore:ignored}).filter(path=>!lstatSync(join(root,path)).isSymbolicLink());
    const oracle=[...new Set(row.inputs.map(path=>path.replaceAll("\\","/")).filter(path=>!path.split("/").some(part=>!part||part==="."||part==="..")&&inventory.includes(path)))].sort();expect(oracle,row.id).toEqual([...row.expected].sort());
-   const actual=await plugin.default.createNodesV2[1](row.inputs,{}, {workspaceRoot:root});expect(actual.map(entry=>entry[0]).sort(),row.id).toEqual(oracle);expect(actual.flatMap(entry=>Object.values(entry[1].projects)).map(project=>project.root).sort()).toEqual(oracle.map(dirname).sort());
+   const actual=await plugin.default.createNodesV2[1](row.inputs,{}, {workspaceRoot:root}),projects=actual.flatMap(entry=>Object.values(entry[1].projects)) as {root:string;metadata:{semio:{testCases:string[]}}}[];
+   expect(actual.every(entry=>oracle.includes(entry[0])),row.id).toBe(true);
+   expect(projects.map(project=>project.root).sort(),row.id).toEqual([...new Set(oracle.map(path=>dirname(dirname(path))))].sort());
+   expect(projects.flatMap(project=>project.metadata.semio.testCases).sort(),row.id).toEqual(oracle.map(path=>basename(dirname(path))).sort());
   }
  }finally{rmSync(root,{recursive:true,force:true});}
 },30000);
@@ -86,7 +89,7 @@ test("fresh authority links and resident Node and Bun source mutations fail clos
   }
   const changed=structuredClone(vocabulary);changed.pathExclusions.fixture={path:fixture.expected[0]};put(taxonomyPath,JSON.stringify(changed));expect(await plugin.default.createNodesV2[1]([featurePath],{}, {workspaceRoot:root})).toEqual([]);put(taxonomyPath,JSON.stringify(vocabulary));
   const helper=readFileSync(join(owner,"🕸️dependencies/🟨️.mjs"),"utf8");
-  put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🟨️.mjs",`export {cacheInternals} from ${JSON.stringify(pathToFileURL(join(repo,library,"🟨️.mjs")).href)};\n`);
+  put("plugin/🟨️.mjs",readFileSync(join(owner,"🟨️.mjs"),"utf8"));put("plugin/🕸️dependencies/🟨️.mjs",helper);put("📚️library/🟨️.mjs",`export {cacheInternals} from ${JSON.stringify(pathToFileURL(join(repo,library,"🟨️.mjs")).href)};\n`);put("📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs",`export {observeDependencies,observedFs,observeInference} from ${JSON.stringify(pathToFileURL(join(repo,library,"🔌️nx-plugin/👁️observation/🟨️.mjs")).href)};\n`);
   const code=`import assert from "node:assert/strict";import{readFileSync,writeFileSync}from"node:fs";import{join}from"node:path";import{pathToFileURL}from"node:url";const root=${JSON.stringify(root)},feature=${JSON.stringify(featurePath)},path=join(root,"plugin/🕸️dependencies/🟨️.mjs"),source=readFileSync(path,"utf8"),resident=(await import(pathToFileURL(join(root,"plugin/🟨️.mjs")).href)).default;assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);writeFileSync(path,source+"\\nexport const invalid = ;\\n");await assert.rejects(()=>resident.createNodesV2[1]([feature],{}, {workspaceRoot:root}),/Unexpected|Expected|Parse|Syntax|stale ESM/i);writeFileSync(path,source);assert.equal((await resident.createNodesV2[1]([feature],{}, {workspaceRoot:root})).length,1);console.log("fresh resident source accepted/refused/accepted");`;
   for(const runtime of ["node",process.execPath]){const child=spawnSync(runtime,[...(runtime==="node"?["--input-type=module"]:[]),"--eval",code],{encoding:"utf8",timeout:10000});expect(child.status,child.stdout+child.stderr).toBe(0);expect(child.stdout.trim()).toBe("fresh resident source accepted/refused/accepted");}
  }finally{rmSync(root,{recursive:true,force:true});}

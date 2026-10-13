@@ -5,7 +5,7 @@ import { runArtifactRustPackageMain } from "../../../../../../../🧰️framewor
 import { retainedExtrusionOracle } from "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🟦️.ts";
 import { BundleScript } from "../../../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runCmd, runCargo } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { prepareSemioConversionDefinitionV1 } from "../../🧩️composition/🔗️conversions/🟦️.ts";
 import { runCargoCapabilityContributionChecks } from "../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🧩️capabilities/🧪️tests/🟦️.ts";
@@ -46,7 +46,7 @@ const stdioSchemaRoot = join(this.repoRoot, "✏️s/🔌️plugins/🗄️stdio
 runCmd("bun", [join(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--resolveJsonModule", "--allowImportingTsExtensions", "--esModuleInterop", "--skipLibCheck", `${stdioSchemaRoot}/✉️base/🧬️schema/🧮️geometry/🟦️.ts`, ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts"].map((file) => `${stdioSchemaRoot}/📦️object/🧬️schema/${file}`), ...["🟦️.ts", "📸️snapshot/🟦️.ts", "🔺️diff/🟦️.ts", "🧬️mutations/🟦️.ts", "🧪️tests/🪪️document-contract/🟦️.ts"].map((file) => `${stdioSchemaRoot}/🧰️kit/🧬️schema/${file}`)], { cwd: this.repoRoot });
 if (segments[1] === "native") {
 const { runCargo } = await import("../../../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts");
-for (const filter of ["stdio_document_contract", "subsets::object::", "subsets::kit::"]) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", "semio-s-artifact-stdio-semio", "--lib", filter, "--", "--nocapture"], this.repoRoot);
+for (const [crate, filter] of [["semio-s-artifact-stdio-semio-base", "stdio_document_contract"], ["semio-s-artifact-stdio-semio-object", ""], ["semio-s-artifact-stdio-semio-kit", ""]] as const) await runCargo(["test", "--manifest-path", "Cargo.toml", "-p", crate, "--lib", ...(filter ? [filter] : []), "--", "--nocapture"], this.repoRoot);
 }
 return;
 }
@@ -54,7 +54,11 @@ throw new Error('Unknown owned verification '+segments.join(' '));
 }
 }
 
-await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
+/** 📦️ Every Cargo package the semio artifact family is cut into: the members of its own workspace. */
+const familyRoot = resolve(import.meta.dir, "../..");
+const familyPackages = (Bun.TOML.parse(readFileSync(join(familyRoot, "Cargo.toml"), "utf8")) as { workspace: { members: string[] } }).workspace.members.map((member) => (Bun.TOML.parse(readFileSync(join(familyRoot, member, "Cargo.toml"), "utf8")) as { package: { name: string } }).package.name);
+
+await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-stdio-semio", { packages: familyPackages, ...{ twins: [{ name: "retained-extrusion", run: retainedExtrusionOracle }, { name: "conversion-contributions", run: runCargoCapabilityContributionChecks }] }, commands: { verify: OwnedVerifyScript, composition: CompositionScript }, snapshotSqliteTestBudgetMs: 120000, snapshotSqliteTests: [
 "../../🧪️tests/🪶️sqlite/🛬️native/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts",
 "../../🏅️standards/🔖️v1/🪆️subsets/✉️base/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🔺️geometry/🟦️.ts",

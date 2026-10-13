@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+use crate::schema::snapshot::{SemioMesh, SemioPrimitive};
 use store::{InferenceCache, InferenceCacheConfig};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

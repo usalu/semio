@@ -1,5 +1,6 @@
 //! 📦️ Native PDF foreign artifacts preserve encoded custody behind first-party typed references.
-use crate::standards::v1_7::subsets::base::{schema::snapshot::*,modules::lexer::{PResult,PdfEngineError}};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use semio_framework_artifact_reference::{ArtifactRef,ArtifactDialect};
 use semio_framework_value::ToValue;
 

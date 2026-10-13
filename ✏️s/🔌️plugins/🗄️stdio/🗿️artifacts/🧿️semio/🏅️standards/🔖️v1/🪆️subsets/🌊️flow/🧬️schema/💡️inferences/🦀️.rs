@@ -6,7 +6,7 @@
 //! from this directed node/edge graph's own `nodes`/`edges` — the same Kahn's-algorithm shape
 //! trinity's own `jack` inference facet establishes for its own node/edge graph).
 
-use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::schema::snapshot::SemioFlowSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::topology::compute_semio_flow_topology;

@@ -4,7 +4,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::mutations::PresentationMutation;
 use crate::standards::v1::subsets::any::schema::mutations::create_tile;
 
-use store::{os_store::test_support, ArtifactCommand};
+use store::{os_store::test_support, os_store::store_schema::ArtifactCommand};
 
 #[semio_framework_async_macros::async_test]
 async fn presentation_deck_materializes() {
@@ -53,9 +53,9 @@ async fn document_text_round_trip_with_operation_applied() {
 /// instead of being caught here.
 #[test]
 fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
-    let mut authority = PresentationPackSnapshotAuthority::new(semio_framework_job::OperationId(9_101), semio_framework_job::Generation(1), store::OwnedSchemaPath::ROOT);
+    let mut authority = PresentationPackSnapshotAuthority::new(semio_framework_job::OperationId(9_101), semio_framework_job::Generation(1), store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT);
     *authority.value = Some(empty_presentation_snapshot());
-    assert!(!store::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(&authority), "the fixture must hold a LIVE owner, or this law proves nothing");
+    assert!(!store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority::terminal_is_empty(&authority), "the fixture must hold a LIVE owner, or this law proves nothing");
     let previous = std::panic::take_hook();
     std::panic::set_hook(Box::new(|_| {}));
     let outcome = std::panic::catch_unwind(std::panic::AssertUnwindSafe(move || {

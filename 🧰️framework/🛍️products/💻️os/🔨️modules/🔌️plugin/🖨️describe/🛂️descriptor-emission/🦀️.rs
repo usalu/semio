@@ -1,27 +1,24 @@
 //! 🛂️ `semio-framework-plugin-describe` — the build-time-only descriptor emitter
-//! (`📓️design-abi.md` §3, packet E1-describe). `describe <component.wasm> --core
-//! <core.wasm> --out <dir>`
+//! (`📓️design-abi.md` §3, packet E1-describe). `describe <component.wasm> --out <dir>`
 //! instantiates the built `world actor` component exactly once, with ONLY its `pure` import
 //! satisfied and a fuel cap, calls the `describe()` export, decodes the packed
-//! `semio_framework::PackageDescriptor` it returns, patches in the content hashes (which the guest
-//! itself cannot compute — it doesn't know its own already-built wasm bytes), and writes
-//! `🛂️.descriptor.semio` (pack bytes) + `🔣️.json` (readable mirror) to `--out <dir>`.
+//! `semio_framework::PackageDescriptor` it returns and writes its canonical SEMANTIC form —
+//! `🛂️.descriptor.semio` (pack bytes) + `🔣️.json` (readable mirror) — to `--out <dir>`. The
+//! semantic descriptor carries no byte identity: the binding to shipped bytes lives in the generated
+//! `ComponentReceiptV1` (ticket 26/09/23 wave A2), so a descriptor is equal under every profile.
 //! Never instantiated or invoked by the OS at runtime — see `🧬️schema/📜️.wit`'s
 //! `describe` interface doc.
-extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as store;
-
-/// 🧠️ The build-time descriptor emitter and the native plugin host share one owned interpreter
-/// implementation; Wasmtime remains only as the differential oracle until component parity closes.
-#[path = "../../🧠️interpreter/🦀️.rs"]
-pub mod interpreter;
 
 use std::fs::{self, File, OpenOptions};
 use std::io::{Read, Write};
 use std::path::{Path, PathBuf};
 
 use semio_framework::{CanonicalDescriptorValue, PackageDescriptor, ASSEMBLY_FAILED_PLUGIN_ID};
-use semio_framework_plugin_host::{CompiledHandle, GuestRuntime, OwnedRuntime, PackageHash, PackageId, PackageRef, TurnFault};
+use semio_framework_plugin_interpreter::{OwnedCompiledGuest, OwnedRuntime, TurnFault};
+/// 🧠️ The owned interpreter the emitter drives; the owned core-export law reads its export set.
+#[cfg(test)]
+use semio_framework_plugin_interpreter::interpreter;
 
 //#region 🔖️ActorBindings
 #[cfg(test)]
@@ -55,12 +52,6 @@ impl wasmtime_wasi::WasiView for DescribeHostState {
 // See R9/R2 E1.
 #[cfg(test)]
 impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
-    async fn operation_begin(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>)->Result<u64,u32>{Err(6)}
-    async fn operation_progress(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_completed:u64,_total:u64,_owned:u64)->u32{6}
-    async fn operation_allocation(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_bytes:u64,_owned:u64,_next:u64,_maximum:u64)->u32{6}
-    async fn operation_reserve_return(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_kind:actor_bindings::semio::framework::pure::OperationReturnAllocation,_count:u64)->u32{6}
-    async fn operation_finish(_accessor:&wasmtime::component::Accessor<DescribeHostState,Self>,_owned:u64)->u32{6}
-
     fn log(&mut self, level: String, message: String) {
         eprintln!("[describe:{level}] {message}");
     }
@@ -71,6 +62,32 @@ impl actor_bindings::semio::framework::pure::Host for DescribeHostState {
 
     fn trace_span(&mut self, name: String) {
         eprintln!("[describe:trace] {name}");
+    }
+}
+
+/// 🎟️ `pure`'s `async func` operation doors (`operation-begin` … `operation-finish`). `bindgen!` places every WIT
+/// `async func` on `HostWithStore` with an `Accessor`, never on `Host`. `describe()` owns no receiving operation, so
+/// each door answers the refusal code 6 and no admission is ever granted.
+#[cfg(test)]
+impl actor_bindings::semio::framework::pure::HostWithStore<DescribeHostState> for wasmtime::component::HasSelf<DescribeHostState> {
+    async fn operation_begin(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>) -> Result<u64, u32> {
+        Err(6)
+    }
+
+    async fn operation_progress(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _completed: u64, _total: u64, _owned: u64) -> u32 {
+        6
+    }
+
+    async fn operation_allocation(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _bytes: u64, _owned: u64, _next: u64, _maximum: u64) -> u32 {
+        6
+    }
+
+    async fn operation_reserve_return(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _kind: actor_bindings::semio::framework::pure::OperationReturnAllocation, _count: u64) -> u32 {
+        6
+    }
+
+    async fn operation_finish(_accessor: &wasmtime::component::Accessor<DescribeHostState, Self>, _owned: u64) -> u32 {
+        6
     }
 }
 
@@ -271,12 +288,12 @@ fn describe_budget() -> semio_framework::kernel::Budget {
     semio_framework::kernel::Budget { retained: semio_framework::kernel::RetainedTurnInput { operation: 1, generation: 1, epoch: 1, grant }, fuel: DESCRIBE_FUEL_BUDGET, deadline_ms: DESCRIBE_DEADLINE_MS, max_effects: 0, max_patch_bytes: 0, max_frames: 0 }
 }
 
-/// 🛡️ Ceiling for the build artifacts the emitter reads — the raw `wasm32-wasip2` component and
-/// jco's extracted core, both built with the UNOPTIMIZED `wasm-dev` profile. This is a build-time
-/// input bound and deliberately NOT the strict catalog's runtime ceiling
-/// (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`), which applies to the optimized artifact that
-/// actually ships. Mirrored by `FRESH_COMPONENT_MAX_BYTES` in this crate's `📜️script.ts`.
-pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 256 * 1024 * 1024;
+/// 🛡️ Ceiling for the one artifact the emitter reads: a `wasm32-wasip2` component built either as the
+/// shipped `wasm-release` bytes (additionally bounded at 256 MiB by `SHIPPED_COMPONENT_MAX_BYTES` before
+/// they reach a receipt) or as the local-only `wasm-prototype` bytes of the single plugin being edited,
+/// whose unoptimized, unstripped link may reach this 512 MiB cap (`ITERATE_COMPONENT_MAX_BYTES` in
+/// `🏗️component-build/🟦️.ts`). It is deliberately NOT the runtime ceiling a served component meets.
+pub const DESCRIBE_ARTIFACT_MAX_BYTES: u64 = 512 * 1024 * 1024;
 
 /// 🧱 Fixed-size IO keeps hashing and publication memory/work bounded and observable.
 pub const DESCRIBE_IO_CHUNK_BYTES: usize = 64 * 1024;
@@ -319,14 +336,6 @@ fn read_artifact(path: &Path, label: &str) -> Result<(Vec<u8>, String), Describe
         return Err(DescribeError(format!("{label} {} changed while reading", path.display())));
     }
     Ok((bytes, semio_framework_hash::hex_lower(&hash.finalize())))
-}
-
-/// #️⃣ Derives distinct raw/core identities and refuses the historical raw-only substitution.
-fn artifact_hashes(wasm_sha256: String, core_wasm_sha256: String) -> Result<(String, String), DescribeError> {
-    if wasm_sha256 == core_wasm_sha256 {
-        return Err(DescribeError("raw component and independently extracted core module have the same SHA-256".to_string()));
-    }
-    Ok((wasm_sha256, core_wasm_sha256))
 }
 
 fn transaction_path(out_dir: &Path, name: &str, role: &str) -> PathBuf {
@@ -401,9 +410,9 @@ fn write_descriptor_pair_atomic(out_dir: &Path, pack: &[u8], json: &[u8]) -> Res
     result
 }
 
+/// 🐎️ The independent describe oracle: the shipped component bytes, unmodified, under Wasmtime's own component host.
 #[cfg(test)]
 async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<Vec<u8>, DescribeError> {
-    let execution_bytes = interpreter::wasm_execution_binary(wasm_bytes).map_err(|error| DescribeError(format!("normalizing {} for execution: {error}", source.display())))?;
     let mut config = wasmtime::Config::new();
     config.wasm_component_model_async(true);
     config.consume_fuel(true);
@@ -411,7 +420,7 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
     let mut linker = wasmtime::component::Linker::<DescribeHostState>::new(&engine);
     actor_bindings::Actor::add_to_linker::<DescribeHostState, wasmtime::component::HasSelf<DescribeHostState>>(&mut linker, |state: &mut DescribeHostState| state).map_err(|error| DescribeError(format!("linking `world actor` imports: {error}")))?;
     wasmtime_wasi::p2::add_to_linker_async(&mut linker).map_err(|error| DescribeError(format!("linking wasi preview 2: {error}")))?;
-    let component = wasmtime::component::Component::from_binary(&engine, &execution_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", source.display())))?;
+    let component = wasmtime::component::Component::from_binary(&engine, wasm_bytes).map_err(|error| DescribeError(format!("parsing {} as a wasm component: {error}", source.display())))?;
     let mut store = wasmtime::Store::new(&engine, DescribeHostState { wasi_ctx: wasmtime_wasi::WasiCtxBuilder::new().build(), resource_table: wasmtime::component::ResourceTable::new() });
     store.set_fuel(DESCRIBE_FUEL_BUDGET).map_err(|error| DescribeError(format!("setting fuel budget: {error}")))?;
     let bindings = actor_bindings::Actor::instantiate_async(&mut store, &component, &linker).await.map_err(|error| DescribeError(format!("instantiating {}: {error}", source.display())))?;
@@ -422,12 +431,11 @@ async fn execute_describe_wasmtime(wasm_bytes: &[u8], source: &Path) -> Result<V
         .map_err(|error| DescribeError(format!("calling describe() on {}: {error}", source.display())))
 }
 
-async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec<u8>, OwnedRuntime, CompiledHandle), DescribeError> {
+async fn execute_describe_owned(wasm_bytes: &[u8], source: &Path) -> Result<(Vec<u8>, OwnedRuntime, OwnedCompiledGuest), DescribeError> {
     let started = std::time::Instant::now();
     eprintln!("[describe] owned phase=compile bytes={} elapsed_ms=0", wasm_bytes.len());
     let runtime = OwnedRuntime::new();
-    let package = PackageRef { package: PackageId(source.display().to_string()), hash: PackageHash([0; 32]) };
-    let compiled = runtime.compile(&package, wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
+    let compiled = runtime.compile_component(wasm_bytes).map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", source.display())))?;
     eprintln!("[describe] owned phase=execute fuel=0 elapsed_ms={}", started.elapsed().as_millis());
     let descriptor = runtime
         .describe_observed(
@@ -497,7 +505,7 @@ pub fn declared_artifact_kind_pairs(descriptor: &PackageDescriptor) -> Vec<(Stri
 /// throwaway instance for almost every package; a full census of a large bundle would cost minutes per describe).
 /// Unowned kinds are expected (inputs, companions); the faults of every kind probed before the first owned one are
 /// returned so a refusal names them.
-async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pairs: &[(String, String)]) -> Result<(), Vec<String>> {
+async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &OwnedCompiledGuest, pairs: &[(String, String)]) -> Result<(), Vec<String>> {
     let budget = describe_budget();
     let mut faults = Vec::new();
     for (kind, schema) in pairs {
@@ -511,21 +519,16 @@ async fn first_owned_codec(runtime: &OwnedRuntime, compiled: &CompiledHandle, pa
     Err(faults)
 }
 
-/// 🛂️ Instantiates `wasm_path` once (fuel-capped, `pure`-only imports), calls its `describe()`
-/// export, patches independent raw-component and extracted-core `hashes` in, and writes
-/// both output files under `out_dir` — only after the kind-identity law and the codec census pass on the same
-/// compiled component ([`kind_identity_faults`], [`first_owned_codec`]). Returns the patched descriptor for the caller to print/verify.
-///
 /// 📦️ The pack bytes of a descriptor: its canonical value through the wire value encoder.
 pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {
     store::pack_rt::encode_wire_value(value.value())
 }
 
-/// 🪪️ `descriptor_sha256` self-hashes the descriptor's own encoded pack MINUS this very field
-/// (a self-referential hash cannot include itself) — encode once with an empty
-/// `descriptor_sha256`, hash THAT, then patch the real value in before the final write. Any
-/// consumer re-deriving `descriptor_sha256` for verification must reproduce this exact two-pass
-/// convention.
+/// 🛂️ Instantiates `wasm_path` once (fuel-capped, `pure`-only imports), calls its `describe()`
+/// export and writes its canonical semantic pair under `out_dir` — only after the kind-identity law
+/// and the codec census pass on the same compiled component ([`kind_identity_faults`],
+/// [`first_owned_codec`]). A guest never binds byte identity, so a `describe()` answer that carries
+/// `hashes` is refused. Returns the semantic descriptor and its pack bytes.
 ///
 /// 🛡️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (registrar): refuse to write a descriptor whose
 /// assembly failed. `plugin_manifest()` mints a `pluginId: "assembly-failed"` stub when
@@ -535,20 +538,12 @@ pub fn descriptor_pack(value: &CanonicalDescriptorValue) -> Vec<u8> {
 /// before verifying: the "never commit a placeholder" rule held only while an agent reached its
 /// verification step, and enforced nothing when it did not. Failing at the writer makes the
 /// invalid state unrepresentable instead of relying on every caller to remember.
-pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir: &Path) -> Result<PackageDescriptor, DescribeError> {
-    let (wasm_bytes, wasm_sha256) = read_artifact(wasm_path, "raw component")?;
-    let (_, core_wasm_sha256) = read_artifact(core_wasm_path, "extracted core module")?;
-    let (wasm_sha256, core_wasm_sha256) = artifact_hashes(wasm_sha256, core_wasm_sha256)?;
+pub async fn describe_component(wasm_path: &Path, out_dir: &Path) -> Result<(PackageDescriptor, Vec<u8>), DescribeError> {
+    let (wasm_bytes, _) = read_artifact(wasm_path, "component")?;
     let (descriptor_bytes, runtime, compiled) = execute_describe_owned(&wasm_bytes, wasm_path).await?;
 
     let decoded = store::pack_rt::decode_wire_value(&descriptor_bytes).map_err(|error| DescribeError(format!("decoding describe() output as a pack: {error}")))?;
-    let mut descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
-
-    descriptor.hashes.wasm_sha256 = wasm_sha256;
-    descriptor.hashes.core_wasm_sha256 = core_wasm_sha256;
-    descriptor.hashes.descriptor_sha256 = String::new();
-    let prehash_bytes = descriptor_pack(&CanonicalDescriptorValue::new(semio_framework_value::ToValue::to_value(&descriptor)));
-    descriptor.hashes.descriptor_sha256 = semio_framework_hash::sha256_hex(&prehash_bytes);
+    let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(decoded).map_err(|error| DescribeError(format!("decoding describe() output as a PackageDescriptor: {error}")))?;
 
     let final_value = semio_framework_value::ToValue::to_value(&descriptor);
     let final_json = semio_framework_pack_json::to_string_pretty(&semio_framework_pack_json::from_dsl_value(&final_value));
@@ -569,7 +564,7 @@ pub async fn describe_component(wasm_path: &Path, core_wasm_path: &Path, out_dir
     }
     write_descriptor_pair_atomic(out_dir, &final_bytes, format!("{final_json}\n").as_bytes())?;
 
-    Ok(descriptor)
+    Ok((descriptor, final_bytes))
 }
 //#endregion 🔖️Describe
 
@@ -610,8 +605,7 @@ pub struct ComponentCodecRows {
 pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) -> Result<ComponentCodecRows, DescribeError> {
     let (wasm_bytes, _) = read_artifact(wasm_path, "raw component")?;
     let runtime = OwnedRuntime::new();
-    let package = PackageRef { package: PackageId(wasm_path.display().to_string()), hash: PackageHash([0; 32]) };
-    let compiled = runtime.compile(&package, &wasm_bytes).await.map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
+    let compiled = runtime.compile_component(&wasm_bytes).map_err(|error| DescribeError(format!("compiling {} with the owned interpreter: {error}", wasm_path.display())))?;
     let budget = describe_budget();
     let mut rows = ComponentCodecRows { owned: Vec::with_capacity(pairs.len()), unowned: Vec::new() };
     for (kind, schema) in pairs {
@@ -634,7 +628,7 @@ pub async fn component_codec_rows(wasm_path: &Path, pairs: &[(String, String)]) 
     Ok(rows)
 }
 
-/// ⌨️ `describe <component.wasm> --core <core.wasm> --out <dir>` and `codecs <component.wasm>
+/// ⌨️ `describe <component.wasm> --out <dir>` and `codecs <component.wasm>
 /// --kinds <kind=schema,…> --out <file.json>`. Returns the process exit code (0 success, 1 a failure,
 /// 2 a usage error).
 pub async fn run(args: Vec<String>) -> i32 {
@@ -647,7 +641,7 @@ pub async fn run(args: Vec<String>) -> i32 {
             2
         }
         None => {
-            eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --core <core.wasm> --out <dir>");
+            eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
             2
         }
     }
@@ -724,12 +718,10 @@ async fn run_codecs(args: Vec<String>) -> i32 {
 
 async fn run_describe(args: Vec<String>) -> i32 {
     let mut wasm_path: Option<PathBuf> = None;
-    let mut core_wasm_path: Option<PathBuf> = None;
     let mut out_dir: Option<PathBuf> = None;
     let mut iter = args.into_iter();
     while let Some(arg) = iter.next() {
         match arg.as_str() {
-            "--core" => core_wasm_path = iter.next().map(PathBuf::from),
             "--out" => out_dir = iter.next().map(PathBuf::from),
             _ if wasm_path.is_none() => wasm_path = Some(PathBuf::from(arg)),
             other => {
@@ -738,13 +730,13 @@ async fn run_describe(args: Vec<String>) -> i32 {
             }
         }
     }
-    let (Some(wasm_path), Some(core_wasm_path), Some(out_dir)) = (wasm_path, core_wasm_path, out_dir) else {
-        eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --core <core.wasm> --out <dir>");
+    let (Some(wasm_path), Some(out_dir)) = (wasm_path, out_dir) else {
+        eprintln!("usage: semio-framework-plugin-describe describe <component.wasm> --out <dir>");
         return 2;
     };
-    match describe_component(&wasm_path, &core_wasm_path, &out_dir).await {
-        Ok(descriptor) => {
-            println!("described {} with core {} ({:?}, role={:?}) -> {}/🛂️.descriptor.semio + 🔣️.json (wasm_sha256={}, core_wasm_sha256={})", wasm_path.display(), core_wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), descriptor.hashes.wasm_sha256, descriptor.hashes.core_wasm_sha256);
+    match describe_component(&wasm_path, &out_dir).await {
+        Ok((descriptor, pack)) => {
+            println!("described {} ({:?}, role={:?}) -> {}/🛂️.descriptor.semio + 🔣️.json (semantic_descriptor_sha256={})", wasm_path.display(), descriptor.manifest.plugin_id, descriptor.role, out_dir.display(), semio_framework_hash::sha256_hex(&pack));
             0
         }
         Err(error) => {

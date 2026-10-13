@@ -18,8 +18,8 @@ use crate::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
 use semio_framework_tool_machine::{node_drag_emit, node_graph_edit_rows, NodeDragRecord, NodeGraphEditRow};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{create_edge::CreateEdge, delete_edge::DeleteEdge, delete_node::DeleteNode, drag_nodes::DragNodes, SemioGraphMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
 
 /// 🪪️ The editor app id every drag transaction's `tool` is scoped by: `<appId>#nodeGraphEdit`.
 pub(crate) const TRINITY_REWRITING_EDITOR_APP_ID: &str = "s.trinity.rewriting@1/*#editor";

@@ -166,7 +166,7 @@ use framework_schema::ArtifactSchema;
 use std::fmt;
 use crate::standards::v1_7::subsets::base::io::text::snapshot as snapshot_text;
 
-impl store::ArtifactDsl for PdfSnapshot {
+impl store::os_store::serialization::ArtifactDsl for PdfSnapshot {
     const EXTENSION: &'static str = "pdf";
     fn envelope_id() -> &'static str {
         STDIO_PDF17_DOCUMENT_SCHEMA
@@ -174,7 +174,7 @@ impl store::ArtifactDsl for PdfSnapshot {
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         let body = match store::semio_format::split_text_preamble(text) {
             Ok((envelope, rest)) => {
-                if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
+                if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1) { return Err(semio_framework_diagnostic::TextError::new(ValueRefusalKind::InvalidValue, "PDF snapshot text envelope mismatch", semio_framework_diagnostic::TextSpan::at(1, 1))); }
                 rest
             }
             Err(_) => text,
@@ -184,39 +184,13 @@ impl store::ArtifactDsl for PdfSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body=semio_framework_dsl_record::print(&to_record(self),&spec(),semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 }
 #[cfg(test)] pub use snapshot_codec::*;
 
-mod source_fixtures {
-use crate::standards::v1_7::subsets::base::schema::snapshot::*;
-/// 🆕️ A new pdf document: the empty 1.7 document as the real codec round-trips it — its retained object graph
-/// (`objects`/`trailer`) is what a fresh write produced, read back, exactly like [`demo_pdf17_snapshot`]; the empty
-/// `Default` carries no graph, so it saved as a document that reopened as a different one.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn blank_pdf_snapshot() -> PdfSnapshot {
-    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
-    encode_pdf(&PdfSnapshot::default()).and_then(|bytes| decode_pdf(&bytes)).expect("blank_pdf_snapshot: the empty document round-trips through the real codec")
-}
-/// 📄️ The demo `stdio.pdf.1.7` document -- the single source of truth for `🏅️standards/7️⃣1.7/
-/// 📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio` (both are literally this
-/// snapshot's `print_dsl`/`encode_pack` output, asserted equal by `fixture_honesty_law`).
-///
-/// Deliberately the real `decode_pdf(encode_pdf(seed))` FIXED POINT: the typed lanes survive the
-/// round trip by the `lift(lower(t)) == t` law, and `objects`/`trailer` are whatever the fresh
-/// write produced, read back — a hand-built snapshot with empty `objects` would not equal its
-/// own decoded print.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn demo_pdf17_snapshot() -> PdfSnapshot {
-    let seed = crate::standards::v1_7::subsets::base::io::text_document(&[(200.0, 300.0, "Semio")]);
-    let bytes = crate::standards::v1_7::subsets::base::io::encode_pdf(&seed).expect("encode_pdf(seed) must succeed");
-    crate::standards::v1_7::subsets::base::io::decode_pdf(&bytes).expect("decode_pdf(encode_pdf(seed)) must succeed")
-}
-}
-pub use source_fixtures::*;
 
 #[path="📅️date/🦀️.rs"]
 pub mod date;

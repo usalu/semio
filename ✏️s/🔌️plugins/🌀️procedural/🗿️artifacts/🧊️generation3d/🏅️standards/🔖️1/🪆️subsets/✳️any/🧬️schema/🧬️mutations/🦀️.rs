@@ -25,7 +25,7 @@ use crate::standards::v1::subsets::any::schema::diff::Generation3dDiff;
 use crate::{widget_id, Generation3dSnapshot};
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️AddressHelpers
 /// 🔎️ BASE-state widget index lookup by id — shared by every widget triad leaf's inverse.

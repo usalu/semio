@@ -1,14 +1,15 @@
 use super::*;
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::operations::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
-use crate::brep::representation::arena::ArenaId;
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt2, Vec2};
+use crate::test_support::{observe_tessellation_system, MESH_RELEASES, OBSERVED_MESH, OBSERVED_RELEASE_BYTES, OBSERVED_SAMPLE, SAMPLE_RELEASES};
+use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_operations::primitives::{make_cylinder, make_rectangle_wire, make_sphere};
+use semio_framework_3d_brep_representation::arena::ArenaId;
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Vec2};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn build_unit_box(body: &mut Body, rec: &mut OpRecorder) -> SolidId {
@@ -333,42 +334,6 @@ async fn coedge_uv_prefers_stored_pcurve_when_present() {
 }
 
 
-struct TessellationAllocationObserver;
-std::thread_local! {
-    static SYSTEM_OBSERVING: std::cell::Cell<bool> = const { std::cell::Cell::new(false) };
-    static SYSTEM_CAPACITY: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-    static SYSTEM_RELEASE: std::cell::Cell<usize> = const { std::cell::Cell::new(0) };
-}
-pub(crate) fn observe_tessellation_system<T>(operation: impl FnOnce() -> T) -> (T, (usize, usize)) {
-    SYSTEM_CAPACITY.with(|value| value.set(0));
-    SYSTEM_RELEASE.with(|value| value.set(0));
-    SYSTEM_OBSERVING.with(|value| value.set(true));
-    let result = operation();
-    SYSTEM_OBSERVING.with(|value| value.set(false));
-    (result, (SYSTEM_CAPACITY.with(std::cell::Cell::get), SYSTEM_RELEASE.with(std::cell::Cell::get)))
-}
-static OBSERVED_SAMPLE: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static OBSERVED_MESH: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static SAMPLE_RELEASES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static MESH_RELEASES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-static OBSERVED_RELEASE_BYTES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-#[global_allocator]
-static TESSELLATION_ALLOCATOR: TessellationAllocationObserver = TessellationAllocationObserver;
-unsafe impl std::alloc::GlobalAlloc for TessellationAllocationObserver {
-    unsafe fn alloc(&self, layout: std::alloc::Layout) -> *mut u8 {
-        let pointer = unsafe { std::alloc::GlobalAlloc::alloc(&std::alloc::System, layout) };
-        if !pointer.is_null() && SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_CAPACITY.with(|value| value.set(value.get() + layout.size())); }
-        pointer
-    }
-    unsafe fn dealloc(&self, pointer: *mut u8, layout: std::alloc::Layout) {
-        use std::sync::atomic::Ordering::SeqCst;
-        if SYSTEM_OBSERVING.with(std::cell::Cell::get) { SYSTEM_RELEASE.with(|value| value.set(value.get() + layout.size())); }
-        if OBSERVED_SAMPLE.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { SAMPLE_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
-        if OBSERVED_MESH.compare_exchange(pointer as usize,0,SeqCst,SeqCst).is_ok() { MESH_RELEASES.fetch_add(1,SeqCst);OBSERVED_RELEASE_BYTES.fetch_add(layout.size(),SeqCst); }
-        unsafe { std::alloc::GlobalAlloc::dealloc(&std::alloc::System,pointer,layout); }
-    }
-}
-
 fn exact_retirement_grant<T:semio_framework_value::retirement::RetireOwned>(owner:&semio_framework_value::retirement::controlled::ControlledRetirement<T>,items:usize)->semio_framework_value::retained_clone::RetainedCloneGrant {
     let copy=owner.next_copy_byte_demand().unwrap();semio_framework_value::retained_clone::RetainedCloneGrant {maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:owner.next_capacity_byte_demand(copy).unwrap(),maximum_release_bytes:owner.next_release_byte_demand().unwrap(),maximum_depth:owner.next_depth_demand().unwrap()}
 }
@@ -409,7 +374,7 @@ fn tessellation_cancel_handoff_and_small_grants_cover_every_actual_system_alloca
 
 #[test]
 fn original_native_family_handoff_retains_all_system_owners_until_grants() {
-    use crate::brep::engine::Brep;
+    use semio_framework_3d_brep_engine::Brep;
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();
     let mut family=Brep::new();
     family.box_prim_sync(1.0,1.0,1.0).unwrap();
@@ -432,7 +397,7 @@ fn original_native_family_handoff_retains_all_system_owners_until_grants() {
 
 #[test]
 fn original_native_family_typed_owner_covers_nurbs_wire_aliases_and_compound() {
-    use crate::brep::engine::Brep;
+    use semio_framework_3d_brep_engine::Brep;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let cases=&fixture["nativeFamily"];
     for converted in cases["convertToNurbs"].as_array().unwrap() {
@@ -614,19 +579,19 @@ fn tessellation_cold_admission_does_not_collect_original_topology_before_a_grant
     let before=job.progress().units_done;assert!(matches!(job.step(&body,TessellationInput::Solid(solid),1).unwrap(),TessellationStep::Working(_)));assert_eq!(job.progress().units_done,before+1);
     let (mesh,_)=job.run_to_completion(&body,TessellationInput::Solid(solid)).unwrap();assert_eq!(mesh.face_groups.len(),fixture["box"]["faces"].as_u64().unwrap() as usize);assert_eq!(mesh.edge_groups.len(),12);assert_eq!(mesh.index.len()/3,12);assert!((triangle_area_sum(&mesh)-6.0).abs()<1e-6);
     let volume=mesh.index.chunks_exact(3).map(|tri| {let p=|id:u32|Vec3::new(mesh.position[id as usize*3] as f64,mesh.position[id as usize*3+1] as f64,mesh.position[id as usize*3+2] as f64);p(tri[0]).dot(p(tri[1]).cross(p(tri[2])))/6.0}).sum::<f64>().abs();assert!((volume-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
-    use crate::brep::operations::staged::{StageStep,StagedOperation};
-    let mut caller=crate::brep::operations::boolean::SplitJob::new(&body,solid,Pnt3::new(0.5,0.0,0.0),Vec3::new(1.0,0.0,0.0),0.1).unwrap();
+    use semio_framework_3d_brep_operations::staged::{StageStep, StagedOperation};
+    let mut caller=semio_framework_3d_brep_operations::boolean::SplitJob::new(&body,solid,Pnt3::new(0.5,0.0,0.0),Vec3::new(1.0,0.0,0.0),0.1).unwrap();
     for turn in 0..fixture["cold"]["callerProbeTurns"].as_u64().unwrap() as usize {
         assert_eq!(caller.advance(&mut body,&mut rec).unwrap(),StageStep::Working);
         assert_eq!(caller.progress().phase,"tessellate","original Split Plan advanced before its cold child produced a mesh");assert_eq!(caller.progress().done,turn+1);assert!(caller.progress().total>=caller.progress().done);
     }
-    assert!((crate::brep::queries::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
+    assert!((crate::mass_properties::solid_volume(&body,solid,0.1).unwrap()-fixture["box"]["volume"].as_f64().unwrap()).abs()<1e-6);
     eprintln!("[DEBUG] Tessellation cold ownership: no original topology collection before grants; one grant advanced one frontier; original box parity area=6 volume=1 triangles=12; original Split Plan remains on cold tessellation through eight granted caller turns");
 }
 
 #[test]
 fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() {
-    use crate::brep::queries::validation::BodyValidationJob;
+    use crate::validation::BodyValidationJob;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["validationScratch"];
     let mut body=Body::new();build_unit_box(&mut body,&mut OpRecorder::new());
@@ -644,7 +609,7 @@ fn original_validation_scratch_retains_all_physical_buffers_until_full_grants() 
 
 #[test]
 fn original_mesh_import_cancel_retains_original_buffers_before_full_grants() {
-    use crate::brep::engine::MeshImportCursor;
+    use semio_framework_3d_brep_engine::MeshImportCursor;
     use semio_framework_value::{retained_clone::RetainedCloneGrant,retirement::controlled::ControlledRetirement};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎟️ownership/🔣️.json")).unwrap();let laws=&fixture["meshImport"];
     let ((mut body,mut cursor),source)=observe_tessellation_system(||{let positions=laws["positions"].as_array().unwrap().iter().map(|n|n.as_f64().unwrap() as f32).collect();let indices=laws["indices"].as_array().unwrap().iter().map(|n|n.as_u64().unwrap() as u32).collect();let mut body=Body::new();let mut cursor=MeshImportCursor::new(positions,Vec::new(),indices,0.1).unwrap();cursor.step(&mut body,laws["warmTurns"].as_u64().unwrap() as usize).unwrap();(body,cursor)});

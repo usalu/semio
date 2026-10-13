@@ -17,7 +17,7 @@ component-kind = "plugin"
 package = "semio:neutral-host-fixture"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 path = "🦀️.rs"
 
 [dependencies]
@@ -35,7 +35,7 @@ semio-framework-2d = { path = "../../../../../../../../../🔨️modules/◻️2
 semio-framework-value = { path = "../../../../../../../../../🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-framework.workspace = true
 semio-framework-dispatch-macros.workspace = true
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-plugin = { workspace = true }
 semio-framework-os-kernel.workspace = true
 semio-framework-schema.workspace = true
 semio-framework-value-derive.workspace = true

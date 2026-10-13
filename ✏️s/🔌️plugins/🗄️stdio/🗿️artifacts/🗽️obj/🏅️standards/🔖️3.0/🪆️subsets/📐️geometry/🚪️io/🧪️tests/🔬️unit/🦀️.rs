@@ -9,11 +9,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = crate::engine::empty_obj_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <ObjSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <ObjSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <ObjSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <ObjSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -204,7 +204,7 @@ mod conformance_laws {
         intermediate.groups.push(ObjGroup{name:"Unresolved".into(),faces:vec![u64::MAX]});
         intermediate.usemtl.push(ObjUsemtlRange{face_index_from:u64::MAX,material:"M".into()});
         for snapshot in [crate::engine::empty_obj_snapshot(),crate::engine::demo_obj_snapshot(),intermediate]{
-            let text=store::ArtifactDsl::print_dsl(&snapshot);
+            let text=store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
             assert!(recognizer.recognize(&text).expect("recognize"),"grammar did not recognize owned snapshot:\n{text}");
             assert!(!recognizer.recognize(&format!("{text}\nopaque=[]")).expect("recognize unknown field"),"snapshot grammar must reject fields outside its authored owned model");
         }
@@ -248,7 +248,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v3_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::ArtifactPack::encode_pack(&crate::engine::demo_obj_snapshot());
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&crate::engine::demo_obj_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -279,13 +279,13 @@ mod conformance_laws {
 
         let demo = crate::engine::demo_obj_snapshot();
 
-        let parsed = <ObjSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <ObjSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_obj_snapshot()");
-        assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_obj_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_obj_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <ObjSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <ObjSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_obj_snapshot()");
-        assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_obj_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_obj_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 }
 //#endregion 🔖️ConformanceLaws

@@ -70,11 +70,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn snapshot_dsl_and_pack_round_trip() {
     let snapshot = JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value: obj(vec![("a", JsonValue::Number { lexeme: "1".into() }), ("b", JsonValue::Array { items: vec![JsonValue::Bool { value: true }, JsonValue::Null] })]) };
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    let parsed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed, snapshot);
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snapshot);
 }
 
@@ -86,21 +86,21 @@ async fn snapshot_dsl_and_pack_round_trip() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_json_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn nontrivial_nested_value_round_trip() {
     let snap = demo_json_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.value, snap.value);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <JsonSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded.value, snap.value);
 }

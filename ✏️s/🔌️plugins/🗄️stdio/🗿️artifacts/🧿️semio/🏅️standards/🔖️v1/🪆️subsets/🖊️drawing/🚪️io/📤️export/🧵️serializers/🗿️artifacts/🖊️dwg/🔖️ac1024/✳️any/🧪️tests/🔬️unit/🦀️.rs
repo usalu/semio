@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::drawing::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;
-use crate::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_drawing_import::deserializers::artifacts::dwg::v_ac1024::any::SemioDrawingFromDwg;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawLayer;
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

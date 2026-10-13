@@ -1,7 +1,7 @@
 use super::*;
-use crate::brep::operations::primitives::{make_box, make_cylinder, make_sphere};
-use crate::brep::queries::mass_properties::solid_volume;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use crate::primitives::{make_box, make_cylinder, make_sphere};
+use semio_framework_3d_brep_queries::mass_properties::solid_volume;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 #[semio_framework_async_macros::async_test]
 async fn transform_solid_preserves_face_and_edge_counts_for_a_box() {

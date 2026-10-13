@@ -30,8 +30,8 @@ pub(crate) use crate::standards::v1::subsets::any::schema::spatial_internals as 
 use semio_framework::MeshData;
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -148,7 +148,7 @@ pub const REMODELING_DIALECT: semio_framework_artifact_reference::Dialect = semi
 /// design summary):
 ///
 /// 1. **`results.mesh.mesh` (was `MeshData`, the reconstructed/placeholder mesh's flat buffers) is now
-///    a composed `s.stdio.semio/v1/mesh` CHILD** (`RemodelingMeshChild = store::ArtifactChild<
+///    a composed `s.stdio.semio/v1/mesh` CHILD** (`RemodelingMeshChild = store::os_store::artifact_child::ArtifactChild<
 ///    SemioMeshSnapshot>`) — exactly `💠️lowpoly`'s own pattern (this ticket's closest precedent for
 ///    opaque mesh composition), extended with a REAL bidirectional converter
 ///    (`crate::standards::v1::subsets::any::io::{mesh_data_to_semio_mesh,
@@ -156,7 +156,7 @@ pub const REMODELING_DIALECT: semio_framework_artifact_reference::Dialect = semi
 ///
 /// 2. **`assets: BTreeMap<String, ImageAsset>` (embedded mime+base64 pixel bytes: video frames,
 ///    baked mesh textures, DSM/DTM/ortho rasters) is now `BTreeMap<String, RemodelingAssetChild>`
-///    (`RemodelingAssetChild = store::ArtifactChild<SemioImageSnapshot>`)** — the design line's "R:image"
+///    (`RemodelingAssetChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>`)** — the design line's "R:image"
 ///    literally means `ArtifactLink` (an INDEPENDENT-lifecycle reference, `store::ArtifactLink`'s own
 ///    doc comment: "renders as a chip, never nests inline"). `remodeling`'s assets are NOT independent
 ///    documents referenced from elsewhere — they are embedded content OWNED by this exact document
@@ -177,8 +177,8 @@ pub const REMODELING_DIALECT: semio_framework_artifact_reference::Dialect = semi
 /// (`image_key`-equivalent lookups by asset id; `ReplaceMeshResult`'s whole-`RemodelingMesh` payload
 /// shape) — the type/mutation/persistence layer is fully real, only the derive's SCHEMA
 /// INTROSPECTION table is incomplete for these two fields.
-pub type RemodelingAssetChild = store::ArtifactChild<SemioImageSnapshot>;
-pub type RemodelingMeshChild = store::ArtifactChild<SemioMeshSnapshot>;
+pub type RemodelingAssetChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
+pub type RemodelingMeshChild = store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>;
 
 /// 🧩️ Restart-stable content authority. Every literal leaf contains at most 4 KiB; values carry
 /// only bounded metadata and content-addressed leaves, never a whole image or mesh object.
@@ -212,7 +212,7 @@ const REMODELING_BOUNDED_MESH_TRIANGLES: usize = 512;
 fn mint_asset_child_handle(asset_id: &str, child_id: String) -> RemodelingAssetChild {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 pub fn committed_remodeling_asset_handle(asset_id: &str, content_id: &str) -> RemodelingAssetChild {
@@ -412,7 +412,7 @@ pub fn remodeling_content_is_complete(store: &RemodelingDurableArtifactStore, co
 fn mesh_child_handle(child_id: String, artifact_id: String) -> RemodelingMeshChild {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id, dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 #[cfg(test)]

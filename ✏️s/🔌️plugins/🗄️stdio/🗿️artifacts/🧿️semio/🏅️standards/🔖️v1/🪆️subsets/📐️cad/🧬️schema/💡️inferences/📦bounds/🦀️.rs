@@ -9,8 +9,8 @@
 //! `center ± |major_axis_end - center|` as its bounding radius. A pure whole-snapshot scalar (one
 //! min/max fold) — no `InferredField` needed.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::schema::snapshot::{CadEntity, CadEntityRecord, SemioCadSnapshot};
 
 //#region 🔖️Bounds
 /// 📦️ Semio cad's entity-derived planar bounding box.

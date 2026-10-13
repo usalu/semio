@@ -22,7 +22,7 @@ async fn reset_snapshot_restores_default_snapshot() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("resetSnapshot must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let restored = <ShootingSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let restored = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert_eq!(restored.shots.len(), 2);
 }
 
@@ -47,7 +47,7 @@ async fn set_active_example_loads_hexagonal_cut_concrete_forest_left() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("setActiveExample must emit LoadDocument") else {
         panic!("expected LoadDocument");
     };
-    let loaded = <ShootingSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode");
+    let loaded = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode");
     let asset = loaded.assets.first().expect("forest asset");
     assert_eq!(asset.url, "/mesh/🧊️hexagonal-cut-concrete-forest-left.glb");
 }

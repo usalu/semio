@@ -1,6 +1,6 @@
 //! 🔢️ Original Value projection owns graph ordinals and shared scalar tree frames through every result.
 use super::{SemioValue,SemioValueSnapshot,ValueSqliteTables,VALUE_TABLES,number};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::NameIndex;
+use crate::base_foundation::io::sqlite::snapshot::projection::NameIndex;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,ProjectionStorage,RowWriter,project_owned,owned_workspace}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 #[path="🌳️tree/🦀️.rs"]mod tree;

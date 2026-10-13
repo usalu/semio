@@ -24,8 +24,8 @@ use crate::os_spr::{
 };
 use crate::os_spr::{ActorId, MutationId};
 use crate::os_store::{
-    decode_hot_backbone_message_exact, ArtifactPackFiles, ArtifactStore, ArtifactTextFiles, BackboneMessage, Backbones, ChannelBackbone, ChannelBackboneRemote, BACKBONE_CHANNEL_MAXIMUM_BYTES, BACKBONE_CHANNEL_MAXIMUM_MESSAGES,
-    BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
+    backbone::decode_hot_backbone_message_exact, serialization::ArtifactPackFiles, ArtifactStore, text_format::ArtifactTextFiles, backbone::BackboneMessage, backbone::Backbones, backbone::ChannelBackbone, backbone::ChannelBackboneRemote, backbone::BACKBONE_CHANNEL_MAXIMUM_BYTES, backbone::BACKBONE_CHANNEL_MAXIMUM_MESSAGES,
+    backbone::BACKBONE_HOT_MESSAGE_MAXIMUM_BYTES,
 };
 use semio_framework_value_derive::{FromValue, ToValue};
 use tokio::sync::broadcast;
@@ -862,7 +862,7 @@ impl CommandAckOutcome {
 //#endregion 🔖️Protocol
 
 //#region 🔖️BackboneWorkerWire
-/// 🧵️ Binary worker seam: `MAGIC` + `crate::os_store::pack_rt::encode_wire_value` over a `DslValue`
+/// 🧵️ Binary worker seam: `MAGIC` + `crate::os_pack::pack_rt::encode_wire_value` over a `DslValue`
 /// tree (serde-shaped), shared by the wasm `store_worker` and `🏪️store/👷️worker/🟦️.ts`.
 pub mod backbone_worker_wire {
     use super::{ArtifactActorConfig, ArtifactActorMsg, ArtifactEvent, PersistenceBinding};
@@ -917,7 +917,7 @@ pub mod backbone_worker_wire {
     pub fn encode_request(request: &BackboneWorkerRequest) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(request);
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(crate::os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -926,14 +926,14 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = crate::os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 
     pub fn encode_response(response: &BackboneWorkerResponse) -> Vec<u8> {
         let dsl = semio_framework_value::ToValue::to_value(response);
         let mut bytes = vec![MAGIC];
-        bytes.extend(crate::os_store::pack_rt::encode_wire_value(&dsl));
+        bytes.extend(crate::os_pack::pack_rt::encode_wire_value(&dsl));
         bytes
     }
 
@@ -942,7 +942,7 @@ pub mod backbone_worker_wire {
         if *magic != MAGIC {
             return Err(format!("backbone worker wire: unknown magic {magic}"));
         }
-        let dsl = crate::os_store::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
+        let dsl = crate::os_pack::pack_rt::decode_wire_value(payload).map_err(|error| error.to_string())?;
         semio_framework_value::FromValue::from_value(dsl).map_err(|error| error.to_string())
     }
 }
@@ -1039,7 +1039,7 @@ async fn envelopes_from_history_edit(edit: &crate::os_spr::HistoryEdit, document
 /// 📦️ The inverse of {@link envelopes_from_history_edit}: one `MutationEnvelope` -> one
 /// `HistoryEdit` with a real binary `OpPayload` and populated meta (`op_id` == the envelope's own
 /// id, so a later `op_ids_of` re-read agrees) — the byte-level twin of
-/// `crate::os_store::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
+/// `crate::os_store::ledger::edit_from_operation_envelope`, for appending a locally-flushed envelope to the spr log.
 ///
 /// 🎞️ `crate::os_spr::causal::MutationEnvelope` (this fn's input) carries no group_id —
 /// same precedent as its already-absent `semantic_kind`/`label`/`undo_policy`, see
@@ -1096,13 +1096,13 @@ async fn hub_ws_url(base_url: &str, space_id: &str, document_id: &str, surface: 
 
 //#region 🔖️DocumentSocketConnect
 /// 🧬️ The pack schema identity a document socket's hello and bootstrap are checked against: the
-/// kind's codec when this process resolves one ([`crate::os_store::document_kind_codec`] — the linked
+/// kind's codec when this process resolves one ([`crate::os_store::codec_registry::document_kind_codec`] — the linked
 /// Rust codec, else the codec of the mounted component that owns the kind, asked of that component
 /// exactly as the hub's trusted catalog asks it), otherwise the verified execution-target lease's — the
 /// hub-selected package a client that mounted no owning component will run. Neither is no identity at
 /// all, and the caller refuses to dial rather than guess.
 pub async fn document_pack_schema_hash(schema: &str, lease: Option<&crate::os_directory::DocumentExecutionTargetLeaseFieldsV1>) -> Option<[u8; 32]> {
-    if let Ok(Some(codec)) = crate::os_store::document_kind_codec(schema).await {
+    if let Ok(Some(codec)) = crate::os_store::codec_registry::document_kind_codec(schema).await {
         return codec.pack_schema_hash().await.ok();
     }
     let lease = lease.filter(|lease| lease.artifact.schema == schema)?;
@@ -1471,7 +1471,7 @@ pub trait DocumentSocketDialer {
 // 🎯️ W6 kernel unification: `to_wire_envelope`/`from_wire_envelope` are DELETED — this actor's
 // local envelope shape (`LocalMutations`/`RemoteMutations`/`ChannelBackbone`) and the wire shape
 // (`crate::os_spr::wire::ClientFrame::Commands`/`ServerFrame::Commands`) are now the SAME type,
-// `crate::os_spr::MutationEnvelope`, throughout: `crate::os_store::BackboneMessage::Mutations` already carries
+// `crate::os_spr::MutationEnvelope`, throughout: `crate::os_store::backbone::BackboneMessage::Mutations` already carries
 // it natively (W6's `store` repoint), so there is no local/wire boundary left to bridge across.
 // The old local-only fields (`payload_hash`, `schema_version` separate from `diff.schema`) are
 // dropped, not replaced — a repo-wide grep confirmed neither was ever read outside this
@@ -1591,7 +1591,7 @@ async fn next_timestamp(seed: u64, counter: &mut u64) -> crate::os_spr::HybridLo
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
 pub struct SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::serialization::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub store: ArtifactStore<P, Mutation>,
@@ -1602,7 +1602,7 @@ where
 
 impl<P, Mutation> SyncSession<P, Mutation>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + crate::os_store::serialization::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + crate::os_spr::Mutation<P> + OpBinary + crate::os_spr::OpText + Send + 'static,
 {
     pub async fn new(store: ArtifactStore<P, Mutation>) -> Self {
@@ -1661,7 +1661,7 @@ where
     /// 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
     pub async fn receive(&mut self, envelope: MutationEnvelope, identity: &mut crate::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Result<(), SyncError> {
-        self.store.dispatch(crate::os_store::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
+        self.store.dispatch(crate::os_store::store_schema::ArtifactCommand::IngestRemote { envelope }, identity).await.map(|_| ()).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
     pub async fn reconcile_branch(&mut self, _alternative_name: &str, _message: Option<String>, _authors: Vec<vcs::Author>) -> Result<String, SyncError> {
@@ -2213,7 +2213,7 @@ mod native_actor {
                         Some(files) => Some((files.pack, files.spr)),
                         None => match storage.read(document_id, extension).await.map_err(|error| error.to_string())? {
                             Some(files) => {
-                                let codec = crate::os_store::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
+                                let codec = crate::os_store::codec_registry::document_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec registered for schema {schema:?} — cannot compile the DSL-only source"))?;
                                 let (pack, _) = (codec.compile_dsl)(&files.dsl, &files.ops).await.map_err(|error| error.to_string())?;
                                 Some((pack.pack, pack.spr))
                             }
@@ -2234,7 +2234,7 @@ mod native_actor {
             match self {
                 FolderEndpoint::EventLog { storage, document_id, schema } => storage.write_archive(document_id, schema, archive_bytes).await.map_err(|error| error.to_string()),
                 FolderEndpoint::Pack { storage, document_id, extension, schema } => {
-                    let codec = crate::os_store::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
+                    let codec = crate::os_store::codec_registry::document_kind_codec(schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {schema:?} — cannot persist synchronized archive mirrors"))?;
                     let mirror = codec.print_mirror(&archive.parent_pack, &archive.parent_spr).await.map_err(|error| error.to_string())?;
                     let pack_files = ArtifactPackFiles { pack: archive.parent_pack, spr: archive.parent_spr, ops: mirror.ops };
                     storage.write_archive(document_id, extension, archive_bytes, &pack_files, &mirror.dsl).await.map_err(|error| error.to_string())
@@ -2762,7 +2762,7 @@ mod native_actor {
 
         //#region 🔖️Folder
         /// ✍️ Persists the current recursive archive to the folder binding and records the
-        /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::ArtifactCodec`
+        /// content hash for self-write suppression. A write failure (e.g. no `crate::os_store::serialization::ArtifactCodec`
         /// registered for this document's schema on the `Pack` endpoint — see `FolderEndpoint::write_archive`)
         /// is swallowed here the same way every other best-effort path in this actor already is, but
         /// deliberately does NOT record `last_written_hash` on failure — a false "persisted" mark
@@ -2813,7 +2813,7 @@ mod native_actor {
                 }
                 return;
             }
-            let spr = crate::os_store::empty_document_spr(&self.document_id, &self.schema).await;
+            let spr = crate::os_store::text_format::empty_document_spr(&self.document_id, &self.schema).await;
             let archive = crate::os_spr::DocumentArchivePack { parent_pack: pack, parent_spr: spr, members: Vec::new() };
             if let Ok(bytes) = crate::os_spr::encode_document_archive_bytes(&archive) {
                 self.persist_archive(bytes, archive).await;
@@ -2839,7 +2839,7 @@ mod native_actor {
             if new_edits.is_empty() && new_transitions.is_empty() {
                 return;
             }
-            let Ok(new_spr) = crate::os_store::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else { return };
+            let Ok(new_spr) = crate::os_store::text_format::append_history_events_to_spr(&spr, &new_edits, &new_transitions).await else { return };
             self.persist_spr(pack, new_spr).await;
         }
 
@@ -3254,7 +3254,7 @@ mod native_actor {
         }
 
         async fn install_artifact_bootstrap(&mut self, pending: PendingArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            let codec = crate::os_store::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
+            let codec = crate::os_store::codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())?.ok_or_else(|| format!("no document codec resolves schema {:?}", self.schema))?;
             if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
                 return Err("artifact bootstrap codec changed during transfer".into());
             }
@@ -3357,7 +3357,7 @@ mod native_actor {
                     wire_version: 1,
                     protocol_version: 1,
                     schema: self.schema.clone(),
-                    pack_schema_hash: crate::os_store::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
+                    pack_schema_hash: crate::os_store::codec_registry::document_codec(&self.schema).await.ok().flatten().map_or([0u8; 32], |codec| codec.pack_schema_hash),
                     resume_token: self.resume_token.clone(),
                     frontier: self.server_frontier.clone(),
                 },
@@ -4974,12 +4974,12 @@ mod wasm_actor {
         }
 
         /// 🗃️ Installs one assembled canonical pair. With a codec this process resolves for the kind
-        /// (linked, or the mounted component's — [`crate::os_store::document_kind_codec`]) the pair is
+        /// (linked, or the mounted component's — [`crate::os_store::codec_registry::document_kind_codec`]) the pair is
         /// decoded here first; without one the pair's identity was already bound to the verified lease's
         /// pack schema hash, and the mounted guest that owns the kind validates the archive when the shell
         /// loads it.
         async fn install_artifact_bootstrap(&mut self, pending: PendingWasmArtifactBootstrap, pair: ArtifactBootstrapPair) -> Result<(), String> {
-            if let Some(codec) = crate::os_store::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
+            if let Some(codec) = crate::os_store::codec_registry::document_kind_codec(&self.schema).await.map_err(|error| error.to_string())? {
                 if codec.pack_schema_hash().await.map_err(|error| error.to_string())? != pending.pack_schema_hash {
                     return Err("artifact bootstrap codec changed during transfer".into());
                 }
@@ -5730,8 +5730,8 @@ impl FolderEventLogStorage {
 }
 
 /// 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
-/// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::print_document_text`/
-/// `crate::os_store::parse_document_text`). No `Backbone` impl: like `FolderEventLogStorage` above, this actor
+/// snapshot), `<id>.<ext>.ops` holds the append-only op log (see `crate::os_store::text_format::print_document_text`/
+/// `crate::os_store::text_format::parse_document_text`). No `Backbone` impl: like `FolderEventLogStorage` above, this actor
 /// layer drives it from its own thread; this crate only owns the file format. Additive alongside the
 /// sqlite storage today — a technology adopts it by implementing `ArtifactDsl`/`OpText` and having
 /// its sync endpoint construct one of these instead; nothing currently reads or writes through it

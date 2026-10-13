@@ -6,7 +6,7 @@
 //! `InferredField`/incremental caching needed for one recursive pass (same ruling `flow`'s/
 //! `graph`'s own whole-graph topology facets reach for their own graphs).
 
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueSnapshot};
+use crate::schema::snapshot::{SemioValue, SemioValueSnapshot};
 
 //#region 🔖️Census
 /// 🌳️ Semio value graph variant census.

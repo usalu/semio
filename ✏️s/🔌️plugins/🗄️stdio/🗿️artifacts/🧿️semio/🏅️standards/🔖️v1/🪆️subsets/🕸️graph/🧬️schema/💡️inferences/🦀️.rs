@@ -7,7 +7,7 @@
 //! trinity's own `jack` and sibling `🌊️flow` inference facets establish for their own node/edge
 //! graphs).
 
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::snapshot::SemioGraphSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::topology::compute_semio_graph_topology;

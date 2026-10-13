@@ -5,7 +5,7 @@ use semio_framework_os_kernel::io::io_mechanism::{ArchiveChildren, Serializer};
 use semio_framework::io_schema::{IoFidelity, IoOutcome, IoPayload, IoResult};
 use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
-use semio_s_artifact_stdio_pdf::STDIO_PDF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("base") };
 
@@ -15,7 +15,7 @@ impl Serializer<WriterSnapshot> for WriterIntoPdf {
     const FIDELITY: IoFidelity = IoFidelity::Lossy;
     async fn serialize(from: &WriterSnapshot, _: &ArchiveChildren, _control: &mut semio_framework_os_kernel::io::io_mechanism::IoRunControl<'_, '_>) -> IoResult<IoPayload> {
         let pdf = PdfSnapshot { schema: STDIO_PDF_DOCUMENT_SCHEMA.into(), pages: vec![PageDoc { width: PageDoc::DEFAULT_WIDTH, height: PageDoc::DEFAULT_HEIGHT, text: writer_text(from) }] };
-        Ok(IoOutcome { value: IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(&pdf)), diagnostics: Vec::new() })
+        Ok(IoOutcome { value: IoPayload::Binary(<PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&pdf)), diagnostics: Vec::new() })
     }
 }
 

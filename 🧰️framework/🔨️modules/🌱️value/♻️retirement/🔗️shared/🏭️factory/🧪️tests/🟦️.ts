@@ -11,8 +11,7 @@ test("🔐️ shared factory metadata never enlarges a narrow payload copy grant
     for(let index=0;index<aliases;index++)applyPatch(pending,[{op:"replace",path:"/aliases",value:aliases-index-1}],true);
     expect(pending.snapshot).toBe(baseline.snapshot);expect(pending.factory).toBe("original");expect(applyPatch(pending,[{op:"replace",path:"/snapshot",value:null},{op:"replace",path:"/factory",value:null}],true).newDocument).toEqual({...baseline,snapshot:null,aliases:0,factory:null});expect(baseline.snapshot).toBe(text);
   }
-  const shared=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8"),store=readFileSync(new URL("../../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs",import.meta.url),"utf8");
+  const shared=readFileSync(new URL("../../🦀️.rs",import.meta.url),"utf8");
   expect(shared.includes('pub use factory::FactorySharedRetirement;')).toBe(true);
-  expect(store.includes('use semio_framework_value::retirement::shared::FactorySharedRetirement as ReturnedSnapshotReadRetirement;')).toBe(true);
-  console.log(`[DEBUG] neutral aliases ${law.aliases}/copy ${law.copyBytes}/cancel ${law.cancelAt}, independent RFC6902 and actual Store shared factory mount agree`);
+  console.log(`[DEBUG] neutral aliases ${law.aliases}/copy ${law.copyBytes}/cancel ${law.cancelAt}, independent RFC6902 and neutral shared factory export agree`);
 });

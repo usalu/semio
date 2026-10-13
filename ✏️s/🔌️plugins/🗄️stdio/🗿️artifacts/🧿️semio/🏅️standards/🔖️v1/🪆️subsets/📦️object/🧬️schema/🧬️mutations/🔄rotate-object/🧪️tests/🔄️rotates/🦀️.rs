@@ -6,10 +6,10 @@
 //! the rotation chosen here precisely because every component is exactly representable, so the
 //! canonical-JSON assertion holds without any float slack.
 
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔄rotate-object/🔄️rotates/📸️snapshot/➡️after/🔣️.json");

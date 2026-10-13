@@ -10,14 +10,20 @@
   ],
   "targets": {
     "test-original-registry-alias-custody": {
-      "executor":"nx:run-commands",
-      "cache":false,
-      "options":{"cwd":"{projectRoot}","command":"bun ./📜️script.ts test-original-registry-alias-custody"}
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-original-registry-alias-custody"
+      }
     },
     "test-returned-read-custody": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"cwd": "{projectRoot}", "command": "bun ./📜️script.ts test-returned-read-custody"}
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-returned-read-custody"
+      }
     },
     "test-member-group-publication-source": {
       "executor": "nx:run-commands",
@@ -542,11 +548,47 @@
         "forwardAllArgs": true
       }
     },
-    "test-snapshot-receiving-native": {"executor":"nx:run-commands","cache":false,"options":{"command":"bun ./📜️script.ts test-snapshot-receiving-native","cwd":"{projectRoot}","forwardAllArgs":true}},
-    "test-snapshot-codec-receiving-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-codec-receiving source","cwd":"{projectRoot}","forwardAllArgs":true}},
-    "test-snapshot-codec-receiving-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-codec-receiving native","cwd":"{projectRoot}","forwardAllArgs":true}},
-    "test-snapshot-route-admission-source": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-route-admission source","cwd":"{projectRoot}","forwardAllArgs":true}},
-    "test-snapshot-route-admission-native": {"executor":"nx:run-commands","options":{"command":"bun ./📜️script.ts test-snapshot-route-admission native","cwd":"{projectRoot}","forwardAllArgs":true}},
+    "test-snapshot-receiving-native": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-receiving-native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-codec-receiving-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-codec-receiving source",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-codec-receiving-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-codec-receiving native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-route-admission-source": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-route-admission source",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
+    "test-snapshot-route-admission-native": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./📜️script.ts test-snapshot-route-admission native",
+        "cwd": "{projectRoot}",
+        "forwardAllArgs": true
+      }
+    },
     "test-snapshot-native-admission": {
       "executor": "nx:run-commands",
       "options": {
@@ -823,6 +865,14 @@
         "command": "bun ./📜️script.ts test-canonical-preparation-control-source",
         "cwd": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
         "forwardAllArgs": true
+      }
+    },
+    "test-returned-read-factory-mount": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-returned-read-factory-mount"
       }
     }
   },

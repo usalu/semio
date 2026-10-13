@@ -44,7 +44,7 @@ async fn onboarding_fixture_pack_agrees_with_dsl() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::{op::FormMutation, FormStep, FORMS_DOCUMENT_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let document = crate::forms_snapshot_with_state(FORMS_DOCUMENT_SCHEMA.into(), "forms".into(), "1".into(), None, &[FormStep { id: "s".into(), title: "Inputs".into(), description: None, blocks: Vec::new() }]);
     let mut store = crate::host::owned::new_forms_store(create_document_envelope(FORMS_DOCUMENT_SCHEMA, "forms-demo", document, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");

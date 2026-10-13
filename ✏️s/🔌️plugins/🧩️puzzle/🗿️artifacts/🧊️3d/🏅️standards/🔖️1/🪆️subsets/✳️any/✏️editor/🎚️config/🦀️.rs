@@ -297,7 +297,7 @@ impl Default for Puzzle3dConfig {
     }
 }
 
-impl store::ArtifactDsl for Puzzle3dConfig {
+impl store::os_store::serialization::ArtifactDsl for Puzzle3dConfig {
     const EXTENSION: &'static str = "puzzle3dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -309,7 +309,7 @@ impl store::ArtifactDsl for Puzzle3dConfig {
     }
 }
 
-impl store::ArtifactPack for Puzzle3dConfig {
+impl store::os_store::serialization::ArtifactPack for Puzzle3dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }

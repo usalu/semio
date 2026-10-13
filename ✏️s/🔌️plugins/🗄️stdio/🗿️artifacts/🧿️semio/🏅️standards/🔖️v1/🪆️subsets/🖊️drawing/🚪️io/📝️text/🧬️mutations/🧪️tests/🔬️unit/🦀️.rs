@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::drawing::io::text::mutations::*;
-use crate::standards::v1::subsets::drawing::schema::mutations::demo_mutation_cases;
+use crate::io::text::mutations::*;
+use crate::schema::mutations::demo_mutation_cases;
 use protocol::OpText;
 
 #[semio_framework_async_macros::async_test]

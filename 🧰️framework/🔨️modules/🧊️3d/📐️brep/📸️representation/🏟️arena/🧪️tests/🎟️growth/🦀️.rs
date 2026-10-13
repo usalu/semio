@@ -3,7 +3,7 @@ use super::*;
 /// 🫴️ Original incoming values and prior slots survive denied normal admission and paged source growth unchanged.
 #[test]
 fn original_arena_admitted_growth_returns_same_value_and_preserves_slot_addresses(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();let row=&law["arenaGrowth"];
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize){

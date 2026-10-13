@@ -106,16 +106,16 @@ class DeletionProofScript extends BundleScript {
     const artifactsAbsent = !existsSync(join(workspaceRoot, relative(this.repoRoot, core), "🗿️artifacts"));
     if (!artifactsAbsent) throw new Error("deletion-proof copied concrete Stdio artifacts");
     const env = devToolingEnv({ CARGO_TARGET_DIR: join(workspaceRoot, "target"), CARGO_BUILD_BUILD_DIR: join(workspaceRoot, "cargo-build"), CARGO_INCREMENTAL: "0" });
-    const checkedPackages = [...new Set(["semio-s-plugin-stdio", ...(closure.has("semio-framework-3d") ? ["semio-framework-3d"] : []), ...requestedOwners])];
-    await runRepositoryCommand("cargo", ["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"], workspaceRoot, "stdio-deletion-proof", undefined, { env });
+    const checkedPackages = [...new Set(["semio-s-plugin-stdio", ...["semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine"].filter((name) => closure.has(name)), ...requestedOwners])];
+    await runRepositoryCommand(this.invocation,"cargo",["check", "--offline", ...checkedPackages.flatMap((name) => ["-p", name]), "--lib"],workspaceRoot,"stdio-deletion-proof",{version:1,maximumElapsedMilliseconds:0,output:null},{env});
     const probeRoot = join(workspaceRoot, "🧪️sqlite-required");
     mkdirSync(probeRoot);
     writeFileSync(join(probeRoot, "Cargo.toml"), '[package]\nname = "semio-stdio-sql-required-probe"\nversion = "0.1.0"\nedition = "2021"\n[lib]\npath = "🦀️.rs"\n[dependencies]\nsemio-framework-os-kernel.workspace = true\n');
-    writeFileSync(join(probeRoot, "🦀️.rs"), `use semio_framework_os_kernel::{ArtifactCodec, ArtifactDsl, ArtifactPack, ToValue, FromValue, OpText, OpBinary, Mutation};
+    writeFileSync(join(probeRoot, "🦀️.rs"), `use semio_framework_os_kernel::{artifact_codec, os_store::serialization::ArtifactCodec, os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack, ToValue, FromValue, OpText, OpBinary, Mutation};
 pub fn required<P, M>(schema: &str) -> ArtifactCodec
 where P: Clone + PartialEq + ToValue + FromValue + ArtifactDsl + ArtifactPack + Send + Sync + 'static,
 M: Mutation<P> + PartialEq + ToValue + FromValue + OpText + OpBinary + Send + Sync + 'static {
-    ArtifactCodec::of::<P, M>(schema)
+    artifact_codec::<P, M>(schema)
 }
 `);
     writeFileSync(join(workspaceRoot, "Cargo.toml"), manifest.replace('"members" = [', '"members" = ["🧪️sqlite-required", '));

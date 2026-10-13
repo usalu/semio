@@ -6,7 +6,7 @@
 //! is a whitespace-split word count over every Paragraph/Heading run's text plus every Code
 //! block's literal text).
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use crate::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 
 //#region 🔖️Outline
 /// 🧾️ One `sectionOutline` entry — a heading's level + flattened run text.

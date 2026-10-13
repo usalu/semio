@@ -48,9 +48,9 @@ impl NativeVcsCodecReceiptV1 {
         }
     }
 
-    fn codec(&self) -> store::ArtifactCodec {
+    fn codec(&self) -> store::os_store::serialization::ArtifactCodec {
         match self.artifact {
-            VcsCodecV1::Vcs => store::ArtifactCodec::bare::<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>("vcs.vcs"),
+            VcsCodecV1::Vcs => store::bare_artifact_codec::<crate::artifacts::vcs::VcsSnapshot, crate::artifacts::vcs::VcsDemoMutation>("vcs.vcs"),
         }
     }
 
@@ -80,7 +80,7 @@ impl NativeVcsCodecReceiptV1 {
     }
 
     /// 🧬 Consumes the inert receipt into the exact typed codec after declaration revalidation.
-    pub fn into_codec(self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
+    pub fn into_codec(self) -> Result<store::os_store::serialization::ArtifactCodec, PluginAssemblyError> {
         self.validate()?;
         let identity = self.identity();
         let codec = self.codec();

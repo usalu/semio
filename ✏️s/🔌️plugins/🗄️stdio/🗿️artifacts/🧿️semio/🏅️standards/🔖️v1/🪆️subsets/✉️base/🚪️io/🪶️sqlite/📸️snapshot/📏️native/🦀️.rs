@@ -18,3 +18,8 @@ impl<'c, 'p> Bound<'c, 'p> {
     pub fn checkpoint(&mut self) -> Result<(), ValueError> { self.bound.checkpoint() }
     pub fn finish(self) -> Result<(), ValueError> { self.bound.finish() }
 }
+
+/// 🧭️ Bounds the actual typed ArtifactRef fields in an owned Semio relationship.
+pub fn native_reference(reference:&semio_framework_artifact_reference::ArtifactRef,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.text(&reference.artifact_id)?;b.text(&reference.dialect.artifact_kind)?;b.text(&reference.dialect.standard)?;b.text(&reference.dialect.subset)?;Ok(())}
+/// 🪆️ Bounds a typed durable ArtifactChild identity and target without materializing its cache.
+pub fn native_child<S>(child:&store::os_store::artifact_child::ArtifactChild<S>,b:&mut Bound<'_, '_>)->Result<(),ValueError>{b.entities(1)?;b.text(&child.child_id)?;native_reference(&child.target,b)}

@@ -9,12 +9,7 @@ description = "Animate plugin - one crate for the presentation artifact (diff/op
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:animate"
-
 [package.metadata.semio]
-deployment-directory = "🎞️animate"
-component-kind = "plugin"
 role = "hub"
 
 # 📖️ Opts this plugin into the generated Storybook scope registry (`.storybook/📖️stories/🧭️coordination/🟦️.ts`'s
@@ -27,13 +22,7 @@ titlePrefix = "🎬️animate"
 sourceRoots = ["../../../✏️s/🔌️plugins/🎞️animate/🗿️artifacts/🎬️presentation/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/📺️renderer/⚛️react"]
 storyGlobs = ["../../../✏️s/🔌️plugins/🎞️animate/📖️stories/**/🧪️.story.tsx"]
 
-[[package.metadata.semio.playground]]
-variant = "animate"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-ports = { react = 6051, wgpu = 6151 }
-
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
@@ -56,7 +45,7 @@ semio-framework-os-kernel = { path = "../../../../../🧰️framework/🛍️pro
 semio-framework = { path = "../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-job.workspace = true
 semio-framework-async.workspace = true
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-schema = { path = "../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-ui-contract = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🧬️contract/📦️packages/🦀️rust", package = "semio-framework-ui-contract" }
 semio-framework-ui-scene = { path = "../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust", package = "semio-framework-ui-scene" }
@@ -72,7 +61,6 @@ semio-framework-raster = { path = "../../../../../🧰️framework/🔨️module
 semio-framework-pixels = { path = "../../../../../🧰️framework/🔨️modules/🔲️pixels/📦️packages/🦀️rust", package = "semio-framework-pixels" }
 
 [features]
-default = []
 preview-window = ["winit"]
 
 [dependencies.winit]
@@ -82,7 +70,7 @@ features = ["rwh_06"]
 optional = true
 
 [dev-dependencies]
-semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 roxmltree = "0.20.0"
 serde.workspace = true
 serde_json.workspace = true
@@ -94,6 +82,3 @@ semio-framework-async-macros = { path = "../../../../../🧰️framework/🔨️
 # `fontdb`/`png`/`gif` tail into the shipped component. Mirrors 🧩️puzzle's existing split.
 [target.'cfg(not(all(target_arch = "wasm32", target_env = "p2")))'.dependencies]
 semio-framework-os = { path = "../../../../../🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust", package = "semio-framework-os" }
-
-[package.metadata.semio.sources]
-artifacts = ["../../../../../✏️s/🔌️plugins/🎞️animate/🗿️artifacts"]

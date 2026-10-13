@@ -1,7 +1,7 @@
 use super::*;
 use flow_extension_sdk::evaluate_json;
 use neural_engine::{Atom, Value};
-use semio_framework_3d::brep::engine::Brep;
+use semio_framework_3d_brep_engine::Brep;
 use std::sync::{Mutex, OnceLock};
 
 async fn point(x: f64, y: f64, z: f64) -> Dictionary {
@@ -400,7 +400,6 @@ async fn topology_widget_exposes_every_shape_kind_and_exact_labels() {
     assert!(session.terminal_is_empty());
 }
 
-#[cfg(feature = "component-guest")]
 #[semio_framework_async_macros::async_test]
 async fn extension_bundle_extends_flow_and_evaluates_box() {
     use semio_framework_plugin::{extension_activate, extension_invoke, extension_manifest, install_extension_bundle};

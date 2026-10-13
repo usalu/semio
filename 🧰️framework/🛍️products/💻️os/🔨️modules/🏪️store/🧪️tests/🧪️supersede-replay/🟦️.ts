@@ -204,7 +204,7 @@ test("🧮️ an independent fast-json-patch replay reproduces every expected st
 test("🕰️ bounded history reads stop at the selected mutation and replay the complete changed history", () => {
   const law = corpus.boundedHistoryRead;
   expect(law.closeGrant.maximumItems).toBe(1);
-  expect(law.closeGrant.maximumReleaseBytes).toBe(16384);
+  expect(law.closeGrant.maximumReleaseBytes).toBe(4096);
   expect(new Uint8Array(law.physicalInversePageBytes).byteLength).toBe(4096);
   expect(law.physicalInversePageBytes).toBeLessThanOrEqual(law.closeGrant.maximumReleaseBytes);
   const prefix = { name: "preview", initial: law.initial, edits: law.edits.slice(0, law.target.edit + 1).map((edit: DemoOperation[], index: number) => index === law.target.edit ? edit.slice(0, law.target.op) : edit), supersessions: law.accepted };

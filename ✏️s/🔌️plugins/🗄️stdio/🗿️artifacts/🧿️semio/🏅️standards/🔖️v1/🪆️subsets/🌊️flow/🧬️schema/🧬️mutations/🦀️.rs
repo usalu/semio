@@ -6,13 +6,10 @@
 //! `dsl::Mutations` derive's synthesized leaves delegate into, per the stdio mutation-leaf
 //! migration recipe.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
 
-use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, SemioFlowDiff};
-
-
-
+use crate::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, SemioFlowDiff};
 
 
 
@@ -22,7 +19,10 @@ use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_i
 
 
 
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
+
+
+
+use crate::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioFlowMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
@@ -190,7 +190,7 @@ fn param_index_at(base: &SemioFlowSnapshot, id: &str, key: &str) -> Option<usize
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
-        schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("n1", "source", "Source", 0.0, 0.0), node("n2", "sink", "Sink", 10.0, 10.0)],
         edges: vec![edge("e1", "n1", "n2", "data")],
     }
@@ -229,7 +229,7 @@ mod tests;
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn node(id: &str, kind: &str, label: &str, x: f64, y: f64) -> FlowNode {
-    FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::standards::v1::subsets::flow::schema::snapshot::FlowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
+    FlowNode { id: id.into(), kind: kind.into(), label: label.into(), params: vec![crate::schema::snapshot::FlowParam { key: "k".into(), value: "v".into() }], position: SemioPoint2 { x, y } }
 }
 
 #[cfg(test)]

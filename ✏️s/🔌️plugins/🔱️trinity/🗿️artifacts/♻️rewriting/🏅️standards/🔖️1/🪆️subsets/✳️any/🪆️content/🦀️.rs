@@ -5,8 +5,8 @@ use crate::RewritingSnapshot;
 use semio_framework_diagnostic::Severity;
 use semio_framework_plugin::app::{ChildContentView,ChildEmitPreparation};
 use semio_framework_plugin::{Emit, Fault};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
 #[path = "👁️read/🦀️.rs"]
 mod read;
@@ -27,7 +27,7 @@ pub(crate) fn composed(parent: &RewritingSnapshot, children: &ChildContentView) 
 
 /// 🌱️ The genesis pack of the rule's own `workingGraph` child, derived from the parent the document was created or loaded with.
 pub(crate) fn genesis_working_child_pack(parent: &RewritingSnapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>, semio_framework_value::ValueError> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot != WORKING_CHILD_SLOT || child_id != parent.working_graph.content.child_id {
         return Ok(None);
     }

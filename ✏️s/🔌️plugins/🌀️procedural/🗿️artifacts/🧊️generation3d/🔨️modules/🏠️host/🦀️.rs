@@ -31,10 +31,10 @@ use crate::standards::v1::subsets::any::schema::mutations::select_generation::Se
 use protocol::OpBinary;
 use store::ErasedSnapshotRetirement;
 //#region 🔖️RetainedMountedIngress
-const GENERATION3D_OWNER_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+const GENERATION3D_OWNER_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const GENERATION3D_RETAINED_STACK_CAPACITY: usize = 64;
 const GENERATION3D_MAXIMUM_DOMAIN_ITEMS: usize = 8_192;
-const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const GENERATION3D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const GENERATION3D_MUTATION_VARIANT_COUNT: usize = 22;
 pub const GENERATION3D_MOUNTED_OUTPUT_CHANNELS: usize = 4;
 pub const GENERATION3D_MOUNTED_CONTROL_CREDITS: usize = 1;
@@ -1759,7 +1759,7 @@ impl Generation3dMutationSession {
                             self.maximum_items.min(GENERATION3D_MAXIMUM_DOMAIN_ITEMS),
                             self.expected_bytes,
                             self.expected_bytes,
-                            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
+                            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
                         )
                         .map_err(|_| "generation3d-mutation.body-preflight")?,
                     );
@@ -1886,9 +1886,9 @@ enum Generation3dPackSnapshotState {
 struct Generation3dPackSnapshotAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Generation3dPackSnapshotState,
-    token: Option<store::OwnedSchemaToken>,
+    token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
     session: std::mem::ManuallyDrop<Option<crate::standards::v1::subsets::any::io::binary::snapshot::Generation3dMountedPackSession>>,
@@ -1897,22 +1897,22 @@ struct Generation3dPackSnapshotAuthority {
 }
 
 impl Generation3dPackSnapshotAuthority {
-    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.snapshot-close-demand", path).with_native(error);
+        let refusal = move |error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.snapshot-close-demand", path).with_native(error);
         if let Some(session) = self.session.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
         }
         Ok(Default::default())
     }
 
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -1927,8 +1927,8 @@ impl Generation3dPackSnapshotAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn owners_terminal_empty(&self) -> bool {
@@ -1945,14 +1945,14 @@ impl Generation3dPackSnapshotAuthority {
     }
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Generation3dPackSnapshotAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Generation3dPackSnapshotAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("generation3d-envelope.snapshot-stale-authority", token.start));
         }
@@ -1960,10 +1960,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
             return Err(self.diagnostic("generation3d-envelope.snapshot-pack-cancelled", token.start));
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dPackSnapshotState::AwaitToken {
-            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
+            if !terminal || token.kind != store::os_store::owned_schema_decode::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("generation3d-envelope.snapshot-pack-must-be-scalar", token.start));
             }
             let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("generation3d-envelope.snapshot-pack-length", token.start))?;
@@ -1987,7 +1987,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
                 }
                 self.session.as_mut().expect("P3 mounted pack session retained").seal().map_err(|_| self.diagnostic("generation3d-envelope.snapshot-pack-seal", retained.end))?;
                 self.state = Generation3dPackSnapshotState::Drive;
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             if let Some(exact) = self.session.as_mut().expect("P3 mounted pack session retained").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation3d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))? {
                 let step = self.session.as_mut().expect("P3 mounted pack session retained").reserve_retained_allocation(exact).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))?;
@@ -1995,7 +1995,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
                     return Err(self.diagnostic("generation3d-envelope.snapshot-source-allocation-stalled", retained.start + self.relative as u64));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
@@ -2009,7 +2009,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
             } else {
                 self.high = Some(nibble);
             }
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dPackSnapshotState::Drive {
             cx.set_stage("generation3d-retained-canonical-pack");
@@ -2019,16 +2019,16 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
                     return Err(self.diagnostic("generation3d-envelope.snapshot-retained-allocation-stalled", token.start));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P3 mounted pack session retained").grant().map_err(|_| self.diagnostic("generation3d-envelope.snapshot-pack-malformed", token.start))? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             *self.value = Some(self.session.as_mut().expect("P3 mounted pack session retained").take().ok_or_else(|| self.diagnostic("generation3d-envelope.snapshot-pack-handoff", token.start))?);
             self.session.as_mut().expect("P3 mounted pack session retained").request_cancel();
             self.state = Generation3dPackSnapshotState::CloseSession;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dPackSnapshotState::CloseSession {
             cx.consume_fuel(1);
@@ -2037,59 +2037,59 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
                 self.session.as_mut().expect("P3 mounted pack session retained").close_step(1, maximum_bytes).map_err(|_| self.diagnostic("generation3d-envelope.snapshot-session-close", token.start))?,
                 store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }
             ) {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             drop(self.session.take());
             self.token = None;
             self.state = Generation3dPackSnapshotState::Ready;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
         }
         Err(self.diagnostic("generation3d-envelope.snapshot-token-replayed", token.start))
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<Generation3dSnapshot>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<Generation3dSnapshot>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if !matches!(self.state, Generation3dPackSnapshotState::Ready) {
             return Err(self.diagnostic("generation3d-envelope.snapshot-pack-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("generation3d-envelope.snapshot-owner-missing", 0))?;
         target.publish_snapshot_reserved(reservation, value);
         self.state = Generation3dPackSnapshotState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let path = self.path;
-        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
         let empty = RetainedCloneProgress::default();
         if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
             self.state = Generation3dPackSnapshotState::Complete;
@@ -2112,11 +2112,11 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot> for Gen
             };
         }
         if self.retirement.is_none() {
-            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
             self.state = Generation3dPackSnapshotState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.snapshot-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation3dPackSnapshotState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -2150,9 +2150,9 @@ enum Generation3dMutationDecodeState {
 struct Generation3dMutationDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Generation3dMutationDecodeState,
-    token: Option<store::OwnedSchemaToken>,
+    token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
     drive_ingress: bool,
@@ -2162,22 +2162,22 @@ struct Generation3dMutationDecodeAuthority {
 }
 
 impl Generation3dMutationDecodeAuthority {
-    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.mutation-close-demand", path).with_native(error);
+        let refusal = move |error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("generation3d-envelope.mutation-close-demand", path).with_native(error);
         if let Some(session) = self.session.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
         }
         Ok(Default::default())
     }
 
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -2193,8 +2193,8 @@ impl Generation3dMutationDecodeAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn nibble(value: u8) -> Option<u8> {
@@ -2211,14 +2211,14 @@ impl Generation3dMutationDecodeAuthority {
     }
 }
 
-impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Generation3dMutationDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Generation3dMutationDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("generation3d-envelope.mutation-stale-authority", token.start));
         }
@@ -2226,10 +2226,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
             return Err(self.diagnostic("generation3d-envelope.mutation-cancelled", token.start));
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dMutationDecodeState::AwaitToken {
-            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
+            if !terminal || token.kind != store::os_store::owned_schema_decode::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("generation3d-envelope.mutation-pack-must-be-scalar", token.start));
             }
             let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("generation3d-envelope.mutation-pack-length", token.start))?;
@@ -2259,12 +2259,12 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
                         return Err(self.diagnostic("generation3d-envelope.mutation-retained-allocation-stalled", retained.start + self.relative as u64));
                     }
                     cx.consume_fuel(1);
-                    return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                    return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
                 }
                 self.session.as_mut().expect("P3 retained mutation session").grant().map_err(|_| self.diagnostic("generation3d-envelope.mutation-ingress-malformed", retained.start + self.relative as u64))?;
                 self.drive_ingress = !self.session.as_ref().expect("P3 retained mutation session").ingress_ready();
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             if retained.start + self.relative as u64 + 1 >= retained.end {
                 if self.high.is_some() {
@@ -2272,7 +2272,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
                 }
                 self.session.as_mut().expect("P3 retained mutation session").seal().map_err(|_| self.diagnostic("generation3d-envelope.mutation-seal", retained.end))?;
                 self.state = Generation3dMutationDecodeState::Drive;
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
@@ -2287,7 +2287,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
             } else {
                 self.high = Some(nibble);
             }
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dMutationDecodeState::Drive {
             cx.set_stage("generation3d-retained-mutation");
@@ -2302,15 +2302,15 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
                     return Err(self.diagnostic("generation3d-envelope.mutation-retained-allocation-stalled", token.start));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P3 retained mutation session").grant().map_err(|_| self.diagnostic("generation3d-envelope.mutation-malformed", token.start))? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             *self.value = Some(self.session.as_mut().expect("P3 retained mutation session").take().ok_or_else(|| self.diagnostic("generation3d-envelope.mutation-handoff", token.start))?);
             self.state = Generation3dMutationDecodeState::CloseSession;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation3dMutationDecodeState::CloseSession {
             cx.consume_fuel(1);
@@ -2322,52 +2322,52 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
                 .close_step(1, maximum_bytes)
                 .map_err(|_| self.diagnostic("generation3d-envelope.mutation-session-close", token.start))?
             {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
                 store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;
             self.state = Generation3dMutationDecodeState::Ready;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
         }
         Err(self.diagnostic("generation3d-envelope.mutation-token-replayed", token.start))
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<Generation3dMutation>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget<Generation3dMutation>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.state != Generation3dMutationDecodeState::Ready {
             return Err(self.diagnostic("generation3d-envelope.mutation-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("generation3d-envelope.mutation-owner-missing", 0))?;
         target.publish_mutation_reserved(reservation, value);
         self.state = Generation3dMutationDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let path = self.path;
-        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
         let empty = RetainedCloneProgress::default();
         if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
             self.state = Generation3dMutationDecodeState::Complete;
@@ -2389,11 +2389,11 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation> for Gen
             };
         }
         if self.retirement.is_none() {
-            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
             self.state = Generation3dMutationDecodeState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation3d-envelope.mutation-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation3dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -2416,34 +2416,34 @@ struct Generation3dRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for Generation3dRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for Generation3dRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "generation3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "generation3d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
@@ -2466,43 +2466,43 @@ pub struct Generation3dEnvelopeOwnedFieldCatalog;
 
 /// 📦️ Installs Generation3d's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
-pub fn generation3d_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<Generation3dSnapshot, Generation3dMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
+pub fn generation3d_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Generation3dSnapshot, Generation3dMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation3dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
 }
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3dMutation> for Generation3dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Generation3dSnapshot, Generation3dMutation> for Generation3dEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation3dSnapshot, Generation3dMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation3dSnapshot>> {
         Box::new(Generation3dPackSnapshotAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation3dMutation>> {
         Box::new(Generation3dMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(Generation3dRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation3dMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation3dMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation3dMutation>::default()))
     }
 }
 //#endregion 🔖️TypedOwnedEnvelopeCatalog
@@ -2812,7 +2812,7 @@ impl Generation3dSnapshotCopyCursor {
         if self.target.is_none() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
-        store::artifact_retirement_owned_birth_demands(&*self.target)
+        store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.target)
     }
 
     fn abandon(&mut self, active: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
@@ -2820,7 +2820,7 @@ impl Generation3dSnapshotCopyCursor {
             self.handed_back = true;
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        let step = store::artifact_retirement_admit_owned(&mut self.target, active, grant)?;
+        let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.target, active, grant)?;
         if self.target.is_none() {
             self.handed_back = true;
         }
@@ -2869,11 +2869,11 @@ struct Generation3dStoreInitializationAuthority {
     base_revision: u64,
     parent_revision: u64,
     history_items: usize,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>>>,
     copy: std::mem::ManuallyDrop<Option<Generation3dSnapshotCopyCursor>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Generation3dSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Generation3dSnapshot, Generation3dMutation>>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<Generation3dSnapshot, Generation3dMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<Generation3dSnapshot, Generation3dMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn ErasedSnapshotRetirement>>>,
     displaced: std::mem::ManuallyDrop<Option<Generation3dReplayDisplaced>>,
     rejected: std::mem::ManuallyDrop<Option<Generation3dSnapshot>>,
@@ -2891,7 +2891,7 @@ struct Generation3dStoreInitializationAuthority {
 }
 
 impl Generation3dStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         if generation3d_validate_publication_authority(operation, generation).is_err() {
             let _ = generation3d_admit_app_publication_authority(operation, generation);
         }
@@ -2948,17 +2948,17 @@ impl Generation3dStoreInitializationAuthority {
 
     fn pump_owned(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
         if self.active.is_some() {
-            let step = store::artifact_retirement_box_close_step(&mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
         if self.displaced.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
         if self.rejected.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
@@ -2976,13 +2976,13 @@ impl Generation3dStoreInitializationAuthority {
             return self.publication.retirement_demands();
         }
         if let Some(owner) = self.active.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.displaced);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.displaced);
         }
         if self.rejected.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.rejected);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.rejected);
         }
         if let Some(candidate) = self.candidate.as_ref() {
             return match self.candidate_disposer.as_ref() {
@@ -3033,13 +3033,13 @@ impl Generation3dStoreInitializationAuthority {
             return self.publication.close_step(child).map(|step| step.progress());
         }
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant).map(|step| step.progress());
         }
         if self.rejected.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, grant).map(|step| step.progress());
         }
         if self.candidate.is_some() {
             if self.candidate_disposer.is_none() {
@@ -3397,7 +3397,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation3dSn
             }
             Generation3dStoreInitializationPhase::BuildOwners => {
                 if self.owners.is_none() {
-                    match store::bounded_artifact_store_owners::<Generation3dSnapshot, Generation3dMutation>(cx.retained_grant()) {
+                    match store::os_store::document_store_owners::bounded_artifact_store_owners::<Generation3dSnapshot, Generation3dMutation>(cx.retained_grant()) {
                         Ok((owners, progress)) => {
                             *self.owners = Some(owners);
                             cx.consume_retained(progress)?;
@@ -3518,7 +3518,7 @@ impl Drop for Generation3dStoreInitializationAuthority {
 }
 
 pub fn generation3d_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<Generation3dSnapshot, Generation3dMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,

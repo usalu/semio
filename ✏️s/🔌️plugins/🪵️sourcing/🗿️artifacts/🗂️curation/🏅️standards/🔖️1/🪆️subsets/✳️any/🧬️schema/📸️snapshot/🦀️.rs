@@ -2,7 +2,7 @@
 
 use crate::{CuratedItem, ObjectKindExtra};
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted Kit catalog child, sourcing geometry and availability, and ordered selection.
@@ -13,7 +13,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 pub struct CurationSnapshot {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    pub catalog: store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
     #[value(default)]
     pub stock_extra: Vec<ObjectKindExtra>,
@@ -51,7 +51,7 @@ impl semio_framework_value::FromValue for CurationSnapshot {
 impl CurationSnapshot {
     /// 🪆 Requires the persisted child target to use the Kit dialect.
     pub fn validate(&self) -> Result<(), String> {
-        semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&self.catalog.child_id, &self.catalog.target, "kit")
+        semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity(&self.catalog.child_id, &self.catalog.target, "kit")
     }
 }
 /// 🧺 Formats a persisted ordered selection for scenario diagnostics.

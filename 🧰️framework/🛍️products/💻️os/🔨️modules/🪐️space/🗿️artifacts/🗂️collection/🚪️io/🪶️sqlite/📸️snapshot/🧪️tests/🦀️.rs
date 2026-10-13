@@ -15,10 +15,10 @@ async fn sqlite_snapshot_framework_collection_builtin_creation_and_reload_publis
         return;
     };
     let source = fixture();
-    let mut envelope = store::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "sqlite-builtin", source.clone(), None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "sqlite-builtin", source.clone(), None);
     if mode == "retained" { envelope.dialect = Some(dialect()); }
     let mut live = if mode == "retained" {
-        let saved = store::print_document_pack(&envelope).await.unwrap();
+        let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
         envelope.retire_unadopted();
         let history = store::os_spr::decode_history(&saved.spr, &store::os_spr::DecodeOptions::default()).await.unwrap();
         let initial_digest = store::artifact_initial_digest_of_pack(&saved.pack);
@@ -49,9 +49,9 @@ async fn sqlite_snapshot_framework_collection_builtin_creation_and_reload_publis
         ready.expect("bounded retained opening must finish")
     } else {
         let envelope = if mode == "reload" {
-        let saved = store::print_document_pack(&envelope).await.unwrap();
+        let saved = store::os_store::text_format::print_document_pack(&envelope).await.unwrap();
         envelope.retire_unadopted();
-        store::parse_document_pack::<CollectionSnapshot, CollectionMutation>(&saved.pack, &saved.spr).await.unwrap().into_envelope()
+        store::os_store::text_format::parse_document_pack::<CollectionSnapshot, CollectionMutation>(&saved.pack, &saved.spr).await.unwrap().into_envelope()
         } else { envelope };
         let mut live = store::ArtifactStore::new(envelope, store::os_spr::ActorId("actor:sqlite-retained-registration-fixture".into())).await.unwrap();
         live.install_document_store_owners_exact(store::test_support::plain_document_store_owners());
@@ -64,7 +64,7 @@ async fn sqlite_snapshot_framework_collection_builtin_creation_and_reload_publis
     assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<CollectionSnapshot>(&dialect(), &bytes, SqliteDatabaseLimits::default(), &mut |_|true).await.unwrap().value, source);
 }
 
-#[test]fn sqlite_snapshot_framework_collection_same_control_retained_materialization_budget_is_cumulative(){let f=f();let case=&f["reconstructionBudget"];let mut source=fixture();source.name=case["textUnit"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap()as usize);let bytes=source.name.len();let database=<CollectionSnapshot as store::ArtifactSqliteSnapshot>::to_sqlite_database(&source,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let limits=SqliteDatabaseLimits{max_value_bytes:bytes*case["ceilingNumerator"].as_u64().unwrap()as usize/case["ceilingDenominator"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()};let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,limits);let retained=<CollectionSnapshot as store::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control).unwrap();assert_eq!(retained.name,source.name);assert!(<CollectionSnapshot as store::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control).is_err(),"second live materialization must not reset the caller ownership ledger");}
+#[test]fn sqlite_snapshot_framework_collection_same_control_retained_materialization_budget_is_cumulative(){let f=f();let case=&f["reconstructionBudget"];let mut source=fixture();source.name=case["textUnit"].as_str().unwrap().repeat(case["repeat"].as_u64().unwrap()as usize);let bytes=source.name.len();let database=<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::to_sqlite_database(&source,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();let limits=SqliteDatabaseLimits{max_value_bytes:bytes*case["ceilingNumerator"].as_u64().unwrap()as usize/case["ceilingDenominator"].as_u64().unwrap()as usize,..SqliteDatabaseLimits::default()};let mut progress=|_|true;let mut control=SqliteSnapshotControl::new(&mut progress,limits);let retained=<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control).unwrap();assert_eq!(retained.name,source.name);assert!(<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::from_sqlite_database(&database,&mut control).is_err(),"second live materialization must not reset the caller ownership ledger");}
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_framework_collection_actual_typed_io_file_metadata_and_route(){crate::register_sqlite_snapshot().unwrap();let source=fixture();let limits=SqliteDatabaseLimits::default();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let bytes=store::io::io_mechanism::io_export_sqlite_snapshot(&dialect(),&source,encoding,limits,&mut |_|true).await.unwrap().value;let database=import_sqlite_database(&bytes,limits,&mut |_|true).unwrap();assert_eq!(store::io::io_mechanism::sqlite_snapshot_metadata(&database).unwrap(),(dialect(),encoding));assert_eq!(store::io::io_mechanism::io_import_sqlite_snapshot::<CollectionSnapshot>(&dialect(),&bytes,limits,&mut |_|true).await.unwrap().value,source);}let route=store::io::io_mechanism::io_route(&dialect(),&semio_framework_artifact_reference::ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT),1).await.unwrap().value;assert_eq!(route.hops.len(),1);}
 #[test]fn sqlite_snapshot_framework_collection_independent_surrogate_renumber_preserves_complete_logical_state(){let source=fixture();let codec=codec();let changed=oracle::renumber(&database(),f()["identityOffset"].as_i64().unwrap());for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let native={let mut original_input=Some(changed.clone());with_original_encode(&native_caller_policy(),SqliteDatabaseLimits::default(),&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|(codec.import)(S_COLLECTION_SCHEMA,&dialect(),&mut original_input,encoding,original_sql,original_owner))}.unwrap().value;assert_eq!(decode(native),source);}}
@@ -79,9 +79,9 @@ fn f()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/
 fn fixture()->CollectionSnapshot{{let f=f();let mut value:CollectionSnapshot=serde_json::from_value(f["nativeSnapshot"].clone()).unwrap();let mut sizes=f["blobSizes"].as_array().unwrap().iter();for entry in&mut value.entries{if let ArtifactBody::Blob{blob}=entry.body.as_mut(){blob.size=sizes.next().unwrap().as_str().unwrap().parse().unwrap();}}value}}
 fn database()->SqliteDatabase{oracle::database(&f(),SQL)}
 fn dialect()->semio_framework_artifact_reference::ArtifactDialect{semio_framework_artifact_reference::ArtifactDialect{artifact_kind:S_COLLECTION_SCHEMA.into(),standard:"1".into(),subset:"*".into()}}
-fn codec()->store::ArtifactSqliteSnapshotCodec{store::ArtifactCodec::bare::<CollectionSnapshot,CollectionMutation>(S_COLLECTION_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")}
-fn payload(value:&CollectionSnapshot,encoding:SnapshotEncoding)->store::io::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(value)),SnapshotEncoding::Text=>store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(value))}}
-fn decode(value:store::io::IoPayload)->CollectionSnapshot{match value{store::io::IoPayload::Binary(bytes)=>store::ArtifactPack::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=>store::ArtifactDsl::parse_dsl(&text).unwrap()}}
+fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{store::bare_artifact_codec::<CollectionSnapshot,CollectionMutation>(S_COLLECTION_SCHEMA).snapshot_sqlite.expect("actual builtin native factory requires its owned semantic SQLite capability")}
+fn payload(value:&CollectionSnapshot,encoding:SnapshotEncoding)->store::io::IoPayload{match encoding{SnapshotEncoding::Binary=>store::io::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(value)),SnapshotEncoding::Text=>store::io::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(value))}}
+fn decode(value:store::io::IoPayload)->CollectionSnapshot{match value{store::io::IoPayload::Binary(bytes)=>store::os_store::serialization::ArtifactPack::decode_pack(&bytes).unwrap(),store::io::IoPayload::Text(text)=>store::os_store::serialization::ArtifactDsl::parse_dsl(&text).unwrap()}}
 #[test]fn sqlite_snapshot_framework_collection_actual_factory_capability(){let codec=codec();assert_eq!(codec.snapshot_type,Some(std::any::TypeId::of::<CollectionSnapshot>()));}
 #[test]fn sqlite_snapshot_framework_collection_ordinary_native_complete_state(){let source=fixture();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{assert_eq!(decode(payload(&source,encoding)),source);}}
 #[test]fn sqlite_snapshot_framework_collection_erased_both_directions_preserve_all_semantic_cells(){let source=fixture();let codec=codec();let limits=SqliteDatabaseLimits::default();let expected=database();for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let native=payload(&source,encoding);assert_eq!(with_original_decode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|(codec.export)(S_COLLECTION_SCHEMA,&dialect(),&native,original_sql,original_owner)).unwrap().value,expected);let native={let mut original_input=Some(expected.clone());with_original_encode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|(codec.import)(S_COLLECTION_SCHEMA,&dialect(),&mut original_input,encoding,original_sql,original_owner))}.unwrap().value;assert_eq!(decode(native),source);}}
@@ -94,9 +94,9 @@ fn sqlite_snapshot_framework_collection_native_input_retained_materialization_us
  let corpus=f();let sample=&corpus["reconstructionBudget"];let ratio=&corpus["nativeRetention"];assert_eq!(ratio["ledger"],"native-backing-allocation");let mut source=fixture();source.name=sample["textUnit"].as_str().unwrap().repeat(sample["repeat"].as_u64().unwrap()as usize);
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
   let payload=payload(&source,encoding);let limits=SqliteDatabaseLimits::default();let mut charged=0usize;
-  let first=with_original_decode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|{let value=<CollectionSnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner);charged=limits.max_allocation_bytes-original_sql.allocation_remaining_bytes();value}).unwrap();assert_eq!(first,source);<CollectionSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(first);assert!(charged>0,"native parser and retained typed fields must publish their actual cumulative ownership");
+  let first=with_original_decode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|{let value=<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner);charged=limits.max_allocation_bytes-original_sql.allocation_remaining_bytes();value}).unwrap();assert_eq!(first,source);<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(first);assert!(charged>0,"native parser and retained typed fields must publish their actual cumulative ownership");
   let ceiling=charged.checked_mul(ratio["ceilingNumerator"].as_u64().unwrap()as usize).unwrap()/ratio["ceilingDenominator"].as_u64().unwrap()as usize;let limits=SqliteDatabaseLimits{max_allocation_bytes:ceiling,..limits};
-  let (retained,second)=with_original_decode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|Ok::<_,semio_framework_value::ValueError>((<CollectionSnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner),<CollectionSnapshot as store::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner)))).unwrap();let retained=retained.unwrap();assert_eq!(retained,source);<CollectionSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(retained);assert!(second.is_err(),"second retained native input must not reset the same caller ledger");
+  let (retained,second)=with_original_decode(&native_caller_policy(),limits,&mut |_|true,&mut |_|true,|_|{},|original_sql,original_owner|Ok::<_,semio_framework_value::ValueError>((<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner),<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::decode_sqlite_snapshot_native(&payload,original_sql,original_owner)))).unwrap();let retained=retained.unwrap();assert_eq!(retained,source);<CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(retained);assert!(second.is_err(),"second retained native input must not reset the same caller ledger");
  }
 }
 
@@ -141,7 +141,7 @@ fn semantic_role_source(index:usize,text:&str)->CollectionSnapshot{let mut sourc
 
 #[test]
 fn sqlite_snapshot_framework_collection_complete_native_semantic_text_roles_and_columns(){
- use store::ArtifactSqliteSnapshot;use std::io::Write;use std::process::{Command,Stdio};
+ use store::os_store::serialization::ArtifactSqliteSnapshot;use std::io::Write;use std::process::{Command,Stdio};
  let plan:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();
  
  let defaults=SqliteDatabaseLimits::default();let text=plan["text"].as_str().unwrap();assert_eq!(text.len(),plan["textBytes"].as_u64().unwrap()as usize);
@@ -192,13 +192,13 @@ fn sqlite_snapshot_framework_collection_actual_borrowed_wire_matches_public_file
     SnapshotEncoding::Binary=>{let mut options=store::os_pack::record::EncodeOptions::default();options.limits.max_file_len=(body-1)as u64;store::os_pack::record::measure_document_borrowed(&source,&exact_borrowed_wire::spec(),&options,&mut native)},
    };assert!(short.is_err(),"one canonical output octet short must refuse");
   }
-  <CollectionSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(source);
+  <CollectionSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(source);
  }
 }
 
 #[test]
 fn sqlite_snapshot_framework_collection_borrowed_semantic_gate_uses_closed_exact_cells_before_typed_construction(){
- use store::ArtifactSqliteSnapshot;
+ use store::os_store::serialization::ArtifactSqliteSnapshot;
  let plan:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🛂️semantic/🔣️.json")).unwrap();let defaults=SqliteDatabaseLimits::default();
  for(index,sample)in plan["cases"].as_array().unwrap().iter().enumerate(){
   let source=semantic_role_source(index,plan["text"].as_str().unwrap());let bytes=sample["semanticBytes"].as_u64().unwrap()as usize;let rows=plan["rows"].as_u64().unwrap()as usize;let schema=CollectionSnapshot::SQLITE_SCHEMA.len();

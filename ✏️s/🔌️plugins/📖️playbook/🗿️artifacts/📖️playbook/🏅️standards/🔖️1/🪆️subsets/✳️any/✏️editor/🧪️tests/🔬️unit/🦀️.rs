@@ -52,8 +52,8 @@ pub(crate) mod context {
     /// 🧩️ The LIVE playbook, composed from the parent projection and the `flow` CHILD store — the surface every step/block verb
     /// publishes on (the parent only carries the child's coordinate, design §20.15).
     pub async fn live_spec(app: &MountedPlaybookApp) -> crate::PlaybookSpec {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-        use store::{ArtifactPack, SpaceMember};
+        use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+        use store::{os_store::serialization::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("playbook parent projection");
         let bytes = app.child_store("flow", &snapshot.flow.child_id).await.expect("playbook flow child").document_pack_bytes().await.expect("playbook flow child pack");
         let content = SemioFlowSnapshot::decode_pack(&bytes).expect("playbook flow child snapshot");
@@ -68,7 +68,7 @@ pub(crate) mod context {
         result.requested_effects.extend(receipt.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("test host applies load-document effect");
             }
         }
@@ -289,9 +289,9 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     let mut instance_a = playbook_app().await;
     let mut instance_b = playbook_app().await;
-    let (backbone_a, backbone_b) = store::MemoryBackbone::pair("mem://playbook-convergence", "mem://playbook-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair("mem://playbook-convergence", "mem://playbook-convergence").await;
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let receiver = meta("actor-a").instance_id;
     instance_a.dispatch_typed(PlaybookCommand::AddStep(add_step::AddStep {}), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
     settle_registered_typed_operation(&mut *instance_a, receiver, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a's edit publishes");
@@ -417,13 +417,13 @@ fn set_active_example_is_host_only_and_the_flow_child_mints_its_genesis_pack() {
     let definition = create_playbook_play_app();
     let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample is declared on the app roster");
     assert_eq!(action.semantics.execution.interactive_job, InteractiveJobClassification::Migrated);
-    let demo = <PlaybookSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
+    let demo = <PlaybookSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).expect("the demo asset parses as a playbook snapshot");
     assert_eq!(demo.flow.child_id, crate::examples::demo::FLOW_ID);
     assert_eq!(demo.flow.target.artifact_id, demo.flow.child_id, "the target must name its own child_id or ChildRestoreProjection refuses the whole load");
     let projection = PlaybookPlayApp::child_restore_projection(&demo).expect("the demo's loaded-parent child projection");
     assert!(projection.admits_member("flow", &demo.flow.target));
     let pack = PlaybookPlayApp::genesis_child_pack(&demo, "flow", &demo.flow.child_id).expect("valid genesis owner").expect("the demo flow child mints its genesis pack");
-    let content = <semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
+    let content = <semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("the genesis pack decodes");
     assert_eq!(crate::steps_from_flow_content(&content).expect("decodable demo steps").len(), 3);
     assert!(PlaybookPlayApp::genesis_child_pack(&demo, "flow", "not-this-documents-child").expect("valid genesis owner").is_none(), "a foreign child id must not be answered");
     assert!(PlaybookPlayApp::genesis_child_pack(&demo, "document", &demo.flow.child_id).expect("valid genesis owner").is_none(), "the deleted document slot is never answered");

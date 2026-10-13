@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d::brep::engine::Brep;
+use semio_framework_3d_brep_engine::Brep;
 
 //#region 🔖️SemioMeshBridge
 #[semio_framework_async_macros::async_test]

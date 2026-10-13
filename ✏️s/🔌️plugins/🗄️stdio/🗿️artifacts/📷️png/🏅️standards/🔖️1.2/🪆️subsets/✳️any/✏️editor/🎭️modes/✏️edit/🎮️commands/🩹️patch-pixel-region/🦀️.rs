@@ -21,7 +21,7 @@ pub const ACTION_ID: &str = "set-pixel-region";
 pub const PAYLOAD_SCHEMA: &str = "s.stdio.png.command.patch-pixel-region.v1";
 pub const MAXIMUM_RAW_BYTES: usize = 8_192;
 pub const MAXIMUM_RASTER_BYTES: usize = 4_096 * 2_160 * 4;
-pub const PATCH_PAYLOAD_BYTES: usize = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 4;
+pub const PATCH_PAYLOAD_BYTES: usize = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 4;
 pub const CAPACITY: ArtifactRetainedWorkCapacity = ArtifactRetainedWorkCapacity::for_invertible_items(128);
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned)]

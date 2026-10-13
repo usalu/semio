@@ -1,0 +1,64 @@
+{
+ "root": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model/🦀️.rs",
+ "base": "✏️s/🔌️plugins/🏙️bim/🗿️artifacts/🏢️model",
+ "order": [
+  "model",
+  "diff",
+  "mutations",
+  "inferences",
+  "read",
+  "write",
+  "io",
+  "editor",
+  "viewer",
+  "examples",
+  "root"
+ ],
+ "allow": {},
+ "files": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "viewer"
+  ],
+  [
+   "/📚️examples/",
+   "examples"
+  ],
+  [
+   "/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🧬️schema/🔺️diff/",
+   "diff"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/📥️import/",
+   "read"
+  ],
+  [
+   "/🚪️io/📤️export/",
+   "write"
+  ],
+  [
+   "/🚪️io/",
+   "io"
+  ]
+ ]
+}

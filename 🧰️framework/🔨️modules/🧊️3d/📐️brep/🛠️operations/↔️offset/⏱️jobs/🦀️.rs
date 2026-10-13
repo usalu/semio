@@ -6,10 +6,10 @@
 //! `26/09/09/PROCEDURAL-3D-END-TO-END`, lane J).
 
 use super::*;
-use crate::brep::operations::blend::BlendJob;
-use crate::brep::operations::staged::{ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::operations::transform::FaceCopier;
-use crate::brep::representation::topology::Face;
+use crate::blend::BlendJob;
+use crate::staged::{ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use crate::transform::FaceCopier;
+use semio_framework_3d_brep_representation::topology::Face;
 
 // #region 🔖️Rebuild
 
@@ -317,7 +317,7 @@ pub struct OffsetFaceJob {
     signed: f64,
     loops: Vec<LoopId>,
     boundary: Vec<CoedgeId>,
-    surface: Option<(Surface, crate::brep::representation::arena::SurfaceId, Affine3)>,
+    surface: Option<(Surface, semio_framework_3d_brep_representation::arena::SurfaceId, Affine3)>,
     moved_vertices: HashMap<VertexId, VertexId>,
     moved_edges: HashMap<EdgeId, EdgeId>,
     new_face: Option<FaceId>,

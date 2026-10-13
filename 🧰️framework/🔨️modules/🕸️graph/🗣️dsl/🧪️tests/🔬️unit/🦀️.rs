@@ -52,7 +52,7 @@ fn idiom_hooks_canonicalize_and_classify_through_the_dsl_registry_seam() {
 fn run_dag_fixture_query() {
     block_on_test(async {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`store::os_store::serialization::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",
@@ -204,7 +204,7 @@ fn parse_labeled_directed_and_undirected_edges_use_double_dash_connector() {
 fn run_port_filtered_query() {
     block_on_test(async {
         // 🩹️ Was `include_str!` of the dag technology's example fixture; that technology migrated its
-        // fixture to a handcrafted DSL (`store::ArtifactDsl`) — inlined the same dag-fixture JSON this
+        // fixture to a handcrafted DSL (`store::os_store::serialization::ArtifactDsl`) — inlined the same dag-fixture JSON this
         // test actually parses (`from_dag_host_snapshot_json`), decoupled from its document format.
         let fixture = r#"{
   "schema": "dag.host_snapshot",

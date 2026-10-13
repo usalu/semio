@@ -6,7 +6,7 @@ use super::brep_curve::{direction, dot, guarded, norm, path_wire, refusal};
 use super::brep_surface::{fit_plane, profile_face, wire_corners, WIRE};
 use super::phased_job::Pipeline;
 use super::super::prelude::*;
-use semio_framework_3d::brep::engine::BrepOperation;
+use semio_framework_3d_brep_engine::BrepOperation;
 use std::f64::consts::TAU;
 
 fn extrude_wire(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {

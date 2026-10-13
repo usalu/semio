@@ -178,15 +178,25 @@ describe("descriptor fetch progress", () => {
     expect(beats).toBe(1);
   });
 
-  /** 🪪️ LAW: a package descriptor answers the identity hub documents bind by — its own package id and
-   * component digest — and a descriptor without either is refused rather than guessed. */
-  it("reads a package descriptor's identity and refuses one that has none", async () => {
-    const identified = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "a".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
-    const read = await withFetch(streamingResponse([identified]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"));
+  /** 🪪️ LAW: a served module answers the identity hub documents bind by — its semantic descriptor's package id and the
+   * component digest its own `🧾️receipt.json` names — and a module whose receipt is missing, foreign or malformed, or whose
+   * descriptor carries a byte binding of its own, is refused rather than guessed. */
+  it("reads a module's identity from its descriptor and receipt and refuses one that has none", async () => {
+    const receipt = (overrides: Record<string, unknown> = {}): string => `${JSON.stringify({ schema: "semio.plugin.component-receipt/v1", pluginId: "demonstrator", packageId: "semio:demonstrator", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: "a".repeat(64), wasmBytes: 4096, semanticDescriptorSha256: "b".repeat(64), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "c".repeat(64), provenanceSha256: "d".repeat(64), ...overrides }, null, 2)}\n`;
+    const withModule = async <T,>(descriptorText: string, receiptText: string | null, run: () => Promise<T>): Promise<T> => {
+      const original = globalThis.fetch;
+      globalThis.fetch = stubFetch(async (input: URL | RequestInfo) => (String(input).endsWith("🧾️receipt.json") ? (receiptText === null ? ({ ok: false, status: 404, headers: { get: () => "text/plain" }, text: async () => "" } as unknown as Response) : streamingResponse([receiptText])) : streamingResponse([descriptorText])));
+      try { return await run(); } finally { globalThis.fetch = original; }
+    };
+    const identified = JSON.stringify({ packageId: "semio:demonstrator", manifest: { pluginId: "demonstrator", apps: [] } });
+    const read = await withModule(identified, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"));
     expect({ packageId: read.packageId, componentSha256: read.componentSha256, pluginId: read.manifest.pluginId }).toEqual({ packageId: "semio:demonstrator", componentSha256: "a".repeat(64), pluginId: "demonstrator" });
-    await expect(withFetch(streamingResponse([descriptor]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
-    const shortDigest = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "A".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
-    await expect(withFetch(streamingResponse([shortDigest]), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
+    await expect(withModule(descriptor, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
+    await expect(withModule(identified, null, () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("plugin.descriptor-invalid");
+    await expect(withModule(identified, receipt({ packageId: "semio:impostor" }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
+    await expect(withModule(identified, receipt({ wasmSha256: "A".repeat(64) }), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("plugin.descriptor-invalid");
+    const bound = JSON.stringify({ packageId: "semio:demonstrator", hashes: { wasmSha256: "a".repeat(64) }, manifest: { pluginId: "demonstrator", apps: [] } });
+    await expect(withModule(bound, receipt(), () => fetchPackageDescriptor("demonstrator", "/plugin-modules/demonstrator/bridge.js"))).rejects.toThrow("missing package identity");
   });
 
   /** 🔤️ A chunk boundary is a BYTE boundary, and this repo's descriptors are full of multi-byte emoji

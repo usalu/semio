@@ -18,7 +18,7 @@
 /// 🎞️ Shared palette, indexed frames, and optional transparency index.
 pub type QuantizedFrames = (GifColorTable, Vec<Vec<u8>>, Option<u8>);
 
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_gif::standards::v89a::subsets::any::schema::snapshot::{GifColorTable, GifFrame, GifRgb, GifSnapshot};
 

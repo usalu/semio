@@ -11,8 +11,8 @@ use flow::FlowEvalSession;
 use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::{app::ChildEmitPreparation, ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_node_param::SetNodeParam, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
+use {semio_s_artifact_stdio_semio_flow::schema::mutations::set_node_param::SetNodeParam, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_dsl_record_derive::DslRecord)]
 #[derive(semio_framework_value::RetireOwned)]

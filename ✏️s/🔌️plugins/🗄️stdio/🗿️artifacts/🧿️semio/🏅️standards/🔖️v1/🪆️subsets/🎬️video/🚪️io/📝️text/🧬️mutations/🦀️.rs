@@ -9,27 +9,27 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::video::schema::mutations::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::video::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_stream};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_stream};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_sample};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_sample};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_rational};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_rational};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_kind};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_kind};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_bool};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_bool};
-use crate::standards::v1::subsets::document::io::text::mutations::{parse_usize};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::video::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::video::io::text::snapshot::{hex_decode};
-use crate::standards::v1::subsets::video::io::text::snapshot::{hex_encode};
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{diff_insert_sample, diff_insert_stream, diff_remove_sample, diff_remove_stream, diff_set_sample_data, diff_set_sample_flags, diff_set_stream_meta, SemioVideoDiff};
+use crate::io::text::snapshot::dec_stream;
+use crate::io::text::snapshot::enc_stream;
+use crate::io::text::snapshot::dec_sample;
+use crate::io::text::snapshot::enc_sample;
+use crate::io::text::snapshot::dec_rational;
+use crate::io::text::snapshot::enc_rational;
+use crate::io::text::snapshot::dec_kind;
+use crate::io::text::snapshot::enc_kind;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_bool;
+use crate::io::text::snapshot::enc_bool;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_usize;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use crate::io::text::snapshot::dec_str;
+use crate::io::text::snapshot::enc_str;
+use crate::io::text::snapshot::hex_decode;
+use crate::io::text::snapshot::hex_encode;
+use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::OpBinary;
 use protocol::{Mutation, OpText};
 

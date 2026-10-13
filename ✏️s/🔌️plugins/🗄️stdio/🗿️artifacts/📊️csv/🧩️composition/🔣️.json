@@ -3,10 +3,7 @@
   "artifact": "csv",
   "package": "semio-s-artifact-stdio-csv",
   "order": 6,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio",
@@ -33,7 +30,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio",

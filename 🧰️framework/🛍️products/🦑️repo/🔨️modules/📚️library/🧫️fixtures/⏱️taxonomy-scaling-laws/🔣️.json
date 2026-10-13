@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "utf8Order": [
+    { "left": "a", "right": "b", "sign": -1 },
+    { "left": "b", "right": "a", "sign": 1 },
+    { "left": "same", "right": "same", "sign": 0 },
+    { "left": "ab", "right": "abc", "sign": -1 },
+    { "left": "️", "right": "😀", "sign": -1 },
+    { "left": "", "right": "🧩", "sign": -1 },
+    { "left": "🧰️framework", "right": "🧰️framework/x", "sign": -1 },
+    { "left": "dir-x", "right": "dir/x", "sign": -1 },
+    { "left": "￿", "right": "\ud800\udc00", "sign": -1 }
+  ],
+  "literalLeafPaths": [
+    "package.json",
+    "a/b/package.json",
+    "🧰️framework/🛍️products/🦑️repo/📋️project.json",
+    "x/🪝️hooks/post-rewrite",
+    "x/y/README.md",
+    "Cargo.toml",
+    "deep/a/b/c/Cargo.toml",
+    "tsconfig.json"
+  ],
+  "markdownReferenceDefinitions": [
+    { "content": "[a]: b\n", "values": ["b"] },
+    { "content": "  [label]: ./x.md \"title\"\n", "values": ["./x.md"] },
+    { "content": "[x]: x y\n", "values": ["x"] },
+    { "content": "[]: z\n[unclosed\n[c]:d\n", "values": ["d"] },
+    { "content": "\n\n   \n[l]: dest", "values": ["dest"] },
+    { "content": "[n]:\n\n  value\n[m] : no\n[k]::x\n", "values": ["value", ":x"] }
+  ]
+}

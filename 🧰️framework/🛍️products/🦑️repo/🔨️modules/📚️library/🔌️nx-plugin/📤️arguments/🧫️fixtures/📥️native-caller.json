@@ -135,7 +135,9 @@
       ],
       "selected": [
         "run",
-        "workspace:test-long"
+        "workspace:test",
+        "--",
+        "long"
       ],
       "environment": {},
       "offline": false,
@@ -195,7 +197,9 @@
     ],
     [
       "run",
-      "workspace:test-long"
+      "workspace:test",
+      "--",
+      "long"
     ],
     [
       "run-many",

@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `AddEdgeProperty`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ An empty key is a Fatal `mutation.invariant`; an edge the graph lacks is `mutation.target-missing`; a key the edge

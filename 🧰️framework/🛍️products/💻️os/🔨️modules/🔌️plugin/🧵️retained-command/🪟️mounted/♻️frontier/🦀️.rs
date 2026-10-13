@@ -2,31 +2,31 @@
 enum PendingPublicationOutcomePhase{Uncaptured,Captured,Released}
 #[derive(Clone,Copy,PartialEq,Eq)]
 enum PendingPublicationDisposition{Accepted,Rejected,Lenient}
-struct PendingPublicationOutcome{phase:PendingPublicationOutcomePhase,disposition:PendingPublicationDisposition,report:Option<ArtifactBoundedToolFault>}
+pub(crate) struct PendingPublicationOutcome{phase:PendingPublicationOutcomePhase,disposition:PendingPublicationDisposition,report:Option<ArtifactBoundedToolFault>}
 impl PendingPublicationOutcome{
- const fn new()->Self{Self{phase:PendingPublicationOutcomePhase::Uncaptured,disposition:PendingPublicationDisposition::Accepted,report:None}}
+ pub(crate) const fn new()->Self{Self{phase:PendingPublicationOutcomePhase::Uncaptured,disposition:PendingPublicationDisposition::Accepted,report:None}}
  fn pending(&self)->bool{self.phase!=PendingPublicationOutcomePhase::Uncaptured}
  fn copy_demand(&self)->usize{if self.report.is_some(){super::completion_fault::borrowed_report_copy_bytes()}else{0}}
 }
 impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
- fn close_fault_pending(&self)->bool{self.retained_close_fault.is_some()||self.retained_close_fault_retirement.is_some()||self.retained_close_fault_refusal.is_some()}
- fn close_fault_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub(crate) fn close_fault_pending(&self)->bool{self.retained_close_fault.is_some()||self.retained_close_fault_retirement.is_some()||self.retained_close_fault_refusal.is_some()}
+ pub(crate) fn close_fault_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if self.retained_close_fault_refusal.is_some(){return Ok(RetirementDemand{depth:1,..Default::default()});}
-  if let Some(owner)=self.retained_close_fault_retirement.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
+  if let Some(owner)=self.retained_close_fault_retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
   if self.retained_close_fault.is_some()&&self.terminal_fault.is_none(){return Ok(RetirementDemand{copy_bytes:super::completion_fault::borrowed_report_copy_bytes(),depth:1,..Default::default()});}
-  store::artifact_retirement_owned_birth_demands(&self.retained_close_fault)
+  store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retained_close_fault)
  }
- fn close_fault_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub(crate) fn close_fault_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   let demand=self.close_fault_demands(grant.maximum_copy_bytes)?;
   if !plugin_grant_funds(demand,grant)||self.retained_close_fault_refusal.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   if let Some(original)=self.retained_close_fault.as_ref(){if self.terminal_fault.is_none(){self.terminal_fault=Some(super::completion_fault::borrowed_report(original.origin,&original.code.0,original.severity,&original.message,original.retryable));if let Some(lease)=self.cancellation_lease.as_ref(){lease.cancel();}return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()}));}}
-  let result=if self.retained_close_fault_retirement.is_some(){store::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)}else{store::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)};
+  let result=if self.retained_close_fault_retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retained_close_fault_retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retained_close_fault,&mut self.retained_close_fault_retirement,grant)};
   match result{Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),Err(original)=>{self.retained_close_fault_refusal=Some(original);Ok(RetainedCloneStep::Progress(Default::default()))}}
  }
 
- fn granted_retirement_ready(&self)->bool{self.result_page.is_none()&&(self.stage==MountedTypedCommandFullOperationStage::Retiring||self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)))}
- fn granted_retirement_pending(&self)->bool{self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing))||(self.stage==MountedTypedCommandFullOperationStage::Retiring&&(self.actor_capture.is_some()||self.reserved_producer.is_some()||self.raw_input.is_some()||self.pending_artifact_publication.is_some()||self.pending_child_publication.is_some()||self.publication.is_some()||self.publication_retirement.is_some()||self.completion.is_some()||self.completion_retirement.is_some()||self.output_chunks.is_some()||self.output_retirement.is_some()))}
- fn granted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
+ pub(crate) fn granted_retirement_ready(&self)->bool{self.result_page.is_none()&&(self.stage==MountedTypedCommandFullOperationStage::Retiring||self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing)))}
+ pub(crate) fn granted_retirement_pending(&self)->bool{self.pending_artifact_publication.as_ref().is_some_and(PendingArtifactStorePublication::is_closing)||self.pending_child_publication.as_ref().is_some_and(|owner|matches!(owner.phase,PendingChildGroupPublicationPhase::Acknowledged|PendingChildGroupPublicationPhase::Closing))||(self.stage==MountedTypedCommandFullOperationStage::Retiring&&(self.actor_capture.is_some()||self.reserved_producer.is_some()||self.raw_input.is_some()||self.pending_artifact_publication.is_some()||self.pending_child_publication.is_some()||self.publication.is_some()||self.publication_retirement.is_some()||self.completion.is_some()||self.completion_retirement.is_some()||self.output_chunks.is_some()||self.output_retirement.is_some()))}
+ pub(crate) fn granted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.actor_capture.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
   if let Some(producer)=self.reserved_producer.as_ref(){
    if producer.terminal_is_empty(){return Ok(if std::sync::Arc::strong_count(&producer.state)==1&&std::sync::Arc::weak_count(&producer.state)==0{RetirementDemand{release_bytes:original_reserved_arc_frame_bytes::<std::sync::Mutex<ArtifactReservedToolJobState>>(),depth:1,..Default::default()}}else{Default::default()});}
@@ -45,7 +45,7 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
   if let Some(owner)=self.output_retirement.as_ref(){return Ok(RetirementDemand{copy_bytes:owner.next_copy_byte_demand()?,capacity_bytes:owner.next_capacity_byte_demand(body)?,release_bytes:owner.next_release_byte_demand()?,depth:owner.next_depth_demand()?});}
   Ok(RetirementDemand{depth:usize::from(self.output_chunks.is_some()),..Default::default()})
  }
- fn granted_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
+ pub(crate) fn granted_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
   use semio_framework_value::retained_clone::RetainedCloneStep;
   if !self.granted_retirement_ready()||self.publication_ownership_progress.is_some()||self.original_retirement_receipt.is_some(){return Ok(RetainedCloneStep::Progress(Default::default()));}
   let demand=self.granted_retirement_demands(grant.maximum_copy_bytes)?;
@@ -87,12 +87,12 @@ impl<A:ArtifactApp> MountedTypedCommandFullOperation<A>{
 }
 /// 🧱️ A blank mounted operation for laws that read one retained field of it.
 #[cfg(test)]
-pub(crate) fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
+fn test_blank_mounted_operation<A:ArtifactApp>()->MountedTypedCommandFullOperation<A>{
  MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:false,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:None,owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing}
 }
 /// 🚨️ An operation retains a structural refusal exactly when its close fault or its refused owner can never retire: the language-agnostic corpus decides which retained causes are structural.
 #[cfg(test)]
-pub(crate) fn test_retained_structural_refusal<A:ArtifactApp>(){
+fn test_retained_structural_refusal<A:ArtifactApp>(){
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🚨️structural-refusal/🧫️fixtures/🔣️.json")).unwrap();
  let structural=corpus["structuralRefusalKinds"].as_array().unwrap().iter().map(|kind|kind.as_str().unwrap()).collect::<Vec<_>>();
  assert_eq!(structural,["UnsupportedOwner"]);
@@ -109,7 +109,7 @@ pub(crate) fn test_retained_structural_refusal<A:ArtifactApp>(){
  }
 }
 #[cfg(test)]
-pub(crate) fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
+fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl FnOnce()->Vec<A::Mutation>,grant:RetainedCloneGrant){
  let(mut mounted,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{
   let mut child=PendingChildGroupPublication::<A>::new(original(),vec![ChildEmit::open("original","child",0)],Some(protocol::TransactionRef{id:"original".repeat(1171),tool:"original-tool".into()})).unwrap();child.begin_dispatch().unwrap();child.commit(ChildPublicationResultV1{invocation_id:"original-invocation".repeat(457),committed_members:1,child_content_generation:1}).unwrap();
   let mut mounted=MountedTypedCommandFullOperation::<A>{verb:String::new(),meta:ActionMeta{actor:Default::default(),instance_id:19,view_state:None},operation:semio_framework_job::Operation::new(semio_framework_job::OperationId(23),semio_framework_job::RevisionId(0),semio_framework_job::Generation(1),0),canonical_revision:[0;32],artifact_generation:0,config_generation:0,draft_generation:0,presence_generation:0,transient_generation:0,window_config_authority:None,window_transient_authority:None,publication_lanes:&[],session:None,session_rejected:None,reserved_producer:None,completion:None,completion_retirement:None,publication_retirement:None,output_retirement:None,raw_input:None,output_chunks:None,cancellation_lease:None,identity:None,identity_progress:semio_framework_value::native_encoding::NativeEncodeProgress{completed:0,total:0,owned_bytes:0},worker_semantic_pending:false,worker_outcome_pending:false,worker_fault_capture:None,terminal_seen:true,worker_resume_pending:false,publication:None,pending_artifact_publication:None,pending_publication_outcome:PendingPublicationOutcome::new(),pending_window_config_receipt:None,cancellation_retirement:None,pending_child_publication:Some(child),owned_child_group:None,owned_child_committed:false,owned_child_result_pending:false,captured_child_content:None,captured_child_content_generation:0,result_page:None,result_page_presented:false,result_sequence:0,publication_progress:0,publication_checkpoint:None,publication_ownership_progress:None,original_retirement_receipt:None,actor_capture:None,publication_attempt:0,ui_pending:false,progress:None,progress_pending:false,user_cancel_requested:false,published_artifact:false,published_config:false,published_window_config:false,command_logged:false,interaction_revalidated:false,retained_close_fault:None,retained_close_fault_retirement:None,retained_close_fault_refusal:None,terminal_fault:None,stage:MountedTypedCommandFullOperationStage::Publishing};
@@ -125,48 +125,4 @@ pub(crate) fn test_original_mounted_child_frontier<A:ArtifactApp>(original:impl 
   let terminal=mounted.pending_child_publication.as_ref().unwrap().terminal_is_empty();let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||mounted.granted_retirement_step(grant).unwrap());assert!(matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Progress(_)));let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));if terminal{assert!(mounted.pending_child_publication.is_none());assert_eq!(receipt,RetainedCloneProgress{copied_items:1,..Default::default()});separate_removal=true;}else{assert!(mounted.pending_child_publication.is_some());}births+=heap.requested_bytes;released+=heap.released_bytes;turns+=1;assert!(turns<100000);
  }
  assert!(separate_removal);assert_eq!(released,held+births);let((),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(mounted));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original mounted child ACK frontier turns={turns} held={held} births={births} released={released} everyDenied0heap separateParentRemoval=true terminalDrop0");
-}
-impl<A:ArtifactApp,M:SpaceMember+MemberFactory+Send+'static> VcsArtifactApp<A,M>{
- fn next_granted_mounted_retirement(&self)->Option<(usize,u64)>{(0..ARTIFACT_LIVE_OUTPUT_SLOTS).find_map(|offset|{let index=(self.close_typed_operation_cursor+offset)%ARTIFACT_LIVE_OUTPUT_SLOTS;self.tool_operations.entry(index).filter(|(_,owner)|self.close_started||owner.stage==MountedTypedCommandFullOperationStage::Retiring||(owner.granted_retirement_ready()&&owner.granted_retirement_pending())).map(|(id,_)|(index,*id))})}
- fn granted_mounted_retirement_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
-  let Some((_,id))=self.next_granted_mounted_retirement()else{return Ok(Default::default());};let owner=self.tool_operations.get(id).unwrap();
-  if owner.close_fault_pending(){return owner.close_fault_demands(body);}
-  if owner.stage==MountedTypedCommandFullOperationStage::Retiring { if let Some(group)=owner.owned_child_group { return if self.private_child_groups.get(group).is_some(){self.private_child_group_operation_close_demands(group,body)}else{Ok(RetirementDemand{depth:1,..Default::default()})}; } }
-  if owner.lease_retirement_ready(){return owner.lease_retirement_demands(&self.tool_cancellations,body);}
-  if self.close_started{return owner.close_demands(body);}
-  if owner.stage==MountedTypedCommandFullOperationStage::Retiring{return owner.retirement_demands(body);}
-  owner.granted_retirement_demands(body)
- }
- fn granted_mounted_retirement_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
-  use semio_framework_value::retained_clone::RetainedCloneStep;
-  let Some((index,id))=self.next_granted_mounted_retirement()else{return Ok(RetainedCloneStep::Complete(Default::default()));};
-  let closing=self.close_started;
-  if closing||self.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring{self.request_gesture_cancellation(id);}
-  if self.tool_operations.get(id).unwrap().close_fault_pending(){let step=self.tool_operations.get_mut(id).unwrap().close_fault_step(grant)?;self.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step);}
-  if self.tool_operations.get(id).unwrap().lease_retirement_ready(){let step=self.tool_operations.get_mut(id).unwrap().lease_retirement_step(&self.tool_cancellations,grant)?;self.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return Ok(step);}
-  if self.tool_operations.get(id).unwrap().stage==MountedTypedCommandFullOperationStage::Retiring {
-   if !closing {let result=self.retire_typed_operation_unit(id,grant);self.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;return match result{Ok(PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress))=>Ok(RetainedCloneStep::Progress(progress)),Ok(_)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(original)=>{self.tool_operations.get_mut(id).expect("failed original mounted owner remains attached").retained_close_fault=Some(original);Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted normal retirement retains its original fault"))}};}
-   if let Some(group)=self.tool_operations.get(id).unwrap().owned_child_group {
-    if self.private_child_groups.get(group).is_some(){return match self.close_private_child_group_operation_step(group,grant){Ok(semio_framework_job::InteractiveJobCloseStep::Pending{progress}|semio_framework_job::InteractiveJobCloseStep::Complete{progress})=>Ok(RetainedCloneStep::Progress(progress)),Ok(_)=>Ok(RetainedCloneStep::Progress(Default::default())),Err(original)=>{self.tool_operations.get_mut(id).unwrap().retained_close_fault=Some(original);Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted child close retains its original fault"))}};}
-    if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}self.tool_operations.get_mut(id).unwrap().owned_child_group=None;return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()}));
-   }
-  }
-  let owner=self.tool_operations.get_mut(id).unwrap();
-  let step=if closing||owner.stage==MountedTypedCommandFullOperationStage::Retiring{
-   let result=if closing{owner.close_step(grant)}else{owner.retirement_step(grant)};
-   match result{
-    Ok(PluginLifecycleStep::Progress(progress))=>RetainedCloneStep::Progress(progress),
-    Ok(PluginLifecycleStep::Complete(progress))=>RetainedCloneStep::Complete(progress),
-    Ok(PluginLifecycleStep::AwaitingInput{..}|PluginLifecycleStep::Blocked{..})=>RetainedCloneStep::Progress(Default::default()),
-    Err(original)=>{owner.retained_close_fault=Some(original);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted original owner retirement failed and retains its fault"));}
-   }
-  }else{owner.granted_retirement_step(grant)?};
-  if matches!(step,RetainedCloneStep::Complete(_)){
-   if !self.tool_operations.get(id).is_some_and(MountedTypedCommandFullOperation::terminal_is_empty){return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated,"mounted removal requires every original owner terminal"));}
-   if grant.maximum_items==0||grant.maximum_depth==0{return Ok(RetainedCloneStep::Progress(Default::default()));}
-   let original=self.tool_operations.remove(id).unwrap();self.operation_progress_retired|=original.progress.is_some();drop(original);self.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;
-   return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:step.progress().copied_items.max(1),..step.progress()}));
-  }
-  self.close_typed_operation_cursor=(index+1)%ARTIFACT_LIVE_OUTPUT_SLOTS;Ok(step)
- }
 }

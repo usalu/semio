@@ -24,7 +24,7 @@
 
 
 
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids

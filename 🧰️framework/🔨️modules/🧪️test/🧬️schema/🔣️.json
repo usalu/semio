@@ -1993,6 +1993,40 @@
         }
       }
     },
+    "SubjectHostPackage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "implementation",
+        "package",
+        "path",
+        "rationale"
+      ],
+      "description": "🧱️ A local package the generated SUBJECT host links beside the owner's own package, for a subject whose implementation spans several packages (a split artifact family whose subset crate builds on a shared base crate and the kernel it dispatches through). Linked only under the subject role, never by the oracle role, which must not link the subject at all.",
+      "properties": {
+        "implementation": {
+          "$ref": "#/$defs/Implementation"
+        },
+        "package": {
+          "type": "string",
+          "minLength": 1
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1
+        },
+        "features": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "rationale": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "SubjectFeatures": {
       "type": "object",
       "additionalProperties": false,
@@ -2096,6 +2130,12 @@
           "type": "array",
           "items": {
             "$ref": "#/$defs/SubjectFeatures"
+          }
+        },
+        "subjectHostPackages": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/SubjectHostPackage"
           }
         },
         "migrationStatus": {

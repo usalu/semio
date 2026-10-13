@@ -13,7 +13,7 @@ mod dff_public_action_admission_tests {
         body
     }
 
-    fn owner(controller_id: &str) -> crate::app::ToolOwnerWitness {
+    fn owner(controller_id: &str) -> crate::tool_contract::ToolOwnerWitness {
         let owner_type_name = match controller_id {
             "s.draw.draw@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_draw::editor::draw::DrawPlayApp>",
             "s.flow.flow@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_flow::editor::flow::FlowPlayApp>",
@@ -21,7 +21,7 @@ mod dff_public_action_admission_tests {
             "s.remodel.remodel@1/*#editor" => "semio_framework_plugin::app::EditorApp<semio_s_plugin_remodel::editor::remodel::RemodelPlayApp>",
             _ => "unproved::Owner",
         };
-        crate::app::ToolOwnerWitness::test_with_name(owner_type_name)
+        crate::tool_contract::ToolOwnerWitness::test_with_name(owner_type_name)
     }
 
     /// 🧾️ The interactive wire caps are no longer a frozen framework table keyed by verb: since the
@@ -30,7 +30,7 @@ mod dff_public_action_admission_tests {
     /// the rows the four Draw/Flow/Forms editors contribute, restated so the laws below drive the
     /// landed lookup instead of an empty contract slice (which declares NO bound at all, so every
     /// oversized body was admitted).
-    fn dff_public_contracts() -> Vec<crate::app::ArtifactToolPublicContract> {
+    fn dff_public_contracts() -> Vec<crate::tool_contract::ArtifactToolPublicContract> {
         [
             ("s.forms.forms@1/*#editor", "setTryValue", 16_384usize),
             ("s.forms.forms@1/*#editor", "setTryValueStep", 16_384),
@@ -39,7 +39,7 @@ mod dff_public_action_admission_tests {
             ("s.flow.flow@1/*#editor", "duplicateWidgetStep", 8_192),
         ]
         .into_iter()
-        .map(|(controller_id, tool_id, max_raw_wire_bytes)| crate::app::ArtifactToolPublicContract {
+        .map(|(controller_id, tool_id, max_raw_wire_bytes)| crate::tool_contract::ArtifactToolPublicContract {
             owner: owner(controller_id),
             controller_id: controller_id.to_string(),
             tool_id: tool_id.to_string(),
@@ -116,22 +116,22 @@ mod dff_public_action_admission_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn public_action_and_command_entry_points_require_a_live_instance_before_decode() {
-        let runtime = PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
-        let action = plugin_handle_action(&runtime, 1, &padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("an action without a live instance must reject before decoding");
+        let runtime = PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let action = plugin_handle_action(&runtime, 1, &padded_action("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("an action without a live instance must reject before decoding");
         assert!(action.message.contains("unknown instance"));
-        let command = plugin_handle_command(&runtime, 1, &padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("a command without a live instance must reject before decoding");
+        let command = plugin_handle_command(&runtime, 1, &padded_command("s.draw.draw@1/*#editor", "canvasPointerDown", 8_192), "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a command without a live instance must reject before decoding");
         assert!(command.message.contains("unknown instance"));
 
-        let malformed = plugin_handle_command(&runtime, 1, r#"{"address":{"commandId":"setTryValue""#, "{}", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("a malformed DFF command must be rejected before decoding");
+        let malformed = plugin_handle_command(&runtime, 1, r#"{"address":{"commandId":"setTryValue""#, "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a malformed DFF command must be rejected before decoding");
         assert!(malformed.message.contains("structurally incomplete"));
         let hostile = format!(r#"{{"address":{{"owner":"os","commandId":"setTryValue"}},"arguments":{{"valueJson":"{}"}}}}"#, "x".repeat(MAX_PUBLIC_ACTION_STRING_BYTES + 1));
-        let hostile = plugin_handle_command(&runtime, 1, &hostile, "{}", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("a hostile DFF command string must be rejected before decoding");
+        let hostile = plugin_handle_command(&runtime, 1, &hostile, "{}", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("a hostile DFF command string must be rejected before decoding");
         assert!(hostile.message.contains("oversized string"));
     }
 
     #[test]
     fn action_entry_points_drive_spawn_admit_instead_of_awaiting_the_retained_job() {
-        let source = include_str!("../../🦀️.rs");
+        let source = include_str!("../../⚛️reactor/🏃️runtime/🦀️.rs");
         let public_start = source.find("pub async fn plugin_handle_action").expect("public action entry point");
         let public_end = source[public_start..].find("pub async fn plugin_handle_command").map(|offset| public_start + offset).expect("public action boundary");
         let public_action = &source[public_start..public_end];

@@ -4,7 +4,7 @@ name = "semio-framework-3d"
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
-description = "Generic 3D geometry kernel - native B-Rep kernel, half-edge mesh, and BVH spatial index"
+description = "Generic 3D geometry kernel - half-edge mesh, rigid-body and inertia algebra, and BVH collision queries"
 
 [lints]
 workspace = true
@@ -16,27 +16,19 @@ role = "framework"
 path = "🦀️.rs"
 
 [dependencies]
+semio-framework-3d-brep-representation.workspace = true
 semio-framework-pack-json = { path = "../../../🎒️pack/🔤️json/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../🌱️value/📦️packages/🦀️rust" }
-semio-framework-hash.workspace = true
-semio-framework-job.workspace = true
 semio-framework-mesh-engine.workspace = true
-semio-framework-number = { workspace = true }
-semio-framework-geometry = { workspace = true }
 # 🧬️ `#[derive(ToValue, FromValue)]`, additive alongside serde
 # (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01). This crate has no
 # `semio-framework-os-kernel` dependency, so types here target `#[value(crate = "::protocol::value")]`
 # (unconditional) rather than the derive's `semio-framework-os-kernel`-dependent default path.
 semio-framework-value-derive = { path = "../../../../🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust" }
 semio-framework-replication = { workspace = true }
-# 🔤️ `🥽️mesh`'s `HalfedgeMesh::to_json`/`from_json` route through `pack::json::to_json_string`/
-# `from_json_str` (over `ToValue`/`FromValue`) instead of `serde_json::to_string`/`from_str`
-# (RUNTIME-DEPENDENCY-ELIMINATION-FOR-S-PLUGINS-AND-ARTIFACTS, 26/09/01).
-pack = { path = "../../../🎒️pack/📦️packages/🦀️rust", package = "semio-framework-pack" }
 
 [dev-dependencies]
 semio-framework-replication = { workspace = true, features = ["history-index-serde"] }
-num-rational = "0.4"
 semio-framework-async-macros = { path = "../../../⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🧪️ Differential oracle for `🧿️collision` ONLY — proves our BVH triangle-mesh queries agree with
 # `parry3d`'s. Test-only: never a `[dependencies]` entry, never reachable from a production target.

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `CreateEdge`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{delete_edge, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::mutations::{delete_edge, SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

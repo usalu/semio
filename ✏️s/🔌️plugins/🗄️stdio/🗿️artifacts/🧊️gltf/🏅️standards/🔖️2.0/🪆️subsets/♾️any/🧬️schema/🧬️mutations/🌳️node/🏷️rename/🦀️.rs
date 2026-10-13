@@ -1,10 +1,10 @@
 //! 🧬️ Direct change-node-name mutation owner.
-use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::structure_geometry::checked_index;
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
-use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 //#region 🔖️Payload
 pub const ID: &str = "s.stdio.gltf.mutation.change-node-name.v1";

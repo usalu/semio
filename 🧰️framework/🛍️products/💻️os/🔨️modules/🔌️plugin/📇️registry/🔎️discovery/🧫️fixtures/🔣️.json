@@ -132,6 +132,26 @@
         "contributes": [],
         "activationEvents": [],
         "extensionPoints": [],
+        "executionMode": "isolated"
+      },
+      "valid": true
+    },
+    {
+      "name": "compiled-cannot-carry-byte-identity",
+      "stage": "compiled",
+      "value": {
+        "pluginId": "portable",
+        "packageId": "semio:portable",
+        "cratePath": "owner/📦️packages/🦀️rust",
+        "packageName": "portable-component",
+        "wasmOut": "portable_component.wasm",
+        "role": "plugin",
+        "consumes": [],
+        "dependsOn": [],
+        "capabilities": [],
+        "contributes": [],
+        "activationEvents": [],
+        "extensionPoints": [],
         "executionMode": "isolated",
         "hashes": {
           "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
@@ -139,7 +159,7 @@
           "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
         }
       },
-      "valid": true
+      "valid": false
     },
     {
       "name": "compiled-deployed-declaration",
@@ -158,12 +178,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "🧪️portable",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": true
     },
@@ -182,12 +197,7 @@
         "contributes": [],
         "activationEvents": [],
         "extensionPoints": [],
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -206,12 +216,7 @@
         "capabilities": [],
         "activationEvents": [],
         "extensionPoints": [],
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -230,12 +235,7 @@
         "capabilities": [],
         "contributes": [],
         "extensionPoints": [],
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -254,12 +254,7 @@
         "capabilities": [],
         "contributes": [],
         "activationEvents": [],
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -280,12 +275,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "🧪️portable",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": true
     },
@@ -305,12 +295,7 @@
         "contributes": [],
         "activationEvents": [],
         "extensionPoints": [],
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -331,12 +316,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "portable",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -357,12 +337,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "🧪️portable/child",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -383,12 +358,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "🧪portable",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -409,12 +379,7 @@
         "activationEvents": [],
         "extensionPoints": [],
         "directoryName": "🧪️Portable",
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -436,12 +401,7 @@
         "extensionPoints": [],
         "directoryName": "🧪️portable",
         "descriptor": {},
-        "executionMode": "isolated",
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
+        "executionMode": "isolated"
       },
       "valid": false
     },
@@ -478,32 +438,7 @@
         "capabilities": [],
         "contributes": [],
         "activationEvents": [],
-        "extensionPoints": [],
-        "hashes": {
-          "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-          "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-        }
-      },
-      "valid": false
-    },
-    {
-      "name": "compiled-missing-hashes",
-      "stage": "compiled",
-      "value": {
-        "pluginId": "portable",
-        "packageId": "semio:portable",
-        "cratePath": "owner/📦️packages/🦀️rust",
-        "packageName": "portable-component",
-        "wasmOut": "portable_component.wasm",
-        "role": "plugin",
-        "consumes": [],
-        "dependsOn": [],
-        "capabilities": [],
-        "contributes": [],
-        "activationEvents": [],
-        "extensionPoints": [],
-        "executionMode": "isolated"
+        "extensionPoints": []
       },
       "valid": false
     }
@@ -546,12 +481,7 @@
         {
           "id": "slot"
         }
-      ],
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      ]
     },
     "compiled": {
       "capabilities": [
@@ -566,12 +496,7 @@
       "extensionPoints": [
         "slot"
       ],
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     }
   },
   "comparisons": [

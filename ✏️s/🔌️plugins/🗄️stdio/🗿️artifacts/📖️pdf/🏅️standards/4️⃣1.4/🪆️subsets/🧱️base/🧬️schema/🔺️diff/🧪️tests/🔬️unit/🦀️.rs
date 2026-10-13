@@ -1,5 +1,5 @@
 use super::*;
-use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn page(width: f64, height: f64, text: &str) -> PageDoc {

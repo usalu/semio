@@ -6,11 +6,11 @@
 //! `metadata.added[entry]`. This case takes the MODIFIED branch (the key exists with a different
 //! value); `metadata` is a weak, name-keyed collection, so its per-entry "diff" is just the whole
 //! new value string.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_metadata_entry;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️set-metadata-entry/✍️rewrites/📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +42,7 @@ async fn rewrites_the_author_entry_in_place() {
     assert_eq!(produced.metadata[0].value, "Ueli Saluz", "the entry's value must become the payload's value");
     assert_eq!(produced.frames, base.frames, "metadata edits must not touch a frame");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -56,9 +56,9 @@ async fn the_undo_set_metadata_entry_restores_the_old_value() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Author".to_string(), value: "semio".to_string(), at: None })], "an existing key undoes as a set carrying BASE's own value, never as a remove");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-metadata-entry/rewrites-the-existing-author-entry: the undo did not restore the before-snapshot");
 }

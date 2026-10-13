@@ -1,7 +1,7 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use semio_framework_plugin::WindowConfigOwner;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn block_on_generation2d_window_ownership<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();
@@ -119,7 +119,7 @@ fn generation2d_window_camera_ownership_runtime_isolates_routes_renders_and_reop
                 async fn load_exact<O: WindowConfigOwner>(app: &mut TestApp, window_id: &str, state: O::State) -> Result<(), String> {
                     let envelope_id = format!("window-config:{}:{window_id}", O::WINDOW_KIND_ID);
                     let envelope = store::create_config_envelope::<O::State, O::Mutation>(O::SCHEMA, &envelope_id, state, None).await;
-                    let files = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+                    let files = store::os_store::text_format::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
                     drop(envelope.into_owners());
                     app.load_window_config_pack(WindowConfigPack { window_id: window_id.into(), window_kind_id: O::WINDOW_KIND_ID.into(), files }).await.map_err(|error| format!("{error:?}"))
                 }

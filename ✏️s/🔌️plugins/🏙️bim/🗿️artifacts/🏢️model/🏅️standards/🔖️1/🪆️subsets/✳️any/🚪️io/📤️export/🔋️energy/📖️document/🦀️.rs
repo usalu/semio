@@ -10,9 +10,9 @@ use semio_framework_value::{DslValue, ToValue};
 /// 🏷️ The schema name of an energy snapshot.
 pub const SCHEMA: &str = "energy.model";
 
-fn handle(subset: &str) -> store::ArtifactChild<()> {
+fn handle(subset: &str) -> store::os_store::artifact_child::ArtifactChild<()> {
     let target = ArtifactRef { artifact_id: format!("energy-{subset}"), dialect: ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() } };
-    store::ArtifactChild::new(target.artifact_id.clone(), target)
+    store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target)
 }
 
 /// 📖️ The snapshot as the energy artifact's JSON export writes it.
@@ -21,8 +21,8 @@ fn handle(subset: &str) -> store::ArtifactChild<()> {
 pub struct EnergySnapshot {
     pub schema: String,
     pub model: EnergyModel,
-    pub structure: store::ArtifactChild<()>,
-    pub zones: store::ArtifactChild<()>,
+    pub structure: store::os_store::artifact_child::ArtifactChild<()>,
+    pub zones: store::os_store::artifact_child::ArtifactChild<()>,
     pub referenced_model: Option<DslValue>,
     pub weather_link: Option<DslValue>,
 }
@@ -39,8 +39,8 @@ impl EnergySnapshot {
 pub(crate) struct EnergyRecord {
     pub(crate) schema: String,
     pub(crate) model: DslValue,
-    pub(crate) structure: store::ArtifactChild<()>,
-    pub(crate) zones: store::ArtifactChild<()>,
+    pub(crate) structure: store::os_store::artifact_child::ArtifactChild<()>,
+    pub(crate) zones: store::os_store::artifact_child::ArtifactChild<()>,
     pub(crate) referenced_model: Option<store::ArtifactLink>,
     pub(crate) weather_link: Option<store::ArtifactLink>,
 }

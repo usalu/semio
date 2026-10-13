@@ -7,11 +7,11 @@ mod snapshot;
 pub use snapshot::SnapshotRetirementFactory;
 
 pub fn store_owners_source_demands()->Result<semio_framework_value::RetirementDemand,ValueError>{
- Ok(semio_framework_value::RetirementDemand{capacity_bytes:store::DocumentStoreOwners::<FlowSnapshot,FlowMutation>::source_birth_bytes::<SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer<FlowSnapshot,FlowMutation>>()?,depth:1,..Default::default()})
+ Ok(semio_framework_value::RetirementDemand{capacity_bytes:store::os_store::document_store_owners::DocumentStoreOwners::<FlowSnapshot,FlowMutation>::source_birth_bytes::<SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer<FlowSnapshot,FlowMutation>>()?,depth:1,..Default::default()})
 }
 
-pub fn store_owners(grant:RetainedCloneGrant)->Result<(store::DocumentStoreOwners<FlowSnapshot,FlowMutation>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<FlowSnapshot,FlowMutation>>{
- store::DocumentStoreOwners::admit_source_constructor(grant,||(SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer::<FlowSnapshot,FlowMutation>::new()))
+pub fn store_owners(grant:RetainedCloneGrant)->Result<(store::os_store::document_store_owners::DocumentStoreOwners<FlowSnapshot,FlowMutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<FlowSnapshot,FlowMutation>>{
+ store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant,||(SnapshotRetirementFactory,SnapshotRetirementFactory,MutationRetirementFactory,store::ArtifactStoreCursorDisposer::<FlowSnapshot,FlowMutation>::new()))
 }
 
 impl RetireOwned for FlowMutation{

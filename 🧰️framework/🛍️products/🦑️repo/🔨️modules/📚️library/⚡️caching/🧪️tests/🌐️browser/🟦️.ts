@@ -57,7 +57,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.equal(copied, 1);
     const { init, parse } = await import("es-module-lexer"); await init;
     const [imports] = parse(readFileSync(join(output, fixture.destination, "🌉️bridge.js"), "utf8"));
-    assert.equal(imports[0]?.n, "../.." + fixture.shimDirectory + "/io.js");
+    assert.equal(imports[0]?.n, "../../" + fixture.shimDirectory + "/io.js");
     const { browserArtifactVitePlugin } = await import(join(moduleRoot, "⚡️vite/🟦️.ts"));
     const app = join(temporary, "app"), buildOutput = join(temporary, "vite-output");
     put(join(app, "index.html"), '<!doctype html><title>Artifact fixture</title><script type="module" src="/entry.js"></script>');
@@ -71,7 +71,7 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     const { buildViteArtifact, serveVite } = await import(join(workspace, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts"));
     const config = join(app, "⚙️vite.config.ts"), published = join(temporary, "published");
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
-    await buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, temporaryRoot: temporary });
+    await buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary });
     assert.ok(existsSync(join(temporary, lifecycle.storage.config)), "Vite config compilation must stay inside the private fixture");
     const resolvedConfig = await resolveConfig({ root: app, configFile: false }, "serve");
     assert.equal(resolvedConfig.cacheDir, join(temporary, lifecycle.storage.optimizer), "Vite dependency optimization must stay inside the private fixture");
@@ -80,9 +80,9 @@ export async function testBrowserDistribution(workspace: string, outputDirectory
     assert.ok(publishedMarker.files.includes("index.html"));
     assert.deepEqual(publishedMarker.files, (await require("fast-glob")("**/*", { cwd: published, dot: true, onlyFiles: true })).filter((file: string) => file !== ".nx-artifact.json").sort());
     put(config, 'throw new Error("fixture build failure"); export default {};');
-    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, temporaryRoot: temporary }), /Vite build failed/i);
+    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary }), /Vite build failed/i);
     assert.equal(readFileSync(join(published, "index.html"), "utf8"), publishedIndex);
-    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, temporaryRoot: temporary, signal: abort.signal }), /abort/i);
+    await assert.rejects(() => buildViteArtifact({ root: app, workspace, config, output: published, owner: fixture.owner, mode: "release", temporaryRoot: temporary, signal: abort.signal }), /abort/i);
     assert.equal((await (await import("node:fs/promises")).readdir(temporary)).some(name => name.startsWith("vite-build-")), false);
     put(config, 'export default { publicDir: false, logLevel: "silent" };');
     const serving = new AbortController();

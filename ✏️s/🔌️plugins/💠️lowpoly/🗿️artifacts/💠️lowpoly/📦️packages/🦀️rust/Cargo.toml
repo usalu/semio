@@ -32,19 +32,23 @@ semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️m
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-ui-contract = { workspace = true }
-semio-s-artifact-stdio-dwg = { workspace = true }
-semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
 semio-s-artifact-stdio-ply = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 semio-framework-3d = { path = "../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 semio-framework-value-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/✨️derive/📦️packages/🦀️rust", package = "semio-framework-value-derive" }
@@ -67,7 +71,7 @@ optional = true
 
 [dev-dependencies]
 base64 = "0.22.1"
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest", "artifact-app-testing"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["artifact-app-testing"], package = "semio-framework-plugin" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-async-macros = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
 # 🔮 Test-only glTF ORACLE (never a `[dependencies]` entry): the third-party `gltf` reader loads the

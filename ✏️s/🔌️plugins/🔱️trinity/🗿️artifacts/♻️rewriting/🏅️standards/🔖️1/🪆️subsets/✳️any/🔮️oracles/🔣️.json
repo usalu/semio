@@ -367,9 +367,9 @@
   "oracleHostPackages": [
     {
       "implementation": "rust",
-      "package": "semio-s-artifact-stdio-semio",
-      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
-      "rationale": "The Rewriting scenario subject reads and projects the explicitly declared full Semio graph child through its actual first-party typed codec."
+      "package": "semio-s-artifact-stdio-semio-graph",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🕸️graph/📦️packages/🦀️rust",
+      "rationale": "The Rewriting scenario subject reads and projects the explicitly declared full Semio graph child through the graph subset crate's actual first-party typed codec."
     },
     {
       "implementation": "rust",

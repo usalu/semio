@@ -62,7 +62,7 @@ impl FemPlaybackClock {
 }
 //#endregion 🔖️Clock
 
-impl store::ArtifactDsl for FemResultsWindowTransient {
+impl store::os_store::serialization::ArtifactDsl for FemResultsWindowTransient {
     const EXTENSION: &'static str = "femresultswindowtransient";
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -74,24 +74,24 @@ impl store::ArtifactDsl for FemResultsWindowTransient {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid FEM results-window transient envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid FEM results-window transient envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-impl store::ArtifactPack for FemResultsWindowTransient {
+impl store::os_store::serialization::ArtifactPack for FemResultsWindowTransient {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "FEM results-window transient pack envelope mismatch")));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -121,8 +121,8 @@ mod mutations;
 pub use mutations::*;
 
 #[expect(clippy::unnecessary_wraps, reason = "ArtifactEphemeralTransferPreparationFactory requires a fallible footprint callback")]
-fn clock_footprint(_: &FemResultsWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<FemResultsWindowTransientMutation>()))
+fn clock_footprint(_: &FemResultsWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(size_of::<FemResultsWindowTransientMutation>()))
 }
 
 fn clock_transfer(mutation: FemResultsWindowTransientMutation) -> FemResultsWindowTransient {

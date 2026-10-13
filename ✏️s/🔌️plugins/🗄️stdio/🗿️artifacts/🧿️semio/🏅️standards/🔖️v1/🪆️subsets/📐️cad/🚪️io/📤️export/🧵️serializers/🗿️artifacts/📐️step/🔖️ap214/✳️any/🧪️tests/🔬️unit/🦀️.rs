@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::schema::snapshot::CadEntityRecord;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::CadEntityRecord;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_cad() -> SemioCadSnapshot {
@@ -22,8 +22,8 @@ async fn real_text_round_trip_through_step_codec() {
     assert_eq!(step.header.file_schema.schemas, vec!["AUTOMOTIVE_DESIGN".to_string()]);
     assert_eq!(step.entities.len(), 7, "4 for LINE + 3 for CIRCLE; Text is dropped");
 
-    let text = store::ArtifactDsl::print_dsl(&step);
-    let reparsed = <StepSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real step text");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&step);
+    let reparsed = <StepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("reparse real step text");
     assert_eq!(reparsed, step, "step's own codec_retention_law must hold on our emitted graph");
 
     let line_count = reparsed.entities.iter().filter(|e| e.name == "LINE").count();

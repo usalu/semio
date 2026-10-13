@@ -1,5 +1,5 @@
 //! 💾️ Binary representation codec surface for `stdio.semio.drawing` (snapshot). The real
-//! encode/decode lives on `SemioDrawingSnapshot`'s `store::ArtifactPack` impl
+//! encode/decode lives on `SemioDrawingSnapshot`'s `store::os_store::serialization::ArtifactPack` impl
 //! (📸️snapshot/🦀️.rs) -- this module exposes the protocol source for tooling.
 
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
@@ -8,118 +8,15 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::drawing::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::{NativeF64, NativeF32};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
-/// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
-/// `store::ByteReader`, same helpers `stdio.semio.flow`'s/`stdio.semio.brep`'s upgraded
-/// `ArtifactPack` reuse) backing the real `ArtifactPack` below — replaces the old
-/// `serde_json::to_vec`-in-envelope shortcut.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
-    store::pack_rt::write_varint_u64(out, bytes.len() as u64);
-    out.extend_from_slice(bytes);
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
-    let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
-    Ok(reader.read_bytes(len).map_err(|e| e.to_string())?.to_vec())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_str_lp(out: &mut Vec<u8>, s: &str) {
-    write_bytes_lp(out, s.as_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_str_lp(reader: &mut store::ByteReader<'_>) -> Result<String, String> {
-    String::from_utf8(read_bytes_lp(reader)?).map_err(|e| e.to_string())
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_point2(out: &mut Vec<u8>, p: &SemioPoint2) {
-    out.extend_from_slice(&p.x.to_le_bytes());
-    out.extend_from_slice(&p.y.to_le_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_point2(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint2, String> {
-    Ok(SemioPoint2 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_point3(out: &mut Vec<u8>, p: &SemioPoint3) {
-    out.extend_from_slice(&p.x.to_le_bytes());
-    out.extend_from_slice(&p.y.to_le_bytes());
-    out.extend_from_slice(&p.z.to_le_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_point3(reader: &mut store::ByteReader<'_>) -> Result<SemioPoint3, String> {
-    Ok(SemioPoint3 { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_quaternion(out: &mut Vec<u8>, q: &SemioQuaternion) {
-    out.extend_from_slice(&q.x.to_le_bytes());
-    out.extend_from_slice(&q.y.to_le_bytes());
-    out.extend_from_slice(&q.z.to_le_bytes());
-    out.extend_from_slice(&q.w.to_le_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_quaternion(reader: &mut store::ByteReader<'_>) -> Result<SemioQuaternion, String> {
-    Ok(SemioQuaternion { x: reader.read_f64_le().map_err(|e| e.to_string())?, y: reader.read_f64_le().map_err(|e| e.to_string())?, z: reader.read_f64_le().map_err(|e| e.to_string())?, w: reader.read_f64_le().map_err(|e| e.to_string())? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_transform(out: &mut Vec<u8>, t: &SemioTransform) {
-    write_point3(out, &t.translation);
-    write_quaternion(out, &t.rotation);
-    write_point3(out, &t.scale);
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_transform(reader: &mut store::ByteReader<'_>) -> Result<SemioTransform, String> {
-    Ok(SemioTransform { translation: read_point3(reader)?, rotation: read_quaternion(reader)?, scale: read_point3(reader)? })
-}
-
-/// 🩹️ `store::ByteReader` has no native `f32` reader (only `f64_le`) — read 4 raw bytes instead.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_f32_le(reader: &mut store::ByteReader<'_>) -> Result<f32, String> {
-    let bytes = reader.read_bytes(4).map_err(|e| e.to_string())?;
-    let arr: [u8; 4] = bytes.try_into().map_err(|_| "f32 read: truncated".to_string())?;
-    Ok(f32::from_le_bytes(arr))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_rgba(out: &mut Vec<u8>, c: &SemioRgba) {
-    out.extend_from_slice(&c.r.to_le_bytes());
-    out.extend_from_slice(&c.g.to_le_bytes());
-    out.extend_from_slice(&c.b.to_le_bytes());
-    out.extend_from_slice(&c.a.to_le_bytes());
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_rgba(reader: &mut store::ByteReader<'_>) -> Result<SemioRgba, String> {
-    Ok(SemioRgba { r: read_f32_le(reader)?, g: read_f32_le(reader)?, b: read_f32_le(reader)?, a: read_f32_le(reader)? })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn write_bool(out: &mut Vec<u8>, b: bool) {
-    out.push(if b { 1 } else { 0 });
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn read_bool(reader: &mut store::ByteReader<'_>) -> Result<bool, String> {
-    Ok(reader.read_u8().map_err(|e| e.to_string())? != 0)
-}
+use semio_s_artifact_stdio_semio_base::io::binary::codec::{write_bytes_lp, read_bytes_lp, write_str_lp, read_str_lp, write_point2, read_point2, write_transform, read_transform, read_f32_le, write_rgba, read_rgba, write_bool, read_bool};
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn write_option<T>(out: &mut Vec<u8>, opt: &Option<T>, write: impl Fn(&mut Vec<u8>, &T)) {
@@ -363,54 +260,53 @@ pub(crate) fn decode_drawing_snapshot_binary(bytes: &[u8]) -> Result<SemioDrawin
     Ok(SemioDrawingSnapshot { schema, canvas, styles, layers })
 }
 
-impl store::ArtifactPack for SemioDrawingSnapshot {
+impl store::os_store::serialization::ArtifactPack for SemioDrawingSnapshot {
     /// 🪶️ Publishes the owned typed relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_drawing_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         decode_drawing_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
     }
 }
 }
-pub use snapshot_codec::*;
 
 #[allow(unused_imports)]
 mod native_snapshot_codec {
 use super::*;
 use super::*;
-use crate::standards::v1::subsets::drawing::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native::{NativeF64,NativeF32};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::{NativeF64, NativeF32};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::drawing::io::text::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::io::text::snapshot::*;
 /// 📦️ Encodes a [`SemioDrawingSnapshot`] as a semio pack envelope — the binary twin of the DSL
 /// text, produced by a SEPARATE codec, which is what makes the two committed encodings of one
 /// document able to contradict each other.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_drawing_pack(snapshot: &SemioDrawingSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
+    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
 }
 /// 📦️ Decodes a semio pack envelope into a [`SemioDrawingSnapshot`] — the inverse of
 /// [`encode_semio_drawing_pack`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_drawing_pack(bytes: &[u8]) -> Result<SemioDrawingSnapshot, String> {
-    <SemioDrawingSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+    <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
 }
 }
 pub use native_snapshot_codec::*;

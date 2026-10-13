@@ -1,6 +1,6 @@
 //! 🧹️ Public HTML cold retirement and late SQL refusal share literal neutral ownership.
 use super::*;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase}};
 std::thread_local!{
  static TRACK:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};
  static REFUSE:std::cell::Cell<bool>=const{std::cell::Cell::new(false)};

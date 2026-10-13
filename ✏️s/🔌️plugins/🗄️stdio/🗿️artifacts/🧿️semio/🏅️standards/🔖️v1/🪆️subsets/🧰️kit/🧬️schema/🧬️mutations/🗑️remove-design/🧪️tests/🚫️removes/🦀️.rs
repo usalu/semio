@@ -6,10 +6,10 @@
 //! That is why `↩️inverse/🦀️.rs` needs TWO steps: `add-design` only restores the empty
 //! shell, so an `edit-design` carrying the captured content has to follow it.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-design/🚫️removes/📸️snapshot/➡️after/🔣️.json");

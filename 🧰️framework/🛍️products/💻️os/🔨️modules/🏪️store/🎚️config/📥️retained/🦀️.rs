@@ -365,9 +365,9 @@ where
                 let current = self.current.take().expect("typed config current snapshot remains retained");
                 let expected_id = self.expected_id.take().expect("config identity remains retained");
                 let schema = self.schema.take().expect("config schema remains retained");
-                let mut envelope = crate::os_store::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
+                let mut envelope = crate::os_store::document_materialize::create_document_envelope_from_genesis::<P, M>(&schema, &expected_id, initial, None);
                 envelope.history_shape = crate::os_spr::HistoryShape::Config;
-                envelope.cursor = Some(crate::os_store::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
+                envelope.cursor = Some(crate::os_store::store_schema::ArtifactCursor::new(Vec::new(), Vec::new(), fold.checkpoint.take()));
                 envelope.transitions = self.normalized_transitions.take().expect("normalized config transitions remain retained");
                 *self.source_edits = Some(super::resident_backing::SourceIterator::new(std::mem::take(&mut history.edits)));
                 *self.runtime = Some(ArtifactStoreInitializationRuntime::new(&envelope.id, &envelope.schema, std::sync::Arc::new(current), self.initial_digest, crate::os_spr::ActorId(std::mem::take(&mut self.actor.0))));

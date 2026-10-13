@@ -16,7 +16,7 @@ impl Deserializer<WriterSnapshot> for PdfIntoWriter {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "PdfIntoWriter: expected a binary payload".to_string())));
         };
-        let pdf = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PdfIntoWriter: {error}"))))?;
+        let pdf = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("PdfIntoWriter: {error}"))))?;
         let text = pdf.pages.iter().map(|page| page.text.as_str()).collect::<Vec<_>>().join("\n");
         let snapshot = writer_snapshot_with_text(WRITER_DOCUMENT_SCHEMA, "pdf-import", "plaintext", "writer://pdf-import", &text);
         Ok(IoOutcome { value: snapshot, diagnostics: Vec::new() })

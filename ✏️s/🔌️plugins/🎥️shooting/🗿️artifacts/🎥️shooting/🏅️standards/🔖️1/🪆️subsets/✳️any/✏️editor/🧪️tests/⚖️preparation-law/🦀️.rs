@@ -14,14 +14,14 @@ const PREPARATION_TURN_BOUND: usize = 2_048;
 /// ⏲️ One-item turns the same edit may spend closing its preparation; measured 126 (document) and 111 (config).
 const CLOSE_TURN_BOUND: usize = 256;
 
-fn grant() -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 }
+fn grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+    store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 }
 }
 
 /// 📄️ A structural document edit reaches `Prepared` through the paged document factory and its inverse deletes the created shot again.
 #[test]
 fn document_lane_create_shot_reaches_prepared_and_closes_under_quoted_grants() {
-    let factory: Arc<dyn store::ArtifactStoreOneItemPreparationFactory<ShootingSnapshot, ShootingMutation>> = store::mutation_apply_preparation_factory::<ShootingSnapshot, ShootingMutation>();
+    let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<ShootingSnapshot, ShootingMutation>> = store::mutation_apply_preparation_factory::<ShootingSnapshot, ShootingMutation>();
     let shot = ShootingShot { id: "shot-1".into(), label: "Hero".into(), width: 1280, height: 720, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None };
     let mutation = ShootingMutation::CreateShot(CreateShot { shot: shot.clone(), index: None });
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, ShootingSnapshot::default(), mutation, grant());
@@ -33,7 +33,7 @@ fn document_lane_create_shot_reaches_prepared_and_closes_under_quoted_grants() {
 /// 🎚️ A config field-set reaches `Prepared` through the config factory and its inverse restores the displaced camera.
 #[test]
 fn config_lane_set_camera_reaches_prepared_and_closes_under_quoted_grants() {
-    let factory: Arc<dyn store::ArtifactStoreOneItemPreparationFactory<ShootingConfig, ShootingConfigMutation>> = store::snapshot_clone_preparation::config_apply_preparation_factory::<ShootingConfig, ShootingConfigMutation>();
+    let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<ShootingConfig, ShootingConfigMutation>> = store::snapshot_clone_preparation::config_apply_preparation_factory::<ShootingConfig, ShootingConfigMutation>();
     let base = ShootingConfig::default();
     let mut camera = base.camera.clone();
     camera.position = [4.0, 5.0, 6.0];

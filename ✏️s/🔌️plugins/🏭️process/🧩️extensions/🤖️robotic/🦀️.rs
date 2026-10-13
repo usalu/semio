@@ -150,7 +150,7 @@ const HOST_APP_ID: &str = "process3d-play";
 // bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request asking the SDK
 // owner to revert those two (plus `TopicContribution::new`) to sync directly, matching the sibling
 // reversion already applied to `ExtensionBundle::new`/`.extends`/`.depends_on` in that same impl block.
-fn bundle() -> ExtensionBundle {
+pub fn bundle() -> ExtensionBundle {
     let catalog = RoboticCatalog;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Process Robotic Machines", env!("CARGO_PKG_VERSION")).extends("process").depends_on("process", semio_framework::tree_pin!());
     let bundle = bundle.mode(semio_framework_plugin::ExecutionMode::Declarative);
@@ -166,7 +166,6 @@ fn bundle() -> ExtensionBundle {
     )
 }
 
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 //#endregion 🔖️Bundle
 
 //#region 🧪️Tests

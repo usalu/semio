@@ -1,0 +1,16 @@
+{
+  "target": "🧾️document/🦀️.rs",
+  "module": "document_materialize",
+  "anchor": "//#region 🔖️Materialize\n",
+  "doc": [
+    "//! 🧾️ Document envelope materialization: genesis-to-envelope construction and the materialized views the codecs and",
+    "//! the engine build documents from.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️Materialize"
+  ],
+  "items": [],
+  "movableTraits": []
+}

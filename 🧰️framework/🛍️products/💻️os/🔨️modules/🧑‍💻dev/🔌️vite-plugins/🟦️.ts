@@ -753,34 +753,6 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
       const jobs = new Map<string, { readonly controller: AbortController; readonly promise: Promise<void>; readonly listeners: Set<(line: string) => void>; owners: number }>();
       const profile: "dev" | "release" = /(?:^|\/)release(?:\/|$)/.test(options.moduleRoot.replaceAll("\\", "/")) ? "release" : "dev";
 
-      const resolveProject = (component: ActivationComponentSpec): string => {
-        const roots = [component.cratePath ? join(REPO_ROOT, component.cratePath) : "", component.sourceRoot, join(component.sourceRoot, "packages")].filter(Boolean);
-        for (const base of roots) {
-          if (!existsSync(base)) continue;
-          try {
-            for (const name of readdirSync(base)) {
-              if (!name.endsWith("project.json")) continue;
-              const parsed = JSON.parse(readFileSync(join(base, name), "utf8")) as { name?: string };
-              if (typeof parsed.name === "string" && parsed.name) return parsed.name;
-            }
-          } catch { /* continue */ }
-          try {
-            for (const child of readdirSync(base)) {
-              const nested = join(base, child);
-              if (!existsSync(nested)) continue;
-              try {
-                for (const name of readdirSync(nested)) {
-                  if (!name.endsWith("project.json")) continue;
-                  const parsed = JSON.parse(readFileSync(join(nested, name), "utf8")) as { name?: string };
-                  if (typeof parsed.name === "string" && parsed.name) return parsed.name;
-                }
-              } catch { continue; }
-            }
-          } catch { continue; }
-        }
-        throw new Error(`No nx project for plugin ${component.pluginId}`);
-      };
-
       const publishOne = async (pluginId: string): Promise<void> => {
         const component = options.components.find((row) => row.pluginId === pluginId);
         if (!component) throw new Error(`Unknown plugin ${pluginId}`);
@@ -807,30 +779,9 @@ export function semioActivationVitePlugin(options: { readonly receiptDirectory: 
           const controller = new AbortController();
           const listeners = new Set<(text: string) => void>();
           const promise = (async () => {
-            const project = resolveProject(component);
-            const target = `${project}:materialize-${profile}`;
-            console.log(`[lazy-activate] materialize ${pluginId} via ${target}`);
-            await new Promise<void>((resolvePromise, reject) => {
-              const child = spawn("bun", ["nx", "run", target, "--excludeTaskDependencies"], { cwd: REPO_ROOT, env: process.env, stdio: ["ignore", "pipe", "pipe"] });
-              const onAbort = (): void => { child.kill("SIGTERM"); };
-              controller.signal.addEventListener("abort", onAbort, { once: true });
-              let stderr = "";
-              const progress = (chunk: Buffer | string): void => {
-                for (const text of String(chunk).split("\n")) {
-                  const trimmed = text.trim();
-                  if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength));
-                }
-              };
-              child.stdout?.on("data", progress);
-              child.stderr?.on("data", (chunk: Buffer | string) => { stderr += String(chunk); progress(chunk); });
-              child.on("error", reject);
-              child.on("exit", (code) => {
-                controller.signal.removeEventListener("abort", onAbort);
-                if (controller.signal.aborted) return reject(new Error(`cancelled ${pluginId}`));
-                if (code !== 0) return reject(new Error(`materialize failed ${target}: ${stderr.slice(-500)}`));
-                resolvePromise();
-              });
-            });
+            console.log(`[lazy-activate] build ${pluginId} through the build driver`);
+            const { buildComponentClosureV1 } = await import("../../🔌️plugin/🏗️build/🧩️driver-stages/🟦️.ts");
+            await buildComponentClosureV1(REPO_ROOT, new Set([component.pluginId]), { signal: controller.signal, log: (text) => { const trimmed = text.trim(); if (trimmed) for (const listener of listeners) listener(trimmed.slice(0, STREAM_MUX_BOUNDS_V1.maxDetailLength)); } }).catch((error: unknown) => { throw controller.signal.aborted ? new Error(`cancelled ${pluginId}`) : error; });
             await publishOne(pluginId);
             const rebuiltAt = readActivationReceipt(options.receiptDirectory).plugins.find((row) => row.pluginId === pluginId)?.rebuiltAt ?? Date.now();
             send({ kind: "built", pluginId, rebuiltAt });

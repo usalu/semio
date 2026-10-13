@@ -1,5 +1,5 @@
 /** 🏗️ Canonical 🚪️source-admission source service. */
-import { inScope, normalizeRelative } from "../🛣️path/🟦️.ts";
+import { inScope, normalizeRelative, utf8Compare } from "../🛣️path/🟦️.ts";
 
 export type TaxonomyNodeKind = "directory" | "file" | "symlink";
 
@@ -58,7 +58,7 @@ export interface TaxonomySourceAdmission {
 
 export const SOURCE_ADMISSION_ORIGINS: readonly TaxonomySourceOrigin[] = ["tracked", "nonignored-untracked", "ignored-generator", "explicit-ticket"];
 
-export const sourceAdmissionByteCompare = (left: string, right: string): number => Buffer.compare(Buffer.from(left), Buffer.from(right));
+export const sourceAdmissionByteCompare = utf8Compare;
 
 export function sourceAdmissionSafePath(path: string): boolean {
   return path.length > 0 && !path.startsWith("/") && !/^[A-Za-z]:/u.test(path) && !path.includes("\\") && !/[\u0000-\u001f\u007f]/u.test(path) && Buffer.from(path).toString("utf8") === path && path.split("/").every((part) => part.length > 0 && part !== "." && part !== "..");
@@ -136,7 +136,7 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
     generatorPolicies.set(key, group);
   }
   for (const group of generatorPolicies.values()) if (new Set(group.map((output) => output.inclusion)).size > 1) diagnose("contradictory-generator-output", group[0].rootPath, "One generator contract/root identity declares conflicting inclusion policies");
-  const groups = new Map<string, TaxonomySourceCandidateObservation[]>();
+  const groups = new Map<string, TaxonomySourceCandidateObservation[]>(), normalizedGeneratorRoots = input.generatorOutputRoots.map((root) => [root, root.rootPath.normalize("NFC")] as const);
   for (const row of input.candidates) {
     if (!sourceAdmissionSafePath(row.sourcePath)) { diagnose("invalid-source-path", row.sourcePath, "Candidate sourcePath is not a safe repository-relative slash path"); continue; }
     if (sourceAdmissionContainingRepository(row.sourcePath, repositoryFences, false) !== null) diagnose("repository-boundary-descendant", row.sourcePath, "Candidate is below an index-owned repository boundary");
@@ -149,7 +149,7 @@ export function projectTaxonomySourceAdmission(value: unknown): TaxonomySourceAd
     const first = rows[0], normalized = sourcePath.normalize("NFC");
     const physical = new Set(rows.map((row) => JSON.stringify([row.observedKind, row.worktreeMode, row.explicitDirectory])));
     const indexEntries = [...new Map(rows.flatMap((row) => row.indexEntries).map((entry) => [JSON.stringify([entry.stage, entry.mode, entry.objectId]), entry])).values()].sort((left, right) => left.stage - right.stage || sourceAdmissionByteCompare(left.mode, right.mode) || sourceAdmissionByteCompare(left.objectId, right.objectId));
-    const generatorOutputs = [...new Map(input.generatorOutputRoots.filter((root) => normalized === root.rootPath.normalize("NFC") || normalized.startsWith(root.rootPath.normalize("NFC") + "/")).map((root) => [JSON.stringify([root.contractId, root.rootPath, root.inclusion]), root])).values()].sort((left, right) => sourceAdmissionByteCompare(left.contractId, right.contractId) || sourceAdmissionByteCompare(left.rootPath, right.rootPath) || sourceAdmissionByteCompare(left.inclusion, right.inclusion));
+    const generatorOutputs = [...new Map(normalizedGeneratorRoots.filter(([, rootPath]) => normalized === rootPath || normalized.startsWith(rootPath + "/")).map(([root]) => root).map((root) => [JSON.stringify([root.contractId, root.rootPath, root.inclusion]), root])).values()].sort((left, right) => sourceAdmissionByteCompare(left.contractId, right.contractId) || sourceAdmissionByteCompare(left.rootPath, right.rootPath) || sourceAdmissionByteCompare(left.inclusion, right.inclusion));
     const supplied = new Set(rows.flatMap((row) => row.origins)), hasIgnored = generatorOutputs.some((root) => root.inclusion === "ignored");
     const opaque = sourceAdmissionOpaque(sourcePath, input.opaquePrefixes), unsafe = rows.some((row) => row.unsafeAncestor);
     const stageZero = indexEntries.some((entry) => entry.stage === 0), conflicted = indexEntries.some((entry) => entry.stage !== 0);
@@ -203,7 +203,7 @@ export function taxonomyScopedGitPathspec(inputScope: string | null | undefined,
   const intersects = (exclusion: string): boolean => conservativePrefix === "." || exclusion === conservativePrefix || exclusion.startsWith(`${conservativePrefix}/`) || conservativePrefix.startsWith(`${exclusion}/`);
   const exclusionPathspecs = [...new Set(opaqueExclusions.map(normalizeRelative))]
     .filter(intersects)
-    .sort((left, right) => Buffer.from(left).compare(Buffer.from(right)))
+    .sort(utf8Compare)
     .map((path) => `:(exclude,top,literal)${path}`);
   return {
     normalizedScope,

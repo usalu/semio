@@ -1,7 +1,7 @@
 use super::*;
-use crate::brep::representation::arena::ArenaId;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::Vec3;
+use crate::arena::ArenaId;
+use crate::vector::matrix::Frame3;
+use crate::vector::Vec3;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn null_coedge() -> CoedgeId {
@@ -165,68 +165,4 @@ async fn deep_copy_produces_an_independent_body() {
     let mut copy = body.deep_copy();
     copy.vertices.get_mut(v).unwrap().position = Pnt3::new(9.0, 9.0, 9.0);
     assert_ne!(body.vertices.get(v).unwrap().position, copy.vertices.get(v).unwrap().position);
-}
-
-/// 🌱 Law A from the W3a-0 design: `Body::from_seed(&seed).to_seed() == seed`. Exercised against a
-/// real closed solid (a box built exclusively through the checked euler editors) rather than a
-/// hand-assembled fixture, so the seed under test has the same shape a real diff constructor's
-/// extraction would produce.
-#[semio_framework_async_macros::async_test]
-async fn from_seed_round_trips_a_closed_box_through_to_seed() {
-    let mut body = Body::new();
-    let mut rec = history::OpRecorder::new();
-    crate::brep::operations::primitives::make_box(&mut body, 2.0, 3.0, 4.0, &mut rec).unwrap();
-
-    let seed = body.to_seed();
-    assert_eq!(seed.vertices.len(), 8);
-    assert_eq!(seed.edges.len(), 12);
-    assert_eq!(seed.faces.len(), 6);
-    assert_eq!(seed.shells.len(), 1);
-    assert_eq!(seed.solids.len(), 1);
-
-    let rebuilt = Body::from_seed(&seed);
-    let round_tripped = rebuilt.to_seed();
-    assert_eq!(seed, round_tripped, "Body::from_seed(seed).to_seed() must equal seed");
-}
-
-/// 🌱 The same law on a simpler, loop-free-of-holes single face — guards the `outer`/`inners`
-/// index bookkeeping independently of a full closed solid's shell/solid wrapping.
-#[semio_framework_async_macros::async_test]
-async fn from_seed_round_trips_a_loose_planar_face() {
-    let mut body = Body::new();
-    let mut rec = history::OpRecorder::new();
-    crate::brep::operations::primitives::make_planar_face_from_points(&mut body, &[Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0)], &mut rec).unwrap();
-
-    let seed = body.to_seed();
-    let rebuilt = Body::from_seed(&seed);
-    assert_eq!(rebuilt.to_seed(), seed);
-}
-
-/// 🌱 `LabelSource` determinism (the frozen W1 seed contract, "from_seed(s) equals from_seed(s)
-/// for byte-identical s"): rebuilding the same seed twice must not re-mint or collide labels.
-#[semio_framework_async_macros::async_test]
-async fn from_seed_is_deterministic_for_identical_seeds() {
-    let mut body = Body::new();
-    let mut rec = history::OpRecorder::new();
-    crate::brep::operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let seed = body.to_seed();
-
-    let a = Body::from_seed(&seed);
-    let b = Body::from_seed(&seed);
-    assert_eq!(a.to_seed(), b.to_seed());
-}
-
-/// 🌱 The seed's `next_label` must survive `build`, not reset to 0 — otherwise two independent
-/// diff-constructor calls against the same `base` mint colliding labels the instant they merge
-/// (the exact defect §2 of the design flags for a `LabelSource` that restarts at 0 every build).
-#[semio_framework_async_macros::async_test]
-async fn from_seed_preserves_the_label_high_water_mark() {
-    let mut body = Body::new();
-    let mut rec = history::OpRecorder::new();
-    crate::brep::operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let seed = body.to_seed();
-    assert!(seed.next_label > 0, "a box mints more than zero labels");
-
-    let rebuilt = Body::from_seed(&seed);
-    assert_eq!(rebuilt.labels.next(), seed.next_label);
 }

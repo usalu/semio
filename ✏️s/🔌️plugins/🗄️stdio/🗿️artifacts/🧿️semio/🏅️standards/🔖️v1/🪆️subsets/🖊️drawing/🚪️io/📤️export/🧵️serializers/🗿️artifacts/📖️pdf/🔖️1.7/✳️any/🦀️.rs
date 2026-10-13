@@ -11,12 +11,12 @@
 //!
 //! @see https://opensource.adobe.com/dc-acrobat-sdk-docs/pdfstandards/PDF32000_2008.pdf
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioRgba;
-use crate::standards::v1::subsets::drawing::schema::geometry::{arc_to_cubics, semio_transform_affine};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+use semio_s_artifact_stdio_semio_drawing::schema::geometry::{arc_to_cubics, semio_transform_affine};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfExtGState, PdfFont, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfTextString};
-use semio_s_artifact_stdio_pdf::PdfSnapshot;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.7"), subset: SubsetId::ANY };

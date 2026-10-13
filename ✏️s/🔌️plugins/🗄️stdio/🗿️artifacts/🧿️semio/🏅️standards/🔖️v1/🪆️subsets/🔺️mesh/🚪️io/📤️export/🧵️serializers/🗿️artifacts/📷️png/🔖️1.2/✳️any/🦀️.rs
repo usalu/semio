@@ -12,10 +12,10 @@
 //! view; `Points` primitives, textures, normals and UVs are not drawn; intersecting triangles are
 //! ordered by centroid depth, not split.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::SemioDrawingToPng;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing_export::serializers::artifacts::png::v1_2::any::SemioDrawingToPng;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::PngSnapshot;
 use std::collections::BTreeMap;

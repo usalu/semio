@@ -49,7 +49,7 @@ use crate::standards::v6_0::subsets::document::schema::snapshot::*;
 use crate::STDIO_TIFF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::ArtifactDsl for TiffSnapshot {
+impl store::os_store::serialization::ArtifactDsl for TiffSnapshot {
  const EXTENSION:&'static str="tiff";
  fn envelope_id()->&'static str{"stdio.tiff"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{

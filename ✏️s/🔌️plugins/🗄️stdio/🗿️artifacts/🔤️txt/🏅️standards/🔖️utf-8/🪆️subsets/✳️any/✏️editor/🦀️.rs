@@ -192,7 +192,7 @@ fn txt_retained_contract() -> ToolExecutionContract {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn txt_example_snapshot(example_id: &str) -> TxtSnapshot {
     if example_id == crate::examples::demo::ID {
-        <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         TxtSnapshot::default()
     }
@@ -426,7 +426,7 @@ impl ArtifactEditor for TxtEditor {
     /// 📤️ The artifact lane's one-item publication authority. The kit verb's route declares the
     /// `Artifact` lane, and without this authority every such route fails closed with
     /// `interactive-job.publication-authority-missing`.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

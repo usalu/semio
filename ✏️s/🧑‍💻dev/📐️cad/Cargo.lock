@@ -2324,7 +2324,6 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
 ]
 
 [[package]]

@@ -10,7 +10,7 @@ use serde_json::Value;
 fn ensure_stdio_semio_registered_for_tests() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_s_artifact_stdio_semio::register();
+        semio_s_artifact_stdio_semio::register(&[semio_s_artifact_stdio_semio_drawing_import::CONVERSION, semio_s_artifact_stdio_semio_drawing_export::CONVERSION]);
     });
 }
 

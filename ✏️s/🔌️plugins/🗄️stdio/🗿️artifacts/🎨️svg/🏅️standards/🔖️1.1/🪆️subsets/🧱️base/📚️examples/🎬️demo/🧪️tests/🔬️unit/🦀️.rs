@@ -13,7 +13,7 @@ async fn inference_determinism_law() {
     use crate::standards::v1_1::subsets::base::schema::inferences::SvgInference;
     use crate::SvgSnapshot;
     use protocol::Inference;
-    let snapshot = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+    let snapshot = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(SvgInference::infer(&snapshot).expect("valid materialized inference fixture"), SvgInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 

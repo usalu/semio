@@ -300,11 +300,11 @@ pub fn empty_board_snapshot() -> Value {
 
 /// 📂️ The artifact's load path for a whole-document import: an `Effect::LoadDocument` (outside history) carrying the
 /// `document` pack and a fresh, edit-free op-log. A whole-document replacement is never a mutation and is never stated as
-/// the difference of two boards. The spr is built from bytes (`store::empty_document_spr`), never from a live envelope,
+/// the difference of two boards. The spr is built from bytes (`store::os_store::text_format::empty_document_spr`), never from a live envelope,
 /// whose bounded retirement authority would trap the guest when dropped.
 pub fn puzzle2d_load_document_effect(document: &crate::Puzzle2dSnapshot) -> Effect {
-    let pack = <crate::Puzzle2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("puzzle2d", crate::PUZZLE_2D_SCHEMA));
+    let pack = <crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("puzzle2d", crate::PUZZLE_2D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -2056,7 +2056,7 @@ const PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES: usize = 65_536;
 
 struct Puzzle2dConfigStorePreparation {
     owners: store::OneItemOwners<Puzzle2dConfig, Puzzle2dConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
     phase: u8,
     cancelled: bool,
@@ -2084,18 +2084,18 @@ fn puzzle2d_config_store_mutation_bytes(mutation: &Puzzle2dConfigMutation) -> Op
     (encoded.len() <= PUZZLE2D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded.len())
 }
 
-impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Config preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
@@ -2111,8 +2111,8 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = completed_bytes;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
                 let Some(authority) = self.owners.authority.as_ref() else {
@@ -2127,23 +2127,23 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
                     }
                 };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
                 *self.owners.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle2dConfig, Puzzle2dConfigMutation>> {
         self.owners.prepared.take()
     }
 
@@ -2155,7 +2155,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -2180,7 +2180,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutati
     }
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfigMutation> for Puzzle2dConfigStorePreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Puzzle2dConfigMutation>>>,
@@ -2189,24 +2189,24 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Puzzle2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Puzzle2dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Puzzle2d Config preparation rejected its lane".into());
         }
         let retained_bytes = puzzle2d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle2d Config preparation rejected its exact mutation".to_string())?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
     }
 
-    fn begin_demand(&self, _mutation: &Puzzle2dConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Puzzle2dConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle2dConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dConfig, Puzzle2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle2dConfig, Puzzle2dConfigMutation, Puzzle2dConfigMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Config preparation rejected its original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) {
@@ -2217,7 +2217,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dConfig, Puzzle2dConfi
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle2dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle2dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -2231,13 +2231,13 @@ struct Puzzle2dArtifactStorePreparationFactory;
 
 struct Puzzle2dArtifactStorePreparation {
     owners: store::OneItemOwners<Puzzle2dPlaySnapshot, Puzzle2dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
     phase: u8,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Puzzle2dMutation>>>,
@@ -2248,23 +2248,23 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2
 
     /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): `delete-node`
     /// re-creates the node and re-connects every edge on its handles, a selection transform restores each target.
-    fn preflight(&self, mutation: &Puzzle2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Puzzle2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Puzzle2d Artifact preparation rejected its lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle2dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle2dPlaySnapshot, _>(mutation, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &Puzzle2dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Puzzle2dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle2dArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle2dPlaySnapshot, Puzzle2dMutation, Puzzle2dMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle2d Artifact preparation rejected its original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) {
@@ -2275,22 +2275,22 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle2dPlaySnapshot, Puzzle2
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutation> for Puzzle2dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle2d Artifact preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
@@ -2302,8 +2302,8 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = 1;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
                 let Some(authority) = self.owners.authority.as_ref() else {
@@ -2318,23 +2318,23 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
                     }
                 };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
                 *self.owners.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle2dPlaySnapshot, Puzzle2dMutation>> {
         self.owners.prepared.take()
     }
 
@@ -2346,7 +2346,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle2dPlaySnapshot, Puzzle2dMutati
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -4451,11 +4451,11 @@ impl ArtifactEditor for Puzzle2dPlayApp {
 
 
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Puzzle2dConfigStorePreparationFactory))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Puzzle2dArtifactStorePreparationFactory))
     }
 

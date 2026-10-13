@@ -1836,12 +1836,12 @@ fn generation3d_artifact_mutation_retained_bytes(mutation: &Generation3dMutation
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation3d-artifact-mutation-encode-failed".to_string())
 }
 
-fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_generation3d_artifact_mutation(mutation: &Generation3dMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = generation3d_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("generation3d-artifact-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation3dDiff` owns the
@@ -1875,25 +1875,25 @@ struct Generation3dArtifactStorePreparationFactory;
 
 struct Generation3dArtifactStorePreparation {
     owners: store::OneItemOwners<Generation3dSnapshot, Generation3dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation3dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Generation3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Generation3dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("generation3d-artifact-lane".into());
         }
         admit_generation3d_artifact_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &Generation3dMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        if lane != store::HistoryLane::Document {
+    fn begin_demand(&self, _mutation: &Generation3dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err(generation3d_preparation_refusal("generation3d-artifact-lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation3dArtifactStorePreparation>(), depth: 1 })
@@ -1901,9 +1901,9 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generat
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation3dSnapshot, Generation3dMutation, Generation3dMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) {
             Ok(demand) => demand,
             Err(error) => return Err((error, request)),
@@ -1916,28 +1916,28 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation3dSnapshot, Generat
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > GENERATION3D_ARTIFACT_STORE_MAXIMUM_BYTES
         {
             return Err((generation3d_preparation_refusal("generation3d-artifact-request-refused"), request));
         }
-        Ok((Box::new(Generation3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
+        Ok((Box::new(Generation3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMutation> for Generation3dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(generation3d_preparation_refusal("generation3d-artifact-original-refusal-retained"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation3d_preparation_refusal("generation3d-artifact-mutation-owner-missing"))?;
@@ -1952,20 +1952,20 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation3dSnapshot, Generation3dMutation>> {
         self.owners.prepared.take()
     }
 
@@ -1977,7 +1977,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation3dSnapshot, Generation3dMu
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -2040,7 +2040,7 @@ impl ArtifactEditor for Generation3dPlayApp {
 
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::generation3d_envelope_decode_owner_bundle())
     }
 
@@ -2058,11 +2058,11 @@ impl ArtifactEditor for Generation3dPlayApp {
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::host::generation3d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
@@ -2124,11 +2124,11 @@ impl ArtifactEditor for Generation3dPlayApp {
     const DIALECT: Dialect = crate::GENERATION3D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_3D_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Generation3dArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Generation3dConfig, Generation3dConfigMutation>())
     }
 
@@ -2231,7 +2231,7 @@ impl ArtifactEditor for Generation3dPlayApp {
             return Err(MediaError::NotImplemented);
         }
         let media_type = Self::io().map_or(MediaType { class: MediaClass::Data, form: MediaForm::Value }, |io| io.artifact_media_type);
-        let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
         Ok(semio_framework_plugin::Media { media_type, payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
     }
 
@@ -3625,10 +3625,10 @@ mod knife_selection_tests;
 mod work_capacity;
 
 /// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and
-/// never a mutation row. `store::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
+/// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
 /// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_generation3d_document_effect(document: &Generation3dSnapshot) -> Effect {
-    let pack = <Generation3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("generation3d", GENERATION_3D_SCHEMA));
+    let pack = <Generation3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("generation3d", GENERATION_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }

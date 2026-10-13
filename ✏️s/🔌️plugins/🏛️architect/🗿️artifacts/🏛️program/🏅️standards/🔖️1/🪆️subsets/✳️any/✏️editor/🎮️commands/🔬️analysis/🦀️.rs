@@ -5,7 +5,7 @@ pub mod run_validation {
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::validate_plugin;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
     use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -26,9 +26,9 @@ pub mod run_analysis {
     use crate::editor::architect::catalog::{analysis_kind_from_str, analysis_record_from};
     use crate::editor::architect::config::{snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::schema::mutations as leaves;
+    use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::run_analysis;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
     use semio_framework_value_derive::{FromValue, ToValue};
 
@@ -57,9 +57,9 @@ pub mod run_report {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::editor::architect::modes::edit::windows::report::config;
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::schema::mutations as leaves;
+    use crate::standards::v1::subsets::any::schema::mutations as leaves;
     use crate::standards::v1::subsets::any::schema::inferences::build_report;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin, ViewModel};
     use semio_framework_value_derive::{FromValue, ToValue};
 

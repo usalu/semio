@@ -40,7 +40,8 @@ mod subject {
     use super::mutable_input;
     use semio_s_plugin_stdio_document_test_oracle::project_pdf;
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::encode_pdf;
 
     pub fn replace_metadata(ctx: &Context) -> Result<Outcome, String> {
         let mut snapshot = decode_pdf(&mutable_input(ctx)?).map_err(|error| format!("decode_pdf failed: {:?}", error))?;

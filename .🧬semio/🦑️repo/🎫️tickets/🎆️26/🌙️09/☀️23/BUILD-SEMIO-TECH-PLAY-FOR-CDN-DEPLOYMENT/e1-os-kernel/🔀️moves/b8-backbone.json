@@ -1,0 +1,16 @@
+{
+  "target": "🔗️backbone/🦀️.rs",
+  "module": "backbone",
+  "anchor": "//#region 🔖️Backbone\n//#region 🔖️Backbone\n",
+  "doc": [
+    "//! 🔗️ Hot-swappable backbones: the backbone message protocol, memory, channel and port backbones and their registry.",
+    "//! The engine attaches them; their retirement lives beside them in `♻️retirement`.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️Backbone"
+  ],
+  "items": [],
+  "movableTraits": []
+}

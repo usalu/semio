@@ -56,7 +56,7 @@ impl semio_framework_value::FromValue for DagSnapshot {
 impl DagSnapshot {
     /// 🪆️ Enforces the document marker and exact owned-child coordinates.
     pub fn validate(&self) -> Result<(), String> {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if self.schema != "dag.dag" {
             return Err("invalid Dag document marker".into());
         }

@@ -58,7 +58,7 @@ function declaration(name: string): ts.Statement {
   return found[0]!;
 }
 
-const names = ["LEXICAL_OPAQUE_ROOTS", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "assertLexicalInputOutsideOpaque", "isExcluded", "lstatOrNull", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "referenceCoordinateRoots"];
+const names = ["LEXICAL_OPAQUE_ROOTS", "sourceRelative", "normalizeRelative", "assertNoFollowAncestors", "noFollowAncestors", "assertLexicalInputOutsideOpaque", "lexicalInputOutsideOpaque", "createLexicalInputSession", "isExcluded", "lstatOrNull", "utf8Compare", "generatorPathCompare", "report", "ancestorReferenceCoordinateRoot", "referenceCoordinateRoots"];
 const extracted = names.map((name) => declaration(name).getText(syntax).replace(/^export /u, "")).join("\n");
 const compiled = compilers.map((compiler) => ({ name: compiler.name, code: compiler.compile(extracted) }));
 
@@ -169,7 +169,7 @@ test("actual plan and apply callers forward progress without changing the marker
   const resolver = declaration("referenceCoordinateRoots") as ts.FunctionDeclaration;
   expect(resolver.parameters.map((node) => node.name.getText(syntax))).toEqual(["repoRoot", "paths", "taxonomy", "cancelFile", "observe", "progress", "operation"]);
   expect(resolver.parameters[6]?.initializer?.getText(syntax).replaceAll(/["']/gu, "")).toBe("plan");
-  for (const [caller, callback, operation] of [["incomingReferenceSnapshot", "options.progress", "plan"], ["capturePreflightReferenceBasis", "progress", "apply"], ["lexicalTargetIncomingReferences", "progress", "apply"]]) {
+  for (const [caller, callback, operation] of [["incomingReferenceSnapshot", "options.progress", "plan", "createLexicalInputSession", "lexicalInputOutsideOpaque", "noFollowAncestors"], ["capturePreflightReferenceBasis", "progress", "apply"], ["lexicalTargetIncomingReferences", "progress", "apply"]]) {
     const sites = calls(caller!, "referenceCoordinateRoots");
     expect(sites).toHaveLength(1);
     expect(sites[0]!.arguments[5]?.getText(syntax)).toBe(callback);

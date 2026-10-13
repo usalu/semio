@@ -1,11 +1,11 @@
 //! 🔀 Exact imprint→classify→select→stitch boolean pipeline for solids bounded by planes,
-//! cylinders, cones, spheres and tori (and NURBS via [`crate::brep::operations::intersect`]'s marching SSI): face-pair
+//! cylinders, cones, spheres and tori (and NURBS via [`semio_framework_3d_brep_queries::intersect`]'s marching SSI): face-pair
 //! candidates via AABB overlap → [`intersect_surface_surface`] (W2-A) → the SSI curve's domain
 //! clipped to both faces' trims → an imprint edge shared by both operands (so stitching needs no
-//! fuzzy vertex welding, only shared-edge adjacency) → [`crate::brep::operations::euler::split_face_by_chain`]/
-//! [`crate::brep::operations::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
-//! against the OTHER solid via [`crate::brep::queries::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
-//! shell(s)/solid(s) → [`crate::brep::queries::validation::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
+//! fuzzy vertex welding, only shared-edge adjacency) → [`crate::euler::split_face_by_chain`]/
+//! [`crate::euler::split_face_by_interior_curve`] imprint each side → every resulting piece classified
+//! against the OTHER solid via [`semio_framework_3d_brep_queries::classification::point_in_solid`] → selected per [`BooleanOp`] → stitched into
+//! shell(s)/solid(s) → [`semio_framework_3d_brep_queries::validation::validate_body`]. No tessellate→triangle-soup rebuild on this path — the
 //! old mesh pipeline survives only as the explicit opt-in [`boolean_solid_mesh_preview`]. A
 //! trivial disjoint/contained fast path and a box-specific exact-analytic fast path (both still
 //! genuinely exact, not mesh-derived) run before the general engine when they apply.
@@ -42,30 +42,30 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::brep::operations::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex};
-use crate::brep::operations::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
-use crate::brep::operations::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
-use crate::brep::operations::staged::{drive, drive_solid, StageOutput};
-use crate::brep::operations::transform::{copy_solid, transform_solid};
-use crate::brep::representation::vector::matrix::Affine3;
-use crate::brep::engine::{MeshTransfer, PointClassification};
-use crate::brep::queries::bounding_volume::face_aabb;
-use crate::brep::queries::classification::{point_in_face_uv, point_in_face_uv_closure};
-use crate::brep::queries::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
-use crate::brep::queries::tessellation::tessellate_solid;
-use crate::brep::queries::validation::BodyValidationJob;
+use crate::euler::{add_shell, add_solid, make_edge, make_vertex, splice_boundary_vertex};
+use semio_framework_3d_brep_queries::intersect::{intersect_curve_surface, intersect_surface_surface, IntCurve};
+use crate::primitives::{make_box, make_convex_hull, solid_from_triangle_soup};
+use crate::staged::{drive, drive_solid, StageOutput};
+use crate::transform::{copy_solid, transform_solid};
+use semio_framework_3d_brep_representation::vector::matrix::Affine3;
+use semio_framework_3d_brep_representation::contract::{MeshTransfer, PointClassification};
+use semio_framework_3d_brep_queries::bounding_volume::face_aabb;
+use semio_framework_3d_brep_queries::classification::{point_in_face_uv, point_in_face_uv_closure};
+use semio_framework_3d_brep_queries::mass_properties::{closest_point_on_solid, shell_signed_volume, solid_bounding_box, solid_volume, AxisAlignedBox};
+use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_queries::validation::BodyValidationJob;
 #[cfg(test)]
-use crate::brep::queries::validation::validate_body;
-use crate::brep::representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
-use crate::brep::representation::curve::curve_ops::closest_parameter;
-use crate::brep::representation::curve::Curve2;
-use crate::brep::representation::error::{BooleanError, KernelError, ValidationIssue};
-use crate::brep::representation::surface::surface_ops::closest_uv;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_representation::curve::Curve2;
+use semio_framework_3d_brep_representation::error::{BooleanError, KernelError, ValidationIssue};
+use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Api
 
@@ -81,7 +81,7 @@ pub enum BooleanOp {
 /// box-specific exact-analytic shortcut when both operands genuinely are axis boxes, then the
 /// general exact imprint→classify→select→stitch engine — never the mesh path (see
 /// [`boolean_solid_mesh_preview`] for that, behind explicit opt-in). `rec` accumulates the whole
-/// operation's [`crate::brep::representation::topology::history::OpDelta`].
+/// operation's [`semio_framework_3d_brep_representation::topology::history::OpDelta`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn boolean_solid(body: &mut Body, a: SolidId, b: SolidId, op: BooleanOp, tol: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
     match boolean_job(body, a, b, op, tol, rec)? {
@@ -322,7 +322,7 @@ struct Pending {
 fn imprint_face_pair(
     body: &mut Body,
     (fa, fb): (FaceId, FaceId),
-    (sa, bb_a): (&Surface, &crate::brep::engine::Aabb),
+    (sa, bb_a): (&Surface, &semio_framework_3d_brep_representation::contract::Aabb),
     tol: f64,
     weld: &mut Vec<(Pnt3, VertexId)>,
     (pending_a, pending_b): (&mut HashMap<FaceId, Vec<Pending>>, &mut HashMap<FaceId, Vec<Pending>>),
@@ -526,7 +526,7 @@ pub enum BooleanAdmission {
 /// ⏱️ The general exact imprint→classify→select→stitch→validate pipeline split into budgetable
 /// units, so a host can run it inside an interactive step ceiling across many turns, report
 /// progress, and cancel it — the boolean twin of
-/// [`crate::brep::queries::tessellation::TessellationJob`].
+/// [`semio_framework_3d_brep_queries::tessellation::TessellationJob`].
 ///
 /// One unit is one face PAIR (imprint), one face (apply/classify) or one
 /// [`BodyValidationJob`] unit (validate). Measured on `🍩️sphere-cut-with-torus` in a native debug
@@ -560,7 +560,7 @@ pub struct BooleanJob {
     faces_b: Vec<FaceId>,
     /// 🔗 Per-face-of-A support cache: the surface and AABB the whole `fb` row is tested against,
     /// read once per row instead of once per pair.
-    row: Option<(Surface, crate::brep::engine::Aabb)>,
+    row: Option<(Surface, semio_framework_3d_brep_representation::contract::Aabb)>,
     weld: Vec<(Pnt3, VertexId)>,
     pending_a: HashMap<FaceId, Vec<Pending>>,
     pending_b: HashMap<FaceId, Vec<Pending>>,
@@ -979,7 +979,7 @@ fn pre_existing_entity_strings(body: &Body, solids: &HashSet<SolidId>) -> HashSe
 
 /// 🔀 Clips `ic`'s shared parameter domain to the sub-ranges where BOTH `pcurve_a` (on `face_a`)
 /// and `pcurve_b` (on `face_b`) land inside their own face's trim, sampling at a fixed resolution
-/// (matching [`crate::brep::operations::intersect::surface_surface::general_marching`]'s own documented-simplification sampling style).
+/// (matching [`semio_framework_3d_brep_queries::intersect::surface_surface::general_marching`]'s own documented-simplification sampling style).
 /// A periodic curve whose valid runs cover (within 0.1% of the period) the WHOLE domain is
 /// returned as ONE fully-closed range (`closed = true`) — this covers both "never touches either
 /// boundary" and "touches a seam at exactly one physical point," which reads as a narrow gap
@@ -1060,7 +1060,7 @@ fn refine_boundary(valid: &impl Fn(f64) -> bool, mut outside: f64, mut inside: f
     inside
 }
 
-/// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`crate::brep::representation::curve::Curve3::Line`] (e.g. plane/plane,
+/// 🔀 [`IntCurve::domain`] is infinite for an unbounded [`semio_framework_3d_brep_representation::curve::Curve3::Line`] (e.g. plane/plane,
 /// coincident-cylinder-axis lines); windows it to the parameter run where the line passes through
 /// the two faces' AABB INTERSECTION (a slab clip per axis, each slab widened by a small margin), so
 /// [`clip_intcurve_to_faces`]'s fixed 64-cell sampling spends its cells where an imprint can exist
@@ -1073,14 +1073,14 @@ fn refine_boundary(valid: &impl Fn(f64) -> bool, mut outside: f64, mut inside: f
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: FaceId) -> (f64, f64) {
     let (lo, hi) = (ic.domain.min, ic.domain.max);
-    let is_line = matches!(ic.curve3, crate::brep::representation::curve::Curve3::Line { .. });
+    let is_line = matches!(ic.curve3, semio_framework_3d_brep_representation::curve::Curve3::Line { .. });
     if lo.is_finite() && hi.is_finite() && !is_line {
         return (lo, hi);
     }
     let Ok((ba, bb)) = face_aabb(body, face_a).and_then(|ba| face_aabb(body, face_b).map(|bb| (ba, bb))) else {
         return (if lo.is_finite() { lo } else { -100.0 }, if hi.is_finite() { hi } else { 100.0 });
     };
-    if let crate::brep::representation::curve::Curve3::Line { origin, dir } = &ic.curve3 {
+    if let semio_framework_3d_brep_representation::curve::Curve3::Line { origin, dir } = &ic.curve3 {
         let extent = (0..3).map(|axis| (ba.max[axis] - ba.min[axis]).max(bb.max[axis] - bb.min[axis])).fold(0.0f64, f64::max).max(1e-9);
         let margin = extent * 1e-3;
         let (mut t_lo, mut t_hi) = (f64::NEG_INFINITY, f64::INFINITY);
@@ -1113,7 +1113,7 @@ fn intcurve_finite_bracket(body: &Body, ic: &IntCurve, face_a: FaceId, face_b: F
 /// genuine contact circle/ellipse from a near-zero-radius numerical artifact of a tolerant
 /// overlap test (see the near-tangent-spheres skip at this function's call site).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn curve3_extent(curve: &crate::brep::representation::curve::Curve3, domain: (f64, f64)) -> f64 {
+fn curve3_extent(curve: &semio_framework_3d_brep_representation::curve::Curve3, domain: (f64, f64)) -> f64 {
     const K: usize = 16;
     let (lo, hi) = domain;
     if hi.partial_cmp(&lo) != Some(std::cmp::Ordering::Greater) {
@@ -1189,7 +1189,7 @@ fn point_in_face_uv_periodic(body: &Body, face: FaceId, uv: Pnt2, tol: f64) -> b
 }
 
 /// 🔀 [`point_in_face_uv_periodic`] against the trim's CLOSURE — see
-/// [`crate::brep::queries::classification::point_in_face_uv_closure`]
+/// [`semio_framework_3d_brep_queries::classification::point_in_face_uv_closure`]
 /// for why a clip must use the closed test (poles, seams and coincident arcs all live exactly on
 /// the boundary and are invisible to the open one).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -1218,7 +1218,7 @@ fn uv_probe_over_period_shifts(body: &Body, face: FaceId, uv: Pnt2, probe: impl 
 /// geometry a clip endpoint has to land ON, and the geometry a closed imprint curve grazes when it
 /// crosses a seam.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(crate::brep::representation::curve::Curve3, (f64, f64))> {
+fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(semio_framework_3d_brep_representation::curve::Curve3, (f64, f64))> {
     let mut out = Vec::new();
     let Some(outer) = body.faces.get(face).and_then(|f| f.outer) else { return out };
     for coedge_id in body.loop_coedges(outer) {
@@ -1235,7 +1235,7 @@ fn outer_boundary_curves(body: &Body, face: FaceId) -> Vec<(crate::brep::represe
 /// projects to its own origin) and Newton-refined for `Nurbs`, so this is the certified distance,
 /// not a sampled estimate.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn nearest_boundary_curve(curves: &[(crate::brep::representation::curve::Curve3, (f64, f64))], point: Pnt3, tol: f64) -> Option<(usize, f64)> {
+fn nearest_boundary_curve(curves: &[(semio_framework_3d_brep_representation::curve::Curve3, (f64, f64))], point: Pnt3, tol: f64) -> Option<(usize, f64)> {
     nearest_transversal_boundary_curve(curves, point, None, tol)
 }
 
@@ -1244,7 +1244,7 @@ fn nearest_boundary_curve(curves: &[(crate::brep::representation::curve::Curve3,
 /// edge, the flush-box case) is at distance 0 everywhere and would pin the endpoint where it already
 /// is, while the crossing that really ends the run is the perpendicular boundary a few `tol` away.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn nearest_transversal_boundary_curve(curves: &[(crate::brep::representation::curve::Curve3, (f64, f64))], point: Pnt3, along: Option<Vec3>, tol: f64) -> Option<(usize, f64)> {
+fn nearest_transversal_boundary_curve(curves: &[(semio_framework_3d_brep_representation::curve::Curve3, (f64, f64))], point: Pnt3, along: Option<Vec3>, tol: f64) -> Option<(usize, f64)> {
     let mut best: Option<(usize, f64)> = None;
     for (index, (curve, range)) in curves.iter().enumerate() {
         let closest = closest_parameter(curve, *range, point, tol);
@@ -1357,7 +1357,7 @@ fn boundary_touch_parameters(body: &Body, ic: &IntCurve, (face_a, face_b): (Face
 /// latitude circle, meridian branch and ruling — the sub-arcs this stage produces on analytic supports), then by an adaptive
 /// uniform-parameter interpolation of exact surface inversions refined until the measured deviation is within tolerance.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn pcurve_for_clip(surface: &Surface, curve3: &crate::brep::representation::curve::Curve3, pcurve: &Curve2, (t0, t1): (f64, f64), tol: f64) -> (Curve2, (f64, f64)) {
+fn pcurve_for_clip(surface: &Surface, curve3: &semio_framework_3d_brep_representation::curve::Curve3, pcurve: &Curve2, (t0, t1): (f64, f64), tol: f64) -> (Curve2, (f64, f64)) {
     const K: usize = 33;
     let edge_tol = tol.min(Tol::DEFAULT.value()) * 0.5;
     let at = |i: usize| t0 + (t1 - t0) * i as f64 / (K - 1) as f64;
@@ -1733,7 +1733,7 @@ fn local_point_in_solid(body: &Body, solid: SolidId, point: Pnt3, tol: f64) -> R
     let mut outside_votes = 0u32;
     for raw_dir in LOCAL_RAY_RETRY_DIRS {
         let dir = Vec3::new(raw_dir[0], raw_dir[1], raw_dir[2]);
-        let ray = crate::brep::representation::curve::Curve3::Line { origin: point, dir };
+        let ray = semio_framework_3d_brep_representation::curve::Curve3::Line { origin: point, dir };
         let mut grazing = false;
         let mut hits: Vec<f64> = Vec::new();
         for &face in &faces {
@@ -2081,7 +2081,7 @@ fn remove_face(body: &mut Body, face: FaceId, rec: &mut OpRecorder) {
 /// shared edge even when only one side ends up selected) and `remove_face` only clears coedges, not
 /// the shared geometry underneath them.
 /// 🐛 `protected` is every edge/vertex that predates the job, and the sweep may never cross it: a
-/// bare [`crate::brep::representation::topology::Wire`]'s member edges
+/// bare [`semio_framework_3d_brep_representation::topology::Wire`]'s member edges
 /// carry no coedge at all, so an unscoped orphan sweep read every live wire handle's geometry as
 /// garbage and freed it — the same "a boolean frees what it did not create" law its operands are
 /// now protected by.
@@ -2363,7 +2363,7 @@ fn aabb_contains(outer: &AxisAlignedBox, inner: &AxisAlignedBox, tol: f64) -> bo
 /// [`AxisAlignedBox`] — inflated by `tol` on every side so a face pair whose supports are exactly
 /// tangent still gets a chance to intersect.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn aabb_overlap(a: &crate::brep::engine::Aabb, b: &crate::brep::engine::Aabb, tol: f64) -> bool {
+fn aabb_overlap(a: &semio_framework_3d_brep_representation::contract::Aabb, b: &semio_framework_3d_brep_representation::contract::Aabb, tol: f64) -> bool {
     (0..3).all(|i| a.min[i] - tol <= b.max[i] + tol && b.min[i] - tol <= a.max[i] + tol)
 }
 

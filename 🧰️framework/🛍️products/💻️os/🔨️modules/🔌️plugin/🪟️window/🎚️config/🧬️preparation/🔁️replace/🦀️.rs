@@ -29,9 +29,9 @@ pub struct WindowConfigReplaceCursor<S: Copy + RetireOwned + 'static, M: RetireO
 impl<S, M> RetainedCloneEdit<S, M> for WindowConfigReplaceEdit<S, M>
 where S: RetainedClone + Copy + RetireOwned + Send + Sync + 'static, M: WindowConfigReplaceMutation<S> + RetireOwned {
     type Cursor = WindowConfigReplaceCursor<S, M>;
-    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document || !mutation.admissible() { return Err("window config replace mutation has invalid lane or record authority".into()); }
-        Ok(store::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::snapshot_clone_preparation::CONFIG_EDIT_RETAINED_BASELINE_BYTES })
+    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document || !mutation.admissible() { return Err("window config replace mutation has invalid lane or record authority".into()); }
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint { work_items: 2, retained_bytes: store::snapshot_clone_preparation::CONFIG_EDIT_RETAINED_BASELINE_BYTES })
     }
     fn begin_demand(&self) -> RetainedCloneBirthDemand { RetainedCloneBirthDemand { capacity_bytes: 0, depth: 1 } }
     fn snapshot_cursor_birth_demand(&self) -> RetainedCloneBirthDemand { RetainedCloneBirthDemand { capacity_bytes: 0, depth: 1 } }

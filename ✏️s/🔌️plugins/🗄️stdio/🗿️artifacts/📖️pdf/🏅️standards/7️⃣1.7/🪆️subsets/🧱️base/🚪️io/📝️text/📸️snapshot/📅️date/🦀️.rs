@@ -1,5 +1,5 @@
 //! 📅️ Physical PDF date spelling over the owned date value.
-use crate::schema::snapshot::PdfDate;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfDate;
 
 /// 📥️ Decodes a native PDF date.
 pub fn parse_pdf_date(text: &str) -> Option<PdfDate> {

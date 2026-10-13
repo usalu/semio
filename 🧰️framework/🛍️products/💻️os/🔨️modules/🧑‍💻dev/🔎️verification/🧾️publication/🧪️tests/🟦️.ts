@@ -84,7 +84,6 @@ export async function testProtectedActorChildExecutionV1(root:string,page:Protec
 
   const {encodePackValue}=await import("../../../../../🟦️.ts");
   const descriptor=JSON.parse(readFileSync(join(root,"🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json"),"utf8")).descriptor,staged=encodePackValue(descriptor);
-  for(const key of Object.keys(descriptor.hashes))descriptor.hashes[key]="";
   const guest=encodePackValue(descriptor),actor=Buffer.from(`export async function activate(){return{async invoke(path,args){if(path.join('.')!=='describe.describe'||args.length)throw Error('neutral describe path');return new Uint8Array(${JSON.stringify(Array.from(guest))});},async close(){}};}`);
   const joined={actor,descriptor:staged} as Parameters<typeof executeProtectedActorChildV1>[2];
   const childUrl=protectedActorChildUrlV1(root,baseUrl);

@@ -1,0 +1,16 @@
+{
+  "target": "🧩️composition/🦀️.rs",
+  "module": "composition_coordinator",
+  "anchor": "//#region 🔖️CompositionCoordinator\n",
+  "doc": [
+    "//! 🧩️ The composition coordinator: multi-member composition sessions above the Store engine, their command transactions",
+    "//! and member factories.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️CompositionCoordinator"
+  ],
+  "items": [],
+  "movableTraits": []
+}

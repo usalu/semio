@@ -40,7 +40,7 @@ use crate::GisMapSnapshot;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use protocol::Mutation;
-use store::ArtifactEnvelope;
+use store::os_store::store_schema::ArtifactEnvelope;
 
 /// 🔮️ One JSON report of applying `mutation_json` to `base_json`, for a language-neutral test adapter.
 ///

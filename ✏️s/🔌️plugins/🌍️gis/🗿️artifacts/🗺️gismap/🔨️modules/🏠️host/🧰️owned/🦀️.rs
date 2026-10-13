@@ -9,10 +9,10 @@ struct GisMapStoreInitializationAuthority {
     actor: protocol::ActorId,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<GisMapSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<GisMapSnapshot, GisMapMutation>>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>,
     pending: std::mem::ManuallyDrop<Option<GisMapSnapshot>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
@@ -89,7 +89,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<GisMapSnapshot
     }
 }
 
-pub(crate) const GIS_MAP_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+pub(crate) const GIS_MAP_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct GisMapSnapshotRetirementFactory;
@@ -130,8 +130,8 @@ struct GisMapSnapshotCloneAuthority {
 }
 
 impl GisMapSnapshotCloneAuthority {
-    fn empty_child<S>() -> store::ArtifactChild<S> {
-        store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
+    fn empty_child<S>() -> store::os_store::artifact_child::ArtifactChild<S> {
+        store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
     }
 
     fn new() -> Self {
@@ -162,7 +162,7 @@ impl GisMapSnapshotCloneAuthority {
         Ok(source.clone())
     }
 
-    fn copy_child_field<'a, S>(target: &mut store::ArtifactChild<S>, source: &'a store::ArtifactChild<S>, phase: u8, base: u8) -> Result<&'a [u8], &'static str> {
+    fn copy_child_field<'a, S>(target: &mut store::os_store::artifact_child::ArtifactChild<S>, source: &'a store::os_store::artifact_child::ArtifactChild<S>, phase: u8, base: u8) -> Result<&'a [u8], &'static str> {
         let observed = match phase - base {
             0 => {
                 target.child_id = Self::clone_string(&source.child_id)?;
@@ -253,23 +253,23 @@ impl GisMapSnapshotCloneAuthority {
             Ok(demand)
         };
         if let Some(active) = self.retirement.as_ref() {
-            return nested(store::artifact_retirement_box_demands(active, body)?);
+            return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if self.value.is_some() {
-            return nested(store::artifact_retirement_owned_birth_demands(&*self.value)?);
+            return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.value)?);
         }
         Ok(Default::default())
     }
 
     fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| {
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| {
                 self.terminal = self.value.is_none() && self.retirement.is_none();
                 RetainedCloneStep::Progress(step.progress())
             });
         }
         if self.value.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant);
         }
         self.terminal = true;
         Ok(RetainedCloneStep::Complete(Default::default()))
@@ -316,7 +316,7 @@ enum GisMapStoreInitializationPhase {
 }
 
 impl GisMapStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         Self {
             actor,
             operation,
@@ -383,7 +383,7 @@ impl GisMapStoreInitializationAuthority {
             GisMapStoreInitializationPhase::AdmitOwners => {
                 let grant = cx.retained_grant();
                 let admitted = if self.owners.is_none() {
-                    match store::bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>(grant) {
+                    match store::os_store::document_store_owners::bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>(grant) {
                         Ok((owners, progress)) => {
                             *self.owners = Some(owners);
                             Ok(progress)
@@ -690,10 +690,10 @@ impl GisMapStoreInitializationAuthority {
 
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_ref() {
-            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if self.pending.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&*self.pending)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.pending)?);
         }
         if let Some(runtime) = self.runtime.as_ref() {
             return Self::nested(runtime.initialization_retirement_demands(body)?);
@@ -702,14 +702,14 @@ impl GisMapStoreInitializationAuthority {
             return clone.close_demands(body);
         }
         if let Some(active) = self.envelope_retirement.as_ref() {
-            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if !self.publication.terminal_is_empty() && self.close_core_is_terminal() {
             return Self::nested(self.publication.retirement_demands()?);
         }
         if let Some(envelope) = self.envelope.as_ref() {
             let Some(owners) = self.owners.as_ref() else {
-                return Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), capacity_bytes: store::bounded_artifact_store_owners_birth_bytes::<GisMapSnapshot, GisMapMutation>(), depth: 1, ..Default::default() });
+                return Ok(RetirementDemand { copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), capacity_bytes: store::os_store::document_store_owners::bounded_artifact_store_owners_birth_bytes::<GisMapSnapshot, GisMapMutation>(), depth: 1, ..Default::default() });
             };
             if !owners.constructor_is_complete() {
                 return Self::nested(owners.constructor_demands(body)?);
@@ -720,7 +720,7 @@ impl GisMapStoreInitializationAuthority {
         }
         if let Some(owners) = self.owners.as_ref() {
             return if owners.uninstalled_owners_terminal_is_empty() {
-                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), depth: 1, ..Default::default() })
+                Ok(RetirementDemand { copy_bytes: size_of::<Option<store::os_store::document_store_owners::DocumentStoreOwners<GisMapSnapshot, GisMapMutation>>>(), depth: 1, ..Default::default() })
             } else {
                 Self::nested(owners.uninstalled_owners_demands(body)?)
             };
@@ -734,9 +734,9 @@ impl GisMapStoreInitializationAuthority {
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
-        store::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, child)
+        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, child)
     }
 
     fn close_is_terminal(&self) -> bool {
@@ -794,7 +794,7 @@ impl GisMapStoreInitializationAuthority {
             if self.owners.is_none() {
                 let placement = demand.copy_bytes;
                 let owner_grant = RetainedCloneGrant { maximum_copy_bytes: grant.maximum_copy_bytes - placement, ..grant };
-                return match store::bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>(owner_grant) {
+                return match store::os_store::document_store_owners::bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>(owner_grant) {
                     Ok((owners, mut receipt)) => {
                         *self.owners = Some(owners);
                         receipt.copied_bytes += placement;
@@ -863,7 +863,7 @@ impl Drop for GisMapStoreInitializationAuthority {
 }
 
 pub fn gis_map_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<GisMapSnapshot, GisMapMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,
@@ -874,44 +874,44 @@ pub fn gis_map_document_store_initialization_job(
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct GisMapEnvelopeOwnedFieldCatalog;
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<GisMapSnapshot, GisMapMutation> for GisMapEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<GisMapSnapshot, GisMapMutation> for GisMapEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(GisMapSnapshotRetirementFactory),
             std::sync::Arc::new(GisMapMutationRetirementFactory),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<GisMapSnapshot, GisMapMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<GisMapSnapshot>> {
         Box::new(GisMapSnapshotDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<GisMapMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<GisMapMutation>> {
         Box::new(GisMapMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(GisMapRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<GisMapMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(GisMapMutationRetirementFactory))
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<GisMapMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(GisMapMutationRetirementFactory))
     }
 }
 
-pub fn gis_map_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<GisMapSnapshot, GisMapMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(GisMapEnvelopeOwnedFieldCatalog), std::sync::Arc::new(GisMapSnapshotRetirementFactory), std::sync::Arc::new(GisMapMutationRetirementFactory))
+pub fn gis_map_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<GisMapSnapshot, GisMapMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(GisMapEnvelopeOwnedFieldCatalog), std::sync::Arc::new(GisMapSnapshotRetirementFactory), std::sync::Arc::new(GisMapMutationRetirementFactory))
 }
 
 
@@ -921,7 +921,7 @@ pub fn gis_map_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOw
 mod tests;
 
 fn decode_gis_map_snapshot_pack(bytes: &[u8]) -> Result<GisMapSnapshot, ()> {
-    <GisMapSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_gis_map_mutation_pack(bytes: &[u8]) -> Result<GisMapMutation, ()> {
@@ -930,23 +930,23 @@ fn decode_gis_map_mutation_pack(bytes: &[u8]) -> Result<GisMapMutation, ()> {
 
 macro_rules! gis_map_owned_field_close_capacity {
     (@demands, $value:ty) => {
-        fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.copy_bytes) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.copy_bytes) }
 
-        fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes) }
+        fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes) }
 
-        fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes) }
 
-        fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth) }
+        fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth) }
     };
     (ArtifactEnvelopeSnapshotFieldAuthority, $value:ty) => {
         gis_map_owned_field_close_capacity!(@demands, $value);
 
         fn maximum_close_byte_demand(&self) -> usize {
-            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
         }
 
         fn maximum_retained_close_bytes(&self) -> usize {
-            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
         }
     };
     (ArtifactEnvelopeMutationFieldAuthority, $value:ty) => {
@@ -959,7 +959,7 @@ macro_rules! gis_map_owned_field_authority {
         #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
         enum $state {
             AwaitToken,
-            Decode(store::OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>),
+            Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<GIS_MAP_OWNED_FIELD_BYTES>),
             Ready,
             Published,
             Closing,
@@ -969,28 +969,28 @@ macro_rules! gis_map_owned_field_authority {
         struct $authority {
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
-            path: store::OwnedSchemaPath,
+            path: store::os_store::owned_schema_decode::OwnedSchemaPath,
             state: $state,
             value: std::mem::ManuallyDrop<Option<$value>>,
             retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
         }
 
         impl $authority {
-            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
                 Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
             }
 
-            fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-                store::OwnedSchemaDecodeDiagnostic { offset, ..store::OwnedSchemaDecodeDiagnostic::before(code, self.path) }
+            fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+                store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, self.path) }
             }
 
-            fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+            fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if matches!(self.state, $state::Decode(_)) {
                     return Ok(semio_framework_value::RetirementDemand { release_bytes: GIS_MAP_OWNED_FIELD_BYTES, depth: 1, ..Default::default() });
                 }
                 let demand = match self.retirement.as_ref() {
-                    Some(owner) => store::artifact_retirement_box_demands(owner, maximum_copy_bytes),
-                    None => store::artifact_retirement_owned_birth_demands(&self.value),
+                    Some(owner) => store::os_store::snapshot_read::artifact_retirement_box_demands(owner, maximum_copy_bytes),
+                    None => store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value),
                 };
                 demand.map_err(|error| self.diagnostic(concat!("gis-map-envelope.", $kind, "-retirement-demand-fault"), 0).with_native(error))
             }
@@ -999,25 +999,25 @@ macro_rules! gis_map_owned_field_authority {
         impl store::$authority_trait<$value> for $authority {
             fn accept_token(
                 &mut self,
-                token: store::OwnedSchemaToken,
+                token: store::os_store::owned_schema_decode::OwnedSchemaToken,
                 terminal: bool,
-                source: &store::OwnedSchemaRecordCursor,
+                source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
                 cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+            ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 let path = self.path;
-                let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { offset, ..store::OwnedSchemaDecodeDiagnostic::before(code, path) };
+                let diagnostic = |code: &'static str, offset| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path) };
                 if matches!(self.state, $state::AwaitToken) {
                     if !terminal {
                         return Err(diagnostic(concat!("gis-map-envelope.", $kind, "-pack-must-be-scalar"), token.start));
                     }
-                    self.state = $state::Decode(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
                 }
                 let $state::Decode(authority) = &mut self.state else {
                     return Err(diagnostic(concat!("gis-map-envelope.", $kind, "-pack-token-replayed"), token.start));
                 };
                 match authority.step(source, cx) {
-                    store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-                    store::OwnedSchemaHexStep::Complete => {
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                         let bytes = authority.as_bytes().ok_or_else(|| diagnostic(concat!("gis-map-envelope.", $kind, "-pack-missing"), token.start))?;
                         let value = $decode(bytes).map_err(|_| diagnostic(concat!("gis-map-envelope.", $kind, "-pack-malformed"), token.start))?;
                         if !authority.release() {
@@ -1025,31 +1025,31 @@ macro_rules! gis_map_owned_field_authority {
                         }
                         *self.value = Some(value);
                         self.state = $state::Ready;
-                        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
                     }
-                    store::OwnedSchemaHexStep::Cancelled => Err(diagnostic(concat!("gis-map-envelope.", $kind, "-pack-cancelled"), token.start)),
-                    store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(diagnostic(concat!("gis-map-envelope.", $kind, "-pack-cancelled"), token.start)),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
                 }
             }
 
             fn publish_reserved(
                 &mut self,
                 target: &mut dyn store::$target_trait<$value>,
-                reservation: store::ArtifactEnvelopeFieldReservation,
+                reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
                 _cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+            ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if !matches!(self.state, $state::Ready) {
                     return Err(self.diagnostic(concat!("gis-map-envelope.", $kind, "-pack-not-ready"), 0));
                 }
                 let value = self.value.take().ok_or_else(|| self.diagnostic(concat!("gis-map-envelope.", $kind, "-owner-missing"), 0))?;
                 target.$publish(reservation, value);
                 self.state = $state::Published;
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
 
             gis_map_owned_field_close_capacity!($authority_trait, $value);
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 let empty = RetainedCloneProgress::default();
                 if self.terminal_is_empty() {
                     return Ok(RetainedCloneStep::Complete(empty));
@@ -1070,9 +1070,9 @@ macro_rules! gis_map_owned_field_authority {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: GIS_MAP_OWNED_FIELD_BYTES, ..empty }));
                 }
                 let step = if self.retirement.is_some() {
-                    store::artifact_retirement_box_close_step(&mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
                 } else if self.value.is_some() {
-                    store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
                 } else {
                     Ok(RetainedCloneStep::Complete(empty))
                 }
@@ -1127,26 +1127,26 @@ struct GisMapRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for GisMapRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for GisMapRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::OwnedSchemaDecodeDiagnostic::before("gis-map-envelope.fresh-conflict-not-admitted", store::OwnedSchemaPath::ROOT) })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("gis-map-envelope.fresh-conflict-not-admitted", store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT) })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }

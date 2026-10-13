@@ -13,7 +13,7 @@ fn demo_host_snapshot() -> FlowHostSnapshot {
 }
 
 fn demo_text(host: &FlowHostSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(host)
+    store::os_store::serialization::ArtifactDsl::print_dsl(host)
 }
 
 #[semio_framework_async_macros::async_test]

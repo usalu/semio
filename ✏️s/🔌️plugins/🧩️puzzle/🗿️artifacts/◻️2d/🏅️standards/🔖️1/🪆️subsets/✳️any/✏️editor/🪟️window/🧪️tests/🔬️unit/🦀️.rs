@@ -38,7 +38,7 @@ use super::*;
         let spr = semio_framework_pack_json::to_json_string(&shared);
         let oracle: semio_framework_pack_json::Value = semio_framework_pack_json::from_json_str(&spr, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("serde_json oracle accepts the neutral config");
         assert_eq!(oracle.as_object().map(semio_framework_pack_json::Object::len), Some(5));
-        let pack = store::ArtifactPack::encode_pack(&shared);
+        let pack = store::os_store::serialization::ArtifactPack::encode_pack(&shared);
         for forbidden in ["cameraX", "engagementInput", "brushCandidates", "fillJobCheckpointSequence"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
@@ -67,7 +67,7 @@ use super::*;
         };
         let footprint = puzzle2d_window_transient_preflight(&Puzzle2dWindowTransientMutation::Snapshot { transient: transient.clone() }).expect("admitted exact footprint");
         assert_eq!(footprint.work_items, 1);
-        assert!(footprint.retained_bytes < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+        assert!(footprint.retained_bytes < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         retire_to_terminal_empty(Puzzle2dWindowTransientMutation::Snapshot { transient });
     }
 
@@ -93,7 +93,7 @@ use super::*;
 
     #[test]
     fn every_oversized_string_and_vector_capacity_returns_the_exact_puzzle2d_owner() {
-        let maximum = store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+        let maximum = store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
         {
             let mut value = String::with_capacity(maximum + 1);
             value.push('i');
@@ -209,11 +209,11 @@ use super::*;
             selectable_edges: false,
         };
         assert_ne!(original, Puzzle2dWindowConfig::default(), "the snapshot must differ from the default in every field it asserts");
-        let bytes = store::ArtifactPack::encode_pack(&original);
-        let decoded = <Puzzle2dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
+        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&original);
+        let decoded = <Puzzle2dWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
         assert_eq!(decoded, original, "one pack round trip must preserve every persisted pane option");
-        let printed = store::ArtifactDsl::print_dsl(&original);
-        let parsed = <Puzzle2dWindowConfig as store::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
+        let printed = store::os_store::serialization::ArtifactDsl::print_dsl(&original);
+        let parsed = <Puzzle2dWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
         assert_eq!(parsed, original, "one text round trip must preserve every persisted pane option");
     }
 

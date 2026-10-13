@@ -9,10 +9,10 @@ fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
     let after = include_str!("../../../../🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/📸️snapshot/➡️after/🗣️.dsl.semio");
     let wire = include_str!("../../../../🧫️fixtures/🧬️mutations/✍️set-text/🔤️history/🦠️mutation/🔣️.json");
     let mutation: XmlValidMutation = semio_framework_pack_json::from_json_str(wire, semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
-    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(before).unwrap();
+    let base = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(before).unwrap();
     let (next, outcome) = applied(&base, &mutation);
     assert!(outcome.messages().is_empty());
-    assert_eq!(next, <XmlSnapshot as store::ArtifactDsl>::parse_dsl(after).unwrap());
+    assert_eq!(next, <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(after).unwrap());
     let output = String::from_utf8(next.export_utf8().unwrap()).unwrap();
     let mut reader = Reader::from_str(&output);
     let mut text = String::new();
@@ -40,7 +40,7 @@ fn history_text_fixture_preserves_doctype_and_matches_independent_xml_reader() {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn valid_document() -> XmlSnapshot {
-    <XmlSnapshot as store::ArtifactDsl>::parse_dsl(
+    <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(
         "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n<plist version=\"1.0\"><key>Name</key></plist>",
     )
     .expect("the fixture document parses")
@@ -72,16 +72,16 @@ fn kinds_matches_enum_variants_in_declaration_order() {
 
 #[test]
 fn gate_agrees_with_the_subset_conformance_checker() {
-    let no_doctype = <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<plist/>").expect("parses");
+    let no_doctype = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("<plist/>").expect("parses");
     assert!(blocked_snapshot_violation(&no_doctype).expect("a document with no DOCTYPE is hard-invalid").contains(CODE_DOCTYPE_MISSING));
-    let mismatched = <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<!DOCTYPE book>\n<plist/>").expect("parses");
+    let mismatched = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("<!DOCTYPE book>\n<plist/>").expect("parses");
     assert!(blocked_snapshot_violation(&mismatched).expect("a desynchronised DOCTYPE Name is hard-invalid").contains(CODE_ROOT_NAME_MISMATCH));
     assert_eq!(blocked_snapshot_violation(&valid_document()), None, "the always-on advisory is a Warning and must never block");
 }
 
 #[test]
 fn declare_doctype_derives_the_name_from_the_document_element() {
-    let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl("<requests version=\"1.0\"/>").expect("parses");
+    let base = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("<requests version=\"1.0\"/>").expect("parses");
     let (next, _) = applied(&base, &XmlValidMutation::DeclareDoctype(declare_doctype::DeclareDoctype { external_id: Some(XmlExternalId::System { system_id: "logreq.dtd".into() }) }));
     assert_eq!(next.doc.doctype.as_ref().map(|doctype| doctype.name.as_str()), Some("requests"), "§2.8 must hold by construction, not by the caller's care");
     assert_eq!(blocked_snapshot_violation(&next), None);
@@ -102,7 +102,7 @@ fn declare_entity_refuses_a_duplicate_name() {
     let (with_entity, _) = applied(&base, &XmlValidMutation::DeclareEntity(declare_entity::DeclareEntity { index: 0, parameter: false, name: "semio".into(), value: "Semio".into() }));
     let (_, duplicate) = applied(&with_entity, &XmlValidMutation::DeclareEntity(declare_entity::DeclareEntity { index: 0, parameter: false, name: "semio".into(), value: "Other".into() }));
     assert!(duplicate.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "§4.2 binds the first declaration, so a second one is dead markup");
-    let (_, no_doctype) = applied(&<XmlSnapshot as store::ArtifactDsl>::parse_dsl("<plist/>").expect("parses"), &XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: Vec::new() }));
+    let (_, no_doctype) = applied(&<XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("<plist/>").expect("parses"), &XmlValidMutation::SetInternalSubset(set_internal_subset::SetInternalSubset { declarations: Vec::new() }));
     assert!(no_doctype.messages().iter().any(|message| message.code.0 == CODE_REJECTED), "there is no internal subset without a DOCTYPE to hold it");
 }
 
@@ -160,7 +160,7 @@ fn every_kind_round_trips_through_its_own_inverse() {
 #[test]
 fn set_standalone_is_exact_in_every_declaration_combination() {
     for source in ["<!DOCTYPE root>\n<root/>", "<?xml version=\"1.0\"?>\n<!DOCTYPE root>\n<root/>", "<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>\n<!DOCTYPE root>\n<root/>"] {
-        let base = <XmlSnapshot as store::ArtifactDsl>::parse_dsl(source).expect("parses");
+        let base = <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(source).expect("parses");
         for target in [None, Some(true), Some(false)] {
             let mutation = XmlValidMutation::SetStandalone(set_standalone::SetStandalone { standalone: target });
             let (mut next, _) = applied(&base, &mutation);

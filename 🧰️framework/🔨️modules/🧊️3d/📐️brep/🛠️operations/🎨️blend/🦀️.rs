@@ -31,22 +31,22 @@
 use std::collections::{BTreeMap, BTreeSet};
 use std::f64::consts::{FRAC_PI_2, PI, TAU};
 
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::operations::offset::exact_pcurve;
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::queries::mass_properties::edge_length;
-use crate::brep::representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::brep::representation::curve::bspline::KnotVector;
-use crate::brep::representation::curve::curve_ops::{interpolate_curve, ParamMethod};
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::surface_ops::closest_uv;
-use crate::brep::representation::surface::{IsoDirection, Surface};
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use crate::offset::exact_pcurve;
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_queries::mass_properties::edge_length;
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::curve_ops::{interpolate_curve, ParamMethod};
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_representation::surface::{IsoDirection, Surface};
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 /// 🎨️ Positional agreement two exactly-derived quantities must reach (a trim endpoint against the
 /// curve it is meant to lie on, a closed-form p-curve against its own 3D curve). Three orders of

@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RenameNode`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff, SemioGraphNodeDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff, SemioGraphNodeDiff};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ An empty new id is a Fatal `mutation.invariant` (the schema's hard bound); a node the graph lacks is

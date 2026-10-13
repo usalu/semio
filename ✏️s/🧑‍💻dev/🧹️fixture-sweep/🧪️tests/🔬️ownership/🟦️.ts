@@ -196,8 +196,9 @@ export async function testFixtureSweepExtraction(): Promise<void> {
   const project = JSON.parse(read(join(packageDir, "📋️project.json")));
   assert.equal(project.root, `${sourcePath}/📦️packages/🦀️rust`);
   assert.equal(project.sourceRoot, sourcePath);
-  assert.equal(project.targets["test-quick"].options.command, "bun ./📜️script.ts source-check");
-  assert.equal(project.targets["test-exhaustive"].options.command, "bun ./📜️script.ts test exhaustive");
+  assert.equal(project.targets.test.options.command, "bun ./📜️script.ts test");
+  assert.deepEqual(Object.keys(project.targets).filter((name) => /^test-(?:quick|long|exhaustive)$/u.test(name)), []);
+  assert(runner.includes('if (level === "quick") return;'), "the quick level is the extraction check alone");
   const domain = "🧰️framework/🛍️products/🦑️repo/🔨️modules";
   assert(JSON.parse(read(join(root, domain, "📚️library/🔣️taxonomy.json"))).testPhases.includes("dsl"));
   const router = read(join(root, domain, "🧪️test/📜️script.ts"));

@@ -1,4 +1,9 @@
 #!/usr/bin/env bun
+import { readBuildMode, buildModeEnvironment } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { withCompilerState } from "../../../../📚️library/⚡️caching/🏗️state/🟦️.ts";
+import { repoCacheDirectory } from "../../../../📚️library/⚡️caching/🟦️.ts";
+import { runOwnedCommand } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { createRequire } from "node:module";
 import { resolveTestLevel } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧭️ Coordinator Next.js package router: `bun ./📜️script.ts build|dev|start|test|policy`. */
 import { join } from "node:path";
@@ -17,8 +22,11 @@ const PACKAGE_DIR = import.meta.dir;
 
 /** 🏗️ Compiles the coordinator's own Next.js surface; the Go and Rust servers build from their own packages. */
 class BuildScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["next", "build", ...segments], PACKAGE_DIR, devToolingEnv());
+  async run(segments: string[]): Promise<void> {
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), require = createRequire(join(PACKAGE_DIR, "package.json"));
+    await withCompilerState({ root: repoCacheDirectory(this.repoRoot), owner: "repo-coordinator:next", compiler: `next:${require("next/package.json").version}`, configuration: PACKAGE_DIR, mode, signal: this.invocation.control.signal }, async () => {
+      await runOwnedCommand(process.execPath, [require.resolve("next/dist/bin/next"), "build", ...segments], PACKAGE_DIR, "repo-coordinator:next", 600_000, { env: buildModeEnvironment(mode, devToolingEnv()), signal: this.invocation.control.signal });
+    });
   }
 }
 

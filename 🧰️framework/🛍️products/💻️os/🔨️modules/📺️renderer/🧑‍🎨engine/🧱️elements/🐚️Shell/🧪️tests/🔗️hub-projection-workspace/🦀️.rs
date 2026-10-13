@@ -678,7 +678,7 @@ fn two_live_wgpu_shells_collaborate_on_one_hub_document() {
 
     let mut trail = Vec::new();
     let live_after = pump_pair(&mut a, &mut b, std::time::Duration::from_secs(30), &mut trail, |a, b| is_live(a) && is_live(b));
-    let codec = match drive(store_sync::os_store::document_kind_codec(journey.schema.as_str())) {
+    let codec = match drive(store_sync::os_store::codec_registry::document_kind_codec(journey.schema.as_str())) {
         Ok(Some(codec)) => drive(codec.pack_schema_hash()).ok(),
         _ => None,
     };
@@ -1255,7 +1255,7 @@ fn a_native_and_a_react_user_see_each_others_cursor_on_one_hub_board() {
 ///
 /// 🔌️ `#[ignore]`d: needs the staged native runtime (`SEMIO_PLUGIN_MODULES`/`SEMIO_PLUGIN`, the journey fixture's
 /// app answers) and the long-opening component (`SEMIO_LONG_TURN_PLUGIN`, `SEMIO_LONG_TURN_APP`,
-/// `SEMIO_LONG_TURN_COMPONENT`, `SEMIO_LONG_TURN_DESCRIPTOR`, `SEMIO_LONG_TURN_SHA`).
+/// `SEMIO_LONG_TURN_COMPONENT`, `SEMIO_LONG_TURN_DESCRIPTOR`, `SEMIO_LONG_TURN_RECEIPT`).
 #[cfg(not(target_arch = "wasm32"))]
 #[test]
 #[ignore = "needs a staged native runtime and a long-opening component; see this test's own doc comment"]
@@ -1269,7 +1269,7 @@ fn a_long_guest_turn_shares_the_kernel_and_only_its_owners_cancel_ends_it() {
         &live_env("SEMIO_LONG_TURN_PLUGIN"),
         std::path::Path::new(&live_env("SEMIO_LONG_TURN_COMPONENT")),
         std::path::Path::new(&live_env("SEMIO_LONG_TURN_DESCRIPTOR")),
-        &live_env("SEMIO_LONG_TURN_SHA"),
+        &semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1::decode_canonical(&std::fs::read(live_env("SEMIO_LONG_TURN_RECEIPT")).expect("the long-opening component's receipt")).expect("a canonical shipped receipt"),
     ))
     .expect("the long-opening component loads");
     let long_app = live_env("SEMIO_LONG_TURN_APP");

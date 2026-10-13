@@ -1,8 +1,8 @@
 //! 🏛️ Borrowed Model primitives count spatial ownership, exact placements and typed property rows.
 use super::{SemioModelSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Model native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Model complete cell extent overflow"))}
@@ -31,7 +31,7 @@ fn binary_placement(reader:&mut store::ByteReader<'_>,census:&mut Census)->Resul
  let mut bytes=8;for _ in 0..10{bytes=add(bytes,scalar(reader.read_f64_le().map_err(|_|invalid())?))?;}census.row(bytes)
 }
 /// 📦️ Counts the real Model primitive order without constructing a spatial graph or property set.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|{
@@ -74,7 +74,7 @@ fn document_relation(value:&str,control:&mut NativeDecodeControl<'_>)->Result<us
  let tag=match value{"AG"=>0,"CI"=>1,"CN"=>2,"FV"=>3,"VE"=>4,_=>5};let mut bytes=relation(tag)?;if tag==5{let[label]=native::record(value.strip_prefix("OT").ok_or_else(invalid)?,control)?;bytes=add(bytes,native::hex_text_extent(label,control)?)?;}Ok(bytes)
 }
 /// 📝️ Preserves exact optional placement parents, enum tags and all three typed property spellings.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","spatial","elements","relations"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{

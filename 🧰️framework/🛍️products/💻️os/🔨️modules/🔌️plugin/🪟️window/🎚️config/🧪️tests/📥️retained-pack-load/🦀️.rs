@@ -59,7 +59,7 @@ pub(super) struct RetainedLoadCameraConfig {
 
 semio_framework_value::artifact_retire_leaf!(RetainedLoadCameraConfig);
 
-impl store::ArtifactDsl for RetainedLoadCameraConfig {
+impl store::os_store::serialization::ArtifactDsl for RetainedLoadCameraConfig {
     const EXTENSION: &'static str = "retainedloadcameracfg";
     fn envelope_id() -> &'static str {
         Self::__DSL_ENVELOPE_ID
@@ -71,24 +71,24 @@ impl store::ArtifactDsl for RetainedLoadCameraConfig {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid retained-load camera envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid retained-load camera envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-impl store::ArtifactPack for RetainedLoadCameraConfig {
+impl store::os_store::serialization::ArtifactPack for RetainedLoadCameraConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
             return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "retained-load camera pack envelope mismatch")));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -135,7 +135,7 @@ impl protocol::DiffAlgebra<RetainedLoadCameraConfig> for RetainedLoadCameraConfi
 #[derive(Clone, Debug, PartialEq, semio_framework_value_derive::ToValue, semio_framework_value_derive::FromValue, semio_framework_dsl_record_derive::DslEnum, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = store)]
 #[value(tag = "kind", rename_all = "kebab-case", rename_all_fields = "camelCase", deny_unknown_fields)]
-pub(super) enum RetainedLoadCameraConfigMutation {
+enum RetainedLoadCameraConfigMutation {
     #[dsl(key = "snapshot")]
     Snapshot {
         #[dsl(block)]
@@ -219,11 +219,11 @@ macro_rules! retained_load_owner {
             const MAXIMUM_PREPARATION_DEPTH:usize=64;
             fn build_retained_edit()->Arc<Self::Edit>{Arc::new(CameraRetainedEdit)}
 
-            fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
+            fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
                 bounded_window_config_store_owners::<Self>()
             }
 
-            fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
+            fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
                 bounded_window_config_preparation_factory::<Self>()
             }
 
@@ -255,7 +255,7 @@ pub(super) fn close_retained_load_registry(registry: &mut WindowConfigOwnerRegis
     }
     panic!("retained-load registry did not reach terminal emptiness");
 }
-fn keyed_packs(packs: Vec<WindowConfigPack>) -> BTreeMap<(String, String), store::ArtifactPackFiles> {
+fn keyed_packs(packs: Vec<WindowConfigPack>) -> BTreeMap<(String, String), store::os_store::serialization::ArtifactPackFiles> {
     packs.into_iter().map(|pack| ((pack.window_kind_id, pack.window_id), pack.files)).collect()
 }
 
@@ -291,7 +291,7 @@ fn window_config_paged_registry_retained_pack_load_current_registry_identity_and
                 reopened.load(pack).await.expect("current exact registry load");
             }
             let restored = reopened.packs().await.expect("reopened packs");
-            let first = WindowConfigPack { window_id: "malformed-absent".into(), window_kind_id: restored[0].window_kind_id.clone(), files: store::ArtifactPackFiles { pack: vec![1], ..restored[0].files.clone() } };
+            let first = WindowConfigPack { window_id: "malformed-absent".into(), window_kind_id: restored[0].window_kind_id.clone(), files: store::os_store::serialization::ArtifactPackFiles { pack: vec![1], ..restored[0].files.clone() } };
             let restored_bytes = keyed_packs(restored);
             assert_eq!(restored_bytes, expected_bytes, "two same-kind and one cross-kind Pack+SPR identities survive a new registry lifetime");
 

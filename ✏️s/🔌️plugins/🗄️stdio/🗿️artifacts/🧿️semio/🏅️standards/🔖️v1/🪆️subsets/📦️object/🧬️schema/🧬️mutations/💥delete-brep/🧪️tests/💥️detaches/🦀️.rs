@@ -8,10 +8,10 @@
 //! into the INNER `None` (an absent key stays the outer `None`, "untouched"), so the committed
 //! `🔺️diff/🔣️.json` is a decode→encode fixed point that clears the slot when applied.
 
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/💥delete-brep/💥️detaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/💥delete-brep/💥️detaches/📸️snapshot/➡️after/🔣️.json");

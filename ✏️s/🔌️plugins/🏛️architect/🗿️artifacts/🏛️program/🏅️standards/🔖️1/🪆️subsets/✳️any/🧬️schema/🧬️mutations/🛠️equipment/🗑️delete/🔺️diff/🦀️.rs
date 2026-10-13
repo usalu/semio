@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛠️equipment` per Wave C.
 
 use super::DeleteEquipment;
-use crate::diff::ProgramEquipmentDelta;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramEquipmentDelta;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 🗑️ Error `mutation.target-missing` if the id is absent (empty diff), else `removed = [{id, index}]`.
 pub fn diff(payload: &DeleteEquipment, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

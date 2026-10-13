@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `GisTerrainSnapshot` to its binary pack form.
 pub fn encode(document: &GisTerrainSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(document)
+    store::os_store::serialization::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `GisTerrainSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<GisTerrainSnapshot, PackError> {
-    <GisTerrainSnapshot as store::ArtifactPack>::decode_pack(bytes)
+    <GisTerrainSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region 🧪️Tests
@@ -39,8 +39,8 @@ use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 pub(crate) fn write_bytes_lp(out: &mut Vec<u8>, bytes: &[u8]) {
     store::pack_rt::write_varint_u64(out, bytes.len() as u64);
@@ -54,11 +54,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     write_str_lp(out, &r.to_uri());
 }
-pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+pub(crate) fn write_child<S>(out: &mut Vec<u8>, c: &store::os_store::artifact_child::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::ArtifactChild<S>>) {
+pub(crate) fn write_child_opt<S>(out: &mut Vec<u8>, c: &Option<store::os_store::artifact_child::ArtifactChild<S>>) {
     match c {
         Some(c) => {
             out.push(1);
@@ -78,8 +78,8 @@ use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub(crate) fn read_bytes_lp(reader: &mut store::ByteReader<'_>) -> Result<Vec<u8>, String> {
     let len = reader.read_varint_u64().map_err(|e| e.to_string())? as usize;
@@ -96,13 +96,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     semio_framework_artifact_reference::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
 
-pub(crate) fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+pub(crate) fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+    Ok(store::os_store::artifact_child::ArtifactChild::new(child_id, target))
 }
 
-pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::ArtifactChild<S>>, String> {
+pub(crate) fn read_child_opt<S>(reader: &mut store::ByteReader<'_>) -> Result<Option<store::os_store::artifact_child::ArtifactChild<S>>, String> {
     let presence = reader.read_u8().map_err(|e| e.to_string())?;
     if presence == 0 {
         Ok(None)

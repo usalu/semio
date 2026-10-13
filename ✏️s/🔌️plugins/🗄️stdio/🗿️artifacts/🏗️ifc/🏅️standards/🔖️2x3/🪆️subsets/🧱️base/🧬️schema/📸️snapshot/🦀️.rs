@@ -14,7 +14,7 @@ use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::Part21Document;
 //#region 🔖️Ids
 /// 🏷️ Document schema / DSL envelope id — distinct from `4`'s `"stdio.ifc"` so the two
-/// standards' document codecs never collide in the shared `store::document_codec_registry`.
+/// standards' document codecs never collide in the shared `store::os_store::codec_registry::document_codec_registry`.
 pub const STDIO_IFC2X3_DOCUMENT_SCHEMA: &str = "stdio.ifc.2x3";
 /// 🧬️ Artifact schema descriptor id — distinct from `4`'s `"s.stdio.ifc"`.
 pub const IFC2X3_ARTIFACT_SCHEMA_ID: &str = "s.stdio.ifc.2x3";

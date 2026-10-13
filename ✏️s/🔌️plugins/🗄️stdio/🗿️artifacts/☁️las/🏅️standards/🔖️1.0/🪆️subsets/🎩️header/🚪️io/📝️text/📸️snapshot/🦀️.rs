@@ -13,7 +13,7 @@ pub type LasSnapshotText = String;
 mod pack_codec {
 use crate::standards::v1_0::subsets::any::schema::snapshot::{LasHeader, LasPoint, LasSnapshot, LasVlr};
 use crate::standards::v1_0::subsets::any::io::binary::snapshot::pack::*;
-impl store::ArtifactDsl for LasSnapshot {
+impl store::os_store::serialization::ArtifactDsl for LasSnapshot {
     const EXTENSION: &'static str = "las";
     fn envelope_id() -> &'static str { "stdio.las" }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {

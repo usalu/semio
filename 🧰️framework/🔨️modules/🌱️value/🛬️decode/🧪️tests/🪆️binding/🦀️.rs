@@ -122,7 +122,7 @@ fn sqlite_snapshot_native_binding_controlled_document_cancels_during_inflation()
 
 #[test]
 fn sqlite_snapshot_native_binding_controls_artifact_child_identity() {
-    use {semio_framework_os_kernel::ArtifactChild,semio_framework_artifact_reference::ArtifactRef};
+    use {semio_framework_os_kernel::os_store::artifact_child::ArtifactChild,semio_framework_artifact_reference::ArtifactRef};
     use std::{io::Write,process::{Command,Stdio}};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔗️child/🔣️.json")).unwrap();
     let strings=["childId","artifactId","artifactKind","standard","subset"].map(|key|fixture[key].as_str().unwrap());let total=strings.iter().map(|text|text.len()).sum::<usize>();let expected=ArtifactRef{artifact_id:strings[1].into(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:strings[2].into(),standard:strings[3].into(),subset:strings[4].into()}};

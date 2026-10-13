@@ -10,7 +10,7 @@ fn fixture() -> serde_json::Value {
 #[semio_framework_async_macros::async_test]
 async fn document_codec_native_send_compile_dsl_preserves_exact_snapshots() {
     let fixture = fixture();
-    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
+    let codec = artifact_codec::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
     for value in fixture["snapshots"].as_array().unwrap() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None);
@@ -28,7 +28,7 @@ async fn document_codec_native_send_compile_dsl_preserves_exact_snapshots() {
 #[semio_framework_async_macros::async_test]
 async fn document_codec_native_send_print_mirror_preserves_exact_snapshots() {
     let fixture = fixture();
-    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
+    let codec = artifact_codec::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap());
     for value in fixture["snapshots"].as_array().unwrap() {
         let snapshot: DemoSnapshot = serde_json::from_value(value.clone()).unwrap();
         let envelope = create_document_envelope::<DemoSnapshot, DemoMutation>(fixture["schema"].as_str().unwrap(), "native-send", snapshot.clone(), None);

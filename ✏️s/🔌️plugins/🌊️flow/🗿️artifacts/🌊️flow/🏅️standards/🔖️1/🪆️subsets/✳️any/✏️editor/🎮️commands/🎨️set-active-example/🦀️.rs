@@ -19,8 +19,8 @@ pub struct SetActiveExample {
 /// 🗃️ The whole-document load an example switch answers with. A `LoadDocument` effect is NOT an edit: it carries no mutation rows, no diff and no history
 /// row; the runtime composes the loaded document's content child through `genesis_child_pack`, so the example is exactly what the window, the next verb and a reload see.
 pub fn load_document_effect(document: &FlowSnapshot) -> semio_framework_plugin::Effect {
-    let pack = <FlowSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("flow", crate::FLOW_DOCUMENT_SCHEMA));
+    let pack = <FlowSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("flow", crate::FLOW_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 

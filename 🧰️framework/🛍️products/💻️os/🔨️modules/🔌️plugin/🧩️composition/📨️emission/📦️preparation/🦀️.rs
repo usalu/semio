@@ -1,5 +1,7 @@
 //! 📨️ Owned child emission preparation retains typed operation owners across every refusal.
-use crate::{store,protocol,app::{ChildEmit,PluginLifecycleStep}};
+use crate::{store,protocol};
+use crate::app_emission::ChildEmit;
+use crate::bounded_ownership::PluginLifecycleStep;
 use semio_framework_diagnostic::{Fault,FaultFrom};
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop, sync::Arc};
@@ -106,12 +108,12 @@ pub struct ChildEmitPreparation {
 impl ChildEmitPreparation {
     pub fn of<S,M>(slot:impl Into<String>,child_id:impl Into<String>,operations:Vec<M>)->Self
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned {
-        Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),operations,None,Some((store::artifact_retirement_admit_owned::<M>,store::artifact_retirement_owned_birth_demands::<M>)))
+        Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),operations,None,Some((store::os_store::snapshot_read::artifact_retirement_admit_owned::<M>,store::os_store::snapshot_read::artifact_retirement_owned_birth_demands::<M>)))
     }
     /// 📦️ Retains the original typed mutation vector for direct member admission.
     pub fn of_owned<S,M>(slot:impl Into<String>,child_id:impl Into<String>,operations:Vec<M>)->Self
     where M:protocol::SemanticMutation<S>+::protocol::OpBinary+RetireOwned {
-        let mut preparation=Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),Vec::new(),None,Some((store::artifact_retirement_admit_owned::<M>,store::artifact_retirement_owned_birth_demands::<M>)));
+        let mut preparation=Self::with_factory_kind::<S,M>(slot.into(),child_id.into(),Vec::new(),None,Some((store::os_store::snapshot_read::artifact_retirement_admit_owned::<M>,store::os_store::snapshot_read::artifact_retirement_owned_birth_demands::<M>)));
         let owner=preparation.owner.as_any_mut().downcast_mut::<TypedChildEmitPreparation<M>>().unwrap();
         owner.operation_count=operations.len();
         owner.backing_bytes=operations.capacity().checked_mul(size_of::<M>()).expect("typed source vector layout");
@@ -122,7 +124,7 @@ impl ChildEmitPreparation {
         preparation
     }
     /// 🌱️ Carries the explicit member source with the same retained typed operation prefix.
-    pub fn with_genesis<S,M>(slot: impl Into<String>, child_id: impl Into<String>, genesis: crate::app::ChildEmitGenesis, operations: Vec<M>) -> Self
+    pub fn with_genesis<S,M>(slot: impl Into<String>, child_id: impl Into<String>, genesis: crate::app_emission::ChildEmitGenesis, operations: Vec<M>) -> Self
     where M: protocol::SemanticMutation<S> + protocol::OpBinary + RetireOwned {
         let mut preparation=Self::of_owned::<S,M>(slot,child_id,operations);
         preparation.owner.as_any_mut().downcast_mut::<TypedChildEmitPreparation<M>>().expect("exact typed genesis operation owner").prefix.as_mut().expect("retained genesis prefix").genesis=Some(genesis);
@@ -207,7 +209,7 @@ where M:Send+'static {
     fn retire_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         if let Some(error)=self.close_refusal.as_ref(){return Ok(RetirementDemand{release_bytes:owned_message_bytes(error),depth:1,..Default::default()});}
         if let Some(schema)=self.retired_schema.as_ref(){return Ok(RetirementDemand{release_bytes:schema.capacity(),depth:1,..Default::default()});}
-        if let Some(retirement)=self.retirement.as_ref(){return store::artifact_retirement_box_demands(retirement,body);}
+        if let Some(retirement)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement,body);}
         if let Some(operation)=self.current.as_ref(){
             return match self.retire_builtin{
                 Some((_,demand))=>demand(&self.current),
@@ -234,7 +236,7 @@ where M:Send+'static {
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:demand.release_bytes,..idle}));
         }
         if self.retirement.is_some(){
-            return match store::artifact_retirement_box_close_step(&mut self.retirement,grant){
+            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant){
                 Ok(step)=>Ok(RetainedCloneStep::Progress(step.progress())),
                 Err(error)=>{let fault=retirement_refusal_fault(&error);*self.close_refusal=Some(error);Err(fault)}
             };
@@ -485,7 +487,7 @@ impl<M> Drop for TypedChildEmitPreparation<M>{
 }
 
 
-pub(crate) fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::ProtocolError>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,ValueError>{
+fn close_protocol_owned_cause_one(cause:&mut Option<::protocol::ProtocolError>,grant:RetainedCloneGrant)->Result<PluginLifecycleStep,ValueError>{
     ::protocol::close_protocol_error_one(cause,grant).map(|step|PluginLifecycleStep::retained(step,cause.is_none()))
 }
 

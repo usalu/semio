@@ -5,7 +5,7 @@
 //! `Serializer`/`Deserializer` → [`IoDeclaration`] → `SubsetDeclaration.io` channel every healthy
 //! plugin already runs (`🗒️note`, `🧱️block`). The eight `compose_export_*` rows the old
 //! `io_registry` published were cross-type `ArtifactPack` casts — `RemodelingSnapshot::encode_pack`
-//! followed by `PlySnapshot::decode_pack` and friends — which `store::ArtifactPack`'s own
+//! followed by `PlySnapshot::decode_pack` and friends — which `store::os_store::serialization::ArtifactPack`'s own
 //! same-type round-trip law makes a deterministic `PackError` on every invocation; they are deleted,
 //! not shimmed. Every foreign hop below now runs through a REAL codec: `🧿️semio`'s `🔺️mesh` subset
 //! owns bidirectional `SemioMeshSnapshot ↔ {ply,las,obj,stl,gltf}` bridges and `🗄️stdio` owns the
@@ -28,14 +28,7 @@ use semio_framework_plugin::{ArtifactSerializer, MeshData};
 use semio_s_artifact_stdio_las::standards::v1_0::engine as las_engine;
 use semio_s_artifact_stdio_ply::standards::v1_0::engine as ply_engine;
 use semio_s_artifact_stdio_png::PngSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::{
-    subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv},
-    subsets::image::schema::snapshot::SemioImageSnapshot,
-    subsets::mesh::{
-        io::export::serializers::artifacts::{las::v1_0::any::SemioMeshToLas, ply::v1_0::any::SemioMeshToPly},
-        schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology},
-    },
-};
+use {semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv}, semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot, semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::las::v1_0::any::SemioMeshToLas, semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly, semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology}};
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.gltf", "stdio.json", "stdio.las", "stdio.obj", "stdio.ply", "stdio.png", "stdio.stl", "stdio.txt"]
@@ -65,7 +58,7 @@ pub(crate) fn mesh_data_to_semio_mesh(mesh: &MeshData) -> SemioMeshSnapshot {
 /// 🧬️ Inverse of `mesh_data_to_semio_mesh` — reconstructs a flat `MeshData` buffer from the FIRST
 /// primitive of the FIRST mesh (the only shape `mesh_data_to_semio_mesh` ever produces). Real,
 /// bidirectional, ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` (`🧩️Composition` region,
-/// artifact root): backs `RemodelingMesh.mesh: store::ArtifactChild<SemioMeshSnapshot>`'s working-scene
+/// artifact root): backs `RemodelingMesh.mesh: store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>`'s working-scene
 /// cache accessor, and (since W6) every `{ply,las,obj,stl,gltf}` IMPORT hop below.
 /// `face_ids`/`vertex_ids`/`edge_*`/`paint_texture_base64` are NOT representable in
 /// `SemioMeshSnapshot`'s gltf-shaped primitive (positions/normals/uvs/colors/indices only) — honestly
@@ -126,7 +119,7 @@ pub fn remodeling_png_asset(scene: &RemodelingSnapshot) -> Result<ImageAsset, St
 }
 
 /// 🖼️ `remodeling_png_asset` in the OS media-export envelope the editor's export command speaks.
-/// Takes the typed scene: `RemodelingSnapshot` left the serde type graph with `store::ArtifactChild`
+/// Takes the typed scene: `RemodelingSnapshot` left the serde type graph with `store::os_store::artifact_child::ArtifactChild`
 /// (W9), so a `serde_json::Value` document is no longer a carrier this crate can decode.
 pub fn remodeling_png_export(scene: &RemodelingSnapshot) -> Result<semio_framework_os::OsMediaExportResult, String> {
     let asset = remodeling_png_asset(scene)?;
@@ -335,7 +328,7 @@ fn semio_io_key(owner: &Dialect, direction: IoDirection, counterpart: &Dialect) 
 fn ensure_stdio_semio_and_png_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_s_artifact_stdio_semio::register();
+        semio_s_artifact_stdio_semio::register(&[semio_s_artifact_stdio_semio_image_import::CONVERSION, semio_s_artifact_stdio_semio_image_export::CONVERSION, semio_s_artifact_stdio_semio_mesh_import::CONVERSION, semio_s_artifact_stdio_semio_mesh_export::CONVERSION, semio_s_artifact_stdio_semio_drawing_import::CONVERSION, semio_s_artifact_stdio_semio_drawing_export::CONVERSION]);
         semio_s_artifact_stdio_png::register();
     });
 }
@@ -343,20 +336,20 @@ fn ensure_stdio_semio_and_png_registered() {
 pub(crate) fn semio_image_from_png_bytes(raw_png_bytes: &[u8]) -> Result<SemioImageSnapshot, String> {
     ensure_stdio_semio_and_png_registered();
     let png_snapshot = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::decode_png(raw_png_bytes)?;
-    let payload = IoPayload::Binary(<PngSnapshot as store::ArtifactPack>::encode_pack(&png_snapshot));
+    let payload = IoPayload::Binary(<PngSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&png_snapshot));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Import, &PNG_DIALECT);
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: PNG_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.semio image composer returned a non-binary payload".into()) };
-    <SemioImageSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
+    <SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))
 }
 
 pub(crate) fn png_bytes_from_semio_image(image: &SemioImageSnapshot) -> Result<Vec<u8>, String> {
     ensure_stdio_semio_and_png_registered();
-    let payload = IoPayload::Binary(<SemioImageSnapshot as store::ArtifactPack>::encode_pack(image));
+    let payload = IoPayload::Binary(<SemioImageSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(image));
     let key = semio_io_key(&SEMIO_IMAGE_DIALECT, IoDirection::Export, &PNG_DIALECT);
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, &[ErasedComposeSource { dialect: SEMIO_IMAGE_DIALECT, payload }])).map_err(|error| error.message)?;
     let IoPayload::Binary(bytes) = composed.payload else { return Err("s.stdio.png composer returned a non-binary payload".into()) };
-    let png_snapshot = <PngSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
+    let png_snapshot = <PngSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| format!("{error:?}"))?;
     semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::encode_png(&png_snapshot)
 }
 
@@ -540,7 +533,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<RemodelingSnapshot, RemodelingMutation>(REMODELING_DOCUMENT_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec::<RemodelingSnapshot, RemodelingMutation>(REMODELING_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }
@@ -585,10 +578,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<RemodelingSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<RemodelingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <RemodelingMutation as protocol::Mutation<RemodelingSnapshot>>::diff(&mutation, &self.snapshot);
@@ -639,14 +632,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <RemodelingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

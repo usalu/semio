@@ -7,7 +7,7 @@ import { resolveTestLevel } from "../../../../🔨️modules/🏃️process/🧪
 // This program is free software: you can redistribute it and/or modify it under the terms of the GNU Lesser General Public License as published by the Free Software Foundation, either version 3 of the License, or (at your option) any later version. This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public License for more details. You should have received a copy of the GNU Lesser General Public License along with this program.  If not, see <https://www.gnu.org/licenses/>.
 
 // 🧪️ Router of the repository testing domain:
-//   bun ./📜️script.ts <discover|contract|oracle|subject|parity|run|report|clean|dependency|nx|doctor|acceptance> [args…]
+//   bun ./📜️script.ts <discover|contract|oracle|subject|parity|run|cases|report|clean|dependency|nx|doctor|acceptance> [args…]
 
 //#endregion 🧲️Header
 
@@ -34,6 +34,20 @@ class DslScript extends Script {
   run(segments: string[]): void {
     const { level, rest } = resolveTestLevel(segments);
     runCmd("bun", ["nx", "run", "@semio-tech/s-fixture-sweep-rs:test", "--skip-nx-cache", "--", level, ...rest], { cwd: this.root, ...orchestratorBudgetOpts() });
+  }
+}
+
+/** 🧪️ `cases <owner> [quick|long|exhaustive] [--facet run|contract|oracle|subject|parity] [--case <slug>] [selectors…]`: the one argument-driven test entry
+ * of an owner's Nx test project. The level and facet are arguments, never separate targets; Nx caches every argument combination on its own. */
+class CasesScript extends Script {
+  async run(segments: string[]): Promise<void> {
+    const [owner, ...rest] = segments, facets = { run: RunScript, contract: ContractScript, oracle: OracleScript, subject: SubjectScript, parity: ParityScript } as const;
+    if (!owner || owner.startsWith("--")) throw new Error("cases <owner> [level] [--facet run|contract|oracle|subject|parity] [--case <slug>]");
+    const flag = rest.indexOf("--facet"), facet = (flag === -1 ? "run" : rest[flag + 1]) as keyof typeof facets, remaining = flag === -1 ? rest : [...rest.slice(0, flag), ...rest.slice(flag + 2)];
+    if (!Object.hasOwn(facets, facet)) throw new Error(`Unknown test facet ${facet}`);
+    const level = remaining.find((segment) => ["fundamental", "quick", "long", "exhaustive"].includes(segment)), selectors = remaining.filter((segment) => segment !== level);
+    if (level) process.env.SEMIO_TEST_LEVEL = level;
+    return new facets[facet](this.root, this.repoRoot, this.invocation).run([...(level && facet === "run" ? [level] : []), "--owner-root", owner, ...selectors]);
   }
 }
 
@@ -71,6 +85,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("subject", SubjectScript)
   .register("parity", ParityScript)
   .register("run", RunScript)
+  .register("cases", CasesScript)
   .register("test", TestScript)
   .register("schema", SchemaScript)
   .register("report", ReportScript)

@@ -3,8 +3,8 @@
   "package": {
     "pluginId": "gis",
     "packageId": "semio:gis",
-    "cargoPackage": "semio-hub-gis",
-    "componentFile": "semio_hub_gis.wasm"
+    "cargoPackage": "semio-hub-gis-component",
+    "componentFile": "semio_hub_gis_component.wasm"
   },
   "app": {
     "id": "s.gis.gismap@1/*#editor",

@@ -19,6 +19,29 @@ export interface OwnedCommandOptions {
 }
 
 
+/** 🧺️ Runs one tool without blocking the event loop and without forwarding its output: several tools run at once (jco, wasm-opt, a descriptor emitter, a
+ * module probe), so their output is kept as a 64 KiB tail and surfaced only in the failure. Cancellation terminates the tool's process tree, forcefully after 2 s.
+ * Resolves with the output tail. */
+export function captureOwnedCommandV1(command: string, args: readonly string[], cwd: string, options: Readonly<{ env?: Readonly<Record<string, string | undefined>>; signal?: AbortSignal }> = {}): Promise<string> {
+  options.signal?.throwIfAborted();
+  return new Promise((accept, reject) => {
+    const child = spawn(command, [...args], { cwd, env: options.env ?? process.env, shell: false, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], windowsHide: true });
+    let output = "", forced: ReturnType<typeof setTimeout> | undefined;
+    const cancel = (): void => { terminateOwnedChildTree(child); forced ??= setTimeout(() => { if (child.pid && process.platform !== "win32") try { process.kill(-child.pid, "SIGKILL"); } catch {} }, 2_000); };
+    options.signal?.addEventListener("abort", cancel, { once: true });
+    const capture = (chunk: Buffer): void => { output = (output + chunk.toString("utf8")).slice(-64 * 1024); };
+    child.stdout?.on("data", capture); child.stderr?.on("data", capture);
+    child.once("error", reject);
+    child.once("close", (code) => {
+      if (forced) clearTimeout(forced);
+      options.signal?.removeEventListener("abort", cancel);
+      if (options.signal?.aborted) reject(options.signal.reason);
+      else if (code === 0) accept(output);
+      else reject(new Error(`${command} ${args.join(" ")} exited with status ${code}\n${output}`));
+    });
+  });
+}
+
 /** ⏱️ Keeps long native queue waits observable until the owning operation completes. */
 export function startNativeProgress(label: string, intervalMs = 10_000, output: (line: string) => void = (line) => console.log(line)): () => void {
   const started = Date.now(),

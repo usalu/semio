@@ -71,7 +71,7 @@ fn folded_rows_against_declaration(items: &[(usize, usize)]) -> (usize, usize) {
 #[test]
 fn both_durable_lanes_derive_their_footprint_from_the_mutation() {
     let source = include_str!("../../../../../../../../../../../🔌️plugins/🌀️procedural/🗿️artifacts/🧊️generation3d/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🦀️.rs");
-    assert_eq!(source.matches("Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))").count(), 2, "both the artifact and the config preflight derive their footprint from the mutation");
+    assert_eq!(source.matches("Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))").count(), 2, "both the artifact and the config preflight derive their footprint from the mutation");
     assert!(!source.contains("ArtifactStoreOneItemFootprint { work_items"), "a durable lane regained a hand-written work-items literal");
 }
 
@@ -123,7 +123,7 @@ fn debug_print_normalized_examples() {
                 declared.retire_cold();
             }
         }
-        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", store::ArtifactDsl::print_dsl(&*read));
+        eprintln!("[DEBUG] BEGIN {example_id}\n{}\n[DEBUG] END {example_id}", store::os_store::serialization::ArtifactDsl::print_dsl(&*read));
     }
 }
 

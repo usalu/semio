@@ -3,10 +3,10 @@
 //! encloses volume (a solid, a compound of solids, or a closed shell).
 
 use super::{manifold_report, ShapeKind, ShapeScope, Watertightness};
-use crate::brep::queries::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, mass_from_moments, solid_mass_with_area_centroid, MassProperties};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::Body;
-use crate::inertia::{combine, principal_inertia, InertiaPiece, PrincipalInertia};
+use crate::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, mass_from_moments, solid_mass_with_area_centroid, MassProperties};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d::inertia::{combine, principal_inertia, InertiaPiece, PrincipalInertia};
 
 /// 🛞️ Volume, centroid and inertia about the centroid at unit density, with the principal frame.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]

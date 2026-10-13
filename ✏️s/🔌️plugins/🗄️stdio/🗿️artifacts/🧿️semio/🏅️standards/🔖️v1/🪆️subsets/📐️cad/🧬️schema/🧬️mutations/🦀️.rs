@@ -3,14 +3,11 @@
 //! `inverse()` looks up prior state from `base` and constructs the exact undoing mutation
 //! (name/handle-aware, matching bcf/docx precedent).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 
 
-use crate::standards::v1::subsets::cad::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
-
-
-
+use crate::schema::diff::{wrap_block_diff, wrap_block_entity_diff, wrap_entity_diff, wrap_layer_diff, CadBlockDiff, CadEntityRecordDiff, CadLayerDiff, SemioCadDiff};
 
 
 
@@ -24,7 +21,10 @@ use crate::standards::v1::subsets::cad::schema::diff::{wrap_block_diff, wrap_blo
 
 
 
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
+
+
+
+use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 
 use protocol::{Mutation};
 
@@ -180,7 +180,7 @@ fn find_block_entity<'a>(base: &'a SemioCadSnapshot, block_name: &str, handle: &
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn fixture() -> SemioCadSnapshot {
     SemioCadSnapshot {
-        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "0".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "dim".into(), color_index: 7, line_type: "CONTINUOUS".into(), visible: true }],
         blocks: vec![CadBlock {
             name: "door".into(),
@@ -194,7 +194,7 @@ fn fixture() -> SemioCadSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioCadMutation> {
-    let base = fixture();
+    let _base = fixture();
     vec![
         SemioCadMutation::AddLayer(add_layer::AddLayer { layer: CadLayer { name: "fresh".into(), color_index: 3, line_type: "CONTINUOUS".into(), visible: true }, at: None }),
         SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: "dim".into() }),

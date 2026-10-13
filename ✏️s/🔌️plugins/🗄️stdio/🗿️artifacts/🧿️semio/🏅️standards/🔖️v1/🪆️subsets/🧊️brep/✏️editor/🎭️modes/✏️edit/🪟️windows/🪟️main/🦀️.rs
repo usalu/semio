@@ -4,7 +4,7 @@
 //! artifact-level `SemioBrepSnapshot` — this window itself never mutates; mutation is the surface
 //! root's `handle()` responsibility.
 
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::snapshot::SemioBrepSnapshot;
 use semio_framework_plugin::{mesh_from_kind, world3d_camera_json, world3d_selection_json, BuiltNode, MeshView, MeshWindowKit, WindowKindDefinition, WindowKit};
 
 //#region 🔖️Constants
@@ -22,7 +22,7 @@ const SEMIO_BREP_EDIT_DEFAULT_CAMERA_FOV: f64 = 45.0;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn definition() -> WindowKindDefinition {
     let mut definition = MeshWindowKit::editable_window_kind();
-    definition.actions = vec![crate::editor::semio_brep::set_vertex_action()];
+    definition.actions = vec![crate::editor::set_vertex_action()];
     definition
 }
 //#endregion 🔖️Definition

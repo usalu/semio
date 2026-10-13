@@ -15,12 +15,12 @@ pub const LOWPOLY_EXAMPLE_TEXT: &str = include_str!("../../../📚️examples/�
 
 /// 📖️ Parses `.lowpoly` DSL text into a `LowpolySnapshot`.
 pub fn parse_dsl(text: &str) -> Result<LowpolySnapshot, semio_framework_diagnostic::TextError> {
-    <LowpolySnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <LowpolySnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LowpolySnapshot` back to `.lowpoly` DSL text.
 pub fn print_dsl(document: &LowpolySnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -42,7 +42,7 @@ use crate::{LowpolyObject, LowpolyPaintLayer, LowpolyTransform, LOWPOLY_DOCUMENT
 use framework_schema::ArtifactSchema;
 
 /// ✉️ Handcrafted `ArtifactDsl`; `ArtifactPack` over the derived record spec.
-impl store::ArtifactDsl for LowpolySnapshot {
+impl store::os_store::serialization::ArtifactDsl for LowpolySnapshot {
     const EXTENSION: &'static str = "lowpoly";
     fn envelope_id() -> &'static str {
         "lowpoly.lowpoly"
@@ -57,7 +57,7 @@ impl store::ArtifactDsl for LowpolySnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

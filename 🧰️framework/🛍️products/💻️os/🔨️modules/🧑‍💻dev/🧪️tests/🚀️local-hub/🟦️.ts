@@ -307,7 +307,8 @@ describe("the development catalog", () => {
     expect(body).toContain(`schemaVersion: ${declared.schemaVersion.const},`);
     for (const key of declared.packages.items.required) expect(body, key).toMatch(new RegExp(`\\n\\s+${key}[:,]`, "u"));
     const loader = readFileSync(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
-    expect(loader).toContain(`bundle.schema_version != ${declared.schemaVersion.const}`);
+    expect(loader).toContain("bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION");
+    expect(readFileSync(join(REPO, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🧬️schema/🦀️.rs"), "utf8")).toContain(`pub const TRUSTED_BUNDLE_SCHEMA_VERSION: u32 = ${declared.schemaVersion.const};`);
   });
 });
 

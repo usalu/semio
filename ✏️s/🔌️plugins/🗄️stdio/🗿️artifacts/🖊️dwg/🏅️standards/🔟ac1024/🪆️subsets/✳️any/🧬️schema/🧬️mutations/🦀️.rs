@@ -1,7 +1,7 @@
 //! 🧬️ Logical DWG document mutations.
 
-use crate::schema::diff::{self, DwgDiff};
-use crate::DwgSnapshot;
+use crate::standards::v_ac1024::subsets::any::schema::diff::{self, DwgDiff};
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Mutations
@@ -98,10 +98,10 @@ pub const KINDS: &[&str] = &["set-version-info", "set-drawing", "set-header", "s
 
 //#endregion 🔖️MutationTrait
 
-#[cfg(test)]
+/// 🎬️ One representative mutation of every kind, for the grammar, protocol and round-trip laws.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_mutation_cases() -> Vec<DwgMutation> {
-    use crate::schema::snapshot::*;
+pub fn demo_mutation_cases() -> Vec<DwgMutation> {
+    use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
     vec![
         DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: "AC1024".into(), maintenance_version: 9, codepage: 65001 }),
         DwgMutation::SetDrawing(set_drawing::SetDrawing { drawing: DwgLogicalDrawing::default() }),

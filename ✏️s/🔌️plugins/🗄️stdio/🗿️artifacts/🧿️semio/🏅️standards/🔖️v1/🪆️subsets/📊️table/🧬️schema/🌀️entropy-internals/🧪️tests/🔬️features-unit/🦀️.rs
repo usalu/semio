@@ -3,7 +3,7 @@ mod tests {
 
     #[test]
     fn standard_registry_computes_all_features_in_order() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
         let registry = FeatureRegistry::standard();
         let features = registry.compute(&x).unwrap();
@@ -17,7 +17,7 @@ mod tests {
     #[test]
     fn with_feature_appends_after_standard_entries() {
         let registry = FeatureRegistry::standard().with_feature("custom", feature_histogram_entropy as FeatureFn);
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
         let x: Vec<f64> = (0..1500).map(|_| rng.next_gaussian()).collect();
         let features = registry.compute(&x).unwrap();
         assert_eq!(features.last().unwrap().name, "custom");
@@ -32,7 +32,7 @@ mod tests {
 
     #[test]
     fn suggest_bins_prefers_freedman_diaconis_for_spread_data() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let x: Vec<f64> = (0..500).map(|_| rng.next_gaussian()).collect();
         assert!(matches!(suggest_bins(&x), BinsSpec::FreedmanDiaconis));
     }

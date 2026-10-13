@@ -11,7 +11,7 @@ use semio_framework_job::InteractiveJobCloseStep;
 use semio_framework_plugin::{AppOperationContext, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
 
 type Owner = EditorApp<TrinityJackPlayApp>;
 pub(crate) const JACK_QUERY_TOOL_IDS: &[&str] = &["runQuery", "loadExampleQuery"];
@@ -327,7 +327,7 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             Err(error) => refused(error),
         };
         if self.retirement.is_some() {
-            return progress(store::artifact_retirement_box_close_step(&mut self.retirement, grant));
+            return progress(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant));
         }
         if let Some(execution) = self.execution.as_mut() {
             if execution.terminal_is_empty() {
@@ -344,12 +344,12 @@ impl ArtifactCommandWork<Owner> for JackQueryWork {
             return progress(preparation.close_step(grant));
         }
         if self.source.is_some() {
-            return progress(store::artifact_retirement_admit_owned(&mut self.source, &mut self.retirement, grant));
+            return progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.source, &mut self.retirement, grant));
         }
         if self.editor_window_id.is_some() {
-            return progress(store::artifact_retirement_admit_owned(&mut self.editor_window_id, &mut self.retirement, grant));
+            return progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.editor_window_id, &mut self.retirement, grant));
         }
-        progress(store::artifact_retirement_admit_owned(&mut self.results_window_id, &mut self.retirement, grant))
+        progress(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.results_window_id, &mut self.retirement, grant))
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> {
         Ok(self.close_demands(0)?.copy_bytes)
@@ -372,7 +372,7 @@ impl JackQueryWork {
     /// 📏️ Quotes the next close turn in the fixed order: child cursor, execution, preparation, then each owned string.
     fn close_demands(&self, body: usize) -> Result<RetirementDemand, semio_framework_value::ValueError> {
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if let Some(execution) = self.execution.as_ref() {
             return if execution.terminal_is_empty() { Ok(RetirementDemand { release_bytes: size_of::<crate::executor::QueryExecution>(), depth: 1, ..Default::default() }) } else { execution.close_demands(body) };
@@ -381,12 +381,12 @@ impl JackQueryWork {
             return if preparation.terminal_is_empty() { Ok(RetirementDemand { copy_bytes: size_of::<Option<crate::executor::QueryExecutionPreparation>>(), depth: 1, ..Default::default() }) } else { preparation.close_demands(body) };
         }
         if self.source.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.source);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.source);
         }
         if self.editor_window_id.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.editor_window_id);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.editor_window_id);
         }
-        store::artifact_retirement_owned_birth_demands(&self.results_window_id)
+        store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.results_window_id)
     }
 }
 

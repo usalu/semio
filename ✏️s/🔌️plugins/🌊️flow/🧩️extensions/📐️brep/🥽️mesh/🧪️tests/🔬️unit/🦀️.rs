@@ -303,7 +303,7 @@ async fn mesh_from_brep_retains_tessellation_import_normals_and_output() {
             assert!(flow_extension_sdk::evaluation_progress(&registry,"brep.mesh.toBrep",node).is_none());assert_eq!(counts(),stable,"guest cancelled at {phase}");
         }
     }
-    let mut fault=semio_framework_3d::brep::engine::MeshImportCursor::new(vec![0.,0.,0.,1.,0.,0.,0.,1.,0.,2.,0.,0.],Vec::new(),vec![0,1,2,0,1,3],0.001).unwrap();
+    let mut fault=semio_framework_3d_brep_engine::MeshImportCursor::new(vec![0.,0.,0.,1.,0.,0.,0.,1.,0.,2.,0.,0.],Vec::new(),vec![0,1,2,0,1,3],0.001).unwrap();
     let mut trips=0;loop {match registry.session.step_mesh_import(&mut fault,1) {Err(_)=>break,Ok(Some(_))=>panic!("faulted import published"),_=>{trips+=1;assert!(trips<10000);}}}assert_eq!(counts(),stable,"fault rollback preserves exactly the existing body");
     let mut interleaved=registry.dispatch_job("brep.mesh.toBrep",&request).unwrap().unwrap();let mut trips=0;let output=loop {match interleaved.step(1).unwrap() {
         OperatorJobStep::Done(value)=>break neural_engine::ColdOwner::new(registry.finish_job("brep.mesh.toBrep",value).unwrap()),

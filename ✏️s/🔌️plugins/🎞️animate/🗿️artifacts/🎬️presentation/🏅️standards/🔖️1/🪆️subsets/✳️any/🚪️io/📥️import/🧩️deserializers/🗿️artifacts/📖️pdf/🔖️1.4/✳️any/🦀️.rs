@@ -7,7 +7,7 @@ use crate::PresentationSnapshot;
 use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_pdf::PdfSnapshot;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 pub const PDF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId::ANY };
 
@@ -20,7 +20,7 @@ impl Deserializer<PresentationSnapshot> for PdfIntoPresentation {
         let IoPayload::Binary(bytes) = payload else {
             return Err(IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,"PdfIntoPresentation: expected a binary pdf payload")));
         };
-        let wire = <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(cause) => semio_framework_value::ValueError::new(cause.kind, format!("PdfIntoPresentation: {}", cause.message)), Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("PdfIntoPresentation: in-memory decode reported a transport failure: {error}")) }))?;
+        let wire = <PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| IoError::from_value_error(match error.into_value_error() { Ok(cause) => semio_framework_value::ValueError::new(cause.kind, format!("PdfIntoPresentation: {}", cause.message)), Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("PdfIntoPresentation: in-memory decode reported a transport failure: {error}")) }))?;
         let json = semio_framework_pack_json::to_json_string(&wire);
         let snapshot: PresentationSnapshot = semio_framework_pack_json::from_json_str(&json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| { let mut cause=error;cause.message=format!("PdfIntoPresentation: {}",cause.message).into();IoError::from_value_error(cause) })?;
         Ok(IoOutcome::clean(snapshot))

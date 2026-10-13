@@ -49,7 +49,7 @@ use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use semio_framework_2d::compute::EngineHandles;
 use semio_framework_tool_machine::node_drag_emit;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::drag_nodes::DragNodes;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes;
 
 //#region 🔖️Constants
 pub const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -107,8 +107,8 @@ pub fn ui_value_map(values: impl IntoIterator<Item = (&'static str, semio_framew
 /// `🎮️commands/🧬️set-active-example::set_active_example` uses instead of a banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_wires_document_effect(document: &WiresSnapshot) -> Effect {
-    let pack = <WiresSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("reasoning-wires", crate::MINDMAP_WIRES_SCHEMA));
+    let pack = <WiresSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("reasoning-wires", crate::MINDMAP_WIRES_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Constants

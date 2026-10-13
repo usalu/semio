@@ -110,30 +110,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "\ud83c\udf0e\ufe0fhub/\ud83e\udde9\ufe0fcompositions/\ud83e\ude90\ufe0fspace/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "persistence-data-class-check": {
       "executor": "nx:run-commands",
       "cache": true,

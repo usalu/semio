@@ -31,7 +31,7 @@
           "pattern": "^semio:[a-z][a-z0-9-]*$"
         },
         "packageName": {
-          "const": "semio-hub-space"
+          "const": "semio-hub-space-component"
         },
         "moduleDirectoryName": {
           "type": "string",

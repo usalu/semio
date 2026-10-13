@@ -2,9 +2,9 @@
 //! hierarchy, per `📓️taxonomy.md`'s `flatten`/`unflatten` row: "addr + captured hierarchy"). Its own
 //! inverse captures the node it overwrites, so undoing it is exact for any node it replaces.
 
-use crate::standards::v1::subsets::drawing::schema::diff::NodePath;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
+use crate::schema::diff::NodePath;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::{DrawNode, SemioDrawingSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

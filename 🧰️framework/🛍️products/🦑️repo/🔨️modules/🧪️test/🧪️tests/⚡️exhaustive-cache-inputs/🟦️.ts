@@ -95,15 +95,18 @@ describe("⚡️ test-exhaustive cache inputs cover the owner's real dependency 
     expect(inputs.some((input) => input.includes("📦️packages/🦀️rust"))).toBe(false);
   });
 
-  test("every generated level target is cached alike, exhaustive included", async () => {
+  test("one owner project carries a cached lint and a level-forwarding test target", async () => {
     const { default: plugin } = await import("../../🟨️.mjs");
     const featurePath = "🧰️framework/🔨️modules/🎠️kernel/🧪️tests/✅️satisfy-version-requirements/🥒️.feature";
     const [, graph] = (await plugin.createNodesV2[1]([featurePath], {}, { workspaceRoot }))[0];
-    const project = Object.values(graph.projects)[0] as { targets: Record<string, { cache?: boolean; outputs?: readonly string[] }> };
-    for (const level of ["quick", "long", "exhaustive"]) {
-      const target = project.targets[`test-${level}`];
-      expect(target.cache, level).toBe(true);
-      expect(target.outputs, level).toEqual(expect.arrayContaining([expect.stringContaining("/results"), expect.stringContaining("/reports"), expect.stringContaining("/diffs")]));
+    const project = Object.values(graph.projects)[0] as { targets: Record<string, { cache?: boolean; outputs?: readonly string[]; options: { command: string; forwardAllArgs: boolean } }> };
+    expect(Object.keys(project.targets).sort()).toEqual(["lint", "test"]);
+    expect(project.targets.test.options.forwardAllArgs).toBe(true);
+    expect(project.targets.test.options.command).toBe('bun ./📜️script.ts cases "🧰️framework/🔨️modules/🎠️kernel"');
+    expect(project.targets.lint.options.forwardAllArgs).toBe(false);
+    for (const name of ["lint", "test"]) {
+      expect(project.targets[name].cache, name).toBe(true);
+      expect(project.targets[name].outputs, name).toEqual(expect.arrayContaining([expect.stringContaining("/results"), expect.stringContaining("/reports"), expect.stringContaining("/diffs")]));
     }
   });
 });

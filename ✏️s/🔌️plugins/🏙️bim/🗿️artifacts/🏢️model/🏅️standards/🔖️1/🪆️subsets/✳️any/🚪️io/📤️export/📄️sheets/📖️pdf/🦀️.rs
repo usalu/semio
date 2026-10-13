@@ -10,7 +10,7 @@ use crate::standards::v1::subsets::any::schema::inferences::plan_linework::{Plan
 use crate::standards::v1::subsets::any::schema::inferences::sheet_layout::{PaperRect, PlacedViewport, SheetLayout};
 use crate::standards::v1::subsets::any::schema::inferences::view_linework::ViewLinework;
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::foreign_artifacts::NativePdfArtifactResources;
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{DocumentStream, EncodeOptions, PdfTextLayout};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::{DocumentStream, EncodeOptions, PdfTextLayout};
 use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfFont, PdfInfo, PdfLineCap, PdfLineJoin, PdfOp, PdfPage, PdfSnapshot, PdfTextString};
 use std::collections::BTreeMap;
 

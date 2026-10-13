@@ -187,10 +187,10 @@ struct Generation2dStoreInitializationAuthority {
     base_revision: u64,
     parent_revision: u64,
     history_items: usize,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>>>,
     copy: std::mem::ManuallyDrop<Option<Generation2dSnapshotCopyCursor>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<Generation2dSnapshot>>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<Generation2dSnapshot, Generation2dMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<Generation2dSnapshot, Generation2dMutation>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<Generation2dSnapshot, Generation2dMutation>>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     displaced: std::mem::ManuallyDrop<Option<Generation2dReplayDisplaced>>,
@@ -467,7 +467,7 @@ impl semio_framework_plugin::ArtifactStoreInitializationAuthority<Generation2dSn
             }
             Generation2dStoreInitializationPhase::BuildOwners => {
                 if self.owners.is_none() {
-                    match store::bounded_artifact_store_owners::<Generation2dSnapshot, Generation2dMutation>(cx.retained_grant()) {
+                    match store::os_store::document_store_owners::bounded_artifact_store_owners::<Generation2dSnapshot, Generation2dMutation>(cx.retained_grant()) {
                         Ok((owners, progress)) => {
                             *self.owners = Some(owners);
                             cx.consume_retained(progress)?;
@@ -776,7 +776,7 @@ impl Generation2dSnapshotCopyCursor {
         if self.target.is_none() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
-        store::artifact_retirement_owned_birth_demands(&*self.target)
+        store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.target)
     }
 
     fn abandon(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
@@ -784,7 +784,7 @@ impl Generation2dSnapshotCopyCursor {
             self.handed_back = true;
             return Ok(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         }
-        let step = store::artifact_retirement_admit_owned(&mut self.target, active, grant)?;
+        let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.target, active, grant)?;
         if self.target.is_none() {
             self.handed_back = true;
         }
@@ -827,7 +827,7 @@ enum Generation2dStoreInitializationPhase {
 }
 
 impl Generation2dStoreInitializationAuthority {
-    fn new(envelope: store::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
+    fn new(envelope: store::os_store::store_schema::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, actor: protocol::ActorId) -> Self {
         if generation2d_validate_publication_authority(operation, generation).is_err() {
             let _ = generation2d_admit_app_publication_authority(operation, generation);
         }
@@ -884,17 +884,17 @@ impl Generation2dStoreInitializationAuthority {
 
     fn pump_owned(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
         if self.active.is_some() {
-            let step = store::artifact_retirement_box_close_step(&mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
         if self.displaced.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
         if self.rejected.is_some() {
-            let step = store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, cx.retained_grant())?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, cx.retained_grant())?;
             cx.consume_retained(step.progress())?;
             return Ok(true);
         }
@@ -912,13 +912,13 @@ impl Generation2dStoreInitializationAuthority {
             return self.publication.retirement_demands();
         }
         if let Some(owner) = self.active.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.displaced);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.displaced);
         }
         if self.rejected.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.rejected);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.rejected);
         }
         if let Some(candidate) = self.candidate.as_ref() {
             return match self.candidate_disposer.as_ref() {
@@ -969,13 +969,13 @@ impl Generation2dStoreInitializationAuthority {
             return self.publication.close_step(child).map(|step| step.progress());
         }
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
         }
         if self.displaced.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.displaced, &mut self.active, grant).map(|step| step.progress());
         }
         if self.rejected.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.active, grant).map(|step| step.progress());
         }
         if self.candidate.is_some() {
             if self.candidate_disposer.is_none() {
@@ -1086,7 +1086,7 @@ impl Drop for Generation2dStoreInitializationAuthority {
 }
 
 pub fn generation2d_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,
@@ -1110,14 +1110,14 @@ fn generation2d_publication_hostiles() -> &'static std::sync::Mutex<[Option<Gene
     HOSTILES.get_or_init(|| std::sync::Mutex::new([None; GENERATION2D_PUBLICATION_SLOTS]))
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Generation2dPackSnapshotAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Generation2dPackSnapshotAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("generation2d-envelope.snapshot-stale-authority", token.start));
         }
@@ -1125,10 +1125,10 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
             return Err(self.diagnostic("generation2d-envelope.snapshot-pack-cancelled", token.start));
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dPackSnapshotState::AwaitToken {
-            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
+            if !terminal || token.kind != store::os_store::owned_schema_decode::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("generation2d-envelope.snapshot-pack-must-be-scalar", token.start));
             }
             let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("generation2d-envelope.snapshot-pack-length", token.start))?;
@@ -1152,7 +1152,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
                 }
                 self.session.as_mut().expect("P2 mounted pack session retained").seal().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-seal", retained.end))?;
                 self.state = Generation2dPackSnapshotState::Drive;
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             if let Some(exact) = self.session.as_mut().expect("P2 mounted pack session retained").next_retained_allocation_bytes().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))? {
                 let step = self.session.as_mut().expect("P2 mounted pack session retained").reserve_retained_allocation(exact).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-source-allocation", retained.start + self.relative as u64))?;
@@ -1160,7 +1160,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
                     return Err(self.diagnostic("generation2d-envelope.snapshot-source-allocation-stalled", retained.start + self.relative as u64));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
@@ -1174,7 +1174,7 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
             } else {
                 self.high = Some(nibble);
             }
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dPackSnapshotState::Drive {
             cx.set_stage("generation2d-retained-canonical-pack");
@@ -1184,16 +1184,16 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
                     return Err(self.diagnostic("generation2d-envelope.snapshot-retained-allocation-stalled", token.start));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P2 mounted pack session retained").grant().map_err(|_| self.diagnostic("generation2d-envelope.snapshot-pack-malformed", token.start))? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             *self.value = Some(self.session.as_mut().expect("P2 mounted pack session retained").take().ok_or_else(|| self.diagnostic("generation2d-envelope.snapshot-pack-handoff", token.start))?);
             self.session.as_mut().expect("P2 mounted pack session retained").request_cancel();
             self.state = Generation2dPackSnapshotState::CloseSession;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dPackSnapshotState::CloseSession {
             cx.consume_fuel(1);
@@ -1202,59 +1202,59 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
                 self.session.as_mut().expect("P2 mounted pack session retained").close_step(1, maximum_bytes).map_err(|_| self.diagnostic("generation2d-envelope.snapshot-session-close", token.start))?,
                 store::mounted_pack_rt::RetainedTypedPackCloseStep::Pending { .. }
             ) {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             drop(self.session.take());
             self.token = None;
             self.state = Generation2dPackSnapshotState::Ready;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
         }
         Err(self.diagnostic("generation2d-envelope.snapshot-token-replayed", token.start))
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<Generation2dSnapshot>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<Generation2dSnapshot>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if !matches!(self.state, Generation2dPackSnapshotState::Ready) {
             return Err(self.diagnostic("generation2d-envelope.snapshot-pack-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("generation2d-envelope.snapshot-owner-missing", 0))?;
         target.publish_snapshot_reserved(reservation, value);
         self.state = Generation2dPackSnapshotState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
     fn maximum_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let path = self.path;
-        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
         let empty = RetainedCloneProgress::default();
         if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
             self.state = Generation2dPackSnapshotState::Complete;
@@ -1277,11 +1277,11 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Gen
             };
         }
         if self.retirement.is_none() {
-            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
             self.state = Generation2dPackSnapshotState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.snapshot-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation2dPackSnapshotState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -1300,14 +1300,14 @@ impl Drop for Generation2dPackSnapshotAuthority {
     }
 }
 
-impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Generation2dMutationDecodeAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Generation2dMutationDecodeAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         terminal: bool,
-        source: &store::OwnedSchemaRecordCursor,
+        source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if cx.operation() != self.operation || cx.generation() != self.generation {
             return Err(self.diagnostic("generation2d-envelope.mutation-stale-authority", token.start));
         }
@@ -1315,10 +1315,10 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
             return Err(self.diagnostic("generation2d-envelope.mutation-cancelled", token.start));
         }
         if cx.should_yield() || cx.fuel_remaining() == 0 {
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dMutationDecodeState::AwaitToken {
-            if !terminal || token.kind != store::OwnedSchemaTokenKind::String {
+            if !terminal || token.kind != store::os_store::owned_schema_decode::OwnedSchemaTokenKind::String {
                 return Err(self.diagnostic("generation2d-envelope.mutation-pack-must-be-scalar", token.start));
             }
             let span = token.end.checked_sub(token.start).and_then(|span| span.checked_sub(2)).ok_or_else(|| self.diagnostic("generation2d-envelope.mutation-pack-length", token.start))?;
@@ -1348,12 +1348,12 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                         return Err(self.diagnostic("generation2d-envelope.mutation-retained-allocation-stalled", retained.start + self.relative as u64));
                     }
                     cx.consume_fuel(1);
-                    return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                    return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
                 }
                 self.session.as_mut().expect("P2 retained mutation session").grant().map_err(|_| self.diagnostic("generation2d-envelope.mutation-ingress-malformed", retained.start + self.relative as u64))?;
                 self.drive_ingress = !self.session.as_ref().expect("P2 retained mutation session").ingress_ready();
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             if retained.start + self.relative as u64 + 1 >= retained.end {
                 if self.high.is_some() {
@@ -1361,7 +1361,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                 }
                 self.session.as_mut().expect("P2 retained mutation session").seal().map_err(|_| self.diagnostic("generation2d-envelope.mutation-seal", retained.end))?;
                 self.state = Generation2dMutationDecodeState::Drive;
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             let mut byte = [0u8; 1];
             if source.copy_token_bytes(retained, self.relative, &mut byte) != 1 {
@@ -1376,7 +1376,7 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
             } else {
                 self.high = Some(nibble);
             }
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dMutationDecodeState::Drive {
             cx.set_stage("generation2d-retained-mutation");
@@ -1391,15 +1391,15 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                     return Err(self.diagnostic("generation2d-envelope.mutation-retained-allocation-stalled", token.start));
                 }
                 cx.consume_fuel(1);
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             cx.consume_fuel(1);
             if !self.session.as_mut().expect("P2 retained mutation session").grant().map_err(|_| self.diagnostic("generation2d-envelope.mutation-malformed", token.start))? {
-                return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+                return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
             }
             *self.value = Some(self.session.as_mut().expect("P2 retained mutation session").take().ok_or_else(|| self.diagnostic("generation2d-envelope.mutation-handoff", token.start))?);
             self.state = Generation2dMutationDecodeState::CloseSession;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending);
         }
         if self.state == Generation2dMutationDecodeState::CloseSession {
             cx.consume_fuel(1);
@@ -1411,52 +1411,52 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
                 .close_step(1, maximum_bytes)
                 .map_err(|_| self.diagnostic("generation2d-envelope.mutation-session-close", token.start))?
             {
-                store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
+                store::mounted_pack_rt::RetainedPackCloseStep::Pending { .. } => return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
                 store::mounted_pack_rt::RetainedPackCloseStep::Complete => {}
             }
             drop(self.session.take());
             self.token = None;
             self.state = Generation2dMutationDecodeState::Ready;
-            return Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
+            return Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete);
         }
         Err(self.diagnostic("generation2d-envelope.mutation-token-replayed", token.start))
     }
 
     fn publish_reserved(
         &mut self,
-        target: &mut dyn store::ArtifactEnvelopeMutationFieldTarget<Generation2dMutation>,
-        reservation: store::ArtifactEnvelopeFieldReservation,
+        target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldTarget<Generation2dMutation>,
+        reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.state != Generation2dMutationDecodeState::Ready {
             return Err(self.diagnostic("generation2d-envelope.mutation-not-ready", 0));
         }
         let value = self.value.take().ok_or_else(|| self.diagnostic("generation2d-envelope.mutation-owner-missing", 0))?;
         target.publish_mutation_reserved(reservation, value);
         self.state = Generation2dMutationDecodeState::Published;
-        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.copy_bytes)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.capacity_bytes)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.release_bytes)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(self.close_demands()?.depth)
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         let path = self.path;
-        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
+        let diagnostic = move |code: &'static str, error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path).with_native(error);
         let empty = RetainedCloneProgress::default();
         if self.session.is_none() && self.retirement.is_none() && self.value.is_none() {
             self.state = Generation2dMutationDecodeState::Complete;
@@ -1478,11 +1478,11 @@ impl store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation> for Gen
             };
         }
         if self.retirement.is_none() {
-            let step = store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
+            let step = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
             self.state = Generation2dMutationDecodeState::Closing;
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
-        let step = store::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
+        let step = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map_err(|error| diagnostic("generation2d-envelope.mutation-retirement-fault", error))?;
         if self.retirement.is_none() {
             self.state = Generation2dMutationDecodeState::Complete;
             return Ok(RetainedCloneStep::Complete(step.progress()));
@@ -1503,43 +1503,43 @@ impl Drop for Generation2dMutationDecodeAuthority {
 
 /// 📦️ Installs Generation2d's exact field catalog and nested owner retirement factories as
 /// one indivisible app decode authority.
-pub fn generation2d_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<Generation2dSnapshot, Generation2dMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation2dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
+pub fn generation2d_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Generation2dSnapshot, Generation2dMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(Generation2dEnvelopeOwnedFieldCatalog), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
 }
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<Generation2dSnapshot, Generation2dMutation> for Generation2dEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<Generation2dSnapshot, Generation2dMutation> for Generation2dEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>> {
         Box::new(Generation2dPackSnapshotAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<Generation2dMutation>> {
         Box::new(Generation2dMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(Generation2dRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation2dMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<Generation2dMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()))
     }
 }
 
@@ -1669,7 +1669,7 @@ impl Generation2dMutationSession {
                             self.maximum_items.min(GENERATION2D_MAXIMUM_DOMAIN_ITEMS),
                             self.expected_bytes,
                             self.expected_bytes,
-                            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
+                            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES,
                         )
                         .map_err(|_| "generation2d-mutation.body-preflight")?,
                     );
@@ -1793,9 +1793,9 @@ enum Generation2dPackSnapshotState {
 struct Generation2dPackSnapshotAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Generation2dPackSnapshotState,
-    token: Option<store::OwnedSchemaToken>,
+    token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
     session: std::mem::ManuallyDrop<Option<crate::standards::v1::subsets::any::io::binary::snapshot::Generation2dMountedPackSession>>,
@@ -1804,7 +1804,7 @@ struct Generation2dPackSnapshotAuthority {
 }
 
 impl Generation2dPackSnapshotAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -1819,21 +1819,21 @@ impl Generation2dPackSnapshotAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
-    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation2d-envelope.snapshot-close-demand", path).with_native(error);
+        let refusal = move |error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("generation2d-envelope.snapshot-close-demand", path).with_native(error);
         if let Some(session) = self.session.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
         }
         Ok(Default::default())
     }
@@ -1867,9 +1867,9 @@ enum Generation2dMutationDecodeState {
 struct Generation2dMutationDecodeAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
-    path: store::OwnedSchemaPath,
+    path: store::os_store::owned_schema_decode::OwnedSchemaPath,
     state: Generation2dMutationDecodeState,
-    token: Option<store::OwnedSchemaToken>,
+    token: Option<store::os_store::owned_schema_decode::OwnedSchemaToken>,
     relative: usize,
     high: Option<u8>,
     drive_ingress: bool,
@@ -1879,7 +1879,7 @@ struct Generation2dMutationDecodeAuthority {
 }
 
 impl Generation2dMutationDecodeAuthority {
-    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+    fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
         Self {
             operation,
             generation,
@@ -1895,8 +1895,8 @@ impl Generation2dMutationDecodeAuthority {
         }
     }
 
-    fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset, line: 0, column: 0, path: self.path , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 
     fn nibble(value: u8) -> Option<u8> {
@@ -1908,17 +1908,17 @@ impl Generation2dMutationDecodeAuthority {
         }
     }
 
-    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_demands(&self) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let path = self.path;
-        let refusal = move |error: semio_framework_value::ValueError| store::OwnedSchemaDecodeDiagnostic::before("generation2d-envelope.mutation-close-demand", path).with_native(error);
+        let refusal = move |error: semio_framework_value::ValueError| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("generation2d-envelope.mutation-close-demand", path).with_native(error);
         if let Some(session) = self.session.as_ref() {
             return Ok(semio_framework_value::RetirementDemand { release_bytes: session.next_retained_release_allocation_bytes().unwrap_or(0), depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(refusal);
         }
         if self.value.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&*self.value).map_err(refusal);
         }
         Ok(Default::default())
     }
@@ -1932,34 +1932,34 @@ struct Generation2dRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for Generation2dRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for Generation2dRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { code: "generation2d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "generation2d-envelope.fresh-conflict-not-admitted", offset: token.start, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
@@ -1980,7 +1980,7 @@ impl store::ArtifactEnvelopeSprConflictAuthority for Generation2dRejectedConflic
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct Generation2dEnvelopeOwnedFieldCatalog;
 
-const GENERATION2D_MAXIMUM_DOMAIN_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const GENERATION2D_MAXIMUM_DOMAIN_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 /// 🧬️ Fixed-depth typed owner for the exact fourteen Generation2d mutation records.
 /// Dynamic JSON is admitted only at the one ChangeGenerationValue value leaf.

@@ -3,7 +3,7 @@ use super::*;
 /// 🎨️ Indexed authored channels keep their original keys and sample allocations through genuine normal emission, projection and closure.
 #[test]
 fn original_mesh_tessellation_normal_indexed_channels_preserve_source_rows(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{DslValue,FromValue,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::{ControlledRetirement,ErasedControlledRetirement}};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();let fixture=&law["indexedChannels"];
     for face_uv in[false,true]{for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){

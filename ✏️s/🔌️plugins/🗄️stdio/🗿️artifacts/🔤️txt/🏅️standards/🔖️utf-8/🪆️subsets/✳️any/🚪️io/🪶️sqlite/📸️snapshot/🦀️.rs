@@ -1,6 +1,6 @@
 //! 🪶️ Explicit TXT entities and controlled external UTF-8 carriers.
 use crate::standards::v_utf_8::subsets::any::schema::snapshot::{LineEnding, TxtSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, Reconstruction, ordered_row_refs}, validate_sqlite_database_schema, SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshot};
 use semio_framework_value::{native_decoding::{NativeDecodeControl, NativeDecodeProgress},NativeEncodeControl};
 #[path="🛫️encoding/🦀️.rs"]
 mod original_encoding;

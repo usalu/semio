@@ -6,13 +6,13 @@
 //! `🏗️builder/🦀️.rs`, E2's own owned path — see `PluginDescriptorExtras`'s doc for why
 //! these live in a thread-local rather than on `Plugin`/`PluginManifest` themselves).
 //!
-//! `hashes` stay empty strings for all three fields: `wasm_sha256`/`core_wasm_sha256` can only be
-//! computed AFTER this component is built (by the external `semio-framework-plugin-describe` bin
-//! crate, packet E1) and `descriptor_sha256` is that same emitter's own two-pass self-hash — none of
-//! the three is computable by `describe()` itself, running inside the not-yet-hashed wasm. Unchanged
-//! from E1's own placeholder.
+//! `hashes` stay unbound (omitted on the wire): the descriptor `describe()` answers is SEMANTIC and equal
+//! under every build profile. Byte identity — the shipped component's SHA-256 — lives in the generated
+//! `ComponentReceiptV1` the describe stage writes beside the shipped bytes, and a deployed descriptor is
+//! bound to those bytes only when a module page or a trusted-catalog generation is materialized
+//! (ticket 26/09/23 wave A2).
 
-use semio_framework::{kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor, PackageHashes, PackageRole, PanelTabDefinition, PluginManifest};
+use semio_framework::{kernel, AppDefinition, AssetDeclaration, ComposerEntryDescriptor, ContributedInferenceMetadata, ContributionSet, ExecutionProtocol, FileTypeContribution, IoEntryDescriptor, IoEntryDirection, MediaClass, MediaForm, MediaType, PackageDescriptor, PackageRole, PanelTabDefinition, PluginManifest};
 use semio_framework_os_kernel::io;
 
 /// 📚️ The largest example document body a descriptor still carries inline.
@@ -95,11 +95,11 @@ async fn plugin_panels(apps: &[AppDefinition]) -> Vec<PanelTabDefinition> {
 
 /// 💡️ This plugin's frozen first-party inference roster (`owner == plugin_id`), including
 /// metadata-only ActionBus cold routes that deliberately have no synchronous service facade.
-async fn plugin_inference_services<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
+async fn plugin_inference_services<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, plugin_id: &str) -> Vec<ContributedInferenceMetadata> {
     let bytes = crate::plugin_runtime::plugin_wire_list_artifact_inference_services(runtime).await.unwrap_or_default();
     std::str::from_utf8(&bytes)
         .ok()
-        .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<crate::app::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
+        .and_then(|text| semio_framework_pack_json::from_json_str::<Vec<crate::artifact_inference::WireArtifactInferenceMetadata>>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).ok())
         .unwrap_or_default()
         .into_iter()
         .filter(|metadata| metadata.owner == plugin_id)
@@ -163,7 +163,7 @@ async fn plugin_io_contributions(plugin_id: &str) -> (Vec<IoEntryDescriptor>, Ve
 /// 🗂️ Assembles `ContributionSet` from what `manifest` and the process-global runtime registries
 /// actually declare — see each field helper's own doc. `menus`/`themes` stay empty (E1's own survey,
 /// unchanged); `mutation_services` stays empty (see `plugin_io_contributions`'s doc).
-async fn plugin_contributions<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, manifest: &PluginManifest) -> ContributionSet {
+async fn plugin_contributions<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, manifest: &PluginManifest) -> ContributionSet {
     let (io_entries, composer_entries) = plugin_io_contributions(&manifest.plugin_id).await;
     ContributionSet {
         commands: manifest.commands.clone(),
@@ -185,7 +185,7 @@ fn encode_package_descriptor(descriptor: &PackageDescriptor) -> Vec<u8> {
     store::pack_rt::encode_wire_value(semio_framework::CanonicalDescriptorValue::new(value).value())
 }
 
-async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
+async fn plugin_descriptor<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> PackageDescriptor {
     let mut manifest = crate::plugin_runtime::plugin_manifest(runtime).await;
     let extras = crate::plugin_runtime::plugin_descriptor_extras(runtime).await;
     let contributions = plugin_contributions(runtime, &manifest).await;
@@ -204,17 +204,16 @@ async fn plugin_descriptor<PA: crate::app::PluginApp>(runtime: &crate::plugin_ru
         quotas: extras.quotas,
         contributions,
         assets,
-        hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     }
 }
 
 /// 🔌️ Encodes the plugin's installed runtime descriptor.
-pub async fn describe_plugin<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+pub async fn describe_plugin<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
     encode_package_descriptor(&plugin_descriptor(runtime).await)
 }
 
 /// 🧩️ Combines an extension's metadata with its installed typed application runtime.
-pub async fn describe_extension_with_apps<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
+pub async fn describe_extension_with_apps<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Vec<u8> {
     let mut descriptor = plugin_descriptor(runtime).await;
     let extension = crate::plugin_runtime::extension_manifest().await;
     assert_eq!(descriptor.manifest.plugin_id, extension.extension_id, "extension and app bundle identities must match");
@@ -312,7 +311,6 @@ pub async fn describe_extension() -> Vec<u8> {
         quotas: kernel::QuotaSchema::default(),
         contributions,
         assets: Vec::new(),
-        hashes: PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() },
     };
     encode_package_descriptor(&descriptor)
 }

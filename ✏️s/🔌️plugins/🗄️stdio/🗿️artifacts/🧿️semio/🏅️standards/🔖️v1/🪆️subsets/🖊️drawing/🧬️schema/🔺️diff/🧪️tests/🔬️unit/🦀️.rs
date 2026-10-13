@@ -1,6 +1,5 @@
-use crate::standards::v1::subsets::drawing::schema::diff::transform;
 use super::*;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffBinary,DiffText};
 
 #[semio_framework_async_macros::async_test]
 async fn absorb_insert_then_remove_annihilates_the_add() {

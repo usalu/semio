@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{SemioAudioChannel, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snapshot(sample_rate: u32, channel_lengths: &[usize]) -> SemioAudioSnapshot {

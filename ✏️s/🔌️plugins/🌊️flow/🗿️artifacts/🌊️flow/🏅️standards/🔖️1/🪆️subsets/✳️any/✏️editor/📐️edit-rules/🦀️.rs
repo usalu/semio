@@ -3,9 +3,9 @@
 //! applied to a working copy of that content the next row of the same gesture reads. The `FlowHost` stays the oracle of port compatibility, id minting and layout; the leaves are
 //! built here from the payload and the content, never by differencing two contents.
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, set_edge_endpoints, set_node_param, set_node_position, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, set_edge_endpoints, set_node_param, set_node_position, SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 
 /// ✏️ One gesture in progress: the content child as the gesture has left it and the concrete leaves it has emitted so far.
 #[derive(Clone, Debug)]
@@ -60,7 +60,7 @@ impl ContentEdit {
         match node.params.iter_mut().find(|param| param.key == key) {
             Some(param) if param.value == value => return false,
             Some(param) => param.value = value.into(),
-            None => node.params.push(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowParam { key: key.into(), value: value.into() }),
+            None => node.params.push(semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowParam { key: key.into(), value: value.into() }),
         }
         self.leaves.push(SemioFlowMutation::SetNodeParam(set_node_param::SetNodeParam { id: id.into(), key: key.into(), value: value.into(), at: None }));
         true

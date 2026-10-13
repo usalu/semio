@@ -15,8 +15,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (the stdio
 //! W2 agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::schema::diff::SemioTextDiff;
+use crate::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Leaves
 use super::add_mark;

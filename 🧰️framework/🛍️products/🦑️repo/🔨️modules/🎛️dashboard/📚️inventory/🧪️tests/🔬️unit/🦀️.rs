@@ -28,7 +28,7 @@ fn discovery_reads_manifests_the_graph_the_catalog_and_the_open_tickets_and_noth
     let registry = discover(&root, &never());
     assert_eq!(registry.problems(), &[] as &[Problem]);
     let ids = ids(&registry);
-    for expected in ["workspace:verify", "hub:serve-docs", "@fixture/quiz:materialize-dev", "@fixture/artifact-wav:check", "@fixture/artifact-pdf:watch-tests", "playground:shell", "tool:workspace/inspector", "ticket:26/09/23/OPEN-PROBE/probe"] { assert!(ids.contains(&expected.to_string()), "{expected}"); }
+    for expected in ["workspace:verify", "hub:serve-docs", "@fixture/quiz:materialize", "@fixture/artifact-wav:check", "@fixture/artifact-pdf:watch-tests", "playground:shell", "tool:workspace/inspector", "ticket:26/09/23/OPEN-PROBE/probe"] { assert!(ids.contains(&expected.to_string()), "{expected}"); }
     assert!(!ids.iter().any(|id| id.starts_with("script:") || id.contains("vanished") || id.contains("CLOSED-PROBE/stale")));
     let wav = registry.find("@fixture/artifact-wav:check").unwrap();
     assert_eq!(wav.source, ".nx/workspace-data/project-graph.json (project @fixture/artifact-wav)", "a graph-only target names the graph as its source");

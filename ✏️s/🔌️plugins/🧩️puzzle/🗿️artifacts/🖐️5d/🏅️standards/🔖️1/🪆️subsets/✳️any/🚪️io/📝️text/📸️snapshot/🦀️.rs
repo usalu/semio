@@ -17,12 +17,12 @@ pub const PUZZLE5D_CAPSULE_DREAM_EXAMPLE_TEXT: &str = include_str!("../../../�
 
 /// 📖️ Parses `.puzzle5d` DSL text into a `Puzzle5dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle5dSnapshot, semio_framework_diagnostic::TextError> {
-    <Puzzle5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Puzzle5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle5dSnapshot` back to `.puzzle5d` DSL text.
 pub fn print_dsl(document: &Puzzle5dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -42,12 +42,12 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE_5D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use crate::Puzzle5dKindCatalogsExtra;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Puzzle5dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Puzzle5dSnapshot {
     const EXTENSION: &'static str = "puzzle5d";
     fn envelope_id() -> &'static str {
         "puzzle.puzzle5d"
@@ -62,7 +62,7 @@ impl store::ArtifactDsl for Puzzle5dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

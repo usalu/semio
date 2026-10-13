@@ -40,6 +40,5 @@ pub mod native_codecs;
 #[path = "../../🦀️.rs"]
 mod plugin;
 pub use plugin::{plugin, VcsApps};
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, VcsApps);
 
 //#endregion 🔖️Plugin

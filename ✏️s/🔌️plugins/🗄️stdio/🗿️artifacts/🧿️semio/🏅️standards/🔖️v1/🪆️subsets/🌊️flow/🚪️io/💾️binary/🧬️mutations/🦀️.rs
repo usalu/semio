@@ -5,29 +5,29 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::flow::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::flow::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, SemioFlowDiff};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_edge};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_edge};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_port_ref};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_port_ref};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point2};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point2};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_f64};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_f64};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{diff_insert_edge, diff_insert_node, diff_remove_edge, diff_remove_node, diff_remove_node_param, diff_set_edge_endpoints, diff_set_edge_kind, diff_set_node_kind, diff_set_node_label, diff_set_node_param, diff_set_node_position, SemioFlowDiff};
+use crate::io::text::snapshot::dec_edge;
+use crate::io::text::snapshot::enc_edge;
+use semio_s_artifact_stdio_semio_drawing::io::text::snapshot::dec_node;
+use semio_s_artifact_stdio_semio_drawing::io::text::snapshot::enc_node;
+use crate::io::text::snapshot::dec_port_ref;
+use crate::io::text::snapshot::enc_port_ref;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::{FlowEdge, FlowNode, PortRef, SemioFlowSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioFlowMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
 /// scope in production code too, not merely under `#[cfg(test)]` (W2b closer fix).
 use protocol::{OpBinary, OpText};
-use crate::standards::v1::subsets::flow::io::text::mutations::{print_flow_mutation};
+use crate::io::text::mutations::print_flow_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioFlowMutation) -> u8 {
     match m {

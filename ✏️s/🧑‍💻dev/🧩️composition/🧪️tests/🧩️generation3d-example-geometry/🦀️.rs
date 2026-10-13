@@ -131,8 +131,8 @@ const FIXTURE_SCHEMA: &str = "s.procedural.generation3d.example-geometry/v1";
 /// ⏱️ The hard bound the two USER-FACING phases sit under — mirrors the TypeScript twin's
 /// `EXAMPLE_BUDGET_INTERACTIVE_CEILING_MICROS`. Evaluating the op chain and tessellating at the LOD
 /// the live preview asks for are what the playground waits on, and neither may claim more than two
-/// seconds of this lane's native `test`-profile wall time: the wasm guest runs the identical code at
-/// `opt-level = 2` (root `Cargo.toml`'s `[profile.wasm-dev.package]` overrides) inside a budgeted
+/// seconds of this lane's native `test`-profile wall time: the shipped wasm guest runs the identical code at
+/// the `wasm-release` profile (`opt-level = "s"`, thin LTO) inside a budgeted
 /// resumable job, so a phase over this bound cannot converge in the playground within the
 /// user-facing target ticket 26/09/09/PROCEDURAL-3D-END-TO-END set.
 const BUDGET_INTERACTIVE_CEILING_MICROS: u64 = 2_000_000;
@@ -345,8 +345,8 @@ fn resolve_ready<T>(future: impl std::future::Future<Output = T>) -> T {
 /// resolves to. `math.vector`/`math.point` are not written out by the math extension — they are
 /// auto-derived schema components produced by `Registry::finalize`.
 fn install_example_operators(registry: &mut Registry) {
-    semio_s_plugin_flow_extension_brep::register(registry, geometry_session());
-    semio_s_plugin_flow_extension_math::register(registry);
+    semio_s_plugin_flow_brep::register(registry, geometry_session());
+    semio_s_plugin_flow_math::register(registry);
 }
 
 /// 🌿️ Publishes the operator registry once per test binary.

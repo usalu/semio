@@ -4,7 +4,10 @@
 //! and format registries. A rejection law therefore differences [`publication_witness`] around its
 //! candidate instead of asserting an absolute emptiness that its sibling's success would break.
 
-use crate::app::{declarations::fixture, ArtifactCapability, ArtifactCapabilityKind, ArtifactDeclaration, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace, Plugin};
+use crate::declarations::fixture;
+use crate::artifact_identity::{ArtifactCapability, ArtifactCapabilityKind, ArtifactDefinition, ArtifactIdentity, ArtifactIdentityClaim, ArtifactIdentityNamespace};
+use crate::artifact_declaration::ArtifactDeclaration;
+use crate::plugin_program::Plugin;
 use {semio_framework_artifact_reference::ArtifactKindId};
 
 fn definition(kind: &str) -> ArtifactDefinition {
@@ -29,7 +32,7 @@ async fn publication_witness() -> Vec<bool> {
     let mut witness = Vec::new();
     for (id, codec) in [("s.testkit.w1c-fixture@1/*", "semio.testkit.w1c-fixture.std1-any/v1"), ("s.testkit.w1c-fixture@1/strict", "semio.testkit.w1c-fixture.std1-strict/v1"), ("s.testkit.w1c-fixture@2/*", "semio.testkit.w1c-fixture.std2-any/v1")] {
         witness.push(semio_framework_schema_registry::artifact_schema_descriptor_registered(id));
-        witness.push(store::document_codec(codec).await.expect("registry available").is_some());
+        witness.push(store::os_store::codec_registry::document_codec(codec).await.expect("registry available").is_some());
     }
     witness.push(semio_framework_os_kernel::io::io_mechanism::io_entries().iter().any(|row| row.from.artifact_kind == "s.testkit.w1c-fixture" || row.into.artifact_kind == "s.testkit.w1c-fixture"));
     witness.push(semio_framework_os_kernel::io::format_descriptor("s.testkit.w1c-fixture@1").expect("registry available").is_some());
@@ -80,7 +83,7 @@ fn strict_artifact_identity_matches_independent_neutral_fixture() {
     let rows = fixture["cases"].as_array().expect("cases");
     assert_eq!(rows.len(), 15);
     for row in rows {
-        let result = crate::app::preflight_artifact_identity(row["plugin"].as_str().unwrap(), row["kind"].as_str().unwrap());
+        let result = crate::artifact_identity::preflight_artifact_identity(row["plugin"].as_str().unwrap(), row["kind"].as_str().unwrap());
         assert_eq!(result.err().map(|error| error.code).unwrap_or_else(|| "accepted".into()), row["code"].as_str().unwrap(), "{}", row["id"]);
     }
 }
@@ -94,5 +97,5 @@ async fn strict_artifact_identity_owned_tree_and_definition_channels_publish() {
     assert_eq!(tree.manifest.plugin_id, "testkit");
     assert_eq!(tree.manifest.apps.len(), 6);
     assert!(semio_framework_schema_registry::artifact_schema_descriptor_registered("s.testkit.w1c-fixture@1/*"));
-    assert!(store::document_codec("semio.testkit.w1c-fixture.std1-any/v1").await.unwrap().is_some());
+    assert!(store::os_store::codec_registry::document_codec("semio.testkit.w1c-fixture.std1-any/v1").await.unwrap().is_some());
 }

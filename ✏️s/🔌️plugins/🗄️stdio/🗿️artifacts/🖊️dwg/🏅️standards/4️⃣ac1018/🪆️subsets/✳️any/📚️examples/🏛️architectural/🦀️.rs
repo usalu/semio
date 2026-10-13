@@ -2,7 +2,7 @@
 //! ~145KB) for ticket 26/08/10/ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION.
 //! The DWG codec projects the real fixture into standard logical drawing and metadata concepts.
 
-use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg;
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
 use semio_framework_plugin::ExampleSource;
 use semio_framework_ui_locale::LocalizedLabel;
 

@@ -11,7 +11,7 @@
 //! per-entity, so this uses the plain `protocol::Inference<P>` shape (no `InferredField`/caching
 //! machinery — see `🧭topology/🦀️.rs` for the derivation).
 
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 
@@ -22,9 +22,9 @@ use super::topology::compute_topology;
 /// Value`-style read-only projection that used to live on the artifact-tree engine hub. Mutating /
 /// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
-use crate::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, Priority, ProgramDiagnostic};
-use crate::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, Priority, ProgramDiagnostic};
+use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
+use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
 use std::collections::{HashMap, HashSet};
 //#endregion 🔖️DerivedComputeImports
 

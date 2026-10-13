@@ -5,8 +5,8 @@
 //! rebuilt list. No `snapshot: Option<SemioTextSnapshot>` full-replace slot anywhere — whole-document replace is
 //! `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::schema::snapshot::{SemioTextMark, SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -135,8 +135,8 @@ impl protocol::command::DiffAlgebra<SemioTextSnapshot> for SemioTextDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTextDiff> {
-    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
-    use crate::standards::v1::subsets::text::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
+    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use crate::schema::snapshot::{demo_text_snapshot, SemioTextMarkKind};
     let bold = SemioTextMark { kind: SemioTextMarkKind::Bold, href: String::new() };
     vec![
         SemioTextDiff::default(),

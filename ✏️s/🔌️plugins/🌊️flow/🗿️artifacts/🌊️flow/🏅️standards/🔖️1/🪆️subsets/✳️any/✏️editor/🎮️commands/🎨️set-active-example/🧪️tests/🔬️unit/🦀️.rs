@@ -4,7 +4,7 @@ use crate::editor::flow::FlowCommand;
 use crate::examples::demo;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::Effect;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 fn loaded<'a>(effects: impl Iterator<Item = &'a Effect>) -> Vec<FlowSnapshot> {
     effects.filter_map(|effect| if let Effect::LoadDocument { pack, .. } = effect { Some(<FlowSnapshot as ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes")) } else { None }).collect()

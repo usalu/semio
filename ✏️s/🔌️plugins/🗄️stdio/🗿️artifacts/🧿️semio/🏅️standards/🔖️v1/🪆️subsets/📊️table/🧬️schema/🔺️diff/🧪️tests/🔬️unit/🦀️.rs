@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use crate::schema::snapshot::{SemioTableCellKind, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use protocol::{DiffBinary,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> SemioTableSnapshot {
@@ -9,7 +9,7 @@ fn one_col_row(name: &str, kind: SemioTableCellKind, value: SemioValue) -> Semio
 }
 
 fn modify_cell(row: usize, cell: usize, value: SemioValue) -> SemioTableDiff {
-    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     let cells = IndexedTripleDiff { modified: vec![IndexModified { index: cell, diff: Replace { value } }], ..Default::default() };
     SemioTableDiff { columns: None, rows: Some(IndexedTripleDiff { modified: vec![IndexModified { index: row, diff: SemioTableRowDiff { cells: Some(cells) } }], ..Default::default() }) }
 }

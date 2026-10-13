@@ -6,10 +6,10 @@
 //! leaving `rows: None`. That `None` is the whole point of this case: a rename is a pure
 //! identity-field change, so the committed diff must not even mention `rows`.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-column/✏️renames/📸️snapshot/➡️after/🔣️.json");
@@ -47,7 +47,7 @@ async fn the_undo_rename_column_swaps_the_two_names_back() {
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
     assert_eq!(
         undo,
-        vec![SemioTableMutation::RenameColumn(crate::standards::v1::subsets::table::schema::mutations::rename_column::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
+        vec![SemioTableMutation::RenameColumn(crate::schema::mutations::rename_column::RenameColumn { name: "town".to_string(), new_name: "city".to_string() })],
         "the undo must address the NEW name and rename it back to the old one"
     );
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward rename-column applies");

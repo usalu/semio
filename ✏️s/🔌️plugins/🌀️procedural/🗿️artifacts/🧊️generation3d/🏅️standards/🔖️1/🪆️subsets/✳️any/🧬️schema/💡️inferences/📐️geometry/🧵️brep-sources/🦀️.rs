@@ -3,12 +3,12 @@
 //! A curve and an edge are parameterised by their own curve parameter; a wire of `n` members is parameterised over `[0, n]`, member `i` covering `[i, i + 1]` in the member's own direction. A face answers through its supporting surface, with the normal turned the way the face points.
 
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::representation::curve::curve_ops::closest_parameter;
-use semio_framework_3d::brep::representation::curve::Curve3;
-use semio_framework_3d::brep::representation::surface::surface_ops::closest_uv;
-use semio_framework_3d::brep::representation::surface::Surface;
-use semio_framework_3d::brep::representation::vector::Pnt3;
+use semio_framework_3d_brep_engine::{ShapeRoot, ShapeValue};
+use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::surface::surface_ops::closest_uv;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::vector::Pnt3;
 
 fn axes(point: Pnt3) -> [f64; 3] {
     [point.x, point.y, point.z]

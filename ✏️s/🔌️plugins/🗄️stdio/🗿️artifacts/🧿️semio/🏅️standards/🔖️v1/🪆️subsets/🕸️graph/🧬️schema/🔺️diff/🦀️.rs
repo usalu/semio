@@ -4,10 +4,10 @@
 //! that must reach the edges names exactly the touched edge rows — never a rebuilt list. No `snapshot:
 //! Option<SemioGraphSnapshot>` full-replace slot anywhere — whole-document replace is `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::schema::snapshot::{GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -298,8 +298,8 @@ impl protocol::command::DiffAlgebra<SemioGraphSnapshot> for SemioGraphDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioGraphDiff> {
-    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
-    use crate::standards::v1::subsets::graph::schema::snapshot::demo_graph_snapshot;
+    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use crate::schema::snapshot::demo_graph_snapshot;
     let demo = demo_graph_snapshot();
     fn added<T>(items: Vec<T>) -> Vec<IndexAdded<T>> {
         items.into_iter().enumerate().map(|(index, item)| IndexAdded { index, item }).collect()

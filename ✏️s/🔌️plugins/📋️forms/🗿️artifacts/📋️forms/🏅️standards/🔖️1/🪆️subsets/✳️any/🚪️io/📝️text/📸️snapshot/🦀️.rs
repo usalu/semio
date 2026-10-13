@@ -1,5 +1,5 @@
 //! 📜️ Forms artifact — textual document grammar surface + laws (constitutional: dsl). Ticket
-//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (design.md §1 CORRECTION): `store::ArtifactDsl
+//! 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (design.md §1 CORRECTION): `store::os_store::serialization::ArtifactDsl
 //! for FormsSnapshot` now lives HERE (moved from `🧬️schema/📸️snapshot`, which keeps only the struct)
 //! — the native codec is one bidirectional thing and sits directly under `🚪️io/<facet>/<representation>`,
 //! unsplit. This component owns the real `parse_dsl`/`print_dsl` impl plus the thin artifact-facing
@@ -16,7 +16,7 @@ use crate::FormsSnapshot;
 //#region 🔖️HandcraftedArtifactDsl
 /// ✉️ `ArtifactDsl` over the derived spec-driven text of `FormsSnapshot::__dsl_spec()`, the same record
 /// the pack encodes; a parsed document must also pass `FormsSnapshot::validate`.
-impl store::ArtifactDsl for FormsSnapshot {
+impl store::os_store::serialization::ArtifactDsl for FormsSnapshot {
     const EXTENSION: &'static str = "forms";
     fn envelope_id() -> &'static str {
         crate::FORMS_DOCUMENT_SCHEMA
@@ -38,7 +38,7 @@ impl store::ArtifactDsl for FormsSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&crate::standards::v1::subsets::any::io::binary::snapshot::pack::record(self).expect("valid Forms native state"), &crate::standards::v1::subsets::any::io::binary::snapshot::pack::record_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -56,12 +56,12 @@ pub const ONBOARDING_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 /// 📖️ Parses `.forms` DSL text into a `FormsSnapshot` — `FormsSnapshot`'s OWN persisted wire
 /// format, the derived text of its own `dsl::DslRecord` spec.
 pub fn parse_dsl(text: &str) -> Result<FormsSnapshot, semio_framework_diagnostic::TextError> {
-    <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <FormsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `FormsSnapshot` back to `.forms` DSL text.
 pub fn print_dsl(document: &FormsSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -77,14 +77,14 @@ mod tests;
 /// `🗣️.dsl.semio` artifact.
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn parse_forms_dsl(text: &str) -> Result<FormsSnapshot, String> {
-    <FormsSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <FormsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 🖨️ Prints a [`FormsSnapshot`] back to `.forms` DSL text under a name an external caller can reach, paired
 /// with [`parse_forms_dsl`].
 // 🚫️async: E1 pure codec helper (file verified I/O-free) — see R9
 pub fn print_forms_dsl(snapshot: &FormsSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 //#endregion 🔖️ExternalBridges
 

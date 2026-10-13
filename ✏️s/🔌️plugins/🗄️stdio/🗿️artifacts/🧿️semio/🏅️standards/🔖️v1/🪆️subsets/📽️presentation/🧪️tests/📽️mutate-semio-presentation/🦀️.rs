@@ -42,20 +42,17 @@ use semio_repo_test_host::Adapter;
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{digest, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
+    use semio_framework_os_kernel::apply_diff;
     use semio_repo_test_host::law::carrier_is_exact;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::mutations::{
-        diff_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame,
-        set_slide_layout, set_slide_notes, set_textbox_blocks, SemioPresentationMutation,
-    };
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::binary::snapshot::{decode_semio_presentation_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::binary::snapshot::{encode_semio_presentation_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::text::snapshot::{print_semio_presentation_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::io::text::snapshot::{parse_semio_presentation_dsl};
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocListItem, DocRun, DocTableCell, DocTableRow, RunStyle};
+    use semio_s_artifact_stdio_semio_presentation::schema::mutations::{diff_semio_presentation_mutation, insert_layout, insert_master, insert_shape, insert_slide, remove_layout, remove_master, remove_shape, remove_slide, semio_presentation_mutation_inverse, set_layout_master, set_shape_frame, set_slide_layout, set_slide_notes, set_textbox_blocks, SemioPresentationMutation};
+    use semio_s_artifact_stdio_semio_presentation::schema::snapshot::{PlaceholderKind, SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
+    use semio_s_artifact_stdio_semio_presentation::io::binary::snapshot::decode_semio_presentation_pack;
+    use semio_s_artifact_stdio_semio_presentation::io::binary::snapshot::encode_semio_presentation_pack;
+    use semio_s_artifact_stdio_semio_presentation::io::text::snapshot::print_semio_presentation_dsl;
+    use semio_s_artifact_stdio_semio_presentation::io::text::snapshot::parse_semio_presentation_dsl;
 
     //#region 🔖️Input
     /// 🎤️ The real derived talk deck — the committed `📽️.pptx` read once by an independent

@@ -7,8 +7,8 @@
 
 use crate::{Pose, ProcessStep, Stock, Workshop};
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 
 //#region 🔖️Snapshot
@@ -33,17 +33,17 @@ pub struct Process3dSnapshot {
     pub stock_payload: Stock,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub stock_solid: store::ArtifactChild<SemioBrepSnapshot>,
+    pub stock_solid: store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub steps: store::ArtifactChild<SemioFlowSnapshot>,
+    pub steps: store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>,
     #[state(artifact)]
     #[value(default)]
     pub step_payloads: Vec<ProcessStep>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default)]
-    pub tool_solids: Vec<store::ArtifactChild<SemioBrepSnapshot>>,
+    pub tool_solids: Vec<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>,
 }
 
 impl Default for Process3dSnapshot {

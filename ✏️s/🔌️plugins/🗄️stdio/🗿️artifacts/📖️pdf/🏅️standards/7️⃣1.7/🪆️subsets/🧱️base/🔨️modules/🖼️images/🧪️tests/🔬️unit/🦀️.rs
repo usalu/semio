@@ -2,7 +2,8 @@ use super::*;
 
 #[test]
 fn pdf_semantic_body_image_words_match_neutral_native_and_independent_lopdf() {
-    use crate::standards::v1_7::subsets::base::{io::encode_pdf,schema::snapshot::{PdfSnapshot,PdfPage,PdfColorSpace}};
+    use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, PdfPage, PdfColorSpace};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["cases"].as_array().unwrap(){let integer=|key:&str|row[key].as_u64().unwrap() as u32;let values=row["values"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u32).collect::<Vec<_>>();let packed=row["packed"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect::<Vec<_>>();let (width,height,components,bits)=(integer("width"),integer("height"),integer("components"),integer("bits"));
         assert_eq!(pack_image_samples(width,height,components,bits,&values).unwrap(),packed);assert_eq!(unpack_image_samples(width,height,components,bits,&packed).unwrap(),values);

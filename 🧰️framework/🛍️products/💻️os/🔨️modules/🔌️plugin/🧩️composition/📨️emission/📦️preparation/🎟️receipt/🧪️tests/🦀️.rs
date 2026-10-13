@@ -1,6 +1,6 @@
 //! 🎟️ Original typed child schema and source retain exact native preparation receipts.
 use super::*;
-use crate::app::Emit;
+use crate::app_emission::Emit;
 use crate::test_app_mutation_fixture::{SetCount,TestMutation,TestSnapshot};
 #[test]
 fn original_child_preparation_preserves_native_receipts_and_cancellation(){

@@ -225,6 +225,22 @@
       "options": {
         "command": "bun ./📜️script.ts test workspace-ownership"
       }
+    },
+    "test-build-mode": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test build-mode"
+      }
+    },
+    "test-web-build": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "outputs": [],
+      "options": {
+        "command": "bun ./📜️script.ts test web-build"
+      }
     }
   },
   "namedInputs": {

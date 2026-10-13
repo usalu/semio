@@ -24,5 +24,5 @@ pub fn scene() -> crate::ProcedureScene {
 
 /// 📸️ The bundled demo parent document; its children are the derivable [`scene`].
 pub fn snapshot() -> crate::ProcedureSnapshot {
-    <crate::ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("bundled literal parent document parses")
+    <crate::ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("bundled literal parent document parses")
 }

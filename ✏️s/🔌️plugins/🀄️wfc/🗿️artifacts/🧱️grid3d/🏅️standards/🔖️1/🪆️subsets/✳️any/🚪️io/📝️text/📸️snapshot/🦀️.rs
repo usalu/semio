@@ -19,12 +19,12 @@ pub const GRID3D_EXAMPLE_PIPES_TEXT: &str = include_str!("../../../📚️exampl
 
 /// 📖️ Parses `.wfcgrid3d` DSL text into a `Grid3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Grid3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Grid3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Grid3dSnapshot` back to `.wfcgrid3d` DSL text.
 pub fn print_dsl(document: &Grid3dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -44,11 +44,11 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 /// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` — the derive stopped emitting these traits, so every
 /// artifact states its own envelope discipline.
-impl store::ArtifactDsl for Grid3dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Grid3dSnapshot {
     const EXTENSION: &'static str = "wfcgrid3d";
     fn envelope_id() -> &'static str {
         "wfc.grid3d"
@@ -66,7 +66,7 @@ impl store::ArtifactDsl for Grid3dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

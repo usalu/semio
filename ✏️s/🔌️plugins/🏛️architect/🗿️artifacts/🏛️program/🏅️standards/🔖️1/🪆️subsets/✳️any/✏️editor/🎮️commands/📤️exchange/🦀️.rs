@@ -5,7 +5,7 @@ pub mod export_registers_csv {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
@@ -21,10 +21,10 @@ pub mod export_registers_csv {
 }
 
 pub mod import_registers_csv {
-    use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
+    use crate::standards::v1::subsets::any::io::tables::{import_registers_csv, MergeStrategy};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 
@@ -50,7 +50,7 @@ pub mod import_registers_csv {
 pub mod import_registers_csv_request {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
@@ -77,7 +77,7 @@ pub mod import_registers_csv_request {
 pub mod export_program {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
@@ -95,7 +95,7 @@ pub mod export_program {
 pub mod import_program_request {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Effect, Emit, Fault};
 
@@ -117,7 +117,7 @@ pub mod import_program_request {
 pub mod import_program {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 

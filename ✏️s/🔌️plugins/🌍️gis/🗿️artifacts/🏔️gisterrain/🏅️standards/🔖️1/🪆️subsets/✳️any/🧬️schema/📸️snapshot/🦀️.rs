@@ -1,7 +1,7 @@
 //! 🧬️ GIS terrain snapshot schema — artifact-lane fields only.
 //!
 //! P6 handcrafted `ArtifactDsl`/`ArtifactPack` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`):
-//! `GisTerrainSnapshot` now carries a real `store::ArtifactChild<SemioMeshSnapshot>` handle for its
+//! `GisTerrainSnapshot` now carries a real `store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>` handle for its
 //! `mesh` slot, which `dsl::DslRecord`'s derive cannot represent (no `DslField` impl for
 //! `ArtifactChild<S>`) — the same reason `✳️object`/`✳️kit` (stdio) and `💠️lowpoly`/`📐️cad` hand-roll
 //! their own codecs rather than deriving. This file follows their exact hex/bracket convention, never
@@ -11,7 +11,7 @@
 use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key};
 use ::semio_framework_schema::ArtifactSchema;
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔹Snapshot
 /// 📸️ Persisted GIS terrain document snapshot (persistent fields of the artifact).
@@ -29,7 +29,7 @@ pub struct GisTerrainSnapshot {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
 }
 
 impl Default for GisTerrainSnapshot {

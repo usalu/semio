@@ -8,7 +8,7 @@
 //! inlined here (this file's own module doc comment) — so a true geometry bounding box is not
 //! honestly derivable from `model` alone; the placement translations ARE owned data).
 
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use crate::schema::snapshot::SemioModelSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::bounds::compute_semio_model_bounds;

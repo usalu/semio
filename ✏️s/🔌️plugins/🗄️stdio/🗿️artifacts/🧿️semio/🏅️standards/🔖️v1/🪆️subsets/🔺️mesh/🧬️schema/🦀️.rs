@@ -1,7 +1,7 @@
 //! 🧬️ SemioMeshArtifact schema — full artifact state, mirrors `SemioMeshSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioTexture};
+use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioTexture};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

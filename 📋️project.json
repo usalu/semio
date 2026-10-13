@@ -108,7 +108,7 @@
               {
                 "id": "ship",
                 "env": {
-                  "SEMIO_BUILD_MODE": "ship"
+                  "SEMIO_BUILD_MODE": "release"
                 },
                 "nxFlags": [
                   "--skip-nx-cache",
@@ -337,7 +337,7 @@
                   {
                     "id": "ship",
                     "env": {
-                      "SEMIO_BUILD_MODE": "ship"
+                      "SEMIO_BUILD_MODE": "release"
                     }
                   }
                 ]
@@ -612,6 +612,16 @@
     ]
   },
   "targets": {
+    "test-workspace-build": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "dependsOn": [],
+      "inputs": ["{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/**/*", "{workspaceRoot}/📋️project.json"],
+      "outputs": [],
+      "options": {
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts test"
+      }
+    },
     "agents-check": {
       "executor": "nx:run-commands",
       "cache": false,
@@ -1769,7 +1779,8 @@
             "*",
             "!workspace",
             "!@semio-tech/repo-test-domain"
-          ]
+          ],
+          "params": "forward"
         },
         "@semio-tech/repo-test-domain:test-contract"
       ],
@@ -1956,65 +1967,6 @@
         }
       },
       "outputs": []
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "dependsOn": [
-        {
-          "target": "test-quick",
-          "projects": [
-            "*",
-            "!workspace",
-            "!@semio-tech/repo-test-domain"
-          ]
-        },
-        "@semio-tech/repo-test-domain:test-contract"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts test quick"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "dependsOn": [
-        {
-          "target": "test-long",
-          "projects": [
-            "*",
-            "!workspace",
-            "!@semio-tech/repo-test-domain"
-          ]
-        },
-        "@semio-tech/repo-test-domain:test-contract",
-        "test-storybook"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts test long"
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "dependsOn": [
-        {
-          "target": "test-exhaustive",
-          "projects": [
-            "*",
-            "!workspace",
-            "!@semio-tech/repo-test-domain"
-          ]
-        },
-        "@semio-tech/repo-test-domain:test-contract",
-        "test-storybook"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts test exhaustive"
-      }
     },
     "bench-plugins": {
       "executor": "nx:run-commands",
@@ -2482,17 +2434,127 @@
         "build-storybook"
       ],
       "options": {
-        "command": "bun ./📜️script.ts build",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build",
         "forwardAllArgs": true
       },
       "cache": true,
+      "outputs": []
+    },
+    "release": {
+      "executor": "nx:run-commands",
+      "dependsOn": [],
+      "metadata": {
+        "semio": {
+          "orchestrator": true,
+          "release": {
+            "prerequisites": [
+              "workspace:deps-wasm-opt"
+            ],
+            "stageAfter": {
+              "describe": [
+                "job:describe-tool"
+              ],
+              "probe": [
+                "job:support"
+              ]
+            },
+            "jobs": [
+              {
+                "id": "describe-tool",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "host-tool",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "font-assets",
+                "root": "🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "build"
+                ],
+                "after": [],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "fonts",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "fonts"
+                ],
+                "after": [
+                  "job:font-assets"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process",
+                  "cargo"
+                ]
+              },
+              {
+                "id": "support",
+                "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
+                "command": [
+                  "bun",
+                  "./📜️script.ts",
+                  "support"
+                ],
+                "after": [
+                  "job:fonts"
+                ],
+                "profile": "release",
+                "target": "host",
+                "policies": [
+                  "process"
+                ]
+              }
+            ]
+          }
+        }
+      },
+      "options": {
+        "command": "bun ./📜️script.ts release",
+        "forwardAllArgs": false
+      },
+      "cache": false,
+      "outputs": []
+    },
+    "components": {
+      "executor": "nx:run-commands",
+      "dependsOn": [
+        "@semio-tech/os-plugin-describe-rs:build",
+        "@semio-tech/framework-plugin-web:support"
+      ],
+      "options": {
+        "command": "bun ./📜️script.ts components",
+        "forwardAllArgs": true
+      },
+      "cache": false,
       "outputs": []
     },
     "build-storybook": {
       "executor": "nx:run-commands",
       "dependsOn": [],
       "options": {
-        "command": "bun ./📜️script.ts build storybook",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build storybook",
         "forwardAllArgs": true,
         "env": {
           "STORYBOOK_PORT": "6010"
@@ -2500,7 +2562,7 @@
       },
       "cache": true,
       "outputs": [
-        "{workspaceRoot}/storybook-static"
+        "{workspaceRoot}/dist/{options.env.SEMIO_BUILD_MODE}/storybook"
       ],
       "inputs": [
         "production",
@@ -2533,7 +2595,7 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts cpp setup",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp setup",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2545,7 +2607,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp configure",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp configure",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2560,7 +2622,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp build",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp build",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2575,7 +2637,7 @@
       ],
       "cache": true,
       "options": {
-        "command": "bun ./📜️script.ts cpp test",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts cpp test",
         "forwardAllArgs": true
       },
       "outputs": []
@@ -2732,25 +2794,6 @@
       "outputs": [],
       "options": {
         "command": "bun ./📜️script.ts setup native"
-      }
-    },
-    "test-fundamental": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "outputs": [],
-      "dependsOn": [
-        {
-          "target": "test",
-          "projects": [
-            "*",
-            "!workspace",
-            "!@semio-tech/repo-test-domain"
-          ]
-        },
-        "@semio-tech/repo-test-domain:test-contract"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts test fundamental"
       }
     },
     "test-browser-actor-host-context": {
@@ -3350,7 +3393,7 @@
       "dependsOn": [],
       "cache": false,
       "options": {
-        "command": "bun ./📜️script.ts build canvas fonts",
+        "command": "bun ./🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/📜️script.ts build canvas fonts",
         "forwardAllArgs": true
       }
     },

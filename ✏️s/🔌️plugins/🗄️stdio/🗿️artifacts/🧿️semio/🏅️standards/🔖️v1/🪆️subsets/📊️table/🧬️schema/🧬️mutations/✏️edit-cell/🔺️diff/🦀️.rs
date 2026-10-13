@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `EditCell`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::table::schema::diff::{SemioTableDiff, SemioTableRowDiff};
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff, Replace};
+use crate::schema::diff::{SemioTableDiff, SemioTableRowDiff};
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Replaces one cell: the row's `cells` triple names exactly that cell's new value.

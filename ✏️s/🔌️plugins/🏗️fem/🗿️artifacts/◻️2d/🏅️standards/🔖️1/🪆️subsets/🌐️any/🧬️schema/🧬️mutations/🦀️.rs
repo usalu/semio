@@ -9,7 +9,7 @@ use crate::standards::v1::subsets::any::schema::diff::Fem2dDiff;
 use crate::Fem2dSnapshot;
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

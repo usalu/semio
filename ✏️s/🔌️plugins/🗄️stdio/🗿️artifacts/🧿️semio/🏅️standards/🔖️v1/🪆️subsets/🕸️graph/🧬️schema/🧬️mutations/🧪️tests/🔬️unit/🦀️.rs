@@ -1,8 +1,8 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
+use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioGraphSnapshot {
@@ -82,7 +82,7 @@ async fn create_delete_node_round_trips() {
 /// their child id across delete → undo, and a time-travel fold over the undo equals the fold before it.
 #[semio_framework_async_macros::async_test]
 async fn delete_then_undo_restores_byte_identical_snapshot_bytes() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let node = |id: &str, x: f64| SemioGraphNode { id: GraphNodeId::new(id), kind: "k".into(), label: id.to_uppercase(), position: SemioPoint2 { x, y: -x }, width: 2.0, height: 1.0, ports: vec![], properties: vec![SemioValueEntry { key: "w".into(), value: SemioValue::Int { lexeme: "3".into() } }] };
     let edge = |id: &str, source: &str, target: &str| SemioGraphEdge { id: GraphEdgeId::new(id), source: GraphNodeId::new(source), target: GraphNodeId::new(target), kind: "flow".into(), label: String::new(), source_port: Some("out".into()), target_port: None, properties: Vec::new() };
     let base = SemioGraphSnapshot { nodes: vec![node("a", 0.0), node("b", 1.5), node("c", 3.0)], edges: vec![edge("e1", "a", "c"), edge("e2", "a", "b"), edge("e3", "c", "a"), edge("e4", "b", "c")], ..Default::default() };

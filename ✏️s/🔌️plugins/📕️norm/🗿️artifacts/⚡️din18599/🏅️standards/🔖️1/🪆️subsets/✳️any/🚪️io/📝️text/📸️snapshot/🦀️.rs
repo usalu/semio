@@ -13,12 +13,12 @@ pub const DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬
 
 /// 📖️ Parses DIN V 18599 DSL text into a `Document`.
 pub fn parse_dsl(text: &str) -> Result<Din18599Snapshot, semio_framework_diagnostic::TextError> {
-    <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Din18599Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Document` back to `.din18599` DSL text.
 pub fn print_dsl(document: &Din18599Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -42,7 +42,7 @@ use crate::{
 use framework_schema::ArtifactSchema;
 
 /// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec, composed child included.
-impl store::ArtifactDsl for Din18599Snapshot {
+impl store::os_store::serialization::ArtifactDsl for Din18599Snapshot {
     const EXTENSION: &'static str = "din18599";
     fn envelope_id() -> &'static str {
         "norm.din18599"
@@ -57,7 +57,7 @@ impl store::ArtifactDsl for Din18599Snapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -77,13 +77,13 @@ pub fn decode_din18599_snapshot_json(text: &str) -> Result<Din18599Snapshot, Str
 /// 📖️ Parses the committed `.dsl.semio` artifact into a [`Din18599Snapshot`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_din18599_dsl(text: &str) -> Result<Din18599Snapshot, String> {
-    <Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <Din18599Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 🖨️ Prints a [`Din18599Snapshot`] back to its canonical `.dsl.semio` body.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_din18599_dsl(snapshot: &Din18599Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

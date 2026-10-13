@@ -2,7 +2,7 @@
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** 🧪️ `@semio-tech/framework-os-scale-fixture` test task router — F1-scale-fixture
  * (26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME). `check` is the native `--all-targets` proof
- * (unit tests included); `check-wasm` is the real wasm32-wasip2 component-guest build this ticket's
+ * (unit tests included); `check-wasm` is the real wasm32-wasip2 component build this ticket's
  * whole claim rests on. */
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
@@ -20,14 +20,14 @@ class CheckScript extends BundleScript {
 
 class CheckWasmScript extends BundleScript {
   run(): void {
-    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2", "--features", "component-guest"], this.root);
+    runCargo(["check", "--manifest-path", "Cargo.toml", "-p", "semio-framework-os-scale-fixture", "--target", "wasm32-wasip2"], this.root);
   }
 }
 
 class BuildWasmScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("Scale component build has a fixed output contract");
-    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", "wasm-dev", "--features", "component-guest"], this.repoRoot, {
+    await buildRepositoryCargoArtifacts(join(this.root, "Cargo.toml"), ["-p", "semio-framework-os-scale-fixture", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"], this.repoRoot, {
       command: "rustc",
       output: "dist/component",
       validate(files) {

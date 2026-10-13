@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::cad::io::binary::mutations::wire_tag;
-use crate::standards::v1::subsets::cad::io::text::mutations::print_cad_mutation;
+use crate::io::binary::mutations::wire_tag;
+use crate::io::text::mutations::print_cad_mutation;
 use super::*;
 
 //#region 🧪️KindsCatalog
@@ -33,7 +33,7 @@ async fn mutation_diff_law() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
-        let (__next, returned) = crate::applied(&snap, &m);
+        let (__next, returned) = semio_s_artifact_stdio_semio_base::applied(&snap, &m);
         snap = __next;
         let expected_diff = m.diff(&base);
         assert_eq!(returned, expected_diff, "returned diff mismatch for {m:?}");
@@ -51,10 +51,10 @@ async fn inverse_law() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut snap = base.clone();
-        snap = crate::applied(&snap, &m).0;
+        snap = semio_s_artifact_stdio_semio_base::applied(&snap, &m).0;
         for inv in m.inverse(&base).expect("valid retained mutation inverse fixture") {
             let mut undone = snap.clone();
-            undone = crate::applied(&undone, &inv).0;
+            undone = semio_s_artifact_stdio_semio_base::applied(&undone, &inv).0;
             assert_eq!(undone, base, "mutation-level inverse mismatch for {m:?}");
         }
 
@@ -87,7 +87,7 @@ async fn op_text_binary_roundtrip_law() {
 /// 🎯️ Position law: removing ANY layer, block, entity or block entity (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn removals_invert_at_every_position() {
-    let base = crate::standards::v1::subsets::cad::schema::snapshot::demo_cad_snapshot();
+    let base = crate::schema::snapshot::demo_cad_snapshot();
     for item in &base.layers {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioCadMutation::RemoveLayer(remove_layer::RemoveLayer { name: item.name.clone() }), &base).await;
     }

@@ -1,6 +1,6 @@
 use super::*;
 
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 use protocol::{apply_diff, DiffAlgebra, MutationDiff};
 
 fn rename_stakeholder_diff(id: &EntityId, name: &str) -> ProgramDiff {
@@ -39,7 +39,7 @@ async fn knowledge_and_benchmark_deltas_rederive_their_composed_child_handles() 
     let diff = ProgramDiff { knowledge: Some(ProgramKnowledgeDelta::removal(&base.knowledge_payload, 0)), ..Default::default() };
     let next = apply_diff(&diff, &base).expect("valid diff");
     assert!(next.knowledge_payload.is_empty());
-    assert_eq!(next.knowledge, crate::knowledge_child_from_records(&[]), "the child handle is derived from the remaining rows, never carried in the diff");
+    assert_eq!(next.knowledge, crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&[]), "the child handle is derived from the remaining rows, never carried in the diff");
     assert_eq!(next.benchmarks, base.benchmarks, "an untouched table keeps its handle");
 }
 

@@ -53,7 +53,7 @@ impl PlaybookArtifact {
 //#endregion 🔖️Conversions
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `flow` is a `store::ArtifactChild<S>` composed-artifact
+/// 🔀️ Hand-written, not derived: `flow` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact
 /// handle, which speak `serde` (framework-internal, unaffected by this ticket) rather than
 /// `ToValue`/`FromValue` directly — bridged per-field through the pre-existing
 /// `to_dsl_value`/`from_dsl_value` seam (`🌱️value/🔀️serde`) instead of widening the derive macro to

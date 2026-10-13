@@ -4,7 +4,7 @@
 //! playback length, matching how a real player would report duration). A pure whole-snapshot
 //! scalar (one max-length fold over `channels`) — no `InferredField` needed.
 
-use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
+use crate::schema::snapshot::SemioAudioSnapshot;
 
 //#region 🔖️Duration
 /// ⏱️ Semio audio's sample-count-derived playback duration.

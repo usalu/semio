@@ -97,13 +97,13 @@ fn note_app_schema_descriptor() -> semio_framework_schema_registry::AppSchemaDes
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`loadDocumentJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry. The spr is a
-/// fresh, edit-free op-log (`store::empty_document_spr`) — never a live `ArtifactEnvelope` minted just to
+/// fresh, edit-free op-log (`store::os_store::text_format::empty_document_spr`) — never a live `ArtifactEnvelope` minted just to
 /// print it: dropping such an envelope trapped the guest (`artifact envelope terminal shell reached Drop
 /// before its app-owned bounded retirement authority detached every nested owner`) on the react shell's
 /// boot `setActiveExample` (ticket 26/09/17/NOTE-PLUGIN-END-TO-END).
 pub fn reset_document_effect(document: &NoteSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <NoteSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
+    let pack = <NoteSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("note", NOTE_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -535,7 +535,7 @@ impl ArtifactEditor for NotePlayApp {
         crate::editor::note::window::register_transient(registry)
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(crate::editor::note::retained::artifact_preparation_factory())
     }
 

@@ -7,11 +7,11 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Debug, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct WireTestSnapshot {
-    pub(crate) value: i32,
+struct WireTestSnapshot {
+    value: i32,
 }
 
-impl store::ArtifactPack for WireTestSnapshot {
+impl store::os_store::serialization::ArtifactPack for WireTestSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }
@@ -24,8 +24,8 @@ impl store::ArtifactPack for WireTestSnapshot {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct WireTestDiff {
-    pub(crate) deltas: Vec<i32>,
+struct WireTestDiff {
+    deltas: Vec<i32>,
 }
 
 impl protocol::DiffAlgebra<WireTestSnapshot> for WireTestDiff {
@@ -53,7 +53,7 @@ impl protocol::MutationDiff<WireTestSnapshot> for WireTestDiff {
 
 #[path = "../../🧪️testing/📡️contributed-mutation-wire/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub(crate) use mutations::{AddValue, WireTestMutation};
+use mutations::{AddValue, WireTestMutation};
 
 #[cfg(test)]
 #[path = "../📡️contributed-mutation-wire-unit/🦀️.rs"]

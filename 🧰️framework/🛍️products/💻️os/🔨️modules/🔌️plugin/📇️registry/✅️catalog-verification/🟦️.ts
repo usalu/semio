@@ -6,11 +6,12 @@ import { isAbsolute, dirname, join, relative, resolve } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import { getWorkspaceRoot, runVitest } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { APP_CHANNEL_VERSION, clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🟦️.ts";
+import { APP_CHANNEL_VERSION, decodePackValue, encodePackValue, packValueToExactJson } from "../../../../🟦️.ts";
 import type { PackValue } from "../../../../🟦️.ts";
 import { declaredComponentKind } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, PluginDescriptorHashes, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
+import { CATALOG_ID, COMPONENT_PACKAGE_ID, DESCRIPTOR_JSON_REL_PATH, findPluginCargoFiles, parseComponentSourceOwnerV1, parseCompiledComponentOwnerV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1 } from "../🔎️discovery/🟦️.ts";
 import { tomlBlocksAfterHeader } from "../🔎️discovery/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_MAX_BYTES, SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1, type ComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 import { dialectCoordinate } from "../../../../../../🔨️modules/🚪️io/🧬️schema/🟦️.ts";
 import { exampleBodyAssetPrefix, examplesForApp, normalizeManifestExamples, type PluginManifest } from "../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
 
@@ -78,7 +79,7 @@ export const CATALOG_NODE_MAX = 256;
 
 export const CATALOG_DEPENDENCY_MAX = 128;
 
-export const CATALOG_ARTIFACT_MAX_BYTES = 64 * 1024 * 1024;
+export const CATALOG_ARTIFACT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 
 export const CATALOG_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 
@@ -96,7 +97,7 @@ export const CATALOG_SHA256 = /^[0-9a-f]{64}$/;
 
 export const CATALOG_DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
 
-export const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "executionProtocol", "quotas", "contributions", "assets", "hashes"]);
+export const CATALOG_DESCRIPTOR_TOP_LEVEL = new Set(["descriptorVersion", "packageId", "role", "manifest", "activationEvents", "capabilityRequests", "extensionPoints", "execution", "executionProtocol", "quotas", "contributions", "assets"]);
 
 export const CATALOG_MANIFEST_FIELDS = new Set(["pluginId", "label", "version", "apps", "examples", "capabilities", "topicContributions", "commands", "artifactKinds", "hostedArtifactKinds", "dependencies", "contributions"]);
 
@@ -148,7 +149,7 @@ export type StrictCatalogDescriptor = {
   readonly packPath: string;
   readonly packBytes: Uint8Array;
   readonly descriptor: Readonly<Record<string, unknown>>;
-  readonly hashes: PluginDescriptorHashes;
+  readonly semanticSha256: string;
 };
 
 
@@ -171,7 +172,7 @@ export type CatalogSourceAudit = {
 
 export type CatalogArtifactProgress = {
   readonly pluginId: string;
-  readonly artifact: "raw" | "core" | "descriptor";
+  readonly artifact: "raw" | "descriptor" | "receipt";
   readonly bytesRead: number;
   readonly totalBytes: number;
 };
@@ -184,16 +185,17 @@ export type CatalogFileReceipt = {
 };
 
 
+/** 🧾️ The marker a producer publishes last for one fresh catalog row: the raw component, its semantic descriptor and the
+ * shipped `ComponentReceiptV1` binding the two, each by path, length and digest. */
 export type FreshCatalogCommitMarker = {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly packageId: string;
   readonly pluginId: string;
   readonly packageName: string;
   readonly wasmOut: string;
   readonly raw: CatalogFileReceipt;
-  readonly core: CatalogFileReceipt;
   readonly descriptor: CatalogFileReceipt;
-  readonly descriptorSha256: string;
+  readonly receipt: CatalogFileReceipt;
 };
 
 
@@ -207,10 +209,9 @@ export type CatalogArtifactControl = {
 export type CatalogArtifactReceipt = {
   readonly pluginId: string;
   readonly rawSha256: string;
-  readonly coreSha256: string;
   readonly descriptorSha256: string;
+  readonly receipt: ComponentReceiptV1;
   readonly rawBytes: Uint8Array;
-  readonly coreBytes: Uint8Array;
   readonly descriptorBytes: Uint8Array;
 };
 
@@ -446,7 +447,8 @@ export function validateCatalogExecutionProtocol(pluginId: string, candidate: un
 }
 
 
-export function validateCatalogDescriptorValue(entry: CatalogDescriptorIdentity, descriptor: unknown): PluginDescriptorHashes {
+/** 🧩️ Admits every member of a semantic descriptor value against the identity it must carry; a byte binding is an unknown member. */
+function validateCatalogDescriptorShape(entry: CatalogDescriptorIdentity, descriptor: unknown): Record<string, unknown> {
   if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor) || !isStrictJsonValue(descriptor)) throw new Error(`${entry.pluginId}: descriptor is not a lossless JSON object`);
   const record = descriptor as Record<string, unknown>;
   const unknownTop = Object.keys(record).filter((key) => !CATALOG_DESCRIPTOR_TOP_LEVEL.has(key));
@@ -465,26 +467,17 @@ export function validateCatalogDescriptorValue(entry: CatalogDescriptorIdentity,
   if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);
   validateCatalogExecutionProtocol(entry.pluginId, record.executionProtocol);
   if (record.quotas === null || typeof record.quotas !== "object" || Array.isArray(record.quotas) || record.contributions === null || typeof record.contributions !== "object" || Array.isArray(record.contributions)) throw new Error(`${entry.pluginId}: descriptor quotas/contributions must be objects`);
-  const hashes = record.hashes;
-  if (hashes === null || typeof hashes !== "object" || Array.isArray(hashes)) throw new Error(`${entry.pluginId}: descriptor hashes must be an object`);
-  const hashRecord = hashes as Record<string, unknown>;
-  if (Object.keys(hashRecord).sort().join(",") !== "coreWasmSha256,descriptorSha256,wasmSha256") throw new Error(`${entry.pluginId}: descriptor hashes must contain exactly raw/core/descriptor SHA-256`);
-  for (const [name, value] of Object.entries(hashRecord)) if (typeof value !== "string" || !CATALOG_SHA256.test(value)) throw new Error(`${entry.pluginId}: hashes.${name} must be lowercase 64-hex`);
   if (entry.role === "extension" && (!entry.extends || entry.dependsOn[0] !== entry.extends)) throw new Error(`${entry.pluginId}: extension host must be its first dependency`);
   if (entry.role === "plugin" && entry.extends !== undefined) throw new Error(`${entry.pluginId}: plugin cannot declare an extension host`);
-  return hashRecord as PluginDescriptorHashes;
+  return record;
 }
 
 
-export type FreshCatalogPackageIdentityV1 = Readonly<{
-  pluginId: string;
-  packageId: string;
-  version: string;
-  role: "plugin" | "extension";
-  execution: "isolated";
-  wasmSha256: string;
-  coreWasmSha256: string;
-}>;
+/** 🫥️ Admits a SEMANTIC descriptor value — a guest's `describe()` answer or a committed descriptor — which carries no
+ * byte identity: the binding to shipped bytes lives in the generated `ComponentReceiptV1` (ticket 26/09/23 wave A2). */
+export function validateSemanticCatalogDescriptorValue(entry: CatalogDescriptorIdentity, descriptor: unknown): void {
+  validateCatalogDescriptorShape(entry, descriptor);
+}
 
 
 export const CATALOG_PLACEHOLDER_PLUGIN_IDS: readonly string[] = ["empty", "assembly-failed", "unknown", "placeholder"];
@@ -499,7 +492,7 @@ export type OwnerDescriptorPairV1 = Readonly<{
   version: string;
   execution: string;
   extends?: string;
-  hashes: PluginDescriptorHashes;
+  semanticSha256: string;
   descriptor: Readonly<Record<string, unknown>>;
 }>;
 
@@ -511,9 +504,8 @@ export function rejectPlaceholderCatalogIdentity(pluginId: string, version: stri
 }
 
 
-/** 🧬️ Verifies one emitted JSON/pack descriptor pair against the exact raw/core artifacts it
- * describes, deriving identity from the descriptor itself rather than from owner discovery. */
-export function verifyDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: Readonly<{ wasmSha256: string; coreWasmSha256: string }>): OwnerDescriptorPairV1 {
+/** 🧾️ Decodes and identifies one JSON/pack descriptor pair: both forms strict, the pack canonical, the forms equal. */
+function decodeDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array): { record: Record<string, any>; packed: PackValue; entry: CatalogDescriptorIdentity; role: "plugin" | "extension"; host: string | undefined } {
   if (jsonBytes.byteLength === 0 || jsonBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES || packBytes.byteLength === 0 || packBytes.byteLength > CATALOG_DESCRIPTOR_MAX_BYTES) throw new Error("emitted descriptor forms exceed the fixed boundary");
   let descriptor: unknown;
   let packed: PackValue;
@@ -530,32 +522,24 @@ export function verifyDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Ui
   const role = record.role === "extension" ? "extension" : "plugin";
   const host = role === "extension" ? (record.manifest?.dependencies?.[0]?.pluginId as string | undefined) : undefined;
   const entry: CatalogDescriptorIdentity = { pluginId: String(record.manifest?.pluginId), packageId: String(record.packageId), role, extends: host, dependsOn: host ? [host] : [] };
-  const hashes = validateCatalogDescriptorValue(entry, descriptor);
-  if (hashes.wasmSha256 !== expected.wasmSha256 || hashes.coreWasmSha256 !== expected.coreWasmSha256) throw new Error(`${entry.pluginId}: emitted descriptor hashes do not name the exact raw/core artifacts it was emitted from`);
   if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${entry.pluginId}: emitted descriptor pack is not canonical or contains trailing bytes`);
   if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packValueToExactJson(packed)))) throw new Error(`${entry.pluginId}: emitted descriptor JSON and pack forms disagree`);
-  const blanked = clonePackValue(packed) as Record<string, any>;
-  blanked.hashes.descriptorSha256 = "";
-  if (createHash("sha256").update(encodePackValue(blanked)).digest("hex") !== hashes.descriptorSha256) throw new Error(`${entry.pluginId}: emitted descriptor self-hash mismatch`);
+  return { record, packed, entry, role, host };
+}
+
+
+/** 🧬️ Verifies one emitted SEMANTIC JSON/pack descriptor pair, deriving identity from the descriptor itself rather than
+ * from owner discovery: strict forms, a canonical pack, equal forms, no byte-identity binding and no placeholder identity. */
+export function verifySemanticDescriptorPairBytesV1(jsonBytes: Uint8Array, packBytes: Uint8Array): OwnerDescriptorPairV1 {
+  const { record, packed, entry, role, host } = decodeDescriptorPairBytesV1(jsonBytes, packBytes);
+  validateSemanticCatalogDescriptorValue(entry, record);
   rejectPlaceholderCatalogIdentity(entry.pluginId, String(record.manifest.version));
-  return { pluginId: entry.pluginId, packageId: entry.packageId, role, version: String(record.manifest.version), execution: String(record.execution), extends: host, hashes, descriptor: packed as Record<string, unknown> };
+  return { pluginId: entry.pluginId, packageId: entry.packageId, role, version: String(record.manifest.version), execution: String(record.execution), extends: host, semanticSha256: createHash("sha256").update(packBytes).digest("hex"), descriptor: packed as Record<string, unknown> };
 }
 
 
-/** 🧬️ Verifies fresh diagnostic JSON and packed descriptor bytes without discovering or publishing owner state. */
-export function verifyFreshCatalogPackageV1(jsonBytes: Uint8Array, packBytes: Uint8Array, expected: FreshCatalogPackageIdentityV1): PluginDescriptorHashes {
-  let pair: OwnerDescriptorPairV1;
-  try {
-    pair = verifyDescriptorPairBytesV1(jsonBytes, packBytes, expected);
-  } catch (error) {
-    throw new Error(`${expected.pluginId}: ${boundedCatalogDiagnostic(error)}`);
-  }
-  if (pair.pluginId !== expected.pluginId || pair.packageId !== expected.packageId || pair.role !== expected.role || pair.version !== expected.version || pair.execution !== expected.execution) throw new Error(`${expected.pluginId}: fresh descriptor identity, execution, or component hashes differ`);
-  return pair.hashes;
-}
-
-
-/** 🔐️ Strict-decodes and cross-checks one owner-root JSON/pack `PackageDescriptor` pair. */
+/** 🔐️ Strict-decodes and cross-checks one owner-root SEMANTIC JSON/pack `PackageDescriptor` pair against the discovered
+ * component identity: strict equal forms, a canonical pack and no byte-identity binding. */
 export function validateCatalogDescriptorPair(entry: CompiledComponentOwnerV1, repoRoot: string): StrictCatalogDescriptor {
   const jsonPath = resolve(repoRoot, entry.cratePath, ...DESCRIPTOR_JSON_REL_PATH);
   const ownerRoot = dirname(jsonPath);
@@ -563,54 +547,14 @@ export function validateCatalogDescriptorPair(entry: CompiledComponentOwnerV1, r
   if (!pathIsWithin(resolve(repoRoot), jsonPath) || !pathIsWithin(resolve(repoRoot), packPath)) throw new Error(`${entry.pluginId}: descriptor owner escapes the repository`);
   const jsonBytes = readCatalogFile(jsonPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
   const packBytes = readCatalogFile(packPath, repoRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
-  let descriptor: unknown;
-  let packed: PackValue;
+  let decoded: ReturnType<typeof decodeDescriptorPairBytesV1>;
   try {
-    const json = Buffer.from(jsonBytes).toString("utf8");
-    rejectDuplicateJsonObjectNames(json);
-    descriptor = JSON.parse(json);
+    decoded = decodeDescriptorPairBytesV1(jsonBytes, packBytes);
   } catch (error) {
-    throw new Error(`${entry.pluginId}: descriptor JSON does not decode: ${boundedCatalogDiagnostic(error)}`);
+    throw new Error(`${entry.pluginId}: committed descriptor pair refused: ${boundedCatalogDiagnostic(error)}`);
   }
-  try {
-    packed = decodePackValue(packBytes);
-  } catch (error) {
-    throw new Error(`${entry.pluginId}: descriptor pack does not decode: ${boundedCatalogDiagnostic(error)}`);
-  }
-  if (descriptor === null || typeof descriptor !== "object" || Array.isArray(descriptor) || !isStrictJsonValue(descriptor)) throw new Error(`${entry.pluginId}: descriptor is not a lossless JSON object`);
-  const record = descriptor as Record<string, unknown>;
-  const unknownTop = Object.keys(record).filter((key) => !CATALOG_DESCRIPTOR_TOP_LEVEL.has(key));
-  if (unknownTop.length > 0) throw new Error(`${entry.pluginId}: descriptor has unknown fields ${unknownTop.sort().join(", ")}`);
-  if (record.descriptorVersion !== 1 || record.role !== entry.role) throw new Error(`${entry.pluginId}: descriptor version/role does not match source identity`);
-  if (record.packageId !== entry.packageId || !CATALOG_PACKAGE_ID.test(String(record.packageId))) throw new Error(`${entry.pluginId}: descriptor packageId does not match the complete Cargo component identity`);
-  const manifest = record.manifest;
-  if (manifest === null || typeof manifest !== "object" || Array.isArray(manifest)) throw new Error(`${entry.pluginId}: descriptor manifest must be an object`);
-  const manifestRecord = manifest as Record<string, unknown>;
-  const unknownManifest = Object.keys(manifestRecord).filter((key) => !CATALOG_MANIFEST_FIELDS.has(key));
-  if (unknownManifest.length > 0) throw new Error(`${entry.pluginId}: manifest has unknown fields ${unknownManifest.sort().join(", ")}`);
-  if (manifestRecord.pluginId !== entry.pluginId || !CATALOG_ID.test(String(manifestRecord.pluginId))) throw new Error(`${entry.pluginId}: manifest.pluginId does not match the Cargo component identity`);
-  if (typeof manifestRecord.label !== "string" || typeof manifestRecord.version !== "string" || !Array.isArray(manifestRecord.apps) || !Array.isArray(manifestRecord.examples)) throw new Error(`${entry.pluginId}: manifest required fields do not decode`);
-  for (const field of ["capabilities", "topicContributions", "commands", "artifactKinds", "hostedArtifactKinds", "dependencies", "contributions"] as const) if (manifestRecord[field] !== undefined && !Array.isArray(manifestRecord[field])) throw new Error(`${entry.pluginId}: manifest.${field} must be an array`);
-  for (const field of ["activationEvents", "capabilityRequests", "extensionPoints", "assets"] as const) if (record[field] !== undefined && !Array.isArray(record[field])) throw new Error(`${entry.pluginId}: descriptor.${field} must be an array`);
-  if (!["declarative", "linked", "isolated", "exclusive", "cold"].includes(String(record.execution))) throw new Error(`${entry.pluginId}: descriptor execution mode does not decode`);
-  validateCatalogExecutionProtocol(entry.pluginId, record.executionProtocol);
-  if (record.quotas === null || typeof record.quotas !== "object" || Array.isArray(record.quotas) || record.contributions === null || typeof record.contributions !== "object" || Array.isArray(record.contributions)) throw new Error(`${entry.pluginId}: descriptor quotas/contributions must be objects`);
-  const hashes = record.hashes;
-  if (hashes === null || typeof hashes !== "object" || Array.isArray(hashes)) throw new Error(`${entry.pluginId}: descriptor hashes must be an object`);
-  const hashRecord = hashes as Record<string, unknown>;
-  if (Object.keys(hashRecord).sort().join(",") !== "coreWasmSha256,descriptorSha256,wasmSha256") throw new Error(`${entry.pluginId}: descriptor hashes must contain exactly raw/core/descriptor SHA-256`);
-  for (const [name, value] of Object.entries(hashRecord)) if (typeof value !== "string" || !CATALOG_SHA256.test(value)) throw new Error(`${entry.pluginId}: hashes.${name} must be lowercase 64-hex`);
-  if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(packBytes))) throw new Error(`${entry.pluginId}: descriptor pack is not canonical or contains trailing bytes`);
-  if (!isDeepStrictEqual(normalizeCatalogDescriptorEnums(descriptor), normalizeCatalogDescriptorEnums(packValueToExactJson(packed)))) throw new Error(`${entry.pluginId}: descriptor JSON and pack forms disagree`);
-  const blanked = clonePackValue(packed) as Record<string, unknown>;
-  (blanked.hashes as Record<string, unknown>).descriptorSha256 = "";
-  const actualDescriptorHash = createHash("sha256").update(encodePackValue(blanked)).digest("hex");
-  if (actualDescriptorHash !== hashRecord.descriptorSha256) throw new Error(`${entry.pluginId}: descriptor self-hash mismatch`);
-  const exactHashes = hashRecord as PluginDescriptorHashes;
-  if (!entry.hashes || entry.hashes.wasmSha256 !== exactHashes.wasmSha256 || entry.hashes.coreWasmSha256 !== exactHashes.coreWasmSha256 || entry.hashes.descriptorSha256 !== exactHashes.descriptorSha256) throw new Error(`${entry.pluginId}: rendered registry hashes do not exactly match the source descriptor`);
-  if (entry.role === "extension" && (!entry.extends || entry.dependsOn[0] !== entry.extends)) throw new Error(`${entry.pluginId}: extension host must be its first dependency`);
-  if (entry.role === "plugin" && entry.extends !== undefined) throw new Error(`${entry.pluginId}: plugin cannot declare an extension host`);
-  return { entry, jsonPath, jsonBytes, packPath, packBytes, descriptor: packed as Record<string, unknown>, hashes: exactHashes };
+  validateSemanticCatalogDescriptorValue(entry, decoded.record);
+  return { entry, jsonPath, jsonBytes, packPath, packBytes, descriptor: decoded.packed as Record<string, unknown>, semanticSha256: createHash("sha256").update(packBytes).digest("hex") };
 }
 
 
@@ -754,33 +698,38 @@ export function catalogArtifactReceipt(path: string, containmentRoot: string, re
 }
 
 
-/** 🧾️ Computes the exact immutable receipt a producer must publish last for one fresh row. */
+/** 🧾️ Computes the exact immutable marker a producer must publish last for one fresh row: the staged descriptor must be the
+ * committed semantic descriptor itself, and the staged receipt a canonical shipped receipt binding it to the staged raw component. */
 export function createFreshCatalogCommitMarker(source: StrictCatalogDescriptor, buildRoot: string, control: CatalogArtifactControl = {}): FreshCatalogCommitMarker {
   const exactRoot = realpathSync(resolve(buildRoot));
   const rowRoot = join(exactRoot, source.entry.pluginId);
   const rawRelative = join("raw", source.entry.wasmOut);
-  const coreRelative = join("core", source.entry.wasmOut);
   const descriptorRelative = join("descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME);
+  const receiptRelative = join("receipt", COMPONENT_RECEIPT_FILE);
   const packageId = source.entry.packageId;
   if (!CATALOG_PACKAGE_ID.test(packageId) || source.descriptor.packageId !== packageId) throw new Error(`${source.entry.pluginId}: descriptor packageId cannot identify a commit marker`);
+  const staged = readCatalogFile(join(rowRoot, descriptorRelative), exactRoot, CATALOG_DESCRIPTOR_MAX_BYTES);
+  if (!Buffer.from(staged).equals(Buffer.from(source.packBytes))) throw new Error(`${source.entry.pluginId}: staged descriptor is not the committed semantic descriptor`);
+  const raw = catalogArtifactReceipt(join(rowRoot, rawRelative), exactRoot, rawRelative, source.entry.pluginId, "raw", control);
+  const receipt = parseComponentReceiptV1(Buffer.from(readCatalogFile(join(rowRoot, receiptRelative), exactRoot, COMPONENT_RECEIPT_MAX_BYTES)).toString("utf8"));
+  if (!componentReceiptBindsV1(receipt, { pluginId: source.entry.pluginId, packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: source.semanticSha256 }) || receipt.wasmBytes !== raw.bytes) throw new Error(`${source.entry.pluginId}: staged receipt does not bind the staged component to the committed semantic descriptor`);
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     packageId,
     pluginId: source.entry.pluginId,
     packageName: source.entry.packageName,
     wasmOut: source.entry.wasmOut,
-    raw: catalogArtifactReceipt(join(rowRoot, rawRelative), exactRoot, rawRelative, source.entry.pluginId, "raw", control),
-    core: catalogArtifactReceipt(join(rowRoot, coreRelative), exactRoot, coreRelative, source.entry.pluginId, "core", control),
+    raw,
     descriptor: catalogArtifactReceipt(join(rowRoot, descriptorRelative), exactRoot, descriptorRelative, source.entry.pluginId, "descriptor", control),
-    descriptorSha256: source.hashes.descriptorSha256,
+    receipt: catalogArtifactReceipt(join(rowRoot, receiptRelative), exactRoot, receiptRelative, source.entry.pluginId, "receipt", control),
   };
 }
 
 
 export function requireExactCatalogRow(rowRoot: string, wasmOut: string): void {
-  const expected = [CATALOG_COMMIT_MARKER_FILENAME, "core", "descriptor", "raw"].sort();
+  const expected = [CATALOG_COMMIT_MARKER_FILENAME, "descriptor", "raw", "receipt"].sort();
   if (!isDeepStrictEqual(readdirSync(rowRoot).sort(), expected)) throw new Error(`${rowRoot}: catalog row is not the exact committed triplet`);
-  for (const [directory, filename] of [["raw", wasmOut], ["core", wasmOut], ["descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME]] as const) {
+  for (const [directory, filename] of [["raw", wasmOut], ["descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME], ["receipt", COMPONENT_RECEIPT_FILE]] as const) {
     const root = join(rowRoot, directory);
     const info = lstatSync(root);
     if (info.isSymbolicLink() || !info.isDirectory() || !isDeepStrictEqual(readdirSync(root), [filename])) throw new Error(`${root}: catalog artifact directory is not exact`);
@@ -820,24 +769,16 @@ export function createFreshCatalogBuildVerifier(repoRoot: string, buildRoot: str
       }
       if (marker === null || typeof marker !== "object" || Array.isArray(marker) || !isStrictJsonValue(marker)) throw new Error(`${entry.pluginId}: catalog commit marker is not an object`);
       const markerRecord = marker as Record<string, unknown>;
-      const markerFields = ["core", "descriptor", "descriptorSha256", "packageId", "packageName", "pluginId", "raw", "schemaVersion", "wasmOut"];
+      const markerFields = ["descriptor", "packageId", "packageName", "pluginId", "raw", "receipt", "schemaVersion", "wasmOut"];
       if (!isDeepStrictEqual(Object.keys(markerRecord).sort(), markerFields)) throw new Error(`${entry.pluginId}: catalog commit marker fields are not exact`);
-      if (markerRecord.schemaVersion !== 1 || markerRecord.pluginId !== entry.pluginId || markerRecord.packageId !== entry.packageId || markerRecord.packageName !== entry.packageName || markerRecord.wasmOut !== entry.wasmOut || typeof markerRecord.descriptorSha256 !== "string" || !CATALOG_SHA256.test(markerRecord.descriptorSha256)) throw new Error(`${entry.pluginId}: catalog commit marker identity is not the carried Cargo identity`);
+      if (markerRecord.schemaVersion !== 2 || markerRecord.pluginId !== entry.pluginId || markerRecord.packageId !== entry.packageId || markerRecord.packageName !== entry.packageName || markerRecord.wasmOut !== entry.wasmOut) throw new Error(`${entry.pluginId}: catalog commit marker identity is not the carried Cargo identity`);
       if (!Buffer.from(markerBytes).equals(Buffer.from(`${JSON.stringify(marker)}\n`))) throw new Error(`${entry.pluginId}: catalog commit marker is not canonical JSON`);
       requireExactCatalogRow(rowRoot, entry.wasmOut);
-      const rawPath = join(rowRoot, "raw", entry.wasmOut);
-      const corePath = join(rowRoot, "core", entry.wasmOut);
-      const descriptorPath = join(rowRoot, "descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME);
-      const raw = readVerifiedCatalogArtifact(rawPath, exactRoot, CATALOG_ARTIFACT_MAX_BYTES, entry.pluginId, "raw", control);
-      const core = readVerifiedCatalogArtifact(corePath, exactRoot, CATALOG_ARTIFACT_MAX_BYTES, entry.pluginId, "core", control);
-      const descriptor = readVerifiedCatalogArtifact(descriptorPath, exactRoot, CATALOG_DESCRIPTOR_MAX_BYTES, entry.pluginId, "descriptor", control);
-      if (raw.sha256 === core.sha256) throw new Error(`${entry.pluginId}: raw component and extracted core identities are not distinct`);
+      const raw = readVerifiedCatalogArtifact(join(rowRoot, "raw", entry.wasmOut), exactRoot, CATALOG_ARTIFACT_MAX_BYTES, entry.pluginId, "raw", control);
+      const descriptor = readVerifiedCatalogArtifact(join(rowRoot, "descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME), exactRoot, CATALOG_DESCRIPTOR_MAX_BYTES, entry.pluginId, "descriptor", control);
+      const receiptFile = readVerifiedCatalogArtifact(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), exactRoot, COMPONENT_RECEIPT_MAX_BYTES, entry.pluginId, "receipt", control);
       const fileReceipt = (path: string, bytes: Uint8Array, sha256: string): CatalogFileReceipt => ({ path, bytes: bytes.byteLength, sha256 });
-      const expectedRaw = fileReceipt(join("raw", entry.wasmOut), raw.bytes, raw.sha256);
-      const expectedCore = fileReceipt(join("core", entry.wasmOut), core.bytes, core.sha256);
-      const descriptorFileSha256 = createHash("sha256").update(descriptor.bytes).digest("hex");
-      const expectedDescriptor = fileReceipt(join("descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME), descriptor.bytes, descriptorFileSha256);
-      if (!isDeepStrictEqual(markerRecord.raw, expectedRaw) || !isDeepStrictEqual(markerRecord.core, expectedCore) || !isDeepStrictEqual(markerRecord.descriptor, expectedDescriptor)) throw new Error(`${entry.pluginId}: catalog commit marker artifact receipts disagree with the staged row`);
+      if (!isDeepStrictEqual(markerRecord.raw, fileReceipt(join("raw", entry.wasmOut), raw.bytes, raw.sha256)) || !isDeepStrictEqual(markerRecord.descriptor, fileReceipt(join("descriptor", CATALOG_DESCRIPTOR_PACK_FILENAME), descriptor.bytes, descriptor.sha256)) || !isDeepStrictEqual(markerRecord.receipt, fileReceipt(join("receipt", COMPONENT_RECEIPT_FILE), receiptFile.bytes, receiptFile.sha256))) throw new Error(`${entry.pluginId}: catalog commit marker artifact receipts disagree with the staged row`);
       let packed: PackValue;
       try {
         packed = decodePackValue(descriptor.bytes);
@@ -845,19 +786,21 @@ export function createFreshCatalogBuildVerifier(repoRoot: string, buildRoot: str
         throw new Error(`${entry.pluginId}: staged descriptor pack does not decode: ${boundedCatalogDiagnostic(error)}`);
       }
       if (!Buffer.from(encodePackValue(packed)).equals(Buffer.from(descriptor.bytes))) throw new Error(`${entry.pluginId}: staged descriptor pack is not canonical`);
-      const hashes = validateCatalogDescriptorValue(entry, packValueToExactJson(packed));
-      const blanked = clonePackValue(packed) as Record<string, unknown>;
-      (blanked.hashes as Record<string, unknown>).descriptorSha256 = "";
-      const descriptorSha256 = createHash("sha256").update(encodePackValue(blanked)).digest("hex");
-      if (hashes.wasmSha256 !== raw.sha256 || hashes.coreWasmSha256 !== core.sha256 || hashes.descriptorSha256 !== descriptorSha256 || markerRecord.descriptorSha256 !== descriptorSha256) throw new Error(`${entry.pluginId}: staged descriptor identity disagrees with the committed artifacts`);
+      if (packed === null || typeof packed !== "object" || Array.isArray(packed) || "hashes" in (packed as Record<string, unknown>)) throw new Error(`${entry.pluginId}: staged descriptor is not a semantic descriptor`);
+      let receipt: ComponentReceiptV1;
+      try {
+        receipt = parseComponentReceiptV1(Buffer.from(receiptFile.bytes).toString("utf8"));
+      } catch (error) {
+        throw new Error(`${entry.pluginId}: staged receipt does not decode: ${boundedCatalogDiagnostic(error)}`);
+      }
+      if (!componentReceiptBindsV1(receipt, { pluginId: entry.pluginId, packageId: entry.packageId, wasmSha256: raw.sha256, semanticDescriptorSha256: descriptor.sha256 }) || receipt.wasmBytes !== raw.bytes.byteLength) throw new Error(`${entry.pluginId}: staged receipt does not bind the staged component to its semantic descriptor`);
       if (!Buffer.from(readCatalogFile(markerPath, exactRoot, CATALOG_COMMIT_MARKER_MAX_BYTES)).equals(Buffer.from(markerBytes))) throw new Error(`${entry.pluginId}: catalog commit marker changed during verification`);
       return {
         pluginId: entry.pluginId,
         rawSha256: raw.sha256,
-        coreSha256: core.sha256,
-        descriptorSha256,
+        descriptorSha256: descriptor.sha256,
+        receipt,
         rawBytes: raw.bytes,
-        coreBytes: core.bytes,
         descriptorBytes: descriptor.bytes,
       };
     },
@@ -1102,6 +1045,6 @@ export class CatalogCompleteScript extends BundleScript {
       for (const row of result.results.filter(({ status }) => status !== "verified")) console.error(`  - [${row.status}] ${row.pluginId}: ${row.diagnostic ?? "unverified"}`);
       throw new Error("catalog-complete refused unverified fresh build artifacts");
     }
-    console.log(`plugin catalog is complete: ${audit.manifestCount} source identities and fresh raw/core/descriptor artifacts verified from ${verifier.root}.`);
+    console.log(`plugin catalog is complete: ${audit.manifestCount} source identities and fresh raw/descriptor/receipt artifacts verified from ${verifier.root}.`);
   }
 }

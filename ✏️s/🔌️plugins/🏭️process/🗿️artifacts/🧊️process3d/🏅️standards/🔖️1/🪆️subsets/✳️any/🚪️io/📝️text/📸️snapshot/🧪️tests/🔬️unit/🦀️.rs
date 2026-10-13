@@ -246,7 +246,7 @@ async fn concrete_forest_example_applies_every_concrete_machine() {
 #[semio_framework_async_macros::async_test]
 async fn concrete_forest_example_replays_every_step_on_the_kernel() {
     use crate::schema::inferences::{replay_process, ProcessKernelReplay};
-    use semio_framework_3d::brep::engine::BrepKernel;
+    use semio_framework_3d_brep_engine::BrepKernel;
     let scene = crate::process_working_scene_from_snapshot(&parse_dsl(PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT).expect("parse concrete forest example"));
     let mut session = ProcessKernelReplay::new();
     let stock = replay_process(&mut session, &scene, Some(0)).expect("stock replays");

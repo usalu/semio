@@ -2,10 +2,10 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioObjectEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::editor::semio_object::modes::edit;
-use crate::editor::semio_object::modes::edit::windows::main;
-use crate::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation};
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::editor::modes::edit;
+use crate::editor::modes::edit::windows::main;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -85,8 +85,8 @@ const SEMIO_OBJECT_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.semio.object.to
 const SEMIO_OBJECT_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_object_editor_example_snapshot(example_id: &str) -> SemioObjectSnapshot {
-    if example_id == crate::examples::demo::ID {
-        <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
+        <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioObjectSnapshot::default()
     }
@@ -166,7 +166,7 @@ impl ArtifactOwnedToolJobFactory for SemioObjectEditorExampleFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_OBJECT_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
-pub(crate) mod edit_rules;
+pub mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -175,7 +175,7 @@ pub struct SemioObjectEditor;
 impl ArtifactEditor for SemioObjectEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_semio_base::examples::demo::source()]
     }
     type Snapshot = SemioObjectSnapshot;
     type Mutation = SemioObjectMutation;
@@ -300,7 +300,7 @@ impl editing::SnapshotEditingEditor for SemioObjectEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_object_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(SEMIO_OBJECT_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_OBJECT_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base::examples::demo::ID, semio_s_artifact_stdio_semio_base::examples::demo::label())], semio_s_artifact_stdio_semio_base::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

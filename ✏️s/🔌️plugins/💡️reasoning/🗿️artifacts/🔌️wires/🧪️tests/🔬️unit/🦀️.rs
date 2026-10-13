@@ -18,7 +18,7 @@ async fn the_empty_snapshot_names_the_empty_board_child() {
     assert_eq!(snapshot.wires_snapshot.get("identities").and_then(|value| value.as_array()).map(|items| items.len()), Some(0));
     assert!(snapshot.wires_snapshot.get("board").is_none() && snapshot.wires_snapshot.get("relationships").is_none(), "the parent carries no board");
     let pack = genesis_wires_child_pack(&snapshot, WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("genesis composes the empty board");
-    assert_eq!(<SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("graph pack"), empty_wires_content());
+    assert_eq!(<SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("graph pack"), empty_wires_content());
     assert!(genesis_wires_child_pack(&snapshot, WIRES_CONTENT_SLOT, "another-child").is_none(), "genesis answers only the child the parent names");
 }
 

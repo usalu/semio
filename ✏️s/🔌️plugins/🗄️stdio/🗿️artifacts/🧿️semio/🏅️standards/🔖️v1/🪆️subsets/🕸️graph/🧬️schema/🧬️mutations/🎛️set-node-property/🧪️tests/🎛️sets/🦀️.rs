@@ -3,10 +3,10 @@
 //! Transcribed from `../../🔺️diff/🦀️.rs`, whose guards run in this order: empty key ⇒ FATAL `mutation.invariant`; no such
 //! node or no such key ⇒ Error `mutation.target-missing`; an equal value ⇒ Warning `mutation.no-op`. Otherwise the property
 //! takes the value in place, keeping its position among the node's properties.
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎛️set-node-property/🎛️sets/📸️snapshot/➡️after/🔣️.json");
@@ -18,7 +18,7 @@ fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("set-node-property fixture decodes")
 }
 fn snapshot(text: &str) -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
 }
 fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).expect("set-node-property fixture parses")
@@ -52,7 +52,7 @@ async fn the_undo_sets_the_base_value_back() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for text in [BEFORE, AFTER] {
-        assert_eq!(json(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "set-node-property/sets: a committed snapshot is not canonical");
+        assert_eq!(json(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "set-node-property/sets: a committed snapshot is not canonical");
     }
     assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "set-node-property/sets: the committed mutation is not canonical");
 }
@@ -71,9 +71,9 @@ async fn declared_outcome_and_diff_hold() {
 /// 🚧️ The guard branches report their frozen codes.
 #[semio_framework_async_macros::async_test]
 async fn guard_branches_report_their_frozen_codes() {
-    use crate::standards::v1::subsets::graph::schema::mutations::set_node_property::SetNodeProperty;
-    use crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
-    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use crate::schema::mutations::set_node_property::SetNodeProperty;
+    use crate::schema::snapshot::GraphNodeId;
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     let base = snapshot(BEFORE);
     let codes = |node: &str, key: &str, value: &str| -> Vec<String> {
         let leaf = SemioGraphMutation::SetNodeProperty(SetNodeProperty { node_id: GraphNodeId::new(node), key: key.into(), value: SemioValue::Str { value: value.into() } });

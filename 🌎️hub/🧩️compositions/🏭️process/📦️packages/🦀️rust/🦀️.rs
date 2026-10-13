@@ -43,8 +43,6 @@ pub mod viewer {
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
-mod plugin;
-#[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin::plugin, plugin::ProcessApps);
+pub mod plugin;
 
 //#endregion 🔖️Plugin

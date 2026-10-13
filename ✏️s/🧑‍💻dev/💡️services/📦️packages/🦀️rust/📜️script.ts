@@ -8,17 +8,9 @@ import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️pro
 class CheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("check accepts no arguments");
-    const controller = new AbortController(), cancel = (): void => controller.abort();
-    process.on("SIGINT", cancel);
-    process.on("SIGTERM", cancel);
-    try {
-      const manifest = join(this.root, "Cargo.toml");
-      await runRepositoryCommand("cargo", ["metadata", "--offline", "--format-version=1", "--manifest-path", manifest], this.root, "s-dev-native-resolution", 900_000, { signal: controller.signal, stdout: "ignore" });
-      await runRepositoryCommand("cargo", ["check", "--locked", "--offline", "--manifest-path", manifest, "--all-targets", "--all-features"], this.root, "s-dev-native-check", 900_000, { signal: controller.signal, onLine: line => console.log(line) });
-    } finally {
-      process.removeListener("SIGINT", cancel);
-      process.removeListener("SIGTERM", cancel);
-    }
+    const manifest = join(this.root, "Cargo.toml");
+    await runRepositoryCommand(this.invocation,"cargo",["metadata", "--offline", "--format-version=1", "--manifest-path", manifest],this.root,"s-dev-native-resolution",{version:1,maximumElapsedMilliseconds:900000,output:{maximumBytes:134217728,maximumLines:65536}},{stdout:"ignore"});
+    await runRepositoryCommand(this.invocation,"cargo",["check", "--locked", "--offline", "--manifest-path", manifest, "--all-targets", "--all-features"],this.root,"s-dev-native-check",{version:1,maximumElapsedMilliseconds:900000,output:{maximumBytes:134217728,maximumLines:65536}},{onLine:line=>console.log(line)});
   }
 }
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("native", NativeScript).register("check", CheckScript), { invocation: original }));

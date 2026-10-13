@@ -52,7 +52,7 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return String::new();
             }
-            match app.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+            match app.close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
                 Ok(semio_framework_plugin::PluginCloseStep::AwaitingInput { reason } | semio_framework_plugin::PluginCloseStep::Blocked { reason }) => witness = format!(", last pending close authority: {reason}"),
                 Ok(_) => {}
                 Err(fault) => return format!(", close ladder faulted: {fault:?}"),
@@ -1431,7 +1431,7 @@ fn generation3d_mesh_bridges_round_trip_through_obj_glb_stl_codecs() {
 #[test]
 fn rectangle_wire_preview_emits_edge_only_mesh() {
     let _serial = test_serial();
-    let projection = <Generation3dSnapshot as store::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
+    let projection = <Generation3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::text::snapshot::GENERATION3D_EXAMPLE_RECTANGLE_WIRE_TEXT).expect("rectangle wire example");
     let config = Generation3dConfig::default();
     let (meshes_json, instances_json) = preview_payload_from_evaluated_fixture(&projection.host_snapshot, &config);
     let meshes: Vec<Value> = serde_json::from_str(&meshes_json).expect("meshes");

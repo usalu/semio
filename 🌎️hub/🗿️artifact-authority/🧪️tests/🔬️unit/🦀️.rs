@@ -3,7 +3,7 @@ use directory::os_directory::io::binary::artifact_hash::hex_lower;
 use super::adapters::{AUTHORITY_MAX_DIAGNOSTIC_BYTES, LivePluginPackageBinding, PluginHostTrustedArtifactCatalog, bounded_message};
 use super::*;
 use ::directory::os_directory::{DocumentFrontier, DocumentOwner};
-use ::directory::os_store::{ArtifactCodec, ArtifactPackFiles, ArtifactTextFiles, VcsError, register_document_codec};
+use ::directory::os_store::{serialization::ArtifactCodec, serialization::ArtifactPackFiles, text_format::ArtifactTextFiles, VcsError, codec_registry::register_document_codec};
 use semio_framework_plugin_host::{PackageHash, PackageId, PackageRef, PluginGraph};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
@@ -158,7 +158,7 @@ fn fixture_edit<'a>(_envelope: &'a directory::os_spr::MutationEnvelope) -> std::
     Box::pin(async { Ok(String::new()) })
 }
 
-fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
+fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let operations = directory::os_spr::decode_ops_vec(operations).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         if operations.len() != 1 {
@@ -173,12 +173,12 @@ fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], operations: &'a [u8]) -> dir
     })
 }
 
-fn fixture_replay<'a>(_pack: &'a [u8], _spr: &'a [u8], _envelopes: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
+fn fixture_replay<'a>(_pack: &'a [u8], _spr: &'a [u8], _envelopes: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async { Err(VcsError::ValidationFailed("the number fixture codec has no ledger replay".to_string())) })
 }
 
 fn fixture_artifact_codec() -> ArtifactCodec {
-    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", native_identity: directory::os_store::ArtifactNativeSnapshotIdentity::typed::<i64>(), snapshot_sqlite: None, pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
+    ArtifactCodec { schema: "fixture.number@1".to_string(), extension: "fixture", native_identity: directory::os_store::serialization::ArtifactNativeSnapshotIdentity::typed::<i64>(), snapshot_sqlite: None, pack_schema_hash: [0x11; 32], compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_replay }
 }
 
 fn fixture_manifest() -> semio_framework::PluginManifest {

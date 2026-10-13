@@ -9,13 +9,16 @@ import { resolveTestLevel } from "../../../🏃️process/🧪️testing/🎚️
 import { buildBudgetMs } from "../../../🏃️process/⏱️budget/🟦️.ts";
 /** 🦀️ `semio-framework-3d` router: `bun ./📜️script.ts test`. */
 
+/** 🧊️ The base crate and its four boundary-representation crates (wave E4 crate cut), tested and linted together. */
+const SEMIO_FRAMEWORK_3D_PACKAGES = ["semio-framework-3d", "semio-framework-3d-brep-representation", "semio-framework-3d-brep-queries", "semio-framework-3d-brep-operations", "semio-framework-3d-brep-engine"];
+
 import { BundleScript, ScriptRouter } from "../../../🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: ["semio-framework-3d"], cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
+    await runCargoTestsV1({ manifestPath: resolve(this.root, "Cargo.toml"), packages: SEMIO_FRAMEWORK_3D_PACKAGES, cwd: this.root, extraArgs: rest }, readCargoTestPolicyV1(process.env));
   }
 }
 
@@ -27,19 +30,19 @@ class CanonicalArchitectureScript extends BundleScript {
   }
 }
 
-/** 📈️ Runs Cargo's benchmark mode for `semio-framework-3d`; this package declares no standalone benchmark target.
+/** 📈️ Runs Cargo's benchmark mode for the `semio-framework-3d` packages; they declare no standalone benchmark target.
  * The dedicated Brep Criterion benchmark belongs to `semio-s-plugin-stdio` and its own `bench` command. */
 class BenchScript extends BundleScript {
   async run(): Promise<void> {
-    await runOwnedCommand("cargo", ["bench", "--manifest-path",resolve(this.root,"Cargo.toml"), "-p", "semio-framework-3d"], this.repoRoot, "tool:owner", buildBudgetMs(), {env: process.env});
+    await runOwnedCommand("cargo", ["bench", "--manifest-path",resolve(this.root,"Cargo.toml"), ...SEMIO_FRAMEWORK_3D_PACKAGES.flatMap(name => ["-p", name])], this.repoRoot, "tool:owner", buildBudgetMs(), {env: process.env});
   }
 }
 
 
-/** 🧹️Zero-warning clippy gate: `cargo clippy -p semio-framework-3d --all-targets -- -D warnings`. */
+/** 🧹️Zero-warning clippy gate: `cargo clippy -p <each 3d package> --all-targets -- -D warnings`. */
 class LintScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runCargoLintV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:["semio-framework-3d"],cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));
+    await runCargoLintV1({manifestPath:resolve(this.root,"Cargo.toml"),packages:SEMIO_FRAMEWORK_3D_PACKAGES,cwd:this.root,extraArgs:segments},readCargoTestPolicyV1(process.env));
   }
 }
 

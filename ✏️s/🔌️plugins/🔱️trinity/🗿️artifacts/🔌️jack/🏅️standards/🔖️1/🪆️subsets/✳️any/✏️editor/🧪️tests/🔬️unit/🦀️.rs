@@ -66,8 +66,6 @@ async fn new_app() -> JackTestApp {
 }
 
 const JACK_TEST_INSTANCE: u32 = 1;
-
-}
 const JACK_LIVE_LOAD_STEP_BYTES: usize = 32 * 1_024;
 
 pub(crate) struct JackTestApp {
@@ -117,7 +115,7 @@ fn jack_envelope_wire() -> Vec<u8> {
 
 /// 📦️ The exact envelope wire a host hands the guest for `snapshot` (initial snapshot, no edits).
 fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     let snapshot_pack = snapshot.encode_pack();
     let snapshot_hex = snapshot_pack.iter().map(|byte| format!("{byte:02x}")).collect::<String>();
@@ -135,18 +133,18 @@ fn jack_envelope_wire_of(snapshot: crate::JackSnapshot) -> Vec<u8> {
         "conflicts": []
     }))
     .into_bytes();
-    let envelope = store::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(TRINITY_GRAPH_SCHEMA, "jack-live-load", snapshot, None);
     crate::drive_retirement_to_terminal(crate::standards::v1::subsets::any::io::binary::mutations::jack_envelope_decode_owner_bundle().retire_envelope(envelope)).expect("Jack fixture envelope retirement");
     wire
 }
 
 fn admit_jack_envelope(app: &mut VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Jack live envelope ingress credits");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Jack live envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Jack live envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Jack live envelope page admission failed: {fault:?}"));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("Jack live envelope seal/submit"));
@@ -185,12 +183,12 @@ async fn jack_live_envelope_cancel_closes_retained_pages_without_publication() {
     let mut app = new_app().await;
     let base_generation = app.artifact_generation_now();
     let wire = jack_envelope_wire();
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Jack ingress credits");
-    let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
-    let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    let first = &wire[..wire.len().min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+    let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
     bytes[..first.len()].copy_from_slice(first);
-    let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Jack first page");
+    let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Jack first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Jack page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Jack ingress");
     assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
@@ -199,8 +197,8 @@ async fn jack_live_envelope_cancel_closes_retained_pages_without_publication() {
 
 /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
 async fn live_scene(app: &VcsArtifactApp<EditorApp<TrinityJackPlayApp>, semio_s_artifact_stdio_semio::SemioMembers>) -> crate::JackWorkingScene {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-    use store::{ArtifactPack, SpaceMember};
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+    use store::{os_store::serialization::ArtifactPack, SpaceMember};
     let snapshot = app.snapshot().expect("Jack parent projection");
     let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("Jack content child").document_pack_bytes().await.expect("Jack content child pack");
     let (nodes, edges) = crate::working_from_jack_content_snapshot(&SemioGraphSnapshot::decode_pack(&bytes).expect("Jack content child snapshot")).expect("Jack content child scene");
@@ -424,7 +422,7 @@ async fn set_active_example_loads_the_example_with_its_preset_query() {
     // `InvocationResult.mutations` is always empty for this command — `requested_effects` is
     // the field that actually carries the swap.
     let loaded = result.requested_effects.iter().chain(receipt.effects.iter()).find_map(|effect| match effect {
-        semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<crate::JackSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
+        semio_framework_plugin::Effect::LoadDocument { pack, .. } => Some(<crate::JackSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("the loaded example decodes")),
         _ => None,
     });
     let loaded = loaded.expect("setActiveExample must request the LoadDocument effect");
@@ -535,7 +533,7 @@ async fn drive_query_ownership_operations(app: &mut VcsArtifactApp<EditorApp<Tri
         if std::time::Instant::now() >= deadline {
             return Err("query operations did not finish".into());
         }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
+        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| format!("{error:?}"))?;
         app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.map_err(|error| format!("{error:?}"))?;
         if let Some(page) = app.take_typed_operation_result_page(1) {
             let fault = (page.lane == semio_framework_plugin::app::TypedOperationResultLane::Fault).then(|| format!("query publication fault: {:?}", page.bytes()));
@@ -637,7 +635,7 @@ async fn jack_query_is_document_content_shared_by_every_editor_while_results_sta
         assert!(artifact_app_laws::project_and_retire_fixture_tree(tree).expect("result projection").contains("table"));
     }
 
-    let reloaded = <crate::JackSnapshot as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");
+    let reloaded = <crate::JackSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&document)).expect("the document pack decodes");
     assert_eq!(reloaded.query, left_query, "the query persists with the document");
     let admitted = app.handle_action("undo", None, &semio_framework_plugin::ActionMeta { view_state: Some(editor_right.clone()), ..meta("query-owner") }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap_or_else(|fault| panic!("undo admission: {fault:?}"));
     semio_framework_plugin::app::settle_framework_reserved_admission(&mut app.app, admitted).await.unwrap_or_else(|fault| panic!("undo settles: {fault:?}"));
@@ -729,7 +727,7 @@ async fn set_active_example_resolves_every_id_the_shell_can_send() {
 /// ships with, and must run there.
 #[semio_framework_async_macros::async_test]
 async fn every_shipped_query_lints_clean_and_runs_on_the_curated_example() {
-    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
+    let example = <crate::JackSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
     for query in [crate::TRINITY_JACK_DEFAULT_QUERY, "MATCH (a:Piece)-[r:Connection]->(b:Piece) RETURN a, r, b"] {
         let graph = crate::Graph::from_snapshot(example.clone()).expect("curated example graph");
         let diagnostics = crate::core::lint(&graph, query);
@@ -812,7 +810,7 @@ async fn the_shells_select_all_patch_undo_redo_round_trip_restores_every_node() 
 #[semio_framework_async_macros::async_test]
 async fn a_loaded_example_keeps_the_local_users_patch_undoable() {
     let mut app = new_app().await;
-    let example = <crate::JackSnapshot as store::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
+    let example = <crate::JackSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::editor::jack::NAKAGIN_EXAMPLE_DSL).expect("curated example parses");
     let handle = admit_jack_envelope(&mut app, &jack_envelope_wire_of(example));
     assert_eq!(drive_jack_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready);
     assert!(app.acknowledge_artifact_store_replacement(handle).expect("exact load acknowledgement"));

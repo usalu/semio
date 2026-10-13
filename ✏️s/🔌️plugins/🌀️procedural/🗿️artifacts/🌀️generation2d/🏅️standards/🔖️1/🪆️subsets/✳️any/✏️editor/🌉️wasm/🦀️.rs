@@ -7,7 +7,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
 use crate::Generation2dSnapshot;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
 pub type Generation2dEnvelope = ArtifactEnvelope<Generation2dSnapshot, Generation2dMutation>;

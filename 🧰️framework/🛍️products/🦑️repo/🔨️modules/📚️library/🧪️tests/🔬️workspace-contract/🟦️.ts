@@ -409,7 +409,7 @@ describe("package language semantic handoff", () => {
     expect(parseJsonc(readFileSync(join(inputRoot, "🔣️.json"), "utf8"))).toEqual(vector);
     const source = readFileSync(join(import.meta.dir, "../../🧹️normalization/🟦️.ts"), "utf8");
     const syntax = ts.createSourceFile("🟦️.ts", source, ts.ScriptTarget.Latest, true, ts.ScriptKind.TS);
-    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "mutationDomainOwnerLocation", "mutationFixtureMirrorOwnerPath", "canonicalDirectory"]);
+    const names = new Set(["emojiFold", "graphemes", "isEmojiGrapheme", "splitLeadingEmoji", "splitLeadingEmojiIdentity", "matchDirectoryKind", "packageLocation", "fixedSpecificity", "compareFixedSpecificity", "equalFixedSpecificity", "fixedScopeMatches", "matchingFixedContracts", "violation", "mutationDomainOwnerLocation", "mutationFixtureMirrorOwnerPath", "canonicalDirectory", "directoryKindIndex", "directoryKindIndexes", "fixedContractCandidates", "fixedContractLeafIndex", "fixedContractLeafIndexes", "fixedContractLiteralLeaf", "fixedContractSpecificity", "fixedContractSpecificities"]);
     const declarations = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && names.has(node.name?.text ?? ""));
     expect(declarations).toHaveLength(names.size);
     const code = declarations.map((node) => node.getText(syntax)).join("\n") + "\nreturn canonicalDirectory;";
@@ -1431,7 +1431,7 @@ describe("composition policy (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM
     
     const validateKind = oracle.compile(schema.$defs.artifactKind);
     const render: Record<string, (kind: string) => string> = {
-      rs: kind => '#[child(kind = "' + kind + '")] pub content: store::ArtifactChild<Child>,\n',
+      rs: kind => '#[child(kind = "' + kind + '")] pub content: store::os_store::artifact_child::ArtifactChild<Child>,\n',
       ts: kind => '/** @state artifact @child kind=' + kind + ' */ content: ArtifactChild;\n',
       json: kind => JSON.stringify({ properties: { content: { "x-semio-child": kind } } }),
       graphql: kind => 'content: ArtifactChild! @child(kind: "' + kind + '")\n',

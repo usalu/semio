@@ -454,8 +454,8 @@ pub fn example_document(example_id: &str) -> Option<Grid2dSnapshot> {
 /// document swap is deliberately NOT a `Grid2dMutation` — it carries no inverse and belongs in no
 /// undo ladder — so it rides `Effect::LoadDocument` and leaves the history exactly as it was.
 pub fn reset_document_effect(document: &Grid2dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Grid2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc-grid2d", WFC_GRID2D_DOCUMENT_SCHEMA));
+    let pack = <Grid2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc-grid2d", WFC_GRID2D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Examples
@@ -714,7 +714,7 @@ impl ArtifactEditor for Grid2dEditor {
 
     /// 📬️ Publication authority for the document lane. Without it every `Artifact`-lane verb is
     /// refused closed with `interactive-job.publication-authority-missing`.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

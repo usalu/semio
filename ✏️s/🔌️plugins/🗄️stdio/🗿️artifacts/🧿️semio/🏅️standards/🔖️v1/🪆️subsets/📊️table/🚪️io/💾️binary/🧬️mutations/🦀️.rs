@@ -5,7 +5,7 @@
 //! argument tail) rather than re-deriving a second independent encoding, mirroring `🔤️text`'s own
 //! established convention.
 
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
+use crate::schema::mutations::SemioTableMutation;
 
 //#region 📡️SemioProtocol
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");

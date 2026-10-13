@@ -3,7 +3,7 @@ use crate::editor::forms::commands::{next_step, reset_try, set_try_value};
 use crate::editor::forms::modes::blueprint::windows::try_wizard::transient::{FormsTryWindowLease, FormsTryWindowTransient};
 use crate::{forms_snapshot_with_state, FormStep, FORMS_DOCUMENT_SCHEMA};
 use semio_framework::kernel::Effect;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 fn block_on_forms_try_window<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);

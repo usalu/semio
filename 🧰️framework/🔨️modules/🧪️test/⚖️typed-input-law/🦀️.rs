@@ -23,9 +23,9 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
     assert!(value.retirement_birth_bytes().is_some(), "{label}: the owner quotes its exact birth");
     let mut pending = Some(value);
     let mut active: Option<Box<dyn store::ErasedSnapshotRetirement>> = None;
-    let demand = store::artifact_retirement_owned_birth_demands(&pending).unwrap_or_else(|error| panic!("{label}: the typed lane quotes the owner: {error}"));
+    let demand = store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&pending).unwrap_or_else(|error| panic!("{label}: the typed lane quotes the owner: {error}"));
     let admit = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: 1 << 20, maximum_depth: demand.depth };
-    let (admitted, heap) = observe(|| store::artifact_retirement_admit_owned(&mut pending, &mut active, admit));
+    let (admitted, heap) = observe(|| store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, admit));
     let admitted = admitted.unwrap_or_else(|error| panic!("{label}: the typed lane admits the owner: {error}"));
     let RetainedCloneStep::Progress(progress) = admitted else { panic!("{label}: admission reports its birth as progress") };
     assert!(pending.is_none(), "{label}: admission takes the original owner");
@@ -34,7 +34,7 @@ pub fn typed_input_retirement_law<T: RetireOwned>(label: &str, value: T) -> Type
     let mut law = TypedInputLaw { turns: 0, declared_births: progress.retained_capacity_bytes, declared_releases: progress.released_bytes };
     for _ in 0..1usize << 20 {
         if owner.terminal_is_empty() { break; }
-        let copy = owner.next_copy_byte_demand().unwrap_or_else(|error| panic!("{label}: copy demand: {error}")).max(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+        let copy = owner.next_copy_byte_demand().unwrap_or_else(|error| panic!("{label}: copy demand: {error}")).max(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
         let grant = RetainedCloneGrant {
             maximum_items: 1,
             maximum_copy_bytes: copy,
@@ -62,5 +62,5 @@ pub fn typed_command_retirement_law<M>(label: &str, mutation: M) -> TypedInputLa
 where
     M: RetireOwned + Clone,
 {
-    typed_input_retirement_law(label, store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None })
+    typed_input_retirement_law(label, store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None })
 }

@@ -3,7 +3,7 @@
 //! shape (channels/keyframes/target/value) grew richer in W2b; this artifact struct itself needs
 //! no changes since it just carries the top-level `timelines: Vec<AnimTimeline>` field through.
 
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimTimeline, SemioAnimationSnapshot};
+use crate::schema::snapshot::{AnimTimeline, SemioAnimationSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

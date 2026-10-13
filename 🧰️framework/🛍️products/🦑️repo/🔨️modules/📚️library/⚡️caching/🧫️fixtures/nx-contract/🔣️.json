@@ -80,18 +80,6 @@
       "disabledCache": false
     },
     {
-      "target": "test-quick",
-      "cache": true,
-      "continuous": false,
-      "disabledCache": false
-    },
-    {
-      "target": "test-exhaustive",
-      "cache": true,
-      "continuous": false,
-      "disabledCache": false
-    },
-    {
       "target": "lint",
       "cache": true,
       "continuous": false,
@@ -229,7 +217,7 @@
       "name": "leaf",
       "script": "export {};\n",
       "testCommand": "bun ./📜️script.ts test",
-      "derivedTarget": "test-exhaustive"
+      "cachedTarget": "test"
     },
     "workspaceRoot": {
       "name": "workspace-root-probe",
@@ -241,7 +229,6 @@
         "generate",
         "verify",
         "format-check",
-        "test-exhaustive",
         "format",
         "setup",
         "publish",
@@ -361,7 +348,7 @@
   "entrypoints": [
     {
       "project": "@semio-tech/flow-plugin",
-      "target": "component-dev",
+      "target": "component",
       "prerequisite": "@semio-tech/flow-plugin:graph-generate"
     },
     {
@@ -457,18 +444,6 @@
     "react",
     "wgpu"
   ],
-  "componentProfiles": [
-    {
-      "profile": "dev",
-      "target": "component-dev",
-      "output": "{projectRoot}/dist/component-dev"
-    },
-    {
-      "profile": "release",
-      "target": "component-release",
-      "output": "{projectRoot}/dist/component-release"
-    }
-  ],
   "rustDiscoveryCache": {
     "limitBytes": 4096,
     "entry": "src/lib.rs",
@@ -496,29 +471,19 @@
   "materialization": {
     "project": "@semio-tech/framework-plugin-web",
     "root": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript",
-    "profiles": [
-      {
-        "profile": "dev",
-        "target": "materialize-dev",
-        "component": "component-dev",
-        "support": "support-dev",
-        "tooling": []
-      },
-      {
-        "profile": "release",
-        "target": "materialize-release",
-        "component": "component-release",
-        "support": "support-release",
-        "tooling": [
-          "workspace:deps-wasm-opt"
-        ]
-      }
-    ],
+    "support": "support",
+    "modules": "dist/🔌️plugin-modules",
     "cancellation": {
       "shutdownMilliseconds": 4500,
       "maximumDiagnosticCharacters": 70000
     },
-    "source": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts"
+    "source": "🧰️framework/🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts",
+    "removedTargets": [
+      "describe",
+      "materialize"
+    ],
+    "supportCache": false,
+    "canonicalModules": "dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules"
   },
   "playgroundSessions": {
     "project": "@semio-tech/plugin-registry",
@@ -527,7 +492,10 @@
       "s"
     ],
     "prerequisite": "generate",
-    "descriptorPrerequisiteSuffix": ":describe"
+    "descriptorInputs": [
+      "🛂️.descriptor.semio",
+      "🔣️.json"
+    ]
   },
   "fontAssets": {
     "project": "semio-framework-os-infinite",
@@ -638,5 +606,158 @@
     "CODEX_SESSION_ID": "fixture-session",
     "NX_PROJECT_NAME": "fixture-project",
     "NX_FILE_CHANGES": "fixture/source.ts"
+  },
+  "releaseOrchestrators": [
+    {
+      "project": "workspace",
+      "target": "release",
+      "prerequisites": [
+        "workspace:deps-wasm-opt"
+      ],
+      "jobs": [
+        "describe-tool",
+        "font-assets",
+        "fonts",
+        "support"
+      ]
+    },
+    {
+      "project": "@semio-tech/semio-tech-play",
+      "target": "build",
+      "prerequisites": [
+        "workspace:deps-wasm-opt",
+        "@semio-tech/plugin-registry:generate"
+      ],
+      "jobs": [
+        "describe-tool",
+        "font-assets",
+        "fonts",
+        "support",
+        "flow-wasm",
+        "surface-wasm",
+        "puzzle-wasm",
+        "map-tiles",
+        "bundle",
+        "pages"
+      ]
+    }
+  ],
+  "closurePreparation": {
+    "prerequisites": [
+      "@semio-tech/os-plugin-describe-rs:build",
+      "workspace:deps-wasm-opt"
+    ],
+    "modules": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules"
+  },
+  "componentTarget": {
+    "target": "component",
+    "command": "native component --manifest",
+    "dependsOn": [
+      "@semio-tech/os-plugin-describe-rs:build",
+      "@semio-tech/framework-plugin-web:support",
+      "workspace:deps-wasm-opt"
+    ],
+    "output": "{projectRoot}/dist/components/{options.env.SEMIO_BUILD_MODE}"
+  },
+  "buildModes": [
+    {
+      "args": [
+        "run",
+        "fixture:build"
+      ],
+      "mode": "prototype"
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build:release"
+      ],
+      "mode": "release"
+    },
+    {
+      "args": [
+        "run-many",
+        "--targets=build,wasm",
+        "-c",
+        "release"
+      ],
+      "mode": "release"
+    },
+    {
+      "args": [
+        "affected",
+        "--target=build"
+      ],
+      "environment": {
+        "SEMIO_BUILD_MODE": "release"
+      },
+      "mode": "release"
+    },
+    {
+      "args": [
+        "run",
+        "fixture:native-build-release"
+      ],
+      "mode": "release"
+    },
+    {
+      "args": [
+        "run",
+        "fixture:prepare-dev"
+      ],
+      "mode": "prototype"
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "-c",
+        "dev"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "--configuration=ship"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "-c",
+        "prototype",
+        "-c",
+        "release"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:prepare-dev",
+        "-c",
+        "release"
+      ],
+      "error": true
+    },
+    {
+      "args": [
+        "run",
+        "fixture:build",
+        "--",
+        "--release"
+      ],
+      "error": true
+    }
+  ],
+  "commandDependencyOracle": {
+    "entry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🚀️bootstrap/📜️script.ts",
+    "dynamicExternalDependencies": [
+      "npm:yargs"
+    ]
   }
 }

@@ -5,10 +5,10 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::mesh::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below —
@@ -69,10 +69,7 @@ pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
     native::parse(s)
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_list<T>(items: &[T], enc: impl Fn(&T) -> String) -> String {
@@ -271,7 +268,7 @@ pub(crate) fn parse_mesh_snapshot_body(body: &str) -> Result<SemioMeshSnapshot, 
 
 /// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioMeshSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioMeshSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOMESH_DOCUMENT_SCHEMA
@@ -287,7 +284,7 @@ impl store::ArtifactDsl for SemioMeshSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_mesh_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -319,13 +316,13 @@ pub fn decode_semio_mesh_snapshot_json(text: &str) -> Result<SemioMeshSnapshot, 
 /// 📝 Parse mesh subset DSL text into a `SemioMeshSnapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_mesh_dsl(text: &str) -> Result<SemioMeshSnapshot, semio_framework_diagnostic::TextError> {
-    <SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 📝 Render a `SemioMeshSnapshot` as mesh subset DSL text.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_mesh_dsl(snapshot: &SemioMeshSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -333,11 +330,11 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::mesh::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 
 

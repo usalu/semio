@@ -1,3 +1,4 @@
+import { readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 // #region 🔌️Adapters
 import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -12,7 +13,7 @@ import {
   semioReferencedAssetsVitePlugin,
   semioServeCloseVitePlugin,
   semioServeUpgradeVitePlugin,
-  semioViteProductionBuild,
+  semioViteBuild,
   type SemioHostHtmlSpec,
 } from "../../../../../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import catalog from "../../🔣️.json" with { type: "json" };
@@ -133,7 +134,7 @@ export default defineOwnedBuildConfigFactory(({ command }) => ({
     uiReactBuildPlugin(),
     quizReleaseDocumentVitePlugin(proctorOrigin),
   ],
-  build: playgroundStaticSiteBuildOptions({ ...semioViteProductionBuild(), outDir: resolve(bundleRoot, "dist") }),
+  build: playgroundStaticSiteBuildOptions({ ...semioViteBuild(), outDir: resolve(bundleRoot, "dist", readBuildMode(process.env.SEMIO_BUILD_MODE)) }),
   define: { "import.meta.vitest": "undefined", ...(command === "build" ? { "import.meta.env.VITE_PROCTOR_URL": JSON.stringify(proctorOrigin) } : {}) },
   server: {
     fs: { allow: [repoRoot] },

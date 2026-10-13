@@ -8,7 +8,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn compose_carries_no_findings_for_a_conformant_document() {
-        let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
+        let bytes = <TiffSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = TiffBaselineComposerComposition::compose(&sources).expect("pass-through compose never fails on conformance grounds");
         assert!(composed.diagnostics.is_empty(), "got {:?}", composed.diagnostics);
@@ -16,7 +16,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_carries_no_findings_for_a_conformant_document() {
-        let bytes = <TiffSnapshot as store::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
+        let bytes = <TiffSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&minimal_non_degenerate_snapshot());
         let diagnostics = TiffBaselineValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.is_empty(), "got {diagnostics:?}");
     }

@@ -9,7 +9,7 @@ import { createHash } from "node:crypto";
 import { existsSync, readFileSync } from "node:fs";
 import Ajv from "ajv";
 import { parse as parseToml } from "@iarna/toml";
-import { registerPlaygroundSiteBuildCommands, runRepositoryCargoTests, runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runRepositoryCargoTests, runRepositoryExactCargoLaws } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -345,7 +345,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   const operationSources = `${homeOperations}\n${spaceOperations}`;
   const sprLawCalls = operationSources.split("\n").filter((line) => /\bassert_(?:fatal_never_applies|missing_target_is_error|mutation_diff_absorb_law|mutation_inverse_law|outcome_policy_matrix)\(/.test(line));
   assert(sprLawCalls.length === 14 && sprLawCalls.every((call) => call.includes(".await;")), "Home or Space mutation laws do not await the current async SPR test context");
-  assert(homeBinary.includes("ArtifactStore::new(envelope).await") && homeBinary.includes(".dispatch(store::ArtifactCommand::Apply") && homeBinary.includes(" }).await.expect"), "Home document codec law does not await the current Store construction and dispatch boundary");
+  assert(homeBinary.includes("ArtifactStore::new(envelope).await") && homeBinary.includes(".dispatch(store::os_store::store_schema::ArtifactCommand::Apply") && homeBinary.includes(" }).await.expect"), "Home document codec law does not await the current Store construction and dispatch boundary");
   assert(catalogGenerationSource.includes("dsl::from_dsl_value(pack::json_to_dsl_value(&json))") && !catalogGenerationSource.includes("serde_json::from_str(BEFORE)"), "Home snapshot fixture bypasses the first-party value codec");
   assert(!spaceEngine.includes("Some(&json!(") && !spaceEngine.includes("Some(&pack::json!(") && spaceEngine.match(/pack::json_to_dsl_value\(&pack::json!\(/g)?.length === 3, "Space checkpoint tests do not convert first-party JSON into the current DSL action boundary");
   const pluginImports = (source: string): string[] => source.match(/use semio_framework_plugin::\{([^}]*)\};/)?.[1]!.split(",").map((name) => name.trim()) ?? [];
@@ -372,7 +372,7 @@ function homeDirectoryIdentityRowsOracle(repoRoot: string): number {
   assert(spaceConfig.match(/round_trip\(&config, &operation\)\.await/g)?.length === 2 && exportMedia.includes("register_format_descriptors([") && /\.await\s*\.expect\(\"register neutral format descriptor\"\)/.test(exportMedia), "Space config or format-registration fixtures do not await their current async boundaries");
   assert(cataloguePanel.includes(').await.expect("catalogue tree")') && setActivePanelTab.includes(').await.expect("catalogue tree")') && setActiveExample.includes("register_studio_port_for_test(&entry.id, port).await") && cataloguePanel.includes("project_and_retire_fixture_tree") && setActivePanelTab.includes("project_and_retire_fixture_tree"), "Space catalogue or studio-port fixtures bypass current async ownership and component retirement");
   assert(nodeGraphEdit.includes("serde_json::Value::as_object_mut") && nodeGraphEdit.includes("serde_json::Value::Object(position)") && !nodeGraphEdit.includes("fixture.get_mut(\"layout\").and_then(pack::JsonValue::as_object_mut)"), "Space node-graph fixture crosses serde JSON through the first-party Pack value family");
-  assert(setActiveExample.includes("OsBackbonePorts::Store(store::BackbonePorts::Memory") && setActiveExample.match(/empty_workflow_snapshot\(\)\.await/g)?.length === 5 && setActivePanelTab.includes("let projection = empty_workflow_snapshot().await;"), "Space fixtures retain a stale backbone enum or unresolved workflow snapshot future");
+  assert(setActiveExample.includes("OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts::Memory") && setActiveExample.match(/empty_workflow_snapshot\(\)\.await/g)?.length === 5 && setActivePanelTab.includes("let projection = empty_workflow_snapshot().await;"), "Space fixtures retain a stale backbone enum or unresolved workflow snapshot future");
   assert(setActiveExample.match(/load_document_snapshot\(&emit\)\.await/g)?.length === 2 && workflowWindow.match(/\.render\(S_PLAY_BODY_WORKFLOW,[^;]+\.await\.expect\("render"\)/g)?.length === 2 && compiledDagWindow.includes('.render(S_PLAY_BODY_COMPILED_DAG, None, &ViewModel::default()).await.expect("render")') && workflowWindow.match(/project_and_retire_fixture_tree\(node\)/g)?.length === 2 && compiledDagWindow.includes("project_and_retire_fixture_tree(node)"), "Space window fixtures retain unresolved async renders or unretired component owners");
   const spaceAppFixtures = `${workflowWindow}\n${compiledDagWindow}\n${spawnApp}`;
   assert(!spaceAppFixtures.includes("VcsArtifactApp::new(crate::engine::space::SpaceApp::default())") && !spaceAppFixtures.includes("VcsArtifactApp::<crate::engine::space::SpaceApp>::new") && spaceAppFixtures.match(/crate::engine::space::unit_tests::context::app_with_registry\(\)\.await/g)?.length === 4, "Space window and spawn fixtures bypass the registered app constructor");
@@ -444,7 +444,7 @@ function spacePluginIdentityOracle(repoRoot: string): number {
   identityAjv.addSchema(module);
   assert(identityAjv.compile({ $ref: `${module.$id}#/$defs/SpacePluginIdentity` })(fixture), "plugin-identity fixture violates its owner scope export");
 
-  const cargo = readFileSync(join(plugin, "📦️packages/🦀️rust/Cargo.toml"), "utf8");
+  const cargo = readFileSync(join(plugin, "🧩️component/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const cargoComponentPackage = cargo.split("[package.metadata.component]")[1]?.split("[")[0]?.match(/package\s*=\s*"([^"]+)"/)?.[1];
   assert.equal(cargoComponentPackage, fixture.packageId, "Cargo component package is not the fixture identity");
   assert.equal(cargo.match(/^name\s*=\s*"([^"]+)"/mu)?.[1], fixture.packageName, "Cargo package name is not the fixture identity");
@@ -616,6 +616,5 @@ class PersistenceDataClassCheckScript extends BundleScript {
 
 const router = new ScriptRouter(import.meta.dir).register("test", TestScript).register("home-directory-projection-persistence-check", HomeDirectoryProjectionPersistenceCheckScript).register("home-directory-event-page-owner-check", HomeDirectoryEventPageOwnerCheckScript).register("home-directory-identity-rows-check", HomeDirectoryIdentityRowsCheckScript).register("interactive-job-catalog-check", InteractiveJobCatalogCheckScript).register("snapshot-owner-census", SnapshotOwnerCensusScript).register("plugin-identity-check", PluginIdentityCheckScript).register("persistence-data-class-check", PersistenceDataClassCheckScript);
 
-registerPlaygroundSiteBuildCommands(router);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

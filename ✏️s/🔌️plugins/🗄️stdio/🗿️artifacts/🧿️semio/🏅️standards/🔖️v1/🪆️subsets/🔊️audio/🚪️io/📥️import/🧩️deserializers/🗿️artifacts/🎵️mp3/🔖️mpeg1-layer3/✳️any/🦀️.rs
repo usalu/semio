@@ -1,7 +1,7 @@
 //! 📥️ Projects admitted MP3 metadata and MPEG header meaning into semantic audio.
 //! Compressed MPEG payload is retained by MP3; this bridge does not fabricate PCM samples.
 
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp3::Mp3Snapshot;
 use semio_s_artifact_stdio_mp3::standards::mpeg1_layer3::subsets::any::schema::snapshot::Id3Content;

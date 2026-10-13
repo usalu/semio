@@ -1,0 +1,80 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/TelemetryV1",
+  "title": "Per-build CPU and memory timeline, unit table, critical path and report",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "sampleMs": 2000,
+        "idleCpuPercent": 75,
+        "idleWindowMs": 30000,
+        "topUnits": 20,
+        "fanOutRows": 15,
+        "timelineFile": "timeline.jsonl",
+        "unitsFile": "units.json",
+        "reportFile": "report.md"
+      }
+    },
+    "Bytes": { "anyOf": [{ "type": "integer", "minimum": 0 }, { "type": "null" }] },
+    "TimelineRowV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["v", "atMs", "cpuPercent", "cores", "memoryTotalBytes", "memoryAvailableBytes", "swapUsedBytes", "swapOutBytesPerSecond", "rustcRunning", "admissionWaiting", "rustcRssBytes", "frozen", "tokensHeld", "stagesRunning", "stagesWaiting"],
+      "properties": {
+        "v": { "const": 1 },
+        "atMs": { "type": "integer", "minimum": 0 },
+        "cpuPercent": { "type": "number", "minimum": 0, "maximum": 100 },
+        "cores": { "type": "integer", "minimum": 1 },
+        "memoryTotalBytes": { "type": "integer", "minimum": 0 },
+        "memoryAvailableBytes": { "$ref": "#/definitions/Bytes" },
+        "swapUsedBytes": { "$ref": "#/definitions/Bytes" },
+        "swapOutBytesPerSecond": { "anyOf": [{ "type": "number", "minimum": 0 }, { "type": "null" }] },
+        "rustcRunning": { "type": "integer", "minimum": 0 },
+        "admissionWaiting": { "type": "integer", "minimum": 0 },
+        "rustcRssBytes": { "type": "integer", "minimum": 0 },
+        "frozen": { "type": "boolean" },
+        "tokensHeld": { "type": "integer", "minimum": 0 },
+        "stagesRunning": { "type": "integer", "minimum": 0 },
+        "stagesWaiting": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "BuildScriptRunV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["pass", "package", "outDir", "endMs"],
+      "properties": {
+        "pass": { "type": "string", "minLength": 1 },
+        "package": { "type": "string", "minLength": 1 },
+        "outDir": { "type": "string", "minLength": 1 },
+        "endMs": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "StageRecordV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["component", "stage", "readyMs", "startMs", "endMs", "ok"],
+      "properties": {
+        "component": { "type": "string", "minLength": 1 },
+        "stage": { "type": "string", "minLength": 1 },
+        "readyMs": { "type": "integer", "minimum": 0 },
+        "startMs": { "type": "integer", "minimum": 0 },
+        "endMs": { "type": "integer", "minimum": 0 },
+        "ok": { "type": "boolean" }
+      }
+    },
+    "CriticalSegmentV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "label", "edge", "readyMs", "startMs", "endMs"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "label": { "type": "string", "minLength": 1 },
+        "edge": { "enum": ["root", "rmeta", "full", "run"] },
+        "readyMs": { "type": "integer", "minimum": 0 },
+        "startMs": { "type": "integer", "minimum": 0 },
+        "endMs": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}

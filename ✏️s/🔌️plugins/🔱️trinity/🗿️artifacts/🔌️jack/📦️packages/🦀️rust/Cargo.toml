@@ -37,7 +37,7 @@ semio-framework-graph-layout-run = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-canvas = { path = "../../../../../../../🧰️framework/🔨️modules/🖼️canvas/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
@@ -46,6 +46,9 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-graph = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }

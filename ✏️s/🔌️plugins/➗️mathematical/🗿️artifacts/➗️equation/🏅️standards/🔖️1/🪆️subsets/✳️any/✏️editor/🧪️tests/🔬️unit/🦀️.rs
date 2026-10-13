@@ -539,8 +539,8 @@ async fn a_staged_json_text_operations_argument_survives_command_from_action() {
 async fn the_store_preparation_derives_its_footprint_from_the_leaf() {
     use crate::standards::v1::subsets::graph::schema::mutations::{delete_node::DeleteNode, disconnect_nodes::DisconnectNodes};
     let factory = EquationStorePreparationFactory::<EquationSnapshot, EquationMutation>::default();
-    let rows = |mutation: EquationMutation| store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, store::HistoryLane::Document).expect("admitted").work_items;
-    assert_eq!(rows(EquationMutation::DisconnectNodes(DisconnectNodes { id: "edge".into() })), store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    let rows = |mutation: EquationMutation| store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &mutation, store::os_store::store_schema::HistoryLane::Document).expect("admitted").work_items;
+    assert_eq!(rows(EquationMutation::DisconnectNodes(DisconnectNodes { id: "edge".into() })), store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert_eq!(rows(EquationMutation::DeleteNode(DeleteNode { id: "node".into() })), 1 + 1 + EQUATION_MAX_EDGES);
 }
 //#endregion 🔖️LoadedDocumentDispatch

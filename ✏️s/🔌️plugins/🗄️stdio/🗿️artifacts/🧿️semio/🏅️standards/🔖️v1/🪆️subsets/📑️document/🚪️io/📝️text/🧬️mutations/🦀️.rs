@@ -5,29 +5,29 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::document::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::document::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_run_style};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_run_style};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_u8};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_u8};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_image};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_image};
-use crate::standards::v1::subsets::video::io::text::snapshot::{dec_bool};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_style};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_style};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_bool};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{dec_f64};
-use crate::standards::v1::subsets::flow::io::text::snapshot::{enc_f64};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{hex_decode};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{hex_encode};
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{BlocksDiff, DocBlockDiff, DocHeadingDiff, DocParagraphDiff, DocQuoteDiff, DocRunDiff, DocTableCellDiff, DocTableRowDiff, ListItemsDiff, RunsDiff, SemioDocumentDiff, TableCellsDiff, TableRowsDiff};
+use crate::io::text::diff::dec_run_style;
+use crate::io::text::diff::enc_run_style;
+use crate::io::text::diff::dec_u8;
+use crate::io::text::diff::enc_u8;
+use crate::io::text::diff::dec_image;
+use crate::io::text::diff::enc_image;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_bool;
+use crate::io::text::diff::dec_style;
+use crate::io::text::diff::enc_style;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_bool;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::hex_decode;
+use semio_s_artifact_stdio_semio_base::io::text::codec::hex_encode;
+use crate::schema::snapshot::{DocBlock, DocImage, DocRun, DocStyle, RunStyle, SemioDocumentSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioDocumentMutation` block
 /// below calls `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in
@@ -77,10 +77,7 @@ pub(crate) fn dec_path_segment(s: &str) -> Result<DocPathSegment, String> {
     }
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn parse_usize(s: &str) -> Result<usize, String> {
-    s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_usize;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_block_path(p: &DocBlockPath) -> String {
@@ -109,13 +106,13 @@ pub(crate) fn dec_list<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> R
 /// `InsertBlock`/`SetBlockContent`'s whole-payload encoding needs these; reuses `SemioDocumentDiff`'s
 /// `pub(crate)` `enc_block`/`enc_style`/`enc_image` for the shared per-item shape.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &DocBlock) -> String {
-    crate::standards::v1::subsets::document::io::text::diff::enc_block(b)
+pub fn enc_block(b: &DocBlock) -> String {
+    crate::io::text::diff::enc_block(b)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<DocBlock, String> {
-    crate::standards::v1::subsets::document::io::text::diff::dec_block(s)
+pub fn dec_block(s: &str) -> Result<DocBlock, String> {
+    crate::io::text::diff::dec_block(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -139,7 +136,7 @@ pub(crate) fn dec_snapshot(s: &str) -> Result<SemioDocumentSnapshot, String> {
     let parts = split_top_level(inner, ',');
     let [styles, images, blocks] = parts.as_slice() else { return Err(format!("snapshot: expected 3 fields, got {}", parts.len())) };
     Ok(SemioDocumentSnapshot {
-        schema: crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA.into(),
         styles: dec_list(styles, dec_style)?,
         images: dec_list(images, dec_image)?,
         blocks: dec_list(blocks, dec_block)?,

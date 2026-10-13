@@ -8,8 +8,8 @@ use std::sync::Arc;
 const _: () = assert!(!std::mem::needs_drop::<State>() && !std::mem::needs_drop::<Mutation>());
 const _: () = assert!(std::mem::size_of::<State>() <= 16 && std::mem::size_of::<Mutation>() <= 16);
 
-fn footprint(_: &Mutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<Mutation>()))
+fn footprint(_: &Mutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(std::mem::size_of::<Mutation>()))
 }
 
 fn transfer(mutation: Mutation) -> State {
@@ -18,7 +18,7 @@ fn transfer(mutation: Mutation) -> State {
 }
 
 /// 📦️ Shares the exact production lifecycle across window and document replacement laws.
-pub(crate) fn owners() -> WindowTransientOwnerBundle<State, Mutation> {
+fn owners() -> WindowTransientOwnerBundle<State, Mutation> {
     let state: Arc<dyn store::ArtifactOwnedValueRetirementFactory<State>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
     let mutation: Arc<dyn store::ArtifactOwnedValueRetirementFactory<Mutation>> = Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::default());
     let preparation = Arc::new(store::ArtifactEphemeralTransferPreparationFactory::new(footprint, transfer, state.clone(), mutation.clone()));

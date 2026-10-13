@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `ChangeStrokeWidth`.
 
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::drawing::schema::diff::{DrawStyleDiff, SemioDrawingDiff};
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use crate::schema::diff::{DrawStyleDiff, SemioDrawingDiff};
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

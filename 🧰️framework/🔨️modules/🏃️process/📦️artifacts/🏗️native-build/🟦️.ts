@@ -7,10 +7,11 @@ import { basename, dirname, join, relative, resolve, sep, isAbsolute, normalize 
 import { fileURLToPath } from "node:url";
 import { spawn, spawnSync } from "node:child_process";
 import { createHash, randomUUID } from "node:crypto";
-import { availableParallelism, homedir, totalmem } from "node:os";
+import { homedir } from "node:os";
 import { createInterface } from "node:readline";
 import {copyFile,lstat,mkdir,open,rename,rm,type FileHandle} from "node:fs/promises";
-import {CURRENT_PHYSICAL_CONCURRENCY_V1,CurrentPhysicalOwnerV1,mapBoundedV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
+import type { FileObservationControlV1 } from "../../../📁️filesystem/🧾️observation/🟦️.ts";
+import {CURRENT_PHYSICAL_CONCURRENCY_V1,CurrentPhysicalFilesV1,CurrentPhysicalOwnerV1,mapBoundedV1,type CurrentPhysicalEntryV1,type CurrentPhysicalPortV1} from "../../../📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import {
   CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1,
   CargoProvenanceStreamV1,
@@ -20,6 +21,7 @@ import {
   cargoProvenanceProgressSinkV1,
   decodeCargoProvenanceV1,
   type CargoArtifactObservationV1,
+  type CargoBuildResourcesV1,
   type CargoDepInfoV1,
   type CargoInputObservationV1,
   type CargoInvocationInputV1,
@@ -31,9 +33,8 @@ import {
 
 export { cargoDepInfoChecksumsV1, cargoDepInfoSourcesV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1 } from "./🧾️receipt/🟦️.ts";
 
-import { acquireCargoBuildLeaseV1, cargoPrebuildJobsV1, cargoPrebuildPassesV1, ensureCargoPrebuildV1, type CargoPrebuildPlanV1 } from "./🔒️lease/🟦️.ts";
-
-export { admitCargoPrebuildPlanV1, cargoPrebuildJobsV1, cargoPrebuildKeyV1, cargoPrebuildPassesV1, cargoPrebuildRequestV1, readCargoPrebuildPlanV1, type CargoPrebuildPlanV1 } from "./🔒️lease/🟦️.ts";
+import { buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
+import { cargoRequestedProfileV1, acquireCargoBuildLeaseV1, acquireNativeCapacityLeaseV1 } from "./🔒️lease/🟦️.ts";
 
 
 /** ✍️ Re-signs a native executable on macOS, ad-hoc, and does nothing anywhere else.
@@ -146,7 +147,7 @@ export function cargoBinarySourcesFreshnessV1(record: CargoBinarySourcesV1, modi
 }
 
 /** 🏗️ Supplies exact caller-owned compiler storage and execution limits. */
-export type CargoArtifactBuildPolicyV1 = Readonly<{ version: 1; cwd: string; buildDirectory: string; leaseDirectory: string; captureDirectory: string; budgetMs: number }>;
+export type CargoArtifactBuildPolicyV1 = Readonly<{ version: 1; mode: BuildMode; cwd: string; buildDirectory: string; leaseDirectory: string; captureDirectory: string; budgetMs: number }>;
 const artifactPolicySchema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
 function admitArtifactPolicy(value: unknown): CargoArtifactBuildPolicyV1 {
   const errors = validateJsonSchemaSubset(artifactPolicySchema, value);
@@ -168,11 +169,15 @@ export function readCargoArtifactBuildPolicyV1(environment: Readonly<Record<stri
  * `O_NONBLOCK` once written, an inherited pipe shares that flag, and a Cargo burst (replayed warnings
  * of fresh units) then fails with `EAGAIN` as soon as a slow reader lets the 64 KiB pipe fill — the
  * build dies with its diagnostics cut mid-line (ticket 26/09/23 W4, `wp-w4/w4-nonblock-probe.ts`). */
-export type CargoArtifactBuildOptionsV1 = { readonly command?: "build" | "rustc"; readonly prebuild?: CargoPrebuildPlanV1; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly signal?: AbortSignal; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[] }> };
+export type CargoArtifactBuildOptionsV1 = { readonly command?: "build" | "rustc"; readonly deliverables?: readonly string[]; readonly output?: string; readonly sourcesRecord?: string; readonly validate?: (files: ReadonlyMap<string, string>) => void; readonly signal?: AbortSignal; readonly environment?: Readonly<Record<string,string|undefined>>; readonly commandPort?: Readonly<{ command: string; args: readonly string[] }>; readonly provenance?: (receiptPath: string) => void };
 
 /** 🚦️ Holds the shared profile lease through compiler shutdown and the copy of the final artifacts, including queue cancellation, and releases it before staging and provenance so the next compile starts while this build's receipt is still being observed. The receipt's physical recheck still refuses any input a later compile changed. */
 export async function buildCargoArtifacts(manifest: string, args: string[], policy: CargoArtifactBuildPolicyV1, options: CargoArtifactBuildOptionsV1 = {}): Promise<void> {
   policy = admitArtifactPolicy(policy);
+  const selectedProfile = cargoRequestedProfileV1(args), expected = buildModePolicy(policy.mode);
+  if (selectedProfile && selectedProfile !== expected.cargoProfile && selectedProfile !== expected.wasmProfile && !(policy.mode === "release" && selectedProfile === "host-tool")) throw Error("Cargo profile conflicts with selected build mode");
+  if (!selectedProfile) { const delimiter = args.indexOf("--"); args = delimiter < 0 ? [...args, "--profile", expected.cargoProfile] : [...args.slice(0, delimiter), "--profile", expected.cargoProfile, ...args.slice(delimiter)]; }
+  options = { ...options, output: options.output ?? `dist/build/${policy.mode}` };
   if (!isAbsolute(manifest)) throw Error("Cargo artifact manifest must be absolute");
   const budget = policy.budgetMs;
   if (!Number.isFinite(budget) || budget < 0) throw Error("Invalid Cargo build budget");
@@ -185,15 +190,17 @@ export async function buildCargoArtifacts(manifest: string, args: string[], poli
   observeOwner();
   const ownerWatch = setInterval(observeOwner, 1000);
   const expiry = budget > 0 ? setTimeout(abort, budget) : undefined;
+  let capacity: Awaited<ReturnType<typeof acquireNativeCapacityLeaseV1>> | undefined;
   let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
     if (options.signal?.aborted) abort();
-    if (options.prebuild) await ensureCargoPrebuildV1({ plan: options.prebuild, args, cwd: policy.cwd, directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, environment: options.environment ?? process.env, jobs: cargoPrebuildJobsV1(availableParallelism(), totalmem(), options.environment ?? process.env), passes: cargoPrebuildPassesV1(totalmem()), signal: controller.signal, ...(options.commandPort ? { commandPort: options.commandPort } : {}) });
+    capacity = await acquireNativeCapacityLeaseV1({ directory: policy.leaseDirectory, signal: controller.signal, environment: options.environment });
+    options = { ...options, environment: { ...(options.environment ?? process.env), SEMIO_NATIVE_CAPACITY_HELD: "true" } };
     lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, args, signal: controller.signal });
     controller.signal.throwIfAborted();
-    await captureCargoArtifacts(manifest, args, policy, { ...options, signal: controller.signal }, () => { const held = lease; lease = undefined; held?.release(); });
+    await captureCargoArtifacts(manifest, args, policy, { ...options, signal: controller.signal }, () => { const held = lease, allocated = capacity; lease = undefined; capacity = undefined; held?.release(); allocated?.release(); });
   } finally {
-    try { lease?.release(); }
+    try { lease?.release(); capacity?.release(); }
     finally {
       clearInterval(ownerWatch);
       if (expiry) clearTimeout(expiry);
@@ -265,309 +272,427 @@ class ReceiptFileSinkV1 implements CargoProvenanceSinkV1 {
   }
 }
 
-/** 🔏️ Observes a completed Cargo invocation under complete current physical authority and publishes its receipt.
- *
- * Observation never retains file bodies: dep-info is kept as its digest plus the sources and checksums parsed from exactly
- * those bytes, resource captures as their digest, and every path, input digest and resource witness is interned once. Records
- * stream to a private temporary file as they complete; the receipt becomes visible only by an atomic rename after the
- * physical authority rechecked every observed input, so a refused or failed run leaves no receipt.
+/** 📝️ One completed invocation's observation as a session stages it: the receipt waiting for the session's recheck and the records its leaves are derived from. */
+export type CargoProvenanceStagedV1 = Readonly<{ receiptPath: string; units: readonly CargoUnitObservationV1[]; buildResources: readonly CargoBuildResourcesV1[] }>;
+
+/** 🔐️ Where a provenance session takes its physical authority from: one port per observed invocation, settled (its structural observations rechecked) when that
+ * invocation's receipt is staged, and one final recheck of every file the session read. */
+export type CargoProvenanceCustodyV1 = Readonly<{ invocation: () => Readonly<{ port: CurrentPhysicalPortV1; settle: () => Promise<void> }>; recheck: () => Promise<void> }>;
+
+/** 🚪️ The custody of exactly one port: every invocation observes through it and the port's own complete recheck closes the session. */
+export function portProvenanceCustodyV1(port: CurrentPhysicalPortV1): CargoProvenanceCustodyV1 {
+  return Object.freeze({ invocation: () => Object.freeze({ port, settle: async () => undefined }), recheck: () => port.recheck() });
+}
+
+/** 🤝️ The custody of one build session: every invocation observes through its own owner, all owners share one file custody, so a file is hashed once however
+ * many invocations name it and rechecked once at the end, while each invocation's directory rosters and absent paths are rechecked as its receipt is staged. */
+export function sharedProvenanceCustodyV1(root: string, control: () => FileObservationControlV1): CargoProvenanceCustodyV1 & Readonly<{ files: CurrentPhysicalFilesV1 }> {
+  const files = new CurrentPhysicalFilesV1();
+  return Object.freeze({ files, invocation: () => { const owner = new CurrentPhysicalOwnerV1(root, control(), files); return Object.freeze({ port: owner, settle: () => owner.recheckStructure() }); }, recheck: () => files.recheck(control) });
+}
+
+/** 🔭️ One invocation's view of the physical world: structural facts (kinds, rosters, directory digests, input rows) are its own, file facts are the session's. */
+type ProvenanceObserverV1 = Readonly<{ port: CurrentPhysicalPortV1; path: (value: string) => string; kind: (value: string) => Promise<"file" | "directory" | null>; text: (value: string) => Promise<string | null>; length: (value: string) => Promise<number | null>; entries: (value: string) => Promise<readonly CurrentPhysicalEntryV1[] | null>; digest: (value: string) => Promise<string | null>; sha256: (value: string) => Promise<string | null>; input: (value: string) => Promise<CargoInputObservationV1>; resource: (observation: any) => Promise<CargoResourceWitnessV1>; fileDigest: (value: string) => string | undefined }>;
+
+const COMPILER_RESOURCE_DIRECTORY_V1 = "semio-compiler-resources", COMPILER_RESOURCE_OBSERVATION_V1 = "observation.json", BUILD_RESOURCE_INPUTS_V1 = "semio-runtime-resource-inputs.jsonl";
+
+/** 📄️ Whether provenance parses `file` as well as hashing it (a compiler resource observation or a build script's resource inputs), so its one read serves both. */
+function parsedProvenanceFileV1(file: string): boolean {
+  const name = basename(file);
+  return name === BUILD_RESOURCE_INPUTS_V1 || (name === COMPILER_RESOURCE_OBSERVATION_V1 && basename(dirname(dirname(file))) === COMPILER_RESOURCE_DIRECTORY_V1);
+}
+
+/** 🗃️ One build session's physical provenance: every file is hashed once however many invocations name it, dep-info and resource texts are parsed once, and every
+ * file is rechecked once when the session closes; each invocation's directory rosters and absent paths are rechecked when its receipt is staged. Each completed
+ * invocation is observed into a private temporary receipt, and the receipts become visible only by atomic renames after the final recheck, so a refused or failed
+ * session publishes none. Observation never retains file bodies: dep-info is kept as its digest plus the sources and checksums parsed from exactly those bytes,
+ * resource captures as their digest, and every path, input digest and resource witness is interned once.
  * @see ./🧾️receipt/🟦️.ts
- */
-export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: string, invocation: CargoInvocationSourceV1, stagedPaths: ReadonlyMap<string, string>, cargoHome: string, physical: CurrentPhysicalPortV1): Promise<void> {
-  if (!physical || !physical.control || !["read", "digest", "directoryEntries", "checkpoint", "recheck"].every((key) => typeof (physical as any)[key] === "function")) throw Error("Complete current physical provenance authority required");
-  const policy = physical.control;
-  if (![policy.maxBytes, policy.maxWork, policy.chunkBytes].every(Number.isSafeInteger) || policy.maxBytes < 0 || policy.maxWork < 1 || policy.chunkBytes < 1 || !["cancelled", "remainingMs", "onProgress"].every((key) => typeof (policy as any)[key] === "function")) throw Error("Finite current physical provenance control required");
-  const path = (value: string): string => {
-    if (typeof value !== "string" || !isAbsolute(value) || value.includes("\0")) throw Error("Physical provenance path refused");
-    const file = resolve(value);
-    if (file.length > 256) throw Error(`Physical provenance path exceeds 256 UTF-16 units (${file.length}): ${file}`);
-    return file;
-  };
-  path(receiptPath);
-  path(cargoHome);
-  path(invocation.cwd);
-  path(invocation.manifest);
-  if (invocation.buildDirectory) path(invocation.buildDirectory);
-  const kinds = new Map<string, "file" | "directory" | null>();
-  const digests = new Map<string, string | null>();
-  const lengths = new Map<string, number>();
-  const rosters = new Map<string, readonly CurrentPhysicalEntryV1[] | null>();
-  const inputs = new Map<string, CargoInputObservationV1>();
-  const hex = (bytes: Uint8Array | string): string => createHash("sha256").update(bytes).digest("hex");
-  const kind = async (value: string): Promise<"file" | "directory" | null> => {
-    const file = path(value);
-    if (kinds.has(file)) return kinds.get(file)!;
-    await physical.checkpoint();
-    let result: "file" | "directory" | null = null;
-    try {
-      const stat = await lstat(file);
-      if (stat.isSymbolicLink()) throw Error("Physical provenance input cannot be a symbolic link");
-      result = stat.isFile() ? "file" : stat.isDirectory() ? "directory" : null;
-    } catch (error) {
-      if (!["ENOENT", "ENOTDIR"].includes((error as { code?: string }).code ?? "")) throw error;
-      await physical.digest(file);
-    }
-    await physical.checkpoint();
-    kinds.set(file, result);
-    return result;
-  };
-  const bytes = async (value: string): Promise<Uint8Array | null> => {
-    const file = path(value);
-    if ((await kind(file)) !== "file") return null;
-    const actual = await physical.read(file);
-    if (actual === undefined) throw Error("Physical provenance input disappeared");
-    const body = typeof actual === "string" ? Buffer.from(actual) : actual;
-    digests.set(file, hex(body));
-    lengths.set(file, body.byteLength);
-    return body;
-  };
-  const text = async (value: string): Promise<string | null> => {
-    const body = await bytes(value);
-    return body === null ? null : Buffer.from(body).toString("utf8");
-  };
-  const length = async (value: string): Promise<number | null> => {
-    const file = path(value);
-    if (!lengths.has(file)) await bytes(file);
-    return lengths.get(file) ?? null;
-  };
-  const entries = async (value: string): Promise<readonly CurrentPhysicalEntryV1[] | null> => {
-    const file = path(value);
-    if (rosters.has(file)) return rosters.get(file)!;
-    if ((await kind(file)) !== "directory") {
-      rosters.set(file, null);
-      return null;
-    }
-    const rows = await physical.directoryEntries(file);
-    if (!rows) throw Error("Physical provenance directory disappeared");
-    rosters.set(file, rows);
-    digests.set(file, hex(JSON.stringify(rows.map((row) => [basename(row.path), row.kind, row.symlinkTarget]))));
-    return rows;
-  };
-  const digest = async (value: string): Promise<string | null> => {
-    const file = path(value);
-    if (digests.has(file)) return digests.get(file)!;
-    const type = await kind(file);
-    if (type === "directory") await entries(file);
-    else if (type === "file") {
-      const actual = await physical.digest(file);
-      if (actual === undefined) throw Error("Physical provenance input disappeared");
-      digests.set(file, actual);
-    } else digests.set(file, null);
-    return digests.get(file)!;
-  };
-  const sha256 = async (value: string): Promise<string | null> => ((await kind(value)) === "file" ? await digest(value) : null);
-  const input = async (value: string): Promise<CargoInputObservationV1> => {
-    const file = path(value);
-    const known = inputs.get(file);
-    if (known) return known;
-    const observed = { path: value, kind: await kind(value), sha256: await digest(value) };
-    inputs.set(file, observed);
-    return observed;
-  };
-  const resource = async (observation: any): Promise<CargoResourceWitnessV1> => {
-    if (observation.kind === "read") {
-      const errors = validateJsonSchemaSubset(resourceReadSchema, observation);
-      const consumed = await length(observation.path);
-      const actual = await input(observation.path);
-      return { input: observation, bytes: consumed, sha256: actual.sha256, schemaErrors: errors, sourceExact: errors.length === 0 && actual.kind === "file" && consumed === observation.bytes && actual.sha256 === observation.sha256 };
-    }
-    const actual = await input(observation.path);
-    const rows = observation.kind === "directory" ? await entries(observation.path) : null;
-    return { input: observation, sha256: actual.sha256, ...(observation.kind === "copy" ? { outputSha256: typeof observation.output === "string" ? await sha256(observation.output) : null } : {}), ...(rows ? { observedEntries: rows } : {}) };
-  };
-  const producers = new Map<string, CargoProvenanceV1>();
-  const witnessed: { readonly message: any; readonly files: ReadonlySet<string>; readonly rows: readonly CargoInputObservationV1[] }[] = [];
-  const limit = Math.min(policy.maxBytes, CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1);
-  const destinations = [...new Set([receiptPath, ...(invocation.buildDirectory ? [join(invocation.buildDirectory, "semio-cargo-provenance", basename(receiptPath))] : [])])];
-  for (const file of destinations) path(file);
-  await physical.checkpoint();
-  await mkdir(dirname(receiptPath), { recursive: true });
-  const temporary = receiptTemporaryName(receiptPath);
-  const handle = await open(temporary, "wx");
-  const copies: string[] = [];
-  try {
-    const sink = new ReceiptFileSinkV1(handle, limit);
-    const stream = new CargoProvenanceStreamV1(sink);
-    await stream.begin(invocation);
-    await mapBoundedV1([...new Set<string>(invocation.units.flatMap((unit) => unit.message.filenames ?? []))], CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => sha256(file));
-    for (const original of invocation.units) {
-      await physical.checkpoint();
-      const evidence = parseCargoCompilerUnitEvidenceV1(original.evidence);
-      const message = original.message;
-      const candidates: string[] = [...new Set<string>((message.filenames ?? []).flatMap((file: string) => [file.replace(compilerArtifactExtension, "") + ".d", join(dirname(file), basename(file).replace(/^lib/u, "").replace(compilerArtifactExtension, "") + ".d")]))];
-      const unitTexts = new Map<string, string | null>();
-      const dependencyText = async (file: string): Promise<string | null> => {
-        if (!unitTexts.has(file)) unitTexts.set(file, await text(file));
-        return unitTexts.get(file)!;
-      };
-      let producerUnit: CargoUnitObservationV1 | null = null;
-      if (evidence.kind === "received") {
-        const source = await text(evidence.producer.path);
-        if (source === null || (await sha256(evidence.producer.path)) !== evidence.producer.sha256) throw Error("Compiler producer receipt changed");
-        let producer = producers.get(evidence.producer.path);
-        if (!producer) {
-          producer = decodeCargoProvenanceV1(source);
-          producers.set(evidence.producer.path, producer);
-        }
-        for (const field of ["manifest", "cwd", "command", "args", "buildDirectory", "builtAtMs", "status", "cancelled"] as const) if (JSON.stringify(producer[field]) !== JSON.stringify(invocation[field])) throw Error("Compiler producer invocation differs");
-        producerUnit = producer.units[evidence.producer.unit] ?? null;
-        if (!producerUnit || JSON.stringify(producerUnit.message) !== JSON.stringify(message) || JSON.stringify(producerUnit.depInfo.map((row) => row.path)) !== JSON.stringify(evidence.paths)) throw Error("Compiler producer unit custody differs");
-        candidates.splice(0, candidates.length, ...evidence.paths);
+ * @see ./🧩️component-pass/🟦️.ts */
+export class CargoProvenanceSessionV1 {
+  private readonly fileDigests = new Map<string, string>();
+  private readonly lengths = new Map<string, number>();
+  private readonly texts = new Map<string, string>();
+  private readonly reading = new Map<string, Promise<unknown>>();
+  private readonly producers = new Map<string, CargoProvenanceV1>();
+  private readonly staged: { readonly temporary: string; readonly destinations: readonly string[] }[] = [];
+  private state: "open" | "closed" | "failed" = "open";
+
+  constructor(private readonly custody: CargoProvenanceCustodyV1) {
+    if (!custody || typeof custody.invocation !== "function" || typeof custody.recheck !== "function") throw Error("Complete current physical provenance authority required");
+  }
+
+  private once<T>(key: string, read: () => Promise<T>): Promise<T> {
+    const known = this.reading.get(key);
+    if (known) return known as Promise<T>;
+    const pending = read();
+    this.reading.set(key, pending);
+    void pending.catch(() => this.reading.delete(key));
+    return pending;
+  }
+
+  private observer(port: CurrentPhysicalPortV1): ProvenanceObserverV1 {
+    if (!port || !port.control || !["read", "digest", "measure", "directoryEntries", "checkpoint", "recheck"].every((key) => typeof (port as any)[key] === "function")) throw Error("Complete current physical provenance authority required");
+    const policy = port.control;
+    if (![policy.maxBytes, policy.maxWork, policy.chunkBytes].every(Number.isSafeInteger) || policy.maxBytes < 0 || policy.maxWork < 1 || policy.chunkBytes < 1 || !["cancelled", "remainingMs", "onProgress"].every((key) => typeof (policy as any)[key] === "function")) throw Error("Finite current physical provenance control required");
+    const kinds = new Map<string, "file" | "directory" | null>(), rosters = new Map<string, readonly CurrentPhysicalEntryV1[] | null>(), directoryDigests = new Map<string, string | null>(), inputs = new Map<string, CargoInputObservationV1>();
+    const path = (value: string): string => {
+      if (typeof value !== "string" || !isAbsolute(value) || value.includes("\0")) throw Error("Physical provenance path refused");
+      const file = resolve(value);
+      if (file.length > 256) throw Error(`Physical provenance path exceeds 256 UTF-16 units (${file.length}): ${file}`);
+      return file;
+    };
+    const kind = async (value: string): Promise<"file" | "directory" | null> => {
+      const file = path(value);
+      if (kinds.has(file)) return kinds.get(file)!;
+      await port.checkpoint();
+      let result: "file" | "directory" | null = null;
+      try {
+        const stat = await lstat(file);
+        if (stat.isSymbolicLink()) throw Error("Physical provenance input cannot be a symbolic link");
+        result = stat.isFile() ? "file" : stat.isDirectory() ? "directory" : null;
+      } catch (error) {
+        if (!["ENOENT", "ENOTDIR"].includes((error as { code?: string }).code ?? "")) throw error;
+        await port.digest(file);
       }
-      const sourceOwners = new Set<string>();
-      const targetSource = resolve(message.target.src_path);
-      for (const manifest of [invocation.manifest, message.manifest_path].filter((value): value is string => typeof value === "string"))
-        for (let owner = dirname(resolve(manifest)); ; ) {
-          if ((await kind(join(owner, "Cargo.toml"))) === "file") sourceOwners.add(owner);
-          const parent = dirname(owner);
-          if (parent === owner) break;
-          owner = parent;
+      await port.checkpoint();
+      kinds.set(file, result);
+      return result;
+    };
+    const text = async (value: string): Promise<string | null> => {
+      const file = path(value);
+      if ((await kind(file)) !== "file") return null;
+      const known = this.texts.get(file);
+      if (known !== undefined) return known;
+      return await this.once(`text:${file}`, async () => {
+        const actual = await port.read(file);
+        if (actual === undefined) throw Error("Physical provenance input disappeared");
+        const body = typeof actual === "string" ? Buffer.from(actual) : actual;
+        this.fileDigests.set(file, createHash("sha256").update(body).digest("hex"));
+        this.lengths.set(file, body.byteLength);
+        const decoded = Buffer.from(body).toString("utf8");
+        this.texts.set(file, decoded);
+        return decoded;
+      });
+    };
+    const length = async (value: string): Promise<number | null> => {
+      const file = path(value);
+      if (!this.lengths.has(file)) await digest(file);
+      return this.lengths.get(file) ?? null;
+    };
+    const entries = async (value: string): Promise<readonly CurrentPhysicalEntryV1[] | null> => {
+      const file = path(value);
+      if (rosters.has(file)) return rosters.get(file)!;
+      if ((await kind(file)) !== "directory") {
+        rosters.set(file, null);
+        return null;
+      }
+      const rows = await port.directoryEntries(file);
+      if (!rows) throw Error("Physical provenance directory disappeared");
+      rosters.set(file, rows);
+      directoryDigests.set(file, createHash("sha256").update(JSON.stringify(rows.map((row) => [basename(row.path), row.kind, row.symlinkTarget]))).digest("hex"));
+      return rows;
+    };
+    const digest = async (value: string): Promise<string | null> => {
+      const file = path(value);
+      const type = await kind(file);
+      if (type === "file") {
+        const known = this.fileDigests.get(file);
+        if (known !== undefined) return known;
+        if (parsedProvenanceFileV1(file)) { await text(file); return this.fileDigests.get(file)!; }
+        const pendingText = this.reading.get(`text:${file}`);
+        if (pendingText) { await pendingText; return this.fileDigests.get(file)!; }
+        return await this.once(`digest:${file}`, async () => {
+          const actual = await port.measure(file);
+          if (actual === undefined) throw Error("Physical provenance input disappeared");
+          this.fileDigests.set(file, actual.sha256);
+          this.lengths.set(file, actual.byteLength);
+          return actual.sha256;
+        });
+      }
+      if (type === "directory") {
+        if (!directoryDigests.has(file)) await entries(file);
+        return directoryDigests.get(file) ?? null;
+      }
+      return null;
+    };
+    const sha256 = async (value: string): Promise<string | null> => ((await kind(value)) === "file" ? await digest(value) : null);
+    const input = async (value: string): Promise<CargoInputObservationV1> => {
+      const file = path(value);
+      const known = inputs.get(file);
+      if (known) return known;
+      const observed = { path: value, kind: await kind(value), sha256: await digest(value) };
+      inputs.set(file, observed);
+      return observed;
+    };
+    const resource = async (observation: any): Promise<CargoResourceWitnessV1> => {
+      if (observation.kind === "read") {
+        const errors = validateJsonSchemaSubset(resourceReadSchema, observation);
+        const consumed = await length(observation.path);
+        const actual = await input(observation.path);
+        return { input: observation, bytes: consumed, sha256: actual.sha256, schemaErrors: errors, sourceExact: errors.length === 0 && actual.kind === "file" && consumed === observation.bytes && actual.sha256 === observation.sha256 };
+      }
+      const actual = await input(observation.path);
+      const rows = observation.kind === "directory" ? await entries(observation.path) : null;
+      return { input: observation, sha256: actual.sha256, ...(observation.kind === "copy" ? { outputSha256: typeof observation.output === "string" ? await sha256(observation.output) : null } : {}), ...(rows ? { observedEntries: rows } : {}) };
+    };
+    return Object.freeze({ port, path, kind, text, length, entries, digest, sha256, input, resource, fileDigest: (value: string) => this.fileDigests.get(path(value)) });
+  }
+
+  /** ⚡️ Hashes one unit's outputs, dep-info and dep-info sources the moment Cargo announces it, so the receipt written after the invocation finds every file
+   * digest already known; directory rosters and every authoritative row are still observed when the invocation's receipt is written. */
+  async prefetch(message: Readonly<{ filenames?: readonly string[] }>): Promise<void> {
+    if (this.state !== "open") throw Error("Cargo provenance session is closed");
+    const observe = this.observer(this.custody.invocation().port), files = [...new Set<string>(message.filenames ?? [])];
+    await mapBoundedV1(files, CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => observe.sha256(file));
+    for (const file of files) {
+      const dep = file.replace(compilerArtifactExtension, "") + ".d";
+      const text = await observe.text(dep);
+      if (text === null) continue;
+      const base = dirname(dep);
+      await mapBoundedV1(cargoDepInfoSourcesV1(text).filter((source) => isAbsolute(source)).map((source) => resolve(base, source)), CURRENT_PHYSICAL_CONCURRENCY_V1, (source) => observe.digest(source));
+    }
+  }
+
+  /** 🔏️ Observes one completed invocation under the session's physical authority and stages its receipt (and its build-directory ledger copy) for publication
+   * when the session closes. Resolves with the unit and build-resource records the receipt holds, the rows a caller derives provenance leaves from. */
+  async write(receiptPath: string, invocation: CargoInvocationSourceV1, stagedPaths: ReadonlyMap<string, string>, cargoHome: string): Promise<CargoProvenanceStagedV1> {
+    if (this.state !== "open") throw Error("Cargo provenance session is closed");
+    const lease = this.custody.invocation(), observe = this.observer(lease.port), physical = lease.port, policy = physical.control, path = observe.path;
+    path(receiptPath);
+    path(cargoHome);
+    path(invocation.cwd);
+    path(invocation.manifest);
+    if (invocation.buildDirectory) path(invocation.buildDirectory);
+    const witnessed: { readonly message: any; readonly files: ReadonlySet<string>; readonly rows: readonly CargoInputObservationV1[] }[] = [];
+    const observedUnits: CargoUnitObservationV1[] = [], observedResources: CargoBuildResourcesV1[] = [];
+    const limit = Math.min(policy.maxBytes, CARGO_PROVENANCE_RECEIPT_MAX_BYTES_V1);
+    const destinations = [...new Set([receiptPath, ...(invocation.buildDirectory ? [join(invocation.buildDirectory, "semio-cargo-provenance", basename(receiptPath))] : [])])];
+    for (const file of destinations) path(file);
+    await physical.checkpoint();
+    await mkdir(dirname(receiptPath), { recursive: true });
+    const temporary = receiptTemporaryName(receiptPath);
+    const handle = await open(temporary, "wx");
+    let staged = false;
+    try {
+      const sink = new ReceiptFileSinkV1(handle, limit);
+      const stream = new CargoProvenanceStreamV1(sink);
+      await stream.begin(invocation);
+      await mapBoundedV1([...new Set<string>(invocation.units.flatMap((unit) => unit.message.filenames ?? []))], CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => observe.sha256(file));
+      for (const original of invocation.units) {
+        await physical.checkpoint();
+        const evidence = parseCargoCompilerUnitEvidenceV1(original.evidence);
+        const message = original.message;
+        const candidates: string[] = [...new Set<string>((message.filenames ?? []).flatMap((file: string) => [file.replace(compilerArtifactExtension, "") + ".d", join(dirname(file), basename(file).replace(/^lib/u, "").replace(compilerArtifactExtension, "") + ".d")]))];
+        let producerUnit: CargoUnitObservationV1 | null = null;
+        if (evidence.kind === "received") {
+          const source = await observe.text(evidence.producer.path);
+          if (source === null || (await observe.sha256(evidence.producer.path)) !== evidence.producer.sha256) throw Error("Compiler producer receipt changed");
+          let producer = this.producers.get(evidence.producer.path);
+          if (!producer) {
+            producer = decodeCargoProvenanceV1(source);
+            this.producers.set(evidence.producer.path, producer);
+          }
+          for (const field of ["manifest", "cwd", "command", "args", "buildDirectory", "builtAtMs", "status", "cancelled"] as const) if (JSON.stringify(producer[field]) !== JSON.stringify(invocation[field])) throw Error("Compiler producer invocation differs");
+          producerUnit = producer.units[evidence.producer.unit] ?? null;
+          if (!producerUnit || JSON.stringify(producerUnit.message) !== JSON.stringify(message) || JSON.stringify(producerUnit.depInfo.map((row) => row.path)) !== JSON.stringify(evidence.paths)) throw Error("Compiler producer unit custody differs");
+          candidates.splice(0, candidates.length, ...evidence.paths);
         }
-      const matchesSource = async (source: string): Promise<boolean> => {
-        for (const value of cargoDepInfoSourcesV1(source)) {
-          await physical.checkpoint();
-          if (isAbsolute(value)) {
-            if (resolve(value) === targetSource) return true;
+        const sourceOwners = new Set<string>();
+        const targetSource = resolve(message.target.src_path);
+        for (const manifest of [invocation.manifest, message.manifest_path].filter((value): value is string => typeof value === "string"))
+          for (let owner = dirname(resolve(manifest)); ; ) {
+            if ((await observe.kind(join(owner, "Cargo.toml"))) === "file") sourceOwners.add(owner);
+            const parent = dirname(owner);
+            if (parent === owner) break;
+            owner = parent;
+          }
+        const matchesSource = async (source: string): Promise<boolean> => {
+          for (const value of cargoDepInfoSourcesV1(source)) {
+            await physical.checkpoint();
+            if (isAbsolute(value)) {
+              if (resolve(value) === targetSource) return true;
+              continue;
+            }
+            for (const owner of sourceOwners) {
+              await physical.checkpoint();
+              if (resolve(owner, value) === targetSource) return true;
+            }
+          }
+          return false;
+        };
+        if (evidence.kind === "discovery" && invocation.buildDirectory) {
+          const option = (name: string) => invocation.args.flatMap((value, index) => (value === name ? [invocation.args[index + 1]!] : value.startsWith(name + "=") ? [value.slice(name.length + 1)] : []))[0];
+          const packageName = /#([^@]+)@/u.exec(message.package_id ?? "")?.[1];
+          if (packageName) {
+            const target = option("--target");
+            const owner = join(invocation.buildDirectory, ...(target ? [target] : []), option("--profile") ?? (invocation.args.includes("--release") ? "release" : "debug"), "build", packageName);
+            const rows = await observe.entries(owner);
+            if (rows)
+              for (const row of rows) {
+                const output = join(row.path, "out");
+                if ((await observe.kind(output)) !== "directory") continue;
+                for (const file of message.filenames ?? []) {
+                  const internal = join(output, basename(file));
+                  const dep = internal.replace(compilerArtifactExtension, "") + ".d";
+                  const depText = await observe.text(dep);
+                  if (!depText?.includes("# checksum:") || !(await matchesSource(depText))) continue;
+                  const selected = await observe.sha256(file);
+                  if (selected === null || (await observe.sha256(internal)) !== selected) continue;
+                  candidates.push(dep);
+                }
+              }
+          }
+        }
+        const depInfo: CargoDepInfoV1[] = [];
+        for (const file of new Set(candidates)) {
+          const depText = await observe.text(file);
+          if (depText === null) {
+            if (evidence.kind === "received") throw Error("Compiler received candidate disappeared");
             continue;
           }
-          for (const owner of sourceOwners) {
-            await physical.checkpoint();
-            if (resolve(owner, value) === targetSource) return true;
-          }
-        }
-        return false;
-      };
-      if (evidence.kind === "discovery" && invocation.buildDirectory) {
-        const option = (name: string) => invocation.args.flatMap((value, index) => (value === name ? [invocation.args[index + 1]!] : value.startsWith(name + "=") ? [value.slice(name.length + 1)] : []))[0];
-        const packageName = /#([^@]+)@/u.exec(message.package_id ?? "")?.[1];
-        if (packageName) {
-          const target = option("--target");
-          const owner = join(invocation.buildDirectory, ...(target ? [target] : []), option("--profile") ?? (invocation.args.includes("--release") ? "release" : "debug"), "build", packageName);
-          const rows = await entries(owner);
-          if (rows)
-            for (const row of rows) {
-              const output = join(row.path, "out");
-              if ((await kind(output)) !== "directory") continue;
-              for (const file of message.filenames ?? []) {
-                const internal = join(output, basename(file));
-                const dep = internal.replace(compilerArtifactExtension, "") + ".d";
-                const depText = await dependencyText(dep);
-                if (!depText?.includes("# checksum:") || !(await matchesSource(depText))) continue;
-                const selected = await sha256(file);
-                if (selected === null || (await sha256(internal)) !== selected) continue;
-                candidates.push(dep);
+          const depSha256 = observe.fileDigest(file)!;
+          if (evidence.kind === "received" && producerUnit!.depInfo.find((row) => row.path === file)?.sha256 !== depSha256) throw Error("Compiler received candidate bytes differ");
+          const sources = cargoDepInfoSourcesV1(depText);
+          const relativeSources = sources.filter((source) => !isAbsolute(source)).map((source) => normalize(source));
+          const bases: string[] = [];
+          for (const base of sourceOwners) {
+            if (!relativeSources.some((source) => resolve(base, source) === targetSource)) continue;
+            let valid = true;
+            for (const source of sources)
+              if ((await observe.kind(resolve(base, source))) === null) {
+                valid = false;
+                break;
               }
-            }
+            if (valid) bases.push(base);
+          }
+          depInfo.push({ path: file, sha256: depSha256, baseDirectory: relativeSources.length === 0 ? invocation.cwd : bases.length === 1 ? bases[0]! : null, sources, checksums: cargoDepInfoChecksumsV1(depText) });
         }
-      }
-      const depInfo: CargoDepInfoV1[] = [];
-      for (const file of new Set(candidates)) {
-        const depText = await dependencyText(file);
-        if (depText === null) {
-          if (evidence.kind === "received") throw Error("Compiler received candidate disappeared");
-          continue;
+        const rows: CargoInputObservationV1[] = [];
+        const sourceFiles = [...new Set<string>(depInfo.flatMap((row) => row.sources.filter((source) => isAbsolute(source) || row.baseDirectory !== null).map((source) => resolve(row.baseDirectory ?? invocation.cwd, source))))];
+        await mapBoundedV1(sourceFiles, CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => observe.input(file));
+        for (const file of sourceFiles) rows.push(await observe.input(file));
+        const observedAtMs = Date.now();
+        const artifacts: CargoArtifactObservationV1[] = [];
+        for (const file of message.filenames ?? []) {
+          const stagedPath = stagedPaths.get(file);
+          artifacts.push({ path: file, sha256: await observe.sha256(file), ...(stagedPath ? { stagedPath, stagedSha256: await observe.sha256(stagedPath) } : {}) });
         }
-        const depSha256 = digests.get(path(file))!;
-        if (evidence.kind === "received" && producerUnit!.depInfo.find((row) => row.path === file)?.sha256 !== depSha256) throw Error("Compiler received candidate bytes differ");
-        const sources = cargoDepInfoSourcesV1(depText);
-        const relativeSources = sources.filter((source) => !isAbsolute(source)).map((source) => normalize(source));
-        const bases: string[] = [];
-        for (const base of sourceOwners) {
-          if (!relativeSources.some((source) => resolve(base, source) === targetSource)) continue;
-          let valid = true;
-          for (const source of sources)
-            if ((await kind(resolve(base, source))) === null) {
-              valid = false;
-              break;
-            }
-          if (valid) bases.push(base);
+        const unit: CargoUnitObservationV1 = { message, depInfo, inputs: rows, observedAtMs, artifacts };
+        if (producerUnit && (JSON.stringify(unit.depInfo) !== JSON.stringify(producerUnit.depInfo) || JSON.stringify(unit.inputs) !== JSON.stringify(producerUnit.inputs) || JSON.stringify(unit.artifacts.map((row) => [row.path, row.sha256])) !== JSON.stringify(producerUnit.artifacts.map((row) => [row.path, row.sha256])))) throw Error("Compiler received physical witnesses differ");
+        await stream.unit(unit);
+        observedUnits.push(unit);
+        witnessed.push({ message, rows, files: new Set(rows.filter((row) => row.kind === "file").map((row) => resolve(row.path))) });
+      }
+      await stream.buildScripts(invocation.buildScripts);
+      for (const build of invocation.buildScripts) {
+        const file = join(build.out_dir, BUILD_RESOURCE_INPUTS_V1);
+        const source = await observe.text(file);
+        if (source === null) continue;
+        const resources: CargoResourceWitnessV1[] = [];
+        for (const line of source.split(/\r?\n/u).filter(Boolean)) resources.push(await observe.resource(JSON.parse(line)));
+        const row: CargoBuildResourcesV1 = { package_id: build.package_id, out_dir: build.out_dir, path: file, sha256: (await observe.sha256(file))!, observedAtMs: Date.now(), resources };
+        await stream.buildResource(row);
+        observedResources.push(row);
+      }
+      const compilerResourceRoot = invocation.buildDirectory ? join(invocation.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1) : null;
+      await stream.compilerResources(compilerResourceRoot);
+      const compilerPaths = compilerResourceRoot
+        ? [...new Set<string>(witnessed.filter((unit) => !unit.message.target.kind?.includes("proc-macro") && !unit.message.target.kind?.includes("custom-build")).flatMap((unit) => unit.rows.map((row) => row.path)))].filter((file) => basename(file) === COMPILER_RESOURCE_OBSERVATION_V1 && relative(compilerResourceRoot, file).split(sep)[0] !== ".." && !isAbsolute(relative(compilerResourceRoot, file)))
+        : [];
+      const bind = (identity: any, producer: boolean): Record<string, unknown> | null => {
+        if (!identity || ![identity.manifest, identity.source].every((value) => typeof value === "string" && isAbsolute(value))) return null;
+        const source = resolve(identity.source);
+        const matches = witnessed.filter((unit) => typeof unit.message.manifest_path === "string" && resolve(unit.message.manifest_path) === resolve(identity.manifest) && unit.files.has(source) && (producer ? unit.message.target.kind.includes("proc-macro") : typeof identity.crate === "string" && unit.message.target.name.replaceAll("-", "_") === identity.crate && !unit.message.target.kind.includes("custom-build") && !unit.message.target.kind.includes("proc-macro")));
+        return matches.length === 1 ? matches[0]!.message : null;
+      };
+      for (const file of compilerPaths) {
+        const source = await observe.text(file);
+        let observation: any;
+        try {
+          observation = source === null ? null : JSON.parse(source);
+        } catch {
+          observation = null;
         }
-        depInfo.push({ path: file, sha256: depSha256, baseDirectory: relativeSources.length === 0 ? invocation.cwd : bases.length === 1 ? bases[0]! : null, sources, checksums: cargoDepInfoChecksumsV1(depText) });
+        const resources: CargoResourceWitnessV1[] = [];
+        for (const row of Array.isArray(observation?.resources) ? observation.resources : []) resources.push(await observe.resource(row));
+        await stream.compilerResource({ path: file, sha256: await observe.sha256(file), observedAtMs: Date.now(), producer: observation?.producer ?? null, caller: observation?.caller ?? null, producerUnit: bind(observation?.producer, true), callerUnit: bind(observation?.caller, false), resources });
       }
-      const rows: CargoInputObservationV1[] = [];
-      const sourceFiles = [...new Set<string>(depInfo.flatMap((row) => row.sources.filter((source) => isAbsolute(source) || row.baseDirectory !== null).map((source) => resolve(row.baseDirectory ?? invocation.cwd, source))))];
-      await mapBoundedV1(sourceFiles, CURRENT_PHYSICAL_CONCURRENCY_V1, (file) => input(file));
-      for (const file of sourceFiles) rows.push(await input(file));
-      const observedAtMs = Date.now();
-      const artifacts: CargoArtifactObservationV1[] = [];
-      for (const file of message.filenames ?? []) {
-        const stagedPath = stagedPaths.get(file);
-        artifacts.push({ path: file, sha256: await sha256(file), ...(stagedPath ? { stagedPath, stagedSha256: await sha256(stagedPath) } : {}) });
+      const manifests = new Set<string>([invocation.manifest, ...witnessed.map((unit) => unit.message.manifest_path).filter((value): value is string => typeof value === "string")]);
+      const inputPaths = new Set<string>(manifests);
+      const visited = new Set<string>();
+      for (let file of [invocation.cwd, ...[...manifests].map((value) => dirname(value))])
+        for (;;) {
+          if (visited.has(file)) break;
+          visited.add(file);
+          for (const name of ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"]) inputPaths.add(join(file, name));
+          const parent = dirname(file);
+          if (parent === file) break;
+          file = parent;
+        }
+      for (const name of ["config.toml", "config"]) inputPaths.add(join(cargoHome, name));
+      const invocationInputs: CargoInvocationInputV1[] = [];
+      for (const file of [...inputPaths].sort()) invocationInputs.push({ path: file, sha256: await observe.sha256(file) });
+      await stream.invocationInputs(invocationInputs);
+      await stream.finish(Date.now());
+      await handle.close();
+      await lease.settle();
+      this.staged.push({ temporary, destinations });
+      staged = true;
+      return Object.freeze({ receiptPath, units: observedUnits, buildResources: observedResources });
+    } finally {
+      await handle.close().catch(() => undefined);
+      if (!staged) await rm(temporary, { force: true });
+    }
+  }
+
+  /** ✅️ Rechecks every input the session observed exactly once, then publishes every staged receipt and its ledger copies by atomic renames. */
+  async close(): Promise<void> {
+    if (this.state !== "open") throw Error("Cargo provenance session is closed");
+    const copies: string[] = [];
+    try {
+      await this.custody.recheck();
+      for (const row of this.staged)
+        for (const file of row.destinations.slice(1)) {
+          await mkdir(dirname(file), { recursive: true });
+          const copy = receiptTemporaryName(file);
+          copies.push(copy);
+          await copyFile(row.temporary, copy);
+        }
+      let next = 0;
+      for (const row of this.staged) {
+        await rename(row.temporary, row.destinations[0]!);
+        for (const file of row.destinations.slice(1)) await rename(copies[next++]!, file);
       }
-      const unit: CargoUnitObservationV1 = { message, depInfo, inputs: rows, observedAtMs, artifacts };
-      if (producerUnit && (JSON.stringify(unit.depInfo) !== JSON.stringify(producerUnit.depInfo) || JSON.stringify(unit.inputs) !== JSON.stringify(producerUnit.inputs) || JSON.stringify(unit.artifacts.map((row) => [row.path, row.sha256])) !== JSON.stringify(producerUnit.artifacts.map((row) => [row.path, row.sha256])))) throw Error("Compiler received physical witnesses differ");
-      await stream.unit(unit);
-      witnessed.push({ message, rows, files: new Set(rows.filter((row) => row.kind === "file").map((row) => resolve(row.path))) });
+      this.state = "closed";
+    } catch (error) {
+      this.state = "failed";
+      throw error;
+    } finally {
+      for (const copy of copies) await rm(copy, { force: true });
+      if (this.state !== "closed") for (const row of this.staged) await rm(row.temporary, { force: true });
     }
-    await stream.buildScripts(invocation.buildScripts);
-    for (const build of invocation.buildScripts) {
-      const file = join(build.out_dir, "semio-runtime-resource-inputs.jsonl");
-      const source = await text(file);
-      if (source === null) continue;
-      const resources: CargoResourceWitnessV1[] = [];
-      for (const line of source.split(/\r?\n/u).filter(Boolean)) resources.push(await resource(JSON.parse(line)));
-      await stream.buildResource({ package_id: build.package_id, out_dir: build.out_dir, path: file, sha256: (await sha256(file))!, observedAtMs: Date.now(), resources });
-    }
-    const compilerResourceRoot = invocation.buildDirectory ? join(invocation.buildDirectory, "semio-compiler-resources") : null;
-    await stream.compilerResources(compilerResourceRoot);
-    const compilerPaths = compilerResourceRoot
-      ? [...new Set<string>(witnessed.filter((unit) => !unit.message.target.kind?.includes("proc-macro") && !unit.message.target.kind?.includes("custom-build")).flatMap((unit) => unit.rows.map((row) => row.path)))].filter((file) => basename(file) === "observation.json" && relative(compilerResourceRoot, file).split(sep)[0] !== ".." && !isAbsolute(relative(compilerResourceRoot, file)))
-      : [];
-    const bind = (identity: any, producer: boolean): Record<string, unknown> | null => {
-      if (!identity || ![identity.manifest, identity.source].every((value) => typeof value === "string" && isAbsolute(value))) return null;
-      const source = resolve(identity.source);
-      const matches = witnessed.filter((unit) => typeof unit.message.manifest_path === "string" && resolve(unit.message.manifest_path) === resolve(identity.manifest) && unit.files.has(source) && (producer ? unit.message.target.kind.includes("proc-macro") : typeof identity.crate === "string" && unit.message.target.name.replaceAll("-", "_") === identity.crate && !unit.message.target.kind.includes("custom-build") && !unit.message.target.kind.includes("proc-macro")));
-      return matches.length === 1 ? matches[0]!.message : null;
-    };
-    for (const file of compilerPaths) {
-      const source = await text(file);
-      let observation: any;
-      try {
-        observation = source === null ? null : JSON.parse(source);
-      } catch {
-        observation = null;
-      }
-      const resources: CargoResourceWitnessV1[] = [];
-      for (const row of Array.isArray(observation?.resources) ? observation.resources : []) resources.push(await resource(row));
-      await stream.compilerResource({ path: file, sha256: await sha256(file), observedAtMs: Date.now(), producer: observation?.producer ?? null, caller: observation?.caller ?? null, producerUnit: bind(observation?.producer, true), callerUnit: bind(observation?.caller, false), resources });
-    }
-    const manifests = new Set<string>([invocation.manifest, ...witnessed.map((unit) => unit.message.manifest_path).filter((value): value is string => typeof value === "string")]);
-    const inputPaths = new Set<string>(manifests);
-    const visited = new Set<string>();
-    for (let file of [invocation.cwd, ...[...manifests].map((value) => dirname(value))])
-      for (;;) {
-        if (visited.has(file)) break;
-        visited.add(file);
-        for (const name of ["Cargo.toml", "Cargo.lock", ".cargo/config.toml", ".cargo/config", "rust-toolchain.toml", "rust-toolchain"]) inputPaths.add(join(file, name));
-        const parent = dirname(file);
-        if (parent === file) break;
-        file = parent;
-      }
-    for (const name of ["config.toml", "config"]) inputPaths.add(join(cargoHome, name));
-    const invocationInputs: CargoInvocationInputV1[] = [];
-    for (const file of [...inputPaths].sort()) invocationInputs.push({ path: file, sha256: await sha256(file) });
-    await stream.invocationInputs(invocationInputs);
-    await stream.finish(Date.now());
-    await handle.close();
-    await physical.recheck();
-    for (const file of destinations.slice(1)) {
-      path(file);
-      await physical.checkpoint();
-      await mkdir(dirname(file), { recursive: true });
-      const copy = receiptTemporaryName(file);
-      copies.push(copy);
-      await copyFile(temporary, copy);
-    }
-    await physical.checkpoint();
-    await rename(temporary, receiptPath);
-    for (const [index, file] of destinations.slice(1).entries()) {
-      await physical.checkpoint();
-      await rename(copies[index]!, file);
-    }
+  }
+
+  /** 🗑️ Removes every staged temporary receipt of a session that will not close. */
+  async discard(): Promise<void> {
+    if (this.state === "closed") return;
+    this.state = "failed";
+    for (const row of this.staged) await rm(row.temporary, { force: true });
+  }
+}
+
+/** 🔏️ Observes one completed Cargo invocation under complete current physical authority and publishes its receipt: a one-invocation {@link CargoProvenanceSessionV1}.
+ * @see ./🧾️receipt/🟦️.ts
+ */
+export async function writeCompletedCargoInvocationProvenanceV1(receiptPath: string, invocation: CargoInvocationSourceV1, stagedPaths: ReadonlyMap<string, string>, cargoHome: string, physical: CurrentPhysicalPortV1): Promise<CargoProvenanceStagedV1> {
+  const session = new CargoProvenanceSessionV1(portProvenanceCustodyV1(physical));
+  try {
+    const staged = await session.write(receiptPath, invocation, stagedPaths, cargoHome);
+    await session.close();
+    return staged;
   } finally {
-    await handle.close().catch(() => undefined);
-    await rm(temporary, { force: true });
-    for (const copy of copies) await rm(copy, { force: true });
+    await session.discard();
   }
 }
 
@@ -596,7 +721,7 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
   const commandPort = options.commandPort ?? { command: "cargo", args: [] };
   const child = spawn(commandPort.command, [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], {
     cwd: policy.cwd,
-    env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, "semio-compiler-resources"), CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
+    env: { ...(options.environment ?? process.env), SEMIO_COMPILER_RESOURCE_ROOT: join(policy.buildDirectory, COMPILER_RESOURCE_DIRECTORY_V1), CARGO_TARGET_DIR: join(capture, "target"), CARGO_BUILD_BUILD_DIR: policy.buildDirectory },
     detached: process.platform !== "win32",
     stdio: ["inherit", "pipe", "pipe"],
   });
@@ -715,7 +840,9 @@ async function captureCargoArtifacts(manifest: string, args: string[], policy: C
     try {
       {
         if(!options.signal)throw Error("Cargo capture physical signal required");const physical=new CurrentPhysicalOwnerV1(policy.cwd,cargoProvenancePhysicalControlV1({cancelled:()=>options.signal!.aborted,onProgress:cargoProvenanceProgressSinkV1(row=>console.log("[cargo-provenance] "+JSON.stringify(row)))}));
-        await writeCompletedCargoInvocationProvenanceV1(join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`), { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), resolve((options.environment ?? process.env).CARGO_HOME??join(homedir(),".cargo")),physical);
+        const provenanceReceipt = join(provenanceRoot ?? join(policy.buildDirectory, "semio-cargo-provenance"), `cargo-unit-provenance-${basename(capture)}.json`);
+        await writeCompletedCargoInvocationProvenanceV1(provenanceReceipt, { manifest: path, cwd: policy.cwd, command: commandPort.command, args: [...commandPort.args, options.command ?? "build", "--locked", "--manifest-path", path, ...cargoArgs, "--message-format=json-render-diagnostics", ...compilerArgs], buildDirectory: policy.buildDirectory, builtAtMs, status: await status, cancelled, units, buildScripts }, new Map([...stagedNames].filter(([, key]) => files.has(key)).map(([path, key]) => [path, join(staging, key)])), resolve((options.environment ?? process.env).CARGO_HOME??join(homedir(),".cargo")),physical);
+        options.provenance?.(provenanceReceipt);
       }
     } finally {
       rmSync(capture, { recursive: true, force: true });

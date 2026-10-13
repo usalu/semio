@@ -4,6 +4,7 @@
 //! finalize publishes ONE member edit carrying the run's `TransactionRef` — one editable history row, its state exactly the
 //! fresh fold of the run's ops on the member base, one member undo removing it. Expectations: the `member` section of
 //! `🔌️plugin/🧫️fixtures/⏯️tool-run/🔣️.json`.
+#[cfg(test)] use crate::tool_run_contract::ToolRunJobRequest;
 
 use super::*;
 use crate::test_app_mutation_fixture::SetSlotChildren;
@@ -114,7 +115,7 @@ fn member_key() -> (String, String) {
 
 /// 🧒️ The live owned member store at its default state, under the member owner catalog every product member adopts.
 async fn member_store() -> ToolRunMembers {
-    let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None);
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", text(&member_fixture()["childId"]), TestSnapshot::default(), None);
     envelope.dialect = Some(member_dialect());
     let mut child = ArtifactStore::new(envelope, protocol::ActorId(text(&fixture()["actor"]).into())).await.expect("the member store opens");
     store::install_funded_member_store_owners(&mut child).expect("the original member catalog is funded and installed");

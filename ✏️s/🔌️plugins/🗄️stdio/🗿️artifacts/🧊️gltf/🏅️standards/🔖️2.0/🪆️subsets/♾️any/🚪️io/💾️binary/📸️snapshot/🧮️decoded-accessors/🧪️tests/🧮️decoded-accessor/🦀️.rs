@@ -3,7 +3,7 @@ use super::*;
 #[test]
 fn decoded_inference_projection_preserves_values_and_reprojects_mutations() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../🧬️schema/📸️snapshot/🧫️fixtures/🧮️decoded-accessor/🔣️.json")).unwrap();
-    let mut snapshot=crate::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
+    let mut snapshot=semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
     let bytes:Vec<u8>=fixture["bytes"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as u8).collect();
     snapshot.buffers=vec![bytes];
     let mut events=Vec::new();

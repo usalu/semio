@@ -3,7 +3,7 @@
 mod original_owners;
 use super::*;
 use semio_framework_value::ToValue;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
 #[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
 mod observed;
 #[path = "📏️preflight/🦀️.rs"]

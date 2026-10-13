@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../🧰️framework/🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🌎️ `os-hub-ts` (nx `os-hub-ts`) router: `bun ./📜️script.ts <test [quick|long|exhaustive] [args…]|two-client-e2e <sqlite|postgres|neo4j>|document-growth-e2e <sqlite|postgres|neo4j>|backend <up|down|status> <postgres|neo4j|all>|backend run <postgres|neo4j> -- <command…>|backup-restore-drill|shutdown-drill|residency-watch|hub-freshness|agent-ceiling-check|docker-image-build|docker-image-check|typecheck>`.
@@ -585,9 +586,8 @@ class DockerImageCheckScript extends BundleScript {
 
 /** 🪁️ Type-checks every `🌎️hub/**` TypeScript source against the hub-scoped `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    const status = runBunxStatus(["tsc", "--noEmit", "-p", "tsconfig.json", ...segments], this.root);
-    if (status !== 0) process.exit(status);
+  async run(segments: string[]): Promise<void> {
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "hub:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 

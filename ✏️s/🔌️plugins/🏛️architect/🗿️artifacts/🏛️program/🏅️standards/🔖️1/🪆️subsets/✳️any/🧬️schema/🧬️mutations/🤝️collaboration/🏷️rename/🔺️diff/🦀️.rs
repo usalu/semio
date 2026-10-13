@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🤝collaboration` per Wave C.
 
 use super::RenameCollaborationRecord;
-use crate::diff::{ProgramCollaborationDelta, ProgramCollaborationPatchEntry};
-use crate::registers::CollaborationRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramCollaborationDelta, ProgramCollaborationPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::CollaborationRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameCollaborationRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

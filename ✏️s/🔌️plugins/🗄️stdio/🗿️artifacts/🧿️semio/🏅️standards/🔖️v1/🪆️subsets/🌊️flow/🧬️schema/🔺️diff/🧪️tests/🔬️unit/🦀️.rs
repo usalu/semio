@@ -1,9 +1,9 @@
-use crate::standards::v1::subsets::flow::io::text::diff::dec_edge;
-use crate::standards::v1::subsets::flow::io::text::diff::enc_edge;
-use crate::standards::v1::subsets::flow::io::text::diff::dec_node;
-use crate::standards::v1::subsets::flow::io::text::diff::enc_node;
+use crate::io::text::diff::dec_edge;
+use crate::io::text::diff::enc_edge;
+use crate::io::text::diff::dec_node;
+use crate::io::text::diff::enc_node;
 use super::*;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use protocol::{DiffBinary,DiffText};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn node(id: &str, kind: &str, label: &str, params: Vec<(&str, &str)>, x: f64, y: f64) -> FlowNode {
@@ -17,7 +17,7 @@ fn edge(id: &str, from_node: &str, from_port: &str, to_node: &str, to_port: &str
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn base_snapshot() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
-        schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("n1", "source", "Source", vec![("count", "1")], 0.0, 0.0), node("n2", "sink", "Sink", vec![], 10.0, 10.0)],
         edges: vec![edge("e1", "n1", "out", "n2", "in", "data")],
     }
@@ -32,7 +32,7 @@ fn base_snapshot() -> SemioFlowSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
-        schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("keep", "old-kind", "Old Label", vec![("toModify", "old"), ("stay", "same"), ("toRemove", "gone")], 0.0, 0.0), node("toRemoveNode", "sink", "Gone", vec![], 5.0, 5.0)],
         edges: vec![edge("keepEdge", "keep", "out", "toRemoveNode", "in", "old-kind"), edge("toRemoveEdge", "toRemoveNode", "out", "keep", "in", "data")],
     }
@@ -40,7 +40,7 @@ fn sweep_a() -> SemioFlowSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
-        schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![node("keep", "new-kind", "New Label", vec![("toModify", "new"), ("stay", "same"), ("added", "fresh")], 42.0, 7.0), node("addedNode", "source", "Added", vec![], 9.0, 9.0)],
         edges: vec![edge("keepEdge", "keep", "renamed-out", "addedNode", "in", "new-kind"), edge("addedEdge", "addedNode", "out", "keep", "in", "data")],
     }
@@ -167,5 +167,5 @@ async fn node_and_edge_value_codecs_round_trip() {
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn empty_base() -> SemioFlowSnapshot {
-    SemioFlowSnapshot { schema: crate::standards::v1::subsets::flow::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
+    SemioFlowSnapshot { schema: crate::schema::snapshot::STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }

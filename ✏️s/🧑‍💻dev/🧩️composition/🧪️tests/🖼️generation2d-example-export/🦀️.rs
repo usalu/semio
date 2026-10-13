@@ -10,8 +10,8 @@ use semio_s_artifact_procedural_generation2d::standards::v1::subsets::any::io::t
 fn installed() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        semio_framework_os_flow::register_linked_flow_extension_installer("draw", semio_s_plugin_flow_extension_draw::register);
-        semio_framework_os_flow::install_flow_extension_manifest("flow-extension-draw", &semio_s_plugin_flow_extension_draw::extension_manifest_json()).expect("draw extension admission");
+        semio_framework_os_flow::register_linked_flow_extension_installer("draw", semio_s_plugin_flow_draw::register);
+        semio_framework_os_flow::install_flow_extension_manifest("flow-extension-draw", &semio_s_plugin_flow_draw::extension_manifest_json()).expect("draw extension admission");
     });
 }
 
@@ -84,6 +84,6 @@ fn debug_print_normalized_example() {
             declared.retire_cold();
         }
     }
-    eprintln!("[DEBUG] BEGIN demo\n{}\n[DEBUG] END demo", semio_framework_os_kernel::ArtifactDsl::print_dsl(&example));
+    eprintln!("[DEBUG] BEGIN demo\n{}\n[DEBUG] END demo", semio_framework_os_kernel::os_store::serialization::ArtifactDsl::print_dsl(&example));
     example.retire_cold();
 }

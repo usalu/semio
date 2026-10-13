@@ -1,0 +1,32 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-playbook-procedural-component"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The `playbook-module-procedural` extension component: the one cdylib of `semio-s-plugin-playbook-procedural`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:playbook-module-procedural"
+
+[package.metadata.semio]
+role = "extension"
+deployment-directory = "⚙️playbook-module-procedural"
+component-kind = "extension"
+extends = "playbook"
+contributes = ["playbook.blockKind", "forms.questionKind"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-playbook-procedural = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

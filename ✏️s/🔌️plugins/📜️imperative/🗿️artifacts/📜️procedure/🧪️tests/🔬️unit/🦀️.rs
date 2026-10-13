@@ -36,7 +36,7 @@ async fn program_and_seed_round_trip_through_the_composed_child_snapshots() {
 /// so a decoded parent never needs a working scene on its handles (design §20.15).
 #[semio_framework_async_macros::async_test]
 async fn only_derivable_children_have_a_genesis_pack() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let demo = schema::default_snapshot();
     let flow = genesis_procedure_child_pack(&demo, "flow", &demo.flow.child_id).expect("the demo flow is derivable");
     assert_eq!(path_from_flow_content_snapshot(&SemioFlowSnapshot::decode_pack(&flow).expect("genesis flow pack decodes")), examples::demo::scene().path);

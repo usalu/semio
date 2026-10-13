@@ -1,7 +1,7 @@
 //! 🚪️ Extension resources and declarative payloads retain their owners through bounded close.
 
 use super::{plugin_internal_fault, ExtensionBundle, ExtensionManifest, ExtensionRequestHandler, Fault, FaultCode, FaultOrigin};
-use crate::app::PluginLifecycleStep;
+use crate::bounded_ownership::PluginLifecycleStep;
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress}};
 
 #[cfg(test)]

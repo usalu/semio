@@ -18,10 +18,10 @@ fn window_config_replace_reaches_prepared_through_the_real_sealer_and_closes_und
     let (base, next) = (parse(&policy["camera"]["base"]), parse(&policy["camera"]["next"]));
     let edit = WindowConfigReplaceEdit::<State, Mutation>::new();
     let mutation = Mutation::Snapshot { config: Box::new(next) };
-    let footprint = edit.preflight(&mutation, store::HistoryLane::Document).unwrap();
+    let footprint = edit.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).unwrap();
     assert_eq!(footprint.retained_bytes, CONFIG_EDIT_RETAINED_BASELINE_BYTES);
-    let factory: Arc<dyn store::ArtifactStoreOneItemPreparationFactory<State, Mutation>> = Arc::new(store::snapshot_clone_preparation::RetainedClonePreparationFactory::new(Arc::new(edit), Arc::new(OwnedValueRetirementFactory::<Mutation>::default()), Arc::new(SharedValueRetirementFactory::<State>::default()), 64).unwrap());
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let factory: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<State, Mutation>> = Arc::new(store::snapshot_clone_preparation::RetainedClonePreparationFactory::new(Arc::new(edit), Arc::new(OwnedValueRetirementFactory::<Mutation>::default()), Arc::new(SharedValueRetirementFactory::<State>::default()), 64).unwrap());
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let law = drive_one_item_preparation_law(&factory, base, mutation, grant);
     assert_eq!(*law.post, next);
     assert_eq!(law.inverse, vec![Mutation::Snapshot { config: Box::new(base) }]);

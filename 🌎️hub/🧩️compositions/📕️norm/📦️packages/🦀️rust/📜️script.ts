@@ -5,12 +5,12 @@ import { resolveTestLevel } from "../../../../../🧰️framework/🔨️modules
 import Ajv from "ajv";
 import { existsSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative } from "node:path";
-import { registerPlaygroundSiteBuildCommands, runCargo, runRepositoryCargoTests, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, runCmd } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 
-/** 🪶️ Headroom this plugin holds under `FRESH_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
+/** 🪶️ Headroom this plugin holds under `SHIPPED_COMPONENT_MAX_BYTES`, so fifteen standards artifacts
  * never again reach the admission bound unnoticed: norm's component was 273 934 765 B against a
  * 268 435 456 B bound on 2026-09-22 and its `describe` was refused before the guest ran. */
 const NORM_COMPONENT_BUDGET_BYTES = 200 * 1024 * 1024;
@@ -354,13 +354,13 @@ function componentCoreCensus(buffer: Buffer): NormComponentCensus {
   return { total: buffer.length, module: core.bytes, name: total((section) => section.id === 0 && section.name === "name"), code: total((section) => section.id === 10), data: total((section) => section.id === 11) };
 }
 
-/** ⚖️ Law: the `component-dev` deliverable this plugin's `describe` reads fits the admission bound with
+/** ⚖️ Law: the shipped `wasm-release` component this plugin's `describe` verifies fits the admission bound with
  * norm's own headroom, and carries no `name` custom section — 55.9 % of the refused 2026-09-22
  * component was mangled symbol names, so their absence is what keeps the bound met. */
 class ComponentBudgetScript extends BundleScript {
   run(): void {
-    const component = join(this.root, "dist", "component-dev", "semio_hub_norm.wasm");
-    if (!existsSync(component)) throw new Error(`norm's component-dev deliverable is absent, so its size cannot be weighed: build it with \`bun nx run @semio-tech/norm-plugin:component-dev\` (${component})`);
+    const component = componentDeliverableV1(join(this.root, "../../🧩️component/📦️packages/🦀️rust"), "semio-hub-norm-component", SHIPPED_COMPONENT_PROFILE).wasm;
+    if (!existsSync(component)) throw new Error(`norm's shipped component is absent, so its size cannot be weighed: build it with \`bun nx run semio-hub-norm-component:component\` (${component})`);
     const census = componentCoreCensus(readFileSync(component));
     for (const hostile of [Buffer.from("this is not a wasm artifact"), Buffer.from("\0asm\r\0\0", "latin1")]) {
       let refused = false;
@@ -372,10 +372,10 @@ class ComponentBudgetScript extends BundleScript {
       if (!refused) throw new Error("the component census accepted an artifact that is not a wasm component");
     }
     if (census.code === 0 || census.module <= census.code) throw new Error(`norm's component census is not a real module: code=${census.code} module=${census.module}`);
-    if (census.name !== 0) throw new Error(`norm's wasm-dev component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-dev.package.semio-hub-norm] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${FRESH_COMPONENT_MAX_BYTES} B`);
-    if (census.total > FRESH_COMPONENT_MAX_BYTES) throw new Error(`norm's wasm-dev component is ${census.total} B against the ${FRESH_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - FRESH_COMPONENT_MAX_BYTES} B over`);
-    if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`norm's wasm-dev component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
-    console.log(`Norm wasm-dev component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${FRESH_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
+    if (census.name !== 0) throw new Error(`norm's shipped component carries a ${census.name} B \`name\` custom section: \`[profile.wasm-release] strip = "symbols"\` is not in effect, and without it this plugin does not fit ${SHIPPED_COMPONENT_MAX_BYTES} B`);
+    if (census.total > SHIPPED_COMPONENT_MAX_BYTES) throw new Error(`norm's shipped component is ${census.total} B against the ${SHIPPED_COMPONENT_MAX_BYTES} B admission bound its own describe enforces: it is ${census.total - SHIPPED_COMPONENT_MAX_BYTES} B over`);
+    if (census.total > NORM_COMPONENT_BUDGET_BYTES) throw new Error(`norm's shipped component is ${census.total} B against this plugin's own ${NORM_COMPONENT_BUDGET_BYTES} B budget: ${census.total - NORM_COMPONENT_BUDGET_BYTES} B of headroom is gone and the admission bound is next`);
+    console.log(`Norm shipped component budget met: ${census.total} B total (core module ${census.module} B: code ${census.code} B, data ${census.data} B, name 0 B), ${SHIPPED_COMPONENT_MAX_BYTES - census.total} B under the admission bound, ${NORM_COMPONENT_BUDGET_BYTES - census.total} B under this plugin's own budget, 2 hostile artifacts refused`);
   }
 }
 
@@ -427,6 +427,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("component-budget-check", ComponentBudgetScript)
   .register("mutation-leaf-taxonomy-generate", MutationLeafTaxonomyGenerateScript)
   .register("mutation-leaf-taxonomy-check", MutationLeafTaxonomyCheckScript);
-registerPlaygroundSiteBuildCommands(router);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

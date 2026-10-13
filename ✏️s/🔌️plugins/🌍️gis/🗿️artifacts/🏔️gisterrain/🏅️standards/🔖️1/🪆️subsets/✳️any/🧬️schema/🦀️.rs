@@ -9,7 +9,7 @@ use crate::{gis_terrain_mesh_child_handle, gis_terrain_mesh_content_key, GisTerr
 use ::semio_framework_schema::ArtifactSchema;
 #[cfg(test)] use semio_framework_surface::terrain::tiles;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Artifact
 /// 🧬️ GIS terrain document artifact state.
@@ -26,7 +26,7 @@ pub struct GisTerrainArtifact {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
 }
 //#endregion 🔖️Artifact
 

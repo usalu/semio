@@ -29,10 +29,10 @@ fn the_definition_builds_with_every_declared_capability() {
 #[test]
 fn the_document_round_trips_through_its_own_dsl_and_pack_codecs() {
     let document = Grid2dSnapshot { seed: 5, width: 2, height: 3, cell_width: 1.5, cell_height: 2.5, periodic_x: true, ..Default::default() };
-    let text = <Grid2dSnapshot as store::ArtifactDsl>::print_dsl(&document);
-    assert_eq!(<Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("dsl parses"), document);
-    let bytes = <Grid2dSnapshot as store::ArtifactPack>::encode_pack(&document);
-    assert_eq!(<Grid2dSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("pack decodes"), document);
+    let text = <Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&document);
+    assert_eq!(<Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("dsl parses"), document);
+    let bytes = <Grid2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&document);
+    assert_eq!(<Grid2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("pack decodes"), document);
 }
 
 #[test]

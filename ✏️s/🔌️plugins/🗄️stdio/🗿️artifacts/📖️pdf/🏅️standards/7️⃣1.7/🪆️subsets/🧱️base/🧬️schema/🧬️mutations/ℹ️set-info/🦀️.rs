@@ -1,10 +1,8 @@
 //! ℹ️ Authoritative PDF mutation payload, diff, inverse, and tests for `set-info`.
 
 use super::PdfMutation;
-use crate::standards::v1_7::subsets::base::schema::{
-    diff::{self, PdfDiff},
-    snapshot::{PdfInfo, PdfSnapshot},
-};
+use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfSnapshot};
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

@@ -1,14 +1,14 @@
 //! 🧪️ `create-object` fixture — `🏗️attaches`.
 //!
 //! Transcribed from `../../🔺️diff/🦀️.rs`: a duplicate `child_id` is FATAL
-//! `mutation.duplicate-id`; otherwise a new `store::ArtifactChild` handle is PUSHED onto `objects`.
+//! `mutation.duplicate-id`; otherwise a new `store::os_store::artifact_child::ArtifactChild` handle is PUSHED onto `objects`.
 //! `objects` is a child COLLECTION (unlike `📦️object`'s single-slot `brep`/`mesh`), so a kit can
 //! hold many object children and the diff rebuilds the whole list.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️create-object/🏗️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏗️create-object/🏗️attaches/📸️snapshot/➡️after/🔣️.json");

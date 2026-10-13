@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::operations::primitives::make_box;
+use semio_framework_3d_brep_operations::primitives::make_box;
 
 #[semio_framework_async_macros::async_test]
 async fn export_box_mesh_stl_nonempty() {

@@ -15,7 +15,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
   for (const profile of fixture.profiles) for (const command of ["prepare", "activate", "serve", "dev"]) {
     const target = `@semio-tech/framework-os-dev:${command}-sample-wgpu-${profile}`, invocation = resolveInvocation(["run", target]);
     assert.equal(invocation.env.SEMIO_RENDERER, "wgpu");
-    assert.equal(invocation.env.SEMIO_BUILD_MODE, profile === "release" ? "ship" : "dev");
+    assert.equal(invocation.env.SEMIO_BUILD_MODE, profile === "release" ? "release" : "prototype");
     assert.equal(invocation.watch, command === "dev" ? `@semio-tech/framework-os-dev:activate-sample-wgpu-${profile}` : undefined);
   }
   const { serveVite } = await import("../../🌐️vite/🟦️.ts");
@@ -31,7 +31,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
       const reloadFile = join(roots.modules, "reload.json");
       for (const route of fixture.routes) { put(join(roots[route.root], route.file), route.content); put(join(publicRoot, decodeURI(route.url)), route.content); }
       const wasm = new Uint8Array([0, 97, 115, 109, 1, 0, 0, 0]);
-      writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu_bg.wasm"), wasm);
+      writeFileSync(join(roots.compiler, "semio-framework-os-renderer-wgpu-component_bg.wasm"), wasm);
       put(reloadFile, "0");
       copyFileSync(template, join(app, "🌐️.html"));
       put(config, 'import { createWgpuBrowserConfig } from ' + JSON.stringify(implementation) + ';\nexport default () => createWgpuBrowserConfig(' + JSON.stringify({ catalog: { version: 1, targets: [], hosts: [], playgrounds: [] }, workspace: root, root: app, profile, compilerRoot: roots.compiler, moduleRoot: roots.modules, extensionRoot: roots.extensions, bootRoot: roots.boot, libraryRoot: roots.library, workerRoot: roots.worker, reloadFile, assets: [], assetServeMode: "fetch" }) + ');\n');
@@ -52,7 +52,7 @@ export async function testWgpuBrowserServing(workspace: string, output: string):
           assert.equal(actual.status, 200, route.url);
           assert.equal(await actual.text(), await expected.text(), route.url);
         }
-        const wasmResponse = await fetch(new URL("/renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm", url));
+        const wasmResponse = await fetch(new URL("/renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component_bg.wasm", url));
         assert.equal(wasmResponse.headers.get("content-type"), "application/wasm");
         assert.ok((await WebAssembly.instantiate(await wasmResponse.arrayBuffer())).instance);
         assert.equal((await fetch(new URL(fixture.missing, url))).status, 404);

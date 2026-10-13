@@ -1,10 +1,10 @@
 //! 📝️ Generic text framing for the visible glTF mutation aggregate.
-use crate::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
 pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.grammar.semio");
 
-use crate::schema::mutations::GltfMutation;
+use crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
 
 const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;
 
@@ -20,7 +20,7 @@ pub fn apply_gltf_mutation(base: &GltfSnapshot, mutation: &GltfMutation) -> Resu
 
 /// 🌉️ Applies one mutation through the central applier; a refusal (error or fatal message) is an error.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, base: &GltfSnapshot) -> Result<GltfSnapshot, String> {
+pub fn gltf_bridge_apply(kind: &str, step: &str, mutation: &GltfMutation, base: &GltfSnapshot) -> Result<GltfSnapshot, String> {
     apply_gltf_mutation(base, mutation).map_err(|refusal| format!("{kind}: the {step} was refused — {refusal}"))
 }
 
@@ -78,8 +78,8 @@ impl protocol::OpText for GltfMutation {
 mod mutations_codec {
 use super::*;
 use crate::standards::v2_0::subsets::any::schema::mutations::*;
-use crate::schema::diff::GltfDiff;
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use crate::standards::v2_0::subsets::any::schema::mutations::add_required_extension::AddRequiredExtensionMutation;
 use crate::standards::v2_0::subsets::any::schema::mutations::add_used_extension::AddUsedExtensionMutation;
 use crate::standards::v2_0::subsets::any::schema::mutations::bind_default_scene::BindDefaultSceneMutation;
@@ -203,7 +203,7 @@ use crate::standards::v2_0::subsets::any::schema::mutations::unbind_scene_root_n
 
 /// 🌉️ The `(kind, params)` row a mutation case states (`delete-camera`, `{"index":0}`) as the [`GltfMutation`] wire form
 /// `{"mutation": "deleteCamera", "payload": {"phase": "apply", "value": params}}`, decoded by the production codec.
-pub(crate) fn gltf_row_mutation(kind: &str, params_json: &str) -> Result<GltfMutation, String> {
+pub fn gltf_row_mutation(kind: &str, params_json: &str) -> Result<GltfMutation, String> {
     let params: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(params_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{kind}: the parameters are not JSON: {error}"))?;
     let variant: String = kind
         .split('-')
@@ -320,31 +320,4 @@ pub fn decode_gltf_change_node_name_proto(value: &DslValue) -> FacadeResult<Chan
 pub use node_name_facades::{GltfChangeNodeNameFacadeError,decode_gltf_change_node_name_graphql,decode_gltf_change_node_name_proto};
 pub(crate) use node_name_facades::{FacadeResult,facade_error};
 
-fn gltf_bridge_read(document: &[u8]) -> Result<GltfSnapshot, String> {
-    if document.starts_with(b"glTF") { crate::engine::decode_glb(document) } else { crate::engine::parse_gltf_document(document) }
-}
-
-fn gltf_bridge_write(snapshot: &GltfSnapshot) -> Result<Vec<u8>, String> {
-    match snapshot.source_form {
-        crate::schema::snapshot::GltfSourceForm::Glb => crate::engine::encode_glb(snapshot),
-        crate::schema::snapshot::GltfSourceForm::Json => Ok(crate::engine::serialize_gltf_document(snapshot)),
-    }
-}
-
-pub fn gltf_mutated_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
-    let mutation = gltf_row_mutation(kind, params_json)?;
-    let snapshot = gltf_bridge_read(document)?;
-    let mutated = gltf_bridge_apply(kind, "mutation", &mutation, &snapshot)?;
-    gltf_bridge_write(&mutated)
-}
-
-pub fn gltf_inverse_restored_document(document: &[u8], kind: &str, params_json: &str) -> Result<Vec<u8>, String> {
-    let mutation = gltf_row_mutation(kind, params_json)?;
-    let base = gltf_bridge_read(document)?;
-    let mut restored = gltf_bridge_apply(kind, "mutation", &mutation, &base)?;
-    for step in <GltfMutation as protocol::Mutation<GltfSnapshot>>::inverse(&mutation, &base).map_err(semio_framework_value::ValueError::into_message)?.into_iter().rev() {
-        restored = gltf_bridge_apply(kind, "inverse", &step, &restored)?;
-    }
-    gltf_bridge_write(&restored)
-}
 

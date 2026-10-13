@@ -7,7 +7,7 @@ use semio_s_artifact_trinity_jack::{Graph, JackSnapshot, PropertyValue};
 use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.

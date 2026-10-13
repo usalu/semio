@@ -7,7 +7,7 @@ import { demonstratorRuntimeBuildVariants, demonstratorRuntimePluginId } from ".
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 //#region 🔖️DemonstratorActivationLanes
 /** 🛣️ The pane whose own activation lane carries the Demonstrator's OWN component closure — the
@@ -120,7 +120,7 @@ export function demonstratorActivationComponents(workspace: string): readonly Ac
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   return demonstratorRuntimeComponentIds().map(id => {
     const row = byId.get(id)!;
-    return { pluginId: id, directoryName: moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, row.cratePath, "..", "..") };
+    return { pluginId: id, directoryName: moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, componentOwnerRootV1(row.cratePath)) };
   });
 }
 

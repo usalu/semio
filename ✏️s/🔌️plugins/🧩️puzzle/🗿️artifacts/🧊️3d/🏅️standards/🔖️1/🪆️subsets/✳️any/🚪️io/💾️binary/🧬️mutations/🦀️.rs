@@ -122,18 +122,18 @@ use crate::standards::v1::subsets::any::schema::mutations::scale_target_volume::
 
 /// 📦️ Packs through the typed authority, so the play kind shares `Puzzle3dSnapshot`'s derived record
 /// layout and pack-schema identity.
-impl store::ArtifactPack for Puzzle3dPlaySnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl store::os_store::serialization::ArtifactPack for Puzzle3dPlaySnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         self.typed().encode_pack_with(options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
+        <Puzzle3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack_with(bytes, options).map(Self::from_typed)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Puzzle3dSnapshot as store::ArtifactPack>::record_spec()
+        <Puzzle3dSnapshot as store::os_store::serialization::ArtifactPack>::record_spec()
     }
 }
 }

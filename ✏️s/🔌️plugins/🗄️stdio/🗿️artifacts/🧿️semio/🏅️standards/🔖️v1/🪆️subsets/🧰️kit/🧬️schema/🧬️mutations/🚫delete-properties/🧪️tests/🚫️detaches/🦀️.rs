@@ -12,10 +12,10 @@
 //! assertions that would otherwise gloss over this state the collapse explicitly and exercise the
 //! apply law against the in-memory `Some(None)` diff instead.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫delete-properties/🚫️detaches/📸️snapshot/➡️after/🔣️.json");

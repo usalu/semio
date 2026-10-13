@@ -22,7 +22,7 @@ mod initialization_catalog_close;
 use initialization_catalog_close::{close_initialization_catalog, initialization_catalog_close_demands};
 
 //#region 🔖️OwnedSprCatalog
-const DRAWING_OWNED_FIELD_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+const DRAWING_OWNED_FIELD_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 
 /// 🏭️ Framework-owned retirement issuer for decoded Drawing snapshots.
 type DrawingSnapshotRetirementFactory = semio_framework_value::retirement::OwnedValueRetirementFactory<DrawingSnapshot>;
@@ -31,7 +31,7 @@ type DrawingSnapshotRetirementFactory = semio_framework_value::retirement::Owned
 type DrawingMutationRetirementFactory = semio_framework_value::retirement::OwnedValueRetirementFactory<DrawingMutation>;
 
 fn decode_drawing_snapshot_pack(bytes: &[u8]) -> Result<DrawingSnapshot, ()> {
-    <DrawingSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
+    <DrawingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|_| ())
 }
 
 fn decode_drawing_mutation_pack(bytes: &[u8]) -> Result<DrawingMutation, ()> {
@@ -64,23 +64,23 @@ impl<T: semio_framework_value::retirement::RetireOwned> DrawingDecodedFieldRetir
 
 macro_rules! drawing_owned_field_close_capacity {
     (@demands, $value:ty) => {
-        fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.copy_bytes) }
+        fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.copy_bytes) }
 
-        fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes) }
+        fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(maximum_copy_bytes).map(|demand| demand.capacity_bytes) }
 
-        fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes) }
+        fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.release_bytes) }
 
-        fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth) }
+        fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { self.close_demands(0).map(|demand| demand.depth) }
     };
     (ArtifactEnvelopeSnapshotFieldAuthority, $value:ty) => {
         drawing_owned_field_close_capacity!(@demands, $value);
 
         fn maximum_close_byte_demand(&self) -> usize {
-            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
         }
 
         fn maximum_retained_close_bytes(&self) -> usize {
-            store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+            store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
         }
     };
     (ArtifactEnvelopeMutationFieldAuthority, $value:ty) => {
@@ -93,7 +93,7 @@ macro_rules! drawing_owned_field_authority {
         #[expect(clippy::large_enum_variant, reason = "The active decoder keeps its fixed path and admitted hex authority inline without a second allocation at the state transition.")]
         enum $state {
             AwaitToken,
-            Decode(store::OwnedSchemaHexAuthority<DRAWING_OWNED_FIELD_BYTES>),
+            Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority<DRAWING_OWNED_FIELD_BYTES>),
             Ready,
             Published,
             Closing,
@@ -103,28 +103,28 @@ macro_rules! drawing_owned_field_authority {
         struct $authority {
             operation: semio_framework_job::OperationId,
             generation: semio_framework_job::Generation,
-            path: store::OwnedSchemaPath,
+            path: store::os_store::owned_schema_decode::OwnedSchemaPath,
             state: $state,
             value: std::mem::ManuallyDrop<Option<$value>>,
             retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
         }
 
         impl $authority {
-            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Self {
+            fn new(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Self {
                 Self { operation, generation, path, state: $state::AwaitToken, value: std::mem::ManuallyDrop::new(None), retirement: std::mem::ManuallyDrop::new(None) }
             }
 
-            fn diagnostic(&self, code: &'static str, offset: u64) -> store::OwnedSchemaDecodeDiagnostic {
-                store::OwnedSchemaDecodeDiagnostic { offset, ..store::OwnedSchemaDecodeDiagnostic::before(code, self.path) }
+            fn diagnostic(&self, code: &'static str, offset: u64) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+                store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, self.path) }
             }
 
-            fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::OwnedSchemaDecodeDiagnostic> {
+            fn close_demands(&self, maximum_copy_bytes: usize) -> Result<semio_framework_value::RetirementDemand, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if matches!(self.state, $state::Decode(_)) {
                     return Ok(semio_framework_value::RetirementDemand { release_bytes: DRAWING_OWNED_FIELD_BYTES, depth: 1, ..Default::default() });
                 }
                 let demand = match self.retirement.as_ref() {
-                    Some(owner) => store::artifact_retirement_box_demands(owner, maximum_copy_bytes),
-                    None => store::artifact_retirement_owned_birth_demands(&self.value),
+                    Some(owner) => store::os_store::snapshot_read::artifact_retirement_box_demands(owner, maximum_copy_bytes),
+                    None => store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.value),
                 };
                 demand.map_err(|error| self.diagnostic(concat!("drawing-envelope.", $kind, "-retirement-demand-fault"), 0).with_native(error))
             }
@@ -133,25 +133,25 @@ macro_rules! drawing_owned_field_authority {
         impl store::$authority_trait<$value> for $authority {
             fn accept_token(
                 &mut self,
-                token: store::OwnedSchemaToken,
+                token: store::os_store::owned_schema_decode::OwnedSchemaToken,
                 terminal: bool,
-                source: &store::OwnedSchemaRecordCursor,
+                source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
                 cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+            ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 let path = self.path;
-                let diagnostic = |code: &'static str, offset| store::OwnedSchemaDecodeDiagnostic { offset, ..store::OwnedSchemaDecodeDiagnostic::before(code, path) };
+                let diagnostic = |code: &'static str, offset| store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before(code, path) };
                 if matches!(self.state, $state::AwaitToken) {
                     if !terminal {
                         return Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-must-be-scalar"), token.start));
                     }
-                    self.state = $state::Decode(store::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
+                    self.state = $state::Decode(store::os_store::owned_schema_decode::OwnedSchemaHexAuthority::try_new(self.operation, self.generation, token, self.path)?);
                 }
                 let $state::Decode(authority) = &mut self.state else {
                     return Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-token-replayed"), token.start));
                 };
                 match authority.step(source, cx) {
-                    store::OwnedSchemaHexStep::Pending => Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending),
-                    store::OwnedSchemaHexStep::Complete => {
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Pending => Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Complete => {
                         let bytes = authority.as_bytes().ok_or_else(|| diagnostic(concat!("drawing-envelope.", $kind, "-pack-missing"), token.start))?;
                         let value = $decode(bytes).map_err(|_| diagnostic(concat!("drawing-envelope.", $kind, "-pack-malformed"), token.start))?;
                         if !authority.release() {
@@ -159,31 +159,31 @@ macro_rules! drawing_owned_field_authority {
                         }
                         *self.value = Some(value);
                         self.state = $state::Ready;
-                        Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                        Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
                     }
-                    store::OwnedSchemaHexStep::Cancelled => Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-cancelled"), token.start)),
-                    store::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Cancelled => Err(diagnostic(concat!("drawing-envelope.", $kind, "-pack-cancelled"), token.start)),
+                    store::os_store::owned_schema_decode::OwnedSchemaHexStep::Fault(diagnostic) => Err(diagnostic),
                 }
             }
 
             fn publish_reserved(
                 &mut self,
                 target: &mut dyn store::$target_trait<$value>,
-                reservation: store::ArtifactEnvelopeFieldReservation,
+                reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
                 _cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+            ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if !matches!(self.state, $state::Ready) {
                     return Err(self.diagnostic(concat!("drawing-envelope.", $kind, "-pack-not-ready"), 0));
                 }
                 let value = self.value.take().ok_or_else(|| self.diagnostic(concat!("drawing-envelope.", $kind, "-owner-missing"), 0))?;
                 target.$publish(reservation, value);
                 self.state = $state::Published;
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete)
             }
 
             drawing_owned_field_close_capacity!($authority_trait, $value);
 
-            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+            fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 let empty = RetainedCloneProgress::default();
                 if self.terminal_is_empty() {
                     return Ok(RetainedCloneStep::Complete(empty));
@@ -204,9 +204,9 @@ macro_rules! drawing_owned_field_authority {
                     return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, released_bytes: DRAWING_OWNED_FIELD_BYTES, ..empty }));
                 }
                 let step = if self.retirement.is_some() {
-                    store::artifact_retirement_box_close_step(&mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
                 } else if self.value.is_some() {
-                    store::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
+                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.value, &mut self.retirement, grant)
                 } else {
                     Ok(RetainedCloneStep::Complete(empty))
                 }
@@ -261,26 +261,26 @@ struct DrawingRejectedConflictAuthority {
     terminal: bool,
 }
 
-impl store::ArtifactEnvelopeSprConflictAuthority for DrawingRejectedConflictAuthority {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority for DrawingRejectedConflictAuthority {
     fn accept_token(
         &mut self,
-        token: store::OwnedSchemaToken,
+        token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-        Err(store::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::OwnedSchemaDecodeDiagnostic::before("drawing-envelope.fresh-conflict-not-admitted", store::OwnedSchemaPath::ROOT) })
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+        Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { offset: token.start, ..store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic::before("drawing-envelope.fresh-conflict-not-admitted", store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT) })
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(0) }
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(0) }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> { Ok(usize::from(!self.terminal)) }
 
-    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.terminal {
             return Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default()));
         }
@@ -299,52 +299,52 @@ impl store::ArtifactEnvelopeSprConflictAuthority for DrawingRejectedConflictAuth
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 pub struct DrawingEnvelopeOwnedFieldCatalog;
 
-impl store::ArtifactEnvelopeOwnedFieldCatalog<DrawingSnapshot, DrawingMutation> for DrawingEnvelopeOwnedFieldCatalog {
-    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Result<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>, Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>>> {
-        store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog<DrawingSnapshot, DrawingMutation> for DrawingEnvelopeOwnedFieldCatalog {
+    fn begin_vcs(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Result<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>, Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>>> {
+        store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             self.begin_snapshot(operation, generation, path),
             std::sync::Arc::new(DrawingSnapshotRetirementFactory::default()),
             std::sync::Arc::new(DrawingMutationRetirementFactory::default()),
             self.edit_history_decoder(),
         )
-        .map(|authority| Box::new(authority) as Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>)
+        .map(|authority| Box::new(authority) as Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<DrawingSnapshot, DrawingMutation>>)
     }
 
     fn maximum_vcs_close_byte_demand(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES
     }
 
     fn maximum_retained_vcs_close_bytes(&self) -> usize {
-        store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
+        store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_RETAINED_VCS_BYTES
     }
 
-    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {
+    fn begin_snapshot(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<DrawingSnapshot>> {
         Box::new(DrawingSnapshotDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeMutationFieldAuthority<DrawingMutation>> {
+    fn begin_mutation(&self, operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation, path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<DrawingMutation>> {
         Box::new(DrawingMutationDecodeAuthority::new(operation, generation, path))
     }
 
-    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::OwnedSchemaPath) -> Box<dyn store::ArtifactEnvelopeSprConflictAuthority> {
+    fn begin_spr_conflict(&self, _operation: semio_framework_job::OperationId, _generation: semio_framework_job::Generation, _path: store::os_store::owned_schema_decode::OwnedSchemaPath) -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSprConflictAuthority> {
         Box::new(DrawingRejectedConflictAuthority { terminal: false })
     }
 
-    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<DrawingMutation>>> {
-        store::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(DrawingMutationRetirementFactory::default()))
+    fn edit_history_decoder(&self) -> std::sync::Arc<dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder<protocol::Edit<DrawingMutation>>> {
+        store::os_store::owned_schema_decode::artifact_owned_spr_edit_history_decoder(std::sync::Arc::new(Self), std::sync::Arc::new(DrawingMutationRetirementFactory::default()))
     }
 }
 
-pub fn drawing_envelope_decode_owner_bundle() -> store::ArtifactEnvelopeDecodeOwnerBundle<DrawingSnapshot, DrawingMutation> {
-    store::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(DrawingEnvelopeOwnedFieldCatalog), std::sync::Arc::new(DrawingSnapshotRetirementFactory::default()), std::sync::Arc::new(DrawingMutationRetirementFactory::default()))
+pub fn drawing_envelope_decode_owner_bundle() -> store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<DrawingSnapshot, DrawingMutation> {
+    store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle::new(std::sync::Arc::new(DrawingEnvelopeOwnedFieldCatalog), std::sync::Arc::new(DrawingSnapshotRetirementFactory::default()), std::sync::Arc::new(DrawingMutationRetirementFactory::default()))
 }
 //#endregion 🔖️OwnedSprCatalog
 
 //#region 🔖️RetainedStoreInitialization
 const DRAWING_MAXIMUM_NESTED_ITEMS: usize = 4_096;
-const DRAWING_MAXIMUM_NESTED_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const DRAWING_MAXIMUM_NESTED_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 const DRAWING_MAXIMUM_LAYER_DEPTH: usize = 64;
-const DRAWING_MUTATION_RETAINED_PAGE_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+const DRAWING_MUTATION_RETAINED_PAGE_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
 const DRAWING_MUTATION_OVERLAY_PAGE_CAPACITY: usize = 16;
 const DRAWING_MUTATION_CONTAINER_SLOT_CAPACITY: usize = 64;
 const DRAWING_MUTATION_ARENA_POOL_CAPACITY: usize = 4;
@@ -4204,9 +4204,9 @@ impl DrawingMutationCandidateAuthority {
     fn pump_retirement(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, &'static str> {
         let grant = cx.retained_grant();
         let step = if self.retirement.is_some() {
-            store::artifact_retirement_box_close_step(&mut self.retirement, grant)
+            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant)
         } else if self.retire_pending.is_some() {
-            store::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant)
+            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant)
         } else {
             return Ok(false);
         }
@@ -4303,8 +4303,8 @@ impl DrawingMutationCandidateAuthority {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Drawing mutation candidate close depth overflow"))?; Ok(demand) };
         let unit = semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
         if self.preflight_mutation.is_some() { return Ok(unit); }
-        if let Some(active) = self.retirement.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
-        if self.retire_pending.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.retire_pending)?); }
+        if let Some(active) = self.retirement.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
+        if self.retire_pending.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retire_pending)?); }
         if self.duplicate_rewrite.is_some() || self.rebuild.is_some() { return Ok(Self::coarse_demand()); }
         if !self.overlay.as_ref().is_some_and(|overlay| overlay.committed) && self.source_undo.is_some() { return Ok(unit); }
         let clone_demand = |grant: RetainedCloneGrant| semio_framework_value::RetirementDemand { copy_bytes: grant.maximum_copy_bytes, capacity_bytes: grant.maximum_capacity_bytes, release_bytes: grant.maximum_release_bytes, depth: grant.maximum_depth };
@@ -4314,7 +4314,7 @@ impl DrawingMutationCandidateAuthority {
         if let Some(asset) = self.asset_clone.as_ref() { return nested(clone_demand(asset.close_demands(body)?)); }
         if let Some(segments) = self.segments_clone.as_ref() { return nested(clone_demand(segments.close_demands(body)?)); }
         if let Some(stroke) = self.stroke_clone.as_ref() { return nested(clone_demand(stroke.close_demands(body)?)); }
-        if self.pending_layer.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.pending_layer)?); }
+        if self.pending_layer.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_layer)?); }
         Ok(unit)
     }
 
@@ -4332,10 +4332,10 @@ impl DrawingMutationCandidateAuthority {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.retire_pending.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.retirement, grant);
         }
         if let Some(rewrite) = self.duplicate_rewrite.as_mut() {
             let step = rewrite.close_step(child)?;
@@ -4478,14 +4478,14 @@ struct DrawingStoreInitializationAuthority {
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     arena_bootstrap_job: DrawingMutationArenaBootstrapJob,
-    envelope: std::mem::ManuallyDrop<Option<store::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>>>,
+    envelope: std::mem::ManuallyDrop<Option<store::os_store::store_schema::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>>>,
     runtime: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationRuntime<DrawingSnapshot>>>,
     candidate: std::mem::ManuallyDrop<Option<store::ArtifactStore<DrawingSnapshot, DrawingMutation>>>,
     retire_pending: std::mem::ManuallyDrop<Option<DrawingRetirementOwner>>,
     active: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     envelope_retirement: std::mem::ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
     owner_catalog: std::mem::ManuallyDrop<Option<store::ArtifactStoreInitializationOwnerCatalog>>,
-    owners: std::mem::ManuallyDrop<Option<store::DocumentStoreOwners<DrawingSnapshot, DrawingMutation>>>,
+    owners: std::mem::ManuallyDrop<Option<store::os_store::document_store_owners::DocumentStoreOwners<DrawingSnapshot, DrawingMutation>>>,
     forward_source: std::mem::ManuallyDrop<Option<RetainedCloneSource<DrawingMutation>>>,
     forward_from_ledger: bool,
     snapshot_source: std::mem::ManuallyDrop<Option<RetainedCloneSource<DrawingSnapshot, std::sync::Arc<DrawingSnapshot>>>>,
@@ -4509,7 +4509,7 @@ struct DrawingStoreInitializationAuthority {
 
 impl DrawingStoreInitializationAuthority {
     fn new(
-        envelope: store::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>,
         owner_catalog: Result<store::ArtifactStoreInitializationOwnerCatalog, &'static str>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
@@ -4590,7 +4590,7 @@ impl DrawingStoreInitializationAuthority {
             if superseded {
                 let original = entry.forwards.get(index).expect("Drawing superseded forward remains retained");
                 let mutation_id = entry.mutation_meta.get(index).and_then(|meta| meta.mutation_id.clone()).or_else(|| Mutation::<DrawingSnapshot>::mutation_id(original)).unwrap_or_else(|| protocol::MutationId(format!("{}#{index}", entry.id)));
-                runtime.supersessions().get(&mutation_id).map(|supersession| store::admit_replacement::<DrawingSnapshot, DrawingMutation>(original, &supersession.replacement, &envelope.schema))
+                runtime.supersessions().get(&mutation_id).map(|supersession| store::os_store::replay::admit_replacement::<DrawingSnapshot, DrawingMutation>(original, &supersession.replacement, &envelope.schema))
             } else {
                 None
             }
@@ -4661,9 +4661,9 @@ impl DrawingStoreInitializationAuthority {
     fn pump_active(&mut self, cx: &mut semio_framework_job::StepContext<'_>) -> Result<bool, semio_framework_value::ValueError> {
         let grant = cx.retained_grant();
         let step = if self.active.is_some() {
-            store::artifact_retirement_box_close_step(&mut self.active, grant)?
+            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant)?
         } else if self.retire_pending.is_some() {
-            store::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, grant)?
+            store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, grant)?
         } else {
             return Ok(false);
         };
@@ -4676,8 +4676,8 @@ impl DrawingStoreInitializationAuthority {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "Drawing initializer close depth overflow"))?; Ok(demand) };
         let unit = semio_framework_value::RetirementDemand { depth: 1, ..Default::default() };
         if !self.publication.terminal_is_empty() { return nested(self.publication.retirement_demands()?); }
-        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
-        if self.retire_pending.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.retire_pending)?); }
+        if let Some(active) = self.active.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
+        if self.retire_pending.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.retire_pending)?); }
         if self.prepared_history_id.is_some() { return Ok(unit); }
         if let Some(clone) = self.initial_snapshot_clone.as_ref() {
             return nested(semio_framework_value::RetirementDemand { copy_bytes: clone.next_close_copy_byte_demand()?, capacity_bytes: clone.next_close_capacity_byte_demand(body)?, release_bytes: clone.next_close_release_byte_demand()?, depth: clone.next_close_depth_demand()? });
@@ -4697,11 +4697,11 @@ impl DrawingStoreInitializationAuthority {
         }
         if let Some(runtime) = self.runtime.as_ref() { return nested(runtime.initialization_retirement_demands(body)?); }
         if self.owner_catalog.is_some() { return nested(initialization_catalog_close_demands(&self.owner_catalog)?); }
-        if let Some(retirement) = self.envelope_retirement.as_ref() { return nested(store::artifact_retirement_box_demands(retirement, body)?); }
+        if let Some(retirement) = self.envelope_retirement.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body)?); }
         if let Some(envelope) = self.envelope.as_ref() {
             return match self.owners.as_ref() {
                 Some(owners) => nested(owners.uninstalled_envelope_retirement_demands(envelope)),
-                None => nested(store::bounded_artifact_store_owners_source_demands::<DrawingSnapshot, DrawingMutation>()?),
+                None => nested(store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<DrawingSnapshot, DrawingMutation>()?),
             };
         }
         if let Some(owners) = self.owners.as_ref() { return nested(owners.uninstalled_owners_demands(body)?); }
@@ -4718,8 +4718,8 @@ impl DrawingStoreInitializationAuthority {
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if !self.publication.terminal_is_empty() { return self.publication.close_step(child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
-        if self.retire_pending.is_some() { return store::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, child); }
+        if self.active.is_some() { return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.retire_pending.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.retire_pending, &mut self.active, child); }
         if let Some(value) = self.prepared_history_id.take() {
             *self.retire_pending = Some(DrawingRetirementOwner::HistoryId(value));
             return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, ..empty }));
@@ -4773,11 +4773,11 @@ impl DrawingStoreInitializationAuthority {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope_retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.envelope_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.envelope_retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.envelope.is_some() {
             let Some(owners) = self.owners.take() else {
-                return match store::bounded_artifact_store_owners::<DrawingSnapshot, DrawingMutation>(child) {
+                return match store::os_store::document_store_owners::bounded_artifact_store_owners::<DrawingSnapshot, DrawingMutation>(child) {
                     Ok((owners, progress)) => { *self.owners = Some(owners); Ok(RetainedCloneStep::Progress(progress)) }
                     Err(refused) => { *self.owners = refused.owners; Err(refused.error.with_retained_progress(refused.progress)) }
                 };
@@ -4868,9 +4868,9 @@ impl DrawingStoreInitializationAuthority {
             }
             DrawingStoreInitializationPhase::AdmitOwners => {
                 let grant = cx.retained_grant();
-                let funded = store::bounded_artifact_store_owners_source_demands::<DrawingSnapshot, DrawingMutation>().is_ok_and(|demand| grant.maximum_items > 0 && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_depth >= demand.depth);
+                let funded = store::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<DrawingSnapshot, DrawingMutation>().is_ok_and(|demand| grant.maximum_items > 0 && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_depth >= demand.depth);
                 if funded {
-                    match store::bounded_artifact_store_owners::<DrawingSnapshot, DrawingMutation>(grant) {
+                    match store::os_store::document_store_owners::bounded_artifact_store_owners::<DrawingSnapshot, DrawingMutation>(grant) {
                         Ok((owners, progress)) => {
                             *self.owners = Some(owners);
                             match cx.consume_retained(progress) {
@@ -5369,7 +5369,7 @@ impl Drop for DrawingStoreInitializationAuthority {
 }
 
 pub fn drawing_document_store_initialization_job(
-    envelope: store::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>,
+    envelope: store::os_store::store_schema::ArtifactEnvelope<DrawingSnapshot, DrawingMutation>,
     operation: semio_framework_job::OperationId,
     generation: semio_framework_job::Generation,
     actor: protocol::ActorId,

@@ -6,11 +6,11 @@
 //! `new_value`. None fire here. The cell is addressed by `{row_index, column_name}` but WRITTEN at
 //! the column's resolved POSITION, so this case pins that name→index resolution.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/✏️edit-cell/👥️rewrites/📸️snapshot/➡️after/🔣️.json");
@@ -95,7 +95,7 @@ async fn produces_committed_diff() {
 async fn committed_diff_is_canonical_and_omits_columns_entirely() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed edit-cell diff decodes");
     assert!(decoded.columns.is_none(), "edit-cell must leave the columns slot untouched");
-    let rows = decoded.rows.as_ref().expect("an applied edit-cell diff carries a rows list");
+    let _rows = decoded.rows.as_ref().expect("an applied edit-cell diff carries a rows list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "edit-cell/rewrites-the-population-cell-of-the-second-row: committed diff JSON is not canonical");

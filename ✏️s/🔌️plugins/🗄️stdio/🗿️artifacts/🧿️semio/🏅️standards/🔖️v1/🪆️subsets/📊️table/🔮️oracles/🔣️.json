@@ -333,5 +333,19 @@
       ]
     }
   ],
-  "oracleHostPackages": []
+  "oracleHostPackages": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-csv",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📦️packages/🦀️rust",
+      "rationale": "🧱️ The table subject reads its CSV cell carriers through the stdio CSV artifact."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-semio-value",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🔢️value/📦️packages/🦀️rust",
+      "rationale": "🧱️ Table cells are semio values; the subject decodes them through the value subset crate."
+    }
+  ]
 }

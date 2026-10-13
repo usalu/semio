@@ -9,7 +9,7 @@ pub type DagStore = store::ArtifactStore<crate::DagSnapshot, crate::schema::muta
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_dag_store(envelope: DagEnvelope, actor: protocol::ActorId) -> Result<OwnedDagStore, store::VcsError> {
     let mut store = DagStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::DagSnapshot, crate::schema::mutations::DagMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::DagSnapshot, crate::schema::mutations::DagMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedDagStore(store))
 }
 
@@ -47,4 +47,4 @@ impl Drop for OwnedDagStore {
     }
 }
 
-pub type DagEnvelope = store::ArtifactEnvelope<crate::DagSnapshot, crate::schema::mutations::DagMutation>;
+pub type DagEnvelope = store::os_store::store_schema::ArtifactEnvelope<crate::DagSnapshot, crate::schema::mutations::DagMutation>;

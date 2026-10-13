@@ -13,8 +13,9 @@ pub type ConvexHullMetrics = (f64, f64, Vec<(V3, f64)>);
 // with zero suspension points; consumed by ~79 sibling inference files across the gltf tree, so
 // R9 propagates outward from here rather than the other way around. Reverted 2026-08-20.
 
-use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
-use crate::schema::snapshot::GltfDecodedSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDecodedSnapshot;
 use std::collections::{BTreeMap, BTreeSet};
 
 use super::super::modules::{measurement_contracts::*, mesh_topology::Topology};
@@ -104,7 +105,7 @@ fn mat_mul(a: M4, b: M4) -> M4 {
 fn transform(m: M4, p: V3) -> V3 {
     [m[0] * p[0] + m[4] * p[1] + m[8] * p[2] + m[12], m[1] * p[0] + m[5] * p[1] + m[9] * p[2] + m[13], m[2] * p[0] + m[6] * p[1] + m[10] * p[2] + m[14]]
 }
-fn node_matrix(node: &crate::schema::snapshot::GltfNode) -> M4 {
+fn node_matrix(node: &semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode) -> M4 {
     if let Some(m) = node.matrix {
         return m;
     }

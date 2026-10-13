@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any as csv_out;
 use crate::standards::v1::subsets::any::io::import::deserializers::artifacts::csv::v_rfc4180::any as csv_in;
-use crate::schema::snapshot::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 const TABLE: &str = include_str!("../../🧫️fixtures/📊️registers/📊️.csv");
 

@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::cad::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadLayer, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_cad_import::deserializers::artifacts::dwg::v_ac1024::any::SemioCadFromDwg;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::{CadLayer, STDIO_SEMIOCAD_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -32,9 +32,9 @@ fn plan() -> SemioCadSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn a_plan_survives_real_dwg_bytes() {
     let dwg = SemioCadToDwg::serialize(&plan()).await.expect("export");
-    let bytes = semio_s_artifact_stdio_dwg::dwg_to_bytes(&dwg.drawing.to_native().expect("native")).expect("dwg bytes");
+    let bytes = semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&dwg.drawing.to_native().expect("native")).expect("dwg bytes");
     assert!(bytes.starts_with(b"AC10"), "a DWG version sentinel opens the file");
-    let decoded = semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(&bytes).expect("decode");
+    let decoded = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&bytes).expect("decode");
     let back = SemioCadFromDwg::deserialize(&decoded).await.expect("import");
     let entities: Vec<(&str, &CadEntity)> = back.entities.iter().map(|record| (record.layer.as_str(), &record.entity)).collect();
     let expected = plan();

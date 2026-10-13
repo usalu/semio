@@ -935,7 +935,7 @@ async fn intrinsic_media_wire_runner_preserves_owned_tags_words_octets_and_occur
 fn an_admission_refusal_reaches_the_runner_as_the_guests_structured_fault() {
     use semio_framework_plugin_host::activation::ActivationRefusal;
     let fault = protocol::admit_guest_channel_version(20, 21).expect_err("a guest of another channel version is refused");
-    let refused = activation_refusal_error(ActivationRefusal::instantiation(semio_framework_plugin_host::PluginHostError::Refused(Box::new(fault.clone()))));
+    let refused = activation_refusal_error(ActivationRefusal::instantiation(semio_framework_plugin_interpreter::PluginHostError::Refused(Box::new(fault.clone()))));
     assert!(matches!(&refused, RunError::Refused(kept) if *kept == fault), "the guest's fault is kept whole: {refused:?}");
     assert_eq!(refused.to_string(), format!("{}: {}", protocol::CHANNEL_MISMATCH_CODE, fault.message));
     let host = activation_refusal_error(ActivationRefusal::host("Kernel activation refused: Saturated"));

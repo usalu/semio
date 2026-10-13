@@ -6,28 +6,26 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::audio::schema::mutations::*;
-use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
-use crate::standards::v1::subsets::audio::io::text::diff::{hex_decode_string};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_tag};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_tag};
-use crate::standards::v1::subsets::animation::io::text::snapshot::{dec_channel};
-use crate::standards::v1::subsets::animation::io::text::snapshot::{enc_channel};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_f32_list};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_f32_list};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_format};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_format};
-use crate::standards::v1::subsets::mesh::io::text::snapshot::{parse_u32};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};
-use crate::standards::v1::subsets::document::io::text::mutations::{parse_usize};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{hex_encode};
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::mutations::*;
+use crate::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
+use crate::io::text::diff::hex_decode_string;
+use crate::io::text::snapshot::dec_tag;
+use crate::io::text::snapshot::enc_tag;
+use crate::io::text::snapshot::dec_f32_list;
+use crate::io::text::snapshot::enc_f32_list;
+use crate::io::text::snapshot::dec_format;
+use crate::io::text::snapshot::enc_format;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32;
+use crate::io::text::snapshot::dec_snapshot;
+use crate::io::text::snapshot::enc_snapshot;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_usize;
+use semio_s_artifact_stdio_semio_base::io::text::codec::hex_encode;
+use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation, OpBinary, OpText};
-use crate::standards::v1::subsets::audio::io::text::mutations::{print_audio_mutation};
+use crate::io::text::mutations::print_audio_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioAudioMutation) -> u8 {
     match m {
@@ -80,6 +78,7 @@ impl OpBinary for SemioAudioMutation {
     }
 }
 }
+#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioAudioMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

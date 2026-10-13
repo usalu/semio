@@ -5,10 +5,19 @@
 //! (c) analyzer→builder round-trip (the project's core acceptance test). F4: rewritten against the
 //! fully typed `GltfDocument` model -- no `serde_json::Value` indexing anywhere in this file.
 
-use crate::examples::metabolism::{decoded_snapshot, BASE_GLB_BYTES};
-use crate::schema::snapshot::{GltfAccessorType, GltfAlphaMode, GltfComponentType, GltfMesh, GltfNode, GltfScene};
-use crate::standards::v2_0::subsets::any::io::GltfAnalyzer;
-use crate::standards::v2_0::subsets::any::io::{decode_accessor, decode_glb, encode_glb, GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
+use semio_s_artifact_stdio_gltf_editor::examples::metabolism::decoded_snapshot;
+use semio_s_artifact_stdio_gltf_editor::examples::metabolism::BASE_GLB_BYTES;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfMesh;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfScene;
+use crate::standards::v2_0::subsets::any::GltfAnalyzer;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
+use crate::standards::v2_0::subsets::any::{GltfAccessorSpec, GltfBuilderConstruction as GltfBuilder};
 use semio_framework_plugin::{io::AnalyzeSource, ArtifactBuilder};
 
 //#region 🔖️(a) RealDecode

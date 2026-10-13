@@ -5,10 +5,10 @@
 //! REMOVED first and re-inserted at `min(to, len_after_removal)`. `columns` stays `None`: rows are
 //! an anonymous ordered collection, so a permutation of them cannot affect the schema.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔃reorder-rows/🔃️moves/📸️snapshot/➡️after/🔣️.json");
@@ -46,7 +46,7 @@ async fn the_undo_reorder_sends_the_row_back_to_the_tail() {
     let mutation = reorder_rows();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioTableMutation::ReorderRows(crate::standards::v1::subsets::table::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })], "the undo must address the landed index #0 and send it back to #2");
+    assert_eq!(undo, vec![SemioTableMutation::ReorderRows(crate::schema::mutations::reorder_rows::ReorderRows { from: 0, to: 2 })], "the undo must address the landed index #0 and send it back to #2");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward reorder-rows applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo reorder-rows applies to the reordered table");

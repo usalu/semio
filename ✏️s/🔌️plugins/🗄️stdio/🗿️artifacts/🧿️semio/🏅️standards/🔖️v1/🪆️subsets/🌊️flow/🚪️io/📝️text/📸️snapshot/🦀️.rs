@@ -5,9 +5,9 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::flow::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ P2 pilot (flow, the FIRST semio subset upgraded): real hex/bracket-encoded value
@@ -43,16 +43,8 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
     String::from_utf8(hex_decode(s)?).map_err(|e| e.to_string())
 }
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_f64(v: f64) -> String {
-    if v.is_nan(){format!("nan64_{:016x}",v.to_bits())}else{v.to_string()}
-}
+use semio_s_artifact_stdio_semio_base::io::text::codec::{enc_f64, dec_f64};
 
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_f64(s: &str) -> Result<f64, String> {
-    if let Some(word)=s.strip_prefix("nan64_"){if word.len()!=16||!word.bytes().all(|byte|byte.is_ascii_hexdigit()){return Err("invalid Flow binary64 NaN word".into())}let bits=u64::from_str_radix(word,16).map_err(|error|error.to_string())?;let value=f64::from_bits(bits);if !value.is_nan(){return Err("Flow binary64 NaN word has a non-NaN class".into())}return Ok(value)}
-    s.parse().map_err(|e: std::num::ParseFloatError| e.to_string())
-}
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_point2(p: &SemioPoint2) -> String {
@@ -158,7 +150,7 @@ pub(crate) fn parse_flow_snapshot_body(body: &str) -> Result<SemioFlowSnapshot, 
 /// 🎁 Real structured text/binary codecs (P2 pilot — first semio subset upgraded off the old
 /// hex-dump-of-`serde_json` shortcut). Wrapped in the repo-wide `store::semio_format` envelope,
 /// unchanged.
-impl store::ArtifactDsl for SemioFlowSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioFlowSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOFLOW_DOCUMENT_SCHEMA
@@ -174,25 +166,25 @@ impl store::ArtifactDsl for SemioFlowSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_flow_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioFlowSnapshot`] — a thin
-/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🌊️mutate-semio-flow` test adapter, which reads the
 /// REAL committed example artifact rather than a hand-transcribed Rust literal of it) can still
 /// drive the same codec production does. Same rationale as `🧰️kit`'s `decode_kit_snapshot_json`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_flow_dsl(text: &str) -> Result<SemioFlowSnapshot, String> {
-    <SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
+/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_flow_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_flow_dsl(snapshot: &SemioFlowSnapshot) -> String {
-    <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 
 /// 📤️ This subset's own `#[value(rename_all = "camelCase")]` structural JSON projection of
@@ -220,10 +212,10 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::flow::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 
 

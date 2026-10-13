@@ -82,7 +82,7 @@ pub(crate) mod context {
     
     pub async fn config(app: &FormsApp) -> FormsConfig {
         let files = app.config_pack().await.expect("config pack");
-        store::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr).await.expect("config projection").snapshot
+        store::os_store::text_format::parse_document_pack::<FormsConfig, FormsConfigMutation>(&files.pack, &files.spr).await.expect("config projection").snapshot
     }
     
     pub fn action_args(value: &serde_json::Value) -> semio_framework_value::DslValue {
@@ -537,7 +537,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, FORMS_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-    let decoded = <FormsSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
+    let decoded = <FormsSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(decoded, document);
 }
 

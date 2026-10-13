@@ -8,8 +8,8 @@ use framework_schema::ArtifactSchema;
 //#region 🔖️Snapshot
 /// 📸️ Persisted `stdio.binary` snapshot.
 ///
-/// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
-/// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
+/// 🧪️ F6-PILOT: `semio_framework_dsl_record_derive::DslRecord` added alongside the existing hand-rolled `store::os_store::serialization::ArtifactDsl`/
+/// `store::os_store::serialization::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be embedded as a block in a record),
 /// it does not touch the artifact's own honest hex-text/raw-binary envelope format.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]

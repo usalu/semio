@@ -31,6 +31,19 @@
         "componentSha256": "1111111111111111111111111111111111111111111111111111111111111111",
         "componentBlake3": "1212121212121212121212121212121212121212121212121212121212121212",
         "descriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+        "receipt": {
+          "schema": "semio.plugin.component-receipt/v1",
+          "pluginId": "gis",
+          "packageId": "semio:gis",
+          "profile": "wasm-release",
+          "target": "wasm32-wasip2",
+          "wasmSha256": "1111111111111111111111111111111111111111111111111111111111111111",
+          "wasmBytes": 4096,
+          "semanticDescriptorSha256": "1313131313131313131313131313131313131313131313131313131313131313",
+          "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+          "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+          "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
         "executionProtocol": {
           "appChannelVersion": 23
         },
@@ -67,6 +80,19 @@
         "componentSha256": "2121212121212121212121212121212121212121212121212121212121212121",
         "componentBlake3": "2222222222222222222222222222222222222222222222222222222222222222",
         "descriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+        "receipt": {
+          "schema": "semio.plugin.component-receipt/v1",
+          "pluginId": "stdio",
+          "packageId": "semio:stdio",
+          "profile": "wasm-release",
+          "target": "wasm32-wasip2",
+          "wasmSha256": "2121212121212121212121212121212121212121212121212121212121212121",
+          "wasmBytes": 4096,
+          "semanticDescriptorSha256": "2323232323232323232323232323232323232323232323232323232323232323",
+          "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+          "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+          "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
         "executionProtocol": {
           "appChannelVersion": 23
         },
@@ -79,7 +105,7 @@
           "sha256": "3636363636363636363636363636363636363636363636363636363636363636",
           "blake3": "3737373737373737373737373737373737373737373737373737373737373737"
         },
-        "codecCount": 29,
+        "codecCount": 30,
         "targetCount": 0
       }
     ],
@@ -106,7 +132,7 @@
         }
       }
     ],
-    "generationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227"
+    "generationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b"
   },
   "sources": {
     "stdioReceipts": "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json",
@@ -115,21 +141,20 @@
   "limits": {
     "descriptorBytes": 4194304,
     "descriptorBytesPlusOne": 4194305,
-    "componentBytes": 67108864,
+    "componentBytes": 268435456,
     "ioChunkBytes": 65536,
     "packageCount": 2,
-    "codecCount": 31,
+    "codecCount": 32,
     "openTargetCount": 1
   },
   "framing": {
     "closureDomain": "semio/hub/trusted-profile-selected-closure/v1\u0000",
-    "generationDomain": "semio/hub/trusted-profile-generation/v1\u0000",
+    "generationDomain": "semio/hub/trusted-profile-generation/v2\u0000",
     "integerEndian": "big",
     "lengthBytes": 8
   },
   "cancellationStages": [
     "build",
-    "extract-core",
     "inspect-wit",
     "emit-descriptor",
     "stage-component",
@@ -323,12 +348,12 @@
         "accepted": false
       }
     ],
-    "initialGenerationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
+    "initialGenerationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
     "failedCandidateGenerationId": "f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1",
-    "currentAfterFailedCandidate": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
+    "currentAfterFailedCandidate": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
     "nextGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
     "stalePlan": {
-      "issuedGenerationId": "aa17c878184a5aa832f9766c9e30b25e914c53aa83afe619cd7a0968a4dec227",
+      "issuedGenerationId": "1c3dee2c47af2b1c0ba236512218167bde3967c2faf652e1a32f679b66c3010b",
       "observedGenerationId": "3434343434343434343434343434343434343434343434343434343434343434",
       "expected": "stale"
     },

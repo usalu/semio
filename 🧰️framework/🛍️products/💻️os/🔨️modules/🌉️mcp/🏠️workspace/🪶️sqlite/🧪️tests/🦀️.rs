@@ -1,5 +1,5 @@
 use super::*;
-use store::{ArtifactDsl as _,ArtifactSqliteSnapshot as _};
+use store::{os_store::serialization::ArtifactDsl as _,os_store::serialization::ArtifactSqliteSnapshot as _};
 use semio_framework_value::{FromValue as _,ToValue as _,retirement::RetireOwned as _};
 
 #[test]

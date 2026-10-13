@@ -14,7 +14,7 @@ import { generatePluginRegistry, type DeployedRegistryEntryV1 } from "../../../�
 
 import { defaultExtensionInstallRoot, EXTENSION_INSTALL_META, EXTENSION_WATCH_MARKER } from "../../../🔌️plugin/🏪️store/📥️installation/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, parseModuleDirectories, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 import { getWorkspaceRoot } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
@@ -65,7 +65,7 @@ export async function collectStagedModuleFacts(options: {
       try { installedPackageHash = JSON.parse(readFileSync(installedMeta, "utf8")).packageHash as string; } catch { installedPackageHash = undefined; }
     }
     const moduleDirectory = join(options.moduleRoot, directoryName);
-    const sourceRoot = join(repoRoot, target.cratePath, "..", "..");
+    const sourceRoot = join(repoRoot, componentOwnerRootV1(target.cratePath));
     const receiptSource = activatedSource.get(target.pluginId);
     const stagedAtMs = stagedModuleMtime(moduleDirectory);
     const hashes = await resolveBootSourceContentHashes({
@@ -107,7 +107,7 @@ async function reportServeStagedModuleFreshness(variant: string, renderer: "reac
     const selected = new Set(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), resolveCatalogFilterPluginId(variant)).map((entry) => entry.pluginId));
     const components = readGeneratedCatalogProjection().entries.filter((entry) => selected.has(entry.pluginId));
     reportStagedModuleFreshness(variant, renderer, profile, await collectStagedModuleFacts({
-      moduleRoot: pluginModulesRoot(profile),
+      moduleRoot: pluginModulesRoot(),
       installRoot: join(runtime, "extensions"),
       receipt,
       components,

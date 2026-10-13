@@ -15,13 +15,13 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn document_text_round_trips_a_store_with_an_applied_operation() {
     let initial = default_drawing_document("doc-text-test", None);
-    let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     store::os_store::test_support::assert_live_equals_replay(&doc_store).await;
@@ -37,13 +37,13 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
 
     let initial = default_drawing_document("doc-text-test", None);
-    let envelope = store::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA, "doc-text-test", initial, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(crate::spr::drawing_document_store_owners());
     let layer = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Added Rect")).to_string().into()).expect("nonempty authored identity"), "Added Rect");
     let layer_id_value = layer_id(&layer).to_string();
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::create_layer(None, None, layer)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply add layer");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::mutations::set_layer_opacity(layer_id_value.into(), 0.5)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply set opacity");
     let edit: &Edit<DrawingMutation> = doc_store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<DrawingSnapshot, DrawingMutation>(edit, &ArtifactId(doc_store.envelope().id.clone()), &SchemaId(doc_store.envelope().schema.clone())).await;
     store::os_store::test_support::close_plain_test_store(&mut doc_store);

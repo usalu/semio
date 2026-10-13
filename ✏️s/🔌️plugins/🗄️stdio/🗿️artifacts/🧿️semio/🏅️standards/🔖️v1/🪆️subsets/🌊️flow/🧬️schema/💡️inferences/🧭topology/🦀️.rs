@@ -5,7 +5,7 @@
 //! caching needed for a single BFS pass (same ruling trinity's own `jack` topology facet reaches
 //! for its own node/edge graph).
 
-use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use crate::schema::snapshot::SemioFlowSnapshot;
 use std::collections::{BTreeMap, VecDeque};
 
 //#region 🔖️Topology

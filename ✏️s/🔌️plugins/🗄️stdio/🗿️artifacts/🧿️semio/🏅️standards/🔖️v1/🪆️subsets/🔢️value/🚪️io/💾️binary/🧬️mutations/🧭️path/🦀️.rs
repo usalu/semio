@@ -1,5 +1,5 @@
 //! 🧭️ Protocol-framed Semio value paths retain exact UTF-8 keys and addressable indices.
-use crate::standards::v1::subsets::value::schema::mutations::{SemioValuePath,SemioValuePathSegment};
+use crate::schema::mutations::{SemioValuePath, SemioValuePathSegment};
 
 const PROTOCOL:&str=include_str!("📡️.protocol.semio");
 const KEY:u8=dsl::protocol_record::tag_u8(PROTOCOL,"key");

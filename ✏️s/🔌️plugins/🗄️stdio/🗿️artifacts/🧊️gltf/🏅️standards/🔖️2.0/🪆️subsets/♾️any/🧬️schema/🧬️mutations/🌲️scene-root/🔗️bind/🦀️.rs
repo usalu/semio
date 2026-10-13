@@ -1,10 +1,10 @@
 //! 🧬️ Direct bind-scene-root-node mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry::{checked_index, checked_position};
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-scene-root-node.v1";
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]

@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::kit::io::text::snapshot::decode_kit_snapshot_json;
-use crate::standards::v1::subsets::drawing::io::text::snapshot::enc_str;
+use crate::io::text::snapshot::decode_kit_snapshot_json;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -20,7 +20,7 @@ async fn minimal_schema_valid_json_defaults_collection_slots() {
     let encoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot reencodes");
     assert_eq!(encoded["schema"], minimal["schema"]);
     assert!(encoded.get("properties").is_none());
-    let artifact: crate::standards::v1::subsets::kit::schema::SemioKitArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Kit artifact");
+    let artifact: crate::schema::SemioKitArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Kit artifact");
     assert!(artifact.types.is_empty() && artifact.designs.is_empty() && artifact.objects.is_empty() && artifact.models.is_empty());
     assert!(artifact.properties.is_none() && artifact.representations.is_empty());
     let encoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&artifact)).expect("artifact reencodes");
@@ -31,27 +31,27 @@ async fn minimal_schema_valid_json_defaults_collection_slots() {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioKitSnapshot::default();
-    let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioKitSnapshot::default();
-    let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = demo_kit_snapshot();
-    let bytes = <SemioKitSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioKitSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
 
@@ -60,7 +60,7 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn parent_snapshot_stores_only_handles_never_child_content() {
     let snap = demo_kit_snapshot();
-    let text = <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(&snap);
+    let text = <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
     assert!(text.contains(&enc_str("obj-01")));
     assert!(!text.to_lowercase().contains("primitives") && !text.to_lowercase().contains("elements"), "must never embed object/model field names — only the handle");
 }

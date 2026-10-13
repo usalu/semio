@@ -22,9 +22,9 @@ async fn set_active_example_metabolism_loads_seven_nodes() {
     let Effect::LoadDocument { pack, .. } = receipt.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let document = <crate::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let document = <crate::WiresSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
-    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
+    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
     let board = crate::wires_composed(&document, &content).board;
     assert_eq!(board_snapshot_nodes(&board).len(), 7);
 }
@@ -37,9 +37,9 @@ async fn set_active_example_unknown_id_loads_empty_document() {
     let Effect::LoadDocument { pack, .. } = receipt.effects.first().expect("setActiveExample must emit a LoadDocument effect") else {
         panic!("expected a LoadDocument effect");
     };
-    let document = <crate::WiresSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let document = <crate::WiresSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     let child_pack = crate::genesis_wires_child_pack(&document, crate::WIRES_CONTENT_SLOT, &document.content.child_id).expect("declared example child pack");
-    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
+    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&child_pack).expect("full example graph child");
     let board = crate::wires_composed(&document, &content).board;
     assert!(board_snapshot_nodes(&board).is_empty());
 }

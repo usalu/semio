@@ -1,8 +1,8 @@
 //! 🧭️ The graph editor's edit rules: which snapshot pointer raises which ONE concrete graph mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, spread_snake, Entries, Reshape, ITEM};
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, spread_snake, Entries, Reshape, ITEM};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};

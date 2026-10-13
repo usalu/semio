@@ -19,7 +19,7 @@ pub type ProgramInferenceText = String;
 mod inferences_codec {
 use super::*;
 use crate::standards::v1::subsets::any::schema::inferences::*;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::topology::compute_topology;
@@ -28,9 +28,9 @@ use crate::standards::v1::subsets::any::schema::inferences::topology::compute_to
 /// Value`-style read-only projection that used to live on the artifact-tree engine hub. Mutating /
 /// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
-use crate::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
-use crate::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
+use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
+use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;
@@ -53,7 +53,7 @@ pub use inferences_codec::*;
 #[allow(unused_imports)]
 mod inferences_wire_codec {
 use crate::standards::v1::subsets::any::schema::inferences::*;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use crate::standards::v1::subsets::any::schema::inferences::topology::compute_topology;
@@ -62,9 +62,9 @@ use crate::standards::v1::subsets::any::schema::inferences::topology::compute_to
 /// Value`-style read-only projection that used to live on the artifact-tree engine hub. Mutating /
 /// constructing counterparts (marked in each region below) moved to `crate::apps::architect`'s own
 /// `//#region 🔧️Behavior` instead, since they take `&mut ProgramSnapshot`.
-use crate::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
-use crate::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
-use crate::ARCHITECT_PROGRAM_SCHEMA;
+use crate::standards::v1::subsets::any::schema::kernel::{DiagnosticSeverity, EntityHeader, EntityId, LifecycleStatus, PluginError, Priority, ProgramDiagnostic};
+use crate::standards::v1::subsets::any::schema::registers::{AdjacencyKind, AnalysisKind, AuditEvent, RelationshipKind, ReportKind, RiskLevel, SearchFilter, SeparationKind, ValidationStatus};
+use crate::standards::v1::subsets::any::schema::ARCHITECT_PROGRAM_SCHEMA;
 use semio_s_artifact_stdio_csv as stdio_csv;
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_engine;

@@ -16,7 +16,7 @@ pub struct StartRunNode {
 impl protocol::MutationKind<RunArtifact, RunMutation> for StartRunNode {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "start", entity: "run-node", kind: "start-run-node", record: "StartedRunNode" };
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: self.node_id.clone(), level: "info".into(), message: "node started".into(), at: store::now_iso() })))
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::LogAppend(RunLogLine { node_id: self.node_id.clone(), level: "info".into(), message: "node started".into(), at: store::os_store::document_materialize::now_iso() })))
     }
     fn inverse(&self, _base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
         Ok(vec![RunMutation::RemoveRunLog(RemoveRunLog { count: 1 })])

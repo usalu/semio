@@ -65,7 +65,7 @@ pub fn default_persisted_snapshot() -> SequenceSnapshot {
     let materialized = neural_engine::ColdOwner::new(default_snapshot());
     SequenceSnapshot {
         schema: materialized.schema.clone(),
-        content: store::ArtifactChild::new(materialized.content.child_id.clone(), materialized.content.target.clone()),
+        content: store::os_store::artifact_child::ArtifactChild::new(materialized.content.child_id.clone(), materialized.content.target.clone()),
     }
 }
 //#endregion 🔖️Snapshot
@@ -107,7 +107,7 @@ impl SequenceSnapshot {
     }
 
     /// 🌱 Converts this snapshot into the plain fixture shape from its exact child-owned scene.
-    pub fn try_to_host_snapshot(&self) -> Result<SequenceHostSnapshot, store::ArtifactChildMaterializationError> {
+    pub fn try_to_host_snapshot(&self) -> Result<SequenceHostSnapshot, store::os_store::artifact_child::ArtifactChildMaterializationError> {
         let scene = require_sequence_working_scene(&self.content)?;
         Ok(SequenceHostSnapshot { schema: self.schema.clone(), steps: scene.steps, edges: scene.edges })
     }

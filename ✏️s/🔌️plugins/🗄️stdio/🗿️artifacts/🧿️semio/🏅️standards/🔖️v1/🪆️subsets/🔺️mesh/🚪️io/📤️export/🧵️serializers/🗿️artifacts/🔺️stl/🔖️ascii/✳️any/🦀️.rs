@@ -14,8 +14,8 @@
 //! - Multiple `SemioMesh`es flatten into ONE `solid` (STL is single-solid); `solid_name` is the
 //!   FIRST mesh's id — later meshes' id boundaries are not preserved in the STL output.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_stl::schema::snapshot::StlTriangle;
 use semio_s_artifact_stdio_stl::StlSnapshot;

@@ -3,12 +3,12 @@
 use super::{WriterMainWindowTransient, WriterMainWindowTransientMutation};
 use semio_framework_value::{retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}, ValueError, ValueRefusalKind};
 use std::{mem::ManuallyDrop, sync::Arc};
-use store::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, ArtifactStoreOneItemCheckpoint, ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ErasedSnapshotRetirement};
+use store::{ArtifactEphemeralPreparationTask, ArtifactEphemeralPreparationTaskStep, os_store::one_item::ArtifactStoreOneItemCheckpoint, os_store::one_item::ArtifactStoreOneItemFootprint, os_store::one_item::ArtifactStoreOneItemGrant, ErasedSnapshotRetirement};
 
 fn footprint(mutation: &WriterMainWindowTransientMutation) -> Result<ArtifactStoreOneItemFootprint, String> {
     let capacity = match mutation { WriterMainWindowTransientMutation::SetEngagementInput(value) => value.value.capacity(), _ => 0 };
-    if capacity > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Writer engagement input exceeds retained capacity".into()); }
-    Ok(ArtifactStoreOneItemFootprint::for_ephemeral_item(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+    if capacity > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Writer engagement input exceeds retained capacity".into()); }
+    Ok(ArtifactStoreOneItemFootprint::for_ephemeral_item(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
 }
 
 pub(super) fn owners() -> semio_framework_plugin::WindowTransientOwnerBundle<WriterMainWindowTransient, WriterMainWindowTransientMutation> {
@@ -19,7 +19,7 @@ pub(super) fn owners() -> semio_framework_plugin::WindowTransientOwnerBundle<Wri
 }
 
 fn create_task(base: &WriterMainWindowTransient, _: &WriterMainWindowTransientMutation) -> Result<Box<dyn ArtifactEphemeralPreparationTask<WriterMainWindowTransient, WriterMainWindowTransientMutation>>, String> {
-    if base.engagement_input.capacity() > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Writer preserved engagement input exceeds retained capacity".into()); }
+    if base.engagement_input.capacity() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES { return Err("Writer preserved engagement input exceeds retained capacity".into()); }
     Ok(Box::new(WriterPreparation { bytes: ManuallyDrop::new(Vec::new()), reserved: false, checkpoint: ArtifactStoreOneItemCheckpoint::default() }))
 }
 

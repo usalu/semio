@@ -10,15 +10,15 @@
 //! there — this file's `validate_body` is called directly by diff constructors on their own
 //! ephemeral rep, never on a persisted snapshot.
 
-use crate::brep::engine::Aabb;
-use crate::brep::queries::bounding_volume::face_aabb;
-use crate::brep::queries::mass_properties;
-use crate::brep::representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, VertexId};
-use crate::brep::representation::curve::curve_ops;
-use crate::brep::representation::error::ValidationIssue;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::{Body, ReachSet};
-use crate::brep::representation::vector::Pnt3;
+use semio_framework_3d_brep_representation::contract::Aabb;
+use crate::bounding_volume::face_aabb;
+use crate::mass_properties;
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, VertexId};
+use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_representation::error::ValidationIssue;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::{Body, ReachSet};
+use semio_framework_3d_brep_representation::vector::Pnt3;
 
 #[cfg(test)]
 std::thread_local! { static LOOP_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
@@ -26,6 +26,8 @@ std::thread_local! { static LOOP_PROBES: std::cell::Cell<usize> = const { std::c
 std::thread_local! { static PCURVE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 #[cfg(test)]
 std::thread_local! { static TOLERANCE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
+#[cfg(test)]
+std::thread_local! { static EDGE_USE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 #[cfg(test)]
 std::thread_local! { static SAME_PARAMETER_SAMPLES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 
@@ -51,10 +53,10 @@ fn check_loop_pair(body: &Body, loop_id: LoopId, ring: &[CoedgeId], index: usize
 
 // #region 🔖️Geometry
 
-fn check_tolerance_pair(finer: String, finer_tol: crate::brep::representation::tolerance::Tol, coarser: String, coarser_tol: crate::brep::representation::tolerance::Tol, issues: &mut Vec<ValidationIssue>) {
+fn check_tolerance_pair(finer: String, finer_tol: semio_framework_3d_brep_representation::tolerance::Tol, coarser: String, coarser_tol: semio_framework_3d_brep_representation::tolerance::Tol, issues: &mut Vec<ValidationIssue>) {
     #[cfg(test)]
     TOLERANCE_PROBES.with(|probes| probes.set(probes.get() + 1));
-    if let Some((finer, coarser)) = crate::brep::representation::tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
+    if let Some((finer, coarser)) = semio_framework_3d_brep_representation::tolerance::check_containment(&finer, finer_tol, &coarser, coarser_tol) {
         issues.push(ValidationIssue { entity: finer.clone(), code: "tolerance-containment-violated", message: format!("{finer}'s tolerance exceeds its containing {coarser}'s") });
     }
 }
@@ -63,7 +65,7 @@ fn check_tolerance_pair(finer: String, finer_tol: crate::brep::representation::t
 /// not verify a coedge without one, so a missing p-curve is an ERROR here, not a skip (audit
 /// §6.12: "missing p-curves are skipped rather than rejected or repaired").
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &crate::brep::representation::topology::Coedge, issues: &mut Vec<ValidationIssue>) {
+fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &semio_framework_3d_brep_representation::topology::Coedge, issues: &mut Vec<ValidationIssue>) {
     #[cfg(test)]
     PCURVE_PROBES.with(|probes| probes.set(probes.get() + 1));
     if coedge.pcurve.is_none() {
@@ -74,8 +76,8 @@ fn check_missing_pcurve(coedge_id: CoedgeId, coedge: &crate::brep::representatio
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn same_parameter_deviation_at(
     surface: &Surface,
-    pcurve: &crate::brep::representation::curve::Curve2,
-    curve3: &crate::brep::representation::curve::Curve3,
+    pcurve: &semio_framework_3d_brep_representation::curve::Curve2,
+    curve3: &semio_framework_3d_brep_representation::curve::Curve3,
     prange: (f64, f64),
     range: (f64, f64),
     s: f64,
@@ -402,8 +404,8 @@ pub struct BodyValidationProgress {
 
 /// ⚖️ One shell whose signed volume the orientation phase accumulates face by face.
 struct ShellVolumeUnit {
-    solid: crate::brep::representation::arena::SolidId,
-    shell: crate::brep::representation::arena::ShellId,
+    solid: semio_framework_3d_brep_representation::arena::SolidId,
+    shell: semio_framework_3d_brep_representation::arena::ShellId,
     outer: bool,
     faces: Vec<FaceId>,
     /// ⚖️ `None` once any face refused to integrate — the same "skip this shell entirely" verdict
@@ -471,7 +473,7 @@ pub struct BodyValidationJob {
     units_total: usize,
     planning_stage: u8,
     planning_slot: usize,
-    planning_solid: Option<crate::brep::representation::arena::SolidId>,
+    planning_solid: Option<semio_framework_3d_brep_representation::arena::SolidId>,
     planning_shell: usize,
     planning_face: Option<usize>,
     live_coedges: usize,
@@ -525,7 +527,9 @@ impl BodyValidationJob {
         };
         if self.valence_coedge_slot < body.coedges.slot_count() {
             if let Some((_, coedge)) = body.coedges.slot_at(self.valence_coedge_slot) {
-                self.valence_uses += usize::from(crate::brep::representation::topology::coedge_uses_edge(coedge, edge));
+                #[cfg(test)]
+                EDGE_USE_PROBES.with(|probes| probes.set(probes.get() + 1));
+                self.valence_uses += usize::from(semio_framework_3d_brep_representation::topology::coedge_uses_edge(coedge, edge));
             }
             self.valence_coedge_slot += 1;
         } else {

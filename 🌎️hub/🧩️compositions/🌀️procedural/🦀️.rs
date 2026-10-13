@@ -133,5 +133,3 @@ pub fn plugin() -> Result<Plugin<ProceduralApps>, PluginAssemblyError> {
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
 
-#[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, ProceduralApps);

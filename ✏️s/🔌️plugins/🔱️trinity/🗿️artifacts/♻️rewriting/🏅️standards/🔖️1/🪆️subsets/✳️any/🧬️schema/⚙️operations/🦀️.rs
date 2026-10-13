@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::{RewritingSnapshot, TrinityRewritingError, REWRITE_RULE_SCHEMA};
-use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
 pub type RewriteRuleEnvelope = ArtifactEnvelope<RewritingSnapshot, RewriteRuleMutation>;
@@ -18,7 +18,7 @@ pub fn create_rewrite_rule_envelope(id: &str, state: RewritingSnapshot) -> Rewri
 /// catalog through `build_document_store_owners`, every standalone store goes through here.
 pub async fn new_rewrite_rule_store(envelope: RewriteRuleEnvelope, actor: protocol::ActorId) -> Result<OwnedRewriteRuleStore, store::VcsError> {
     let mut store = RewriteRuleStore::new(envelope, actor).await?;
-    store::install_unscheduled_catalog(&mut store, store::funded_bounded_artifact_store_owners::<RewritingSnapshot, RewriteRuleMutation>())?;
+    store::install_unscheduled_catalog(&mut store, store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<RewritingSnapshot, RewriteRuleMutation>())?;
     Ok(OwnedRewriteRuleStore(store))
 }
 

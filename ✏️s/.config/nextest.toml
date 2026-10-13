@@ -26,12 +26,12 @@ slow-timeout = { period = "600s", terminate-after = 1 }
 
 
 [[profile.quick.overrides]]
-filter = 'package(semio-s-plugin-cad-aec-building-energy)'
+filter = 'package(semio-s-plugin-cad-aec-energy)'
 slow-timeout = { period = "600s", terminate-after = 1 }
 
 
 [[profile.quick.overrides]]
-filter = 'package(semio-s-plugin-cad-aec-building-structure)'
+filter = 'package(semio-s-plugin-cad-aec-structure)'
 slow-timeout = { period = "600s", terminate-after = 1 }
 
 

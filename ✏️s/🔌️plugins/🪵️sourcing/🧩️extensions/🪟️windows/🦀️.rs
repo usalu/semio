@@ -11,7 +11,7 @@ const HOST_APP_ID: &str = "sourcing-curation";
 // plain sync fn). `.mode`/`.contributes_topic` are still `async fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
 // bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
-fn bundle() -> ExtensionBundle {
+pub fn bundle() -> ExtensionBundle {
     let module = WindowsModule;
     let bundle = ExtensionBundle::new(EXTENSION_ID, "Sourcing Module Windows", env!("CARGO_PKG_VERSION")).extends("sourcing").depends_on("sourcing", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
@@ -30,7 +30,6 @@ fn bundle() -> ExtensionBundle {
     )
 }
 
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 //#endregion 🔖️Bundle
 
 //#region 🔖️Tests

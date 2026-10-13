@@ -21,8 +21,8 @@
 //!   fabricated values.
 //! - No normals/uvs/materials/textures — LAS has none of these concepts.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba};
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology, STDIO_SEMIOMESH_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_las::LasSnapshot;
 

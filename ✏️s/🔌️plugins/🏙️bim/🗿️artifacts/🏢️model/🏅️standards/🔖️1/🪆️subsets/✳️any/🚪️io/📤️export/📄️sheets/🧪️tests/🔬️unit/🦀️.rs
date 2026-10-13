@@ -41,7 +41,7 @@ fn the_svg_of_a_sheet_exists_for_every_sheet_of_the_model_and_for_no_other() {
 
 #[test]
 fn the_pdf_of_the_set_has_one_page_per_sheet_and_the_pdf_of_one_sheet_one_page() {
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
     let model = house_with_sheets();
     let inferred = inferred(&model);
     let set = decode_pdf(&sheets_pdf(&model, &inferred, None, &labels()).expect("the set writes")).expect("the set reads back");

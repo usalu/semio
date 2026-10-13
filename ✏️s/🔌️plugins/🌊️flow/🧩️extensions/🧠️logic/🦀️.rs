@@ -104,8 +104,7 @@ mod tests;
 
 // #region 🔖️ExtensionGuest
 /// 🧩️ Runtime-installable flow extension bundle for `logic`.
-#[cfg(feature = "component-guest")]
-mod extension_guest {
+pub mod extension_guest {
     use super::{extension_manifest_json, module_registry};
     use flow_extension_sdk::{flow_extension_topic_contribution};
     use semio_framework::{Fault, FaultCode, FaultOrigin};
@@ -121,7 +120,7 @@ mod extension_guest {
     // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's
     // path_scope); bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request.
     // See R9.
-    fn bundle() -> ExtensionBundle {
+    pub fn bundle() -> ExtensionBundle {
         let manifest_json = extension_manifest_json();
         let flow_topic = flow_extension_topic_contribution(FLOW_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "logic", &manifest_json);
         let procedural3d_topic = flow_extension_topic_contribution(PROCEDURAL3D_APP_ID, EXTENSION_ID, EXTENSION_LABEL, "logic", &manifest_json);
@@ -135,6 +134,5 @@ mod extension_guest {
     #[cfg(test)]
     include!("🧪️tests/🔬️extension-guest-standalone/🦀️.rs");
 
-    semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 }
 // #endregion 🔖️ExtensionGuest

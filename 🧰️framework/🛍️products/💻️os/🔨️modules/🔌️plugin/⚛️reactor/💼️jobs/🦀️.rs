@@ -18,6 +18,8 @@ mod infer;
 mod migrate;
 #[path = "🧬️mutation-plan/🦀️.rs"]
 mod mutation_plan;
+#[path = "🏛️reserved/🦀️.rs"]
+pub(crate) mod reserved;
 
 //#region 🔖️PublicTypes
 
@@ -43,7 +45,7 @@ pub const JOB_KIND_MIGRATE: &str = "semio.migrate";
 pub const BUILTIN_JOB_KINDS: [&str; 5] = [JOB_KIND_IO_RUN, JOB_KIND_IO_SNIFF, JOB_KIND_INFER, JOB_KIND_MUTATION_PLAN, JOB_KIND_MIGRATE];
 
 /// ⛽️ Plain-Rust mirror of `jobs.wit`'s `record job-budget` — this module is NOT gated to
-/// `component-guest`/wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
+/// wasm32-wasip2 (it must compile and unit-test natively), so it cannot name the
 /// WIT-generated type directly; the WIT boundary conversion lives in the (leased) `JobsGuest` impl
 /// in `🔌️plugin/🦀️.rs`, field-for-field.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, serde::Deserialize, FromValue, serde::Serialize, ToValue)]
@@ -120,9 +122,9 @@ pub fn admit_original_job<T:BoundedJob+'static>(input:&mut Option<Vec<u8>>,resto
 
 /// 🔎️ One phase body of a builtin two-phase machine. Synchronous on purpose: a bounded step may
 /// not suspend, so the framework call it wraps is settled inside the step by `settle_in_step`.
-pub(crate) type BuiltinPhaseFn = fn(&[u8]) -> Result<Vec<u8>, semio_framework::Fault>;
+type BuiltinPhaseFn = fn(&[u8]) -> Result<Vec<u8>, semio_framework::Fault>;
 
-pub(crate) enum BuiltinExecuteFn {
+enum BuiltinExecuteFn {
     Pure(BuiltinPhaseFn),
     OriginalIo(fn(&[u8], &mut IoRunControl<'_, '_>, &mut SqliteSnapshotControl<'_>) -> Result<Vec<u8>, semio_framework::Fault>),
 }
@@ -134,10 +136,11 @@ pub(crate) enum BuiltinExecuteFn {
 
 #[derive(Clone,Copy)]
 struct RegisteredJobKind {kind:&'static str,factory:BoundedJobFactory}
-const REGISTERED_JOB_KINDS:usize=super::requests::REQUEST_SLOTS;
+const REGISTERED_JOB_KINDS:usize=crate::host::requests::REQUEST_SLOTS;
 crate::component_persistent_local! {
     static KIND_REGISTRY: RefCell<[Option<RegisteredJobKind>;REGISTERED_JOB_KINDS]> = RefCell::new([const {None};REGISTERED_JOB_KINDS]);
     static KIND_REGISTRY_EPOCH: Cell<u64> = Cell::new(1);
+    static REGISTERED_KIND_COUNT: Cell<usize> = Cell::new(0);
 }
 
 fn builtin_factory(kind:&str)->Option<BoundedJobFactory>{Some(match kind{
@@ -146,13 +149,13 @@ fn builtin_factory(kind:&str)->Option<BoundedJobFactory>{Some(match kind{
     JOB_KIND_INFER=>BoundedJobFactory{admit:infer::job_infer,demands:infer::job_infer_demands},
     JOB_KIND_MUTATION_PLAN=>BoundedJobFactory{admit:mutation_plan::job_mutation_plan,demands:two_phase_job_demands},
     JOB_KIND_MIGRATE=>BoundedJobFactory{admit:migrate::job_migrate,demands:two_phase_job_demands},
-    semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND=>BoundedJobFactory{admit:crate::app::framework_reserved_job_factory,demands:crate::app::framework_reserved_job_demands},
+    semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND=>BoundedJobFactory{admit:reserved::framework_reserved_job_factory,demands:reserved::framework_reserved_job_demands},
     _=>return None,
 })}
 
 fn kind_at(index:usize)->Option<RegisteredJobKind>{
-    if index<REGISTERED_JOB_KINDS{return KIND_REGISTRY.with(|registry|registry.borrow()[index])}
-    let kind=match index-REGISTERED_JOB_KINDS{0=>JOB_KIND_IO_RUN,1=>JOB_KIND_IO_SNIFF,2=>JOB_KIND_INFER,3=>JOB_KIND_MUTATION_PLAN,4=>JOB_KIND_MIGRATE,5=>semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND,_=>return None};
+    let count=REGISTERED_KIND_COUNT.with(Cell::get);if index<count{return KIND_REGISTRY.with(|registry|registry.borrow()[index])}
+    let kind=match index-count{0=>JOB_KIND_IO_RUN,1=>JOB_KIND_IO_SNIFF,2=>JOB_KIND_INFER,3=>JOB_KIND_MUTATION_PLAN,4=>JOB_KIND_MIGRATE,5=>semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND,_=>return None};
     Some(RegisteredJobKind{kind,factory:builtin_factory(kind).unwrap()})
 }
 
@@ -167,7 +170,7 @@ impl OriginalJobKindLookup{
         let demand=self.demand(source);let grant=cx.retained_grant();if cx.is_cancelled()||grant.maximum_items<demand.maximum_items||grant.maximum_copy_bytes<demand.maximum_copy_bytes||grant.maximum_depth<demand.maximum_depth{return Ok(OriginalJobKindLookupStep::Pending)}
         let epoch=KIND_REGISTRY_EPOCH.with(Cell::get);
         if self.epoch!=epoch{self.epoch=epoch;self.index=0;self.candidate=None;self.offset=0;self.left=None;cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)}
-        let Some(candidate)=self.candidate else{if self.index>=REGISTERED_JOB_KINDS+6{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Missing)}self.candidate=kind_at(self.index);if self.candidate.is_none(){self.index+=1}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)};
+        let Some(candidate)=self.candidate else{if self.index>=REGISTERED_KIND_COUNT.with(Cell::get)+6{cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Missing)}self.candidate=kind_at(self.index);if self.candidate.is_none(){self.index+=1}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;return Ok(OriginalJobKindLookupStep::Pending)};
         if self.offset==source.len()||self.offset==candidate.kind.len(){cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;if self.offset==source.len()&&self.offset==candidate.kind.len(){return Ok(OriginalJobKindLookupStep::Found(candidate))}self.index+=1;self.candidate=None;self.offset=0;self.left=None;return Ok(OriginalJobKindLookupStep::Pending)}
         if let Some(left)=self.left.take(){let right=candidate.kind.as_bytes()[self.offset];if left==right{self.offset+=1}else{self.index+=1;self.candidate=None;self.offset=0}cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?}else{self.left=Some(source.as_bytes()[self.offset]);cx.consume_retained(RetainedCloneProgress{copied_items:1,copied_bytes:1,..Default::default()})?}
         Ok(OriginalJobKindLookupStep::Pending)
@@ -179,8 +182,8 @@ pub fn register_bounded_job_kind(kind:&'static str,factory:BoundedJobFactory)->b
     let Some(next_epoch)=KIND_REGISTRY_EPOCH.with(Cell::get).checked_add(1)else{return false};
     KIND_REGISTRY.with(|registry|{let mut registry=registry.borrow_mut();
         if let Some(entry)=registry.iter_mut().flatten().find(|entry|entry.kind==kind){entry.factory=factory;KIND_REGISTRY_EPOCH.with(|epoch|epoch.set(next_epoch));return true}
-        let Some(slot)=registry.iter_mut().find(|slot|slot.is_none())else{return false};
-        *slot=Some(RegisteredJobKind{kind,factory});KIND_REGISTRY_EPOCH.with(|epoch|epoch.set(next_epoch));true
+        let count=REGISTERED_KIND_COUNT.with(Cell::get);let Some(slot)=registry.get_mut(count)else{return false};
+        *slot=Some(RegisteredJobKind{kind,factory});REGISTERED_KIND_COUNT.with(|size|size.set(count+1));KIND_REGISTRY_EPOCH.with(|epoch|epoch.set(next_epoch));true
     })
 }
 
@@ -217,7 +220,7 @@ struct JobSlot {
     cancelled:bool,
     cancellation_fault_started:bool,
 }
-const JOB_SLOTS:usize=super::requests::REQUEST_SLOTS;
+const JOB_SLOTS:usize=crate::host::requests::REQUEST_SLOTS;
 crate::component_persistent_local! {
     static JOBS: RefCell<[Option<JobSlot>;JOB_SLOTS]> = RefCell::new([const {None};JOB_SLOTS]);
 }
@@ -272,7 +275,7 @@ pub async fn start_job(admission:&mut Option<OriginalJobAdmission>,cx:&mut semio
 /// 🛑️ Cancellation signals the same source and owner; only funded close turns remove its slot.
 pub async fn cancel_job(job:u64){JOBS.with(|jobs|{if let Some(slot)=jobs.borrow_mut().iter_mut().flatten().find(|slot|slot.job==job){slot.cancelled=true;if let Some(JobBody::Bounded(owner))=&mut slot.body{owner.cancel()}}});}
 
-pub(crate) fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
+fn close_original<T:semio_framework_value::retirement::RetireOwned>(source:&mut Option<T>,closing:&mut Option<semio_framework_value::retirement::controlled::ControlledRetirement<T>>,cx:&mut semio_framework_job::StepContext<'_>)->Result<bool,semio_framework_value::ValueError>{
     use semio_framework_value::{RetainedCloneProgress,retirement::controlled::ControlledRetirement};
     let grant=cx.retained_grant();if source.is_none()&&closing.is_none(){return Ok(true)}if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}
     if let Some(original)=source.take(){
@@ -348,7 +351,7 @@ pub mod abi {
     }
 
     /// 🚀️ Admits one registered job from its original request; a denied admission is a typed fault, never a silent drop.
-    pub fn start<PA: crate::app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, kind: String, input: Vec<u8>) -> Result<(), semio_framework::Fault> {
+    pub fn start<PA: crate::plugin_app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, kind: String, input: Vec<u8>) -> Result<(), semio_framework::Fault> {
         let grant = runtime.mounted_owner_policy().preparation;
         let mut admission = Some(OriginalJobAdmission { job, kind, input: Some(input), checkpoint: None });
         let mut sequence = 0;
@@ -363,7 +366,7 @@ pub mod abi {
     }
 
     /// ▶️ Runs one bounded state action of an admitted job under the funded caller context.
-    pub fn step<PA: crate::app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, budget: JobBudget) -> Result<JobStep, semio_framework::Fault> {
+    pub fn step<PA: crate::plugin_app::PluginApp + 'static>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, job: u64, budget: JobBudget) -> Result<JobStep, semio_framework::Fault> {
         let policy = runtime.mounted_owner_policy().preparation;
         let now_us = semio_framework_job::default_now_us().unwrap_or(0);
         let deadline_us = now_us.saturating_add(u64::from(budget.deadline_ms).saturating_mul(1000));
@@ -458,16 +461,16 @@ fn settle_in_step(fault_prefix: &str, future: impl Future<Output = Result<Vec<u8
 /// restore. Both phases independently re-read `input` from scratch (never threading a decoded value
 /// across the step boundary) — a second cheap parse is harmless and keeps `restore` correct without
 /// a second, richer checkpoint payload.
-pub(crate) const PHASE_DECODED: &[u8] = b"phase.decoded";
+const PHASE_DECODED: &[u8] = b"phase.decoded";
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub(crate) enum TwoPhaseState {
+enum TwoPhaseState {
     Decode,
     Execute,
     Complete,
 }
 
-pub(crate) struct TwoPhaseBoundedJob {
+struct TwoPhaseBoundedJob {
     fault_prefix: &'static str,
     state: TwoPhaseState,
     input: Vec<u8>,
@@ -486,7 +489,7 @@ pub(crate) struct TwoPhaseBoundedJob {
 impl TwoPhaseBoundedJob {
     /// 🎟️ Admits the machine, starting at `Execute` when the restore bytes say this kind already
     /// reported `PHASE_DECODED` before the actor was torn down.
-    pub(crate) fn admit(fault_prefix: &'static str, input: Vec<u8>, restored: Option<Vec<u8>>, decode: BuiltinPhaseFn, execute: BuiltinExecuteFn) -> Self {
+    fn admit(fault_prefix: &'static str, input: Vec<u8>, restored: Option<Vec<u8>>, decode: BuiltinPhaseFn, execute: BuiltinExecuteFn) -> Self {
         let checkpoint_complete=restored.is_none();
         Self { fault_prefix, state:TwoPhaseState::Decode, input, restored, checkpoint_scan:0,checkpoint_complete,failure:None,aborted_output:None,close_payload:None,source_close:None,decode, execute, cancelled: false }
     }

@@ -102,7 +102,7 @@ where
 
 pub(super) fn assert_codecs<S, M, L>(operation: fn(i32) -> M)
 where
-    S: Clone + Debug + PartialEq + ToValue + FromValue + store::ArtifactDsl + store::ArtifactPack,
+    S: Clone + Debug + PartialEq + ToValue + FromValue + store::os_store::serialization::ArtifactDsl + store::os_store::serialization::ArtifactPack,
     M: Mutation<S> + Debug + PartialEq + OpText + OpBinary,
     M::Diff: ToValue + FromValue,
     L: ToValue + FromValue,
@@ -173,7 +173,7 @@ where
 
 #[test]
 fn strict_profile_is_an_io_rule_not_a_mutation_constraint() {
-    use crate::app::declarations::fixture::{Std1StrictSnapshot, StrictFromAny};
+    use crate::declarations::fixture::{Std1StrictSnapshot, StrictFromAny};
     let check = <StrictFromAny as semio_framework_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot>>::CONFORMANCE.expect("strict profile check");
     for row in cases()["conformance"].as_array().expect("conformance cases") {
         let snapshot = Std1StrictSnapshot { value: i32_value(&row["value"]) };

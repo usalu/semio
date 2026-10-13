@@ -1,5 +1,5 @@
 use super::*;
-use store::{BackboneChannelPort, BackboneMessage, OpBinary};
+use store::{os_store::backbone::BackboneChannelPort, os_store::backbone::BackboneMessage, OpBinary};
 
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
@@ -16,12 +16,12 @@ fn document_backbone_op_binary_is_exact_canonical_and_bounded() {
     for (message, expected, hot) in rows {
         let encoded = message.encode_op().expect("canonical backbone message encodes");
         assert_eq!(hex(&encoded), expected);
-        assert_eq!(store::decode_backbone_message_exact(&encoded).expect("exact backbone message decodes"), message);
-        assert_eq!(store::decode_hot_backbone_message_exact(&encoded).is_ok(), hot);
+        assert_eq!(store::os_store::backbone::decode_backbone_message_exact(&encoded).expect("exact backbone message decodes"), message);
+        assert_eq!(store::os_store::backbone::decode_hot_backbone_message_exact(&encoded).is_ok(), hot);
     }
     for hostile in ["", "00020001000c00", "01030001000c00", "0182000001000c00", "010201ff01000c010600", "01020000", "01020001010c00", "01020001000800", "01020001000c0000"] {
         let bytes = (0..hostile.len()).step_by(2).map(|index| u8::from_str_radix(&hostile[index..index + 2], 16).expect("hostile hex")).collect::<Vec<_>>();
-        assert!(store::decode_backbone_message_exact(&bytes).is_err(), "hostile {hostile} must be refused");
+        assert!(store::os_store::backbone::decode_backbone_message_exact(&bytes).is_err(), "hostile {hostile} must be refused");
     }
 }
 
@@ -32,7 +32,7 @@ async fn document_backbone_binding_reducer_preserves_generation_and_live_owner()
     assert_eq!(zero.instance_id, 0);
     assert_eq!(DocumentBackboneBindingReceiptV1::bound(&zero).instance_id, 0);
     let uri = "actor://v1:7:3:space-amap";
-    let (port, owner) = store::ActorBackboneChannelOwner::pair(uri);
+    let (port, owner) = store::os_store::backbone::ActorBackboneChannelOwner::pair(uri);
     let message = BackboneMessage::Ack { op_ids: Vec::new() }.encode_op().expect("hot backbone acknowledgment encodes");
     owner.push_inbound(uri, &message).expect("live binding admits an addressed message");
     port.send(uri, &message).await.expect("live binding retains one pending acknowledgment");

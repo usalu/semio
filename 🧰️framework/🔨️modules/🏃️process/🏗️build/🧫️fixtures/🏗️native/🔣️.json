@@ -1,0 +1,61 @@
+{
+  "modes": [
+    {
+      "mode": "prototype",
+      "nativeProfile": "prototype",
+      "wasmProfile": "wasm-prototype",
+      "configuration": "Debug",
+      "optLevel": "0"
+    },
+    {
+      "mode": "release",
+      "nativeProfile": "release",
+      "wasmProfile": "wasm-release",
+      "configuration": "Release",
+      "optLevel": "3"
+    }
+  ],
+  "platforms": [
+    "linux",
+    "macos",
+    "windows"
+  ],
+  "workspaces": [
+    "Cargo.toml",
+    "🧰️framework/Cargo.toml",
+    "🌎️hub/Cargo.toml",
+    "🎓️teaching/Cargo.toml"
+  ],
+  "capacity": {
+    "events": [
+      "first-held",
+      "second-waiting",
+      "first-released",
+      "second-held"
+    ],
+    "cancelled": "AbortError"
+  },
+  "compiler": {
+    "source": "#include <iostream>\nint main() { std::cout << \"native-mode-runtime-ok\"; }\n",
+    "stdout": "native-mode-runtime-ok"
+  },
+  "cmakeEntry": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏗️build/🛠️cmake/📜️script.ts",
+  "cppTargets": [
+    "cpp-setup",
+    "cpp-configure",
+    "cpp-build",
+    "cpp-test"
+  ],
+  "cargo": {
+    "name": "native_mode",
+    "source": "fn main() { print!(\"cargo-mode-runtime-ok\"); }",
+    "stdout": "cargo-mode-runtime-ok"
+  },
+  "managed": {
+    "primary": "#ff344f",
+    "assemblyType": "Semio.Framework.Ui.Styling.Palette",
+    "dotnet": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🔷️dotnet",
+    "python": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
+    "wheelModule": "🎨️styling/🐍️.py"
+  }
+}

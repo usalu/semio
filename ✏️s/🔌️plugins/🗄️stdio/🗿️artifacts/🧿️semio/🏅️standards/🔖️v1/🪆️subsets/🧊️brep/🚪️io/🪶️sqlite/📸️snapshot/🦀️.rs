@@ -1,18 +1,15 @@
 //! 🧊️ Full typed BRep topology, analytic geometry, p-curves and NURBS parameter sequences.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-#[cfg(test)] use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
-#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::artifact::{RowIndex, reconstruct_text};
-use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot,BrepVertex,BrepEdge,BrepLoop,BrepLoopEdge,BrepCoedge,BrepFace,BrepShell,BrepShellFace,BrepSolid,BrepSolidShell,BrepCurve,BrepCurve2,BrepSurface};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
-#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::transfer;
+use crate::schema::snapshot::{SemioBrepSnapshot, BrepVertex, BrepEdge, BrepLoop, BrepLoopEdge, BrepCoedge, BrepFace, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepCurve, BrepCurve2, BrepSurface};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;
 fn unsigned64(mut value:u64,buffer:&mut[u8;20])->&str{let mut start=buffer.len();loop{start-=1;buffer[start]=b'0'+(value%10)as u8;value/=10;if value==0{break}}std::str::from_utf8(&buffer[start..]).expect("decimal digits are UTF8")}
 /// 🫳️ Visits every actual BRep relational field without cloning geometry or topology.
-pub(crate)fn visit_rows(snapshot:&SemioBrepSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let mut buffer=[0u8;20];let label=unsigned64(snapshot.next_label,&mut buffer);p.insert_key_float("semio_brep_document",1,&[Cell::Text(&snapshot.schema),Cell::Text(label)],float_columns("semio_brep_document"))?;
+pub fn visit_rows(snapshot:&SemioBrepSnapshot,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{let mut buffer=[0u8;20];let label=unsigned64(snapshot.next_label,&mut buffer);p.insert_key_float("semio_brep_document",1,&[Cell::Text(&snapshot.schema),Cell::Text(label)],float_columns("semio_brep_document"))?;
 for(ordinal,v)in snapshot.vertices.iter().enumerate(){p.insert_key_float("semio_brep_vertex",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&v.id),Cell::Real(v.point.x),Cell::Real(v.point.y),Cell::Real(v.point.z),Cell::Real(v.tol)],float_columns("semio_brep_vertex"))?;}
 for(ordinal,e)in snapshot.edges.iter().enumerate(){let curve=project_curve3(&e.curve,p)?;p.insert_key_float("semio_brep_edge",number(ordinal+1)?,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&e.id),Cell::Text(&e.start_vertex),Cell::Text(&e.end_vertex),Cell::Integer(curve),Cell::Real(e.tol)],float_columns("semio_brep_edge"))?;}
 for(ordinal,l)in snapshot.loops.iter().enumerate(){let id=number(ordinal+1)?;p.insert_key_float("semio_brep_loop",id,&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&l.id)],float_columns("semio_brep_loop"))?;for(ordinal,e)in l.edges.iter().enumerate(){p.insert_float("semio_brep_loop_edge",&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Text(&e.edge),Cell::Integer(i64::from(e.orientation))],float_columns("semio_brep_loop_edge"))?;}}
@@ -46,7 +43,7 @@ fn brep_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::Inva
 /// 🛂️ Rejects contradictory analytic fields outside the actual selected variant.
 fn shape(row:SqliteRow<'_>,active:&[usize])->Result<(),ValueError>{for index in 2..row.values.len(){if !active.contains(&index)&&!row.is_null(index)?{return Err(brep_invalid("contradictory BRep analytic geometry fields"))}}Ok(())}
 impl ArtifactSqliteSnapshot for SemioBrepSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -87,18 +84,15 @@ fn native_nurbs(points:usize,width:usize,weights:usize,knots:usize,b:&mut Bound<
 
 impl SemioBrepSnapshot {
     /// 🪶️ Projects the owned subset into its declared relational writer while preserving refusals.
-    pub fn project_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(c.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,c,|out|visit_rows(self,out))}
+    pub fn project_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(c.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,c,|out|visit_rows(self,out))}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

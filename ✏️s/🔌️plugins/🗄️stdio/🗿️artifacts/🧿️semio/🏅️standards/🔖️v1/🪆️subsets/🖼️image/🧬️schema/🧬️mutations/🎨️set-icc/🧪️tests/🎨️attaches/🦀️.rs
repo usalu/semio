@@ -6,11 +6,11 @@
 //! `null` = cleared, bytes = set. This case is deliberately the SET arm: its inner value is a real
 //! array, so the committed diff survives a JSON round trip (the `null`/clear arm would not, since
 //! `Option<Option<T>>` decodes `null` back to the outer `None`).
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_icc;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_icc;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🎨️set-icc/🎨️attaches/📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +41,7 @@ async fn attaches_the_profile_bytes_verbatim() {
     assert_eq!(produced.icc.as_deref(), Some([0u8, 1, 2, 3].as_slice()), "the profile bytes must be stored byte-for-byte, never re-encoded");
     assert_eq!(produced.frames, base.frames, "attaching a profile must not touch a frame");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -54,9 +54,9 @@ async fn the_undo_set_icc_clears_the_profile_again() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetIcc(set_icc::SetIcc { icc: None })], "the undo of an attach is a set-icc carrying BASE's own None — the mutation payload is the FINAL value, not a tri-state");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-icc/attaches-an-icc-profile-where-there-was-none: the undo did not restore the before-snapshot");
 }

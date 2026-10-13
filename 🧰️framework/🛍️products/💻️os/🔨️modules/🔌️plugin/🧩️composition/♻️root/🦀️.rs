@@ -1,5 +1,5 @@
 /// 📐️ Quotes original child custody, disjoint borrowed retainers, or a separate terminal frame.
-fn original_child_root_retirement_demands<M: SpaceMember>(registry: &ArtifactFixedRegistry<ChildContentRetirement>, children: &ChildMemberRegistry<M>, retiring: Option<&ArtifactFixedRegistry<ChildMemberRetirement<M>>>, cursor: usize, body: usize, closing: bool) -> Result<Option<RetirementDemand>, ValueError> {
+pub(crate) fn original_child_root_retirement_demands<M: SpaceMember>(registry: &ArtifactFixedRegistry<ChildContentRetirement>, children: &ChildMemberRegistry<M>, retiring: Option<&ArtifactFixedRegistry<ChildMemberRetirement<M>>>, cursor: usize, body: usize, closing: bool) -> Result<Option<RetirementDemand>, ValueError> {
     let Some((_, generation)) = registry.next_id_from(cursor) else {
         let bytes = registry.empty_backing_byte_demand().unwrap_or(0);
         return Ok((closing && bytes != 0).then_some(RetirementDemand { copy_bytes: size_of::<ArtifactFixedRegistry<ChildContentRetirement>>(), release_bytes: bytes, depth: 1, ..Default::default() }));
@@ -14,7 +14,7 @@ fn original_child_root_retirement_demands<M: SpaceMember>(registry: &ArtifactFix
 }
 
 /// 🌳️ Advances one paid original child unit, retaining registry custody after child completion.
-fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut ArtifactFixedRegistry<ChildContentRetirement>, children: &mut ChildMemberRegistry<M>, retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, current: &ChildContentView, member: Option<&ChildContentView>, review: Option<&ChildContentView>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
+pub(crate) fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut ArtifactFixedRegistry<ChildContentRetirement>, children: &mut ChildMemberRegistry<M>, retiring: Option<&mut ArtifactFixedRegistry<ChildMemberRetirement<M>>>, current: &ChildContentView, member: Option<&ChildContentView>, review: Option<&ChildContentView>, cursor: &mut usize, grant: RetainedCloneGrant, closing: bool) -> Result<RetainedCloneStep, Fault> {
     let Some(demand) = original_child_root_retirement_demands(registry, children, retiring.as_deref(), *cursor, grant.maximum_copy_bytes, closing).map_err(|error| Fault::from(error.into_message()))? else { return Ok(RetainedCloneStep::Complete(Default::default())); };
     if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(RetainedCloneStep::Progress(Default::default())); }
     let Some((index, generation)) = registry.next_id_from(*cursor) else {
@@ -32,7 +32,7 @@ fn advance_original_child_root_retirement<M: SpaceMember>(registry: &mut Artifac
     }
     let reserved = ChildContentBorrowedOwners::copy_reservation();
     let child_grant = RetainedCloneGrant { maximum_copy_bytes:grant.maximum_copy_bytes-reserved, maximum_depth:grant.maximum_depth-1, ..grant };
-    let (retirement, owners) = registry.original_content_step_owners(generation, member, review).expect("original occupied child registry supplies disjoint retainers");
+    let (retirement, owners) = original_content_step_owners(registry, generation, member, review).expect("original occupied child registry supplies disjoint retainers");
     let step = retirement.close_step(children, retiring, current, &owners, child_grant)?;
     let step = match step { RetainedCloneStep::Complete(progress)=>RetainedCloneStep::Progress(progress), step=>step };
     let child = step.progress();

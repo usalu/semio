@@ -31,7 +31,7 @@
           "projects": [
             "@semio-tech/framework-plugin-host-test-component"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ]
     },
@@ -99,7 +99,7 @@
           "projects": [
             "@semio-tech/framework-plugin-host-test-component"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ],
       "cache": false
@@ -115,7 +115,7 @@
           "projects": [
             "@semio-tech/framework-plugin-host-test-component"
           ],
-          "target": "component-dev"
+          "target": "component"
         }
       ],
       "cache": false

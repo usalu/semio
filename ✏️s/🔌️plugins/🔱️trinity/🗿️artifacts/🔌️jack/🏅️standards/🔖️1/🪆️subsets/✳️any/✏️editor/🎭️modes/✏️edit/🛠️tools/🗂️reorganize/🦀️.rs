@@ -8,8 +8,8 @@ use semio_framework_graph_layout_run::{layout_run_definition, layout_run_entity,
 use semio_framework_plugin::{Fault, FaultCode, FaultOrigin, ToolDefinition, ToolRunJob};
 use semio_framework_tool_run::{JobKindId, ToolRunIdentity};
 use semio_framework_ui_locale::LocalizedLabel;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeSet, HashMap};
 
 //#region 🔖️Constants
@@ -69,9 +69,9 @@ pub fn layout_graph(content: &SemioGraphSnapshot) -> JackLayoutGraph {
 //#region 🔖️Job
 /// ✍️ Encodes one layout move as the `content` child's absolute graph `move-node` op.
 pub fn move_encoder(node_ids: Vec<String>) -> impl LayoutRunOpEncoder + 'static {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::move_node::MoveNode;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode;
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
     move |node: u32, _entity: u64, position: LayoutRunPoint| {
         let leaf = SemioGraphMutation::MoveNode(MoveNode { id: GraphNodeId::new(node_ids[node as usize].clone()), new_position: SemioPoint2 { x: position.x, y: position.y } });
         protocol::OpBinary::encode_op(&leaf).map_err(|error| LayoutRunEncodeError(format!("{error:?}")))

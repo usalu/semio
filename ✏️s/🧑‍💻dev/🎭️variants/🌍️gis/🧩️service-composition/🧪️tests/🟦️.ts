@@ -1043,8 +1043,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         scope: { spaceId: "studio-1", documentId: "doc-1" },
         descriptorDigestV1: "5".repeat(64),
         catalog: { generationId: "6".repeat(64) },
-        package: { pluginId: "s.test", packageId: "s.test.codec", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64), executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
-        component: { sha256: "1".repeat(64), blake3: "2".repeat(64), byteLength: 1 },
+        package: { pluginId: "test-plugin", packageId: "semio:test-plugin", version: "1", componentSha256: "1".repeat(64), componentBlake3: "2".repeat(64), descriptorByteSha256: "3".repeat(64), executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 }, componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "test-plugin", packageId: "semio:test-plugin", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: "1".repeat(64), wasmBytes: 4096, semanticDescriptorSha256: "3".repeat(64), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "a".repeat(64), provenanceSha256: "b".repeat(64) } },
+        component: { sha256: "1".repeat(64), blake3: "2".repeat(64), byteLength: 4096 },
         descriptor: { sha256: "3".repeat(64), byteLength: 1 },
         browserActor: { kind: "none" },
         artifact: { kind: "test", schema: "demo/v1", packSchemaHash: "4".repeat(64) },
@@ -2713,8 +2713,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         scope: { spaceId: SPACE, documentId: DOCUMENT },
         descriptorDigestV1: HASH,
         catalog: { generationId: HASH },
-        package: { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", componentSha256: HASH, componentBlake3: HASH, descriptorByteSha256: HASH, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
-        component: { sha256: HASH, blake3: HASH, byteLength: 1 },
+        package: { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", componentSha256: HASH, componentBlake3: HASH, descriptorByteSha256: HASH, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 }, componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "gis", packageId: "semio:gis", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: HASH, wasmBytes: 4096, semanticDescriptorSha256: HASH, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "a".repeat(64), provenanceSha256: "b".repeat(64) } },
+        component: { sha256: HASH, blake3: HASH, byteLength: 4096 },
         descriptor: { sha256: HASH, byteLength: 1 },
         browserActor: {
           kind: "closed-browser-actor",
@@ -3700,8 +3700,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         scope: { spaceId: binding.spaceId, documentId: state.config.documentId },
         descriptorDigestV1: digest,
         catalog: { generationId: digest },
-        package: { pluginId: "demo", packageId: "semio:demo", version: "0.1.0", componentSha256: digest, componentBlake3: digest, descriptorByteSha256: digest, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
-        component: { sha256: digest, blake3: digest, byteLength: 1 },
+        package: { pluginId: "demo", packageId: "semio:demo", version: "0.1.0", componentSha256: digest, componentBlake3: digest, descriptorByteSha256: digest, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 }, componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "demo", packageId: "semio:demo", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: digest, wasmBytes: 4096, semanticDescriptorSha256: digest, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "a".repeat(64), provenanceSha256: "b".repeat(64) } },
+        component: { sha256: digest, blake3: digest, byteLength: 4096 },
         descriptor: { sha256: digest, byteLength: 1 },
         browserActor: {
           kind: "closed-browser-actor",
@@ -4825,7 +4825,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         }
       };
       const guest = decodePackValue(descriptor) as Record<string, any>;
-      for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
       try {
         (globalThis as unknown as { WebSocket: unknown }).WebSocket = FakeHubWebSocket;
         for (const row of corpus.cases) {
@@ -5156,7 +5155,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
       const visibleViews: Record<string, unknown>[] = [];
       let panelRefreshes = 0;
-      for (const key of Object.keys(guest.hashes)) guest.hashes[key] = "";
       const received = new Uint8Array(pack.byteLength + spr.byteLength),
         pageIndexes: number[] = [],
         statuses: Extract<BackboneWorkerResponse, { kind: "execution-target-status" }>[] = [],
@@ -5463,7 +5461,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       fields.scope = { spaceId: binding.spaceId, documentId };
       fields.grant = { ...fields.grant, write: true };
       fields.surface = { ...fields.surface, role: "editor" };
-      fields.package = { ...fields.package, descriptorByteSha256 };
+      fields.package = { ...fields.package, descriptorByteSha256, componentReceipt: { ...fields.package.componentReceipt, semanticDescriptorSha256: descriptorByteSha256 } };
       fields.descriptor = { sha256: descriptorByteSha256, byteLength: descriptor.byteLength };
       // 🧭️ Only the closed-browser-actor variant of the lease carries a source descriptor digest; the
       // `{ kind: "none" }` variant has no such field to rewrite.

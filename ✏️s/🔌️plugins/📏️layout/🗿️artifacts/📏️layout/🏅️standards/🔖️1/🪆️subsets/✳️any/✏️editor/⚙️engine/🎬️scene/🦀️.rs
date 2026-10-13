@@ -324,8 +324,8 @@ fn raw_drawing_labels(doc: &LayoutSnapshot) -> Vec<DrawingLabel> {
     labels
 }
 
-fn collect_drawing_text(node: &semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, labels: &mut Vec<DrawingLabel>) {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
+fn collect_drawing_text(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, labels: &mut Vec<DrawingLabel>) {
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
     match node {
         DrawNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;
@@ -450,8 +450,8 @@ fn raw_drawing_rasters(doc: &LayoutSnapshot) -> Vec<DrawingRaster> {
     rasters
 }
 
-fn collect_drawing_rasters(node: &semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, rasters: &mut Vec<DrawingRaster>) {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode;
+fn collect_drawing_rasters(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, tx: f64, ty: f64, rasters: &mut Vec<DrawingRaster>) {
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode;
     match node {
         DrawNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;
@@ -546,7 +546,7 @@ fn place_drawing_in_frame(raw: &[DisplayStroke], bounds: &LayoutBounds) -> Vec<D
         .collect()
 }
 
-fn plan_stroke_paint(styles: &[semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawStyle], name: &Option<String>) -> (Option<[f32; 4]>, [f32; 4], f32) {
+fn plan_stroke_paint(styles: &[semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle], name: &Option<String>) -> (Option<[f32; 4]>, [f32; 4], f32) {
     let mut color = [0.15_f32, 0.2, 0.28, 1.0];
     let mut width = 1.0_f32;
     let mut fill = None;
@@ -570,8 +570,8 @@ fn plan_stroke_paint(styles: &[semio_s_artifact_stdio_semio::standards::v1::subs
     (fill, color, width)
 }
 
-fn collect_draw_node(node: &semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawNode, styles: &[semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::DrawStyle], tx: f64, ty: f64, out: &mut Vec<DisplayStroke>) {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
+fn collect_draw_node(node: &semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawNode, styles: &[semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawStyle], tx: f64, ty: f64, out: &mut Vec<DisplayStroke>) {
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
     match node {
         DrawNode::Group { transform, children } => {
             let next_x = tx + transform.translation.x;

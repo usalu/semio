@@ -2324,20 +2324,62 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
 ]
 
 [[package]]
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "semio-framework-geometry",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-engine"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
  "semio-framework-hash",
- "semio-framework-job",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-operations"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-queries"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-mesh-engine",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-representation"
+version = "0.1.0"
+dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-number",
- "semio-framework-pack",
- "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -3092,6 +3134,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -3143,7 +3186,9 @@ version = "0.1.0"
 dependencies = [
  "parry3d",
  "semio-framework",
- "semio-framework-3d",
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
  "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-flow",
@@ -3152,6 +3197,13 @@ dependencies = [
  "semio-framework-value",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-s-spatial-kernel-semio-session-component"
+version = "0.1.0"
+dependencies = [
+ "semio-s-spatial-kernel-semio-session",
 ]
 
 [[package]]

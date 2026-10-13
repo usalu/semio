@@ -10,5 +10,19 @@
         "oracles"
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-semio-base",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/✉️base/📦️packages/🦀️rust",
+      "rationale": "🧱️ Every semio subset crate builds on the family base crate: the shared mutation refusal vocabulary, child references and envelope plumbing a subset adapter's subject half names directly."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-framework-os-kernel",
+      "path": "🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust",
+      "rationale": "🧱️ A subset adapter's subject half applies its derived diffs through the kernel's `apply_diff`, the one dispatch path production uses."
+    }
   ]
 }

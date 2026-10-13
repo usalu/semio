@@ -16,7 +16,7 @@ use crate::standards::v87a::subsets::any::schema::snapshot::*;
 use crate::STDIO_GIF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::ArtifactDsl for GifSnapshot {
+impl store::os_store::serialization::ArtifactDsl for GifSnapshot {
     const EXTENSION: &'static str = "gif";
     fn envelope_id() -> &'static str {
         "stdio.gif"

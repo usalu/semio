@@ -1,7 +1,7 @@
 //! 🔺️ Sparse field-by-field diff for logical DWG document state.
 
-use crate::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
-use crate::DwgSnapshot;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyResult, MutationDiff};
@@ -190,9 +190,8 @@ fn restore<T: Clone + PartialEq>(change: &Option<T>, base: &T) -> Option<T> {
 
 //#region 🔖️DemoCases
 /// 🎬️ Representative empty, full logical, and version-info diffs.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
+pub fn demo_diff_cases() -> Vec<DwgDiff> {
     vec![
         DwgDiff::default(),
         DwgDiff {
@@ -211,7 +210,7 @@ pub(crate) fn demo_diff_cases() -> Vec<DwgDiff> {
             preview: Some(DwgIndexedPreview::default()),
             application_history: Some(DwgApplicationHistory::default()),
         },
-        diff_set_version_info(&crate::standards::v_ac1024::engine::demo_dwg_snapshot(), "AC1024", 2, 30),
+        diff_set_version_info(&crate::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot(), "AC1024", 2, 30),
     ]
 }
 //#endregion 🔖️DemoCases

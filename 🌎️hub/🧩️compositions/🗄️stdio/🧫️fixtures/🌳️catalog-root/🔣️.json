@@ -2,9 +2,9 @@
   "schemaVersion": 2,
   "pluginId": "stdio",
   "packageId": "semio:stdio",
-  "wasmOut": "semio_hub_stdio.wasm",
+  "wasmOut": "semio_hub_stdio_component.wasm",
   "limits": {
-    "artifactBytes": 67108864,
+    "artifactBytes": 268435456,
     "ioChunkBytes": 65536,
     "deadlineMs": 1200000
   },

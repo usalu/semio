@@ -41,56 +41,56 @@ function harnessEnvironment(verb: string, segments: string[], accepted: readonly
 class OsMcpLiveAgentLoopScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("live-agent-loop-check", segments, ["--serve", "--locale"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts")], this.repoRoot, "os-mcp-live-agent-loop", 900_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️live-agent-loop/🟦️.ts")],this.repoRoot,"os-mcp-live-agent-loop",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpHubAgentParticipantScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("hub-agent-participant-check", segments, ["--hub"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts")], this.repoRoot, "os-mcp-hub-agent-participant", 900_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤖️hub-agent-participant/🟦️.ts")],this.repoRoot,"os-mcp-hub-agent-participant",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpPluginCoverageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("plugin-coverage-check", segments, ["--hub"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts")], this.repoRoot, "os-mcp-plugin-coverage", 7_200_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🧩️plugin-coverage/🟦️.ts")],this.repoRoot,"os-mcp-plugin-coverage",{version:1,maximumElapsedMilliseconds:7_200_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpUserPathScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("user-path-check", segments, ["--hub", "--serve", "--locale"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/🟦️.ts")], this.repoRoot, "os-mcp-user-path", 3_600_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🚶️user-path/🟦️.ts")],this.repoRoot,"os-mcp-user-path",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpInferenceQuartetScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("inference-quartet-check", segments, ["--hub"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts")], this.repoRoot, "os-mcp-inference-quartet", 3_600_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💼️inference-quartet/🟦️.ts")],this.repoRoot,"os-mcp-inference-quartet",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpSecurityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("security-check", segments, ["--hub", "--hub-admin-capability"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/🟦️.ts")], this.repoRoot, "os-mcp-security", 3_600_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🛡️security/🟦️.ts")],this.repoRoot,"os-mcp-security",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
 class OsMcpHubEditDurabilityScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("hub-edit-durability-check accepts no arguments");
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts")], this.repoRoot, "os-mcp-hub-edit-durability", 1_800_000);
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/🤝️hub-edit-durability/🟦️.ts")],this.repoRoot,"os-mcp-hub-edit-durability",{version:1,maximumElapsedMilliseconds:1_800_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
 class OsMcpAgentReplyScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const env = harnessEnvironment("agent-reply-check", segments, ["--serve", "--locale"]);
-    await runRepositoryCommand("bun", [join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts")], this.repoRoot, "os-mcp-agent-reply", 900_000, { env });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "✏️s/🧑‍💻dev/🎭️variants/🌍️gis/💡️services/🧪️tests/💬️agent-reply/🟦️.ts")],this.repoRoot,"os-mcp-agent-reply",{version:1,maximumElapsedMilliseconds:900_000,output:{maximumBytes:134217728,maximumLines:65536}},{env});
   }
 }
 
@@ -106,14 +106,14 @@ class McpCompositionSourceScript extends BundleScript {
 }
 class FixtureOwnershipCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(process.execPath, ["nx", "run", target, "--skip-nx-cache"], this.repoRoot, "fixture-owner:" + target, 3_600_000);
+    for (const target of ["@semio-tech/framework-rs:test-fixture-ownership", "@semio-tech/gis-gismap-rs:verify-inference-client-native", "@semio-tech/gis-gismap-rs:verify-inference-mcp"]) await runRepositoryCommand(this.invocation,process.execPath,["nx", "run", target, "--skip-nx-cache"],this.repoRoot,"fixture-owner:" + target,{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
 class CanonicalPairCompositionScript extends BundleScript {
   async run(): Promise<void> {
-    await runRepositoryCommand(process.execPath, ["nx", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"], this.repoRoot, "canonical-pair-neutral", 3_600_000);
-    await runRepositoryCommand("cargo", ["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"], this.repoRoot, "canonical-pair-peer", 3_600_000);
+    await runRepositoryCommand(this.invocation,process.execPath,["nx", "run", "@semio-tech/framework-os-mcp-rs:canonical-pair-check", "--skip-nx-cache"],this.repoRoot,"canonical-pair-neutral",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
+    await runRepositoryCommand(this.invocation,"cargo",["check", "-p", "semio-hub", "--all-features", "--bin", "os-hub"],this.repoRoot,"canonical-pair-peer",{version:1,maximumElapsedMilliseconds:3_600_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 

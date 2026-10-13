@@ -406,3 +406,25 @@ fn user_preference_record_v1_matches_the_shared_fixture() {
     assert!(validate_directory_event_page_event(&event("u1", None, Some("u2"))).is_err(), "the event's owner is the preference's user");
     assert!(validate_directory_event_page_event(&event("u1", Some("s1"), Some("u1"))).is_err(), "a preference belongs to no space");
 }
+
+/// 🧾️ The language-agnostic receipt law of the lease corpus (`componentReceiptCases`), the same cases the TypeScript lease
+/// parser and the Ajv shape oracle run: a lease package is admitted only with a valid shipped receipt naming exactly its
+/// package, component digest, semantic descriptor digest and component byte length.
+#[test]
+fn a_lease_package_is_admitted_only_with_its_binding_shipped_receipt() {
+    let corpus: serde_json::Value = serde_json::from_str(include_str!("../../../🧫️fixtures/🔏️document-execution-target-lease-v1/🔣️.json")).expect("execution target lease corpus");
+    let cases = corpus["componentReceiptCases"].as_array().expect("receipt cases");
+    assert_eq!(cases.len(), 9);
+    for row in cases {
+        let mut lease = corpus["manifest"].clone();
+        match row["path"].as_array() {
+            None => {
+                lease["package"].as_object_mut().expect("package").remove("componentReceipt");
+            }
+            Some(path) if path.is_empty() => {}
+            Some(path) => lease["package"]["componentReceipt"][path[0].as_str().expect("member")] = row["value"].clone(),
+        }
+        let admitted = semio_framework_pack_json::from_json_str::<DocumentExecutionTargetLeaseFieldsV1>(&lease.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).ok().is_some_and(|fields| fields.validate().is_ok());
+        assert_eq!(admitted, row["accepted"].as_bool().expect("acceptance"), "{}", row["id"]);
+    }
+}

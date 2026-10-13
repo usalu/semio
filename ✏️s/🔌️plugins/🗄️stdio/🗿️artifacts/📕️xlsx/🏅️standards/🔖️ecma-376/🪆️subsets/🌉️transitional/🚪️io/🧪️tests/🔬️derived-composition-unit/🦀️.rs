@@ -10,7 +10,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn conforming_builder_snapshot_composes_and_stamps_transitional() {
         let snapshot = XlsxTransitionalBuilder::new(XlsxWorkbook::default()).build().expect("conforming transitional construction must build");
-        let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = XlsxTransitionalComposerComposition::compose(&sources).expect("clean document must compose to transitional");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "no hard diagnostics expected: {:?}", composed.diagnostics);
@@ -22,7 +22,7 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn strict_shaped_document_fails_compose_with_real_diagnostic() {
         let strict_snapshot = stamp_strict_namespace(build_minimal_xlsx(XlsxWorkbook::default()));
-        let text = store::ArtifactDsl::print_dsl(&strict_snapshot);
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&strict_snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Text(&text) }];
         let err = XlsxTransitionalComposerComposition::compose(&sources).expect_err("a Strict-shaped workbook.xml must not stamp transitional");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_NAMESPACE_MISMATCH && d.severity == Severity::Error), "got {:?}", err.diagnostics);

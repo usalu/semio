@@ -408,7 +408,7 @@ pub(crate) fn validate(value: &JackSnapshot) -> Result<(), ValueError> {
 pub(crate) fn retire_snapshot(value: JackSnapshot) {
     crate::retire_owned_to_terminal(value).expect("Jack explicit retirement");
 }
-impl store::ArtifactSqliteSnapshot for JackSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for JackSnapshot {
     const SQLITE_SCHEMA: &'static str = SQL;
     fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         validate(self)?;
@@ -422,7 +422,7 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
         let max_rows = c.limits().max_rows;
         let value = store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::ArtifactDsl>::envelope_id(),
+            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_from_record_controlled(record, native)?;
@@ -440,7 +440,7 @@ impl store::ArtifactSqliteSnapshot for JackSnapshot {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
         store::encode_sqlite_snapshot_record_native(
             encoding,
-            <Self as store::ArtifactDsl>::envelope_id(),
+            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
             crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::__dsl_spec_producer(),
             |native| {
                 let flat = crate::standards::v1::subsets::any::io::text::snapshot::JackPackRecord::from_snapshot_controlled(self, native)?;

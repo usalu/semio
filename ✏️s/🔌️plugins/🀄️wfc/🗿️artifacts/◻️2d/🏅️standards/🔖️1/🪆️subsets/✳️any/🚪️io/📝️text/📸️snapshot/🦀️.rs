@@ -124,7 +124,7 @@ impl Default for Wfc2dSnapshotDsl {
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` — the derive stopped emitting these traits, so every
 /// artifact states its own envelope discipline.
-impl store::ArtifactDsl for Wfc2dSnapshotDsl {
+impl store::os_store::serialization::ArtifactDsl for Wfc2dSnapshotDsl {
     const EXTENSION: &'static str = "wfc2d";
     fn envelope_id() -> &'static str {
         "wfc.wfc2d"
@@ -142,7 +142,7 @@ impl store::ArtifactDsl for Wfc2dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -171,18 +171,18 @@ pub(crate) fn wfc2d_document_from_dsl(parsed: Wfc2dSnapshotDsl) -> Result<Wfc2dS
     })
 }
 
-impl store::ArtifactDsl for Wfc2dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Wfc2dSnapshot {
     const EXTENSION: &'static str = "wfc2d";
     fn envelope_id() -> &'static str {
         "wfc.wfc2d"
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        wfc2d_document_from_dsl(<Wfc2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)
+        wfc2d_document_from_dsl(<Wfc2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
     }
 
     fn print_dsl(&self) -> String {
-        <Wfc2dSnapshotDsl as store::ArtifactDsl>::print_dsl(&wfc2d_document_to_dsl(self))
+        <Wfc2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&wfc2d_document_to_dsl(self))
     }
 }
 
@@ -191,12 +191,12 @@ impl store::ArtifactDsl for Wfc2dSnapshot {
 
 /// 📖️ Parses `.wfc2d` DSL text into a `Wfc2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Wfc2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Wfc2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Wfc2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Wfc2dSnapshot` back to `.wfc2d` DSL text.
 pub fn print_dsl(document: &Wfc2dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🚚️Carrier

@@ -43,9 +43,9 @@ pub mod polynomial;
 use semio_framework_value::{FromValue, ToValue};
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToValueDerive};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
 //#region 🔖️Constants
 /// 🗂️ The store envelope schema AND the plugin's registered document codec key — see
@@ -161,9 +161,9 @@ pub use crate::snapshot::schema::{EquationExprSnapshot, EquationCarrierSnapshot}
 /// from the parent's own state (`follow_derivable_children` → [`genesis_equation_child_pack`]) and retires the old one. A
 /// derived child is never edited and no parent leaf ever reads it. The converters below are the one-way derivation.
 //#region 🔖️ChildTypes
-pub type EquationNotationChild = store::ArtifactChild<SemioTextSnapshot>;
-pub type EquationResultsChild = store::ArtifactChild<SemioTableSnapshot>;
-pub type EquationComputedChild = store::ArtifactChild<SemioValueSnapshot>;
+pub type EquationNotationChild = store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>;
+pub type EquationResultsChild = store::os_store::artifact_child::ArtifactChild<SemioTableSnapshot>;
+pub type EquationComputedChild = store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
@@ -232,16 +232,16 @@ pub fn equation_computed_from_state(graph: &EquationGraph, geometry: &EquationGe
 //#region 🔖️DerivedChildren
 /// 🧮️ The content-addressed handle of one derived child: its id is `content_id(prefix, pack)` of the derived content, the same
 /// as its target `artifact_id` (what `ChildRestoreProjection::child` demands), so equal state addresses equal children.
-fn equation_derived_child<S>(prefix: &str, subset: &str, pack: &[u8]) -> store::ArtifactChild<S> {
+fn equation_derived_child<S>(prefix: &str, subset: &str, pack: &[u8]) -> store::os_store::artifact_child::ArtifactChild<S> {
     let child_id = store::content_id(prefix, pack);
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
-    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 📦️ The derived pack of composed slot `slot` from `(graph, geometry)`, with the address prefix and subset it is minted
 /// under; `None` for a slot this artifact does not derive.
 fn equation_derived_pack(slot: &str, graph: &EquationGraph, geometry: &EquationGeometry) -> Option<(&'static str, &'static str, Vec<u8>)> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     match slot {
         "notation" => Some(("equation-notation", "text", <SemioTextSnapshot as ArtifactPack>::encode_pack(&equation_notation_from_graph(graph)))),
         "results" => Some(("equation-results", "table", <SemioTableSnapshot as ArtifactPack>::encode_pack(&equation_results_from_graph(graph)))),

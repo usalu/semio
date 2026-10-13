@@ -578,5 +578,13 @@
       "notes": "Applied set-value (payload {\"path\": [{\"kind\": \"key\", \"key\": \"revision\"}], \"value\": {\"kind\": \"int\", \"lexeme\": \"999\"}, \"mutation\": \"setValue\"}) to this subset's own real committed base document via its own, unmodified apply_mutation — every field touched is content already present in the real document (cloned or swapped between two real existing members), never an invented id or enum value. D3 registered only this subset's set-snapshot vector; this fixture discharges one of the remaining kinds its already-complete second implementation was never given evidence for."
     }
   ],
-  "oracleHostPackages": []
+  "oracleHostPackages": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-json",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧾️json/📦️packages/🦀️rust",
+      "rationale": "🧱️ The value subject reads its JSON carriers through the stdio JSON artifact's parser."
+    }
+  ]
 }

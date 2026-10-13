@@ -2,8 +2,8 @@
 //! captured pre-state (`base`), never by structurally inverting the diff. Split from
 //! `💪resilience` per Wave C.
 
-use crate::ProgramMutation;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ↩️ Undo a replace by restoring the pre-state row content. Missing target ⇒ nothing to undo.
 pub fn inverse(payload: &super::ReplaceResilienceRequirement, base: &ProgramSnapshot) -> Result<Vec<ProgramMutation>, semio_framework_value::ValueError> {

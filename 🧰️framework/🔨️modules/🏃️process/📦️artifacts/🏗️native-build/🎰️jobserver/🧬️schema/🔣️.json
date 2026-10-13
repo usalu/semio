@@ -1,0 +1,26 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/JobserverV1",
+  "title": "GNU make compatible job-token pool shared by every compiler and post-link stage of one build driver",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "tokens", "style"],
+  "properties": {
+    "version": { "const": 1 },
+    "tokens": { "type": "integer", "minimum": 1, "maximum": 4096 },
+    "style": { "enum": ["fifo", "semaphore"] }
+  },
+  "definitions": {
+    "Protocol": {
+      "const": {
+        "token": "+",
+        "pollMs": 2,
+        "fifoName": "jobserver.fifo",
+        "semaphorePrefix": "semio-jobserver-",
+        "clientEnvironment": ["CARGO_MAKEFLAGS", "MAKEFLAGS"],
+        "authPrecedence": ["CARGO_MAKEFLAGS", "MAKEFLAGS", "MFLAGS"],
+        "authFlag": "--jobserver-auth="
+      }
+    }
+  }
+}

@@ -10,7 +10,7 @@ pub struct DependencyTestSnapshot {
     pub value: i32,
 }
 
-impl store::ArtifactPack for DependencyTestSnapshot {
+impl store::os_store::serialization::ArtifactPack for DependencyTestSnapshot {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         serde_json::to_vec(self).map_err(|error| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error.to_string())))
     }

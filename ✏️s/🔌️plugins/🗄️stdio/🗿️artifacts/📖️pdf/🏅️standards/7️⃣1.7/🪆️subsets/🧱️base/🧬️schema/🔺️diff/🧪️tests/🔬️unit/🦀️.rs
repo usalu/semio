@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1_7::subsets::base::io::{text_document, PdfTextLayout};
+use crate::standards::v1_7::subsets::base::io::export::{text_document, PdfTextLayout};
 use protocol::{DiffBinary,DiffCodec,DiffText};
 
 fn base() -> PdfSnapshot {

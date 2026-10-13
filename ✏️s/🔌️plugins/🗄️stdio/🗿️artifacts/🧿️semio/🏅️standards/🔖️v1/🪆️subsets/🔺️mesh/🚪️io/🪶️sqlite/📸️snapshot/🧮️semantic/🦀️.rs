@@ -1,8 +1,8 @@
 //! 🔺️ Borrowed Mesh primitives count each exact numeric buffer row and literal material reference.
 use super::{SemioMeshSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Mesh native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Mesh complete cell extent overflow"))}
@@ -31,7 +31,7 @@ fn binary_numbers(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&
 }
 fn octets(reader:&mut store::ByteReader<'_>,control:&mut NativeDecodeControl<'_>)->Result<usize>{let bytes=native::bytes(reader)?;control.scoped_stage(|control|{control.begin_stage(bytes.len())?;for _ in bytes{control.step()?;}control.checkpoint()?;Ok(bytes.len())})}
 /// 📦️ Reads the actual primitive order and both IEEE word widths without constructing geometry.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|{
@@ -62,7 +62,7 @@ fn document_numbers(value:&str,census:&mut Census,control:&mut NativeDecodeContr
 }
 fn hex(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{if !value.len().is_multiple_of(2){return Err(invalid())}control.scoped_stage(|control|{control.begin_stage(value.len()/2)?;for pair in value.as_bytes().chunks_exact(2){if !pair.iter().all(u8::is_ascii_hexdigit){return Err(invalid())}control.step()?;}control.checkpoint()?;Ok(value.len()/2)})}
 /// 📝️ Keeps every original list, optional literal reference and accepted u32 index grammar.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","meshes","materials","textures"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{

@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use semio_framework_3d::brep::engine::ShapeValue;
+use semio_framework_3d_brep_engine::ShapeValue;
 use super::*;
 use std::collections::BTreeMap;
 
@@ -69,7 +69,7 @@ fn a_selection_taken_from_an_older_value_goes_stale_once_the_labels_are_gone() {
     let (_, rounded) = run("brep.feature.fillet", vec![("shape", GeometryValue::Shape(cube())), ("radius", GeometryValue::Number(0.25))], usize::MAX);
     let GeometryValue::Shape(rounded) = rounded.outputs["shape"].clone() else { panic!("shape") };
     let plain = cube();
-    let only_in_rounded = rounded.components(semio_framework_3d::brep::engine::GeometryKind::Edge).into_iter().map(|component| component.label.0).find(|label| !plain.components(semio_framework_3d::brep::engine::GeometryKind::Edge).iter().any(|edge| edge.label.0 == *label)).expect("the fillet mints new edge labels");
+    let only_in_rounded = rounded.components(semio_framework_3d_brep_engine::GeometryKind::Edge).into_iter().map(|component| component.label.0).find(|label| !plain.components(semio_framework_3d_brep_engine::GeometryKind::Edge).iter().any(|edge| edge.label.0 == *label)).expect("the fillet mints new edge labels");
     let selection = SelectionValue { component: SelectionKind::Edge, ids: vec![only_in_rounded] };
     let (_, evaluation) = run("brep.feature.chamferEdges", vec![("shape", GeometryValue::Shape(plain)), ("edges", GeometryValue::Selection(selection)), ("distance", GeometryValue::Number(0.1))], usize::MAX);
     let fault = evaluation.fault.expect("stale");

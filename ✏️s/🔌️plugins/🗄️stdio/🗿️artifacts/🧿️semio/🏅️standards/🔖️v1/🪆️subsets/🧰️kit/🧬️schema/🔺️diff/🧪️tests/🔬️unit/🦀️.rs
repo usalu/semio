@@ -1,10 +1,10 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::snapshot::demo_kit_snapshot;
+use protocol::{DiffBinary,DiffText};
 
 fn rename_first_type(name: &str) -> SemioKitDiff {
-    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     SemioKitDiff { types: Some(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioKitTypeDiff { name: Some(name.into()), ..Default::default() } }], ..Default::default() }), ..Default::default() }
 }
 

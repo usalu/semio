@@ -15,16 +15,16 @@ async fn cad_config_dsl_round_trips_a_populated_record() {
         active_example_id: Some("demo".into()),
         ..CadConfig::default()
     };
-    let text = store::ArtifactDsl::print_dsl(&config);
-    let parsed = <CadConfig as store::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&config);
+    let parsed = <CadConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("cad config dsl parses");
     assert_eq!(parsed, config);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn cad_config_pack_round_trips() {
     let config = CadConfig { selected_node_ids: vec!["node-1".into()], hovered_reference_id: Some("reference-1".into()), ..CadConfig::default() };
-    let bytes = store::ArtifactPack::encode_pack(&config);
-    let decoded = <CadConfig as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&config);
+    let decoded = <CadConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, config);
 }
 

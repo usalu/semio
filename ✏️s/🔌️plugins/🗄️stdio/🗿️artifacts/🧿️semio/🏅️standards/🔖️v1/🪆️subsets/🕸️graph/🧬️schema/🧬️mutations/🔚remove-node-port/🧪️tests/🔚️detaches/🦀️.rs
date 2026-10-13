@@ -4,10 +4,10 @@
 //! `mutation.target-missing` branches: an unknown `node_id` (target `[node_id]`) and an `index`
 //! past the end of that node's `ports` (target `[node_id, index]`). Neither fires here — the node
 //! exists and carries two ports, and only the one at nested index 1 is detached.
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/📸️snapshot/➡️after/🔣️.json");
@@ -16,10 +16,10 @@ const DIFF: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations
 const OUTCOME: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔚remove-node-port/🔚️detaches/🎯️outcome/🔣️.json");
 
 fn before() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("remove-node-port before snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(BEFORE).expect("remove-node-port before snapshot decodes")
 }
 fn expected_after() -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("remove-node-port after snapshot decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(AFTER).expect("remove-node-port after snapshot decodes")
 }
 fn mutation() -> SemioGraphMutation {
     semio_framework_pack_json::from_json_str(MUTATION, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("remove-node-port mutation decodes")
@@ -57,8 +57,8 @@ async fn the_undo_add_node_port_reattaches_the_out_port_in_place() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for (label, text) in [("before", BEFORE), ("after", AFTER)] {
-        let decoded: SemioGraphSnapshot = crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
-        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
+        let decoded: SemioGraphSnapshot = crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot decodes");
+        let reencoded = serde_json::from_str::<serde_json::Value>(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&decoded).expect("snapshot encodes")).expect("snapshot reparses");
         let original: serde_json::Value = serde_json::from_str(text).expect("snapshot reparses");
         assert_eq!(reencoded, original, "remove-node-port/detaches-the-trailing-out-port-from-the-source-node: committed {label} JSON is not canonical");
     }

@@ -1,31 +1,35 @@
-import {captureOwnedProcess} from "../../../../../../../🔨️modules/🏃️process/📥️capture/🟦️.ts";
-import { declaredComponentDeploymentDirectoryV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📇️catalog/🚚️deployment/🟦️.ts";
+import { readBuildMode } from "../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { spawn } from "node:child_process";
 import { createRequire } from "node:module";
-import { existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
-import { dirname, join, relative, resolve, sep } from "node:path";
+import { fileURLToPath } from "node:url";
+import { createHash } from "node:crypto";
+import { copyFileSync, existsSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { stageRepositoryArtifacts } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
-import { pluginModulesRoot } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
-import { ACTOR_COMPONENT_EXPORTS, PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
+import { componentModuleOwnerV1, MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../📇️registry/📦️deployment/🟦️.ts";
+import type { ComponentSourceOwnerV1 } from "../../../📇️registry/🔎️discovery/🟦️.ts";
+import { pluginModulesRoot, builtPluginModulesRootIn } from "../../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { COMPONENT_PROFILE_POLICIES, COMPONENT_RECEIPT_FILE, readComponentReceiptV1, type ComponentDeliverableV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { PLUGIN_DESCRIPTOR_PROBE_SOURCE, finalizePluginDescriptor } from "../../🛂️descriptor/🟦️.ts";
 import { artifactFiles, fileDigest } from "../../📦️distribution/📋️inventory/🟦️.ts";
-import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentAsync } from "../🟦️.ts";
+import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, optimizePluginCoreModuleAsync, PLUGIN_HOST_SHIM_FILE, pluginCoreModuleFilesV1, pluginComponentBridgeSource, pluginWasmOptToolV1, PREVIEW2_VENDOR_RELATIVE, rewritePreview2ShimImports, SHARD_WORKER_FILE, shardWorkerSource, transpilePluginComponentModulesAsync } from "../🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
+import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🗃️stage-cache/🟦️.ts";
+import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 
-type Profile = "dev" | "release";
+/** ⏱️ Upper bound of one guest `describe()` probe over a transpiled module. */
+const DESCRIPTOR_PROBE_BUDGET_MS = 120_000;
 
-/** 🎚️ Selects immutable browser output ownership before any producer runs. */
-function componentProfile(value: string | undefined): Profile {
-  if (value !== "dev" && value !== "release") throw new Error("Select a component profile: dev or release");
-  return value;
-}
+/** 📏️ Upper bound of one probe's base64 descriptor answer. */
+const DESCRIPTOR_PROBE_MAX_OUTPUT_BYTES = 12 * 1024 * 1024;
 
-
-/** 📦️ Enumerates regular staged files without admitting symlinks or unrelated mutable state. */
+/** 📦️ `support`: stages the vendor shims, the shard worker and the packed fonts every module of the one plugin-modules root shares. */
 export class SupportScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length !== 1) throw new Error("Usage: support <dev|release>");
-    const profile = componentProfile(args[0]), root = pluginModulesRoot(profile);
+    if (args.length !== 0) throw new Error("Usage: support");
+    const root = pluginModulesRoot();
     mkdirSync(root, { recursive: true });
     const temporary = mkdtempSync(join(root, ".support-"));
     try {
@@ -33,59 +37,134 @@ export class SupportScript extends BundleScript {
       ensurePreview2ShimVendorAt(vendor, getWorkspaceRoot());
       mkdirSync(shard);
       writeFileSync(join(shard, SHARD_WORKER_FILE), shardWorkerSource());
-      await stageRepositoryArtifacts(join(root, PREVIEW2_VENDOR_RELATIVE), `browser-support:${profile}:preview2`, artifactFiles(vendor));
-      await stageRepositoryArtifacts(join(root, MODULE_SHARD_DIRECTORY), `browser-support:${profile}:shard`, artifactFiles(shard));
+      for (const destination of [builtPluginModulesRootIn(this.repoRoot, readBuildMode(process.env.SEMIO_BUILD_MODE)), root]) {
+        await stageRepositoryArtifacts(join(destination, PREVIEW2_VENDOR_RELATIVE), "browser-support:preview2", artifactFiles(vendor));
+        await stageRepositoryArtifacts(join(destination, MODULE_SHARD_DIRECTORY), "browser-support:shard", artifactFiles(shard));
+      }
       if (!ensureGuestSlimTypstFontsAt(root, getWorkspaceRoot())) throw new Error("Missing typst font seed; run semio-framework-os-infinite:fonts through Nx");
-      console.log(`Browser support ${profile}: vendor shims, typst fonts and shard worker staged`);
+      console.log("Browser support: vendor shims, typst fonts and shard worker staged");
     } finally { rmSync(temporary, { recursive: true, force: true }); }
   }
 }
 
-export class MaterializeScript extends BundleScript {
-  async run(args: string[]): Promise<void> {
-    if (args.length !== 3 || args[1] !== "--manifest") throw new Error("Usage: materialize <dev|release> --manifest <Cargo.toml>");
-    const profile = componentProfile(args[0]), repo = getWorkspaceRoot(), manifestPath = resolve(repo, args[2]!);
-    if (!manifestPath.startsWith(repo + sep) || lstatSync(manifestPath).isSymbolicLink()) throw new Error("Component manifest must belong to the workspace");
-    const text = readFileSync(manifestPath, "utf8"), manifest = createRequire(import.meta.url)("@iarna/toml").parse(text);
-    const directoryName = declaredComponentDeploymentDirectoryV1(text);
-    if (directoryName === undefined) throw new Error("Materialization requires an authored deployment directory");
-    const metadata = manifest.package?.metadata, identity = metadata?.component?.package;
-    if (typeof identity !== "string" || !/^semio:[a-z0-9]+(?:-[a-z0-9]+)*$/.test(identity) || !["plugin", "extension"].includes(metadata.semio?.["component-kind"])) throw new Error("Expected a Cargo plugin or extension component");
-    const pluginId = identity.slice(6), crate = manifest.package.name.replaceAll("-", "_"), componentBase = crate + "_component";
-    const artifact = join(dirname(manifestPath), "dist", `component-${profile}`, crate + ".wasm");
-    const root = pluginModulesRoot(profile), output = join(root, moduleDirectoryName(pluginId, [{pluginId, directoryName}])), vendor = join(root, PREVIEW2_VENDOR_RELATIVE);
-    if (!existsSync(artifact) || !existsSync(join(vendor, ".nx-artifact.json"))) throw new Error("Missing component or browser support prerequisite; run the materialize target through Nx");
-    const controller = new AbortController(), cancel = (): void => controller.abort();
-    process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
-    mkdirSync(root, { recursive: true });
-    const temporary = mkdtempSync(output + ".materialize-");
-    try {
-      writeFileSync(join(temporary, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-      console.log(`Materializing ${pluginId} ${profile}: transpile`);
-      await transpilePluginComponentAsync(artifact, temporary, componentBase, { repoRoot: repo, preview2VendorDir: vendor, signal: controller.signal, optimize: profile === "release" });
-      controller.signal.throwIfAborted();
-      console.log(`Materializing ${pluginId} ${profile}: descriptor`);
-      const stdoutPath = join(temporary, ".descriptor.stdout"), stderrPath = join(temporary, ".descriptor.stderr");
-      const probe = await captureOwnedProcess("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, join(temporary, componentBase + ".js")], { invocation: this.invocation, cwd: repo, env: process.env, budgetMs: 60_000, maxOutputBytes: 12 * 1024 * 1024, stdoutPath, stderrPath });
-      if (probe.status !== 0) throw new Error(`Plugin descriptor failed for ${pluginId}: ${probe.stderr}`);
-      const base64 = probe.stdout.trim();
-      if (!/^[A-Za-z0-9+/]+={0,2}$/.test(base64)) throw new Error(`Invalid descriptor response for ${pluginId}`);
-      const descriptor = finalizePluginDescriptor(Buffer.from(base64, "base64"), pluginId, await fileDigest(artifact), await fileDigest(join(temporary, componentBase + ".core.wasm")));
-      rmSync(stdoutPath); rmSync(stderrPath);
-      writeFileSync(join(temporary, "🛂️.descriptor.semio"), descriptor.pack);
-      writeFileSync(join(temporary, "🔣️.json"), descriptor.json);
-      writeFileSync(join(temporary, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, crate + ".wasm"));
-      controller.signal.throwIfAborted();
-      await stageRepositoryArtifacts(output, relative(repo, manifestPath).split(sep).join("/") + `:browser:${profile}`, artifactFiles(temporary), { signal: controller.signal });
-      console.log(`Materialized ${pluginId} ${profile}: browser bridge and descriptor staged -> ${output}`);
-      // 📣️ A served dev session reads THIS directory directly, so a plugin is live the moment it is
-      // staged; an extension is not — the runtime install root (`/🧩️extension-modules`) is written by
-      // `activate-<variant>-<renderer>-<profile>`. Saying so is the difference between "the rebuild
-      // did not take" and one more command (26/09/09 `📓️extension-invoke-door-2026-09-12.md` §6.3).
-      if (metadata.semio.role === "extension") console.log(`Extension ${pluginId} is staged but NOT published to any runtime install root — run: bun nx run @semio-tech/framework-os-dev:activate-<variant>-<react|wgpu>-${profile}`);
-    } finally {
-      process.removeListener("SIGINT", cancel); process.removeListener("SIGTERM", cancel);
-      rmSync(temporary, { recursive: true, force: true });
-    }
+
+/** 🔎️ Runs the transpiled module's own `describe()` under JSPI and returns the semantic descriptor bytes it answers. */
+async function probeModuleDescriptor(module: string, repoRoot: string, signal?: AbortSignal): Promise<Uint8Array> {
+  const budget = AbortSignal.timeout(DESCRIPTOR_PROBE_BUDGET_MS);
+  const child = spawn("node", ["--experimental-wasm-jspi", "--input-type=module", "--eval", PLUGIN_DESCRIPTOR_PROBE_SOURCE, module], { cwd: repoRoot, signal: signal ? AbortSignal.any([signal, budget]) : budget, stdio: ["ignore", "pipe", "pipe"] });
+  let stdout = "", stderr = "";
+  child.stdout.setEncoding("utf8").on("data", (chunk: string) => { stdout += chunk; if (stdout.length > DESCRIPTOR_PROBE_MAX_OUTPUT_BYTES) child.kill(); });
+  child.stderr.setEncoding("utf8").on("data", (chunk: string) => { stderr = (stderr + chunk).slice(-8192); });
+  const status = await new Promise<number | null>((accept, reject) => { child.once("error", reject); child.once("close", accept); });
+  if (status !== 0) throw new Error(`module describe() probe failed (${status}): ${stderr}`);
+  const base64 = stdout.trim();
+  if (!/^[A-Za-z0-9+/]+={0,2}$/u.test(base64)) throw new Error("module describe() probe answered no base64 descriptor");
+  return Buffer.from(base64, "base64");
+}
+
+/** 🧺️ The private state one component module is materialized in: its source identity, the deliverable the module is built from, the stage cache and a
+ * private work directory. */
+export type ComponentModuleWorkV1 = Readonly<{ repoRoot: string; target: ComponentSourceOwnerV1; deliverable: ComponentDeliverableV1; cache: StageCacheV1; work: string; signal?: AbortSignal }>;
+
+/** 🏷️ The jco module name of a component crate. */
+function componentBaseV1(target: ComponentSourceOwnerV1): string {
+  return target.packageName.replaceAll("-", "_");
+}
+
+const identities = new Map<string, Promise<string>>();
+/** 🪪️ One tool identity per process: a file's SHA-256 or a command's version answer. */
+function toolIdentityV1(key: string, compute: () => Promise<string>): Promise<string> {
+  let known = identities.get(key);
+  if (!known) { known = compute(); identities.set(key, known); }
+  return known;
+}
+
+/** 🧬️ The transpile stage: jco's location-independent module files of the component, cached by the component's digest, the jco version, this module's
+ * implementation and the module name. */
+export async function transpileComponentModulesV1(work: ComponentModuleWorkV1): Promise<string> {
+  const base = componentBaseV1(work.target), output = join(work.work, "transpiled");
+  const [component, jco, materialization] = await Promise.all([fileDigest(work.deliverable.wasm, work.signal), toolIdentityV1("jco", async () => JSON.parse(readFileSync(createRequire(join(work.repoRoot, "package.json")).resolve("@bytecodealliance/jco/package.json"), "utf8")).version), toolIdentityV1("materialization", () => fileDigest(fileURLToPath(new URL("../🟦️.ts", import.meta.url))))]);
+  await work.cache.run({ stage: "transpile", schemaVersion: 1, inputs: { component }, tools: { jco, materialization, base } }, output, (directory) => transpilePluginComponentModulesAsync(work.deliverable.wasm, directory, base, { repoRoot: work.repoRoot, preview2VendorDir: join(pluginModulesRoot(), PREVIEW2_VENDOR_RELATIVE), ...(work.signal ? { signal: work.signal } : {}) }), work.signal);
+  return output;
+}
+
+/** 🪶️ The optimize stage: `wasm-opt -Oz` of every extracted core of a shipped component on `cores` threads, each cached by the core's digest, the optimizer's
+ * version and its arguments (the thread count never changes Binaryen's output). Resolves with the directory of the optimized cores, or `null` for a local
+ * profile that ships unoptimized cores. */
+export async function optimizeComponentCoresV1(work: ComponentModuleWorkV1, transpiled: string, cores?: number): Promise<string | null> {
+  if (!COMPONENT_PROFILE_POLICIES[work.deliverable.profile].shipped) return null;
+  const output = join(work.work, "optimized"), tool = pluginWasmOptToolV1({ repoRoot: work.repoRoot }), version = await toolIdentityV1(`wasm-opt:${tool.command}`, () => captureOwnedCommandV1(tool.command, ["--version"], work.repoRoot).then((text) => text.trim()));
+  mkdirSync(output, { recursive: true });
+  for (const file of pluginCoreModuleFilesV1(transpiled, componentBaseV1(work.target))) {
+    const core = join(transpiled, file), stage = join(work.work, `optimize-${file}`);
+    await work.cache.run({ stage: "optimize", schemaVersion: 1, inputs: { core: await fileDigest(core, work.signal) }, tools: { "wasm-opt": version, args: tool.args.join(" ") } }, stage, (directory) => optimizePluginCoreModuleAsync(core, join(directory, "core.wasm"), { repoRoot: work.repoRoot, preview2VendorDir: "", ...(cores === undefined ? {} : { cores }), ...(work.signal ? { signal: work.signal } : {}) }), work.signal);
+    renameSync(join(stage, "core.wasm"), join(output, file));
+    rmSync(stage, { recursive: true, force: true });
+  }
+  return output;
+}
+
+/** 🧩️ Assembles the module next to its final directory (so relative imports resolve exactly as published): the transpiled files with the optimized cores
+ * swapped in, the host shim, and the preview2 shim imports pointed at the plugin-modules vendor directory. */
+export function assembleComponentModuleV1(work: ComponentModuleWorkV1, transpiled: string, optimized: string | null): string {
+  if (work.target.directoryName === undefined) throw new Error(`${work.target.pluginId}: materialization requires an authored deployment directory`);
+  const root = pluginModulesRoot(), output = join(root, moduleDirectoryName(work.target.pluginId, [{ pluginId: work.target.pluginId, directoryName: work.target.directoryName }]));
+  mkdirSync(root, { recursive: true });
+  const temporary = mkdtempSync(`${output}.materialize-`);
+  for (const [name, path] of artifactFiles(transpiled)) { mkdirSync(dirname(join(temporary, name)), { recursive: true }); copyFileSync(optimized && existsSync(join(optimized, name)) ? join(optimized, name) : path, join(temporary, name)); }
+  writeFileSync(join(temporary, PLUGIN_HOST_SHIM_FILE), hostShimSource());
+  rewritePreview2ShimImports(join(temporary, `${componentBaseV1(work.target)}.js`), join(root, PREVIEW2_VENDOR_RELATIVE));
+  return temporary;
+}
+
+/** 🔎️ The probe stage: the assembled module's own `describe()` under JSPI, cached by the digest of every module file and the node version. */
+export async function probeComponentModuleV1(work: ComponentModuleWorkV1, module: string): Promise<Uint8Array> {
+  const vendor = join(pluginModulesRoot(), PREVIEW2_VENDOR_RELATIVE);
+  if (!existsSync(join(vendor, ".nx-artifact.json"))) throw new Error("Missing browser support prerequisite; run @semio-tech/framework-plugin-web:support");
+  const inputs: Record<string, string> = {};
+  for (const [name, path] of artifactFiles(module)) inputs[name] = await fileDigest(path, work.signal);
+  for (const [name, path] of artifactFiles(vendor)) inputs[`vendor/${name}`] = await fileDigest(path, work.signal);
+  const node = await toolIdentityV1("node", () => captureOwnedCommandV1("node", ["--version"], work.repoRoot).then((text) => text.trim())), output = join(work.work, "probe");
+  await work.cache.run({ stage: "probe", schemaVersion: 1, inputs, tools: { node } }, output, async (directory) => { writeFileSync(join(directory, "semantic.bin"), await probeModuleDescriptor(join(module, `${componentBaseV1(work.target)}.js`), work.repoRoot, work.signal)); }, work.signal);
+  return readFileSync(join(output, "semantic.bin"));
+}
+
+/** 📦️ Publishes the assembled module: its semantic descriptor, the bridge and a copy of the receipt that binds the two, staged atomically under the
+ * component's one ownership key. The module's `describe()` must hash to the receipt's semantic descriptor. */
+export async function publishComponentModuleV1(work: ComponentModuleWorkV1, module: string, semantic: Uint8Array, receipt: ComponentReceiptV1): Promise<string> {
+  const output = module.slice(0, module.lastIndexOf(".materialize-")), base = componentBaseV1(work.target);
+  try {
+    if (createHash("sha256").update(semantic).digest("hex") !== receipt.semanticDescriptorSha256) throw new Error(`${work.target.pluginId}: the module's describe() is not the semantic descriptor its receipt names`);
+    const descriptor = finalizePluginDescriptor(semantic, work.target.pluginId);
+    writeFileSync(join(module, "🛂️.descriptor.semio"), descriptor.pack);
+    writeFileSync(join(module, "🔣️.json"), descriptor.json);
+    writeFileSync(join(module, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(base, work.target.wasmOut));
+    writeFileSync(join(module, COMPONENT_RECEIPT_FILE), readFileSync(work.deliverable.receipt));
+    work.signal?.throwIfAborted();
+    const mode = receipt.profile === "wasm-release" ? "release" : "prototype", canonical = join(builtPluginModulesRootIn(work.repoRoot, mode), work.target.directoryName!);
+    const files = artifactFiles(module), options = work.signal ? { signal: work.signal } : {};
+    await stageRepositoryArtifacts(canonical, componentModuleOwnerV1(work.target.cratePath), files, options);
+    await stageRepositoryArtifacts(output, componentModuleOwnerV1(work.target.cratePath), files, options);
+  } finally {
+    rmSync(module, { recursive: true, force: true });
+  }
+  return output;
+}
+
+/** 🧩️ Materializes one component deliverable into its module directory of the one plugin-modules root through the cached stages: transpile, `wasm-opt -Oz`
+ * only for shipped bytes, the module's own `describe()` checked against the receipt's semantic descriptor, then that semantic descriptor,
+ * the bridge, the host shim and a copy of the receipt — so every consumer can tell a shipped module from a local `wasm-prototype` one. */
+export async function materializeComponentModuleV1(repoRoot: string, target: ComponentSourceOwnerV1, deliverable: ComponentDeliverableV1, signal?: AbortSignal): Promise<Readonly<{ output: string; receipt: ComponentReceiptV1 }>> {
+  if (target.directoryName === undefined) throw new Error(`${target.pluginId}: materialization requires an authored deployment directory`);
+  const receipt = readComponentReceiptV1(deliverable.receipt);
+  if (receipt.pluginId !== target.pluginId || receipt.packageId !== target.packageId || receipt.profile !== deliverable.profile) throw new Error(`${target.pluginId}: ${relative(repoRoot, deliverable.receipt)} names ${receipt.pluginId} ${receipt.profile}, not this ${deliverable.profile} deliverable`);
+  if (lstatSync(deliverable.wasm).size !== receipt.wasmBytes || await fileDigest(deliverable.wasm, signal) !== receipt.wasmSha256) throw new Error(`${target.pluginId}: ${relative(repoRoot, deliverable.wasm)} is not the component its receipt names; rebuild it`);
+  const work: ComponentModuleWorkV1 = { repoRoot, target, deliverable, cache: stageCacheV1(repoCacheDirectory(repoRoot, STAGE_CACHE_POLICY_V1.warmRoot)), work: mkdtempSync(join(dirname(deliverable.directory), ".materialize-")), ...(signal ? { signal } : {}) };
+  try {
+    const transpiled = await transpileComponentModulesV1(work), module = assembleComponentModuleV1(work, transpiled, await optimizeComponentCoresV1(work, transpiled));
+    const output = await publishComponentModuleV1(work, module, await probeComponentModuleV1(work, module).catch((error: unknown) => { rmSync(module, { recursive: true, force: true }); throw error; }), receipt);
+    return Object.freeze({ output, receipt });
+  } finally {
+    rmSync(work.work, { recursive: true, force: true });
   }
 }

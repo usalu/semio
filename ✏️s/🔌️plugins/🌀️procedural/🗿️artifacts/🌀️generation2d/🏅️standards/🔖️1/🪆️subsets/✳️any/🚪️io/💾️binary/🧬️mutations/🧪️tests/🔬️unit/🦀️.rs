@@ -6,7 +6,7 @@ use crate::Generation2dSnapshot;
 use protocol::OpText;
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget};
 use semio_framework_os_kernel::os_store::test_support;
-use store::ArtifactCommand;
+use store::os_store::store_schema::ArtifactCommand;
 
 //#region 🔖️OpTextTests
 #[test]

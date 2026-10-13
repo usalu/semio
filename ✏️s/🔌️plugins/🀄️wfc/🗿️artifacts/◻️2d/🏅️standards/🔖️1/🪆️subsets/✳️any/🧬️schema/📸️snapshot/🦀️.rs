@@ -15,7 +15,7 @@
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 
 //#region 🔖️Ids
 pub const WFC_2D_DOCUMENT_SCHEMA: &str = "s.wfc.wfc2d";
@@ -113,7 +113,7 @@ pub struct Wfc2dVectorMedia {
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
 pub struct Wfc2dImageMedia {
-    pub child: store::ArtifactChild<SemioImageSnapshot>,
+    pub child: store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>,
 }
 
 /// 🖼️ What a tile actually LOOKS like. `Bitmap` carries palette-indexed pixels inline (row-major,

@@ -204,16 +204,16 @@ impl ArtifactViewer for DrawingViewer {
     const DIALECT: semio_framework_artifact_reference::Dialect = DRAWING_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = DRAWING_DOCUMENT_SCHEMA;
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::spr::drawing_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::spr::drawing_document_store_initialization_job(envelope, operation, generation, actor))
     }
 

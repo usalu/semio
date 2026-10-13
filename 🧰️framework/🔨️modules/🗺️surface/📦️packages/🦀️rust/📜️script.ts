@@ -16,13 +16,12 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildWasmWebV1({
       rsDir: this.root,
+      componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/surface/rs",
       wasmBaseName: "framework_surface",
       outputDirectory: "🕸️bindings",
       shipProfile: "wasm-release",
       devOptimizedCrates: BROWSER_CANVAS_HOT_CRATES,
-      noDefaultFeatures: true,
-      cargoFeatures: ["session-bindgen"],
       pkg: {
         name: "@semio-tech/framework-surface-rs",
         files: ["framework_surface_bg.wasm", "framework_surface.js", "framework_surface.d.ts", "framework_surface_bg.wasm.d.ts"],

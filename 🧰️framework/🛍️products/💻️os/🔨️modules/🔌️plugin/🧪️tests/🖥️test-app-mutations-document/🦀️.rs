@@ -3,28 +3,28 @@
 
 use semio_framework_value_derive::{FromValue, ToValue};
 use serde::{Deserialize, Serialize};
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 //#region 🧫️Snapshot
-pub(crate) const MAXIMUM_CHILD_PROBE_BYTES: usize = 4 * 1024 * 1024;
-pub(crate) static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
-pub(crate) static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+const MAXIMUM_CHILD_PROBE_BYTES: usize = 4 * 1024 * 1024;
+static MAXIMUM_CHILD_CLONES: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
+static MAXIMUM_CHILD_ENCODINGS: std::sync::atomic::AtomicUsize = std::sync::atomic::AtomicUsize::new(0);
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-macro")]
-pub(crate) struct TestSnapshot {
-    pub(crate) count: i32,
-    pub(crate) label: String,
+struct TestSnapshot {
+    count: i32,
+    label: String,
     /// 🧒️ The members declared in this document's one owned-child slot, `"slot"` — the field a
-    /// schema-derived snapshot spells `#[child(kind = "s.test.child")]`. `store::ArtifactChild`
+    /// schema-derived snapshot spells `#[child(kind = "s.test.child")]`. `store::os_store::artifact_child::ArtifactChild`
     /// carries `ToValue`/`FromValue`/`DslField` but no serde impl, so the derived serde half skips
     /// it and the hand-written pack/DSL codecs below carry it as its member's canonical
     /// `ArtifactRef` uri.
     #[serde(skip)]
-    pub(crate) slot: Vec<store::ArtifactChild<TestSnapshot>>,
+    slot: Vec<store::os_store::artifact_child::ArtifactChild<TestSnapshot>>,
 }
 
-impl store::ArtifactSqliteSnapshot for TestSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for TestSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
@@ -77,7 +77,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
             let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: row.text(3)?.to_string(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: row.text(4)?.to_string(), standard: row.text(5)?.to_string(), subset: row.text(6)?.to_string() } };
             let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(&target.to_uri()).map_err(|error| semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error))?;
-            snapshot.slot.push(store::ArtifactChild::new(target.artifact_id.clone(), target));
+            snapshot.slot.push(store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target));
         }
         control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot, children.len() + 1, children.len() + 1)?;
         Ok(snapshot)
@@ -112,11 +112,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 }
 
 /// 🧒️ One declared owned-child handle from its canonical `ArtifactRef` uri.
-pub(crate) fn test_child_handle(uri: &str) -> Result<store::ArtifactChild<TestSnapshot>, String> {
+fn test_child_handle(uri: &str) -> Result<store::os_store::artifact_child::ArtifactChild<TestSnapshot>, String> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
     let target = semio_framework_artifact_reference::ArtifactRef::parse_uri(uri)?;
-    Ok(store::ArtifactChild::new(target.artifact_id.clone(), target))
+    Ok(store::os_store::artifact_child::ArtifactChild::new(target.artifact_id.clone(), target))
 }
 
 /// ♻️ The fixture child is an openable member, so its snapshot needs the same bounded owned-value
@@ -143,7 +143,7 @@ impl Clone for TestSnapshot {
     }
 }
 
-impl store::ArtifactDsl for TestSnapshot {
+impl store::os_store::serialization::ArtifactDsl for TestSnapshot {
     const EXTENSION: &'static str = "testkit-macro";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -160,8 +160,8 @@ impl store::ArtifactDsl for TestSnapshot {
 
 impl ArtifactPack for TestSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -183,12 +183,12 @@ impl ArtifactPack for TestSnapshot {
 
 //#region 🔺️Diff
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-pub(crate) struct TestDiff {
-    pub(crate) count: Option<i32>,
-    pub(crate) label: Option<String>,
+struct TestDiff {
+    count: Option<i32>,
+    label: Option<String>,
     /// 🧒️ The whole declared membership of the `"slot"` child slot, as canonical `ArtifactRef`
     /// uris — a child declaration is replaced wholesale, never merged row by row.
-    pub(crate) slot: Option<Vec<String>>,
+    slot: Option<Vec<String>>,
 }
 
 fn test_slot_uris(snapshot: &TestSnapshot) -> Vec<String> {
@@ -231,6 +231,6 @@ impl protocol::MutationDiff<TestSnapshot> for TestDiff {
 //#region 🧬️Mutations
 #[path = "../../🧪️testing/🖥️test-app-mutations/🧬️document/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{SetCount, SetLabel, SetSlotChildren, TestMutation};
+use mutations::{SetCount, SetLabel, SetSlotChildren, TestMutation};
 //#endregion 🧬️Mutations
 //#endregion 🧬️TestDocumentMutationRoot

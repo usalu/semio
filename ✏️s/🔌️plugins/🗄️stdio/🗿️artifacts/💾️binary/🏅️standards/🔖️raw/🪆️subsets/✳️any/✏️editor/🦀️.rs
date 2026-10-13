@@ -146,7 +146,7 @@ fn parse_hex_dump(text: &str) -> Option<Vec<u8>> {
 const BINARY_TEXT_ACTION_ID: &str = "textEdit";
 const BINARY_TEXT_TOOL_IDS: &[&str] = &[BINARY_TEXT_ACTION_ID];
 const BINARY_TEXT_PAYLOAD_SCHEMA: &str = "stdio.binary.text-edit.v1";
-const BINARY_TEXT_MAXIMUM_RAW_BYTES: usize = 4 * store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
+const BINARY_TEXT_MAXIMUM_RAW_BYTES: usize = 4 * store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES;
 const BINARY_TEXT_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &[ArtifactToolPublicationContract { tool_id: BINARY_TEXT_ACTION_ID, lanes: &[ArtifactToolPublicationLane::Artifact] }];
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

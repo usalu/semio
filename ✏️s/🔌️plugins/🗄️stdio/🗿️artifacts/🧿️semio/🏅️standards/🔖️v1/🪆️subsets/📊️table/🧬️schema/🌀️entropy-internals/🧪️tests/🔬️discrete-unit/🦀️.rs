@@ -150,7 +150,7 @@ mod tests {
 
     #[test]
     fn entropy_non_negative_for_random_distributions() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2024);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2024);
         for _ in 0..200 {
             let k = 2 + (rng.next_below(5));
             let mut raw: Vec<f64> = (0..k).map(|_| rng.next_f64()).collect();

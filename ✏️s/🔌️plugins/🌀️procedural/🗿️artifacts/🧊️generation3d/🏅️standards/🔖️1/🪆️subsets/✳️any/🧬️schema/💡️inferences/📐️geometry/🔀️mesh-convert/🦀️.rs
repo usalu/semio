@@ -4,8 +4,8 @@
 
 use super::mesh_support::{cancelled_fault, capacity_fault, mesh_output, modeling_slice, ratio, run, tessellation_slice, Flow, KernelResult, Machine, BATCH};
 use super::super::prelude::*;
-use semio_framework_3d::brep::engine::{MeshImportCursor, ShapeTessellationJob, ShapeValue};
-use semio_framework_3d::brep::queries::tessellation::TessellationStep;
+use semio_framework_3d_brep_engine::{MeshImportCursor, ShapeTessellationJob, ShapeValue};
+use semio_framework_3d_brep_queries::tessellation::TessellationStep;
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshModelingJob, MeshModelingStep, MeshTessellationJob, MeshTessellationStep};
 
 const FACE_LIMIT: usize = 100_000;

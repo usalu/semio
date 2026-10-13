@@ -2,7 +2,7 @@
 
 use super::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};
 use super::{kinds, Fault, GltfMutation, GltfSnapshot};
-use crate::standards::v2_0::subsets::any::schema::snapshot::*;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::{DslValue, FromValue};
 
 type Rows = Result<Vec<GltfMutation>, Fault>;

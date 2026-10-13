@@ -4,7 +4,7 @@ use semio_framework_pack_json::json;
 fn cad_imported_geometry_batches_preserve_exact_typed_owners_and_controlled_close() {
     use semio_framework_os_kernel::MemberStoreOwnedBatch;
     use semio_framework_value::{retained_clone::RetainedCloneGrant, retirement::RetireOwned};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::{brep::schema::mutations::{SemioBrepMutation, create_vertex::CreateVertex}, model::schema::mutations::{SemioModelMutation, insert_element::InsertElement}};
+    use {semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex::CreateVertex, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement};
     fn close<M: RetireOwned + semio_framework_value::ToValue>(operations: Vec<M>) {
         let pointer = operations.as_ptr();
         let oracle = serde_json::to_value(semio_framework_value::ToValue::to_value(&operations)).unwrap();
@@ -37,7 +37,7 @@ fn cad_imported_geometry_model_operation_wire_preserves_original_forward_inverse
     use protocol::OpBinary;
     use semio_framework_os_kernel::{ArtifactPreparedOperationCursor, ArtifactPreparedOperationProgress};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::{schema::{snapshot::SemioModelElement, mutations::{SemioModelMutation, insert_element::InsertElement, remove_element::RemoveElement}}, io::binary::mutations::prepared_operation_wire_source};
+    use {semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement, semio_s_artifact_stdio_semio_model::io::binary::mutations::prepared_operation_wire_source};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../../../../../../🗄️stdio/🗿️artifacts/🧿️semio/🏅️standards/🔖️v1/🪆️subsets/🏛️model/🚪️io/💾️binary/🧬️mutations/🫳️borrowed/🧫️fixtures/🔣️.json")).unwrap();
     for row in fixture["elements"].as_array().unwrap() {
         let element: SemioModelElement = semio_framework_pack_json::from_json_str(&serde_json::to_string(row).unwrap(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
@@ -275,12 +275,12 @@ pub(crate) mod context {
     }
 
     /// 🏛️ `pane`'s model as the mounted app's child store holds it now.
-    pub async fn pane_model(app: &CadFixtureApp, pane: CadPaneId) -> semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot {
-        use store::{ArtifactPack, SpaceMember};
+    pub async fn pane_model(app: &CadFixtureApp, pane: CadPaneId) -> semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot {
+        use store::{os_store::serialization::ArtifactPack, SpaceMember};
         let parent = app.snapshot().expect("CAD parent snapshot");
         let child = crate::cad_pane_model(&parent, pane).unwrap_or_else(|| panic!("{pane:?} pane composes a model child"));
         let member = app.child_store(crate::cad_pane_model_slot(pane), &child.child_id).await.unwrap_or_else(|| panic!("{pane:?} pane model member is live"));
-        semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot::decode_pack(&member.document_pack_bytes().await.expect("pane model pack")).expect("pane model snapshot")
+        semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot::decode_pack(&member.document_pack_bytes().await.expect("pane model pack")).expect("pane model snapshot")
     }
 
     /// 🧱️ `pane`'s objects as the mounted app's child store holds them now.
@@ -346,7 +346,7 @@ use crate::standards::v1::subsets::any::schema::inferences::{
 };
 use crate::{empty_cad_snapshot, CadNode, CadReference, CAD_PLAY_DOCUMENT_SCHEMA};
 use semio_framework_plugin::{ActionKind, AppActionRegistry, EditorApp, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 //#region 🔖️Fixtures
 /// ⚖️ One value per `app_commands!` row (plus a `None`-everywhere twin for every row with
@@ -465,7 +465,7 @@ async fn every_example_load_is_admitted_and_settles_through_the_host_document_ar
         }
         assert!(terminal, "{example_id:?}: the retained operation reaches its terminal page");
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
-        let expected = <CadSnapshot as store::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a CAD document");
+        let expected = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a CAD document");
         PluginApp::begin_document_archive_load(&mut app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {
@@ -523,7 +523,7 @@ async fn retained_cad_presence_close_empty_lanes_have_exact_owners() {
     let fixture: Value = semio_framework_pack_json::parse(include_str!("../../👥️presence/🧫️fixtures/♻️retirement/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let maximum_items = fixture["grant"]["maximumItems"].as_u64().unwrap() as usize;
     let maximum_bytes = fixture["grant"]["maximumBytes"].as_u64().unwrap() as usize;
-    let envelope = store::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<NoDraft, NoDraftMutation>("draft.empty", "cad-draft-close", NoDraft::default(), None);
     let mut draft = store::DraftStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
     draft.install_document_store_owners_exact(<CadPlayApp as ArtifactEditor>::build_draft_store_owners().unwrap());
     let mut disposer = <CadPlayApp as ArtifactEditor>::build_draft_store_disposer().unwrap();
@@ -598,7 +598,7 @@ fn retained_config_store_preparation_is_bounded_exact_and_reversible() {
     assert_eq!(forward, mutation);
     assert_eq!(inverse, vec![CadConfigMutation::Set(SetEdit { config: Box::new(base.clone()) })]);
     assert_eq!(footprint.work_items, 1 + inverse.len(), "config footprint must cover forward + inverse rows");
-    assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
+    assert_eq!(footprint, store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
     let oversized = CadConfigMutation::SetContributions(SetContributionsEdit { json: "x".repeat(CAD_CONFIG_STORE_MAXIMUM_BYTES + 1) });
     assert!(admit_cad_config_mutation(&oversized).is_err());
 }
@@ -635,7 +635,7 @@ fn retained_artifact_store_preparation_is_bounded_exact_and_reversible() {
     assert_eq!(post.nodes, vec![node]);
     assert_eq!(forward, mutation);
     assert_eq!(footprint.work_items, 1 + inverse.len(), "artifact footprint must cover forward + inverse rows");
-    assert_eq!(footprint, store::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
+    assert_eq!(footprint, store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(&mutation, footprint.retained_bytes));
     let mut restored = post;
     for operation in inverse {
         let outcome = <CadMutation as protocol::Mutation<CadSnapshot>>::diff(&operation, &restored);
@@ -1465,7 +1465,7 @@ async fn a_new_document_composes_four_empty_panes_and_add_object_needs_a_compose
         let child = crate::cad_pane_model(&scene, pane).unwrap_or_else(|| panic!("{pane:?} pane composes its empty model child"));
         assert_eq!(child.child_id, crate::cad_empty_pane_child(pane).child_id);
         let pack = crate::cad_genesis_child_pack(&scene, crate::cad_pane_model_slot(pane), &child.child_id).unwrap_or_else(|| panic!("{pane:?} pane derives its genesis pack"));
-        let model = <semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
+        let model = <semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("genesis pack decodes");
         assert!(model.elements.is_empty(), "{pane:?} pane is born empty");
     }
     let fault = drive_result(&CadPlayApp::default(), &empty_cad_snapshot(), "addObject", Some(json!({ "typology": "building.building.column" })), &CadConfig::default()).err().expect("a pane without a model child refuses addObject");
@@ -1757,7 +1757,7 @@ async fn import_cad_file_action_accepts_spatial_json_text_string_payload() {
     let Effect::LoadDocument { pack, .. } = emit.effects.first().expect("importCadFile must emit a LoadDocument effect for a spatial JSON string payload") else {
         panic!("expected a LoadDocument effect");
     };
-    let next = <CadSnapshot as store::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
+    let next = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("decode loaded document pack");
     assert!(next.shape_model.is_some(), "a real imported object must mint a shape-model child");
 }
 
@@ -1842,8 +1842,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     base.nodes = vec![CadNode { id: "node-a".into(), label: "A".into(), kind: "solid".into() }, CadNode { id: "node-b".into(), label: "B".into(), kind: "solid".into() }];
     let node_a = base.nodes[0].id.clone();
     let node_b = base.nodes[1].id.clone();
-    let base_envelope = store::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
-    let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+    let base_envelope = store::os_store::document_materialize::create_document_envelope::<CadSnapshot, CadMutation>(CAD_DOCUMENT_SCHEMA, "cad-play", base, None);
+    let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
     // 🧹️ `base_envelope` is a CANDIDATE that no store ever adopts — it only exists to print the pack
     // both instances load. `ArtifactEnvelope`'s terminal shell asserts in `Drop` that its owners were
     // detached first, so letting the candidate fall out of scope aborts the test process with
@@ -1857,8 +1857,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load a");
     semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load b");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://cad-convergence", "mem://cad-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     // A renames node A.
     instance_a.dispatch_typed(CadCommand::RenameNode(rename_node::RenameNode { node_id: node_a.clone(), value: "Renamed By A".into() }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a renames node a");
@@ -1904,7 +1904,7 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 async fn ingest_operations_is_idempotent_for_cad() {
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://cad-doc", "mem://cad-doc").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
     sender.dispatch_typed(CadCommand::AddNode(add_node::AddNode { kind: "solid".into() }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("add node");
     settle(&mut sender).await;
 
@@ -2443,14 +2443,14 @@ async fn cad_intrinsic_geometry_media_preserves_actual_file_owner() {
         assert_eq!(geometry_child.child_id, created.child_id);
         assert!(geometry_child.ops.is_empty(), "the imported topology is the child's genesis, not an operation");
         let genesis = geometry_child.genesis.as_ref().expect("actual retained topology genesis");
-        let geometry = <semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot as store::ArtifactPack>::decode_pack(&genesis.initial_pack).expect("genesis carries the imported topology");
+        let geometry = <semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&genesis.initial_pack).expect("genesis carries the imported topology");
         let child = &emit.child_emits[1];
         assert_eq!(child.slot, corpus["intrinsicGeometry"]["childSlot"].as_str().unwrap());
         assert_eq!(child.child_id, crate::cad_pane_model(&scene, CadPaneId::Shape).unwrap().child_id);
         assert_eq!(child.ops.len(), 1);
         let mutation: SemioModelMutation = protocol::OpBinary::decode_op(&child.ops[0]).expect("canonical child operation");
         let SemioModelMutation::InsertElement(insert) = mutation else { panic!("exact insert-element media mutation") };
-        assert_eq!(insert.element.geometry, semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef::Brep { brep_id: created.child_id.clone() });
+        assert_eq!(insert.element.geometry, semio_s_artifact_stdio_semio_model::schema::snapshot::GeometryRef::Brep { brep_id: created.child_id.clone() });
         meshes.push(crate::standards::v1::subsets::any::schema::geometry::mesh_from_owned_brep(&geometry).expect("retained topology projects after importer disposal"));
     }
     for payload in [
@@ -2499,7 +2499,7 @@ async fn cad_owned_geometry_media_settles_renders_and_undo_redoes_atomically() {
         if after_model.elements.len() != before_model.elements.len() + 1 { return Err("import did not insert exactly one model element".into()); }
         let geometry_id = after.breps.last().unwrap().child_id.clone();
         let element = after_model.elements.last().unwrap();
-        if element.geometry != (semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef::Brep { brep_id: geometry_id.clone() }) { return Err("model geometry reference escaped its exact retained sibling".into()); }
+        if element.geometry != (semio_s_artifact_stdio_semio_model::schema::snapshot::GeometryRef::Brep { brep_id: geometry_id.clone() }) { return Err("model geometry reference escaped its exact retained sibling".into()); }
         let children = app.test_child_content_view();
         let panes = crate::CadComposedPanes::compose(&after, &children);
         let pane = panes.pane(CadPaneId::Shape);

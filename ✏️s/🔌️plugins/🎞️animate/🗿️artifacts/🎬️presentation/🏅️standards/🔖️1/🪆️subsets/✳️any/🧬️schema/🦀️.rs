@@ -102,7 +102,7 @@ pub enum PresentationError {
     /// 🧾️ The stored envelope JSON was malformed.
     DeserializeEnvelope(semio_framework_value::ValueError),
     /// 🧬️ Whole-buffer envelope ingress was rejected in favor of the persistent fixed-page decoder.
-    EnvelopeIngress(store::ArtifactEnvelopeWholeBufferIngressError),
+    EnvelopeIngress(store::os_store::owned_schema_decode::ArtifactEnvelopeWholeBufferIngressError),
     /// 📐️ VCS replay failed while materializing the projection.
     Vcs(vcs::VcsError),
 }
@@ -133,8 +133,8 @@ impl From<semio_framework_value::ValueError> for PresentationError {
     }
 }
 
-impl From<store::ArtifactEnvelopeWholeBufferIngressError> for PresentationError {
-    fn from(error: store::ArtifactEnvelopeWholeBufferIngressError) -> Self {
+impl From<store::os_store::owned_schema_decode::ArtifactEnvelopeWholeBufferIngressError> for PresentationError {
+    fn from(error: store::os_store::owned_schema_decode::ArtifactEnvelopeWholeBufferIngressError) -> Self {
         Self::EnvelopeIngress(error)
     }
 }

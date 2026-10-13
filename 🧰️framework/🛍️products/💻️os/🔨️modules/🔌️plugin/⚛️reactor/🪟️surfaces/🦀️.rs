@@ -2,7 +2,7 @@
 
 use semio_framework::{UiRefreshSection, ViewModel};
 
-pub(crate) struct SurfaceContext {
+struct SurfaceContext {
     pub(crate) body_key: String,
     pub(crate) view_state: ViewModel,
 }
@@ -194,7 +194,7 @@ fn synthetic_window_surface(surface: &str, view_state: &ViewModel) -> bool {
 }
 
 /// 🪟️ The surface name no app may mount while it has window instances — see [`synthetic_window_surface`].
-pub(crate) const SYNTHETIC_WINDOW_SURFACE: &str = "window";
+const SYNTHETIC_WINDOW_SURFACE: &str = "window";
 
 #[cfg(test)]
 #[path = "🧪️tests/🪟️surface-context-lifecycle/🦀️.rs"]

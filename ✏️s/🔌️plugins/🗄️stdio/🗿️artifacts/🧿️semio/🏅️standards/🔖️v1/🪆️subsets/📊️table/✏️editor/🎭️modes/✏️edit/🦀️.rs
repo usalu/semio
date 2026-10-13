@@ -1,6 +1,6 @@
 //! ✏️ Semio Table editor — the `edit` mode: a single full-pane Main window.
 
-use crate::editor::semio_table::modes::edit::windows::main;
+use crate::editor::modes::edit::windows::main;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

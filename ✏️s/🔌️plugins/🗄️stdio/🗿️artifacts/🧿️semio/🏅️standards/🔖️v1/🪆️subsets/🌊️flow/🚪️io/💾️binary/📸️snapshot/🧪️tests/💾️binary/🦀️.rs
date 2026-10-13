@@ -4,10 +4,10 @@ use semio_framework_job::StepContext;
 static FLOW_HEAP: semio_framework_trace::HeapWitness = semio_framework_trace::HeapWitness;
 use semio_framework_job::{root_cancel_token, Generation, OperationId, StepBudget};
 use semio_framework_os_kernel as store;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio_flow::io::binary::snapshot::{SemioFlowSnapshotDecode, SemioFlowSnapshotDecodeStep};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, SemioFlowSnapshot};
 use semio_s_artifact_stdio_semio::{create_semio_member, SemioMembers, SemioMembersOpen};
-use store::{ArtifactPack, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages};
+use store::{os_store::serialization::ArtifactPack, os_store::owned_schema_decode::OwnedSchemaDecodeCredits, os_store::owned_schema_decode::OwnedSchemaDecodePage, os_store::owned_schema_decode::OwnedSchemaDecodePages};
 use store::{ErasedSnapshotRetirement, MemberFactory, MemberOpenDiagnostic, MemberOpenOperation, MemberOpenRequest, MemberOpenStep, MemberSnapshotOpenOperation, OwnerRef, SpaceMember};
 
 fn request(bytes: &[u8], subset: &str) -> MemberOpenRequest {
@@ -73,7 +73,7 @@ fn close_owned<T: semio_framework_value::retirement::RetireOwned>(value: T) -> u
     let mut born = 0;
     let mut freed = 0;
     loop {
-        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if pending.is_some() { store::artifact_retirement_admit_owned(&mut pending, &mut active, grant).unwrap() } else { store::artifact_retirement_box_close_step(&mut active, grant).unwrap() });
+        let (step, physical) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if pending.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending, &mut active, grant).unwrap() } else { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active, grant).unwrap() });
         assert!(step.progress().fits(grant));
         assert_eq!(physical.requested_bytes, step.progress().retained_capacity_bytes);
         assert_eq!(physical.released_bytes, step.progress().released_bytes);
@@ -146,8 +146,8 @@ fn begin_member_open(request: MemberOpenRequest) -> SemioMembersOpen {
 }
 
 fn expected(value: &serde_json::Value) -> SemioFlowSnapshot {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef;
     let string = |value: &serde_json::Value| value.as_str().unwrap().to_owned();
     SemioFlowSnapshot {
         schema: string(&value["schema"]),
@@ -376,7 +376,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
     assert_eq!(reopened.document_pack_bytes().await.expect("reopened Flow snapshot"), snapshot.encode_pack());
     close_member(&mut reopened);
 
-    let (initial_pack, spr) = store::decode_document_pack_bytes(&envelope).await.expect("real envelope framing");
+    let (initial_pack, spr) = store::os_store::serialization::decode_document_pack_bytes(&envelope).await.expect("real envelope framing");
     let mut persisted_history = store::os_spr::decode_history(&spr, &store::os_spr::DecodeOptions::default()).await.expect("real history decodes");
     persisted_history.transitions.push(store::os_spr::HistoryTransitionRecord {
         id: "persisted-transition".into(),
@@ -387,7 +387,7 @@ async fn semio_member_factory_request_owned_open_admits_only_retained_flow() {
         payload: store::os_spr::encode_history_transition(&store::os_spr::HistoryTransition::Revert { mutation_ids: vec![store::os_spr::MutationId("persisted-missing-operation".into())] }),
     });
     let replay_spr = store::os_spr::encode_history(&persisted_history, &store::os_spr::EncodeOptions::default()).await.expect("non-initial history encodes");
-    let replay_envelope = store::encode_document_pack_bytes(&initial_pack, &replay_spr).await;
+    let replay_envelope = store::os_store::serialization::encode_document_pack_bytes(&initial_pack, &replay_spr).await;
     let (request, retained) = retained_request(&replay_envelope, expected.clone(), Some(owner.clone()));
     let mut replay = begin_member_open(request);
     let mut sequence = 0;

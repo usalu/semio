@@ -77,8 +77,8 @@ impl TryFrom<Snapshot> for JsonSnapshot{
 }
 
 
-impl store::ArtifactPack for JsonSnapshot{
- fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl store::os_store::serialization::ArtifactPack for JsonSnapshot{
+ fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
  fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Snapshot::__dsl_spec())}
  fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
   let inner=store::pack_rt::encode_document(&Snapshot::__dsl_spec(),&Snapshot::from(self).__dsl_to_record(),options)?;
@@ -88,7 +88,7 @@ impl store::ArtifactPack for JsonSnapshot{
   let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|error|store::PackError::from(error.into_value_error()))?;
   if !envelope.matches_identity("stdio.json",store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "JSON logical pack identity differs")))}
   let(record,_)=store::pack_rt::decode_document(&inner,&Snapshot::__dsl_spec(),options)?;
-  Snapshot::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)?.try_into().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
+  Snapshot::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)?.try_into().map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
  }
 }
 

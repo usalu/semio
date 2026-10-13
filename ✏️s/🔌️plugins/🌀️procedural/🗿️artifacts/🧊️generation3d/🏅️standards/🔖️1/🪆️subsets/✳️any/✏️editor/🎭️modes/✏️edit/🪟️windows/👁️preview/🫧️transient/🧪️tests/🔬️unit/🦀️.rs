@@ -37,7 +37,7 @@ fn preview_eval_retained_capacity_is_admitted_and_retired_with_tiny_grants() {
 #[test]
 fn preview_eval_oversized_reserved_capacity_rejects_returns_and_retires_the_exact_owner() {
     let owners = Generation3dPreviewWindowTransientOwner::build_owners();
-    let mut eval_text = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+    let mut eval_text = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
     eval_text.push('e');
     let pointer = eval_text.as_ptr();
     let capacity = eval_text.capacity();
@@ -53,7 +53,7 @@ fn preview_eval_oversized_reserved_capacity_rejects_returns_and_retires_the_exac
     assert_eq!(eval_text, "e");
     assert_eq!(eval_text.as_ptr(), pointer);
     assert_eq!(eval_text.capacity(), capacity);
-    retire(semio_framework_value::retirement::RetireOwned::retirement(Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text: Some(eval_text) }), store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 16);
+    retire(semio_framework_value::retirement::RetireOwned::retirement(Generation3dPreviewWindowTransientMutation::SetPreviewEval { eval_text: Some(eval_text) }), store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 16);
 }
 
 #[test]
@@ -62,7 +62,7 @@ fn preview_eval_transient_codec_matches_the_independent_json_oracle() {
     for expected in fixture["accepted"].as_array().expect("accepted cases") {
         let typed: Generation3dPreviewWindowTransient = serde_json::from_value(expected.clone()).expect("serde_json oracle accepts");
         assert_eq!(serde_json::to_value(&typed).expect("typed JSON"), *expected);
-        let packed = store::ArtifactPack::encode_pack_with(&typed, &Default::default()).expect("pack");
-        assert_eq!(<Generation3dPreviewWindowTransient as store::ArtifactPack>::decode_pack_with(&packed, &Default::default()).expect("unpack"), typed);
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack_with(&typed, &Default::default()).expect("pack");
+        assert_eq!(<Generation3dPreviewWindowTransient as store::os_store::serialization::ArtifactPack>::decode_pack_with(&packed, &Default::default()).expect("unpack"), typed);
     }
 }

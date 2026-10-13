@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, readFileSync, writeFileSync, existsSync, rmSync
 import { dirname, join, resolve } from "node:path";
 import * as toml from "@iarna/toml";
 import cases from "../../🧫️fixtures/🧱️production-preparation/🔣️.json";
-import { prepareStdioComposition } from "../../🟦️.ts";
+import { BRIDGE_MANIFEST, CATALOG_MANIFEST, COMPONENT_MANIFEST, prepareStdioComposition } from "../../🟦️.ts";
 
 const root = resolve(import.meta.dir, "../../../../../..");
 const owner = join(root, "🌎️hub/🧩️compositions/🗄️stdio");
@@ -15,15 +15,15 @@ for (const row of cases.cases) test(`production preparation isolates examples: $
   const scratch = mkdtempSync(join(outputs, "stdio-production-"));
   try {
     const owners = JSON.parse(readFileSync(join(owner, "🧩️composition/🔣️.json"), "utf8")).owners;
-    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", ...owners.map((entry: { root: string; main: boolean }) => entry.main ? "📦️packages/🦀️rust/Cargo.toml" : join(dirname(entry.root), "📦️packages/🦀️rust/Cargo.toml"))];
+    const paths = ["🧩️composition/🔣️.json", "📇️publication/📜️native-catalog.json", "📇️publication/🔣️.json", CATALOG_MANIFEST, BRIDGE_MANIFEST, ...owners.flatMap((entry: { root: string; main: boolean }) => entry.main ? ["📦️packages/🦀️rust/Cargo.toml", COMPONENT_MANIFEST, "🧩️component/🦀️.rs"] : [join(dirname(entry.root), "📦️packages/🦀️rust/Cargo.toml"), join(dirname(entry.root), COMPONENT_MANIFEST), join(dirname(entry.root), "🧩️component/🦀️.rs")])];
     for (const path of paths) {
       const target = join(scratch, path);
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, readFileSync(join(owner, path)));
     }
-    const manifestPath = join(scratch, "📦️packages/🦀️rust/Cargo.toml");
+    const manifestPath = join(scratch, COMPONENT_MANIFEST);
     const manifest = toml.parse(readFileSync(manifestPath, "utf8")) as any;
-    const artifacts = manifest.package.metadata.semio.sources.artifacts.map((path: string) => resolve(owner, "📦️packages/🦀️rust", path));
+    const artifacts = manifest.package.metadata.semio.sources.artifacts.map((path: string) => resolve(owner, dirname(COMPONENT_MANIFEST), path));
     const original = readFileSync(manifestPath, "utf8");
     const declaration = original.match(/^artifacts\s*=.*$/mu);
     if (!declaration) throw Error("Composition artifact input authority missing");

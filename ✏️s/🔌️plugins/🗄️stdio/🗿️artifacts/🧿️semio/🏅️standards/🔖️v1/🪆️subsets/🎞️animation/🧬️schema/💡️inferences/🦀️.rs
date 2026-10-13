@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `⏱️duration/`, honestly derivable
 //! from `timelines` alone — its own nested `channels`/`keyframes`).
 
-use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use crate::schema::snapshot::SemioAnimationSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::duration::compute_semio_animation_duration;

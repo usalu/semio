@@ -1,0 +1,105 @@
+{
+ "order": [
+  "representation",
+  "rigid",
+  "inertia",
+  "mesh",
+  "collision",
+  "queries",
+  "operations",
+  "engine",
+  "root"
+ ],
+ "allow": {
+  "inertia": [],
+  "rigid": [],
+  "representation": [],
+  "mesh": [
+   "rigid",
+   "inertia",
+   "representation"
+  ],
+  "collision": [
+   "rigid",
+   "mesh",
+   "inertia",
+   "representation"
+  ],
+  "queries": [
+   "rigid",
+   "inertia",
+   "mesh",
+   "collision",
+   "representation"
+  ],
+  "operations": [
+   "rigid",
+   "inertia",
+   "mesh",
+   "collision",
+   "representation",
+   "queries"
+  ],
+  "engine": [
+   "rigid",
+   "inertia",
+   "mesh",
+   "collision",
+   "representation",
+   "queries",
+   "operations"
+  ],
+  "root": [
+   "rigid",
+   "inertia",
+   "mesh",
+   "collision",
+   "representation",
+   "queries",
+   "operations",
+   "engine"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "^\\.\\./\\.\\./🌀️rigid/",
+   "rigid"
+  ],
+  [
+   "^\\.\\./\\.\\./🛞️inertia/",
+   "inertia"
+  ],
+  [
+   "^\\.\\./\\.\\./🥽️mesh/",
+   "mesh"
+  ],
+  [
+   "^\\.\\./\\.\\./🧿️collision/",
+   "collision"
+  ],
+  [
+   "^\\.\\./\\.\\./📐️brep/📸️representation/",
+   "representation"
+  ],
+  [
+   "^\\.\\./\\.\\./📐️brep/💡️queries/",
+   "queries"
+  ],
+  [
+   "^\\.\\./\\.\\./📐️brep/🛠️operations/",
+   "operations"
+  ],
+  [
+   "^\\.\\./\\.\\./📐️brep/⚙️engine/",
+   "engine"
+  ],
+  [
+   "^\\.\\./\\.\\./📐️brep/🦀️\\.rs$",
+   "root"
+  ]
+ ]
+}

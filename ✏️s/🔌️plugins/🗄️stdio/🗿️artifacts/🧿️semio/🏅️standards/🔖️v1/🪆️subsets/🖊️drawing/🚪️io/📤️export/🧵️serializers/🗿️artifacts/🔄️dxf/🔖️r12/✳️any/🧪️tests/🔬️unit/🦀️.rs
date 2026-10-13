@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::drawing::schema::snapshot::DrawLayer;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::DrawLayer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn ellipse_path(cx: f64, cy: f64, r: f64) -> Vec<PathSegment> {

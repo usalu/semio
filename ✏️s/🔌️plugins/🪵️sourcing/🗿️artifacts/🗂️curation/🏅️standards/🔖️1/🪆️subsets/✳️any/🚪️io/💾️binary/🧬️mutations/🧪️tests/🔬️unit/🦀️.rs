@@ -13,12 +13,12 @@ async fn op_binary_round_trips_and_agrees_with_text() {
 #[semio_framework_async_macros::async_test]
 async fn curation_document_text_round_trips_through_a_vcs_store() {
     let document = crate::curation_snapshot_from_stock(&crate::schema::demo_stock(), Vec::new());
-    let envelope = store::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::SOURCING_CURATION_SCHEMA, "sourcing-curation-test", document, None);
     let mut doc_store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     doc_store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<CurationSnapshot, SourcingMutation>());
     let object_id = crate::stock_of(&doc_store.snapshot().expect("snapshot"))[0].id.clone();
     let mutation = crate::schema::mutations::create_curated_item(crate::CuratedItem { object_id, count: 3 });
-    doc_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    doc_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&doc_store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&doc_store).await;
     for _ in 0..500_000 {

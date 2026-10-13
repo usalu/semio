@@ -13,7 +13,7 @@
 //! dependency chain to author yet (`canvas` and `styles` themselves are already fully persisted,
 //! not derived).
 
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::snapshot::SemioDrawingSnapshot;
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

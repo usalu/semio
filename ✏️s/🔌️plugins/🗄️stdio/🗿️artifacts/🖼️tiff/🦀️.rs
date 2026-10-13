@@ -39,8 +39,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<TiffSnapshot, TiffMutation>(STDIO_TIFF_DOCUMENT_SCHEMA);
     codec.extension = "tiff";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️6.0/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec

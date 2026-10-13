@@ -104,7 +104,7 @@ impl fmt::Display for ClauseId {
 /// isomorphic to stdio's `✳️text` subset's `SemioTextRun{language,content,..}` (that subset's own
 /// doc comment: "Absorbs the duplicated `LocalizedText` types that currently exist twice inside
 /// the norm plugin") — kept as a local plain value type here rather than a composed
-/// `store::ArtifactChild<SemioTextSnapshot>` because it is nested by the DOZENS as an ordinary
+/// `store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>` because it is nested by the DOZENS as an ordinary
 /// leaf field inside `Names`/`Subject`/`CatalogueProduct` etc., not a top-level content slot; a
 /// composed child handle is for a single large content slot with its own working-scene cache
 /// (`📓️migration-recipe.md` §1/§3), not a value type reused pervasively as a struct field.
@@ -996,7 +996,7 @@ pub fn unescape_op_text_field(value: &str) -> String {
 
 //#region 🔖️SnapshotDslPackCodec
 /// 🧬️ P6: `dsl::DslRecord`/`dsl::DslArtifact` emit the inherent `__dsl_spec`/`__dsl_to_record`/
-/// `__dsl_from_record` trio only — never `store::ArtifactDsl`/`store::ArtifactPack` themselves (a
+/// `__dsl_from_record` trio only — never `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` themselves (a
 /// permanent framework decision, see `🗣️dsl/✨️derive/🦀️.rs`'s "P6" header comment and every
 /// other P6-migrated document kind, e.g. `🪐️space`, `🔁️workflow`, `📖️playbook`). Every one of norm's
 /// fifteen family snapshots therefore needs the identical envelope-wrap/unwrap glue around that
@@ -1051,9 +1051,9 @@ pub fn norm_decode_pack<T: NormArtifactRecord>(bytes: &[u8], options: &store::Pa
         return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", T::ENVELOPE_ID, envelope.binary_token()))));
     }
     let (record, _report) = store::pack_rt::decode_document(&inner, &T::dsl_spec(), options)?;
-    T::dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+    T::dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
 }
-/// 🧩️ Implements `store::ArtifactDsl` + `store::ArtifactPack` for a norm family's snapshot type,
+/// 🧩️ Implements `store::os_store::serialization::ArtifactDsl` + `store::os_store::serialization::ArtifactPack` for a norm family's snapshot type,
 /// entirely by delegating to the four shared functions above. `$extension`/`$envelope_id` are the
 /// two literals every one of the fifteen hand-written impls previously hardcoded independently.
 #[macro_export]
@@ -1076,7 +1076,7 @@ macro_rules! impl_norm_artifact_record {
                 Self::__dsl_from_record(record)
             }
         }
-        impl store::ArtifactDsl for $Snapshot {
+        impl store::os_store::serialization::ArtifactDsl for $Snapshot {
             const EXTENSION: &'static str = $extension;
             fn envelope_id() -> &'static str {
                 $envelope_id
@@ -1090,7 +1090,7 @@ macro_rules! impl_norm_artifact_record {
         }
     };
     (@binary $Snapshot:ty, extension=$extension:literal, envelope_id=$envelope_id:literal $(,sqlite=$sqlite:path)?) => {
-        impl store::ArtifactPack for $Snapshot {
+        impl store::os_store::serialization::ArtifactPack for $Snapshot {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
                 $crate::document::norm_encode_pack(self, options)
             }
@@ -1100,7 +1100,7 @@ macro_rules! impl_norm_artifact_record {
             fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
                 Some(<Self as $crate::document::NormArtifactRecord>::dsl_spec())
             }
-            fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
+            fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
                 $crate::impl_norm_artifact_record!(@sqlite $( $sqlite )?)
             }
         }

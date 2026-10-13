@@ -2,8 +2,8 @@
 
 use super::*;
 use protocol::value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
-use crate::brep::representation::vector::{Pnt3,Vec3 as GeometryVector};
-use crate::brep::representation::vector::matrix::{Affine3,Mat3};
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3 as GeometryVector};
+use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Mat3};
 use std::cmp::{Ordering, Reverse};
 use std::collections::BinaryHeap;
 use semio_framework_mesh_engine::HistoryFoldIndex;
@@ -148,6 +148,11 @@ impl MeshModelingJob {
                 return Ok(MeshModelingStep::Working(self.progress));
             }
             let retained_tessellation=matches!(&self.work,Work::Knife(work)if work.phase==4&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()))||matches!(&self.work,Work::Subdivide(work)if work.phase==3&&(work.tessellation.is_some()||work.tessellation_retirement.is_some()));
+            let retained_initialization=self.orientation_initialization_demands().map_err(MeshKernelError::Retained)?;
+            if let Some(demand)=retained_initialization {
+                if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original orientation initialization exceeds admitted depth")));}
+                if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes {return Ok(MeshModelingStep::Working(self.progress));}
+            }
             let retained_translation=self.translation_demands();
             if let Some(demand)=retained_translation {
                 if grant.maximum_depth<demand.depth {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original translation exceeds admitted depth")));}
@@ -162,7 +167,7 @@ impl MeshModelingJob {
                 Work::Merge(work) => work.advance(),
                 Work::Subdivide(work) => work.advance(grant,tessellation_progress),
                 Work::LoopCut(work) => work.advance(),
-                Work::Orient(work) => work.advance(),
+                Work::Orient(work) => work.advance(grant,tessellation_progress),
                 Work::FillHoles(work) => work.advance(),
                 Work::Inflate(work) => work.advance(),
                 Work::Import(work) => work.advance(),
@@ -198,7 +203,7 @@ impl MeshModelingJob {
                 return Ok(MeshModelingStep::Done(mesh));
             }
             self.progress.units_total = self.progress.units_total.max(self.progress.units_done.saturating_add(1));
-            if retained_tessellation||retained_translation.is_some(){return Ok(MeshModelingStep::Working(self.progress));}
+            if retained_tessellation||retained_translation.is_some()||retained_initialization.is_some(){return Ok(MeshModelingStep::Working(self.progress));}
         }
         Ok(MeshModelingStep::Working(self.progress))
     }
@@ -220,6 +225,11 @@ impl MeshModelingJob {
     /// 🧺️ Quotes the same original source projection through its existing parent frames.
     pub fn snapshot_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
         let Some(owner)=self.work.snapshot_frontier()else{return Ok(None)};let mut demand=owner.preparation_demands()?;demand.depth=demand.depth.checked_add(2).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::DepthLimit,"original Modeling snapshot depth overflow"))?;Ok(Some(demand))
+    }
+
+    /// 🧭️ Quotes the same original orientation initialization backing or face row without touching its source.
+    pub fn orientation_initialization_demands(&self)->Result<Option<protocol::value::RetirementDemand>,protocol::value::ValueError> {
+        match &self.work {Work::Orient(work)if work.phase==1=>work.initialization_demands().map(Some),_=>Ok(None)}
     }
 }
 
@@ -842,10 +852,29 @@ struct Orient {
 }
 impl Orient {
     fn phase(&self)->&'static str { ["snapshot","orient-initialize","orient-incidence","orient-adjacency","orient-components","orient-corners","orient-reconstruct","orient-attributes","orient-selection"][self.phase as usize] }
-    fn advance(&mut self)->MeshResult<Option<HalfedgeMesh>> {
+    fn initialization_demands(&self)->Result<protocol::value::RetirementDemand,protocol::value::ValueError> {
+        let count=self.snapshot.soup.faces.len();
+        let (slots,bytes)=if self.adjacency.capacity()<count {(count,size_of::<Vec<(usize,bool)>>())}else if self.oriented.capacity()<count||self.flipped.capacity()<count {(count,size_of::<bool>())}else {(0,0)};
+        let capacity=slots.checked_mul(bytes).ok_or_else(||protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original orientation initialization backing extent overflow"))?;
+        let copy=if slots!=0||self.cursor==count {0}else {size_of::<Vec<(usize,bool)>>()+2*size_of::<bool>()};
+        Ok(protocol::value::RetirementDemand {copy_bytes:copy,capacity_bytes:capacity,depth:3,..Default::default()})
+    }
+    fn advance(&mut self,grant:RetainedCloneGrant,receipt:&mut RetainedCloneProgress)->MeshResult<Option<HalfedgeMesh>> {
         match self.phase {
             0=>{if self.snapshot.complete() {self.phase=1;}}
-            1=>{if self.cursor==self.snapshot.soup.faces.len() {self.phase=if self.input.is_some() {8}else {2};self.cursor=0;}else {self.adjacency.push(Vec::new());self.oriented.push(false);self.flipped.push(false);self.cursor+=1;}}
+            1=>{
+                let count=self.snapshot.soup.faces.len();let demand=self.initialization_demands().map_err(MeshKernelError::Retained)?;
+                if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth {return Ok(None);}
+                if demand.capacity_bytes!=0 {
+                    let result=if self.adjacency.capacity()<count {self.adjacency.try_reserve_exact(count).map(|()|self.adjacency.capacity()*size_of::<Vec<(usize,bool)>>())}else if self.oriented.capacity()<count {self.oriented.try_reserve_exact(count).map(|()|self.oriented.capacity()*size_of::<bool>())}else {self.flipped.try_reserve_exact(count).map(|()|self.flipped.capacity()*size_of::<bool>())};
+                    let bytes=result.map_err(|_|MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::AllocationFailed,"original orientation initialization backing reservation failed")))?;
+                    *receipt=RetainedCloneProgress {copied_items:1,retained_capacity_bytes:bytes,..Default::default()};
+                    if bytes>grant.maximum_capacity_bytes {return Err(MeshKernelError::Retained(protocol::value::ValueError::literal(protocol::value::ValueRefusalKind::OwnershipLimit,"original orientation allocator exceeded admitted backing").with_retained_progress(*receipt)));}
+                }else {
+                    if self.cursor==count {self.phase=if self.input.is_some() {8}else {2};self.cursor=0;}else {self.adjacency.push(Vec::new());self.oriented.push(false);self.flipped.push(false);self.cursor+=1;}
+                    *receipt=RetainedCloneProgress {copied_items:1,copied_bytes:demand.copy_bytes,..Default::default()};
+                }
+            }
             2=>{
                 if self.face==self.snapshot.soup.faces.len() {self.phase=3;self.face=0;}
                 else {let face=&self.snapshot.soup.faces[self.face];let (a,b)=(face[self.corner],face[(self.corner+1)%face.len()]);let key=(a.min(b),a.max(b));let edge=self.edges.entry(key).or_default();if edge.is_empty() {self.keys.push(key);}edge.push((self.face,a<b));self.corner+=1;if self.corner==face.len() {self.face+=1;self.corner=0;}}

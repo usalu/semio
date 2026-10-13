@@ -9,12 +9,12 @@
 //! own `between`/`apply`/`inverse`/`absorb` algorithm over the shared struct rather than
 //! reinventing the struct itself — see `w1b-type-ownership.md`'s "🧰️triples" entry).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
 
 
 
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
+use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTexture, SemioTopology};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -205,15 +205,15 @@ impl MutationDiff<SemioMeshSnapshot> for SemioMeshDiff {
     fn apply(&self, base: &SemioMeshSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioMeshSnapshot> {
         let mut next = base.clone();
         if let Some(md) = &self.meshes {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.meshes, md, |item| item.id.clone(), |added| added.item.id.clone(), ["meshes"])?;
             apply_named(&mut next.meshes, md, |m| m.id.clone(), apply_mesh);
         }
         if let Some(md) = &self.materials {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.materials, md, |item| item.id.clone(), |added| added.item.id.clone(), ["materials"])?;
             apply_named(&mut next.materials, md, |m| m.id.clone(), apply_material);
         }
         if let Some(td) = &self.textures {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.textures, td, |item| item.id.clone(), |added| added.item.id.clone(), ["textures"])?;
             apply_named(&mut next.textures, td, |t| t.id.clone(), apply_texture);
         }
         Ok(next)
@@ -752,7 +752,7 @@ pub fn diff_replace_texture_bytes(base: &SemioMeshSnapshot, id: &str, new_bytes:
 /// `🎹️composer/🦀️.rs`. Local snapshot fixtures (not imported from `schema::mutations`,
 /// which itself depends ON `schema::diff` — see this file's own module doc comment on why
 /// `diff`/`snapshot`/`mutations` avoid reverse dependencies on each other).
-#[cfg(all(test, feature = "conversion-mesh"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_snapshot_a() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
@@ -768,7 +768,7 @@ fn demo_snapshot_a() -> SemioMeshSnapshot {
         ..Default::default()
     }
 }
-#[cfg(all(test, feature = "conversion-mesh"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn demo_snapshot_b() -> SemioMeshSnapshot {
     SemioMeshSnapshot {
@@ -786,7 +786,7 @@ fn demo_snapshot_b() -> SemioMeshSnapshot {
 }
 /// 🌱 Representative `SemioMeshDiff` cases built declaratively (empty/no-op, removed mesh and material rows, a bare mesh insert, a bare texture insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-mesh"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioMeshDiff> {
     let base = demo_snapshot_a();

@@ -6,7 +6,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
 pub type Process3dEnvelope = ArtifactEnvelope<Process3dSnapshot, Process3dMutation>;

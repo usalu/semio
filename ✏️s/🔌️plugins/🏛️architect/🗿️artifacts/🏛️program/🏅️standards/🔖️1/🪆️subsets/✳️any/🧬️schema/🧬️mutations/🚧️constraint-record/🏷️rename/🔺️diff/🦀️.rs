@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🚧constraints` per Wave C.
 
 use super::RenameConstraintRecord;
-use crate::diff::{ProgramConstraintsDelta, ProgramConstraintsPatchEntry};
-use crate::registers::ConstraintRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramConstraintsDelta, ProgramConstraintsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::ConstraintRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameConstraintRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

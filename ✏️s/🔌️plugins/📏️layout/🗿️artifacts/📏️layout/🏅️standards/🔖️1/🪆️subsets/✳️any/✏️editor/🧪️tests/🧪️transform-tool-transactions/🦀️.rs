@@ -60,7 +60,7 @@ async fn settle(app: &mut LayoutApp, result: Result<InvocationResult, Fault>) ->
             assert!(fault.is_none(), "the operation faulted: {fault:?}");
             return result;
         }
-        PluginApp::maintenance_step(&mut app.0, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
+        PluginApp::maintenance_step(&mut app.0, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
         app.0.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation).await.expect("publication");
         drain(app, &mut result, &mut fault).await.expect("drain");
     }

@@ -4,8 +4,9 @@
 //! become one lowpoly object of triangles.
 use crate::standards::v1::subsets::any::io::mesh_geometry::{snapshot_from_parts, text_error, PolygonPart};
 use crate::schema::snapshot::LowpolySnapshot;
-use semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg;
-use semio_s_artifact_stdio_dwg::{dwg_drawing_to_mesh, DwgSnapshot};
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 pub fn register() {}
 

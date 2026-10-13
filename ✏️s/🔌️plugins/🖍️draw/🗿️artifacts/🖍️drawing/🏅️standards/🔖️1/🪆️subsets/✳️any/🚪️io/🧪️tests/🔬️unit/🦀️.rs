@@ -1,6 +1,6 @@
 use super::*;
 use crate::schema::{create_drawing_image_layer, create_drawing_shape_layer_rect, default_layer_base};
-use crate::standards::v1::subsets::any::schema::{default_drawing_document};
+use crate::standards::v1::subsets::any::schema::default_drawing_document;
 use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 
 /// 🎨️ The direct typed SVG route retains authored paint and positioned text.
@@ -8,7 +8,7 @@ use crate::{DrawingImageAsset, DrawingLayerNode, DrawingTextBody, StrokeStyle};
 async fn drawing_document_to_svg_preserves_shape_text_image_and_gradient_nodes() {
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node;
     use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::schema::snapshot::SvgElement;
-    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{parse_svg_xml};
+    use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::parse_svg_xml;
 
     let mut rect = create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect");
     if let DrawingLayerNode::Shape(shape) = &mut rect {
@@ -80,7 +80,7 @@ async fn declared_pdf_serializer_entry_answers_a_pdf_for_the_native_pack() {
     let entry = io().entries.iter().find(|entry| entry.into.artifact_kind == "s.stdio.pdf").expect("the pdf serializer row is declared");
     let mut doc = default_drawing_document("hop", None);
     doc.layers.push(create_drawing_shape_layer_rect(crate::schema::identity::DrawingIdentity::admit((("Rect")).to_string().into()).expect("nonempty authored identity"), "Rect"));
-    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as store::ArtifactPack>::encode_pack(&doc)));
+    let result: IoResult<IoPayload> = (entry.run)(&IoPayload::Binary(<DrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&doc)));
     let outcome = result.expect("the pdf hop runs");
     let IoPayload::Binary(bytes) = &outcome.value else { panic!("pdf is a binary payload") };
     assert!(bytes.starts_with(b"%PDF-1.4\n"), "{:?}", &bytes[..16]);

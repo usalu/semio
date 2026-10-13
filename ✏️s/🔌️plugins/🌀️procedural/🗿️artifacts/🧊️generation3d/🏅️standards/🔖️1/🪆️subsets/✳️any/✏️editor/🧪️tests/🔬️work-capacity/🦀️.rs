@@ -4,7 +4,7 @@ use super::*;
 fn generation3d_declares_one_work_capacity_for_extent_footprint_and_preflight() {
     let capacity = GENERATION3D_RETAINED_CAPACITY;
     assert_eq!(capacity.work_items(), GENERATION3D_RETAINED_WORK_ITEMS, "the preflight ceiling IS the declared capacity");
-    assert_eq!(capacity.rows_for_items(1), Some(store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS), "one durable item is one forward row plus one inverse row");
+    assert_eq!(capacity.rows_for_items(1), Some(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS), "one durable item is one forward row plus one inverse row");
     let footprint = admit_generation3d_artifact_mutation(&Generation3dMutation::ChangeSchema(crate::standards::v1::subsets::any::schema::mutations::change_schema::ChangeSchema { new_schema: "x".into() })).expect("admissible");
     assert_eq!(footprint.work_items, capacity.rows_for_items(1).expect("one item fits the route capacity"), "the footprint a preflight declares and the extent a work answers are the SAME quantity");
     assert!(capacity.admits(footprint.work_items), "a route whose footprint is N rows must admit an extent of N");

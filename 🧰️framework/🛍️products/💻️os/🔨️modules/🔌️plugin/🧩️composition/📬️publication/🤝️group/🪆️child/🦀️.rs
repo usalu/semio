@@ -1,3 +1,4 @@
+use crate::app_emission::ChildEmit;
 use super::*;
 use crate::component::private_child_input::PrivateChildGenesisInput;
 use semio_framework_job::{Generation, OperationId};
@@ -17,7 +18,7 @@ pub(crate) struct PrivateChildPublicationInput {
     ready: bool,
     closing: bool,
 }
-pub(crate) struct PrivateChildPublicationInputParts {
+struct PrivateChildPublicationInputParts {
     pub(crate) source: OwnedChildEmit,
     pub(crate) metadata: PrivateChildMemberMetadata,
     pub(crate) request: Option<store::MemberOpenRequest>,

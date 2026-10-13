@@ -6,7 +6,7 @@ use store::{
         artifact::{Cell, RowWriter, Reconstruction},
         SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue,
     },
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
@@ -368,7 +368,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
         let limits = c.limits();
         store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::ArtifactDsl>::envelope_id(),
+            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admission::admit(record,native,limits)?;
@@ -379,7 +379,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
     }
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
     fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=RowWriter::new(SQL,c)?;write_rows(self,&mut out,total)?;out.finish()}
     fn from_sqlite_database(d: &SqliteDatabase, c: &mut SqliteSnapshotControl<'_>) -> Result<Self, ValueError> {
@@ -394,7 +394,7 @@ impl ArtifactSqliteSnapshot for Block3dSnapshot {
         let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: v.text()?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: v.text()?, standard: v.text()?, subset: v.text()? } };
         v.done()?;
         catalog_dialect(&target.dialect.artifact_kind,&target.dialect.standard,&target.dialect.subset)?;
-        let catalog = store::ArtifactChild::new(child_id, target);
+        let catalog = store::os_store::artifact_child::ArtifactChild::new(child_id, target);
         let (mut representations, mut vortex_kind_extra, mut vortices, mut rules, mut attributes, mut authors) = (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
         for row in rows.take(3, doc.rowid, c)? {
             let mut v = Cursor::new(row, 3, c);

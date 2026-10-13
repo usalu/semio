@@ -12,7 +12,7 @@ const syntax = ts.createSourceFile("./🟦️.ts", text, ts.ScriptTarget.Latest,
 type Token = { adapter: string; structuredLocation: string; start: number; end: number; value: string; [name: string]: unknown };
 type Parser = (path: string, content: string, adapter: "json" | "jsonc") => Token[];
 const helpers = new Set(["lineLocation", "embeddedArgumentTokens"]);
-const constants = new Set(["indexedLineContent", "indexedLineStarts"]);
+const constants = new Set(["indexedLineContent", "indexedLineStarts", "EMBEDDED_ARGUMENT_WORD", "EMBEDDED_ESCAPED_ARGUMENT_WORD", "EMBEDDED_ARGUMENT_PATH"]);
 const support = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? helpers.has(node.name?.text ?? "") : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => constants.has(declaration.name.getText(syntax)))).map((node) => node.getText(syntax)).join("\n");
 const declaration = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "jsonTokens");
 if (declaration.length !== 1) throw new Error("Expected one actual jsonTokens implementation");

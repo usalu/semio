@@ -2,7 +2,7 @@
 
 use crate::standards::v1_1::subsets::base::schema::snapshot::SvgSnapshot;
 use crate::schema::snapshot::{SvgDocument, SvgNode};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl}, os_store::serialization::ArtifactSqliteSnapshot};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::{project_xml_document, reconstruct_xml_document, XmlSqliteTables};
 
 const TABLES: XmlSqliteTables = XmlSqliteTables {

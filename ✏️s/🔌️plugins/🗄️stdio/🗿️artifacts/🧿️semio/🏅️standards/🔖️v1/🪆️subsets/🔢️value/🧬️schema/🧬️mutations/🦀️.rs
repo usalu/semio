@@ -7,13 +7,10 @@
 //! tree descent. Every variant's `diff()` and `inverse()` is handcrafted directly against the
 //! sparse [`SemioValueTreeDiff`] shape — never apply-and-capture.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
-
-
-
+use crate::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
 
 
 
@@ -23,7 +20,10 @@ use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueD
 
 
 
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+
+
+
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 
 
 #[cfg(test)]
@@ -140,10 +140,10 @@ fn wrap_at_path(path: &[SemioValuePathSegment], leaf: SemioValueDiff) -> SemioVa
         None => leaf,
         Some((SemioValuePathSegment::Key { key }, rest)) => SemioValueDiff::Map { diff: NamedTripleDiff { removed: Vec::new(), added: Vec::new(), modified: vec![NamedModified { key: key.clone(), diff: wrap_at_path(rest, leaf) }] } },
         Some((SemioValuePathSegment::Index { index }, rest)) => SemioValueDiff::List {
-            diff: crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff {
+            diff: semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff {
                 removed: Vec::new(),
                 added: Vec::new(),
-                modified: vec![crate::standards::v1::subsets::base::schema::triples::IndexModified { index: *index, diff: wrap_at_path(rest, leaf) }],
+                modified: vec![semio_s_artifact_stdio_semio_base::schema::triples::IndexModified { index: *index, diff: wrap_at_path(rest, leaf) }],
             },
         },
     }
@@ -215,7 +215,7 @@ pub fn inverse_semio_value_mutation(mutation: &SemioValueMutation, base: &SemioV
 pub(crate) fn demo_mutation_cases() -> Vec<SemioValueMutation> {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
-        SemioValueSnapshot { schema: crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
+        SemioValueSnapshot { schema: crate::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA.into(), root, nodes }
     }
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn mapv(pairs: Vec<(&str, SemioValue)>) -> SemioValue {

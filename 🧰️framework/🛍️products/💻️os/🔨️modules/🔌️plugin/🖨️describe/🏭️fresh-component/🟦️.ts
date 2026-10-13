@@ -6,7 +6,6 @@ import { tmpdir,homedir } from "node:os";
 import {CurrentPhysicalOwnerV1} from "../../../../../../🔨️modules/📁️filesystem/🧾️observation/📁️current/🟦️.ts";
 import { closeSync, existsSync, fsyncSync, lstatSync, mkdirSync, mkdtempSync, openSync, readFileSync, realpathSync, readdirSync, renameSync, rmSync, writeFileSync, writeSync } from "node:fs";
 import { dirname, isAbsolute, join, relative, resolve } from "node:path";
-import { createRequire } from "node:module";
 import { acquireCargoBuildLeaseV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🔒️lease/🟦️.ts";
 import {selectedCargoArguments} from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/📤️arguments/🟦️.ts";
 import {cargoCommandPreparationV1} from "../../../../../🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🏃️command/🟦️.ts";
@@ -16,12 +15,13 @@ import { cargoDirectories } from "../../../../../🦑️repo/🔨️modules/📚
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { isGeneratedPath } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { devToolingEnv, readStableBuildFile, resolveWorkspaceBin } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
 import { blake3Hex } from "../../../../../../🔨️modules/🔏️hash/🟦️.ts";
-import { verifyFreshCatalogPackageV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, extractPluginCore, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
-import { emitOwnerDescriptorPairV1, type DescriptorEmissionControlV1 } from "../🛂️descriptor-emission/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { findPluginCargoFiles, parseComponentSourceOwnerV1, DESCRIPTOR_JSON_REL_PATH } from "../../📇️registry/🔎️discovery/🟦️.ts";
+import { COMPONENT_RECEIPT_SCHEMA_ID, COMPONENT_TARGET, SHIPPED_COMPONENT_MAX_BYTES, componentProvenanceDigestsV1, componentReceiptValueV1, rustToolchainIdentityV1, type ComponentReceiptV1 } from "../🏷️component-receipt/🟦️.ts";
+import { decodeCargoProvenanceV1 } from "../../../../../../🔨️modules/🏃️process/📦️artifacts/🏗️native-build/🧾️receipt/🟦️.ts";
+import { DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_DESCRIPTOR_MAX_BYTES, FRESH_IO_CHUNK_BYTES, CRATE_NAME, freshWasmArtifactSize, pluginWasmArtifactPath } from "../🏗️component-build/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshCheckpoint, freshPathIsWithin, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1, type FreshBuildControlV1, type FreshComponentLeaseV1, type FreshComponentProducedV1, type FreshComponentReceiptV1, type FreshComponentRequestV1 } from "../🧾️source-epoch/🟦️.ts";
 
 export async function freshRun(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv, control: FreshProcessControlV1, stage: string, completed: number, total: number): Promise<string | undefined> {
@@ -162,14 +162,23 @@ export function freshStage(bytes: Uint8Array, destination: string, control: Fres
   }
 }
 
-/** 🪪️ Verifies descriptor outputs against the raw snapshot retained before extraction. */
+/** 📍️ The committed semantic descriptor pack of the component crate named by its Cargo package, found through registry
+ * discovery — the descriptor a fresh build's own `describe()` answer must equal byte for byte. */
+export function committedSemanticDescriptorPackV1(repoRoot: string, cargoPackage: string): Uint8Array {
+  const owner = findPluginCargoFiles(repoRoot).map((path) => parseComponentSourceOwnerV1(path, repoRoot)).find((row) => row.packageName === cargoPackage);
+  if (!owner) throw new Error(`fresh component ${cargoPackage} is no discovered plugin or extension component`);
+  return readFileSync(join(dirname(resolve(repoRoot, owner.cratePath, ...DESCRIPTOR_JSON_REL_PATH)), DESCRIPTOR_PACK_FILENAME));
+}
+
+/** 🪪️ Verifies the emitted SEMANTIC descriptor of the fresh bytes and refuses it unless it equals the committed semantic
+ * descriptor: that pack is what the trusted catalog serves, bound to the bytes only by the component receipt. */
 export async function captureFreshComponentInputs(
   repoRoot: string,
-  request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId">,
+  request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId" | "cargoPackage">,
   componentBytes: Uint8Array,
-  coreBytes: Uint8Array,
   paths: { descriptorPack: string; descriptorJson: string },
   control: FreshBuildControlV1,
+  committedPack: Uint8Array = committedSemanticDescriptorPackV1(repoRoot, request.cargoPackage),
 ) {
   const admission = { remaining: 2 * FRESH_DESCRIPTOR_MAX_BYTES };
   const check = () => freshCheckpoint(control, "verify", 5, 8);
@@ -178,29 +187,18 @@ export async function captureFreshComponentInputs(
   try {
     descriptorJsonBytes = readStableBuildFile(paths.descriptorJson, FRESH_DESCRIPTOR_MAX_BYTES, admission, check);
     descriptorBytes = readStableBuildFile(paths.descriptorPack, FRESH_DESCRIPTOR_MAX_BYTES, admission, check);
-    const projected = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(descriptorJsonBytes)) as Record<string, any>;
-    const componentSha256 = createHash("sha256").update(componentBytes).digest("hex");
-    const coreSha256 = createHash("sha256").update(coreBytes).digest("hex");
-    if (projected.packageId !== request.componentPackageId || projected.manifest?.pluginId !== request.pluginId || typeof projected.manifest?.version !== "string" || projected.manifest.version.length === 0 || projected.role !== "plugin")
+    const semantic = verifySemanticDescriptorPairBytesV1(descriptorJsonBytes, descriptorBytes);
+    if (semantic.packageId !== request.componentPackageId || semantic.pluginId !== request.pluginId || semantic.version.length === 0 || semantic.role !== "plugin")
       throw new Error("fresh descriptor identity differs from the exact component request");
-    verifyFreshCatalogPackageV1(descriptorJsonBytes, descriptorBytes, {
-      pluginId: request.pluginId,
-      packageId: request.componentPackageId,
-      version: projected.manifest.version,
-      role: "plugin",
-      execution: "isolated",
-      wasmSha256: componentSha256,
-      coreWasmSha256: coreSha256,
-    });
+    if (!Buffer.from(descriptorBytes).equals(Buffer.from(committedPack))) throw new Error(`fresh ${request.pluginId} bytes describe a different semantic descriptor than the committed pair; commit it with \`bun nx run workspace:components describe ${request.pluginId}\``);
     check();
     const result = {
       componentBytes,
       descriptorBytes,
-      componentSha256,
+      componentSha256: createHash("sha256").update(componentBytes).digest("hex"),
       componentBlake3: blake3Hex(componentBytes),
-      descriptorSha256: createHash("sha256").update(descriptorBytes).digest("hex"),
-      coreSha256,
-      version: projected.manifest.version as string,
+      descriptorSha256: semantic.semanticSha256,
+      version: semantic.version,
     };
     complete = true;
     return result;
@@ -208,6 +206,25 @@ export async function captureFreshComponentInputs(
     descriptorJsonBytes?.fill(0);
     if (!complete) descriptorBytes?.fill(0);
   }
+}
+
+/** 🧾️ The shipped receipt of one fresh production: its bytes, its semantic descriptor, the pinned toolchain and the provenance
+ * digests of exactly the units its component build observed (`provenance`, that build's cargo provenance receipt). */
+export function freshComponentReceiptV1(repoRoot: string, request: Pick<FreshComponentRequestV1, "pluginId" | "componentPackageId" | "componentProfile">, snapshot: Readonly<{ componentSha256: string; descriptorSha256: string; componentBytes: Uint8Array }>, provenance: string, buildDirectory: string, cargoHome: string): ComponentReceiptV1 {
+  const digests = componentProvenanceDigestsV1(decodeCargoProvenanceV1(readFileSync(provenance, "utf8")), { repository: repoRoot, build: buildDirectory, cargoHome });
+  return componentReceiptValueV1({
+    schema: COMPONENT_RECEIPT_SCHEMA_ID,
+    pluginId: request.pluginId,
+    packageId: request.componentPackageId,
+    profile: request.componentProfile,
+    target: COMPONENT_TARGET,
+    wasmSha256: snapshot.componentSha256,
+    wasmBytes: snapshot.componentBytes.byteLength,
+    semanticDescriptorSha256: snapshot.descriptorSha256,
+    toolchain: rustToolchainIdentityV1(repoRoot),
+    sourceTreeDigest: digests.sourceTreeDigest,
+    provenanceSha256: digests.provenanceSha256,
+  });
 }
 
 /** 🫴️ Loans a private bounded copy once and drains its consumer before retiring the capability. */
@@ -261,6 +278,7 @@ export async function stageFreshComponentInputs<T>(
   snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>>,
   stageRoot: string,
   witExports: readonly string[],
+  componentReceipt: ComponentReceiptV1,
   control: FreshBuildControlV1,
   derive: (lease: FreshComponentLeaseV1) => Promise<T>,
 ): Promise<FreshComponentProducedV1<T>> {
@@ -273,13 +291,14 @@ export async function stageFreshComponentInputs<T>(
     const stagedDescriptor = freshStage(snapshot.descriptorBytes, descriptorPath, control, "stage-descriptor", 6, 8);
     ownedFiles.push(descriptorPath);
     if (stagedComponent.sha256 !== snapshot.componentSha256 || stagedDescriptor.sha256 !== snapshot.descriptorSha256) throw new Error("fresh staged bytes differ from the verified snapshot");
+    if (componentReceipt.wasmSha256 !== snapshot.componentSha256 || componentReceipt.wasmBytes !== stagedComponent.byteLength || componentReceipt.semanticDescriptorSha256 !== snapshot.descriptorSha256 || componentReceipt.pluginId !== request.pluginId || componentReceipt.packageId !== request.componentPackageId) throw new Error("fresh component receipt does not name the staged bytes");
     const receipt: FreshComponentReceiptV1 = Object.freeze({
       pluginId: request.pluginId,
       packageId: request.componentPackageId,
       version: snapshot.version,
       component: Object.freeze({ relativePath: "component.wasm", ...stagedComponent, blake3: snapshot.componentBlake3 }),
       descriptor: Object.freeze({ relativePath: "descriptor.semio", ...stagedDescriptor }),
-      coreSha256: snapshot.coreSha256,
+      componentReceipt,
       witExports: Object.freeze([...witExports]),
     });
     const derived = await withFreshComponentLease(snapshot.componentBytes, control, derive);
@@ -315,35 +334,23 @@ export async function produceFreshComponentV1<T>(
   mkdirSync(workRoot, { mode: 0o700 });
   const env = devToolingEnv({ CARGO_TARGET_DIR: targetRoot, CARGO_INCREMENTAL: "0" });
   const total = 8;
-  let componentBytes: Uint8Array | undefined, coreBytes: Uint8Array | undefined, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>> | undefined;
+  let componentBytes: Uint8Array | undefined, snapshot: Awaited<ReturnType<typeof captureFreshComponentInputs>> | undefined;
   try {
-    const cargo = request.rootCdylib
-      ? ["rustc", "-p", request.cargoPackage, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2", "--profile", request.componentProfile]
-      : ["build", "-p", request.cargoPackage, "--target", "wasm32-wasip2", "--profile", request.componentProfile];
+    const cargo = ["build", "-p", request.cargoPackage, "--lib", "--target", "wasm32-wasip2", "--profile", request.componentProfile];
     const componentInvocation = await freshRun("cargo", cargo, repoRoot, env, control, "build", 0, total);
     const cargoComponent = pluginWasmArtifactPath(repoRoot, request.cargoPackage, request.componentProfile, targetRoot);
     if (cargoComponent !== join(targetRoot, "wasm32-wasip2", request.componentProfile, request.outputName)) throw new Error("fresh component output identity differs from the shared Cargo artifact path");
-    freshWasmArtifactSize(cargoComponent, FRESH_COMPONENT_MAX_BYTES, "fresh WASIp2 component");
-    componentBytes = readStableBuildFile(cargoComponent, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot", 1, total));
+    freshWasmArtifactSize(cargoComponent, SHIPPED_COMPONENT_MAX_BYTES, "fresh WASIp2 component");
+    componentBytes = readStableBuildFile(cargoComponent, SHIPPED_COMPONENT_MAX_BYTES, { remaining: SHIPPED_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot", 1, total));
     if (!componentBytes.byteLength) throw new Error("fresh component is empty");
     const component = join(workRoot, "component.wasm");
     freshStage(componentBytes, component, control, "snapshot", 1, total);
     const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
     if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
-    const extractRoot = join(workRoot, "extract");
-    mkdirSync(extractRoot, { mode: 0o700 });
-    const baseName = request.outputName.slice(0, -".wasm".length);
-    await freshRun("node", [jco, "transpile", component, "-o", extractRoot, "--name", baseName, "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], repoRoot, env, control, "extract-core", 1, total);
-    const corePath = join(extractRoot, `${baseName}.core.wasm`);
-    freshWasmArtifactSize(corePath, FRESH_COMPONENT_MAX_BYTES, "fresh extracted core Wasm module");
-    coreBytes = readStableBuildFile(corePath, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => freshCheckpoint(control, "snapshot-core", 2, total));
-    if (!coreBytes.byteLength) throw new Error("fresh core module is empty");
-    const core = join(workRoot, "core.wasm");
-    freshStage(coreBytes, core, control, "snapshot-core", 2, total);
     const witPath = join(workRoot, "component.wit");
-    await freshRun("node", [jco, "wit", component, "--output", witPath], repoRoot, env, control, "inspect-wit", 2, total);
+    await freshRun("node", [jco, "wit", component, "--output", witPath], repoRoot, env, control, "inspect-wit", 1, total);
     const wit = readFileSync(witPath, "utf8");
-    if (Buffer.byteLength(wit) > FRESH_COMPONENT_MAX_BYTES) throw new Error("fresh component WIT exceeds its fixed boundary");
+    if (Buffer.byteLength(wit) > SHIPPED_COMPONENT_MAX_BYTES) throw new Error("fresh component WIT exceeds its fixed boundary");
     const witExports = [...wit.matchAll(/\bexport\s+([^;]+);/gu)]
       .map((match) => {
         const token = match[1]!.trim();
@@ -361,55 +368,17 @@ export async function produceFreshComponentV1<T>(
     const emitter = join(targetRoot, "debug", process.platform === "win32" ? `${CRATE_NAME}.exe` : CRATE_NAME);
     const descriptorRoot = join(workRoot, "descriptor");
     mkdirSync(descriptorRoot, { mode: 0o700 });
-    await freshRun(emitter, ["describe", component, "--core", core, "--out", descriptorRoot], repoRoot, env, control, "emit-descriptor", 4, total);
+    await freshRun(emitter, ["describe", component, "--out", descriptorRoot], repoRoot, env, control, "emit-descriptor", 4, total);
     const descriptorPack = join(descriptorRoot, DESCRIPTOR_PACK_FILENAME);
     const descriptorJson = join(descriptorRoot, DESCRIPTOR_JSON_FILENAME);
-    snapshot = await captureFreshComponentInputs(repoRoot, request, componentBytes, coreBytes, { descriptorPack, descriptorJson }, control);
-    const produced = await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, control, derive);
+    snapshot = await captureFreshComponentInputs(repoRoot, request, componentBytes, { descriptorPack, descriptorJson }, control);
     if (!componentInvocation || !descriptorInvocation) throw new Error("fresh component compiler observations are missing");
+    const componentReceipt = freshComponentReceiptV1(repoRoot, request, snapshot, componentInvocation, cargoDirectories(repoRoot, env).build, resolve(env.CARGO_HOME ?? join(homedir(), ".cargo")));
+    const produced = await stageFreshComponentInputs(request, snapshot, stageRoot, witExports, componentReceipt, control, derive);
     return { ...produced, compilerInvocations: [componentInvocation, descriptorInvocation] };
   } finally {
     componentBytes?.fill(0);
-    coreBytes?.fill(0);
     snapshot?.descriptorBytes.fill(0);
     rmSync(workRoot, { recursive: true, force: true });
-  }
-}
-
-/** 🛂️ The ONE describe route of every plugin and extension component (the inferred Nx `describe` target, which
- * `dependsOn` `component-dev`): reads the exact bytes `component-dev` staged at `<crate>/dist/component-dev/<crate>.wasm`,
- * extracts its core with jco and re-emits `🛂️.descriptor.semio` + `🔣️.json` at the owner root (`<owner>/📦️packages/🦀️rust`
- * is the crate). No build happens here, so the committed descriptor, the `materialize-dev` staging (which reads the same
- * deliverable) and every consumer that resolves `dist/component-dev` describe one build by construction. */
-export function describeComponentDeliverable(repoRoot: string, manifest: string, control: DescriptorEmissionControlV1 = {}): number {
-  const manifestPath = resolve(repoRoot, manifest);
-  try {
-    const cargo = createRequire(import.meta.url)("@iarna/toml").parse(readFileSync(manifestPath, "utf8")) as { package?: { name?: string; metadata?: { component?: { package?: string }; semio?: { "component-kind"?: string } } } };
-    const packageName = cargo.package?.name;
-    if (!packageName || !cargo.package?.metadata?.component?.package || !["plugin", "extension"].includes(cargo.package.metadata.semio?.["component-kind"] ?? "")) throw new Error(`${manifest} has no authored plugin or extension component kind`);
-    const crateRoot = dirname(manifestPath);
-    const deliverableRoot = join(crateRoot, "dist");
-    const component = join(deliverableRoot, "component-dev", `${packageName.replace(/-/g, "_")}.wasm`);
-    if (!existsSync(component)) throw new Error(`no component-dev deliverable at ${relative(repoRoot, component)}; describe runs through Nx, which builds component-dev first`);
-    const scratch = mkdtempSync(join(deliverableRoot, ".semio-describe-core-"));
-    try {
-      const core = extractPluginCore(repoRoot, component, scratch, packageName.replace(/-/g, "_"));
-      const receipt = emitOwnerDescriptorPairV1(repoRoot, { rawComponentPath: component, extractedCorePath: core, ownerRoot: resolve(crateRoot, "..", ".."), artifactRoot: deliverableRoot }, control);
-      console.log(`described ${receipt.pluginId} (${receipt.role} ${receipt.packageId}@${receipt.version}) from ${relative(repoRoot, component)} -> ${relative(repoRoot, receipt.ownerRoot)} (wasm=${receipt.rawSha256} core=${receipt.coreSha256} descriptor=${receipt.descriptorSha256})`);
-      return 0;
-    } finally {
-      rmSync(scratch, { recursive: true, force: true });
-    }
-  } catch (error) {
-    console.error(`describe ${manifest} failed: ${(error as Error).message}`);
-    return 1;
-  }
-}
-
-/** 🛂️ `describe component --manifest <Cargo.toml>`: the command the inferred Nx `describe` target of every component runs. */
-export class DescribeComponentScript extends BundleScript {
-  run(segments: string[]): void {
-    if (segments.length !== 2 || segments[0] !== "--manifest") throw new Error("usage: component --manifest <Cargo.toml>");
-    process.exit(describeComponentDeliverable(this.repoRoot, segments[1]!));
   }
 }

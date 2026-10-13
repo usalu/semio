@@ -1,5 +1,5 @@
-use crate::standards::v1::subsets::object::io::text::snapshot::decode_semio_object_snapshot_json;
-use crate::standards::v1::subsets::drawing::io::text::snapshot::enc_str;
+use crate::io::text::snapshot::decode_semio_object_snapshot_json;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
 use super::*;
 
 #[semio_framework_async_macros::async_test]
@@ -18,7 +18,7 @@ async fn minimal_schema_valid_json_defaults_optional_children() {
     let snapshot = decode_semio_object_snapshot_json(&minimal_text).expect("schema-valid minimal Object snapshot");
     assert!(snapshot.brep.is_none() && snapshot.mesh.is_none() && snapshot.properties.is_none());
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&snapshot)).expect("snapshot reencodes"), minimal);
-    let artifact: crate::standards::v1::subsets::object::schema::SemioObjectArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Object artifact");
+    let artifact: crate::schema::SemioObjectArtifact = semio_framework_pack_json::from_json_str(&minimal_text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("schema-valid minimal Object artifact");
     assert!(artifact.brep.is_none() && artifact.mesh.is_none() && artifact.properties.is_none());
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&artifact)).expect("artifact reencodes"), minimal);
     let mut malformed = minimal;
@@ -29,16 +29,16 @@ async fn minimal_schema_valid_json_defaults_optional_children() {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioObjectSnapshot::default();
-    let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioObjectSnapshot::default();
-    let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -47,11 +47,11 @@ async fn dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = demo_object_snapshot();
-    let bytes = <SemioObjectSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioObjectSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioObjectSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
-    let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back_text = <SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back_text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back_text);
 }
 
@@ -61,7 +61,7 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn parent_snapshot_stores_only_child_handles_never_content() {
     let snap = demo_object_snapshot();
-    let text = <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(&snap);
+    let text = <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
     assert!(text.contains(&enc_str("crate-brep")), "hex-encoded child_id must be present");
     assert!(!text.to_lowercase().contains("vertices") && !text.to_lowercase().contains("faces"), "must never embed brep/mesh field names — only the handle");
 }

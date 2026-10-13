@@ -2,7 +2,7 @@
 async fn primary_asset_is_nonempty() {
     let text = include_str!("../../../../🖼️assets/🛢️liquid-retaining-fem-anchor/🛢️liquid-retaining-fem-anchor/🗣️.dsl.semio");
     assert!(text.len() > 8);
-    let snap = <crate::En1992Snapshot as store::ArtifactDsl>::parse_dsl(text).expect("parse liquid example");
+    let snap = <crate::En1992Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("parse liquid example");
     assert!(!snap.members.is_empty());
     assert!(snap.members.iter().any(|m| m.tightness.is_some() || m.kind == crate::MemberKind::LiquidRetaining));
     let report = crate::standards::v1::subsets::any::schema::inferences::evaluate(&snap);

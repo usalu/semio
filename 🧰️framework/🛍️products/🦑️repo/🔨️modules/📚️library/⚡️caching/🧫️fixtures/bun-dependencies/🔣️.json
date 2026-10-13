@@ -217,10 +217,8 @@
       "@iarna/toml"
     ],
     "excluded": [
-      "{workspaceRoot}/bun.lock"
-    ],
-    "manifestFields": [
-      "name"
+      "{workspaceRoot}/bun.lock",
+      "{workspaceRoot}/package.json"
     ]
   }
 }

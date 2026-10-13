@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚠️risks` per Wave C.
 
 use super::RenameRisk;
-use crate::diff::{ProgramRisksDelta, ProgramRisksPatchEntry};
-use crate::registers::RiskPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramRisksDelta, ProgramRisksPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::RiskPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameRisk, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

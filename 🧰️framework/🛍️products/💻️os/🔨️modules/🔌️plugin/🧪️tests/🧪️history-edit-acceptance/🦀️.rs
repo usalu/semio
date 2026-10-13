@@ -157,7 +157,7 @@ fn acceptance_dsl_of<A: ArtifactApp>(document: DslValue) -> Option<String> {
         return None;
     }
     let snapshot = <A::Snapshot as semio_framework_value::FromValue>::from_value(document).ok()?;
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
     std::mem::forget(snapshot);
     Some(text)
 }
@@ -193,7 +193,7 @@ pub fn acceptance_cases<A: ArtifactApp>(root: &std::path::Path) -> Vec<Acceptanc
 /// document share its key, so they can follow each other downstream.
 pub async fn acceptance_example_cases<A: ArtifactApp>(root: &std::path::Path, examples: &[ExampleSource]) -> Vec<AcceptanceCase<A::Mutation>> {
     let initial = A::initial_snapshot().await;
-    let mut documents = vec![("initial".to_string(), store::ArtifactDsl::print_dsl(&initial))];
+    let mut documents = vec![("initial".to_string(), store::os_store::serialization::ArtifactDsl::print_dsl(&initial))];
     std::mem::forget(initial);
     for example in examples {
         let body = example.document();
@@ -402,7 +402,7 @@ where
     M: SpaceMember + MemberFactory + Send + 'static,
 {
     let head = app.store.snapshot().map_err(|error| format!("the head does not fold: {error:?}"))?;
-    let value = (semio_framework_value::ToValue::to_value(&head), store::ArtifactDsl::print_dsl(&head));
+    let value = (semio_framework_value::ToValue::to_value(&head), store::os_store::serialization::ArtifactDsl::print_dsl(&head));
     std::mem::forget(head);
     Ok(value)
 }
@@ -439,7 +439,7 @@ where
     if let Some(as_of) = as_of {
         let committed = app.store.snapshot_owner();
         let shown = app.time_travel.render_snapshot_or(&app.tool_runs, &committed);
-        let shown = (semio_framework_value::ToValue::to_value(shown.as_ref()), store::ArtifactDsl::print_dsl(shown.as_ref()));
+        let shown = (semio_framework_value::ToValue::to_value(shown.as_ref()), store::os_store::serialization::ArtifactDsl::print_dsl(shown.as_ref()));
         if shown != *as_of {
             let _ = acceptance_verb(app, HISTORY_EDIT_EXIT_ACTION_ID, Vec::new()).await;
             return Err(AcceptanceVerdict::Fail(format!("while editing, the preview is not the document as of the edited mutation (downstream not applied) at {}", acceptance_text_difference(&shown.1, &as_of.1))));

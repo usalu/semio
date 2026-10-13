@@ -57,12 +57,12 @@ fn maintenance_fault(code: &'static str, message: &'static str) -> Fault {
 }
 
 /// 🧯️ Turns a refused owner-catalog admission into its fault, keeping the receipt the refused build actually spent.
-fn owners_admission_fault<P, Mutation>(refusal: store::DocumentStoreOwnersAdmissionError<P, Mutation>) -> Fault
+fn owners_admission_fault<P, Mutation>(refusal: store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P, Mutation>) -> Fault
 where
     P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P>,
 {
-    let store::DocumentStoreOwnersAdmissionError { error, owners, progress } = refusal;
+    let store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners, progress } = refusal;
     std::mem::forget(owners);
     plugin_retirement_fault(error).with_retained_progress(progress)
 }
@@ -453,7 +453,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                         Ok(PluginLifecycleStep::Progress(progress))
                     }
                     RetainedCloneStep::Complete(progress) => {
-                        if !self.presence_peer_retirements.get(generation).is_some_and(store::PresencePeersRetirement::terminal_is_empty) {
+                        if !self.presence_peer_retirements.get(generation).is_some_and(store::os_store::presence::PresencePeersRetirement::terminal_is_empty) {
                             return Err(maintenance_fault("interactive-job.maintenance-presence-peer-terminal-not-empty", "live app-typed presence retirement reported Complete without its exact terminal-empty witness"));
                         }
                         drop(self.presence_peer_retirements.remove(generation).ok_or_else(authority)?);
@@ -850,9 +850,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             ActiveDocumentArchiveLoadPhase::DecodeParent => RetirementDemand { copy_bytes: 1, ..item },
             ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary => {
                 if active.retained_pending.is_some() {
-                    store::artifact_retirement_owned_birth_demands(&active.retained_pending)?
+                    store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&active.retained_pending)?
                 } else if let Some(retained) = active.retained.as_ref() {
-                    store::artifact_retirement_box_demands(retained, body)?
+                    store::os_store::snapshot_read::artifact_retirement_box_demands(retained, body)?
                 } else {
                     item
                 }
@@ -862,11 +862,11 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
                 if active.hydration.is_none() {
                     item
                 } else {
-                    RetirementDemand { capacity_bytes: store::retire_document_envelope_birth_bytes::<A::Snapshot, A::Mutation>() + size_of::<store::DocumentStoreOwners<A::Snapshot, A::Mutation>>(), depth: 4, ..Default::default() }
+                    RetirementDemand { capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<A::Snapshot, A::Mutation>() + size_of::<store::os_store::document_store_owners::DocumentStoreOwners<A::Snapshot, A::Mutation>>(), depth: 4, ..Default::default() }
                 }
             }
             ActiveDocumentArchiveLoadPhase::FillMember => {
-                let length = active.member.as_ref().and_then(|member| member.entry.as_ref().map(|entry| entry.envelope_pack.len().saturating_sub(member.copied).min(store::OWNED_SCHEMA_DECODE_PAGE_BYTES))).unwrap_or(0);
+                let length = active.member.as_ref().and_then(|member| member.entry.as_ref().map(|entry| entry.envelope_pack.len().saturating_sub(member.copied).min(store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES))).unwrap_or(0);
                 RetirementDemand { copy_bytes: length, capacity_bytes: length, ..item }
             }
             ActiveDocumentArchiveLoadPhase::RetireMemberSource => active.member.as_ref().map_or(item, |member| nonzero(member.source_retirement_demands())),
@@ -1001,9 +1001,9 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static> VcsArtifac
             }
             ActiveDocumentArchiveLoadPhase::RetireParentHistoryAuxiliary => {
                 let step = if active.retained_pending.is_some() {
-                    store::artifact_retirement_admit_owned(&mut active.retained_pending, &mut active.retained, grant).map_err(plugin_retirement_fault)?
+                    store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut active.retained_pending, &mut active.retained, grant).map_err(plugin_retirement_fault)?
                 } else if active.retained.is_some() {
-                    store::artifact_retirement_box_close_step(&mut active.retained, grant).map_err(plugin_retirement_fault)?
+                    store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active.retained, grant).map_err(plugin_retirement_fault)?
                 } else {
                     RetainedCloneStep::Progress(item)
                 };

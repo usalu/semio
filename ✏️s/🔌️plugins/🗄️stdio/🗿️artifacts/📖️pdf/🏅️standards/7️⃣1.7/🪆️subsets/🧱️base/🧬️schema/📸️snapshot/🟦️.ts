@@ -2735,7 +2735,7 @@ export const schema = {
                 {
                   "type": "integer",
                   "minimum": 0,
-                  "semioPrimitive": "u64",
+                  "x-semio-primitive": "u64",
                   "maximum": 18446744073709551615
                 },
                 {
@@ -6873,7 +6873,7 @@ export const schema = {
             {
               "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64",
+              "x-semio-primitive": "u64",
               "maximum": 18446744073709551615
             },
             {
@@ -6944,7 +6944,7 @@ export const schema = {
             {
               "type": "integer",
               "minimum": 0,
-              "semioPrimitive": "u64",
+              "x-semio-primitive": "u64",
               "maximum": 18446744073709551615
             },
             {
@@ -7126,7 +7126,7 @@ export const schema = {
             },
             "value": {
               "type": "integer",
-              "semioPrimitive": "i64",
+              "x-semio-primitive": "i64",
               "minimum": -9223372036854775808,
               "maximum": 9223372036854775807
             }
@@ -11042,8 +11042,8 @@ const resolveRef = (ref: string, own: Schema): { node: Schema; document: Schema 
   return { node: node as Schema, document };
 };
 const matches = (schema: Schema, value: unknown, own: Schema, at: string, errors: string[]): boolean => {
-  if (schema.semioPrimitive === "binary64" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64") { try { parseBinary64(value); return true; } catch { return (errors.push(`${at}: expected owned binary64`), false); } }
-  if (schema.semioPrimitive === "i64" || schema.semioPrimitive === "u64") return typeof value === "bigint" && value >= (schema.semioPrimitive === "i64" ? -9223372036854775808n : 0n) && value <= (schema.semioPrimitive === "i64" ? 9223372036854775807n : 18446744073709551615n) || (errors.push(`${at}: expected owned integer word`), false);
+  if (schema["x-semio-primitive"] === "binary64" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64Transport" || schema["$ref"] === "https://json.schemas.assets.semio-tech.com/framework/value/schema.json#/$defs/Binary64") { try { parseBinary64(value); return true; } catch { return (errors.push(`${at}: expected owned binary64`), false); } }
+  if (schema["x-semio-primitive"] === "i64" || schema["x-semio-primitive"] === "u64") return typeof value === "bigint" && value >= (schema["x-semio-primitive"] === "i64" ? -9223372036854775808n : 0n) && value <= (schema["x-semio-primitive"] === "i64" ? 9223372036854775807n : 18446744073709551615n) || (errors.push(`${at}: expected owned integer word`), false);
   if (typeof schema["$ref"] === "string") { const resolved = resolveRef(schema["$ref"] as string, own); return matches(resolved.node, value, resolved.document, at, errors); }
   if (schema["const"] !== undefined) return value === schema["const"] || (errors.push(`${at}: expected ${JSON.stringify(schema["const"])}`), false);
   if (Array.isArray(schema["enum"])) return (schema["enum"] as unknown[]).includes(value) || (errors.push(`${at}: not one of ${(schema["enum"] as unknown[]).join(", ")}`), false);

@@ -4,7 +4,7 @@
 
 use crate::{SequenceEdge, SequenceStep, SequenceWorkingScene, SlotRef, StepParams};
 use infinite_board_port_directed_dag::would_create_cycle;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{self as flow_mutations, SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{self as flow_mutations, SemioFlowMutation};
 
 /// 📏️ How far two drag offsets may differ and still be one drag: a layout moves every step by its own offset, equal offsets share one leaf.
 const DRAG_OFFSET_TOLERANCE: f64 = 1e-6;

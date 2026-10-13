@@ -4,7 +4,7 @@ import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 import { DescriptorBuildScript, DescriptorTestScript } from "../../🏗️component-build/🟦️.ts";
 import { DescribeScript } from "../../🛂️descriptor-emission/🟦️.ts";
-import { DescribeComponentScript } from "../../🏭️fresh-component/🟦️.ts";
+import { ComponentScript } from "../../🧩️component-stage/🟦️.ts";
 
 /** 🧪️ Runs the portable source, staging and actual process lifetime proofs for fresh producers. */
 class FreshComponentCheckScript extends BundleScript {
@@ -27,4 +27,4 @@ class CanonicalDescriptorPackCheckScript extends BundleScript {
   }
 }
 
-if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", DescribeComponentScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));
+if (import.meta.main) await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("build", DescriptorBuildScript).register("test", DescriptorTestScript).register("describe", DescribeScript).register("component", ComponentScript).register("test-fresh-component", FreshComponentCheckScript).register("test-canonical-descriptor-pack", CanonicalDescriptorPackCheckScript), { invocation: original }));

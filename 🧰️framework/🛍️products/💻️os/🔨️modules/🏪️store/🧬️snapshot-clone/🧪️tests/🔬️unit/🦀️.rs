@@ -7,7 +7,7 @@ fn snapshot_publication_original_build_six_frontiers_preserve_native_pointers_an
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📦️assembly/🔣️.json")).unwrap();
     let grant=ArtifactStoreOneItemGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:4096,maximum_release_bytes:262144,maximum_depth:4096};
     for stop in 0..=law["originalFrontiers"].as_array().unwrap().len(){
-        let authority=Arc::new(ArtifactStoreOneItemLiveAuthority{operation:semio_framework_job::OperationId(1),generation:semio_framework_job::Generation(1),base_revision:[0;32],base_applied_edit_count:0,next_sequence_number:1,next_clock:crate::os_spr::HybridLogicalTimestamp::new(1,0),actor:"actor α\0😀".into(),line:None,group_id:None,stamped_edit_id:None});
+        let authority=Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0;32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1,0), "actor α\0😀".into(), None, None, None));
         let((mutation,inverse),initial)=observe(||(BirthMutation{text:"forward α\0😀".repeat(8192)},vec![BirthMutation{text:"first inverse".repeat(8192)},BirthMutation{text:"second inverse".repeat(8192)}]));
         let forward_pointer=mutation.text.as_ptr();let inverse_pointer=inverse[0].text.as_ptr();
         let(result,source_birth)=observe(||RetainedCloneSource::admit_owned(mutation,SharedControlledRetirement::lease(Arc::clone(&authority)),grant.retained_grant()));let(source,_)=result.map_err(|(error,_,_)|error).unwrap();
@@ -112,7 +112,7 @@ impl RetainedCloneEditCursor<u64, BirthMutation> for BirthCursor {
 
 #[test]
 fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work() {
-    use crate::os_store::{SnapshotReadRegistryHandle, ArtifactStoreOneItemLiveAuthority};
+    use crate::os_store::{SnapshotReadRegistryHandle, one_item_publication::ArtifactStoreOneItemLiveAuthority};
     use semio_framework_trace::observe_heap_allocations_on_this_thread;
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🎟️preparation-birth/🔣️.json")).unwrap();
     BIRTH_PREFLIGHT_CALLS.store(0, std::sync::atomic::Ordering::Relaxed);
@@ -120,7 +120,7 @@ fn snapshot_clone_preparation_birth_returns_original_request_before_domain_work(
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(7u64);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("original registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(3), base_revision: [0;32], base_applied_edit_count: 0, next_sequence_number: 1, next_clock: crate::os_spr::HybridLogicalTimestamp::new(1, 0), actor: "original actor".into(), line: None, group_id: None, stamped_edit_id: None });
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(3), [0;32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1, 0), "original actor".into(), None, None, None));
     let (mutation, original_heap) = observe_heap_allocations_on_this_thread(|| BirthMutation { text: "original α\0😀".into() });
     let mutation_pointer = mutation.text.as_ptr();
     let mut request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(3), base_revision: [0;32], lane: HistoryLane::Document, authority: Arc::clone(&authority), base: SnapshotRead::new(Arc::clone(&root), lease), mutation, mutation_retirement:Arc::clone(&factory.mutation_retirement),snapshot_retirement:Arc::clone(&factory.snapshot_retirement) };

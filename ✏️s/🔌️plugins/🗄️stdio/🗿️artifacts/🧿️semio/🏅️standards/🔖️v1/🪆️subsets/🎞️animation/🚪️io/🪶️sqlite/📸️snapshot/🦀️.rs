@@ -1,16 +1,16 @@
 //! 🎞️ Timelines, channels, discriminated keyframe values and ordered weight entities.
 use semio_framework_os_kernel::sqlite_snapshot::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-use crate::standards::v1::subsets::animation::schema::snapshot::{SemioAnimationSnapshot,AnimTimeline,AnimChannel,AnimTarget,AnimTargetProperty,AnimInterpolation,AnimKeyframe,AnimValue};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3,SemioQuaternion};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use crate::schema::snapshot::{SemioAnimationSnapshot, AnimTimeline, AnimChannel, AnimTarget, AnimTargetProperty, AnimInterpolation, AnimKeyframe, AnimValue};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="💰️reconstruction/🦀️.rs"]
 mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🫳️ Visits every timeline, channel, keyframe and exact scalar detail through one row writer.
-pub(crate)fn visit_rows(snapshot:&SemioAnimationSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioAnimationSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_animation_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,timeline)in snapshot.timelines.iter().enumerate(){
   let timeline_id=out.insert("semio_animation_timeline",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),timeline.name.as_deref().map(Cell::Text).unwrap_or(Cell::Null)])?;
@@ -45,7 +45,7 @@ fn identity<'a>(row:impl std::borrow::Borrow<SqliteRow<'a>>,columns:usize)->Resu
 
 
 impl ArtifactSqliteSnapshot for SemioAnimationSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -66,7 +66,7 @@ fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotCont
 impl SemioAnimationSnapshot {
     /// 🧩️ Projects owned semantic fields with typed relational refusals.
     pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
-semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
+semantic::layout(control.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
 }
 
     /// 🧩️ Restores the owned typed subset inside its independently declared relational composition.
@@ -83,13 +83,10 @@ impl SemioAnimationSnapshot{
 pub fn native_fields(&self,b:&mut Bound<'_,'_>)->Result<(),ValueError>{b.text(&self.schema)?;b.entities(self.timelines.len())?;for timeline in &self.timelines{b.optional_text(timeline.name.as_deref())?;b.entities(timeline.channels.len())?;for channel in &timeline.channels{b.text(&channel.target.node)?;b.scalars(2)?;if let AnimTargetProperty::Custom{name}=&channel.target.property{b.text(name)?;}b.entities(channel.keyframes.len())?;for key in &channel.keyframes{b.scalars(1)?;match &key.value{AnimValue::Scalar{..}=>b.scalars(1)?,AnimValue::Vec3{..}=>b.scalars(3)?,AnimValue::Quat{..}=>b.scalars(4)?,AnimValue::Weights{values}=>{b.entities(values.len())?;b.scalars(values.len())?;}}}}}Ok(())}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;

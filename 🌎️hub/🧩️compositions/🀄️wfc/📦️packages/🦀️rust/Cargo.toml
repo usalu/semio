@@ -9,60 +9,11 @@ description = "WFC plugin composition for the independently packaged bitmap, gri
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:wfc"
-
 [package.metadata.semio]
-deployment-directory = "🀄️wfc"
-component-kind = "plugin"
 role = "hub"
 
-[[package.metadata.semio.playground]]
-variant = "bitmap"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.wfc.bitmap@1/*#editor"
-aliases = ["wfc bitmap"]
-ports = { react = 6041, wgpu = 6141 }
-
-[[package.metadata.semio.playground]]
-variant = "grid2d"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.wfc.grid2d@1/*#editor"
-aliases = ["wfc 2d grid"]
-ports = { react = 6042, wgpu = 6142 }
-
-[[package.metadata.semio.playground]]
-variant = "wfc2d"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.wfc.wfc2d@1/*#editor"
-aliases = ["wfc 2d"]
-ports = { react = 6043, wgpu = 6143 }
-
-[[package.metadata.semio.playground]]
-variant = "grid3d"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.wfc.grid3d@1/*#editor"
-aliases = ["wfc 3d grid"]
-ports = { react = 6044, wgpu = 6144 }
-
-[[package.metadata.semio.playground]]
-variant = "wfc3d"
-compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
-app = "s.wfc.wfc3d@1/*#editor"
-aliases = ["wfc 3d"]
-ports = { react = 6045, wgpu = 6145 }
-
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "../../🦀️.rs"
-
-[features]
-# 🔌️ The WASM component entry point (`plugin_exports!` → `#[no_mangle]`
-# `semio_plugin_install_bundle`). Default-on so this plugin builds as its own component, and
-# switched OFF by any crate that EMBEDS it: two crates each exporting the same `#[no_mangle]` symbol
-# is a duplicate-symbol link error, and the embedding crate is the one that must own the entry point.
-default = ["plugin-entry"]
-plugin-entry = []
 
 [dependencies]
 semio-framework-async = { path = "../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
@@ -75,13 +26,13 @@ semio-s-artifact-wfc-grid3d = { workspace = true, features = ["component-app-ass
 semio-framework-job = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-plugin = { workspace = true }
 # ⏯️ `dyn_enum_close!` copies `PluginApp::tool_run_trace_delta`'s signature verbatim into the generated
 # impl HERE, so the domain-neutral tool-run types have to resolve in this crate too.
 semio-framework-tool-run = { workspace = true }
 
 [dev-dependencies]
-semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-async = { workspace = true }
 semio-framework-async-macros = { workspace = true }
 semio-framework-trace = { workspace = true }
@@ -106,6 +57,3 @@ path = "../../🧪️tests/🚪️close-ladder/🦀️.rs"
 [[test]]
 name = "idle_turns"
 path = "../../🧪️tests/😴️idle-turns/🦀️.rs"
-
-[package.metadata.semio.sources]
-artifacts = ["../../../../../✏️s/🔌️plugins/🀄️wfc/🗿️artifacts"]

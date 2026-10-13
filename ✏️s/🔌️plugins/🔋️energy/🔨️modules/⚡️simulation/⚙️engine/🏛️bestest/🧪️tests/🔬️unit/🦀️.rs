@@ -340,7 +340,7 @@ fn example_asset_path(directory: &str) -> std::path::PathBuf {
 fn example_dsl(case: &str) -> String {
     let built = model(case).unwrap_or_else(|| panic!("case {case} must build"));
     let snapshot = crate::energy_snapshot_with_state(crate::ENERGY_MODEL_DOCUMENT_SCHEMA, &built, None);
-    <crate::EnergyModelSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)
+    <crate::EnergyModelSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot)
 }
 
 /// 🧫️ THE generator. Deliberately inert unless `SEMIO_ENERGY_BESTEST_REGENERATE` is set, so a

@@ -1,7 +1,7 @@
 //! 🔺️ SemioValueTreeDiff — recursive, handcrafted diff mirroring `SemioValue`'s shape. `List` gets an
 //! index-keyed triple, `Map` gets a name-keyed triple, the top-level `nodes` graph gets an
 //! id-keyed triple — all THREE built directly on the shared
-//! `crate::standards::v1::subsets::base::schema::triples` codec (`IndexedTripleDiff`/
+//! `semio_s_artifact_stdio_semio::schema::triples` codec (`IndexedTripleDiff`/
 //! `NamedTripleDiff` + their `enc_*`/`dec_*` bridge functions) per this ticket's explicit
 //! instruction to reuse it rather than reinvent it a 14th time (bcf/docx and now `json` each
 //! rolled their own copy before this shared engine existed). No `snapshot: Option<SemioValueSnapshot>`
@@ -9,12 +9,12 @@
 //! like every other mutation. Structural template (Replace-on-kind-change fallback, recursive
 //! between/apply/absorb) copied from `json`'s own `JsonDiff` (this subset's informing source).
 
-use crate::standards::v1::subsets::base::schema::triples::{inverse_indexed_rows, IndexAdded, IndexModified, IndexedRow, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::{inverse_indexed_rows, IndexAdded, IndexModified, IndexedRow, IndexedTripleDiff, NamedModified, NamedTripleDiff};
 
 
 
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
+use crate::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -125,7 +125,7 @@ impl MutationDiff<SemioValueSnapshot> for SemioValueTreeDiff {
             next.root = apply_value_diff(diff, &base.root);
         }
         if let Some(diff) = &self.nodes {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&base.nodes, diff, |node| node.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
             validate_added_positions(diff.added.iter().map(|added| added.index), base.nodes.len() - diff.removed.len(), ["nodes"])?;
             for modified in &diff.modified {
                 let node = base.nodes.iter().find(|node| node.id == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-node", format!("node {:?} is absent", modified.key)).at(["nodes"]))?;
@@ -219,7 +219,7 @@ fn validate_value_diff(diff: &SemioValueDiff, base: &SemioValue, target: Vec<Str
     }
     match (diff, base) {
         (SemioValueDiff::List { diff }, SemioValue::List { items }) => {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(diff, items.len(), target.clone())?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(diff, items.len(), target.clone())?;
             for modified in &diff.modified {
                 let mut nested = target.clone();
                 nested.push(modified.index.to_string());
@@ -227,7 +227,7 @@ fn validate_value_diff(diff: &SemioValueDiff, base: &SemioValue, target: Vec<Str
             }
         }
         (SemioValueDiff::Map { diff }, SemioValue::Map { entries }) => {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(entries, diff, |entry| entry.key.clone(), |added| added.item.key.clone(), target.clone())?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(entries, diff, |entry| entry.key.clone(), |added| added.item.key.clone(), target.clone())?;
             validate_added_positions(diff.added.iter().map(|added| added.index), entries.len() - diff.removed.len(), target.clone())?;
             for modified in &diff.modified {
                 let entry = entries.iter().find(|entry| entry.key == modified.key).ok_or_else(|| protocol::MutationApplyError::new("mutation.apply.missing-map-entry", format!("map entry {:?} is absent", modified.key)).at(target.clone()))?;

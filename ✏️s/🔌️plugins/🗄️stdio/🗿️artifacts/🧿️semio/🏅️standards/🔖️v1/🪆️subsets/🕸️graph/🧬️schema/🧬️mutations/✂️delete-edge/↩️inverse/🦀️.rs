@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteEdge`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{create_edge::CreateEdge, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use {crate::schema::mutations::create_edge::CreateEdge, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `create-edge` of the whole edge record at its BASE index; nothing when the edge is absent.

@@ -19,9 +19,9 @@
 //! REFERENCED style (which never touches this entity's own node fields) still correctly
 //! invalidates its cached value. `Image` inherits the world transform and has no style field.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::diff::{node_at, NodePath};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::schema::diff::{node_at, NodePath};
+use crate::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
 
 //#region 🔖️Value
 /// 🖼️ One entity's resolved presentation — world transform + (for `Path`/`Text`) the fully

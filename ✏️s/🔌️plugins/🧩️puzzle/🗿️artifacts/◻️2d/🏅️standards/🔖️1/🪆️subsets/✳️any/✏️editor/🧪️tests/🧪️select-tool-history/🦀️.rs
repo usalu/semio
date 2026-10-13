@@ -441,9 +441,9 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
     let board: Puzzle2dSnapshot = semio_framework_pack_json::from_json_str(&corpus["board"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the corpus board decodes");
     for scenario in corpus["scenarios"].as_array().expect("scenarios") {
         let id = scenario["id"].as_str().expect("scenario id");
-        let mut store = puzzle2d_store(store::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        let mut store = puzzle2d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle2dSnapshot, Puzzle2dMutation>(crate::PUZZLE_2D_SCHEMA, id, board.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
         for logged in scenario["log"].as_array().expect("log") {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![leaf(logged)], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a logged leaf applies");
         }
         let mutation_ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = scenario["drafts"]
@@ -472,7 +472,7 @@ async fn every_corpus_edit_previews_and_replays_through_the_store() {
         let mut replay = store.begin_report_replay(&drafts, Some(&mutation_ids[first])).expect("the replay begins at the first edited leaf");
         let mut finished = false;
         for _ in 0..1_024 {
-            if matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)) {
+            if matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)) {
                 finished = true;
                 break;
             }

@@ -7,8 +7,8 @@ import { runtimeComponentClosure } from "../../../../../🦑️repo/🔨️modul
 
 
 
-import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginBuildTargetV1, type PluginDescriptorHashes } from "./🧬️schema/🟦️.ts";
-export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginBuildTargetV1, PluginDescriptorHashes, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
+import { parseComponentSourceRowV1, parseCompiledComponentRowV1, parseDeployedRegistryEntryV1, parsePluginBuildTargetV1, type ComponentSourceOwnerV1, type CompiledComponentOwnerV1, type DeployedRegistryEntryV1, type PluginBuildTargetV1 } from "./🧬️schema/🟦️.ts";
+export type { ComponentSourceOwnerV1, CompiledComponentOwnerV1, DeployedRegistryEntryV1, PluginBuildTargetV1, PluginHostMetadata } from "./🧬️schema/🟦️.ts";
 
 export const COMPONENT_MANIFEST_MAX_BYTES = 64 * 1024;
 
@@ -298,7 +298,6 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
   let activationEvents: string[] = [];
   let extensionPoints: string[] = [];
   let executionMode: string | undefined;
-  let hashes: PluginDescriptorHashes | undefined;
   {
     if (descriptor.role !== source.role || descriptor.packageId !== source.packageId || (descriptor.manifest as { pluginId: string }).pluginId !== source.pluginId) throw new Error("Compiled descriptor differs from its authored component identity in " + manifestPath);
     const capabilityRequests = Array.isArray(descriptor.capabilityRequests) ? descriptor.capabilityRequests : [];
@@ -316,13 +315,9 @@ export function parseCompiledComponentOwnerV1(manifestPath: string, repoRoot: st
     extensionPoints = uniqueStrings(rawExtensionPoints.map((row) => (row as { id?: unknown }).id).filter((id): id is string => typeof id === "string"));
     activationEvents = uniqueStrings(activationEvents);
     executionMode = typeof descriptor.execution === "string" ? descriptor.execution : undefined;
-    const rawHashes = descriptor.hashes as Record<string, unknown> | undefined;
-    if (rawHashes && typeof rawHashes.wasmSha256 === "string" && typeof rawHashes.coreWasmSha256 === "string" && typeof rawHashes.descriptorSha256 === "string") {
-      hashes = { wasmSha256: rawHashes.wasmSha256, coreWasmSha256: rawHashes.coreWasmSha256, descriptorSha256: rawHashes.descriptorSha256 };
-    }
   }
   return parseCompiledComponentRowV1({ ...source, capabilities, contributes, activationEvents, extensionPoints,
-    ...(executionMode ? { executionMode } : {}), ...(hashes ? { hashes } : {}) });
+    ...(executionMode ? { executionMode } : {}) });
 }
 
 

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::SetListOrdered, base: &SemioDocumentSnapshot) -> pr
     }
     let super::SetListOrdered { path, ordered } = payload;
     protocol::MutationOutcome::new(match block_at(base, path) {
-        Some(DocBlock::List { ordered: old, .. }) if old != ordered => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::standards::v1::subsets::document::schema::diff::DocListDiff { ordered: Some(*ordered), items: None }))),
+        Some(DocBlock::List { ordered: old, .. }) if old != ordered => wrap_body_diff(path, DocBlockLeaf::Modified(DocBlockDiff::List(crate::schema::diff::DocListDiff { ordered: Some(*ordered), items: None }))),
         _ => SemioDocumentDiff::default(),
     })
 }

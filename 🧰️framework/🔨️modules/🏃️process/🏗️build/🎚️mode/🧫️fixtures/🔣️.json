@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "modes": [
+    {
+      "mode": "prototype",
+      "policy": {
+        "cargoProfile": "prototype",
+        "wasmProfile": "wasm-prototype",
+        "cmakeConfiguration": "Debug",
+        "dotnetConfiguration": "Debug",
+        "optimize": false,
+        "sourceMap": true
+      }
+    },
+    {
+      "mode": "release",
+      "policy": {
+        "cargoProfile": "release",
+        "wasmProfile": "wasm-release",
+        "cmakeConfiguration": "Release",
+        "dotnetConfiguration": "Release",
+        "optimize": true,
+        "sourceMap": false
+      }
+    }
+  ],
+  "invalid": [null, false, true, 0, 1, {}, [], "", "dev", "ship", "debug", "production", "Prototype", "Release", " release", "release ", "prototype,release"]
+}

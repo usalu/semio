@@ -243,7 +243,7 @@ mod subject {
     /// The CARRIER identity is Rust-only and asserted here in role, on the artifact's own committed
     /// example: `law::round_trip_preserves` for the semantic half, and `law::carrier_is_exact` for
     /// the byte half — deliberately the fixpoint law rather than the wave's no-pass-through
-    /// tripwire, because `store::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
+    /// tripwire, because `store::os_store::serialization::ArtifactDsl` documents canonical `print_dsl` output as a `parse_dsl`
     /// fixpoint, so byte identity of the SECOND printing is the correct answer and anything else is
     /// the defect. The pack decoding is a separate binary codec, so agreeing on one snapshot cannot
     /// be reached by carrying text bytes across.

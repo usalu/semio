@@ -33,31 +33,31 @@ class RuntimeInputScript extends Script {
   }
 }
 class RuntimeContractScript extends Script {
- async run(args:string[]):Promise<void>{if(args.length)throw new Error("runtime-contract-check accepts no overrides");await runRepositoryCommand("bun",["test",join(import.meta.dir,"../../🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts")],this.root,"runtime-input-contract",15_000);}
+ async run(args:string[]):Promise<void>{if(args.length)throw new Error("runtime-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"../../🕸️dependencies/🧩️runtime/📥️admission/🧪️tests/🟦️.ts")],this.root,"runtime-input-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}});}
 }
 
 class NativeInputScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length !== 2 || args[0] !== "--manifest") throw new Error("native-input-check --manifest <current-owner>");
-    await runRepositoryCommand("cargo", ["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(this.root, args[1]!)], this.root, "native-input-admission", 30_000);
+    await runRepositoryCommand(this.invocation,"cargo",["metadata", "--no-deps", "--offline", "--locked", "--format-version", "1", "--manifest-path", join(this.root, args[1]!)],this.root,"native-input-admission",{version:1,maximumElapsedMilliseconds:30_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
 class ContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("contract-check accepts no overrides");
-    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")], this.root, "cargo-workspace-contract", 15_000, { env: repoTestArtifactEnvironment(this.root, "cargo-workspace-contract") });
+    await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🟦️.ts"), join(import.meta.dir,"🧪️tests/🪆️nested-owners/🟦️.ts")],this.root,"cargo-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(this.root, "cargo-workspace-contract")});
   }
 }
 /** 🕰️ Verifies queued preparation with an independent owner holding the native lease. */
 class QueuedContractScript extends Script {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("queued-contract-check accepts no overrides");
-    await runRepositoryCommand("bun", ["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")], this.root, "cargo-queued-preparation-contract", 45_000, { env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract") });
+    await runRepositoryCommand(this.invocation,"bun",["test", join(import.meta.dir, "🧪️tests/🕰️queued-preparation/🟦️.ts")],this.root,"cargo-queued-preparation-contract",{version:1,maximumElapsedMilliseconds:45_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: repoTestArtifactEnvironment(this.root, "cargo-queued-preparation-contract")});
   }
 }
 class BunContractScript extends Script {
-  async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runRepositoryCommand("bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",15_000); }
+  async run(args: string[]): Promise<void> { if(args.length)throw new Error("bun-contract-check accepts no overrides");await runRepositoryCommand(this.invocation,"bun",["test",join(import.meta.dir,"../🟦️bun/🧪️tests/🟦️.ts")],this.root,"bun-workspace-contract",{version:1,maximumElapsedMilliseconds:15_000,output:{maximumBytes:134217728,maximumLines:65536}}); }
 }
 class CapabilityContractScript extends Script {
   async run(args: string[]): Promise<void> {

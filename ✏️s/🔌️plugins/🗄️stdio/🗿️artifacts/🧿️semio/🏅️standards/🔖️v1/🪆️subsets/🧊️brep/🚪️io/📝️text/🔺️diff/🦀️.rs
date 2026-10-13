@@ -17,22 +17,22 @@ pub fn decode_semio_brep_diff_json(text: &str) -> Result<SemioBrepDiff, String> 
 }
 
 use super::*;
-use crate::standards::v1::subsets::brep::io::binary::diff::{encode_option, decode_option};
-use crate::standards::v1::subsets::brep::schema::diff::*;
+use crate::io::binary::diff::{encode_option, decode_option};
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_edge};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_edge};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_vertex};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_vertex};
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_added, dec_named_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
+use crate::io::text::snapshot::dec_face;
+use crate::io::text::snapshot::enc_face;
+use crate::io::text::snapshot::dec_edge;
+use crate::io::text::snapshot::enc_edge;
+use crate::io::text::snapshot::dec_vertex;
+use crate::io::text::snapshot::enc_vertex;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -118,7 +118,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    crate::standards::v1::subsets::base::schema::geometry::native::parse(s)
+    semio_s_artifact_stdio_semio_base::schema::geometry::native::parse(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -389,7 +389,7 @@ pub(crate) fn enc_face_diff(d: &BrepFaceDiff) -> String {
     format!(
         "[{},{},{},{},{}]",
         encode_option(&d.outer_loop, |v: &String| enc_str(v)),
-        encode_option(&d.inner_loops, |v: &Vec<String>| enc_list(v, |s: &String| crate::standards::v1::subsets::brep::io::text::snapshot::enc_loop_id(s))),
+        encode_option(&d.inner_loops, |v: &Vec<String>| enc_list(v, |s: &String| crate::io::text::snapshot::enc_loop_id(s))),
         encode_option(&d.surface, enc_surface),
         encode_option(&d.orientation, |b: &bool| enc_bool(*b).to_string()),
         encode_option(&d.tol, |v: &f64| NativeF64(*v).to_string()),
@@ -402,7 +402,7 @@ pub(crate) fn dec_face_diff(s: &str) -> Result<BrepFaceDiff, String> {
     let [outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face diff: expected 5 fields, got {}", parts.len())) };
     Ok(BrepFaceDiff {
         outer_loop: decode_option(outer_loop, dec_str)?,
-        inner_loops: decode_option(inner_loops, |s| dec_list(s, crate::standards::v1::subsets::brep::io::text::snapshot::dec_loop_id))?,
+        inner_loops: decode_option(inner_loops, |s| dec_list(s, crate::io::text::snapshot::dec_loop_id))?,
         surface: decode_option(surface, dec_surface)?,
         orientation: decode_option(orientation, parse_bool)?,
         tol: decode_option(tol, parse_f64)?,

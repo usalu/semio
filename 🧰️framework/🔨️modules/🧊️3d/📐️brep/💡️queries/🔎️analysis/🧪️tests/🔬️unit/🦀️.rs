@@ -1,12 +1,12 @@
 use super::*;
-use crate::brep::operations::primitives::{make_box, make_cone, make_cylinder, make_sphere, make_torus};
-use crate::brep::representation::curve::bspline::KnotVector;
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Shell;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_operations::primitives::{make_box, make_cone, make_cylinder, make_sphere, make_torus};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Shell;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 use serde_json::Value;
 
 const FIXTURE: &str = include_str!("../../../../🧫️fixtures/🔎️analysis/🔣️.json");

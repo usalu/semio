@@ -927,7 +927,7 @@ fn the_seam_set_encodes_in_ascending_order() {
 /// 🧹️ Keeps the original output and source through a zero-effect cancellation request and funded physical closure.
 #[test]
 fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_closure(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap() as usize){
@@ -944,7 +944,7 @@ fn original_mesh_tessellation_cancellation_retains_exact_output_until_funded_clo
 /// 🧺️ Original source collection uses existing reserved scratch rather than growing an unadmitted Vec.
 #[test]
 fn original_mesh_tessellation_source_collection_requires_original_buffer_reservation(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     let(mut job,source)=observe(||{let positions=serde_json::from_value::<Vec<[f32;3]>>(law["positions"].clone()).unwrap();let faces=serde_json::from_value::<Vec<Vec<u32>>>(law["faces"].clone()).unwrap();MeshTessellationJob::new(HalfedgeMesh::from_faces(&positions,&faces).unwrap())});
     let original=job.mesh.vertices.as_ptr();

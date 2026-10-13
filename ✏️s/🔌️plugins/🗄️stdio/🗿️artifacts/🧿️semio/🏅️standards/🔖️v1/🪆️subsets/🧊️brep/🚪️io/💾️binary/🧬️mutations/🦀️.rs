@@ -9,44 +9,44 @@ mod borrowed;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::brep::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
-use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_solid_shell};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_solid_shell};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_shell_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_shell_face};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_surface};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_surface};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{dec_curve};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{enc_curve};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_bool};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{parse_f64};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_point3};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
+use crate::schema::diff::SemioBrepDiff;
+use crate::io::text::snapshot::dec_solid_shell;
+use crate::io::text::snapshot::enc_solid_shell;
+use crate::io::text::snapshot::dec_shell_face;
+use crate::io::text::snapshot::enc_shell_face;
+use crate::io::text::snapshot::dec_surface;
+use crate::io::text::snapshot::enc_surface;
+use crate::io::text::snapshot::dec_curve;
+use crate::io::text::snapshot::enc_curve;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_bool;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_f64;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_point3;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_point3;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
 /// needed, and flow's own mutations facet needs for the same reason).
 use protocol::{OpBinary, OpText};
-use crate::standards::v1::subsets::brep::schema::mutations::create_edge;
-use crate::standards::v1::subsets::brep::schema::mutations::create_face;
-use crate::standards::v1::subsets::brep::schema::mutations::create_shell;
-use crate::standards::v1::subsets::brep::schema::mutations::create_solid;
-use crate::standards::v1::subsets::brep::schema::mutations::create_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_edge;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_face;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_shell;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_solid;
-use crate::standards::v1::subsets::brep::schema::mutations::delete_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::move_vertex;
-use crate::standards::v1::subsets::brep::schema::mutations::replace_curve;
-use crate::standards::v1::subsets::brep::schema::mutations::replace_surface;
+use crate::schema::mutations::create_edge;
+use crate::schema::mutations::create_face;
+use crate::schema::mutations::create_shell;
+use crate::schema::mutations::create_solid;
+use crate::schema::mutations::create_vertex;
+use crate::schema::mutations::delete_edge;
+use crate::schema::mutations::delete_face;
+use crate::schema::mutations::delete_shell;
+use crate::schema::mutations::delete_solid;
+use crate::schema::mutations::delete_vertex;
+use crate::schema::mutations::move_vertex;
+use crate::schema::mutations::replace_curve;
+use crate::schema::mutations::replace_surface;
 /// 🧬️ Every variant wraps exactly one `protocol::MutationKind<SemioBrepSnapshot, SemioBrepMutation>`
 /// payload struct declared in the corresponding triad leaf's `🦠️mutation/🦀️.rs`. Thirteen
 /// triads: vertex lifecycle (`create-vertex`/`delete-vertex`), edge lifecycle
@@ -54,7 +54,7 @@ use crate::standards::v1::subsets::brep::schema::mutations::replace_surface;
 /// (`create-shell`/`delete-shell`), solid lifecycle (`create-solid`/`delete-solid`), then the two
 /// structured-payload replacements (`replace-curve`/`replace-surface`) and the one scalar
 /// reposition (`move-vertex`).
-use crate::standards::v1::subsets::brep::io::text::mutations::{print_brep_mutation};
+use crate::io::text::mutations::print_brep_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioBrepMutation) -> u8 {
     match m {
@@ -112,7 +112,6 @@ impl OpBinary for SemioBrepMutation {
     }
 }
 }
-#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioBrepMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

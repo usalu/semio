@@ -139,9 +139,10 @@ function guestFaultOracle(): number {
   }
   const host = readFileSync(join(hostRoot, "🦀️.rs"), "utf8");
   const runtime = readFileSync(join(hostRoot, "⏳️runtime", "🦀️.rs"), "utf8");
-  assert(host.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
+  const owned = readFileSync(join(hostRoot, "..", "🧠️interpreter", "🏃️runtime", "🦀️.rs"), "utf8");
+  assert(owned.includes("Guest(semio_framework::Fault)"), "typed guest fault must survive host decode");
   assert(host.includes("poll_result.map_err(decode_guest_plugin_error)?"), "real Wasmtime poll must use typed decoder");
-  assert(host.includes("result.map_err(|error| decode_guest_fault_bytes(&error))"), "owned ABI must use typed decoder");
+  assert(owned.includes("result.map_err(|error| decode_guest_fault_bytes(&error))"), "owned ABI must use typed decoder");
   assert(runtime.includes("Ok(Err(fault)) => Err(super::decode_guest_plugin_error(fault))"), "async component poll must preserve typed guest fault");
   assert(!runtime.includes("Sender<Result<KernelTurnResult, String>>"), "poll oneshot must not stringify faults");
   return fixture.cases.length;

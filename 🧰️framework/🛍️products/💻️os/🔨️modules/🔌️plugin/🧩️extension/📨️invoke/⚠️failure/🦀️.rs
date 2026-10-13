@@ -3,7 +3,7 @@ use semio_framework_diagnostic::{Fault,FaultCause,FaultOrigin,FaultParams,FaultS
 use semio_framework_dsl_record::native_encoding::{FieldProjectionSource,FieldProjectionView as V};
 use semio_framework_job::StepContext;
 use semio_framework_os_kernel::record::{BorrowedProjectedPackCursor,BorrowedProjectedPackFailure};
-use semio_framework_value::{Number,RetainedCloneGrant,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
+use semio_framework_value::{Number,RetainedCloneProgress,RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetireOwned,controlled::ControlledRetirement}};
 
 pub(crate) enum ExtensionInvocationCause{Fault(Fault),Value(ValueError),Inference(crate::ArtifactInferenceGatewayFailure)}
 impl RetireOwned for ExtensionInvocationCause{

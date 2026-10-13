@@ -23,7 +23,7 @@ class FontsScript extends BundleScript {
     const cancel = (): void => { cancelled = true; };
     process.once("SIGINT", cancel); process.once("SIGTERM", cancel);
     try {
-      await runRepositoryCommand(binary, [asset], ROOT, "font-assets:publish", 60_000);
+      await runRepositoryCommand(this.invocation,binary,[asset],ROOT,"font-assets:publish",{version:1,maximumElapsedMilliseconds:60_000,output:{maximumBytes:134217728,maximumLines:65536}});
       if (cancelled) throw new Error("Font dump cancelled");
       const bytes = readFileSync(asset), count = validateFontAsset(bytes);
       await stageRepositoryArtifacts(join(ROOT, "dist/fonts"), "infinite:fonts", new Map([[FONT_ASSET, asset]]));

@@ -66,7 +66,7 @@ async fn boot(app_id: &str) -> (WfcRuntime, ActorInstanceLifetime) {
 /// 📄️ Reads the instance's own document pack once the live maintenance pump has let go of it — the
 /// pump runs on the maintenance worker lane natively, so a read issued in the same breath as the
 /// previous load answers `instance busy or poisoned` rather than a document.
-async fn settled_document_pack(runtime: &WfcRuntime) -> store::ArtifactPackFiles {
+async fn settled_document_pack(runtime: &WfcRuntime) -> store::os_store::serialization::ArtifactPackFiles {
     for _ in 0..256 {
         turn(runtime, Vec::new()).await;
         if let Ok(pack) = plugin_document_pack(runtime, CLOSE_INSTANCE).await {

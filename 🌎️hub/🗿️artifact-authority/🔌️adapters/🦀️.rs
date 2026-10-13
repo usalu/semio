@@ -3,7 +3,7 @@
 
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
-use directory::os_store::{document_codec, ArtifactCodec};
+use directory::os_store::{codec_registry::document_codec, serialization::ArtifactCodec};
 use semio_framework_plugin_host::{PackageRef, PluginGraph};
 use std::fmt::Write;
 

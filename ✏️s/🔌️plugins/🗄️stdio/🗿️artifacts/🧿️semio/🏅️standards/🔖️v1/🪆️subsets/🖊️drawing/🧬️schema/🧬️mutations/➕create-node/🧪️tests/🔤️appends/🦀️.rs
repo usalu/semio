@@ -6,10 +6,10 @@
 //! diff is lowered through `diff_at_path`, so it nests `layers.modified -> root -> Group.children`
 //! — the empty parent path means exactly one level of nesting here.
 
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕create-node/🔤️appends/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕create-node/🔤️appends/📸️snapshot/➡️after/🔣️.json");
@@ -33,9 +33,9 @@ async fn appends_the_caption_as_the_fourth_child() {
     let base = before();
     let produced = protocol::apply_diff(mutation().diff(&base).diff(), &base).expect("create-node applies to its committed before-snapshot");
     assert_eq!(produced, expected_after(), "create-node/appends-a-caption-text-node-to-the-layer-root: applied state differs from the committed after-snapshot");
-    let crate::standards::v1::subsets::drawing::schema::snapshot::DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
+    let crate::schema::snapshot::DrawNode::Group { children, .. } = &produced.layers[0].root else { panic!("the layer root is a group") };
     assert_eq!(children.len(), 4, "create-node adds exactly one child");
-    assert!(matches!(children[3], crate::standards::v1::subsets::drawing::schema::snapshot::DrawNode::Text { .. }), "the payload's own node kind lands");
+    assert!(matches!(children[3], crate::schema::snapshot::DrawNode::Text { .. }), "the payload's own node kind lands");
     assert_eq!(produced.styles, base.styles, "creating a node that references a style must not create the style");
 }
 
@@ -100,7 +100,7 @@ async fn committed_diff_is_canonical_and_narrowly_scoped() {
     let layer_diff = &layers.modified[0].diff;
     assert!(layer_diff.id.is_none() && layer_diff.name.is_none() && layer_diff.visible.is_none(), "a node-level edit must not touch the layer's own scalar fields");
     let root = layer_diff.root.as_ref().expect("the layer diff must carry a root node diff");
-    let crate::standards::v1::subsets::drawing::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
+    let crate::schema::diff::DrawNodeDiff::Group(root_group) = root else { panic!("the layer root is a group, so its diff must be the Group arm") };
     let children = root_group.children.as_ref().expect("the root group diff must carry a children triple");
     assert!(root_group.transform.is_none(), "editing a child must not rewrite the root group's own transform");
     assert_eq!(children.added.len(), 1, "exactly one child is added");

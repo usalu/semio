@@ -1,6 +1,6 @@
 //! 🧵️ Knot vectors, B-spline basis functions and de Boor evaluation for rational curves and
-//! tensor-product surfaces — the machinery [`crate::brep::representation::curve::Curve3::Nurbs`] and
-//! [`crate::brep::representation::surface::Surface::Nurbs`] are built on. Curves and surfaces themselves stay in their
+//! tensor-product surfaces — the machinery [`crate::curve::Curve3::Nurbs`] and
+//! [`crate::surface::Surface::Nurbs`] are built on. Curves and surfaces themselves stay in their
 //! own modules; this file is purely the numerical core, independent of any particular dimension.
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🪢️bspline` in ticket
@@ -264,7 +264,7 @@ pub fn insert_knot(knots: &KnotVector, control_values: &[f64], u: f64) -> (KnotV
     (KnotVector { knots: new_knots, degree: p }, new_values)
 }
 
-/// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::brep::representation::curve::bezier`] elevation
+/// 🧵️ Elevates a Bézier segment's degree by one via the shared [`crate::curve::bezier`] elevation
 /// formula, exposed here so B-spline code can raise a single-span curve's degree without
 /// round-tripping through the `Bernstein`/`Poly` types.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

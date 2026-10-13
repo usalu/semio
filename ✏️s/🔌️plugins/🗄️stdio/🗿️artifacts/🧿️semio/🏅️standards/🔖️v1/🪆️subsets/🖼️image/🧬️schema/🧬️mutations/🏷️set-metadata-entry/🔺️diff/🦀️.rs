@@ -13,7 +13,7 @@ pub fn diff(payload: &super::SetMetadataEntry, base: &SemioImageSnapshot) -> pro
         let metadata = if base.metadata.iter().any(|e| &e.key == key) {
             SemioImageMetadataDiff { modified: vec![NamedModified { key: key.clone(), diff: value.clone() }], ..Default::default() }
         } else {
-            SemioImageMetadataDiff { added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(base.metadata.len(), |at| at.min(base.metadata.len())), item: SemioImageMetadataEntry { key: key.clone(), value: value.clone() } }], ..Default::default() }
+            SemioImageMetadataDiff { added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(base.metadata.len(), |at| at.min(base.metadata.len())), item: SemioImageMetadataEntry { key: key.clone(), value: value.clone() } }], ..Default::default() }
         };
         SemioImageDiff { metadata: Some(metadata), ..Default::default() }
     })

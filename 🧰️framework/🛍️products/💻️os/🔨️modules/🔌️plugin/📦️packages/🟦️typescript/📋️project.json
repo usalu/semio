@@ -4,41 +4,27 @@
     "test-tick-payload": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"command": "bun ./📜️script.ts test-tick-payload"}
+      "options": {
+        "command": "bun ./📜️script.ts test-tick-payload"
+      }
     },
-    "support-dev": {
+    "support": {
       "executor": "nx:run-commands",
-      "cache": true,
+      "cache": false,
       "inputs": [
         "production",
         "browserBundleSources"
       ],
       "outputs": [
-        "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
-        "{projectRoot}/dist/dev/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
-        "{projectRoot}/dist/dev/🔌️plugin-modules/🧵️shard"
+        "{projectRoot}/dist/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
+        "{projectRoot}/dist/🔌️plugin-modules/🧵️shard",
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/🔌️plugin-modules/🧵️shard"
       ],
       "options": {
-        "command": "bun ./📜️script.ts support dev"
-      },
-      "dependsOn": [
-        "semio-framework-os-infinite:fonts"
-      ]
-    },
-    "support-release": {
-      "executor": "nx:run-commands",
-      "cache": true,
-      "inputs": [
-        "production",
-        "browserBundleSources"
-      ],
-      "outputs": [
-        "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim",
-        "{projectRoot}/dist/release/🔌️plugin-modules/🪞️vendor/🔤️guestslim-typst-fonts.bin",
-        "{projectRoot}/dist/release/🔌️plugin-modules/🧵️shard"
-      ],
-      "options": {
-        "command": "bun ./📜️script.ts support release"
+        "command": "bun ./📜️script.ts support"
       },
       "dependsOn": [
         "semio-framework-os-infinite:fonts"

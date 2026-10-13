@@ -1,13 +1,599 @@
 {
   "schema": "semio.stdio.semio.conversion-definition-selection/v1",
   "cases": [
-    {"id":"empty","packages":[],"exports":[],"accepted":true,"dependencies":[]},
-    {"id":"present","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"},{"package":"neutral-alpha","identity":"foreign.alpha"}],"accepted":true,"dependencies":["foreign.alpha","foreign.bravo"]},
-    {"id":"removed","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"}],"accepted":true,"dependencies":["foreign.bravo"]},
-    {"id":"all-removed","packages":["neutral-alpha","neutral-bravo"],"exports":[],"accepted":true,"dependencies":[]},
-    {"id":"unowned-export","packages":["neutral-alpha"],"exports":[{"package":"neutral-bravo","identity":"foreign.bravo"}],"accepted":false,"dependencies":[]},
-    {"id":"duplicate-package","packages":["neutral-alpha"],"exports":[{"package":"neutral-alpha","identity":"foreign.alpha"},{"package":"neutral-alpha","identity":"foreign.bravo"}],"accepted":false,"dependencies":[]},
-    {"id":"duplicate-identity","packages":["neutral-alpha","neutral-bravo"],"exports":[{"package":"neutral-alpha","identity":"foreign.alpha"},{"package":"neutral-bravo","identity":"foreign.alpha"}],"accepted":false,"dependencies":[]},
-    {"id":"malformed-identity","packages":["neutral-alpha"],"exports":[{"package":"neutral-alpha","identity":"foreign..alpha"}],"accepted":false,"dependencies":[]}
+    {
+      "id": "empty",
+      "packages": [],
+      "exports": [],
+      "accepted": true,
+      "dependencies": []
+    },
+    {
+      "id": "present",
+      "packages": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "exports": [
+        {
+          "package": "neutral-bravo",
+          "identity": "foreign.bravo"
+        },
+        {
+          "package": "neutral-alpha",
+          "identity": "foreign.alpha"
+        }
+      ],
+      "accepted": true,
+      "dependencies": [
+        "foreign.alpha",
+        "foreign.bravo"
+      ]
+    },
+    {
+      "id": "removed",
+      "packages": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "exports": [
+        {
+          "package": "neutral-bravo",
+          "identity": "foreign.bravo"
+        }
+      ],
+      "accepted": true,
+      "dependencies": [
+        "foreign.bravo"
+      ]
+    },
+    {
+      "id": "all-removed",
+      "packages": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "exports": [],
+      "accepted": true,
+      "dependencies": []
+    },
+    {
+      "id": "unowned-export",
+      "packages": [
+        "neutral-alpha"
+      ],
+      "exports": [
+        {
+          "package": "neutral-bravo",
+          "identity": "foreign.bravo"
+        }
+      ],
+      "accepted": false,
+      "dependencies": []
+    },
+    {
+      "id": "duplicate-package",
+      "packages": [
+        "neutral-alpha"
+      ],
+      "exports": [
+        {
+          "package": "neutral-alpha",
+          "identity": "foreign.alpha"
+        },
+        {
+          "package": "neutral-alpha",
+          "identity": "foreign.bravo"
+        }
+      ],
+      "accepted": false,
+      "dependencies": []
+    },
+    {
+      "id": "duplicate-identity",
+      "packages": [
+        "neutral-alpha",
+        "neutral-bravo"
+      ],
+      "exports": [
+        {
+          "package": "neutral-alpha",
+          "identity": "foreign.alpha"
+        },
+        {
+          "package": "neutral-bravo",
+          "identity": "foreign.alpha"
+        }
+      ],
+      "accepted": false,
+      "dependencies": []
+    },
+    {
+      "id": "malformed-identity",
+      "packages": [
+        "neutral-alpha"
+      ],
+      "exports": [
+        {
+          "package": "neutral-alpha",
+          "identity": "foreign..alpha"
+        }
+      ],
+      "accepted": false,
+      "dependencies": []
+    }
+  ],
+  "admissionCases": [
+    {
+      "id": "valid",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": true,
+      "rendered": {
+        "one-import": "neutral-alpha = { workspace = true }",
+        "one-export": "neutral-alpha = { workspace = true }\nneutral-bravo = { workspace = true }",
+        "catalogSource": "pub const ALL: &[semio_s_artifact_stdio_semio_base::SemioConversion] = &[\n    neutral_one_import::CONVERSION,\n    neutral_one_export::CONVERSION,\n];",
+        "catalogDependencies": "neutral-one-import = { workspace = true }\nneutral-one-export = { workspace = true }"
+      }
+    },
+    {
+      "id": "unowned-target",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-charlie"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "repeated-target",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo",
+              "neutral-alpha"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "repeated-subset-direction",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "repeated-package",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-import",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "catalog-repeats-conversion",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-one-export",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "unknown-direction",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "both",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "extra-field",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": []
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ],
+            "feature": "conversion-one"
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    },
+    {
+      "id": "symbol-package-target",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": [
+              "neutral-bravo-model",
+              "neutral-bravo-read"
+            ]
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo-read"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": true,
+      "rendered": {
+        "one-import": "neutral-alpha = { workspace = true }\nneutral-bravo-read = { workspace = true }",
+        "one-export": "neutral-alpha = { workspace = true }\nneutral-bravo = { workspace = true }",
+        "catalogSource": "pub const ALL: &[semio_s_artifact_stdio_semio_base::SemioConversion] = &[\n    neutral_one_import::CONVERSION,\n    neutral_one_export::CONVERSION,\n];",
+        "catalogDependencies": "neutral-one-import = { workspace = true }\nneutral-one-export = { workspace = true }"
+      }
+    },
+    {
+      "id": "symbol-package-repeats-owner",
+      "authority": {
+        "schema": "semio.stdio.semio.conversions/v1",
+        "catalog": {
+          "package": "neutral-catalog",
+          "manifest": "catalog/Cargo.toml",
+          "source": "catalog/lib.rs"
+        },
+        "owners": [
+          {
+            "package": "neutral-alpha",
+            "owner": "../alpha",
+            "symbolPackages": []
+          },
+          {
+            "package": "neutral-bravo",
+            "owner": "../bravo",
+            "symbolPackages": [
+              "neutral-alpha"
+            ]
+          }
+        ],
+        "conversions": [
+          {
+            "subset": "one",
+            "direction": "import",
+            "package": "neutral-one-import",
+            "manifest": "one/import/Cargo.toml",
+            "targets": [
+              "neutral-alpha"
+            ]
+          },
+          {
+            "subset": "one",
+            "direction": "export",
+            "package": "neutral-one-export",
+            "manifest": "one/export/Cargo.toml",
+            "targets": [
+              "neutral-alpha",
+              "neutral-bravo"
+            ]
+          }
+        ]
+      },
+      "accepted": false
+    }
   ]
 }

@@ -1,11 +1,11 @@
 //! 🧬️ SemioObjectArtifact schema — full artifact state, mirrors `SemioObjectSnapshot` field for
 //! field (see `🔤️text`'s `SemioTextArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 #[cfg(test)]
@@ -21,13 +21,13 @@ pub struct SemioObjectArtifact {
     pub transform: SemioTransform,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
+    pub brep: Option<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
+    pub properties: Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>,
 }
 
 impl Default for SemioObjectArtifact {

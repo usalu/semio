@@ -47,7 +47,7 @@ export interface ArtifactRef {
   dialect: ArtifactDialect;
 }
 
-/** 🪆 `store::ArtifactChild<S>` handle — identity plus the composed child it addresses. */
+/** 🪆 `store::os_store::artifact_child::ArtifactChild<S>` handle — identity plus the composed child it addresses. */
 export interface ArtifactChild {
   childId: string;
   target: ArtifactRef;

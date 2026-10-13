@@ -3,8 +3,8 @@
 //! are the payload, so editing the drag in history re-derives every position from whatever base it replays on. Editors that
 //! compose this subset as their content child (dag, reasoning/wires) yield one per node drag.
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 /// ✋️ `drag-nodes` payload — the node ids it moves and the offset every one of them moves by.

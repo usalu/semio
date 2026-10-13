@@ -68,9 +68,9 @@ use semio_framework_plugin::WindowMeasure;
 #[cfg(test)]
 use serde_json::json;
 use semio_framework::kernel::UiDirtyScope;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, PortRef, SemioFlowSnapshot};
-#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode};
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_edge, insert_node, SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, PortRef, SemioFlowSnapshot};
+#[cfg(test)] use semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowNode;
 #[cfg(test)]
 use serde_json::Value;
 use std::collections::HashMap;
@@ -349,7 +349,7 @@ pub(crate) const FLOW_STORE_MAX_MUTATION_ITEMS: usize = 256;
 /// 🧮️ The composed content child this document names, read in place for a bounded scan — `None` unless it is
 /// composed as `s.stdio.semio@v1/flow`. Every retained scan reads it, never the parent's working-scene owner
 /// (see [`crate::flow_composed_snapshot`]).
-fn flow_content_child<'a>(snapshot: &FlowSnapshot, children: &'a semio_framework_plugin::ChildContentView) -> Option<store::SnapshotReadRef<'a, SemioFlowSnapshot>> {
+fn flow_content_child<'a>(snapshot: &FlowSnapshot, children: &'a semio_framework_plugin::ChildContentView) -> Option<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>> {
     let child_id = &snapshot.content.child_id;
     let dialect = children.dialect("content", child_id)?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
@@ -1084,7 +1084,7 @@ impl FlowChildGroupWork {
         command: &FlowCommand,
         snapshot: &'a FlowSnapshot,
         context: Option<&'a semio_framework_plugin::app::ArtifactOwnedToolJobContext<semio_framework_plugin::EditorApp<FlowPlayApp>>>,
-    ) -> Option<store::SnapshotReadRef<'a, SemioFlowSnapshot>> {
+    ) -> Option<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>> {
         if !matches!(command, FlowCommand::AddWidget(_) | FlowCommand::MoveMediaNode(_) | FlowCommand::NodeGraphEdit(_) | FlowCommand::SpotlightCommit(_)) {
             return None;
         }
@@ -2132,7 +2132,7 @@ impl ArtifactEditor for FlowPlayApp {
         crate::retirement::store_owners_source_demands()
     }
 
-    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(crate::retirement::store_owners(grant))
     }
 

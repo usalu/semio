@@ -1,6 +1,6 @@
 use super::super::*;
 use super::*;
-use crate::app::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
+use crate::artifact_inference::{ArtifactInferenceExecution, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, WireArtifactInferenceBudget, WireArtifactInferenceCacheMode, WireArtifactInferenceRequest};
 
 /// ⛽️ A grant that covers any state action a builtin declares — `WORK_UNITS_EXECUTE` is the price
 /// the execute state of every two-phase builtin charges for its unchunked native dispatch.
@@ -18,7 +18,7 @@ const TEST_METADATA: ArtifactInferenceServiceMetadata = ArtifactInferenceService
     payload: None,
 };
 
-fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<crate::app::ArtifactInferenceExecutionStep, crate::app::ArtifactInferenceExecutionError> {
+fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<crate::artifact_inference::ArtifactInferenceExecutionStep, crate::artifact_inference::ArtifactInferenceExecutionError> {
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload: Some(request.canonical_payload.to_vec()), diagnostics: Vec::new(), validity: "valid".into(), quality: "exact".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
@@ -26,7 +26,7 @@ fn echo_infer(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<crate::
 /// process-global, so two tests reusing one id race each other for the same slot.
 fn request_bytes(cancellation_id: &str) -> Vec<u8> {
     let request = WireArtifactInferenceRequest {
-        wire_version: crate::app::ARTIFACT_INFERENCE_WIRE_VERSION,
+        wire_version: crate::artifact_inference::ARTIFACT_INFERENCE_WIRE_VERSION,
         owner: TEST_METADATA.owner.into(),
         artifact_kind: TEST_METADATA.artifact_kind.into(),
         artifact_schema: TEST_METADATA.artifact_schema.into(),
@@ -99,7 +99,7 @@ fn interactive_bridge_diagnostic_ring_is_item_and_byte_bounded() {
 #[test]
 fn an_interactive_result_forwards_the_jobs_resume_state_and_claims_no_fidelity_it_was_not_told() {
     let request = decode_request(&request_bytes("jobtest-cancel-encode")).expect("the fixture request decodes");
-    let decoded = |bytes: Vec<u8>| -> crate::app::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
+    let decoded = |bytes: Vec<u8>| -> crate::artifact_inference::WireArtifactInferenceResult { semio_framework_pack_json::from_json_str(std::str::from_utf8(&bytes).expect("result UTF-8"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the result decodes") };
 
     let resumable = decoded(encode_result(request.clone(), vec![1, 2, 3], Some(vec![4, 5]),RetainedCloneProgress{copied_items:7,copied_bytes:23,retained_capacity_bytes:0,released_bytes:65536}).expect("encodes"));
     assert_eq!((resumable.canonical_payload, resumable.previous_state, resumable.complete), (Some(vec![1, 2, 3]), Some(vec![4, 5]), true));

@@ -1,6 +1,6 @@
 //! ⚛️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (A2, design-abi.md §4): the turn loop —
 //! `reactor::poll`'s real implementation. Ties together `🧵️executor` (async task scheduling),
-//! `📮️requests` (the host-effect request/completion registry), `🩹️patches` (revisioned UI diffing),
+//! `🌐host/📮️requests` (the host-effect request/completion registry, owned by the `Host` handle), `🩹️patches` (revisioned UI diffing),
 //! `💼️jobs` (the absorbed `semio.io-run`/`semio.io-sniff` cold job kinds), `📸️checkpoint`, and
 //! `🌐host` (the async `host::*` API surface plugin/extension code awaits).
 //!
@@ -17,7 +17,7 @@ pub mod checkpoint;
 #[path = "🎟️context/🦀️.rs"]
 pub mod original_actor_context;
 #[path = "📥️cold-pair/🦀️.rs"]
-pub(crate) mod cold_pair;
+mod cold_pair;
 #[path = "🧵️executor/🦀️.rs"]
 pub mod executor;
 #[path = "🚪️lifetime/🦀️.rs"]
@@ -28,13 +28,12 @@ pub mod jobs;
 pub mod patches;
 #[path = "📨️pending/🦀️.rs"]
 mod pending;
-#[path = "📮️requests/🦀️.rs"]
-pub mod requests;
+use crate::host::requests;
 
 #[path = "🪟️surfaces/🦀️.rs"]
 pub(crate) mod surface_context;
 
-// 🧬️ Only `wit_bridge` below (component-guest/-extension-guest wasm32-wasip2) consumes these —
+// 🧬️ Only `wit_bridge` below (wasm32-wasip2) consumes these —
 // a plain native build never reaches the WIT-boundary translation code, so unlike `RefCell` these
 // two must be gated identically to `wit_bridge` itself or they warn as unused on native.
 use semio_framework::kernel::{ActorInstanceLifecycleReceipt, ActorUiPatchReceipt, Effect, Event, MessageEndpoint, TurnStatus, UiPatch};
@@ -49,7 +48,7 @@ use semio_framework_ui_contract as ui_contract;
 // are only named inside `wit_bridge::poll`'s intent-batching loop (M1, ticket 26/08/17
 // `design-unified.md`) — gated identically to that module so an ungated alias never warns as unused
 // on native.
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 use semio_framework::kernel::{RequestOutcome, UiPatchOp};
 /// 👥️ M2 (ticket 26/08/17 `design-unified.md`): standalone — needs no `EntityStore`/`UiRuntime`, just
 /// `record_own`/`record_peer`/`expire`/`flush` — so unlike the two imports directly above, this one
@@ -478,7 +477,7 @@ impl FixedTimerRegistry {
         self.head.and_then(|index| self.slots.get(index)).map(|entry| entry.id)
     }
 
-    #[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     fn contains(&self, id: u64) -> bool {
         self.slots.get(Self::index(id)).is_some_and(|entry| entry.id == id)
     }
@@ -579,7 +578,7 @@ enum TaskResumeOutcome {
 /// asked for it even if a different one is active by the time it resolves.
 struct PendingResume {
     instance: u32,
-    meta: crate::app::ActionMeta,
+    meta: crate::app_emission::ActionMeta,
     outcome: TaskResumeOutcome,
 }
 
@@ -702,7 +701,7 @@ pub fn host_for_instance(instance: u32) -> crate::host::Host {
 /// created on the guest side outside `host::Host::invoke_extension`'s awaiting variant. Returns the
 /// minted id (diagnostic; the effect itself rides the registry's own outbound queue, drained into
 /// `turn-result.effects` by `poll` later in the SAME turn).
-pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
+pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app_emission::ExtensionInvocation) -> Result<semio_framework::kernel::RequestId, semio_framework::Fault> {
     let registry = REGISTRY.with(|registry| registry.for_instance(instance));
     let extension_id = invocation.extension_id.clone();
     let capability = invocation.capability.clone();
@@ -714,7 +713,7 @@ pub(crate) fn queue_extension_invocation(instance: u32, invocation: &crate::app:
 /// `turn-result.effects` once per turn. A fixture that drives a `PluginApp` without a live
 /// `PluginRuntime` has no `poll`, so this is its only way to observe a minted
 /// `Effect::InvokeExtension` (`🔌️plugin/🦀️.rs`'s `artifact_app_laws::settle_extension_invocations`).
-pub(crate) fn drain_queued_effects(instance: u32) -> Vec<Effect> {
+fn drain_queued_effects(instance: u32) -> Vec<Effect> {
     REGISTRY.with(|registry| registry.for_instance(instance).drain())
 }
 
@@ -778,7 +777,7 @@ pub fn extension_response_args(request_json: &str, outcome: &Result<Vec<u8>, sem
 /// testable without a live `PluginRuntime`: takes the id's continuation (if any) and builds the
 /// exact `(instance, action, args)` triple the follow-up dispatch uses. `None` means the id is an
 /// ordinary parked-future request and must go to `RequestRegistry::resolve` instead.
-pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
+fn take_extension_response(req: semio_framework::kernel::RequestId, terminal: Result<Vec<u8>, semio_framework::Fault>) -> Result<(u32, String, semio_framework_value::DslValue), Result<Vec<u8>, semio_framework::Fault>> {
     let Some(continuation) = REGISTRY.with(|registry| registry.take_continuation(req)) else { return Err(terminal) };
     let (instance, response_action, request_json, outcome) = continuation.into_response(terminal);
     Ok((instance, response_action, extension_response_args(&request_json, &outcome)))
@@ -788,7 +787,7 @@ pub(crate) fn take_extension_response(req: semio_framework::kernel::RequestId, t
 /// `GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES` page arrives through, whose terminal page rides the
 /// `Event::Completed` that answers the request. `false` means `req` owns no continuation and the
 /// caller must fall through to the parked-future chunk path.
-pub(crate) fn append_extension_response_page(req: semio_framework::kernel::RequestId, bytes: &[u8]) -> bool {
+fn append_extension_response_page(req: semio_framework::kernel::RequestId, bytes: &[u8]) -> bool {
     REGISTRY.with(|registry| registry.append_continuation_chunk(req, bytes)) == requests::ContinuationChunkStep::Accumulated
 }
 //#endregion 🔖️ExtensionContinuation
@@ -818,7 +817,7 @@ pub fn host() -> crate::host::Host {
 /// 🔑️ Latest-wins dedupe: a task spawned with the same `(instance, key)` as one still live
 /// cancels the live one FIRST — its future (and anything it owns, including a parked
 /// `RequestFuture`) is dropped without ever completing, so no resume is ever queued for it.
-pub(crate) fn spawn_task<M, C, D>(instance: u32, meta: &crate::app::ActionMeta, task: crate::app::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
+pub(crate) fn spawn_task<M, C, D>(instance: u32, meta: &crate::app_emission::ActionMeta, task: crate::app_emission::AsyncTask<M, C, D>) -> Result<(), semio_framework::Fault>
 where
     M: ::protocol::OpBinary + 'static,
     C: ::protocol::OpBinary + 'static,
@@ -851,7 +850,7 @@ where
             let detached = TASK_EXECUTOR.with(|executor| executor.detach(previous));
             let record = TASK_RECORDS.with(|records| records.borrow_mut().remove(previous));
             if detached.is_none() && record.is_none() {
-                crate::app::dispose_cold_task_run(run);
+                crate::app_emission::dispose_cold_task_run(run);
                 return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Plugin, semio_framework::FaultCode::new("plugin.task.supersession-pending"), "keyed task supersession found no exact previous owner to dispose"));
             }
             drop(record);
@@ -862,29 +861,29 @@ where
     let reservation = match TASK_EXECUTOR.with(|executor| executor.reserve()) {
         Ok(reservation) => reservation,
         Err(message) => {
-            crate::app::dispose_cold_task_run(run);
+            crate::app_emission::dispose_cold_task_run(run);
             return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.executor-capacity"), message));
         }
     };
     let task_id = reservation.id();
     if !TASK_RECORDS.with(|records| records.borrow().can_insert(task_id)) {
-        crate::app::dispose_cold_task_run(run);
+        crate::app_emission::dispose_cold_task_run(run);
         return Err(semio_framework::Fault::new(semio_framework::FaultOrigin::Framework, semio_framework::FaultCode::new("plugin.task.record-capacity"), "fixed task record authority rejected an executor-reserved direct slot"));
     }
     TASK_RECORDS.with(|records| records.borrow_mut().insert_admitted(task_id, TaskRecord { instance, key, restart }));
 
-    let ctx = crate::app::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
+    let ctx = crate::app_emission::TaskCtx { host: host_for_instance(instance), meta: meta.clone() };
     let resume_instance = instance;
     let resume_meta = meta.clone();
-    let mut cold_run = crate::app::ColdTaskRun::new(run);
+    let mut cold_run = crate::app_emission::ColdTaskRun::new(run);
     reservation.install(Box::pin(async move {
         let future = cold_run.take().run(ctx);
         let outcome = match future.await {
-            Ok(crate::app::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
-            Ok(crate::app::TaskResolution::Emit(emit)) => {
+            Ok(crate::app_emission::TaskResolution::Command(bytes)) => Some(TaskResumeOutcome::Command(bytes)),
+            Ok(crate::app_emission::TaskResolution::Emit(emit)) => {
                 Some(TaskResumeOutcome::Emit { artifact_ops: encode_mutation_lane(&emit.artifact_mutations).await, config_ops: encode_mutation_lane(&emit.config_mutations).await, draft_ops: encode_mutation_lane(&emit.draft_mutations).await })
             }
-            Ok(crate::app::TaskResolution::Done) => None,
+            Ok(crate::app_emission::TaskResolution::Done) => None,
             Err(fault) => Some(TaskResumeOutcome::Fault(fault)),
         };
         TASK_RECORDS.with(|records| drop(records.borrow_mut().remove(task_id)));
@@ -927,7 +926,7 @@ async fn encode_mutation_lane<T: ::protocol::OpBinary>(ops: &[T]) -> Vec<u8> {
 /// `RequestRegistry::begin_cancel_instance`'s doc relies on when it retires slots with no wake.
 // 🚫️async: E1 pure in-memory sweep over `TASK_RECORDS`/`EXECUTOR`/`TASK_KEYS` (all sync now,
 // R9) consumed by `poll`'s sync `world actor` boundary — zero suspension.
-pub(crate) fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
+fn cancel_instance_tasks_step(instance: u32, cursor: &mut usize) -> bool {
     if *cursor < REACTOR_TASK_SLOTS {
         if TASK_RECORDS.with(|records| records.borrow().count_instance(instance)) == 0 {
             *cursor = REACTOR_TASK_SLOTS;
@@ -1081,7 +1080,7 @@ fn step_reactor_close() -> Result<bool, semio_framework::Fault> {
 }
 
 #[cfg(test)]
-pub(crate) fn cancel_instance_tasks(instance: u32) {
+fn cancel_instance_tasks(instance: u32) {
     let mut cursor = 0;
     for _ in 0..REACTOR_TASK_SLOTS {
         let before = cursor;
@@ -1098,7 +1097,7 @@ pub(crate) fn cancel_instance_tasks(instance: u32) {
 /// serialized (`TASK_RECORDS`/`EXECUTOR` are process memory, not pack state) — only the
 /// `restart` command bytes of every LIVE task that declared one via `.restartable(..)` survive
 /// into the pack, one `TaskRestart{instance, command}` per such task.
-pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
+pub async fn checkpoint_now<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>) -> Result<Vec<u8>, semio_framework::Fault> {
     let instances = INSTANCE_METADATA.with(|metadata| metadata.borrow().checkpoint_rows());
     let timers = ARMED_TIMERS.with(|timers| timers.borrow().rows());
     let pending = REGISTRY.with(|registry| registry.pending_ids().into_iter().map(|id| id.0).collect());
@@ -1116,7 +1115,7 @@ pub async fn checkpoint_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_r
 /// `TaskResolution::Command` takes), drained by the first `poll` after restore — restoring is a
 /// pure state-load, it must not itself re-enter app dispatch.
 #[expect(clippy::result_large_err, reason = "The fixed resume queue returns the admitted view snapshot, task metadata, and payload owner intact without allocating on rejection.")]
-pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
+pub async fn restore_now<PA: crate::plugin_app::PluginApp>(runtime: &crate::plugin_runtime::PluginRuntime<PA>, state: &[u8]) -> Result<(), semio_framework::Fault> {
     let mut observe = |_: semio_framework_value::native_encoding::NativeEncodeProgress| true;
     let observer: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_> = &mut observe;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(checkpoint::RESTORE_AUTHORITY_BYTES, observer).map_err(semio_framework::FaultFrom::into_fault)?;
@@ -1148,7 +1147,7 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
         Ok::<(), semio_framework::Fault>(())
     })?;
     for restart in pack.task_restarts().await {
-        let meta = crate::app::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
+        let meta = crate::app_emission::ActionMeta { actor: crate::plugin_runtime::instance_actor(runtime, restart.instance).await?.into(), instance_id: restart.instance, view_state: None };
         let pending = PendingResume { instance: restart.instance, meta, outcome: TaskResumeOutcome::Command(restart.command.clone()) };
         TASK_RESUMES
             .with(|resumes| resumes.borrow_mut().push(pending))
@@ -1160,7 +1159,7 @@ pub async fn restore_now<PA: crate::app::PluginApp>(runtime: &crate::plugin_runt
 /// 🧵️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): re-exported so the (future)
 /// `world actor-async` runner can call the SAME `drain_task_resumes` `poll` uses — one
 /// implementation of "how a resumed `AsyncTask` re-enters the reducer", not two.
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub use turn::drain_task_resumes;
 
 //#region 🔁️CommandIngressTerminal
@@ -1187,10 +1186,10 @@ mod command_ingress_terminal_tests;
 
 /// 🧬️ Everything below crosses the wasm component boundary — gated identically to `component`
 /// (`🦀️.rs` at crate root) since it names `crate::component::wasip2::exports::...` types that
-/// simply do not exist outside a `component-guest`/`component-extension-guest` wasm32-wasip2
+/// simply do not exist outside a wasm32-wasip2
 /// build (mirrors the OLD `host_port`'s per-function `#[cfg(...)]` pattern, just hoisted to one
 /// module instead of repeated per function).
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 pub use wit_bridge::{poll, stage_cold_pair_page, stage_command_page};
 
 #[path = "🔄️turn/🦀️.rs"]
@@ -1200,7 +1199,7 @@ pub use turn::retained_command_ingress_occupancy;
 pub use turn::retained_extension_invocation_occupancy;
 pub use turn::{last_turn_more_work_sources, TurnMoreWorkSources};
 
-#[cfg(all(any(feature = "component-guest", feature = "component-extension-guest"), target_arch = "wasm32", target_env = "p2"))]
+#[cfg(all(target_arch = "wasm32", target_env = "p2"))]
 mod wit_bridge {
     use super::*;
     /// 🧭️ `reactor`/`jobs`/`checkpoint`/`describe` are the only interfaces `world actor` directly
@@ -1208,8 +1207,8 @@ mod wit_bridge {
     /// `events`/`ui`/`types` are merely `use`d by `reactor.wit` (design-abi.md §1/§4) — their own
     /// payload records live at the plain (non-`exports::`) path alongside the `pure` import, one
     /// level down from where the nesting stops being re-aliased. Verified empirically: a
-    /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2
-    /// --features component-guest` emit `help: consider importing … effects::OpenWindowEffect`
+    /// deliberately wrong `wit::OpenWindowEffect` import made `cargo check --target wasm32-wasip2`
+    /// emit `help: consider importing … effects::OpenWindowEffect`
     /// (and the `events`/`ui` siblings the same way) — not guessed.
     use crate::component::wasip2::semio::framework::capabilities as wit_capabilities;
     use crate::component::wasip2::semio::framework::effects as wit_effects;
@@ -1268,7 +1267,7 @@ mod wit_bridge {
     /// ▶️ The real `reactor::poll` body — see module doc for the shape. `events`/`budget` are the
     /// WIT-generated types from `exports::semio::framework::reactor`; the return is that same
     /// module's `TurnResult`. The turn's pages come from [`STAGED_PAGES`], which this call empties.
-    pub async fn poll<PA: crate::app::PluginApp + 'static>(
+    pub async fn poll<PA: crate::plugin_app::PluginApp + 'static>(
         runtime: &crate::plugin_runtime::PluginRuntime<PA>,
         events: Vec<crate::component::wasip2::exports::semio::framework::reactor::Event>,
         budget: crate::component::wasip2::exports::semio::framework::reactor::Budget,
@@ -1804,7 +1803,7 @@ mod wit_bridge {
 /// a wasm32-wasip2 build. `pub(crate)`, `#[cfg(test)]`-gated: never part of the real API surface.
 #[cfg(test)]
 #[path = "🧪️tests/⚛️reactor-driver/🦀️.rs"]
-pub(crate) mod reactor_driver;
+mod reactor_driver;
 
 //#region 🧪️M1M2ReactorTests
 /// 🎯️👥️ M1/M2 (ticket 26/08/17 `design-unified.md`) acceptance, driven through `reactor_driver`'s

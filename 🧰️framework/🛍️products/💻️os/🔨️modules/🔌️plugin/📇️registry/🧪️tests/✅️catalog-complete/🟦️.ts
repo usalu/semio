@@ -6,11 +6,13 @@ import Ajv from "ajv";
 import { parseModuleDirectories, moduleDirectoryName, moduleIdForDirectoryName } from "../../📦️deployment/🟦️.ts";
 import { registryModuleDirectories, readGeneratedCatalogProjection } from "../../📖️catalog-view/🟦️.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { cargoTargetDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { APP_CHANNEL_VERSION, encodePackValue } from "../../../../../🟦️.ts";
-import { emitOwnerDescriptorPairV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
-import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifyDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
+import { emitSemanticDescriptorV1, remainingDescriptorEmissionBudgetMs } from "../../../🖨️describe/🛂️descriptor-emission/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, COMPONENT_RECEIPT_SCHEMA_ID, componentDeliverableV1, encodeComponentReceiptV1, writeComponentReceiptV1, type ComponentReceiptV1 } from "../../../🖨️describe/🏷️component-receipt/🟦️.ts";
+import { CATALOG_ARTIFACT_MAX_BYTES, CATALOG_COMMIT_MARKER_FILENAME, CATALOG_DEPENDENCY_MAX, CATALOG_NODE_MAX, auditNavbarExampleArtifactPayload, auditNavbarExamplePickerCoverage, auditPluginCatalogSources, createFreshCatalogCommitMarker, createFreshCatalogBuildVerifier, executeCatalogVerificationPlan, orderCatalogNodes, rejectPlaceholderCatalogIdentity, sha256CatalogArtifact, validateCatalogDescriptorPair, verifySemanticDescriptorPairBytesV1, type CatalogVerificationNode } from "../../✅️catalog-verification/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
-import { auditInteractiveJobClassificationDrift, describedComponentFindings, describedComponentPath } from "../../🛂️descriptor-verification/🟦️.ts";
+import { auditInteractiveJobClassificationDrift, shippedComponentFindings } from "../../🛂️descriptor-verification/🟦️.ts";
 import { parseComponentPackageId, type CompiledComponentOwnerV1 } from "../../🔎️discovery/🟦️.ts";
 import { resolvePlaygroundBoot } from "@semio-tech/framework";
 import { examplesForApp, normalizeManifestExamples } from "../../../../../../../🔨️modules/🛂️manifest/🟦️.ts";
@@ -117,7 +119,7 @@ async function sha256(bytes: Uint8Array): Promise<string> {
   return Buffer.from(await webcrypto.subtle.digest("SHA-256", bytes)).toString("hex");
 }
 
-async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint8Array): Promise<{ readonly descriptor: Record<string, any>; readonly bytes: Uint8Array }> {
+function syntheticDescriptor(pluginId: string): { readonly descriptor: Record<string, any>; readonly bytes: Uint8Array } {
   const descriptor: Record<string, any> = {
     descriptorVersion: 1,
     packageId: `semio:${pluginId}`,
@@ -127,13 +129,22 @@ async function syntheticDescriptor(pluginId: string, raw: Uint8Array, core: Uint
     executionProtocol: { appChannelVersion: APP_CHANNEL_VERSION },
     quotas: {},
     contributions: {},
-    hashes: { wasmSha256: await sha256(raw), coreWasmSha256: await sha256(core), descriptorSha256: "" },
   };
-  descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(descriptor));
   return { descriptor, bytes: encodePackValue(descriptor) };
 }
 
-function syntheticEntry(hashes: CompiledComponentOwnerV1["hashes"]): CompiledComponentOwnerV1 {
+/** 🧾️ The shipped receipt binding `semantic` to the raw component bytes `raw` of `pluginId`. */
+async function shippedReceipt(pluginId: string, raw: Uint8Array, semantic: Uint8Array): Promise<ComponentReceiptV1> {
+  return { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId, packageId: `semio:${pluginId}`, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: await sha256(raw), wasmBytes: raw.byteLength, semanticDescriptorSha256: await sha256(semantic), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+}
+
+/** 🔏️ A descriptor carrying a byte binding of its own — a shape no semantic reader admits. */
+function byteBoundDescriptor(descriptor: Record<string, any>): { readonly descriptor: Record<string, any>; readonly bytes: Uint8Array; readonly json: Uint8Array } {
+  const bound = { ...descriptor, hashes: { wasmSha256: "1".repeat(64), coreWasmSha256: "2".repeat(64), descriptorSha256: "3".repeat(64) } };
+  return { descriptor: bound, bytes: encodePackValue(bound), json: new TextEncoder().encode(`${JSON.stringify(bound, null, 2)}\n`) };
+}
+
+function syntheticEntry(): CompiledComponentOwnerV1 {
   return {
     pluginId: "parent",
     packageId: "semio:parent",
@@ -141,7 +152,7 @@ function syntheticEntry(hashes: CompiledComponentOwnerV1["hashes"]): CompiledCom
     packageName: "semio-s-plugin-parent",
     wasmOut: "semio_s_plugin_parent.wasm",
     role: "plugin",
-    capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated", hashes,
+    capabilities: [], contributes: [], consumes: [], dependsOn: [], activationEvents: [], extensionPoints: [], executionMode: "isolated",
   };
 }
 
@@ -195,57 +206,58 @@ describe("strict plugin catalog completion", () => {
     const sourceRoot = temporaryRoot();
     const buildRoot = temporaryRoot();
     const raw = new TextEncoder().encode("raw-component");
-    const core = new TextEncoder().encode("extracted-core");
-    const { descriptor, bytes } = await syntheticDescriptor("parent", raw, core);
-    const entry = syntheticEntry(descriptor.hashes);
+    const { descriptor, bytes: semanticBytes } = syntheticDescriptor("parent");
+    const entry = syntheticEntry();
     const ownerRoot = join(sourceRoot, "owner");
     mkdirSync(join(ownerRoot, "📦️packages", "🦀️rust"), { recursive: true });
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), bytes);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
     const source = validateCatalogDescriptorPair(entry, sourceRoot);
+    expect(source.semanticSha256).toBe(await sha256(semanticBytes));
     expect(entry.pluginId).not.toBe(entry.packageName);
     const wrongPackage = structuredClone(descriptor);
     wrongPackage.packageId = "semio:not-parent";
-    wrongPackage.hashes.descriptorSha256 = "";
-    wrongPackage.hashes.descriptorSha256 = await sha256(encodePackValue(wrongPackage));
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(wrongPackage, null, 2)}\n`);
     writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(wrongPackage));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/packageId/);
-    const mismatch = await syntheticDescriptor("package-name-is-not-plugin-id", raw, core);
+    const mismatch = syntheticDescriptor("package-name-is-not-plugin-id");
     mismatch.descriptor.packageId = "semio:parent";
-    mismatch.descriptor.hashes.descriptorSha256 = "";
-    mismatch.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(mismatch.descriptor));
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(mismatch.descriptor, null, 2)}\n`);
     writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(mismatch.descriptor));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/manifest\.pluginId/);
-    const malformed = structuredClone(descriptor);
-    malformed.hashes.wasmSha256 = malformed.hashes.wasmSha256.toUpperCase();
-    writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(malformed, null, 2)}\n`);
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), encodePackValue(malformed));
-    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/lowercase 64-hex/);
+    const bound = byteBoundDescriptor(descriptor);
+    writeFileSync(join(ownerRoot, "🔣️.json"), bound.json);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), bound.bytes);
+    expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/unknown fields hashes/);
     const duplicatePackageId = `${JSON.stringify(descriptor, null, 2).replace(/\n\}/u, ',\n  "packageId": "semio:parent"\n}')}\n`;
     writeFileSync(join(ownerRoot, "🔣️.json"), duplicatePackageId);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow(/duplicate object field "packageId"/);
     writeFileSync(join(ownerRoot, "🔣️.json"), `${JSON.stringify(descriptor, null, 2)}\n`);
     rmSync(join(ownerRoot, "🛂️.descriptor.semio"));
     expect(() => validateCatalogDescriptorPair(entry, sourceRoot)).toThrow();
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), bytes);
+    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), semanticBytes);
     const rowRoot = join(buildRoot, entry.pluginId);
-    for (const part of ["raw", "core", "descriptor"]) mkdirSync(join(rowRoot, part), { recursive: true });
+    const receipt = await shippedReceipt(entry.pluginId, raw, semanticBytes);
+    const receiptBytes = new TextEncoder().encode(encodeComponentReceiptV1(receipt));
+    for (const part of ["raw", "descriptor", "receipt"]) mkdirSync(join(rowRoot, part), { recursive: true });
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
-    writeFileSync(join(rowRoot, "core", entry.wasmOut), core);
-    writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), bytes);
+    writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), semanticBytes);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
     const verifier = createFreshCatalogBuildVerifier(sourceRoot, buildRoot);
     expect(() => verifier.verify(source.entry)).toThrow(/commit marker/);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, profile: "wasm-prototype" }));
+    expect(() => createFreshCatalogCommitMarker(source, buildRoot)).toThrow(/staged receipt does not bind/);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
     const marker = createFreshCatalogCommitMarker(source, buildRoot);
     writeFileSync(join(rowRoot, CATALOG_COMMIT_MARKER_FILENAME), `${JSON.stringify(marker)}\n`, { flag: "wx" });
     rmSync(source.jsonPath);
     rmSync(source.packPath);
-    const { hashes: _ownerProjection, ...ownerlessEntry } = source.entry;
-    const receipt = verifier.verify(ownerlessEntry);
-    expect(receipt.rawSha256).toBe(await sha256(raw));
-    expect(receipt.coreSha256).toBe(await sha256(core));
-    expect(receipt.descriptorSha256).toBe(descriptor.hashes.descriptorSha256);
+    const ownerlessEntry = source.entry;
+    const verified = verifier.verify(ownerlessEntry);
+    expect(verified.rawSha256).toBe(await sha256(raw));
+    expect(verified.descriptorSha256).toBe(await sha256(semanticBytes));
+    expect(verified.receipt).toEqual(receipt);
     expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:not-parent" })).toThrow(/carried Cargo identity/);
     expect(() => verifier.verify({ ...ownerlessEntry, packageId: "semio:Parent" })).toThrow(/carried Cargo identity/);
     expect(createHash("sha256").update(raw).digest("hex")).toBe(await sha256(raw));
@@ -257,11 +269,9 @@ describe("strict plugin catalog completion", () => {
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), rawMutation);
     expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
-    const coreMutation = Uint8Array.from(core);
-    coreMutation[0] ^= 1;
-    writeFileSync(join(rowRoot, "core", entry.wasmOut), coreMutation);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1({ ...receipt, provenanceSha256: "5".repeat(64) }));
     expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
-    writeFileSync(join(rowRoot, "core", entry.wasmOut), core);
+    writeFileSync(join(rowRoot, "receipt", COMPONENT_RECEIPT_FILE), receiptBytes);
     let rewroteRawAfterRead = false;
     const pinned = verifier.verify(ownerlessEntry, {
       afterArtifact(artifact) {
@@ -272,11 +282,10 @@ describe("strict plugin catalog completion", () => {
       },
     });
     expect(Buffer.from(pinned.rawBytes).equals(Buffer.from(raw))).toBe(true);
-    expect(Buffer.from(pinned.coreBytes).equals(Buffer.from(core))).toBe(true);
-    expect(Buffer.from(pinned.descriptorBytes).equals(Buffer.from(bytes))).toBe(true);
+    expect(Buffer.from(pinned.descriptorBytes).equals(Buffer.from(semanticBytes))).toBe(true);
     expect(readFileSync(join(rowRoot, "raw", entry.wasmOut))).toEqual(Buffer.from(rawMutation));
     writeFileSync(join(rowRoot, "raw", entry.wasmOut), raw);
-    const descriptorMutation = Uint8Array.from(bytes);
+    const descriptorMutation = Uint8Array.from(semanticBytes);
     descriptorMutation[0] ^= 1;
     writeFileSync(join(rowRoot, "descriptor", "🛂️.descriptor.semio"), descriptorMutation);
     expect(() => verifier.verify(ownerlessEntry)).toThrow(/commit marker/);
@@ -290,10 +299,11 @@ describe("strict plugin catalog completion", () => {
     expect(() => parseComponentPackageId('[package.metadata.component]\npackage = "semio:Parent"\n', "fixture/Cargo.toml")).toThrow(/lowercase/);
     expect(() => parseComponentPackageId('[package.metadata.component]\npackage-name = "semio:parent"\n', "fixture/Cargo.toml")).toThrow(/missing/);
     const repoRoot = temporaryRoot();
-    const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "dev", "🔌️plugin-modules");
-    mkdirSync(join(repoRoot, "target"), { recursive: true });
+    const cache = join(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🔌️plugin", "📦️packages", "🟦️typescript", "dist", "🔌️plugin-modules");
+    const sharedTarget = cargoTargetDirectory(repoRoot);
+    mkdirSync(sharedTarget, { recursive: true });
     mkdirSync(cache, { recursive: true });
-    expect(() => createFreshCatalogBuildVerifier(repoRoot, join(repoRoot, "target"))).toThrow(/ambient shared target/);
+    expect(() => createFreshCatalogBuildVerifier(repoRoot, sharedTarget)).toThrow(/ambient shared target/);
     expect(() => createFreshCatalogBuildVerifier(repoRoot, cache)).toThrow(/development cache/);
     const hugeRoot = temporaryRoot();
     const huge = join(hugeRoot, "huge");
@@ -303,57 +313,36 @@ describe("strict plugin catalog completion", () => {
     expect(() => sha256CatalogArtifact(huge, hugeRoot)).toThrow(/exceeds/);
   });
 
-  it("verifies one emitted owner pair against its exact raw/core bytes with a WebCrypto oracle", async () => {
-    const raw = new TextEncoder().encode("raw-component");
-    const core = new TextEncoder().encode("extracted-core");
-    const rawSha256 = await sha256(raw);
-    const coreWasmSha256 = await sha256(core);
-    expect(rawSha256).not.toBe(coreWasmSha256);
-    const { descriptor, bytes } = await syntheticDescriptor("parent", raw, core);
+  it("verifies one emitted semantic pair and refuses a descriptor carrying a byte binding of its own", async () => {
+    const { descriptor, bytes } = syntheticDescriptor("parent");
     const json = new TextEncoder().encode(`${JSON.stringify(descriptor, null, 2)}\n`);
-    const pair = verifyDescriptorPairBytesV1(json, bytes, { wasmSha256: rawSha256, coreWasmSha256 });
-    expect(pair).toMatchObject({ pluginId: "parent", packageId: "semio:parent", role: "plugin", version: "1.0.0", execution: "isolated" });
-    expect(pair.hashes.wasmSha256).toBe(rawSha256);
-    expect(pair.hashes.coreWasmSha256).toBe(coreWasmSha256);
-    expect(pair.hashes.descriptorSha256).toBe(createHash("sha256").update(encodePackValue({ ...descriptor, hashes: { ...descriptor.hashes, descriptorSha256: "" } })).digest("hex"));
+    const pair = verifySemanticDescriptorPairBytesV1(json, bytes);
+    expect(pair).toMatchObject({ pluginId: "parent", packageId: "semio:parent", role: "plugin", version: "1.0.0", execution: "isolated", semanticSha256: await sha256(bytes) });
+    const bound = byteBoundDescriptor(descriptor);
+    expect(() => verifySemanticDescriptorPairBytesV1(bound.json, bound.bytes)).toThrow(/unknown fields hashes/);
     for (const invalidProtocol of [undefined, null, {}, { appChannelVersion: 13 }, { appChannelVersion: 14, extra: true }]) {
       const hostile: Record<string, any> = structuredClone(descriptor);
       if (invalidProtocol === undefined) delete hostile.executionProtocol;
       else hostile.executionProtocol = invalidProtocol;
-      hostile.hashes.descriptorSha256 = "";
-      hostile.hashes.descriptorSha256 = await sha256(encodePackValue(hostile));
-      expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostile, null, 2)}\n`), encodePackValue(hostile), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/executionProtocol/);
+      expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostile, null, 2)}\n`), encodePackValue(hostile))).toThrow(/executionProtocol/);
     }
-    const swapped = await syntheticDescriptor("parent", core, raw);
-    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(swapped.descriptor, null, 2)}\n`), swapped.bytes, { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/exact raw\/core artifacts/);
     const divergent = structuredClone(descriptor);
     divergent.manifest.label = "a different label";
-    expect(() => verifyDescriptorPairBytesV1(json, encodePackValue(divergent), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/JSON and pack forms disagree/);
-    const tampered = structuredClone(descriptor);
-    tampered.hashes.descriptorSha256 = await sha256(new TextEncoder().encode("not the self hash"));
-    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(tampered, null, 2)}\n`), encodePackValue(tampered), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/self-hash mismatch/);
-    const trailing = new Uint8Array([...bytes, 0]);
-    expect(() => verifyDescriptorPairBytesV1(json, trailing, { wasmSha256: rawSha256, coreWasmSha256 })).toThrow();
+    expect(() => verifySemanticDescriptorPairBytesV1(json, encodePackValue(divergent))).toThrow(/JSON and pack forms disagree/);
+    expect(() => verifySemanticDescriptorPairBytesV1(json, new Uint8Array([...bytes, 0]))).toThrow();
     for (const identity of [{ pluginId: "empty", version: "1.0.0" }, { pluginId: "cad-extension-spatial-shape", version: "0.0.0" }]) {
-      const placeholder = await syntheticDescriptor(identity.pluginId, raw, core);
+      const placeholder = syntheticDescriptor(identity.pluginId);
       placeholder.descriptor.manifest.version = identity.version;
-      placeholder.descriptor.hashes.descriptorSha256 = "";
-      placeholder.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(placeholder.descriptor));
-      const placeholderBytes = encodePackValue(placeholder.descriptor);
-      expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(placeholder.descriptor, null, 2)}\n`), placeholderBytes, { wasmSha256: rawSha256, coreWasmSha256 }), identity.pluginId).toThrow(/placeholder identity/);
+      expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(placeholder.descriptor, null, 2)}\n`), encodePackValue(placeholder.descriptor)), identity.pluginId).toThrow(/placeholder identity/);
     }
     expect(() => rejectPlaceholderCatalogIdentity("cad-extension-spatial-shape", "1.0.0")).not.toThrow();
-    const hosted = await syntheticDescriptor("host-extension-child", raw, core);
+    const hosted = syntheticDescriptor("host-extension-child");
     hosted.descriptor.role = "extension";
     hosted.descriptor.manifest.dependencies = [{ pluginId: "host" }];
-    hosted.descriptor.hashes.descriptorSha256 = "";
-    hosted.descriptor.hashes.descriptorSha256 = await sha256(encodePackValue(hosted.descriptor));
-    expect(verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hosted.descriptor, null, 2)}\n`), encodePackValue(hosted.descriptor), { wasmSha256: rawSha256, coreWasmSha256 })).toMatchObject({ role: "extension", extends: "host" });
+    expect(verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hosted.descriptor, null, 2)}\n`), encodePackValue(hosted.descriptor))).toMatchObject({ role: "extension", extends: "host" });
     const hostless = structuredClone(hosted.descriptor);
     hostless.manifest.dependencies = [];
-    hostless.hashes.descriptorSha256 = "";
-    hostless.hashes.descriptorSha256 = await sha256(encodePackValue(hostless));
-    expect(() => verifyDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless), { wasmSha256: rawSha256, coreWasmSha256 })).toThrow(/extension host must be its first dependency/);
+    expect(() => verifySemanticDescriptorPairBytesV1(new TextEncoder().encode(`${JSON.stringify(hostless, null, 2)}\n`), encodePackValue(hostless))).toThrow(/extension host must be its first dependency/);
   });
 
   it("preserves opt-in emission deadlines through guard and child-process budgets", async () => {
@@ -367,15 +356,9 @@ describe("strict plugin catalog completion", () => {
     const { Decimal } = await import("decimal.js");
     const repoRoot = temporaryRoot();
     const artifactRoot = join(repoRoot, "artifacts");
-    const ownerRoot = join(repoRoot, "owner");
     mkdirSync(artifactRoot);
-    mkdirSync(ownerRoot);
-    const rawComponentPath = join(artifactRoot, "component.wasm");
-    const extractedCorePath = join(artifactRoot, "component.core.wasm");
-    writeFileSync(rawComponentPath, "raw-component");
-    writeFileSync(extractedCorePath, "extracted-core");
-    writeFileSync(join(ownerRoot, "🔣️.json"), "old-json");
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "old-pack");
+    const component = join(artifactRoot, "component.wasm");
+    writeFileSync(component, "raw-component");
     for (const row of cases.cases) {
       const budget = new Decimal(row.budgetMs);
       expect(!budget.isZero() && new Decimal(row.elapsedMs).greaterThan(budget), row.name).toBe(row.expired);
@@ -383,64 +366,51 @@ describe("strict plugin catalog completion", () => {
       let now = 0;
       const clock = vi.spyOn(Date, "now").mockImplementation(() => now);
       try {
-        expect(() => emitOwnerDescriptorPairV1(repoRoot, { artifactRoot, ownerRoot, rawComponentPath, extractedCorePath }, {
+        await expect(emitSemanticDescriptorV1(repoRoot, { artifactRoot, component }, {
           deadlineMs: row.budgetMs,
           checkpoint(stage) {
             if (stage === "validate") now = row.elapsedMs;
             if (stage === "emit") throw new Error("fixture stopped before native emission");
           },
-        }), row.name).toThrow(row.expired ? /deadline of .*ms exceeded/ : /fixture stopped before native emission/);
+        }), row.name).rejects.toThrow(row.expired ? /deadline of .*ms exceeded/ : /fixture stopped before native emission/);
       } finally {
         clock.mockRestore();
       }
       expect(remainingDescriptorEmissionBudgetMs(row.budgetMs, row.elapsedMs), row.name).toBe(row.remainingMs);
-      expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8")).toBe("old-json");
-      expect(readFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "utf8")).toBe("old-pack");
+      expect(readdirSync(artifactRoot), row.name).toEqual(["component.wasm"]);
     }
   });
 
-  it("refuses every unusable emission input and never half-publishes an owner pair", async () => {
+  it("refuses every unusable emission input and leaves no staging behind", async () => {
     const repoRoot = temporaryRoot();
     const artifactRoot = join(repoRoot, "target-emission");
-    const ownerRoot = join(repoRoot, "owner");
     const outsideRoot = temporaryRoot();
-    for (const directory of [artifactRoot, ownerRoot]) mkdirSync(directory, { recursive: true });
-    const previousJson = `${JSON.stringify({ previous: true }, null, 2)}\n`;
-    const previousPack = encodePackValue({ previous: true });
-    writeFileSync(join(ownerRoot, "🔣️.json"), previousJson);
-    writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), previousPack);
-    const rawComponentPath = join(artifactRoot, "component.wasm");
-    const extractedCorePath = join(artifactRoot, "component.core.wasm");
-    writeFileSync(rawComponentPath, "raw-component");
-    writeFileSync(extractedCorePath, "extracted-core");
+    mkdirSync(artifactRoot, { recursive: true });
+    const component = join(artifactRoot, "component.wasm");
+    writeFileSync(component, "raw-component");
     const outsideComponent = join(outsideRoot, "component.wasm");
     writeFileSync(outsideComponent, "raw-component");
     const emptyComponent = join(artifactRoot, "empty.wasm");
     writeFileSync(emptyComponent, "");
     const linkedComponent = join(artifactRoot, "linked.wasm");
-    symlinkSync(rawComponentPath, linkedComponent);
-    const twinComponent = join(artifactRoot, "twin.wasm");
-    writeFileSync(twinComponent, "raw-component");
-    const request = { rawComponentPath, extractedCorePath, ownerRoot, artifactRoot };
-    const cases: readonly [string, Parameters<typeof emitOwnerDescriptorPairV1>[1], Parameters<typeof emitOwnerDescriptorPairV1>[2], RegExp][] = [
-      ["outside the artifact root", { ...request, rawComponentPath: outsideComponent }, {}, /resolves outside the declared artifact root/],
-      ["an empty artifact", { ...request, rawComponentPath: emptyComponent }, {}, /regular non-symlink file/],
-      ["a symlinked artifact", { ...request, rawComponentPath: linkedComponent }, {}, /regular non-symlink file/],
-      ["a directory owner that is a file", { ...request, ownerRoot: rawComponentPath }, {}, /regular non-symlink directory/],
-      ["the same file twice", { ...request, extractedCorePath: rawComponentPath }, {}, /the same file/],
-      ["byte-identical raw and core", { ...request, extractedCorePath: twinComponent }, {}, /same SHA-256/],
+    symlinkSync(component, linkedComponent);
+    const request = { component, artifactRoot };
+    const cases: readonly [string, Parameters<typeof emitSemanticDescriptorV1>[1], Parameters<typeof emitSemanticDescriptorV1>[2], RegExp][] = [
+      ["outside the artifact root", { ...request, component: outsideComponent }, {}, /resolves outside the declared artifact root/],
+      ["an empty artifact", { ...request, component: emptyComponent }, {}, /regular non-symlink file/],
+      ["a symlinked artifact", { ...request, component: linkedComponent }, {}, /regular non-symlink file/],
+      ["an artifact root that is a file", { ...request, artifactRoot: component }, {}, /regular non-symlink directory/],
       ["a cancelled emission", request, { cancelled: () => true }, /cancelled at validate/],
       ["an exhausted deadline", request, { deadlineMs: -1 }, /deadline of -1ms exceeded/],
     ];
     for (const [label, input, control, expected] of cases) {
-      expect(() => emitOwnerDescriptorPairV1(repoRoot, input, control), label).toThrow(expected);
-      expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8"), label).toBe(previousJson);
-      expect(readFileSync(join(ownerRoot, "🛂️.descriptor.semio")), label).toEqual(Buffer.from(previousPack));
+      await expect(emitSemanticDescriptorV1(repoRoot, input, control), label).rejects.toThrow(expected);
+      expect(readdirSync(artifactRoot).sort(), label).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
     }
     const stages: string[] = [];
-    expect(() => emitOwnerDescriptorPairV1(repoRoot, request, { checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).toThrow(/stopped after emit/);
+    await expect(emitSemanticDescriptorV1(repoRoot, request, { checkpoint: (stage) => { stages.push(stage); if (stages.length === 2) throw new Error("stopped after emit"); } })).rejects.toThrow(/stopped after emit/);
     expect(stages).toEqual(["validate", "emit"]);
-    expect(readFileSync(join(ownerRoot, "🔣️.json"), "utf8")).toBe(previousJson);
+    expect(readdirSync(artifactRoot).sort()).toEqual(["component.wasm", "empty.wasm", "linked.wasm"]);
   });
 
   it("reports only committed classifications that contradict the owner's own Rust", () => {
@@ -469,26 +439,27 @@ describe("strict plugin catalog completion", () => {
 });
 
 describe("descriptor gate component identity", () => {
-  it("checks hashes.wasmSha256 against the described component-dev deliverable and never against a canonical release artifact", () => {
-    const root = mkdtempSync(join(tmpdir(), "semio-described-component-"));
+  it("checks the shipped receipt against the committed semantic pack and the bytes beside it, never an ambient cargo artifact", () => {
+    const root = mkdtempSync(join(tmpdir(), "semio-shipped-component-"));
     try {
-      const entry = { pluginId: "fixture", cratePath: "plugins/fixture/rust", wasmOut: "semio_s_plugin_fixture.wasm" };
-      const described = describedComponentPath(root, entry);
-      expect(described).toBe(join(root, "plugins/fixture/rust/dist/component-dev/semio_s_plugin_fixture.wasm"));
-      const bytes = new TextEncoder().encode("described component bytes");
-      const named = createHash("sha256").update(bytes).digest("hex");
-      expect(describedComponentFindings(root, entry, named)).toEqual({ warnings: [expect.stringContaining("no component-dev deliverable")], errors: [] });
-      mkdirSync(join(root, "plugins/fixture/rust/dist/component-dev"), { recursive: true });
-      writeFileSync(described, bytes);
-      expect(describedComponentFindings(root, entry, named)).toEqual({ warnings: [], errors: [] });
-      expect(publicationWasmPath(root, entry.wasmOut)).not.toBe(described);
-      const stale = describedComponentFindings(root, entry, "0".repeat(64));
+      const entry = { pluginId: "fixture", packageId: "semio:fixture", packageName: "semio-s-plugin-fixture", cratePath: "plugins/fixture/rust" };
+      const deliverable = componentDeliverableV1(join(root, entry.cratePath), entry.packageName, "wasm-release");
+      expect(deliverable.wasm).toBe(join(root, "plugins/fixture/rust/dist/components/release/semio_s_plugin_fixture.wasm"));
+      const bytes = new TextEncoder().encode("\0asm\r\0\x01\0shipped component bytes");
+      const pack = encodePackValue({ semantic: true });
+      expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [expect.stringContaining("no shipped component and receipt")], errors: [] });
+      mkdirSync(deliverable.directory, { recursive: true });
+      writeFileSync(deliverable.wasm, bytes);
+      const receipt = { schema: COMPONENT_RECEIPT_SCHEMA_ID, pluginId: entry.pluginId, packageId: entry.packageId, profile: "wasm-release" as const, target: "wasm32-wasip2" as const, wasmSha256: createHash("sha256").update(bytes).digest("hex"), wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+      writeComponentReceiptV1(deliverable.receipt, receipt);
+      expect(shippedComponentFindings(root, entry, pack)).toEqual({ warnings: [], errors: [] });
+      const stale = shippedComponentFindings(root, entry, encodePackValue({ semantic: false }));
       expect(stale.warnings).toEqual([]);
-      expect(stale.errors).toEqual([expect.stringContaining(`actually hashes to ${named}`)]);
+      expect(stale.errors).toEqual([expect.stringContaining("committed semantic descriptor is not the descriptor the receipt names")]);
+      writeFileSync(deliverable.wasm, new TextEncoder().encode("\0asm\r\0\x01\0other bytes"));
+      expect(shippedComponentFindings(root, entry, pack).errors).toEqual([expect.stringContaining("component bytes are not the bytes the receipt names")]);
     } finally {
       rmSync(root, { recursive: true, force: true });
     }
   });
 });
-
-import { publicationWasmPath } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";

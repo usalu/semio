@@ -10,7 +10,7 @@
 //! The bridge emits a Motion-JPEG sample entry for `jpeg`/`mjpa` streams (JPEG needs no configuration
 //! record) and the logical AVC variant otherwise; it never retains an opaque sample-entry box.
 
-use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_mp4::standards::isobmff::subsets::any::schema::snapshot::{Mp4Codec, Mp4CodecFormat, Mp4Ftyp, Mp4Sample, Mp4Track};
 use semio_s_artifact_stdio_mp4::Mp4Snapshot;

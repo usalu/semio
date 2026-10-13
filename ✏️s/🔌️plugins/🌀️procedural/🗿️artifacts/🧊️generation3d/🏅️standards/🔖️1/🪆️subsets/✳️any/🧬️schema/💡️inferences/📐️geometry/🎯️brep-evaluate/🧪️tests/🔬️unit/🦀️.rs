@@ -1,5 +1,5 @@
 use std::sync::Arc;
-use semio_framework_3d::brep::engine::ShapeValue;
+use semio_framework_3d_brep_engine::ShapeValue;
 use super::*;
 use std::collections::BTreeMap;
 

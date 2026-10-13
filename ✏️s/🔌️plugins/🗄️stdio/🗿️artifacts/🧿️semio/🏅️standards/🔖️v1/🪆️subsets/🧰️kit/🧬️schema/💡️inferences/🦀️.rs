@@ -7,7 +7,7 @@
 //! slots (`objects`/`models`/`properties`) and link slot (`representations`) are handles, never
 //! embedded content).
 
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::snapshot::SemioKitSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::entries::compute_semio_kit_entries;

@@ -1,9 +1,9 @@
 use super::*;
-use crate::brep::operations::primitives::{make_cone, make_cylinder, make_planar_face_from_points, make_sphere, make_torus};
-use crate::brep::operations::sweep::{extrude_face, revolve_face};
-use crate::brep::queries::analysis::{manifold_report, mass_properties, topology_counts, validity, ShapeScope, Watertightness};
-use crate::brep::queries::tessellation::tessellate_solid;
-use crate::brep::representation::vector::matrix::Affine3;
+use crate::primitives::{make_cone, make_cylinder, make_planar_face_from_points, make_sphere, make_torus};
+use crate::sweep::{extrude_face, revolve_face};
+use semio_framework_3d_brep_queries::analysis::{manifold_report, mass_properties, topology_counts, validity, ShapeScope, Watertightness};
+use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_representation::vector::matrix::Affine3;
 use serde_json::Value;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Mutex;
@@ -185,7 +185,7 @@ fn debug_face_tessellation() {
             let started = std::time::Instant::now();
             let (sender, receiver) = std::sync::mpsc::channel();
             let shared = body.clone();
-            std::thread::spawn(move || { let _ = sender.send(crate::brep::queries::tessellation::tessellate_face(&shared, face, 0.01).map(|m| m.index.len() / 3)); });
+            std::thread::spawn(move || { let _ = sender.send(semio_framework_3d_brep_queries::tessellation::tessellate_face(&shared, face, 0.01).map(|m| m.index.len() / 3)); });
             let outcome = receiver.recv_timeout(std::time::Duration::from_secs(10));
             eprintln!("[DEBUG] face {face} tessellation {:?} in {}ms", outcome, started.elapsed().as_millis());
         }

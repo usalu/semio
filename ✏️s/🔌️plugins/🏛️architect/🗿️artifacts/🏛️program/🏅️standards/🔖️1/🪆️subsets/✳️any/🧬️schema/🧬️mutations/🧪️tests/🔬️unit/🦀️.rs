@@ -1,7 +1,7 @@
 use super::*;
-use crate::kernel::*;
-use crate::registers::*;
-use crate::{empty_plugin, sample_plugin};
+use crate::standards::v1::subsets::any::schema::kernel::*;
+use crate::standards::v1::subsets::any::schema::registers::*;
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 use protocol::{Mutation, SemanticMutation};
 
 fn round_trip(snapshot: &ProgramSnapshot, operation: &ProgramMutation) -> ProgramSnapshot {
@@ -297,8 +297,8 @@ async fn composed_table_kinds_obey_the_sum_law() {
         ProgramMutation::ReplaceBenchmarkRecord(super::super::replace_benchmark_record::ReplaceBenchmarkRecord { benchmark_record: renamed_benchmark }),
     ] {
         let after = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("valid mutation diff");
-        assert_eq!(after.knowledge, crate::knowledge_child_from_records(&after.knowledge_payload), "the knowledge handle follows its rows");
-        assert_eq!(after.benchmarks, crate::benchmarks_child_from_records(&after.benchmarks_payload), "the benchmarks handle follows its rows");
+        assert_eq!(after.knowledge, crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&after.knowledge_payload), "the knowledge handle follows its rows");
+        assert_eq!(after.benchmarks, crate::standards::v1::subsets::any::schema::snapshot::benchmarks_child_from_records(&after.benchmarks_payload), "the benchmarks handle follows its rows");
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     }
 }
@@ -361,7 +361,7 @@ async fn middle_deletes_of_edges_and_composed_rows_restore_their_position() {
     base.knowledge_payload.push(knowledge.clone());
     knowledge.header.id = EntityId("knowledge-three".into());
     base.knowledge_payload.push(knowledge);
-    base.knowledge = crate::knowledge_child_from_records(&base.knowledge_payload);
+    base.knowledge = crate::standards::v1::subsets::any::schema::snapshot::knowledge_child_from_records(&base.knowledge_payload);
     let delete = ProgramMutation::DeleteKnowledgeRecord(super::super::delete_knowledge_record::DeleteKnowledgeRecord { id: base.knowledge_payload[1].header.id.clone() });
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&delete, &base).await;
     let mut trace = TraceLink::new(base.elements[0].header.id.clone(), base.elements[1].header.id.clone(), TraceKind::FunctionToProgramElement);

@@ -2270,13 +2270,20 @@ dependencies = [
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "semio-framework-geometry",
- "semio-framework-hash",
- "semio-framework-job",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-representation"
+version = "0.1.0"
+dependencies = [
  "semio-framework-mesh-engine",
  "semio-framework-number",
- "semio-framework-pack",
- "semio-framework-pack-json",
  "semio-framework-replication",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -2518,15 +2525,6 @@ dependencies = [
  "proc-macro2",
  "quote",
  "syn",
-]
-
-[[package]]
-name = "semio-framework-math"
-version = "0.1.0"
-dependencies = [
- "semio-framework-dispatch-macros",
- "semio-framework-geometry",
- "semio-framework-value",
 ]
 
 [[package]]
@@ -2917,6 +2915,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -2977,7 +2976,8 @@ dependencies = [
  "semio-s-artifact-stdio-json",
  "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
- "semio-s-artifact-stdio-semio",
+ "semio-s-artifact-stdio-semio-drawing",
+ "semio-s-artifact-stdio-semio-drawing-export",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-txt",
  "serde",
@@ -3120,7 +3120,21 @@ dependencies = [
 name = "semio-s-artifact-stdio-dwg"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-dsl",
+ "semio-framework-hash",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-dwg-model",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-model"
+version = "0.1.0"
+dependencies = [
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
@@ -3128,10 +3142,8 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-hash",
- "semio-framework-job",
  "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
- "semio-framework-pack",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -3141,9 +3153,17 @@ dependencies = [
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
- "semio-s-artifact-stdio-binary",
  "semio-s-artifact-stdio-contract",
- "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-dwg-write"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-os-kernel",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-binary",
+ "semio-s-artifact-stdio-dwg-model",
 ]
 
 [[package]]
@@ -3178,30 +3198,73 @@ dependencies = [
 name = "semio-s-artifact-stdio-gltf"
 version = "0.1.0"
 dependencies = [
- "semio-framework-2d",
  "semio-framework-artifact-reference",
  "semio-framework-async",
  "semio-framework-diagnostic",
  "semio-framework-dsl",
- "semio-framework-dsl-record",
- "semio-framework-dsl-record-derive",
- "semio-framework-hash",
- "semio-framework-job",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-gltf-inferences",
+ "semio-s-artifact-stdio-gltf-model",
+ "semio-s-artifact-stdio-gltf-mutations",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-gltf-inferences"
+version = "0.1.0"
+dependencies = [
  "semio-framework-os-kernel",
  "semio-framework-pack",
  "semio-framework-pack-json",
- "semio-framework-plugin",
  "semio-framework-schema",
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
- "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
- "semio-s-artifact-stdio-contract",
+ "semio-s-artifact-stdio-gltf-model",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-gltf-model"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-dsl-record",
+ "semio-framework-dsl-record-derive",
+ "semio-framework-os-kernel",
+ "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-schema",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-registry",
+ "semio-framework-schema-state",
+ "semio-framework-value",
+ "semio-framework-value-derive",
  "semio-s-artifact-stdio-json",
  "serde",
  "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-gltf-mutations"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-diagnostic",
+ "semio-framework-os-kernel",
+ "semio-framework-pack-json",
+ "semio-framework-schema-composition",
+ "semio-framework-schema-state",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-gltf-model",
 ]
 
 [[package]]
@@ -3311,6 +3374,7 @@ dependencies = [
  "semio-framework-schema-composition",
  "semio-framework-schema-registry",
  "semio-framework-schema-state",
+ "semio-framework-ui-contract",
  "semio-framework-ui-locale",
  "semio-framework-value",
  "semio-framework-value-derive",
@@ -3383,26 +3447,32 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-artifact-stdio-semio"
+name = "semio-s-artifact-stdio-semio-base"
 version = "0.1.0"
 dependencies = [
- "semio-framework",
- "semio-framework-2d",
- "semio-framework-3d",
  "semio-framework-artifact-reference",
- "semio-framework-async",
  "semio-framework-diagnostic",
- "semio-framework-dsl",
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
- "semio-framework-geometry",
- "semio-framework-graph",
- "semio-framework-hash",
- "semio-framework-job",
- "semio-framework-math",
- "semio-framework-mesh-engine",
  "semio-framework-os-kernel",
- "semio-framework-pack",
+ "semio-framework-pack-json",
+ "semio-framework-plugin",
+ "semio-framework-ui-locale",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "semio-s-artifact-stdio-contract",
+ "serde",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-2d",
+ "semio-framework-artifact-reference",
+ "semio-framework-diagnostic",
+ "semio-framework-job",
+ "semio-framework-os-kernel",
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-schema",
@@ -3413,14 +3483,29 @@ dependencies = [
  "semio-framework-value",
  "semio-framework-value-derive",
  "semio-s-artifact-stdio-contract",
- "semio-s-artifact-stdio-dwg",
+ "semio-s-artifact-stdio-semio-base",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-s-artifact-stdio-semio-drawing-export"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-artifact-reference",
+ "semio-framework-async",
+ "semio-framework-os-kernel",
+ "semio-framework-plugin",
+ "semio-framework-value",
+ "semio-s-artifact-stdio-dwg-model",
+ "semio-s-artifact-stdio-dwg-write",
  "semio-s-artifact-stdio-dxf",
  "semio-s-artifact-stdio-pdf",
  "semio-s-artifact-stdio-png",
+ "semio-s-artifact-stdio-semio-base",
+ "semio-s-artifact-stdio-semio-drawing",
  "semio-s-artifact-stdio-svg",
  "semio-s-artifact-stdio-xml",
- "serde",
- "serde_json",
 ]
 
 [[package]]

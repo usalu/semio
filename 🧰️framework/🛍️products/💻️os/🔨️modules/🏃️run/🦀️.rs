@@ -1638,7 +1638,7 @@ impl<B: BlobStore + 'static> WasmtimeNodeHost<B> {
     /// shard thread would sit idle. The type stays general (same `shard_count` parameter
     /// `ParallelRuntime::new` takes) for a future caller that does want more.
     pub async fn new(plugin_path_for_plugin: HashMap<String, PathBuf>, descriptor_path_for_plugin: HashMap<String, PathBuf>, blob_store: Arc<B>, identity:semio_framework_plugin_host::shard::OriginalShardIdentityIssuer, host_driver_policy:semio_framework_plugin_host::GuestRelayDriverPolicy) -> Self {
-        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_host::OwnedRuntime::new()));
+        let guest_runtime = Arc::new(semio_framework_plugin_host::GuestRuntimes::Owned(semio_framework_plugin_interpreter::OwnedRuntime::new()));
         let kernel = NativeKernelRuntime::new(guest_runtime.clone(), 1, 0, 64,{let mut original=Some(identity);move |_|original.take().expect("sequential host has one original shard issuer")}).await;
         Self {
             guest_runtime,

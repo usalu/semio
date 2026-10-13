@@ -14,7 +14,6 @@ id = "os-node-graph"
 workspace = true
 
 [lib]
-crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [dependencies]

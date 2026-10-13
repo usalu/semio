@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64;
+    use crate::schema::entropy_internals::numeric::Xorshift64;
 
     // #region 🔖️TwoSourceLogicGates
     #[test]

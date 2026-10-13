@@ -6,7 +6,7 @@ import { GenerateScript as GraphGenerateScript, PreviewGeneratedScript, OwnerGra
 
 
 
-import { registerPlaygroundSiteBuildCommands, runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { runCargo, runRepositoryCargoTests, runRepositoryExactCargoLaws, dispatchOwnedScriptRoute } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../🧰️framework/🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -60,6 +60,5 @@ const router = new ScriptRouter(import.meta.dir)
   .register("child-identity-check", ChildIdentityCheckScript)
   .register("child-edit-check", ChildEditCheckScript)
   .register("add-widget-retained-check", AddWidgetRetainedCheckScript);
-registerPlaygroundSiteBuildCommands(router);
 
 await receiveScriptProcessInvocation(process.env, original => runScriptMain(router, { invocation: original, ...({ defaultCommand: "test" }) }));

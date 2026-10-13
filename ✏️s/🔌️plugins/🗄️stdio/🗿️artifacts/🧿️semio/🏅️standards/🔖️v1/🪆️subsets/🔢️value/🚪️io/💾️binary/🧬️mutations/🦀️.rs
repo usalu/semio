@@ -10,23 +10,23 @@ use path_codec::{enc_semio_path_bin,dec_semio_path_bin};
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::value::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
-use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_node_bin};
-use crate::standards::v1::subsets::value::io::binary::diff::{enc_semio_value_node_bin};
-use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_bin};
-use crate::standards::v1::subsets::value::io::binary::diff::{enc_semio_value_bin};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_value_id};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_value_id};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{NamedAdded, SemioValueDiff, SemioValueTreeDiff};
+use crate::io::text::diff::dec_semio_value;
+use crate::io::text::diff::enc_semio_value;
+use crate::io::binary::diff::dec_semio_value_node_bin;
+use crate::io::binary::diff::enc_semio_value_node_bin;
+use crate::io::binary::diff::dec_semio_value_bin;
+use crate::io::binary::diff::enc_semio_value_bin;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
+use crate::io::text::diff::dec_value_id;
+use crate::io::text::diff::enc_value_id;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 #[cfg(test)]
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, OpText};
@@ -135,7 +135,6 @@ impl protocol::OpBinary for SemioValueMutation {
     }
 }
 }
-#[cfg(test)] pub use mutations_codec::*;
 
 //#region 🏷️WireTags
 /// 🏷️ Op tags of `SemioValueMutation`, derived from the `record <kind> tag=<n>` lines of its `📡️.protocol.semio`.

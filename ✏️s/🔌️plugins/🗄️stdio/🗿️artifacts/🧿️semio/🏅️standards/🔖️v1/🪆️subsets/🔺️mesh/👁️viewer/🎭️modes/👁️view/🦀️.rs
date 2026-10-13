@@ -1,6 +1,6 @@
 //! 👁️ Semio Mesh viewer — the `view` mode: a single full-pane Main window.
 
-use crate::viewer::semio_mesh::modes::view::windows::main;
+use crate::viewer::modes::view::windows::main;
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::ModeDefinition;
 use semio_framework_plugin::WindowLayout;

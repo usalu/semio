@@ -23,7 +23,7 @@ required-features = ["mutation-inventory"]
 [features]
 default = []
 mutation-inventory = ["dep:semio-framework-test-mutation-inventory", "component-app-assembly"]
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
+component-app-assembly = ["dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract"]
 
 [dependencies]
 semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }
@@ -50,7 +50,7 @@ semio-framework-os-kernel = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 semio-s-plugin-wfc-engine = { workspace = true }
 pack = { workspace = true }

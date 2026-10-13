@@ -15,10 +15,11 @@ impl SnapshotReadRegistryAliasRetirement {
  pub(super) fn strong_count(&self)->usize{self.registry.as_ref().map_or(usize::from(self.last_registry.is_some()),SnapshotReadRegistryHandle::strong_count)}
  pub(super) fn alias_handle(&self)->&SnapshotReadRegistryHandle{self.registry.as_ref().expect("live source registry alias is unavailable after header retirement")}
  pub(super) fn frame_byte_demand(&self)->Result<usize,ValueError>{if self.registry.is_some(){snapshot_registry_frame_bytes()}else{Ok(0)}}
+ pub(super) fn custody_byte_demand(&self)->Result<usize,ValueError>{self.demands().map(|demand|demand.release_bytes)}
  fn closed(&self)->bool{self.registry.is_none()&&self.last_registry.is_none()}
  fn demands(&self)->Result<RetirementDemand,ValueError>{
   if self.registry.is_some(){return Ok(RetirementDemand{release_bytes:snapshot_registry_frame_bytes()?,depth:1,..Default::default()});}
-  if let Some(registry)=self.last_registry.as_ref(){let mut demand=registry.empty_backing_demands()?;demand.depth=demand.depth.max(1);return Ok(demand);}
+  if let Some(registry)=self.last_registry.as_ref(){let mut demand=registry.owned_backing_demands()?;demand.depth=demand.depth.max(1);return Ok(demand);}
   Ok(Default::default())
  }
  fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -30,12 +31,12 @@ impl SnapshotReadRegistryAliasRetirement {
   if let Some(registry)=self.registry.take(){
    let last=registry.into_inner();let released=if let Some(registry)=last{*self.last_registry=Some(registry);demand.release_bytes}else{0};
    let progress=RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()};
-   if self.last_registry.as_ref().is_some_and(|registry|registry.terminal_is_empty()&&registry.empty_backing_demands().is_ok_and(|demand|demand.release_bytes==0)){self.last_registry.take();}
+   if self.last_registry.as_ref().is_some_and(|registry|registry.terminal_is_empty()&&registry.owned_backing_demands().is_ok_and(|demand|demand.release_bytes==0)){self.last_registry.take();}
    return Ok(if self.closed(){RetainedCloneStep::Complete(progress)}else{RetainedCloneStep::Progress(progress)});
   }
-  let registry=self.last_registry.as_ref().expect("original last registry remains in inline custody");
+  let registry=self.last_registry.as_mut().expect("original last registry remains in inline custody");
   if !registry.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"last registry requires its original typed store retirement pump"));}
-  if demand.release_bytes!=0{return registry.close_empty_backing_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if demand.release_bytes!=0{return registry.close_owned_backing_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
   self.last_registry.take();Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
 }

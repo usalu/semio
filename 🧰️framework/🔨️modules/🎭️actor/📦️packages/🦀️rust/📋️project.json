@@ -14,6 +14,9 @@
       "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧬️typegen/📤️publication/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🔨️modules/🏃️process/📦️artifacts/🗂️files/🟦️.ts",
       "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts"
+    ],
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🎭️actor/🧩️component/**/*"
     ]
   },
   "targets": {
@@ -40,27 +43,6 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
-      }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long"
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎭️actor/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive"
       }
     },
     "typegen": {

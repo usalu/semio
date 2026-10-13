@@ -3,7 +3,7 @@
 //! axis' extent, and no cell is both pinned and masked.
 
 use crate::schema::snapshot::Grid3dSnapshot;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 #[test]
 fn the_example_round_trips_through_dsl_and_pack() {

@@ -1,0 +1,20 @@
+[package]
+workspace = "../../../../../../../../../../.."
+name = "semio-framework-os-renderer-wgpu-component"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The browser module of `semio-framework-os-renderer-wgpu`: the one cdylib wasm-bindgen links, holding no code of its own"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "framework"
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os-renderer-wgpu = { path = "../../../📦️packages/🦀️rust" }

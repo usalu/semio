@@ -2,9 +2,9 @@ import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { getWorkspaceRoot } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts";
-import { publicationWasmPath } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 
-const CATALOG_ARTIFACT_MAX_BYTES = 64 * 1024 * 1024;
+const CATALOG_ARTIFACT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 
 export type TrustedStdioNativeCodecV1 = {
   readonly artifactKind: string;
@@ -145,11 +145,11 @@ export function verifyStdioNativeCodecReceipts(receipts: readonly TrustedStdioNa
 }
 
 
-/** 🗄️ Reports whether a stdio component can be admitted under the 64 MiB trusted-catalog bound. */
+/** 🗄️ Reports whether a stdio component can be admitted under the shipped-component trusted-catalog bound. */
 export function stdioComponentAdmission(repoRoot: string): TrustedStdioComponentAdmissionV1 {
   const limitBytes = CATALOG_ARTIFACT_MAX_BYTES;
   const candidates: string[] = [];
-  const publication = publicationWasmPath(repoRoot, "semio_hub_stdio.wasm");
+  const publication = componentDeliverableV1(join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🧩️component/📦️packages/🦀️rust"), "semio-hub-stdio-component", SHIPPED_COMPONENT_PROFILE).wasm;
   if (existsSync(publication)) candidates.push(publication);
   const development = resolve(repoRoot, "🧰️framework", "🛍️products", "💻️os", "🔨️modules", "🧑‍💻dev");
   if (existsSync(development)) {

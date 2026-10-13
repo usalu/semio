@@ -1,4 +1,13 @@
-//! 📇 Component-level composition and validation for selected artifact packages.
+//! 📇 Component-level composition and validation for selected artifact packages: the feature-free full stdio catalog
+//! that the stdio component, the native hub and every composition validating stdio contributions link.
+
+#![allow(async_fn_in_trait)]
+#![allow(long_running_const_eval)]
+
+extern crate semio_framework_value_derive as value_derive;
+
+#[path = "../../🛂️manifest/🦀️.rs"]
+pub mod manifest;
 
 use semio_framework_plugin::io::FormatDescriptor;
 use semio_framework_plugin::{ArtifactDefinition, ArtifactDefinitionError, PluginAssemblyError};
@@ -14,9 +23,8 @@ pub const CATALOG_SCHEMA_DOCUMENTS: semio_framework_schema_registry::ScopeSchema
 };
 
 /// 📦 Reads the guest's canonical component identity from its Cargo component contract.
-#[cfg(feature = "full-artifact-catalog")]
-pub(crate) fn component_package_id() -> Result<&'static str, PluginAssemblyError> {
-    let manifest = include_str!("../../📦️packages/🦀️rust/Cargo.toml");
+pub fn component_package_id() -> Result<&'static str, PluginAssemblyError> {
+    let manifest = include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml");
     if manifest.len() > 64 * 1024 {
         return Err(PluginAssemblyError::new("plugin-assembly.package-id", "component Cargo contract exceeds 64 KiB"));
     }
@@ -49,7 +57,7 @@ pub(crate) fn component_package_id() -> Result<&'static str, PluginAssemblyError
     Ok(package_id)
 }
 
-#[cfg(all(test, feature = "full-artifact-catalog"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️component-package-id/🦀️.rs"]
 mod component_package_id_tests;
 
@@ -85,7 +93,7 @@ fn failure(message: impl Into<String>) -> PluginAssemblyError {
 
 include!("../../🤖️generated/🧩️composition/🦀️.rs");
 
-pub(crate) fn selected_registry() -> Result<ContributionRegistry, PluginAssemblyError> {
+pub fn selected_registry() -> Result<ContributionRegistry, PluginAssemblyError> {
     let registry = ContributionRegistry::new(selected_contributions())?;
     if let Some(contribution) = registry.contributions().iter().find(|contribution| contribution.identity == "txt") {
         let formats = (contribution.formats)().map_err(PluginAssemblyError::definition)?;
@@ -135,7 +143,6 @@ pub fn native_codec_artifact_kinds() -> Vec<semio_framework_plugin::ArtifactKind
     kinds
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<(), PluginAssemblyError> {
     let provider: NativeOpenableProviderSourceV1 = semio_framework_pack_json::from_json_str(include_str!("📜️native-codec-factories.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| failure(format!("cannot parse native codec receipt projection: {error}")))?;
     if provider.schema != "semio.stdio.native-openable-catalog-provider/v1" || provider.provider_id != "stdio/native-codecs/v1" || provider.plugin_id != "stdio" || provider.package_id != "semio:stdio" {
@@ -173,10 +180,8 @@ fn validate_native_openable_projection(receipts: &[NativeCodecFactoryReceipt], f
     Ok(())
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 const NATIVE_ARTIFACT_CATALOG_TOPIC: &str = "stdio.artifact-catalog.v1";
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct NativeArtifactCatalogV1 {
@@ -188,7 +193,6 @@ struct NativeArtifactCatalogV1 {
     codecs: Vec<NativeCatalogCodecV1>,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct NativeCatalogDefinitionV1 {
@@ -196,7 +200,6 @@ struct NativeCatalogDefinitionV1 {
     capabilities: Vec<NativeCatalogCapabilityV1>,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct NativeCatalogCapabilityV1 {
@@ -208,7 +211,6 @@ struct NativeCatalogCapabilityV1 {
     localizations: Vec<NativeCatalogLocalizationV1>,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(deny_unknown_fields)]
 struct NativeCatalogClaimV1 {
@@ -216,7 +218,6 @@ struct NativeCatalogClaimV1 {
     value: String,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(deny_unknown_fields)]
 struct NativeCatalogLocalizationV1 {
@@ -224,7 +225,6 @@ struct NativeCatalogLocalizationV1 {
     text: String,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 #[derive(Clone, Debug, PartialEq, Eq, value_derive::FromValue, value_derive::ToValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 struct NativeCatalogCodecV1 {
@@ -238,18 +238,15 @@ struct NativeCatalogCodecV1 {
     pack_schema_hash: String,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 fn catalog_hex(bytes: &[u8; 32]) -> String {
     bytes.iter().map(|byte| format!("{byte:02x}")).collect()
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 struct NativeCatalogProjectionBudget {
     projection: usize,
     descriptors: usize,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 impl NativeCatalogProjectionBudget {
     fn new() -> Self {
         Self { projection: 0, descriptors: 0 }
@@ -292,7 +289,6 @@ impl NativeCatalogProjectionBudget {
     }
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts: &[NativeCodecFactoryReceipt], factories: &[NativeCodecFactory]) -> Result<NativeCatalogProjectionBudget, PluginAssemblyError> {
     if assemblies.len() > 4096 || receipts.len() > 4096 || receipts.len() != factories.len() {
         return Err(failure("native catalog projection exceeds its bounds or lacks exact factory closure"));
@@ -351,11 +347,10 @@ fn preflight_native_catalog_projection(assemblies: &[ArtifactAssembly], receipts
     Ok(budget)
 }
 
-#[cfg(all(test, feature = "full-artifact-catalog"))]
+#[cfg(test)]
 #[path = "🧪️tests/🔬️catalog-projection-budget/🦀️.rs"]
 mod catalog_projection_budget_tests;
 
-#[cfg(feature = "full-artifact-catalog")]
 fn native_artifact_catalog(registry: &ContributionRegistry, assemblies: &[ArtifactAssembly]) -> Result<NativeArtifactCatalogV1, PluginAssemblyError> {
     let receipts = native_codec_factory_receipts_for(registry, assemblies)?;
     let factories = registry.native_codec_factories();
@@ -410,13 +405,11 @@ fn native_artifact_catalog(registry: &ContributionRegistry, assemblies: &[Artifa
 }
 
 /// 📇️ Commits the exact definitions consumed by this guest assembly, without executable addresses.
-#[cfg(feature = "full-artifact-catalog")]
-pub(crate) fn artifact_catalog_contribution(assemblies: &[ArtifactAssembly]) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
+pub fn artifact_catalog_contribution(assemblies: &[ArtifactAssembly]) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
     artifact_catalog_contribution_for(&selected_registry()?, assemblies)
 }
 
 /// 🧩 Commits the exact authored selection and verifies its native receipt closure.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn artifact_catalog_contribution_for(registry: &ContributionRegistry, assemblies: &[ArtifactAssembly]) -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
     let selected = registry.contributions().iter().map(|contribution| format!("s.stdio.{}", contribution.identity)).collect::<BTreeSet<_>>();
     let actual = assemblies.iter().map(|assembly| assembly.definition().identity().as_str()).collect::<BTreeSet<_>>();
@@ -431,13 +424,11 @@ pub fn artifact_catalog_contribution_for(registry: &ContributionRegistry, assemb
 }
 
 /// 🔗️ Binds consumers to the exact version of their statically linked Stdio catalog.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn native_artifact_catalog_dependency() -> Result<semio_framework::PluginDependency, PluginAssemblyError> {
     Ok(semio_framework::PluginDependency::new("stdio", semio_framework::tree_pin!()))
 }
 
 /// 🪢️ Requires the consumer's sole dependency to equal its compiled catalog owner.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn validate_native_artifact_catalog_dependency(dependencies: &[semio_framework::PluginDependency]) -> Result<(), PluginAssemblyError> {
     if dependencies != [native_artifact_catalog_dependency()?].as_slice() {
         return Err(failure("decoded consumer dependencies differ from the exact compiled Stdio catalog"));
@@ -446,12 +437,10 @@ pub fn validate_native_artifact_catalog_dependency(dependencies: &[semio_framewo
 }
 
 /// 🧮️ Recomputes the complete headless projection from the same artifact-owned assemblies.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn native_artifact_catalog_contribution() -> Result<semio_framework::TopicContribution, PluginAssemblyError> {
     artifact_catalog_contribution(&artifact_assemblies()?)
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 fn catalog_value_matches(expected: &semio_framework::DslValue, actual: &semio_framework::DslValue) -> bool {
     use semio_framework::DslValue;
     match (expected, actual) {
@@ -470,13 +459,11 @@ fn catalog_value_matches(expected: &semio_framework::DslValue, actual: &semio_fr
     }
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 struct CompiledNativeCatalogExpectation {
     payload: semio_framework::DslValue,
     catalog: NativeArtifactCatalogV1,
 }
 
-#[cfg(feature = "full-artifact-catalog")]
 fn compiled_native_catalog_expectation() -> Result<&'static CompiledNativeCatalogExpectation, PluginAssemblyError> {
     static EXPECTED: std::sync::OnceLock<Result<CompiledNativeCatalogExpectation, PluginAssemblyError>> = std::sync::OnceLock::new();
     EXPECTED
@@ -490,7 +477,6 @@ fn compiled_native_catalog_expectation() -> Result<&'static CompiledNativeCatalo
 }
 
 /// 🔐️ Admits only the exact guest-committed selected semantic projection.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_framework::TopicContribution]) -> Result<(), PluginAssemblyError> {
     if contributions.len() > 256 {
         return Err(failure("native catalog contribution inventory exceeds 256 topics"));
@@ -512,7 +498,6 @@ pub fn validate_native_artifact_catalog_contributions(contributions: &[semio_fra
 }
 
 /// 🔎️ Requires every decoded kind to equal the complete artifact-owned native catalog.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::ArtifactKindSpec]) -> Result<(), PluginAssemblyError> {
     let expected = native_codec_artifact_kinds();
     if kinds.len() != expected.len() {
@@ -527,7 +512,6 @@ pub fn validate_native_codec_artifact_kinds(kinds: &[semio_framework_plugin::Art
 }
 
 /// 🧷 Emits receipts only when schema data explicitly authorizes the exact native factory.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
     native_codec_factory_receipts_for(&selected_registry()?, &artifact_assemblies()?)
 }
@@ -538,7 +522,6 @@ pub fn native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>,
 /// and `native_artifact_catalog` is handed the complete 36-assembly slice by `plugin()`. Building a
 /// second, identical set just to answer that question re-parsed, re-validated and re-BUILT every
 /// definition a second time — the single largest avoidable cost of the guest's `describe()`.
-#[cfg(feature = "full-artifact-catalog")]
 fn native_codec_factory_receipts_for(registry: &ContributionRegistry, assemblies: &[ArtifactAssembly]) -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
     let receipts = registry.native_codec_factory_receipts("stdio", component_package_id()?, env!("CARGO_PKG_VERSION"))?;
     let runtime_artifacts = assemblies
@@ -572,7 +555,6 @@ fn native_codec_factory_receipts_for(registry: &ContributionRegistry, assemblies
 /// 🧬️ The live receipts the committed `📜️native-codec-factories.json` projection is GENERATED from — the same
 /// bijection as [`native_codec_factory_receipts`], but before that projection is compared against them, so the
 /// `native-codec-projection` verb can regenerate a projection a schema-hash change made stale.
-#[cfg(feature = "full-artifact-catalog")]
 pub fn live_native_codec_factory_receipts() -> Result<Vec<NativeCodecFactoryReceipt>, PluginAssemblyError> {
     selected_registry()?.native_codec_factory_receipts("stdio", component_package_id()?, env!("CARGO_PKG_VERSION"))
 }

@@ -1,7 +1,7 @@
 //! 🌀️ Owned Generation2d retained field contract and exact declared SQLite capability.
 use crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding}};
 #[path="../../../../../../../../../🫀️core/🧬️generation/🪶️sqlite/🦀️.rs"]mod typed;
 impl ArtifactSqliteSnapshot for Generation2dSnapshot{
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{c.checkpoint(SqliteSnapshotPhase::DecodeNative,0,0)?;if Self::SQLITE_SCHEMA.len()>c.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Generation authored schema exceeds caller limit"))}crate::standards::v1::subsets::any::io::text::snapshot::decode_sqlite_native(payload,c,native_owner)}

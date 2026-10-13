@@ -15,7 +15,7 @@ import { constants as fsConstants, createReadStream, createWriteStream, copyFile
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -48,7 +48,7 @@ import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODUL
 
 const repoRoot = getWorkspaceRoot();
 
-import { ensureWasmTarget, pluginWasmProfile } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
+import { ensureWasmTarget } from "../../../../🔌️plugin/🏗️build/📋️plan/🟦️.ts";
 
 import { buildPluginCargo } from "../../../../🔌️plugin/🏗️build/📦️materialization/🟦️.ts";
 
@@ -110,9 +110,9 @@ async function materializeTestBrowserPluginV1(input: Readonly<{
   if ((input.descriptorPath === undefined) !== (input.selectedSource === undefined)) throw new Error("Selected browser plugin materialization identity is incomplete");
   const outDir = join(input.moduleRoot, moduleDirectoryName(input.target.pluginId, COMPONENT_MODULE_DIRECTORIES));
   mkdirSync(outDir, { recursive: true, mode: 0o700 });
-  const componentBase = `${input.target.wasmOut.replace(/\.wasm$/u, "")}_component`;
+  const componentBase = input.target.wasmOut.replace(/\.wasm$/u, "");
   writeFileSync(join(outDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
-  await transpilePluginComponentAsync(input.artifact, outDir, componentBase, { repoRoot, preview2VendorDir: join(input.moduleRoot, PREVIEW2_VENDOR_RELATIVE), optimize: pluginWasmProfile() === "wasm-release", wasmOptBin: join(repoRoot, "node_modules/binaryen/bin/wasm-opt") });
+  await transpilePluginComponentAsync(input.artifact, outDir, componentBase, { repoRoot, preview2VendorDir: join(input.moduleRoot, PREVIEW2_VENDOR_RELATIVE), optimize: false, wasmOptBin: join(repoRoot, "node_modules/binaryen/bin/wasm-opt") });
   if (input.descriptorPath) {
     copyFileSync(input.descriptorPath, join(outDir, "🛂️.descriptor.semio"));
   } else {
@@ -145,9 +145,9 @@ export async function stageTestBrowserHostV1(input: TestBrowserHostStageInputV1)
   ensureAppleDeveloperDir();
   ensureWasmTarget();
   const builtSpace = await buildPluginCargo(space);
-  // 🔒️ `buildPluginCargo` now always writes into the ONE shared `cargoTargetDirectory` (fine-grain-locked,
-  // no private target dirs); this ticket-owned copy is what makes the artifact eligible for
-  // `ownedTestBrowserHostInput`'s bounded-regular-file-inside-`artifactRoot` check below.
+  // 🔒️ `buildPluginCargo` stages the iterate component under the crate's own `dist/components-iterate`; this
+  // ticket-owned copy is what makes the artifact eligible for `ownedTestBrowserHostInput`'s
+  // bounded-regular-file-inside-`artifactRoot` check below.
   const stagedSpacePath = join(artifactRoot, "browser-host-wasi-target", basename(builtSpace.artifact));
   mkdirSync(dirname(stagedSpacePath), { recursive: true, mode: 0o700 });
   writeFileSync(stagedSpacePath, readFileSync(builtSpace.artifact), { mode: 0o600 });

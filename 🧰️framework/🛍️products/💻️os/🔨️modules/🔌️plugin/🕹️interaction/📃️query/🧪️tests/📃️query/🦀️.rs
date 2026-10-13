@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::local_interaction::retirement::interaction_store_owners;
-use crate::app::InteractionConfigMutation;
+use crate::local_interaction::mutations::InteractionConfigMutation;
 use protocol::InteractionState;
 use semio_framework_value::retained_clone::RetainedCloneBirthDemand;
 use store::{ArtifactStore, ErasedSnapshotRetirement, SpaceMember};
@@ -34,12 +34,12 @@ fn close_original_query(store:&mut InteractionStore,query:&mut LocalInteractionQ
  panic!("original query caller grant did not close its Store");
 }
 
-pub(crate) fn original_receiving_recipient() -> store::NativeSnapshotBodyWallet {
+fn original_receiving_recipient() -> store::NativeSnapshotBodyWallet {
     let law:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/📨️authority.json")).unwrap();
     store::NativeSnapshotBodyWallet::new(serde_json::from_value(law["wholeOperationGrant"].clone()).unwrap())
 }
 
-pub(crate) fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mut store::NativeSnapshotBodyWallet){
+fn install_original_interaction_owners(store:&mut InteractionStore,recipient:&mut store::NativeSnapshotBodyWallet){
     let(result,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||interaction_store_owners(recipient.remaining_grant()));
     let(mut owners,progress)=match result{Ok(received)=>received,Err(error)=>panic!("original interaction catalog refused: {}",error.error)};
     recipient.record_progress(progress).unwrap();assert_eq!((physical.requested_bytes,physical.released_bytes),(progress.retained_capacity_bytes,progress.released_bytes));
@@ -68,7 +68,7 @@ async fn fixture(source_case: &str) -> (InteractionStore, LocalInteractionQuery,
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["not-captured"]}});
     let state: InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-query-test", state, None);
     let mut store = InteractionStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
     let mut recipient=original_receiving_recipient();install_original_interaction_owners(&mut store,&mut recipient);
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };
@@ -174,12 +174,12 @@ async fn local_interaction_query_zero_grants_cancel_and_worker_transfer() {
 /// 🫙️ A capture that completes without a single byte, so its FIRST page is terminal and empty.
 /// The fixed page authority must still publish it, accept its exact ACK, retire and reach terminal
 /// emptiness — an empty capture is a whole answer, not a missing one.
-pub(crate) struct EmptyCapture {
+struct EmptyCapture {
     identity: LocalInteractionIdentity,
     returned: bool,
 }
 
-pub(crate) fn empty_capture_for_live_law() -> impl LocalInteractionQueryCapture {
+fn empty_capture_for_live_law() -> impl LocalInteractionQueryCapture {
     EmptyCapture { identity: LocalInteractionIdentity { app_instance_id: 5, generation: 2, revision: [4; 32], document_revision: [5; 32], topology_revision: [6; 32] }, returned: false }
 }
 
@@ -340,7 +340,7 @@ struct HostileCapture {
     identity: LocalInteractionIdentity,
 }
 
-pub(crate) fn hostile_capture_for_live_law() -> impl LocalInteractionQueryCapture {
+fn hostile_capture_for_live_law() -> impl LocalInteractionQueryCapture {
     HostileCapture {
         reader: store::ArtifactCanonicalJsonReader::new(std::sync::Arc::new(HostileRoot { first: "retained✓".into(), second: HostileValue }), std::sync::Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<HostileRoot>::default())),
         identity: LocalInteractionIdentity { app_instance_id: 1, generation: 1, revision: [1; 32], document_revision: [2; 32], topology_revision: [3; 32] },

@@ -10,8 +10,8 @@ extern crate semio_framework_schema as framework_schema;
 
 use neural_engine::{Dictionary, Value};
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 
 pub use crate::schema::mutations::SequenceMutation;
@@ -224,7 +224,7 @@ impl protocol::Identified<String> for SequenceEdge {
 /// `steps: Vec<SequenceStep>` / `edges: Vec<SequenceEdge>` snapshot fields are replaced by this
 /// composed child slot — this plugin no longer defines its own node-graph content model, it
 /// composes stdio's `flow` subset instead.
-pub type SequenceContentChild = store::ArtifactChild<SemioFlowSnapshot>;
+pub type SequenceContentChild = store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>;
 
 /// 🎛️ Every `SequenceStep` field flattened into id-ordered string key/value `FlowParam`s —
 /// structured sub-values (`params: StepParams(Dictionary)`, the optional `slot`) are JSON-encoded
@@ -286,7 +286,7 @@ pub fn sequence_content_child_handle(steps: &[SequenceStep], edges: &[SequenceEd
     let child_id = store::content_id("sequence-content", content_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
 
@@ -306,7 +306,7 @@ pub fn sequence_working_scene_for_handle(handle: &SequenceContentChild) -> Optio
 }
 
 /// 📤️ Requires the exact scene at an export or another content-reading boundary.
-pub fn require_sequence_working_scene(handle: &SequenceContentChild) -> Result<SequenceWorkingScene, store::ArtifactChildMaterializationError> {
+pub fn require_sequence_working_scene(handle: &SequenceContentChild) -> Result<SequenceWorkingScene, store::os_store::artifact_child::ArtifactChildMaterializationError> {
     handle.require_local_owner::<SequenceWorkingScene>().map(|scene| scene.as_ref().clone())
 }
 
@@ -331,7 +331,7 @@ pub fn sequence_content_child_with_owner(steps: Vec<SequenceStep>, edges: Vec<Se
 /// empty and every `sequence_working_scene_from_children` call faults
 /// `sequence-content-child-dialect-required` before a single window publishes.
 pub fn genesis_sequence_child_pack(document: &SequenceSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot != "content" || child_id != document.content.child_id {
         return None;
     }

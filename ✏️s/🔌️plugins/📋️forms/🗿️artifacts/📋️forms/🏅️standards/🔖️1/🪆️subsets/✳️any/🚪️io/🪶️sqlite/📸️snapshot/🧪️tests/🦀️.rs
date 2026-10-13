@@ -10,7 +10,7 @@ mod backing;
 fn sqlite_snapshot_forms_declared_native_owner_has_semantic_sqlite_capability(){
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
  assert_eq!(fixture["schema"],crate::FORMS_DOCUMENT_SCHEMA);
- assert!(<FormsSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
+ assert!(<FormsSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().is_some(),"the actual owning Forms native declaration must expose its semantic SQLite snapshot codec");
 }
 
 
@@ -75,7 +75,7 @@ fn sqlite_snapshot_forms_independent_relational_cycles_and_duplicate_metadata_re
 }
 #[test]
 fn sqlite_snapshot_forms_actual_erased_native_import_requires_owned_output(){
- use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
+ use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};let value=specimen();let expected=database(&value);let codec=<FormsSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.forms.forms".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{let mut callback=|_|true;let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let payload=original_owners::with_encoding(|native_owner|(codec.import)(crate::FORMS_DOCUMENT_SCHEMA,&dialect, &mut Some(expected.clone()),encoding,&mut control, native_owner)).expect("actual owned native output");let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());let restored=original_owners::with_decoding(|native_owner|(codec.export)(crate::FORMS_DOCUMENT_SCHEMA,&dialect,&payload.value,&mut control, native_owner)).expect("actual owned native input");assert_eq!(restored.value,expected);}
 }
 
@@ -89,7 +89,7 @@ fn sqlite_snapshot_forms_flat_native_deep_both_real_erased_directions(){
 }
 #[test]
 fn sqlite_snapshot_forms_controlled_flat_row_admission_and_unicode_output(){
- use store::ArtifactSqliteSnapshot;use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
+ use store::os_store::serialization::ArtifactSqliteSnapshot;use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase};
  let value=specimen();let record=crate::standards::v1::subsets::any::io::binary::snapshot::pack::record(&value).unwrap();let mut callback=|_:semio_framework_value::native_decoding::NativeDecodeProgress|true;let mut c=semio_framework_value::NativeDecodeControl::new(0,&mut callback);assert!(crate::standards::v1::subsets::any::io::binary::snapshot::pack::reconstruct_record_controlled(&record,&mut c,5).unwrap_err().kind==semio_framework_value::ValueRefusalKind::WorkLimit);assert_eq!(c.owned_bytes(),0,"the complete borrowed semantic forecast precedes typed field copies");
  let mut callback=|_|true;assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut SqliteSnapshotControl::new(&mut callback,store::sqlite_snapshot::SqliteDatabaseLimits{max_rows:5,..Default::default()}), native_owner)).unwrap_err().kind==semio_framework_value::ValueRefusalKind::WorkLimit);
  let f=fixture();let mut value=specimen();value.title=Some(f["unicodeText"].as_str().unwrap().repeat(f["unicodeRepeat"].as_u64().unwrap()as usize));let total=value.title.as_ref().unwrap().len();let mut observed=false;let mut callback=|p:store::sqlite_snapshot::SqliteSnapshotProgress|{if p.phase==SqliteSnapshotPhase::EncodeNative&&p.total==total&&p.completed>=65536{observed=true;false}else{true}};let mut control=SqliteSnapshotControl::new(&mut callback,Default::default());assert!(original_owners::with_encoding(|native_owner|value.encode_sqlite_snapshot_native(SnapshotEncoding::Text,&mut control, native_owner)).unwrap_err().kind==semio_framework_value::ValueRefusalKind::Canceled);assert!(observed);

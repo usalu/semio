@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::value::io::import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
+use semio_s_artifact_stdio_semio_value_import::deserializers::artifacts::csv::v_rfc4180::any::semio_value_from_csv;
 use semio_s_artifact_stdio_csv::schema::snapshot::CsvField as CsvFieldT;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -44,8 +44,8 @@ async fn headerless_round_trips() {
 async fn mismatched_row_shape_is_a_hard_error() {
     let value = SemioValue::List {
         items: vec![
-            SemioValue::Map { entries: vec![crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
-            SemioValue::Map { entries: vec![crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
+            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry { key: "a".into(), value: SemioValue::Str { value: "1".into() } }] },
+            SemioValue::Map { entries: vec![semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry { key: "b".into(), value: SemioValue::Str { value: "2".into() } }] },
         ],
     };
     let nodes = HashMap::new();

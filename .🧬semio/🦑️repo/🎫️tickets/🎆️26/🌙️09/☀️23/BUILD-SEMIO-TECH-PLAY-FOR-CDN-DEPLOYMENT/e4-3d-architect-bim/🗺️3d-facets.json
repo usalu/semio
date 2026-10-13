@@ -1,0 +1,18 @@
+{
+ "root": "🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust/🦀️.rs",
+ "base": "🧰️framework/🔨️modules/🧊️3d",
+ "order": ["rigid", "inertia", "mesh", "collision", "representation", "queries", "operations", "engine", "root"],
+ "allow": {},
+ "files": [
+  ["^📦️packages/", "root"],
+  ["^🌀️rigid/", "rigid"],
+  ["^🛞️inertia/", "inertia"],
+  ["^🥽️mesh/", "mesh"],
+  ["^🧿️collision/", "collision"],
+  ["^📐️brep/📸️representation/", "representation"],
+  ["^📐️brep/💡️queries/", "queries"],
+  ["^📐️brep/🛠️operations/", "operations"],
+  ["^📐️brep/⚙️engine/", "engine"],
+  ["^📐️brep/🦀️\\.rs$", "root"]
+ ]
+}

@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::registers::QualityRecord;
-use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::QualityRecord;
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🌱️ Brings a new quality record row into existence in `program.quality`.

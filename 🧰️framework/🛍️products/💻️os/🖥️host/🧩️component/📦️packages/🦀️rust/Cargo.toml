@@ -1,0 +1,26 @@
+[package]
+workspace = "../../../../../../.."
+name = "semio-framework-os-component"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "The browser module of `semio-framework-os`: the one cdylib wasm-bindgen links, holding no code of its own"
+
+[lints]
+workspace = true
+
+[package.metadata.semio]
+role = "product"
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-os = { path = "../../../📦️packages/🦀️rust" }

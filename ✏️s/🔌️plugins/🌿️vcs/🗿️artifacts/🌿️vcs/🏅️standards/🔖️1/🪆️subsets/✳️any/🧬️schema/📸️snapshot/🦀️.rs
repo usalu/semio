@@ -38,7 +38,7 @@ impl Default for VcsSnapshot {
 }
 //#endregion 🔖️Snapshot
 
-// 🚪️ `store::ArtifactDsl`/`store::ArtifactPack for VcsSnapshot` — the real codec impls — moved to
+// 🚪️ `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack for VcsSnapshot` — the real codec impls — moved to
 // `🚪️io/📸️snapshot/{📝️text,💾️binary}` (design.md §1 CORRECTION; `🧬️schema` keeps types + pure
 // transforms only, no codecs, per design.md rule 3/`🔖️Exclusivity`).
 

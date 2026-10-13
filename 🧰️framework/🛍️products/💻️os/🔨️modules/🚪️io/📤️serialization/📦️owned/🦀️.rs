@@ -3,7 +3,7 @@ use super::{IoEntry,IoEntryDirection};
 use semio_framework_value::{DslValue,ErasedSnapshotRetirement,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand,RetainedCloneGrant,RetainedCloneProgress};
 use semio_framework_artifact_reference::ArtifactDialect;
-use crate::os_store::ErasedSnapshotRead;
+use crate::os_store::snapshot_read::ErasedSnapshotRead;
 
 /// 🪆️ Original captured child authority with an explicitly bounded retirement lifecycle.
 pub trait OwnedSerializerChildren: ErasedSnapshotRetirement {

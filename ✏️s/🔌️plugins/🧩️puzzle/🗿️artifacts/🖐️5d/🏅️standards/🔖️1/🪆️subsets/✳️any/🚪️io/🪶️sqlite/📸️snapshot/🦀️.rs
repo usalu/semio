@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle5dSnapshot;
 use crate::*;
 use std::collections::{BTreeMap,BTreeSet};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,Projection,Reconstruction}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{Cell,Projection,Reconstruction}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -47,8 +47,8 @@ fn admit_native_rows(record:&semio_framework_dsl_record::RecordValue,maximum:usi
 }
 impl ArtifactSqliteSnapshot for Puzzle5dSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{admit_schema(c)?;c.check_rows(1)?;let maximum=c.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admit_native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
- fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
+ fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,c:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{admit_schema(c)?;c.check_rows(1)?;let maximum=c.limits().max_rows;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admit_native_rows(record,maximum,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },c,native_control)}
+ fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{forecast(self,c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)}
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   let total=forecast(self,c,SqliteSnapshotPhase::ProjectSnapshot)?;let mut out=Projection::new(Self::SQLITE_SCHEMA,c)?;
   let doc=out.insert(TABLES[0].0,&[Cell::Text(&self.schema),Cell::Text(&self.domain),optional_text(&self.label),Cell::Text(&self.meta.description)])?;
@@ -119,7 +119,7 @@ impl<'a> Rows<'a>{
 }
 fn reconstruct(d:&SqliteDatabase,c:&mut SqliteSnapshotControl<'_>)->Result<Puzzle5dSnapshot,ValueError>{
  let mut rows=Rows::new(d,c)?;let doc=rows.one(0,0,true)?.ok_or_else(||invalid("Puzzle5d document missing"))?;let mut root=Cursor::new(doc,1,c);let schema=root.text()?;let domain=root.text()?;let label=root.optional_text()?;let meta=Puzzle5dMeta{description:root.text()?};root.done()?;
- let kind_catalogs=if let Some(row)=rows.one(1,doc.rowid,false)?{let mut value=Cursor::new(row,2,c);let child_id=value.text()?;let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:value.text()?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value.text()?,standard:value.text()?,subset:value.text()?}};value.done()?;Some(store::ArtifactChild::new(child_id,target))}else{None};
+ let kind_catalogs=if let Some(row)=rows.one(1,doc.rowid,false)?{let mut value=Cursor::new(row,2,c);let child_id=value.text()?;let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:value.text()?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value.text()?,standard:value.text()?,subset:value.text()?}};value.done()?;Some(store::os_store::artifact_child::ArtifactChild::new(child_id,target))}else{None};
  let kind_catalogs_extra=if let Some(extra)=rows.one(2,doc.rowid,false)?{
   let(mut parts,mut grips,mut fasteners,mut ropes)=(Vec::new(),Vec::new(),Vec::new(),Vec::new());
   for row in rows.take(3,extra.rowid,c)?{let mut value=Cursor::new(row,3,c);let id=value.text()?;let name=value.text()?;let label=value.text()?;let description=value.text()?;let icon=value.text()?;let image=value.text()?;let unit=value.text()?;let is_abstract=value.boolean()?;value.done()?;

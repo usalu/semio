@@ -13,5 +13,5 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<Ifc2x3Snapshot, store::PackE
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<Ifc2x3Snapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?)
 }

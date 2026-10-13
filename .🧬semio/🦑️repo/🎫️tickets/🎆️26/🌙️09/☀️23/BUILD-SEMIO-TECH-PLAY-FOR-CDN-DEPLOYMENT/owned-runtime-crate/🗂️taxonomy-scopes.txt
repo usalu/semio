@@ -1,0 +1,2 @@
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧠️interpreter
+🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖥️host/🚪️io

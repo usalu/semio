@@ -1,14 +1,14 @@
 //! 📤️ Serialize `stdio.gltf` to stdio.json. Embeds any BIN-chunk-sourced (no-`uri`) buffer as a
 //! base64 data uri first (via the shared `.gltf` JSON codec), since plain `stdio.json` has nowhere
 //! else to carry those bytes -- same reasoning as `serialize_gltf_document`.
-use crate::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::base::io::text::snapshot::parse_json_text;
 use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {}
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize(from: &GltfSnapshot) -> Result<JsonSnapshot, store::PackError> {
-    let embedded = crate::engine::serialize_gltf_document(from);
+    let embedded = crate::standards::v2_0::subsets::any::io::export::serialize_gltf_document(from);
     let text = String::from_utf8(embedded).map_err(|e| store::PackError::from(semio_framework_value::ValueError::from(e)))?;
     let value = parse_json_text(&text).map_err(|e| store::PackError::from(e))?;
     Ok(JsonSnapshot { schema: STDIO_JSON_DOCUMENT_SCHEMA.into(), value })

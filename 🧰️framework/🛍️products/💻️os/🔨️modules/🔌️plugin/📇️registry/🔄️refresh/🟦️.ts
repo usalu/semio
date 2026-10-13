@@ -4,11 +4,9 @@ import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/�
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-
-import { filterProjectedPluginRegistry, readGeneratedCatalogProjection } from "../📖️catalog-view/🟦️.ts";
 
 import type { PluginBuildTargetV1 } from "../🔎️discovery/🟦️.ts";
 
@@ -16,11 +14,9 @@ const repoRoot = getWorkspaceRoot();
 
 import { createConcurrencyLimiter, cargoConcurrencyLimit, materializeConcurrencyLimit } from "../../🏗️build/🏃️execution/🟦️.ts";
 
-import { resolveCatalogFilterPluginId } from "../../🏗️build/📋️plan/🟦️.ts";
-
 import { buildPluginCargo, materializePlugin, publishShardWorker } from "../../🏗️build/📦️materialization/🟦️.ts";
 
-import { syncBuiltPluginDescriptors } from "../../🏗️build/🛂️descriptor/🟦️.ts";
+import type { ComponentDeliverableV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 
 
 
@@ -31,8 +27,8 @@ import { syncBuiltPluginDescriptors } from "../../🏗️build/🛂️descriptor
  * per target. Injectable fakes support tests without a real toolchain. */
 async function buildPluginCatalog(
   orderedTargets: readonly PluginBuildTargetV1[],
-  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly artifact: string }> = buildPluginCargo,
-  materializeFn: (target: PluginBuildTargetV1, artifact: string) => Promise<void> = materializePlugin,
+  cargoFn: (target: PluginBuildTargetV1) => Promise<{ readonly deliverable: ComponentDeliverableV1 }> = buildPluginCargo,
+  materializeFn: (target: PluginBuildTargetV1, built: { readonly deliverable: ComponentDeliverableV1 }) => Promise<void> = materializePlugin,
   concurrencyLimit: number = materializeConcurrencyLimit(),
   publishShardWorkerFn: () => void = publishShardWorker,
   cargoLimit: number = cargoConcurrencyLimit(),
@@ -42,7 +38,7 @@ async function buildPluginCatalog(
   const failed: string[] = [];
   const materializeTasks: Promise<void>[] = [];
   await Promise.all(orderedTargets.map((target) => cargoLimiter.run(async () => {
-    let cargoResult: { readonly artifact: string };
+    let cargoResult: { readonly deliverable: ComponentDeliverableV1 };
     try {
       cargoResult = await cargoFn(target);
     } catch (error) {
@@ -50,11 +46,10 @@ async function buildPluginCatalog(
       console.error(`plugin build failed, continuing with remaining targets: ${target.pluginId}`, error);
       return;
     }
-    const { artifact } = cargoResult;
     materializeTasks.push(
       materializeLimiter.run(async () => {
         try {
-          await materializeFn(target, artifact);
+          await materializeFn(target, cargoResult);
         } catch (error) {
           failed.push(target.pluginId);
           console.error(`plugin materialize failed: ${target.pluginId}`, error);
@@ -72,11 +67,10 @@ function assertPluginCatalogComplete(failedPluginIds: readonly string[]): void {
   if (failedPluginIds.length > 0) throw new Error(`plugin catalog build failed: ${failedPluginIds.join(", ")}`);
 }
 
-export async function ensurePluginRegistry(filterPlugin?: string): Promise<void> {
+/** 🗂️ Regenerates the plugin registry from the committed semantic descriptors before a dev build selects its targets. */
+export async function ensurePluginRegistry(): Promise<void> {
   const registryScript = join(repoRoot, "./🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📜️script.ts");
   if (runCmdStatus("bun", [registryScript, "generate"], { cwd: repoRoot }) !== 0) throw new Error("plugin registry generation failed");
-  const filterPluginId = resolveCatalogFilterPluginId(filterPlugin);
-  syncBuiltPluginDescriptors(filterProjectedPluginRegistry(readGeneratedCatalogProjection(), filterPluginId));
 }
 
 export { assertPluginCatalogComplete, buildPluginCatalog };

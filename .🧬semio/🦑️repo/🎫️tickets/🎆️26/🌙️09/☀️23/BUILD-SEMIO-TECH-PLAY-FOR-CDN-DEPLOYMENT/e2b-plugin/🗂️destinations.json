@@ -1,0 +1,655 @@
+{
+ "facets": [
+  "ownership",
+  "window",
+  "declaration",
+  "publication",
+  "jobs",
+  "reactor",
+  "instance",
+  "laws"
+ ],
+ "facetTitles": {
+  "ownership": "🏛️OwnershipFacet",
+  "window": "🪟️WindowFacet",
+  "declaration": "📜️DeclarationFacet",
+  "publication": "📬️PublicationFacet",
+  "jobs": "👷️JobsFacet",
+  "reactor": "⚛️ReactorFacet",
+  "laws": "⚖️AppLaws",
+  "instance": "🧵️InstanceFacet"
+ },
+ "appDoc": "🧩️ The crate's public app vocabulary: declarative app builder, plugin traits and runtime types, composed from the facet modules that own them.",
+ "destinations": [
+  {
+   "key": "sdk_fault",
+   "dir": "📤️fault",
+   "module": "sdk_fault",
+   "facet": "ownership",
+   "doc": "📤️ The SDK's own plugin fault constructor.",
+   "names": [
+    "plugin_sdk_fault"
+   ]
+  },
+  {
+   "key": "bounded_ownership",
+   "dir": "🏛️ownership",
+   "module": "bounded_ownership",
+   "facet": "ownership",
+   "doc": "🏛️ Bounded ownership primitives: lifecycle steps, fixed queues and registries, and the grant and retirement helpers every owner shares.",
+   "lines": [
+    [
+     16484,
+     16536
+    ],
+    [
+     17926,
+     17958
+    ],
+    [
+     21120,
+     21269
+    ],
+    [
+     21538,
+     21716
+    ]
+   ]
+  },
+  {
+   "key": "window_surface",
+   "dir": "🪟️window",
+   "module": "window_surface",
+   "facet": "window",
+   "doc": "🪟️ Surface tree assembly: built node to runtime tree transfer, paged text carriers, scene surfaces and window kind definitions.",
+   "lines": [
+    [
+     562,
+     756
+    ],
+    [
+     36834,
+     36860
+    ]
+   ]
+  },
+  {
+   "key": "interaction_topology",
+   "dir": "🕹️interaction/🧭️topology",
+   "module": "interaction_topology",
+   "facet": "window",
+   "doc": "🧭️ Interaction verb arguments, domain topology derivation, selection loss and inline interaction verbs.",
+   "lines": [
+    [
+     757,
+     854
+    ],
+    [
+     12966,
+     13022
+    ],
+    [
+     26728,
+     26965
+    ]
+   ]
+  },
+  {
+   "key": "window_kits",
+   "dir": "🪟️window-kits",
+   "module": "window_kits",
+   "facet": "window",
+   "doc": "🪟️ Window kit contract, form panels, label axes and the UI command value producer.",
+   "lines": [
+    [
+     7055,
+     7426
+    ],
+    [
+     17362,
+     17382
+    ],
+    [
+     36861,
+     36874
+    ],
+    [
+     38242,
+     38242
+    ]
+   ]
+  },
+  {
+   "key": "tree_kit",
+   "dir": "🪟️window-kits/🌳️tree",
+   "module": "tree_kit",
+   "facet": "window",
+   "doc": "🌳️ Tree items, panel trees, windowed tree rows and the tree window kit.",
+   "lines": [
+    [
+     6296,
+     7054
+    ],
+    [
+     37568,
+     37696
+    ]
+   ]
+  },
+  {
+   "key": "text_kit",
+   "dir": "🪟️window-kits/📝️text",
+   "module": "text_kit",
+   "facet": "window",
+   "doc": "📝️ The text window kit.",
+   "lines": [
+    [
+     36875,
+     37086
+    ]
+   ]
+  },
+  {
+   "key": "table_kit",
+   "dir": "🪟️window-kits/📊️table",
+   "module": "table_kit",
+   "facet": "window",
+   "doc": "📊️ The table window kit and its editable row windows.",
+   "lines": [
+    [
+     37087,
+     37567
+    ]
+   ]
+  },
+  {
+   "key": "image_kit",
+   "dir": "🪟️window-kits/🖼️image",
+   "module": "image_kit",
+   "facet": "window",
+   "doc": "🖼️ The image window kit.",
+   "lines": [
+    [
+     37697,
+     37827
+    ]
+   ]
+  },
+  {
+   "key": "mesh_kit",
+   "dir": "🪟️window-kits/🧊️mesh",
+   "module": "mesh_kit",
+   "facet": "window",
+   "doc": "🧊️ The mesh window kit.",
+   "lines": [
+    [
+     37828,
+     37859
+    ]
+   ]
+  },
+  {
+   "key": "document_kit",
+   "dir": "🪟️window-kits/📃️document",
+   "module": "document_kit",
+   "facet": "window",
+   "doc": "📃️ The document window kit.",
+   "lines": [
+    [
+     37860,
+     38036
+    ]
+   ]
+  },
+  {
+   "key": "media_kit",
+   "dir": "🪟️window-kits/🎬️media",
+   "module": "media_kit",
+   "facet": "window",
+   "doc": "🎬️ The media window kit.",
+   "lines": [
+    [
+     38037,
+     38241
+    ]
+   ]
+  },
+  {
+   "key": "app_builder",
+   "dir": "🏗️builder/🧩️app",
+   "module": "app_builder",
+   "facet": "declaration",
+   "doc": "🧩️ The declarative app builder, its specs and validators, example sources and the built app definition.",
+   "lines": [
+    [
+     855,
+     1074
+    ],
+    [
+     5167,
+     6295
+    ],
+    [
+     7427,
+     7451
+    ],
+    [
+     9934,
+     10111
+    ]
+   ]
+  },
+  {
+   "key": "artifact_io",
+   "dir": "🚪️io",
+   "module": "artifact_io",
+   "facet": "declaration",
+   "doc": "🚪️ Artifact io capabilities: serializers, deserializers, composers, builders, decomposers, analyzers and derived artifacts.",
+   "lines": [
+    [
+     1075,
+     1579
+    ]
+   ]
+  },
+  {
+   "key": "artifact_inference",
+   "dir": "💡️inference",
+   "module": "artifact_inference",
+   "facet": "declaration",
+   "doc": "💡️ Artifact inference services: metadata, registry, cancellation and the cold wire entry points.",
+   "lines": [
+    [
+     1580,
+     2409
+    ]
+   ]
+  },
+  {
+   "key": "artifact_identity",
+   "dir": "🪪️identity",
+   "module": "artifact_identity",
+   "facet": "declaration",
+   "doc": "🪪️ Artifact identity, capabilities, localization and definitions.",
+   "lines": [
+    [
+     2410,
+     3186
+    ]
+   ]
+  },
+  {
+   "key": "artifact_declaration",
+   "dir": "📜️declaration",
+   "module": "artifact_declaration",
+   "facet": "declaration",
+   "doc": "📜️ Artifact declarations: the declaration builder, document codecs, capability sources, host media handlers and flow extensions.",
+   "lines": [
+    [
+     3187,
+     4351
+    ]
+   ]
+  },
+  {
+   "key": "artifact_registration",
+   "dir": "📜️declaration/📇️registration",
+   "module": "artifact_registration",
+   "facet": "declaration",
+   "doc": "📇️ Registration plans, the plugin runtime registry, contributions and the owner mutation roster.",
+   "lines": [
+    [
+     4352,
+     5166
+    ]
+   ]
+  },
+  {
+   "key": "app_views",
+   "dir": "📜️declaration/👁️view",
+   "module": "app_views",
+   "facet": "declaration",
+   "doc": "👁️ The read views an app receives, its operation contexts and the empty state lanes.",
+   "lines": [
+    [
+     10112,
+     10343
+    ],
+    [
+     12044,
+     12108
+    ],
+    [
+     13023,
+     13529
+    ]
+   ]
+  },
+  {
+   "key": "app_emission",
+   "dir": "📜️declaration/📨️emission",
+   "module": "app_emission",
+   "facet": "declaration",
+   "doc": "📨️ What an app emits: edits, tasks, child emissions, actions and the command macros.",
+   "lines": [
+    [
+     14280,
+     15469
+    ]
+   ]
+  },
+  {
+   "key": "app_contract",
+   "dir": "📜️declaration/🧩️app",
+   "module": "app_contract",
+   "facet": "declaration",
+   "doc": "🧩️ The app contract: `ArtifactApp`, media artifacts, `PluginApp` and the action registry.",
+   "lines": [
+    [
+     15470,
+     16483
+    ],
+    [
+     16537,
+     17361
+    ],
+    [
+     26621,
+     26630
+    ]
+   ]
+  },
+  {
+   "key": "surface_contract",
+   "dir": "📜️declaration/🪟️surface",
+   "module": "surface_contract",
+   "facet": "declaration",
+   "doc": "🪟️ Editor and viewer surfaces: `ArtifactEditor`, `ArtifactViewer`, their app wrappers, builders, declarations and the artifact codec table.",
+   "lines": [
+    [
+     38243,
+     39333
+    ],
+    [
+     39646,
+     41070
+    ]
+   ]
+  },
+  {
+   "key": "plugin_program",
+   "dir": "🏗️builder/🔌️program",
+   "module": "plugin_program",
+   "facet": "reactor",
+   "doc": "🔌️ The assembled plugin program and its app instances.",
+   "lines": [
+    [
+     36570,
+     36833
+    ]
+   ]
+  },
+  {
+   "key": "child_content",
+   "dir": "🪆️child",
+   "module": "child_content",
+   "facet": "publication",
+   "doc": "🪆️ Child members and child content: member keys and paths, the member registry, owned document ingress and child content views.",
+   "lines": [
+    [
+     10344,
+     12043
+    ]
+   ]
+  },
+  {
+   "key": "peer_roster",
+   "dir": "👥️peer",
+   "module": "peer_roster",
+   "facet": "publication",
+   "doc": "👥️ Peer presence roots and the peer roster publication.",
+   "lines": [
+    [
+     12109,
+     12965
+    ]
+   ]
+  },
+  {
+   "key": "store_lifecycle",
+   "dir": "♻️lifecycle",
+   "module": "store_lifecycle",
+   "facet": "publication",
+   "doc": "♻️ Store owners and disposers, store initialization and snapshot close retention, and the close, envelope and maintenance ladders.",
+   "lines": [
+    [
+     19065,
+     19698
+    ],
+    [
+     7485,
+     7491
+    ]
+   ]
+  },
+  {
+   "key": "store_publication",
+   "dir": "🧩️composition/📬️publication",
+   "module": "store_publication",
+   "facet": "publication",
+   "doc": "📬️ Pending artifact store and child group publications.",
+   "lines": [
+    [
+     22464,
+     22862
+    ]
+   ]
+  },
+  {
+   "key": "document_ingress",
+   "dir": "🗃️document",
+   "module": "document_ingress",
+   "facet": "publication",
+   "doc": "🗃️ Document ingress: envelope decode and ingress, store replacement, composition pins and document archive loads.",
+   "lines": [
+    [
+     24268,
+     26077
+    ]
+   ]
+  },
+  {
+   "key": "command_history",
+   "dir": "🎮️command",
+   "module": "command_history",
+   "facet": "jobs",
+   "doc": "🎮️ The command log and history views, and the history panel.",
+   "lines": [
+    [
+     13530,
+     14279
+    ],
+    [
+     26966,
+     26973
+    ]
+   ]
+  },
+  {
+   "key": "command_admission",
+   "dir": "🎮️command/📥️admission",
+   "module": "command_admission",
+   "facet": "jobs",
+   "doc": "📥️ Latest-wins command admission and the typed command wire writer.",
+   "lines": [
+    [
+     21270,
+     21416
+    ],
+    [
+     22333,
+     22463
+    ]
+   ]
+  },
+  {
+   "key": "tool_jobs",
+   "dir": "👷️job",
+   "module": "tool_jobs",
+   "facet": "jobs",
+   "doc": "👷️ Tool jobs: transactions, bounded first-step proofs, tool factories and registrations, typed operation results, tool completions, owned tool job contexts, agent lane previews and the natural file import job.",
+   "lines": [
+    [
+     17383,
+     17914
+    ],
+    [
+     18189,
+     19064
+    ],
+    [
+     21929,
+     22272
+    ],
+    [
+     39334,
+     39645
+    ],
+    [
+     7462,
+     7484
+    ]
+   ]
+  },
+  {
+   "key": "media_export",
+   "dir": "🎞️media",
+   "module": "media_export",
+   "facet": "jobs",
+   "doc": "🎞️ Media exports and segmented downloads.",
+   "lines": [
+    [
+     17915,
+     17925
+    ],
+    [
+     17959,
+     18188
+    ],
+    [
+     19699,
+     19922
+    ],
+    [
+     21426,
+     21537
+    ]
+   ]
+  },
+  {
+   "key": "reserved_jobs",
+   "dir": "👷️job/🏛️reserved",
+   "module": "reserved_jobs",
+   "facet": "jobs",
+   "doc": "🏛️ Framework reserved jobs, their routes, commits and pumps.",
+   "lines": [
+    [
+     19923,
+     20670
+    ],
+    [
+     21417,
+     21425
+    ],
+    [
+     21717,
+     21928
+    ],
+    [
+     22273,
+     22332
+    ]
+   ]
+  },
+  {
+   "key": "tool_cancellation",
+   "dir": "♻️cancellation",
+   "module": "tool_cancellation",
+   "facet": "jobs",
+   "doc": "♻️ Tool operation keys, document authority and tool cancellation scopes, handles and leases.",
+   "lines": [
+    [
+     20671,
+     21119
+    ]
+   ]
+  },
+  {
+   "key": "typed_operation",
+   "dir": "🧵️retained-command/🔄️full-operation",
+   "module": "typed_operation",
+   "facet": "jobs",
+   "doc": "🔄️ Mounted typed command full operations and their job.",
+   "lines": [
+    [
+     22863,
+     24267
+    ]
+   ]
+  },
+  {
+   "key": "artifact_instance",
+   "dir": "🧵️instance",
+   "module": "artifact_instance",
+   "facet": "instance",
+   "doc": "🧵️ The mounted artifact instance `VcsArtifactApp`: its state, its turns and its `PluginApp` implementation.",
+   "lines": [
+    [
+     26078,
+     26620
+    ],
+    [
+     26631,
+     26727
+    ],
+    [
+     26974,
+     36569
+    ]
+   ]
+  },
+  {
+   "key": "app_testing",
+   "dir": "🧪️testing",
+   "module": "app_testing",
+   "facet": "laws",
+   "doc": "⚖️ App laws and the test modules of the app vocabulary.",
+   "lines": [
+    [
+     7452,
+     7461
+    ],
+    [
+     7493,
+     9933
+    ]
+   ],
+   "cfg": "any(test, feature = \"artifact-app-testing\")"
+  }
+ ],
+ "files": [
+  {
+   "module": "plugin_runtime",
+   "dir": "⚛️reactor/🏃️runtime",
+   "pathAttr": "."
+  },
+  {
+   "module": "world3d_host",
+   "dir": "🪟️window-kits/🌍️world3d"
+  },
+  {
+   "module": "engagement",
+   "dir": "🪟️window/🎛️engagement"
+  }
+ ]
+}

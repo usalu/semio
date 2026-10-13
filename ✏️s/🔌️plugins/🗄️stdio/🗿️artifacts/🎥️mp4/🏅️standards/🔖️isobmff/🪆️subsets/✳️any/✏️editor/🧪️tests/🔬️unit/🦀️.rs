@@ -43,7 +43,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP4_DOCUMENT_SCHEMA) else {
         panic!("MP4 snapshot builds one document load");
     };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real MP4 document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real MP4 document");
     let handle = app.submit_media_export(semio_s_artifact_stdio_contract::media_export::PLAYBACK_PORT_ID).await.expect("registered MP4 playback producer");
     let mut completed = None;
     for _ in 0..100_000 {
@@ -93,12 +93,12 @@ fn large_payload_metadata_edit_uses_compact_native_event_and_exact_inverse_admis
     let [Mp4Mutation::SetFtyp(payload)] = emit.artifact_mutations.as_slice() else { panic!("large-payload ftyp edit must remain compact") };
     assert_eq!(payload.ftyp.minor_version, 42);
     let bytes = <Mp4Mutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("compact event encodes");
-    assert!(bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    assert!(bytes.len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     let next = protocol::apply_diff(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("compact event applies");
     assert_eq!(next.ftyp.minor_version, 42);
     assert_eq!(next.tracks[0].samples[0].data, snapshot.tracks[0].samples[0].data);
     let inverse = <Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
-    assert!(inverse.iter().all(|mutation| <Mp4Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
+    assert!(inverse.iter().all(|mutation| <Mp4Mutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
     let restored = inverse.into_iter().fold(next.clone(), |current, mutation| protocol::apply_diff(<Mp4Mutation as protocol::Mutation<Mp4Snapshot>>::diff(&mutation, &current).diff(), &current).expect("ftyp inverse applies"));
     assert_eq!(restored, snapshot);
     let native = crate::standards::isobmff::subsets::any::io::encode_mp4(&next);

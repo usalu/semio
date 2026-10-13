@@ -312,11 +312,11 @@ async fn module_payload_operation_op_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let mut store: ArtifactStore<ModuleRenderPayload, ModulePayloadMutation> =
         ArtifactStore::new(create_document_envelope(MODULE_DOCUMENT_SCHEMA, "playbook-module-procedural-test", default_payload(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<ModuleRenderPayload, ModulePayloadMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ModuleRenderPayload, ModulePayloadMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     let mut payload = default_payload();
     payload.interactive = false;
     store.dispatch(ArtifactCommand::Apply { mutations: vec![ModulePayloadMutation::SetPayload(SetPayload { payload })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");

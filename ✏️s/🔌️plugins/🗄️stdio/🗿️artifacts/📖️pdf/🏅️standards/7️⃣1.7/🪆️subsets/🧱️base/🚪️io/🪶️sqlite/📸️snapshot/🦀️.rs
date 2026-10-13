@@ -32,6 +32,7 @@ mod annotation;
 mod form;
 #[path = "📄️document/🦀️.rs"]
 mod document;
+pub use document::{PdfConformanceProfile,validate_conformance_profile};
 #[path = "🛂️admission/🦀️.rs"]
 mod admission;
 
@@ -115,7 +116,7 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
 #[cfg(test)]
 mod tests {
     use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     use semio_framework_value::FromValue;
     fn fixture()->PdfSnapshot { PdfSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }
     fn domain_schema()->String{include_str!("🗄️.sql").into()}
@@ -146,7 +147,7 @@ mod tests {
 
     #[test]
     fn sqlite_snapshot_pdf17_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{ArtifactDsl,ArtifactPack};use semio_framework_os_kernel::io_schema::IoPayload;
+        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};use semio_framework_os_kernel::io_schema::IoPayload;
         let mut snapshot=fixture();snapshot.schema="owned PDF 世界\0".repeat(16384);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text]{
             let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(snapshot.encode_pack()),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(snapshot.print_dsl())};
@@ -214,12 +215,12 @@ mod tests {
 
     async fn erased_owned_snapshot(snapshot:&PdfSnapshot,encoding:sqlite_snapshot::SnapshotEncoding)->PdfSnapshot{
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::IoPayload,semio_framework_os_kernel::io::io_mechanism::io_route};
-        register_declaration();let native=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(<PdfSnapshot as store::ArtifactPack>::encode_pack(snapshot)),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(<PdfSnapshot as store::ArtifactDsl>::print_dsl(snapshot))};let export=io_route(&native,&sqlite,1).await.unwrap().value;let file=semio_s_artifact_stdio_contract::testing::io_run(&export,payload, Default::default(), &mut |_| true).await.unwrap().value;let import=io_route(&sqlite,&native,1).await.unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::io_run(&import,file, Default::default(), &mut |_| true).await.unwrap().value;match restored{IoPayload::Binary(bytes)=><PdfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=><PdfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap()}
+        register_declaration();let native=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();let payload=match encoding{sqlite_snapshot::SnapshotEncoding::Binary=>IoPayload::Binary(<PdfSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)),sqlite_snapshot::SnapshotEncoding::Text=>IoPayload::Text(<PdfSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot))};let export=io_route(&native,&sqlite,1).await.unwrap().value;let file=semio_s_artifact_stdio_contract::testing::io_run(&export,payload, Default::default(), &mut |_| true).await.unwrap().value;let import=io_route(&sqlite,&native,1).await.unwrap().value;let restored=semio_s_artifact_stdio_contract::testing::io_run(&import,file, Default::default(), &mut |_| true).await.unwrap().value;match restored{IoPayload::Binary(bytes)=><PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap(),IoPayload::Text(text)=><PdfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap()}
     }
     async fn erased_snapshot_roundtrip(encoding:sqlite_snapshot::SnapshotEncoding){let snapshot=fixture();assert_eq!(erased_owned_snapshot(&snapshot,encoding).await,snapshot);}
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf_native_full_entity_row_admission() {
-        use store::ArtifactSqliteSnapshot;
+        use store::os_store::serialization::ArtifactSqliteSnapshot;
         use std::{io::Write,process::{Command,Stdio}};
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🛫️row-admission.json")).unwrap();
         let mut snapshot=PdfSnapshot::default();
@@ -253,11 +254,12 @@ mod tests {
             let markup=restored.pages[0].annotations[0].markup.as_ref().unwrap();assert_eq!(markup.popup,Some(u64::MAX));assert_eq!(markup.in_reply_to,Some(1u64<<32));assert_eq!(markup.opacity.unwrap().to_bits(),bits);assert!(matches!(restored.pages[0].annotations[15].kind,PdfAnnotationKind::Popup{parent:Some(u64::MAX),open:true}));
         }}
     }
+
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf_profiles_use_exact_declared_native_provider_and_validator(){
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_route,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};use semio_framework_plugin::ArtifactBuilder;
         register_declaration();let sqlite:ArtifactDialect=semio_framework_os_kernel::io_schema::SQLITE_SNAPSHOT.into();for(standard,subset)in[("1.4","*"),("1.4","a"),("1.4","x"),("1.7","*"),("1.7","a"),("1.7","x"),("1.7","e"),("1.7","ua"),("1.7","vt"),("1.7","h")]{let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:standard.into(),subset:subset.into()};assert_eq!(io_route(&dialect,&sqlite,1).await.unwrap().value.hops.len(),1);assert_eq!(io_route(&sqlite,&dialect,1).await.unwrap().value.hops.len(),1);}
-        let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"a".into()};let mut snapshot=crate::standards::v1_7::subsets::a::io::PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0,100.0)).build().unwrap();snapshot.schema="full-owned-PDF-A-schema".into();let native=store::ArtifactPack::encode_pack(&snapshot);assert_eq!(<PdfSnapshot as store::ArtifactPack>::decode_pack(&native).unwrap(),snapshot);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
+        let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"a".into()};let mut snapshot=crate::standards::v1_7::subsets::a::io::PdfABuilderConstruction::new("sRGB IEC61966-2.1").add_page(PdfPage::new(100.0,100.0)).build().unwrap();snapshot.schema="full-owned-PDF-A-schema".into();let native=store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);assert_eq!(<PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&native).unwrap(),snapshot);let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let mut phases=Vec::new();let file=io_export_sqlite_snapshot(&dialect,&snapshot,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value;assert_eq!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |event|{phases.push(event.phase);true}).await.unwrap().value,snapshot);assert!(!phases.iter().any(|phase|matches!(phase,Phase::EncodeNative|Phase::DecodeNative)));
         let invalid=PdfSnapshot{open_action:Some(PdfOpenAction::Action{action:PdfAction{kind:PdfActionKind::JavaScript{script:"app.alert(1)".into()},next:Vec::new()}}),..PdfSnapshot::default()};assert!(io_export_sqlite_snapshot(&dialect,&invalid,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |_|true).await.is_err());let base=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"*".into()};let file=io_export_sqlite_snapshot(&base,&invalid,sqlite_snapshot::SnapshotEncoding::Binary,limits,&mut |_|true).await.unwrap().value;assert!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.is_err());let mut forged=sqlite_snapshot::import_sqlite_database(&file,limits,&mut |_|true).unwrap();semio_framework_os_kernel::io::io_mechanism::take_sqlite_snapshot_metadata(&mut forged).unwrap();semio_framework_os_kernel::io::io_mechanism::attach_sqlite_snapshot_metadata(&mut forged,&dialect,sqlite_snapshot::SnapshotEncoding::Binary,&mut sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,limits)).unwrap();let forged=sqlite_snapshot::export_sqlite_database(&forged,limits,&mut |_|true).unwrap();assert!(io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&forged,limits,&mut |_|true).await.is_err());
     }
     #[semio_framework_async_macros::async_test]
@@ -351,7 +353,8 @@ mod tests {
         let mut bad=db.clone();bad.table_mut("pdf_cos_value").unwrap().rows[0].values[3]=V::Integer(12);assert!(cos::read_object(&mut Reader::new(&bad,&mut control).unwrap(),key).is_err());
         let mut bad=db.clone();bad.table_mut("pdf_cos_array_element").unwrap().rows[0].values[3]=V::Integer(key);assert!(cos::read_object(&mut Reader::new(&bad,&mut control).unwrap(),key).is_err());
         assert!(Reader::new(&db,&mut Control::new(&mut |_|false,limits)).is_err());
-    }    #[semio_framework_async_macros::async_test]
+    }
+    #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf17_ua_initial_retains_genuine_typed_raw_profile_and_both_public_forms() {
         use semio_framework_plugin::ArtifactBuilder;
         use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_os_kernel::io::io_mechanism::io_export_sqlite_snapshot,semio_framework_os_kernel::io::io_mechanism::io_import_sqlite_snapshot};
@@ -379,17 +382,17 @@ mod tests {
                 let PdfObject::Dict(entries)=&mut catalog.value else { panic!("literal Catalog dictionary") };
                 entries.retain(|entry| entry.key!=key);
                 assert!(crate::standards::v1_7::subsets::ua::io::check_ua_conformance(&refused).iter().any(|diagnostic| diagnostic.code.0==code && matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
-                <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(refused);
+                <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(refused);
             }
             assert!(crate::standards::v1_7::subsets::ua::io::check_ua_conformance(snapshot).iter().all(|diagnostic| !matches!(diagnostic.severity,semio_framework_diagnostic::Severity::Error|semio_framework_diagnostic::Severity::Fatal)));
         }
         let contract=semio_repo_test_host::parse_json(include_str!("🧫️fixtures/♿️ua-initial/🔣️.json")).unwrap();
         let owner=crate::standards::v1_7::subsets::ua::io::PdfUaBuilderConstruction::new("und").build().unwrap();
         agree(&owner);
-        let native=crate::standards::v1_7::subsets::base::io::encode_pdf(&owner).unwrap();
+        let native=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&owner).unwrap();
         let independent=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::ua::project_conformance(&native).unwrap();
         assert_eq!(&independent,contract.get("conformance").unwrap());
-        let decoded=crate::standards::v1_7::subsets::base::io::decode_pdf(&native).unwrap();
+        let decoded=crate::standards::v1_7::subsets::base::io::import::decode_pdf(&native).unwrap();
         agree(&decoded);
         register_declaration();
         let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"ua".into()};
@@ -399,14 +402,13 @@ mod tests {
             let restored=io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value;
             assert_eq!(restored,owner);
             agree(&restored);
-            let native=crate::standards::v1_7::subsets::base::io::encode_pdf(&restored).unwrap();
+            let native=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&restored).unwrap();
             assert_eq!(semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::ua::project_conformance(&native).unwrap(),independent);
-            <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
+            <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
         }
-        <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);
-        <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
+        <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);
+        <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
     }
-
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf17_x_initial_retains_real_profile_typed_raw_and_both_public_forms() {
         use semio_framework_plugin::ArtifactBuilder;
@@ -435,22 +437,21 @@ mod tests {
         }
         let contract=semio_repo_test_host::parse_json(include_str!("🧫️fixtures/🌈️x-vt-initial/🖨️x.json")).unwrap();
         let owner=crate::standards::v1_7::subsets::x::io::PdfXBuilderConstruction::empty().build().unwrap();agree(&owner);
-        let native=crate::standards::v1_7::subsets::base::io::encode_pdf(&owner).unwrap();
+        let native=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&owner).unwrap();
         let project=|bytes:&[u8]|semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::x::project_conformance(bytes).unwrap();
         let profiles=|bytes:&[u8]|semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::x::output_profiles(bytes).unwrap();
         assert_eq!(&project(&native),contract.get("conformance").unwrap());assert_eq!(profiles(&native),vec![(3,ICC.to_vec())]);
-        let decoded=crate::standards::v1_7::subsets::base::io::decode_pdf(&native).unwrap();agree(&decoded);assert_eq!(decoded,owner);
+        let decoded=crate::standards::v1_7::subsets::base::io::import::decode_pdf(&native).unwrap();agree(&decoded);assert_eq!(decoded,owner);
         register_declaration();let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"x".into()};let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text] {
             let file=io_export_sqlite_snapshot(&dialect,&owner,encoding,limits,&mut |_|true).await.unwrap().value;
             let restored=io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value;assert_eq!(restored,owner);agree(&restored);
-            let bytes=crate::standards::v1_7::subsets::base::io::encode_pdf(&restored).unwrap();assert_eq!(&project(&bytes),contract.get("conformance").unwrap());assert_eq!(profiles(&bytes),vec![(3,ICC.to_vec())]);
-            <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
+            let bytes=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&restored).unwrap();assert_eq!(&project(&bytes),contract.get("conformance").unwrap());assert_eq!(profiles(&bytes),vec![(3,ICC.to_vec())]);
+            <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
         }
-        <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);<PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
+        <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);<PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
         eprintln!("[DEBUG] pdf17 X genuine profile typed/raw native and both public forms");
     }
-
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_pdf17_vt_initial_retains_real_profile_typed_raw_and_both_public_forms() {
         use semio_framework_plugin::ArtifactBuilder;
@@ -487,22 +488,21 @@ mod tests {
         }
         let contract=semio_repo_test_host::parse_json(include_str!("🧫️fixtures/🌈️x-vt-initial/🧾️vt.json")).unwrap();
         let owner=crate::standards::v1_7::subsets::vt::io::PdfVtBuilderConstruction::empty().build().unwrap();agree(&owner);
-        let native=crate::standards::v1_7::subsets::base::io::encode_pdf(&owner).unwrap();
+        let native=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&owner).unwrap();
         let project=|bytes:&[u8]|semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::vt::project_conformance(bytes).unwrap();
         let profiles=|bytes:&[u8]|semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::x::output_profiles(bytes).unwrap();
         assert_eq!(&project(&native),contract.get("conformance").unwrap());assert_eq!(profiles(&native),vec![(3,ICC.to_vec())]);
-        let decoded=crate::standards::v1_7::subsets::base::io::decode_pdf(&native).unwrap();agree(&decoded);assert_eq!(decoded,owner);
+        let decoded=crate::standards::v1_7::subsets::base::io::import::decode_pdf(&native).unwrap();agree(&decoded);assert_eq!(decoded,owner);
         register_declaration();let dialect=ArtifactDialect{artifact_kind:"s.stdio.pdf".into(),standard:"1.7".into(),subset:"vt".into()};let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for encoding in [sqlite_snapshot::SnapshotEncoding::Binary,sqlite_snapshot::SnapshotEncoding::Text] {
             let file=io_export_sqlite_snapshot(&dialect,&owner,encoding,limits,&mut |_|true).await.unwrap().value;
             let restored=io_import_sqlite_snapshot::<PdfSnapshot>(&dialect,&file,limits,&mut |_|true).await.unwrap().value;assert_eq!(restored,owner);agree(&restored);
-            let bytes=crate::standards::v1_7::subsets::base::io::encode_pdf(&restored).unwrap();assert_eq!(&project(&bytes),contract.get("conformance").unwrap());assert_eq!(profiles(&bytes),vec![(3,ICC.to_vec())]);
-            <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
+            let bytes=crate::standards::v1_7::subsets::base::io::export::encode_pdf(&restored).unwrap();assert_eq!(&project(&bytes),contract.get("conformance").unwrap());assert_eq!(profiles(&bytes),vec![(3,ICC.to_vec())]);
+            <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(restored);
         }
-        <PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);<PdfSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
+        <PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(decoded);<PdfSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(owner);
         eprintln!("[DEBUG] pdf17 VT genuine profile typed/raw native and both public forms");
     }
-
     #[test]
     fn sqlite_snapshot_pdf17_vt_initial_graph_refuses_each_malformed_terminal_relation() {
         let r=|num|ObjRef{num,gen:0};
@@ -547,5 +547,4 @@ mod tests {
         }
         eprintln!("[DEBUG] VT ten independently authored terminal graph refusals");
     }
-
 }

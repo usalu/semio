@@ -3,14 +3,14 @@
   "unwatchedSegments": [".git", ".nx", ".vscode", ".🧬semio", "node_modules", "dist", "target", "🤖️generated", "🗑️generated"],
   "unwatchedGlobs": ["**/.git/**", "**/.nx/**", "**/.vscode/**", "**/.🧬semio/**", "**/node_modules/**", "**/dist/**", "**/target/**", "**/🤖️generated/**", "**/🗑️generated/**"],
   "unwatchedPaths": [
-    ".🧬semio/🦑️repo/⚡️cache/cargo/wasm-dev/deps/semio_s_artifact.rmeta",
+    ".🧬semio/🦑️repo/⚡️cache/cargo/wasm-prototype/deps/semio_s_artifact.rmeta",
     ".🧬semio/🦑️repo/⚡️cache/vite/os-dev/generation3d-react/deps/three.js",
     ".🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️09/☀️09/PROCEDURAL-3D-END-TO-END/🗑️generated/serve.txt",
     ".nx/workspace-data/project-graph.json",
     ".git/fsmonitor--daemon/cookies/1",
     ".vscode/settings.json",
     "node_modules/vite/dist/node/index.js",
-    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/dev/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
+    "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist/🔌️plugin-modules/🧵️shard/🟨️shard-worker.js",
     "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🎮️playgrounds/🟦️.ts",
     "🌎️hub/🧩️compositions/🌀️procedural/📦️packages/🦀️rust/target/wasm32-wasip2/release/plugin.wasm"
   ],

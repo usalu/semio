@@ -1,10 +1,8 @@
 //! 📝️ Direct replace-page-text payload, sparse diff, concrete inverse, and laws.
 
 use super::PdfMutation;
-use crate::standards::v1_4::subsets::base::schema::{
-    diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff},
-    snapshot::PdfSnapshot,
-};
+use crate::standards::v1_4::subsets::base::schema::diff::{PdfDiff, PdfPageDiff, PdfPageModified, PdfPagesDiff};
+use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Payload

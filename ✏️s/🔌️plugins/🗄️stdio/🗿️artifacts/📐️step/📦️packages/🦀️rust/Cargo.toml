@@ -31,7 +31,9 @@ semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modu
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-spatial-kernel-semio-session.workspace = true
 semio-framework-os-flow.workspace = true
-semio-framework-3d.workspace = true
+semio-framework-3d-brep-engine.workspace = true
+semio-framework-3d-brep-operations.workspace = true
+semio-framework-3d-brep-representation.workspace = true
 pack = { workspace = true }
 semio-framework-hash = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
@@ -45,6 +47,7 @@ semio-s-artifact-stdio-txt = { workspace = true }
 serde_json = { workspace = true }
 
 [dev-dependencies]
+semio-framework-3d-brep-queries.workspace = true
 semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }

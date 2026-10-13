@@ -22,7 +22,7 @@ import { acquireCargoBuildLeaseV1 } from "../../../../../🧰️framework/🔨�
 import { repoCacheDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { cargoTargetDirectory, cargoBuildDirectory } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { pluginModulesRootIn } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
-import { FRESH_COMPONENT_MAX_BYTES } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptFindingsV1, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
 import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🎛️owned-execution/🟦️.ts";
 import { projectNativeCodecReceiptPublicationV1, selectNativeCodecPublicationFactoryV1, type NativeCodecPublicationReceiptV1 } from "../../📇️publication/♻️native-receipt/🟦️.ts";
 
@@ -31,10 +31,12 @@ import { prepareStdioComposition } from "../../🧩️composition/🟦️.ts";
 const PACKAGE_NAME = "semio-hub-stdio";
 const PLUGIN_ID = "stdio";
 const ARTIFACT_OWNER = "✏️s/🔌️plugins/🗄️stdio";
-const WASM_OUT = "semio_hub_stdio.wasm";
+const COMPONENT_PACKAGE = "semio-hub-stdio-component";
+const COMPONENT_MANIFEST = "../../🧩️component/📦️packages/🦀️rust/Cargo.toml";
+const WASM_OUT = "semio_hub_stdio_component.wasm";
 const DESCRIPTOR_PACK = "🛂️.descriptor.semio";
 const DESCRIPTOR_JSON = "🔣️.json";
-const ARTIFACT_MAX_BYTES = 64 * 1024 * 1024;
+const ARTIFACT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 const IO_CHUNK_BYTES = 64 * 1024;
 const CATALOG_DEADLINE_MS = 1_200_000;
 const COMPONENT_FUNCTION_MAX = 1_000_000;
@@ -100,7 +102,7 @@ function assertContainedBounded(root: string, path: string, label: string, maxBy
 /** 🗜️ Produces a cancellable release component before applying the distribution admission limit. */
 async function prepareReleaseComponent(input: string, output: string, repoRoot: string, env: NodeJS.ProcessEnv, control: CatalogControl): Promise<void> {
   assertControlled(control);
-  const inputBytes = assertRegularBounded(input, "compiler component", FRESH_COMPONENT_MAX_BYTES);
+  const inputBytes = assertRegularBounded(input, "compiler component", SHIPPED_COMPONENT_MAX_BYTES);
   if (resolve(input) === resolve(output)) throw new Error("release output cannot replace its compiler input");
   if (existsSync(output)) assertRegularBounded(output, "previous release component");
   const jco = resolveWorkspaceBin("@bytecodealliance/jco", repoRoot);
@@ -291,30 +293,20 @@ function assertComponentizableCore(bytes: Uint8Array): WasmCoreStructure {
   return structure;
 }
 
-async function verifyIndependentOracles(rawPath: string, corePath: string, descriptorPackPath: string, descriptorJsonPath: string): Promise<{ rawSha256: string; coreSha256: string; descriptorSha256: string }> {
-  for (const [path, label] of [[rawPath, "raw component"], [corePath, "core module"], [descriptorPackPath, "descriptor pack"], [descriptorJsonPath, "descriptor JSON"]] as const) assertRegularBounded(path, label);
+/** 🔎️ Recomputes a staged row's identities without the registry verifier: WebCrypto digests of the raw component and the
+ * semantic descriptor, the first-party Pack round trip, and the receipt read as plain JSON, which must name exactly those bytes. */
+async function verifyIndependentOracles(rawPath: string, descriptorPackPath: string, receiptPath: string): Promise<{ rawSha256: string; descriptorSha256: string; receipt: Record<string, unknown> }> {
+  for (const [path, label, maximum] of [[rawPath, "raw component", SHIPPED_COMPONENT_MAX_BYTES], [descriptorPackPath, "descriptor pack", ARTIFACT_MAX_BYTES], [receiptPath, "component receipt", ARTIFACT_MAX_BYTES]] as const) assertRegularBounded(path, label, maximum);
   const raw = readFileSync(rawPath);
-  const core = readFileSync(corePath);
   const pack = readFileSync(descriptorPackPath);
-  assertComponentizableCore(core);
   const decoded = decodePackValue(pack) as Record<string, unknown>;
   if (!Buffer.from(encodePackValue(decoded)).equals(pack)) throw new Error("independent Pack oracle rejected non-canonical descriptor bytes");
-  const json = JSON.parse(readFileSync(descriptorJsonPath, "utf8")) as Record<string, unknown>;
-  const decodedManifest = decoded.manifest as Record<string, unknown>;
-  const jsonManifest = json.manifest as Record<string, unknown>;
-  if (decodedManifest?.pluginId !== PLUGIN_ID || jsonManifest?.pluginId !== PLUGIN_ID) throw new Error("stdio descriptor identity mismatch");
-  const decodedHashes = decoded.hashes as Record<string, string>;
-  const jsonHashes = json.hashes as Record<string, string>;
-  if (!isDeepStrictEqual(decodedHashes, jsonHashes)) throw new Error("stdio descriptor JSON/Pack hash records disagree");
+  if ((decoded.manifest as Record<string, unknown>)?.pluginId !== PLUGIN_ID || "hashes" in decoded) throw new Error("stdio descriptor is not the semantic stdio descriptor");
+  const receipt = JSON.parse(readFileSync(receiptPath, "utf8")) as Record<string, unknown>;
   const rawSha256 = await webSha256(raw);
-  const coreSha256 = await webSha256(core);
-  if (rawSha256 === coreSha256) throw new Error("stdio descriptor substituted raw component bytes for independently extracted core bytes");
-  if (decodedHashes.wasmSha256 !== rawSha256 || decodedHashes.coreWasmSha256 !== coreSha256) throw new Error("WebCrypto raw/core hashes disagree with descriptor");
-  const blanked = structuredClone(decoded);
-  (blanked.hashes as Record<string, string>).descriptorSha256 = "";
-  const descriptorSha256 = await webSha256(encodePackValue(blanked));
-  if (decodedHashes.descriptorSha256 !== descriptorSha256) throw new Error("WebCrypto descriptor self-hash mismatch");
-  return { rawSha256, coreSha256, descriptorSha256 };
+  const descriptorSha256 = await webSha256(pack);
+  if (receipt.pluginId !== PLUGIN_ID || receipt.profile !== SHIPPED_COMPONENT_PROFILE || receipt.wasmSha256 !== rawSha256 || receipt.wasmBytes !== raw.byteLength || receipt.semanticDescriptorSha256 !== descriptorSha256) throw new Error("WebCrypto digests disagree with the stdio component receipt");
+  return { rawSha256, descriptorSha256, receipt };
 }
 
 async function runCatalogRootContractTests(root: string, repoRoot: string): Promise<void> {
@@ -331,7 +323,7 @@ async function runCatalogRootContractTests(root: string, repoRoot: string): Prom
   const catalogSchema = JSON.parse(readFileSync(join(root, "../../📇️catalog/🧬️schema/🔣️.json"), "utf8"));
   const validateCommitment = new Ajv({ strict: false }).compile({ ...catalogSchema, $ref: "#/$defs/NativeCatalogSurfaceCommitment" });
   if (!validateCommitment({ schema: "semio.stdio.artifact-catalog/v1", pluginId: "stdio", packageId: "semio:stdio", packageVersion: "0.1.0", definitions: [], codecs: [] })) throw new Error("authored empty catalog commitment is invalid");
-  if (componentPackageId(join(root, "Cargo.toml")) !== fixture.packageId) throw new Error("Cargo and neutral fixture package identities disagree");
+  if (componentPackageId(join(root, COMPONENT_MANIFEST)) !== fixture.packageId) throw new Error("Cargo and neutral fixture package identities disagree");
   for (const vector of fixture.vectors) {
     const raw = await webSha256(Buffer.from(vector.raw, "hex"));
     const core = await webSha256(Buffer.from(vector.core, "hex"));
@@ -744,13 +736,15 @@ async function runDwgArtifactOwnership(root: string, repoRoot: string): Promise<
 }
 
 type HomeIoSurfaceFixture = {
-  readonly schema: "semio.stdio.home-io-surface/v1";
-  readonly features: { readonly homeIo: "home-io"; readonly fullArtifactCatalog: "full-artifact-catalog"; readonly componentAppAssembly: "component-app-assembly" };
+  readonly schema: "semio.stdio.home-io-surface/v3";
+  readonly catalogPackage: "semio-hub-stdio-catalog";
+  readonly libraryPackage: "semio-hub-stdio";
+  readonly componentPackage: "semio-hub-stdio-component";
+  readonly componentAppAssembly: "component-app-assembly";
   readonly directArtifacts: readonly ["csv", "json", "xlsx", "zip"];
   readonly sharedCodecs: readonly ["binary", "deflate", "txt", "xml"];
   readonly fullArtifactCount: number;
   readonly nativeCodecCount: number;
-  readonly surfaceCases: readonly { readonly id: string; readonly selected: readonly string[]; readonly catalog: number; readonly apps: boolean; readonly exports: boolean }[];
 };
 
 function cargoTomlFiles(directory: string, files: string[] = []): string[] {
@@ -774,46 +768,31 @@ class HomeIoSurfaceScript extends BundleScript {
     const fixtureRoot = join(this.root, "../../🧫️fixtures/🏠️home-io-surface");
     const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8")) as HomeIoSurfaceFixture;
     const manifest = readFileSync(join(this.root, "Cargo.toml"), "utf8");
-    assert.match(manifest, /default\s*=\s*\["plugin-root"\]/u);
     const { parse: parseToml } = await import("@iarna/toml");
-    const firstParty = Bun.TOML.parse(manifest) as { features: Record<string, string[]> };
-    const independent = parseToml(manifest) as unknown as { features: Record<string, string[]> };
-    assert.deepEqual(firstParty.features, independent.features);
+    const firstParty = Bun.TOML.parse(manifest) as { package: { name: string }; lib: Record<string, unknown>; features?: Record<string, string[]>; dependencies: Record<string, unknown> };
+    assert.deepEqual(firstParty, parseToml(manifest) as unknown);
+    assert.equal(firstParty.package.name, fixture.libraryPackage);
+    assert(!firstParty.features, "the Stdio library declares features, so it compiles once per consumer feature set");
+    assert(!Object.hasOwn(firstParty.lib, "crate-type"), "the Stdio library declares crate types; a library is rlib-only and its cdylib is the component crate");
     const artifactPrefix = "semio-s-artifact-stdio-";
-    const featureClosure = (selected: readonly string[]): { features: Set<string>; artifacts: Set<string> } => {
-      const closure = new Set<string>(), artifacts = new Set<string>();
-      const pending = [...selected];
-      while (pending.length) {
-        const next = pending.pop()!;
-        if (closure.has(next)) continue;
-        assert(Object.hasOwn(firstParty.features, next), `unknown Stdio feature ${next}`);
-        closure.add(next);
-        for (const activation of firstParty.features[next]!) {
-          if (Object.hasOwn(firstParty.features, activation)) pending.push(activation);
-          const packageName = (activation.startsWith("dep:") ? activation.slice(4) : activation.split("/")[0]!)!;
-          if (packageName.startsWith(artifactPrefix)) artifacts.add(packageName.slice(artifactPrefix.length));
-        }
-      }
-      return { features: closure, artifacts };
-    };
-    for (const row of fixture.surfaceCases) {
-      const closure = featureClosure(row.selected);
-      assert.deepEqual({
-        catalog: closure.artifacts.size,
-        apps: closure.features.has(fixture.features.componentAppAssembly),
-        exports: closure.features.has("plugin-root"),
-      }, { catalog: row.catalog, apps: row.apps, exports: row.exports }, row.id);
-    }
+    const componentSource = readFileSync(join(this.root, COMPONENT_MANIFEST), "utf8"), component = Bun.TOML.parse(componentSource) as any;
+    assert.deepEqual(component, parseToml(componentSource) as unknown);
+    assert.equal(component.package.name, fixture.componentPackage);
+    assert.deepEqual(component.lib["crate-type"], ["cdylib"]);
+    assert.deepEqual(Object.keys(component.dependencies).sort(), [fixture.libraryPackage, "semio-framework-plugin"].sort(), "the Stdio component crate links anything but its library and the plugin entry macro");
+    assert(!component.features, "the Stdio component crate declares features");
+    assert.match(readFileSync(join(this.root, "../../🧩️component/🦀️.rs"), "utf8"), /^semio_framework_plugin::plugin_exports!\(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, semio_hub_stdio::plugin, semio_hub_stdio::plugin::StdioApps\);$/mu);
     const selected = [...fixture.directArtifacts, ...fixture.sharedCodecs].sort();
-    const fullArtifacts = [...featureClosure([fixture.features.fullArtifactCatalog]).artifacts].sort();
-    const homeArtifacts = [...featureClosure([fixture.features.homeIo]).artifacts].sort();
-    const componentArtifacts = [...featureClosure([fixture.features.componentAppAssembly]).artifacts].sort();
-    assert.equal(fullArtifacts.length, fixture.fullArtifactCount);
-    assert.deepEqual(homeArtifacts, selected);
-    assert.deepEqual(componentArtifacts, fullArtifacts);
+    const catalogManifestPath = join(this.root, "../../🔌️plugin/📇️catalog/📦️packages/🦀️rust/Cargo.toml");
+    const catalogSource = readFileSync(catalogManifestPath, "utf8"), catalogCargo = Bun.TOML.parse(catalogSource) as any;
+    assert.deepEqual(catalogCargo, parseToml(catalogSource) as any);
+    assert.equal(catalogCargo.package.name, fixture.catalogPackage);
+    assert(!catalogCargo.features, "the Stdio artifact catalog declares features, so its library compiles once per consumer feature set");
+    assert.equal(Object.keys(catalogCargo.dependencies).filter((name) => name.startsWith(artifactPrefix) && name !== `${artifactPrefix}contract`).length, fixture.fullArtifactCount);
+    assert(Object.hasOwn(firstParty.dependencies, fixture.catalogPackage), "the Stdio component no longer assembles through its artifact catalog crate");
     const root = readFileSync(join(this.root, "../../🦀️.rs"), "utf8");
-    assert.match(root, /#\[cfg\(feature = "component-app-assembly"\)\]\s+#\[path = "🔌️plugin\/🦀️\.rs"\]\s+pub mod plugin;/u);
-    assert.match(root, /#\[path = "🔌️plugin\/📇️catalog\/🦀️\.rs"\]\s+pub mod catalog;/u);
+    assert.match(root, /^#\[path = "🔌️plugin\/🦀️\.rs"\]\s+pub mod plugin;$/mu);
+    assert(!root.includes("📇️catalog"), "Stdio composition remounted its artifact catalog instead of linking the catalog crate");
     assert(!root.includes("pub mod artifacts"), "Stdio composition remounted artifact implementations");
     const spaceManifestPath = resolve(this.repoRoot, "✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/📦️packages/🦀️rust/Cargo.toml");
     const spaceManifest = readFileSync(spaceManifestPath, "utf8");
@@ -830,7 +809,7 @@ class HomeIoSurfaceScript extends BundleScript {
       const cargo = parseToml(readFileSync(path, "utf8")) as any;
       if (cargo.package?.name?.startsWith(artifactPrefix)) artifactManifests.set(cargo.package.name, cargo);
     }
-    for (const artifact of [...fixture.directArtifacts, ...fixture.sharedCodecs]) assert(!Object.hasOwn(artifactManifests.get(`${artifactPrefix}${artifact}`)?.features ?? {}, fixture.features.componentAppAssembly), `${artifact} keeps a per-consumer app feature, so its library compiles once per consumer feature set instead of once per profile`);
+    for (const artifact of [...fixture.directArtifacts, ...fixture.sharedCodecs]) assert(!Object.hasOwn(artifactManifests.get(`${artifactPrefix}${artifact}`)?.features ?? {}, fixture.componentAppAssembly), `${artifact} keeps a per-consumer app feature, so its library compiles once per consumer feature set instead of once per profile`);
     const homeClosure = new Set<string>();
     const visitArtifact = (name: string): void => {
       if (name === `${artifactPrefix}contract`) return;
@@ -847,15 +826,16 @@ class HomeIoSurfaceScript extends BundleScript {
     for (const artifact of fixture.directArtifacts) assert(spaceDirect.includes(`${artifactPrefix}${artifact}`), `Space misses direct Home I/O artifact ${artifact}`);
     const consumers = cargoTomlFiles(this.repoRoot).filter((path) => path !== join(this.root, "Cargo.toml") && readFileSync(path, "utf8").includes("semio-hub-stdio = {"));
     assert(!consumers.includes(spaceManifestPath));
+    const catalogConsumers = cargoTomlFiles(this.repoRoot).filter((path) => readFileSync(path, "utf8").includes(`${fixture.catalogPackage} = {`));
     const hubManifestPath = resolve(this.repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml");
     const osHostManifestPath = resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🖥️host/📦️packages/🦀️rust/Cargo.toml");
-    assert(consumers.includes(hubManifestPath));
-    const hubSource = readFileSync(hubManifestPath, "utf8");
-    assert(hubSource.includes('"semio-hub-stdio/full-artifact-catalog"'), "native Hub provider must select its concrete Stdio deployment");
+    assert(!consumers.includes(hubManifestPath), "native Hub links the Stdio guest component instead of its artifact catalog");
+    assert(catalogConsumers.includes(hubManifestPath) && !catalogConsumers.includes(spaceManifestPath));
+    assert(readFileSync(hubManifestPath, "utf8").includes(`"dep:${fixture.catalogPackage}"`), "native Hub provider must select the concrete Stdio artifact catalog");
     const neutralManifest = Bun.TOML.parse(readFileSync(resolve(this.repoRoot, ARTIFACT_OWNER, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
     assert(!neutralManifest.package.metadata.component, "general Stdio assembly advertises a concrete component");
     assert(!dependencyNames(neutralManifest).some((name) => name.startsWith(artifactPrefix) && name !== `${artifactPrefix}contract`), "general Stdio assembly statically depends on concrete artifacts");
-    assert(!neutralManifest.features?.[fixture.features.fullArtifactCatalog], "general Stdio assembly contains a default concrete roster");
+    assert(!Object.values(neutralManifest.features ?? {}).flat().some((activation: any) => String(activation).replace(/^dep:/u, "").startsWith(artifactPrefix)), "general Stdio assembly contains a concrete artifact roster");
     const osHostManifest = readFileSync(osHostManifestPath, "utf8");
     const osHostCargo = parseToml(osHostManifest) as any;
     assert(!osHostCargo.features, "OS host declares features, so hub components compile more than one OS host unit");
@@ -869,10 +849,10 @@ class HomeIoSurfaceScript extends BundleScript {
       .filter((path) => path.endsWith(".rs") && path.includes("/🗿️artifacts/🏠️home/") && !path.includes("/🧪️tests/"))
       .flatMap((path) => [...readFileSync(path, "utf8").matchAll(/semio_s_artifact_stdio_([a-z0-9_]+)/gu)].map((match) => match[1]!));
     assert(productionRefs.length > 0 && productionRefs.every((artifact) => selected.includes(artifact)), "Space Home I/O uses an artifact outside its selected Cargo closure");
-    console.log(`stdio-home-io-surface-oracle: AJV=1 TOML=bun+iarna surfaces=${fixture.surfaceCases.length} direct=${fixture.directArtifacts.length} shared=${fixture.sharedCodecs.length} full=${fixture.fullArtifactCount} codecs=${fixture.nativeCodecCount} consumers=${consumers.length}`);
+    console.log(`stdio-home-io-surface-oracle: AJV=1 TOML=bun+iarna library=${fixture.libraryPackage} component=${fixture.componentPackage} direct=${fixture.directArtifacts.length} shared=${fixture.sharedCodecs.length} full=${fixture.fullArtifactCount} codecs=${fixture.nativeCodecCount} consumers=${consumers.length} catalog-consumers=${catalogConsumers.length}`);
     if (mode === "native") {
       const options = { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: buildBudgetMs() };
-      runCmd("cargo", ["check", "--manifest-path", join(this.root, "Cargo.toml"), "-p", PACKAGE_NAME, "--lib", "--target", "wasm32-wasip2", "--no-default-features", "--features", fixture.features.homeIo, "--message-format=short"], options);
+      runCmd("cargo", ["check", "--manifest-path", catalogManifestPath, "-p", fixture.catalogPackage, "--lib", "--target", "wasm32-wasip2", "--message-format=short"], options);
       runCmd("cargo", ["check", "--manifest-path", resolve(this.repoRoot, "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust/Cargo.toml"), "-p", "semio-hub-space", "--lib", "--target", "wasm32-wasip2", "--message-format=short"], options);
     }
   }
@@ -919,10 +899,10 @@ async function testEditorCatalogContract(packageRoot: string): Promise<void> {
 /** 📦️ Every stdio package manifest, parsed by Bun's TOML reader independently of the Rust census law's row scan, with its
  * generated plugin assembly source: the stdio component's own and one per family component under `🧩️extensions`. */
 function stdioPackageManifests(root: string): { readonly id: string; readonly path: string; readonly assembly: string; readonly manifest: StdioPackageManifest }[] {
-  const families = readdirSync(resolve(root, "🧩️extensions"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => resolve(root, "🧩️extensions", entry.name, "📦️packages/🦀️rust/Cargo.toml"));
-  return [join(root, "📦️packages/🦀️rust/Cargo.toml"), ...families.sort()].map((path) => {
+  const families = readdirSync(resolve(root, "🧩️extensions"), { withFileTypes: true }).filter((entry) => entry.isDirectory()).map((entry) => resolve(root, "🧩️extensions", entry.name, "🧩️component/📦️packages/🦀️rust/Cargo.toml"));
+  return [join(root, "🧩️component/📦️packages/🦀️rust/Cargo.toml"), ...families.sort()].map((path) => {
     const manifest = Bun.TOML.parse(readFileSync(path, "utf8")) as StdioPackageManifest;
-    return { id: manifest.package.metadata.component.package.slice("semio:".length), path, assembly: path === join(root, "📦️packages/🦀️rust/Cargo.toml") ? join(root, "🔌️plugin/🦀️.rs") : resolve(dirname(path), "../../🦀️.rs"), manifest };
+    return { id: manifest.package.metadata.component.package.slice("semio:".length), path, assembly: path === join(root, "🧩️component/📦️packages/🦀️rust/Cargo.toml") ? join(root, "🔌️plugin/🦀️.rs") : resolve(dirname(path), "../../../🦀️.rs"), manifest };
   });
 }
 
@@ -1052,7 +1032,7 @@ class EditorComponentCheckScript extends BundleScript {
         const started = Date.now();
         const control: CatalogControl = { cancelled: () => interrupted, remainingMs: () => Math.max(0, (buildBudgetMs() || CATALOG_DEADLINE_MS) - (Date.now() - started)) };
         const lib = manifest.package.name.replaceAll("-", "_");
-        const args = ["rustc", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"];
+        const args = ["build", "--manifest-path", path, "-p", manifest.package.name, "--profile", COMPONENT_PROFILE, "--lib", "--target", "wasm32-wasip2"];
         const controller = new AbortController();
         const observe = (): void => { if (control.cancelled() || control.remainingMs() <= 0) controller.abort(); };
         observe();
@@ -1089,30 +1069,6 @@ class BenchScript extends BundleScript {
   }
 }
 
-type DescriptorSnapshot = { readonly pack?: Buffer; readonly json?: Buffer };
-
-function snapshotDescriptor(ownerRoot: string): DescriptorSnapshot {
-  const read = (name: string): Buffer | undefined => {
-    const path = join(ownerRoot, name);
-    if (!existsSync(path)) return undefined;
-    assertRegularBounded(path, `owner ${name}`);
-    return readFileSync(path);
-  };
-  return { pack: read(DESCRIPTOR_PACK), json: read(DESCRIPTOR_JSON) };
-}
-
-function restoreDescriptor(ownerRoot: string, snapshot: DescriptorSnapshot): void {
-  const packPath = join(ownerRoot, DESCRIPTOR_PACK);
-  const jsonPath = join(ownerRoot, DESCRIPTOR_JSON);
-  rmSync(packPath, { force: true });
-  rmSync(jsonPath, { force: true });
-  if (snapshot.pack !== undefined && snapshot.json !== undefined) {
-    atomicDescriptorPair(ownerRoot, snapshot.pack, snapshot.json);
-    return;
-  }
-  if (snapshot.pack !== undefined) writeFileSync(packPath, snapshot.pack, { flag: "wx" });
-  if (snapshot.json !== undefined) writeFileSync(jsonPath, snapshot.json, { flag: "wx" });
-}
 
 function pathIsWithin(root: string, candidate: string): boolean {
   const rel = relative(root, candidate);
@@ -1128,7 +1084,7 @@ function requireEmptyFreshRoot(repoRoot: string, value: string): string {
   const exact = realpathSync(root);
   const ambientTarget = cargoTargetDirectory(repoRoot);
   const ambientBuild = cargoBuildDirectory(repoRoot);
-  const developmentCache = pluginModulesRootIn(repoRoot, "dev");
+  const developmentCache = pluginModulesRootIn(repoRoot);
   if (pathIsWithin(ambientTarget, exact)) throw new Error("catalog-root refuses the ambient shared target");
   if (pathIsWithin(ambientBuild, exact)) throw new Error("catalog-root refuses the ambient shared build directory");
   if (pathIsWithin(developmentCache, exact)) throw new Error("catalog-root refuses the development cache");
@@ -1141,10 +1097,12 @@ function catalogCargoEnvironment(target: string, inherited: NodeJS.ProcessEnv = 
   return devToolingEnv({ ...inherited, CARGO_TARGET_DIR: target, CARGO_BUILD_BUILD_DIR: join(target, "build"), CARGO_INCREMENTAL: "0" });
 }
 
-/** 🌳 Builds and verifies the one strict stdio row from an empty caller-owned root. */
+/** 🌳 Stages and verifies the one strict stdio row in an empty caller-owned root: the shipped `wasm-release` component, the
+ * committed semantic descriptor and the `ComponentReceiptV1` binding the two — the release pass's own bytes, never a rebuild. */
 class CatalogRootScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { CATALOG_COMMIT_MARKER_FILENAME, auditPluginCatalogSources, createFreshCatalogBuildVerifier, createFreshCatalogCommitMarker } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts");
+    const { componentStageTargetV1 } = await import("../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts");
     const option = (name: string): string | undefined => {
       const index = segments.indexOf(name);
       return index < 0 ? undefined : segments[index + 1];
@@ -1162,83 +1120,60 @@ class CatalogRootScript extends BundleScript {
       cancelled: () => interrupted || (cancelFile !== undefined && existsSync(resolve(cancelFile))),
       remainingMs: () => Math.max(0, CATALOG_DEADLINE_MS - (Date.now() - started)),
     };
-    const cargoTarget = join(buildRoot, `.stdio-cargo-target-${process.pid}`);
     const workRoot = join(buildRoot, `.stdio-work-${process.pid}`);
     const stageRoot = join(buildRoot, `.stdio-stage-${process.pid}`);
     const rowRoot = join(buildRoot, PLUGIN_ID);
-    const ownerRoot = resolve(this.root, "..", "..");
-    const ownerSnapshot = snapshotDescriptor(ownerRoot);
-    let ownerPublished = false;
     let rowPublished = false;
-    const env = catalogCargoEnvironment(cargoTarget);
     try {
       mkdirSync(workRoot, { recursive: true });
       mkdirSync(stageRoot, { recursive: true });
-      const packageId = componentPackageId(join(this.root, "Cargo.toml"));
-      await runControlled("cargo", ["rustc", "--manifest-path", join(this.root, "Cargo.toml"), "-p", PACKAGE_NAME, "--profile", COMPONENT_PROFILE, "--lib", "--crate-type", "cdylib", "--target", "wasm32-wasip2"], this.repoRoot, env, control);
-      const compiled = join(cargoTarget, "wasm32-wasip2", COMPONENT_PROFILE, WASM_OUT);
-      assertContainedBounded(buildRoot, compiled, "compiler component", FRESH_COMPONENT_MAX_BYTES);
-      const raw = join(workRoot, WASM_OUT);
-      await prepareReleaseComponent(compiled, raw, this.repoRoot, env, control);
-      assertContainedBounded(buildRoot, raw, "release component");
+      const packageId = componentPackageId(join(this.root, COMPONENT_MANIFEST));
+      const target = componentStageTargetV1(this.repoRoot, join(this.root, COMPONENT_MANIFEST));
+      const deliverable = componentDeliverableV1(target.crateRoot, target.packageName, SHIPPED_COMPONENT_PROFILE);
+      const fix = "run bun nx run workspace:release, then bun nx run workspace:components describe stdio";
+      if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) throw new Error(`stdio catalog-root stages the shipped component and its receipt from ${relative(this.repoRoot, deliverable.directory)}; ${fix}`);
+      const committedPack = join(target.ownerRoot, DESCRIPTOR_PACK);
+      const findings = componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId: PLUGIN_ID, packageId, profile: SHIPPED_COMPONENT_PROFILE }, readFileSync(deliverable.wasm), readFileSync(committedPack));
+      if (findings.length > 0) throw new Error(`stdio shipped component refused: ${findings.join("; ")}; ${fix}`);
+      assertControlled(control);
       const jco = resolveWorkspaceBin("@bytecodealliance/jco", this.repoRoot);
       if (!jco) throw new Error("missing @bytecodealliance/jco workspace binary; run bun install");
-      const extractRoot = join(workRoot, "extract");
-      mkdirSync(extractRoot, { recursive: true });
-      await runControlled("node", [jco, "transpile", raw, "-o", extractRoot, "--name", "semio_hub_stdio", "--map", "semio:framework/pure=./pure.js", "--map", "semio:framework/host-async=./host-async.js"], this.repoRoot, env, control);
-      const core = join(extractRoot, "semio_hub_stdio.core.wasm");
-      assertContainedBounded(buildRoot, core, "jco-extracted core module");
       const witPath = join(workRoot, "stdio.wit");
-      await runControlled("node", [jco, "wit", raw, "--output", witPath], this.repoRoot, env, control);
+      await runControlled("node", [jco, "wit", deliverable.wasm, "--output", witPath], this.repoRoot, devToolingEnv(), control);
       const wit = readFileSync(witPath, "utf8");
       if (!/world\s+actor\s*\{/.test(wit) || !["reactor", "jobs", "checkpoint", "describe"].every((name) => new RegExp(`export\\s+${name}\\s*;`).test(wit))) {
         throw new Error("wasm-tools WIT oracle rejected the required actor exports");
       }
-      await runControlled("cargo", ["build", "--manifest-path", resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/📦️packages/🦀️rust/Cargo.toml"), "-p", "semio-framework-plugin-describe"], this.repoRoot, env, control);
-      const emitter = join(cargoTarget, "debug", process.platform === "win32" ? "semio-framework-plugin-describe.exe" : "semio-framework-plugin-describe");
-      const descriptorRoot = join(workRoot, "descriptor");
-      await runControlled(emitter, ["describe", raw, "--core", core, "--out", descriptorRoot], this.repoRoot, env, control);
-      const descriptorPackPath = join(descriptorRoot, DESCRIPTOR_PACK);
-      const descriptorJsonPath = join(descriptorRoot, DESCRIPTOR_JSON);
-      assertContainedBounded(buildRoot, descriptorPackPath, "descriptor pack");
-      assertContainedBounded(buildRoot, descriptorJsonPath, "descriptor JSON");
-      const oracle = await verifyIndependentOracles(raw, core, descriptorPackPath, descriptorJsonPath);
       const stagedRaw = join(stageRoot, "raw", WASM_OUT);
-      const stagedCore = join(stageRoot, "core", WASM_OUT);
       const stagedDescriptor = join(stageRoot, "descriptor", DESCRIPTOR_PACK);
-      const copiedRawHash = copyCatalogArtifact(raw, stagedRaw, "raw component", control);
-      const copiedCoreHash = copyCatalogArtifact(core, stagedCore, "core module", control);
-      copyCatalogArtifact(descriptorPackPath, stagedDescriptor, "descriptor pack", control);
-      if (copiedRawHash !== oracle.rawSha256 || copiedCoreHash !== oracle.coreSha256) throw new Error("bounded-copy hashes disagree with WebCrypto oracle");
+      const stagedReceipt = join(stageRoot, "receipt", COMPONENT_RECEIPT_FILE);
+      const copiedRawHash = copyCatalogArtifact(deliverable.wasm, stagedRaw, "raw component", control);
+      copyCatalogArtifact(committedPack, stagedDescriptor, "descriptor pack", control);
+      copyCatalogArtifact(deliverable.receipt, stagedReceipt, "component receipt", control);
+      const oracle = await verifyIndependentOracles(stagedRaw, stagedDescriptor, stagedReceipt);
+      if (copiedRawHash !== oracle.rawSha256) throw new Error("bounded-copy hash disagrees with the WebCrypto oracle");
       assertControlled(control);
       renameSync(stageRoot, rowRoot);
       rowPublished = true;
-      atomicDescriptorPair(ownerRoot, readFileSync(descriptorPackPath), readFileSync(descriptorJsonPath));
-      ownerPublished = true;
       await runControlled("bun", ["nx", "run", "@semio-tech/plugin-registry:generate"], this.repoRoot, devToolingEnv(), control);
       const audit = auditPluginCatalogSources(this.repoRoot, { cancelled: control.cancelled });
       const stdioIssues = audit.issues.filter((issue) => issue.pluginId === PLUGIN_ID);
       if (stdioIssues.length > 0) throw new Error(`stdio source audit failed: ${stdioIssues.map((issue) => issue.diagnostic).join("; ")}`);
       const source = audit.sources.find(({ entry }) => entry.pluginId === PLUGIN_ID);
       if (!source) throw new Error("stdio strict descriptor source was not discovered");
-      if (source.entry.packageName !== PACKAGE_NAME || source.entry.wasmOut !== WASM_OUT) throw new Error("stdio source identity is not bijective with Cargo component identity");
+      if (source.entry.packageName !== COMPONENT_PACKAGE || source.entry.wasmOut !== WASM_OUT) throw new Error("stdio source identity is not bijective with Cargo component identity");
       await runControlled("bun", ["nx", "run", "@semio-tech/plugin-registry:check-generated"], this.repoRoot, devToolingEnv(), control);
       if (source.descriptor.packageId !== packageId) throw new Error("stdio descriptor packageId does not match the Cargo component contract");
       publishCatalogCommitMarker(rowRoot, createFreshCatalogCommitMarker(source, buildRoot, { cancelled: control.cancelled }), CATALOG_COMMIT_MARKER_FILENAME);
       const strictReceipt = createFreshCatalogBuildVerifier(this.repoRoot, buildRoot).verify(source.entry, { cancelled: control.cancelled });
-      const strictHashes = { pluginId: strictReceipt.pluginId, rawSha256: strictReceipt.rawSha256, coreSha256: strictReceipt.coreSha256, descriptorSha256: strictReceipt.descriptorSha256 };
-      if (!isDeepStrictEqual(strictHashes, { pluginId: PLUGIN_ID, ...oracle })) throw new Error("strict verifier and independent oracle receipts disagree");
-      if (await webSha256(strictReceipt.rawBytes) !== oracle.rawSha256 || await webSha256(strictReceipt.coreBytes) !== oracle.coreSha256 || !Buffer.from(strictReceipt.descriptorBytes).equals(Buffer.from(source.packBytes))) throw new Error("strict verifier did not retain the exact admitted bytes");
-      rmSync(cargoTarget, { recursive: true, force: true });
+      const strictHashes = { pluginId: strictReceipt.pluginId, rawSha256: strictReceipt.rawSha256, descriptorSha256: strictReceipt.descriptorSha256 };
+      if (!isDeepStrictEqual(strictHashes, { pluginId: PLUGIN_ID, rawSha256: oracle.rawSha256, descriptorSha256: oracle.descriptorSha256 }) || !isDeepStrictEqual({ ...strictReceipt.receipt }, oracle.receipt)) throw new Error("strict verifier and independent oracle receipts disagree");
+      if (await webSha256(strictReceipt.rawBytes) !== oracle.rawSha256 || !Buffer.from(strictReceipt.descriptorBytes).equals(Buffer.from(source.packBytes))) throw new Error("strict verifier did not retain the exact admitted bytes");
       rmSync(workRoot, { recursive: true, force: true });
-      console.log(JSON.stringify({ schemaVersion: 1, packageId, wasmOut: WASM_OUT, limits: { artifactBytes: ARTIFACT_MAX_BYTES, ioChunkBytes: IO_CHUNK_BYTES, deadlineMs: CATALOG_DEADLINE_MS }, receipt: strictHashes }));
+      console.log(JSON.stringify({ schemaVersion: 2, packageId, wasmOut: WASM_OUT, limits: { artifactBytes: SHIPPED_COMPONENT_MAX_BYTES, ioChunkBytes: IO_CHUNK_BYTES, deadlineMs: CATALOG_DEADLINE_MS }, receipt: strictHashes }));
     } catch (error) {
       if (rowPublished) rmSync(rowRoot, { recursive: true, force: true });
-      if (ownerPublished) {
-        restoreDescriptor(ownerRoot, ownerSnapshot);
-        try { runCmd("bun", ["nx", "run", "@semio-tech/plugin-registry:generate"], { cwd: this.repoRoot, env: devToolingEnv(), budgetMs: Math.max(1, control.remainingMs()) }); } catch { }
-      }
-      for (const path of [stageRoot, workRoot, cargoTarget]) rmSync(path, { recursive: true, force: true });
+      for (const path of [stageRoot, workRoot]) rmSync(path, { recursive: true, force: true });
       throw error;
     } finally {
       process.off("SIGINT", interrupt);
@@ -1265,11 +1200,7 @@ class NativeCodecProjectionScript extends BundleScript {
         const receipts: NativeCodecPublicationReceiptV1[] = [];
         console.log(`[DEBUG] native-codec-projection proving current ${artifact} compiled carrier and live codec`);
         const ownerScript=resolve(this.repoRoot,dirname(authored.definition_path),"📦️packages/🦀️rust/📜️script.ts");
-        await runRepositoryCommand(process.execPath, ["nx", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--excludeTaskDependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"], this.repoRoot, "native-codec-publication", buildBudgetMs(), {
-          env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },
-          signal: control.signal,
-          onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); },
-        });
+        await runRepositoryCommand(this.invocation,process.execPath,["nx", "exec", `--projects=@semio-tech/stdio-${artifact}-rs`, "--excludeTaskDependencies", "--", process.execPath, ownerScript, "test", "long", "--lib", "owned_fixture_publication_reports_canonical_logical_carriers", "--", "--nocapture"],this.repoRoot,"native-codec-publication",{version:1,maximumElapsedMilliseconds:buildBudgetMs(),output:null},{env: { ...process.env, NEXTEST_SUCCESS_OUTPUT: "immediate" },onLine: line => { const prefix = "[DEBUG] native-codec-publication="; const index = line.indexOf(prefix); if (index >= 0) receipts.push(JSON.parse(line.slice(index + prefix.length))); }});
         if (control.signal.aborted || receipts.length !== 1) throw new Error("native-codec-projection requires one successful current native receipt");
         const receipt = receipts[0];
         if (receipt.factoryId !== authored.factory_id) throw new Error("native-codec-projection native factory disagrees with its owner");
@@ -1290,7 +1221,7 @@ class NativeCodecProjectionScript extends BundleScript {
       return;
     }
     if (segments.length) throw new Error("native-codec-projection accepts refresh <factory-id>");
-    runCmd("cargo", ["test", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub-stdio", "--features", "full-artifact-catalog", "--test", "native_openable_provider", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
+    runCmd("cargo", ["test", "--manifest-path", join(this.root, "Cargo.toml"), "-p", "semio-hub-stdio", "--no-default-features", "--test", "native_openable_provider", "--", "native_codec_projection_pack_schema_hashes_equal_live_receipts", "--exact"], { cwd: this.repoRoot, env: devToolingEnv({ SEMIO_NATIVE_CODEC_PROJECTION: "write", CARGO_INCREMENTAL: "0" }), budgetMs: buildBudgetMs() });
   }
 }
 

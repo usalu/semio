@@ -128,7 +128,7 @@ pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 pub const TRINITY_REWRITING_DIALECT: semio_framework_artifact_reference::Dialect = semio_framework_artifact_reference::Dialect { artifact_kind: "s.trinity.rewriting", standard: semio_framework_artifact_reference::StandardId("1"), subset: semio_framework_artifact_reference::SubsetId::ANY };
 //#endregion 🔖️Types
 
-// 📜️ `RewritingSnapshot`/`RewriteRuleMutation` derive their `store::ArtifactDsl`/`protocol::OpText`
+// 📜️ `RewritingSnapshot`/`RewriteRuleMutation` derive their `store::os_store::serialization::ArtifactDsl`/`protocol::OpText`
 // impls directly (see `#[derive(dsl::DslRecord)]` above and `#[derive(dsl::DslEnum)]` in `🔧️op`) —
 // every field already binds through the `dsl::` engine with no foreign types, so no hand-written
 // parser/printer or twin type is needed anywhere in this artifact (unlike `jack`'s `JackSnapshot`).

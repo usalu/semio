@@ -2,7 +2,7 @@
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Identified, Mutation, MutationDiff, SchemaId};
 use crate::host::history_identity;
-use crate::os_store::{create_document_envelope, ArtifactCommand, ArtifactStore, SnapshotRetirementFactory};
+use crate::os_store::{document_materialize::create_document_envelope, store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementFactory};
 use neural::{Atom, Dictionary, Tree, Value as NeuralValue};
 use std::sync::Arc;
 
@@ -1925,9 +1925,9 @@ fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
 #[test]
 fn flow_fixture_default_pack_uses_canonical_envelope_and_round_trips() {
     let host_snapshot = FlowHostSnapshot::default();
-    assert_eq!(<FlowHostSnapshot as crate::os_store::ArtifactDsl>::envelope_id(), "flow.flow");
-    let encoded = <FlowHostSnapshot as crate::os_store::ArtifactPack>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
-    let decoded = <FlowHostSnapshot as crate::os_store::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
+    assert_eq!(<FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::envelope_id(), "flow.flow");
+    let encoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::encode_pack_with(&host_snapshot, &crate::os_store::PackEncodeOptions::default()).expect("default flow fixture pack");
+    let decoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::decode_pack_with(&encoded, &crate::os_store::PackDecodeOptions::default()).expect("default flow fixture unpack");
     assert_eq!(decoded, host_snapshot);
 }
 
@@ -1952,7 +1952,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 #[test]
 fn default_flow_example_dsl_round_trips() {
     let text = include_str!("../../../📚️examples/🗣️.dsl.semio");
-    let host_snapshot = <FlowHostSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
+    let host_snapshot = <FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("🌊️default.flow must parse");
     crate::os_store::test_support::assert_dsl_round_trip(&host_snapshot);
     crate::os_store::test_support::assert_dsl_pack_equivalence(&host_snapshot);
     host_snapshot.retire_cold();

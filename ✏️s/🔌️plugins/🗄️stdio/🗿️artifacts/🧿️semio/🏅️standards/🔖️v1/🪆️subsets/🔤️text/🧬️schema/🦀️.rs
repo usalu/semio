@@ -1,7 +1,7 @@
 //! 🧬️ SemioTextArtifact schema — full artifact state, mirrors `SemioTextSnapshot` field for
 //! field (see `🖼️image`'s `SemioImageArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use crate::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

@@ -4,16 +4,10 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-brep")]
-    use crate::standards::v1::subsets::brep::io::export::serializers::artifacts::step::v_ap214::any::SemioBrepToStep;
-    #[cfg(feature = "conversion-brep")]
-    use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-    use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-    use crate::standards::v1::subsets::brep::io::SemioBrepAnalyzer;
-    #[cfg(feature = "conversion-brep")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of, io::ComposerEntry};
+    use crate::schema::snapshot::SemioBrepSnapshot;
+    use crate::io::SemioBrepAnalyzer;
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
-    use crate::standards::v1::subsets::brep::schema::check_brep_referential_integrity;
+    use crate::schema::check_brep_referential_integrity;
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") };
 
@@ -59,8 +53,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_brep_referential_integrity(&snapshot),
@@ -81,12 +75,10 @@ pub mod derived_composition {
     /// this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") }, store::ArtifactCodec::bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA))
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_brep_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") }, store::bare_artifact_codec::<SemioBrepSnapshot, crate::schema::mutations::SemioBrepMutation>(crate::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-brep")]
-        register_composer_entries(io_bridge_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -95,15 +87,10 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::brep::schema::semio_brep_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioBrepSnapshot, crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation>(crate::standards::v1::subsets::brep::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") })
+            .schemas([crate::schema::semio_brep_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioBrepSnapshot, crate::schema::mutations::SemioBrepMutation>(crate::schema::snapshot::STDIO_SEMIOBREP_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("brep") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-brep")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(io_bridge_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_brep_artifact_inference_descriptor()]);
         builder
     }
 
@@ -112,63 +99,19 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::brep::schema::inferences::semio_brep_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_brep_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
 
-    /// 🌉️ W4 semio↔step bridge — one deserializer entry (writes brep, reads step) + one serializer
-    /// entry (writes step, reads brep) give all 4 `IoKey`s via `register_composer_entries`'s own
-    /// symmetric import/export insertion (see its doc comment) — no separate reverse registration
-    /// needed.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-brep")]
-    fn io_bridge_entries() -> &'static [ComposerEntry] {
-        static ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-        ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioBrepFromStep>(), serializer_entry_of::<SemioBrepToStep>()]).as_slice()
-    }
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(all(test, feature = "conversion-brep"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
 pub use derived_composition::*;
 //#endregion 🎹️DerivedComposition
 
-/// 🖊️ DWG mesh conversion for the BREP artifact.
-#[cfg(feature = "conversion-brep")]
-pub mod dwg {
-    use semio_framework_3d::brep::engine::{BrepError, BrepKernel, GeometryHandle};
-    struct DwgExporter;
-    impl semio_framework_mesh_engine::io::MeshExporter for DwgExporter {
-        fn format_kind(&self) -> &'static str {
-            "dwg"
-        }
-        fn export(&self, mesh: &semio_framework_mesh_engine::MeshData) -> Result<Vec<u8>, String> {
-            let drawing = semio_s_artifact_stdio_dwg::mesh_to_dwg_drawing(mesh);
-            semio_s_artifact_stdio_dwg::dwg_to_bytes(&drawing)
-        }
-    }
-    struct DwgImporter;
-    impl semio_framework_mesh_engine::io::MeshImporter for DwgImporter {
-        fn format_kind(&self) -> &'static str {
-            "dwg"
-        }
-        fn import(&self, bytes: &[u8]) -> Result<semio_framework_mesh_engine::MeshData, String> {
-            let drawing = semio_s_artifact_stdio_dwg::dwg_from_bytes(bytes)?;
-            Ok(semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&drawing))
-        }
-    }
-
-    /// 📤️ Encodes tessellated BREP geometry through the DWG artifact codec.
-    pub fn export(kernel: &dyn BrepKernel, shapes: &[GeometryHandle], deflection: f64) -> Result<Vec<u8>, BrepError> {
-        kernel.export_mesh(shapes, deflection, &DwgExporter)
-    }
-    /// 📥️ Imports a DWG mesh into the BREP artifact's kernel.
-    pub fn import(kernel: &mut dyn BrepKernel, data: &[u8], tolerance: f64) -> Result<GeometryHandle, BrepError> {
-        kernel.import_mesh(data, tolerance, &DwgImporter)
-    }
-}
 
 #[path = "💾️binary/🦀️.rs"]
 pub mod binary;
@@ -180,9 +123,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-    use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation};
-    use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+    use crate::schema::diff::SemioBrepDiff;
+    use crate::schema::mutations::SemioBrepMutation;
+    use crate::schema::snapshot::SemioBrepSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -201,10 +144,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioBrepMutation as protocol::Mutation<SemioBrepSnapshot>>::diff(&mutation, &self.snapshot);
@@ -225,7 +168,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -265,14 +208,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioBrepSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

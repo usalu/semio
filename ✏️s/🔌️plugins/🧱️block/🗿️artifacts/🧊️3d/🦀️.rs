@@ -27,7 +27,7 @@ impl<PA> ArtifactApps for PA where
 }
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
 
 pub const BLOCK_3D_SCHEMA: &str = "block.3d";
 
@@ -118,19 +118,19 @@ pub fn vortex_kinds_from_catalog_and_extra(catalog: &SemioKitSnapshot, extra: &[
 /// deterministic JSON of the derived `SemioKitType` list so peers replaying the same vortex-kinds
 /// converge on the same `child_id` (never a random/incrementing id), mirroring `sourcing`'s
 /// `catalog_child_handle`.
-pub fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::ArtifactChild<SemioKitSnapshot> {
+pub fn catalog_child_handle(kinds: &[Block3dVortexKind]) -> store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot> {
     let catalog = catalog_snapshot_from_vortex_kinds(kinds);
     let canonical = semio_framework_pack_json::to_json_string(&catalog.types);
     let child_id = store::content_id("catalog", canonical.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "kit".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 👁️ The one accessor every render/export/inference/mutation-diff call site funnels through to read
 /// the full reassembled vortex-kinds catalogue, given the composed child handle and the overflow list
 /// directly (works for both `Block3dSnapshot` and `Block3dArtifact`, which mirror these two fields).
-pub fn vortex_kinds_of_parts(catalog: &store::ArtifactChild<SemioKitSnapshot>, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
+pub fn vortex_kinds_of_parts(catalog: &store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>, extra: &[Block3dVortexKindExtra]) -> Vec<Block3dVortexKind> {
     let _ = catalog;
     extra.iter().map(|row| Block3dVortexKind { id: row.id.clone(), name: row.name.clone(), label: row.label.clone(), color: row.color.clone(), default_cable_kind: row.default_cable_kind.clone() }).collect()
 }
@@ -173,7 +173,7 @@ pub fn block3d_world_fit_revision(snapshot: &Block3dSnapshot) -> u32 {
 /// kinds catalogue: mints a fresh content-addressed `catalog` handle, seeds the working-scene cache,
 /// and writes the overflow half — given the composed child handle and overflow list directly (works
 /// for both `Block3dSnapshot` and `Block3dArtifact`).
-pub fn set_vortex_kinds_parts(catalog: &mut store::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: &[Block3dVortexKind]) {
+pub fn set_vortex_kinds_parts(catalog: &mut store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>, extra: &mut Vec<Block3dVortexKindExtra>, kinds: &[Block3dVortexKind]) {
     let handle = catalog_child_handle(kinds);
     *catalog = handle;
     *extra = vortex_kind_extra_list_from_vortex_kinds(kinds);
@@ -321,7 +321,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
         ("s.block.block3d.grammar.4", "grammar", "3d.pack", &[("grammar", "3d.pack")], None),
         ("s.block.block3d.grammar.5", "grammar", "3d.spr", &[("grammar", "3d.spr")], None),
         // 🐛️ D2-capability-claim-repairs: `.document_codec::<EditorApp<Block3dPlayApp>>()` derives
-        // its extension claim from `<Block3dSnapshot as store::ArtifactDsl>::EXTENSION`
+        // its extension claim from `<Block3dSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION`
         // (`…/🧬️schema/📸️snapshot/🦀️.rs`), which is `"block3d"`, not `"block"`.
         ("s.block.block3d.codec.document-1", "codec", "block.3d:block3d", &[("codec", "block.3d"), ("codec-extension", "8:block.3d:block3d")], None),
         ("s.block.block3d.localization.en", "localization", "3D Block", &[], Some(("en", "3D Block"))),

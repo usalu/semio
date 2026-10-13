@@ -55,8 +55,8 @@ pub(super) fn reconstruct(source:&semio_framework_dsl_record::RecordValue,contro
  if values.0.iter().skip(1).any(Option::is_some){return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Equation logical record contains unowned nodes"))}
  control.checkpoint()?;
  let expr=values.0[0].take().ok_or_else(||ValueError::new(ValueRefusalKind::InvalidValue,"Equation logical root missing"))?;
- let(id,target_ref)=target(notation);let notation=store::ArtifactChild::new(id,target_ref);
- let(id,target_ref)=target(results);let results=store::ArtifactChild::new(id,target_ref);
- let(id,target_ref)=target(computed);let computed=store::ArtifactChild::new(id,target_ref);
+ let(id,target_ref)=target(notation);let notation=store::os_store::artifact_child::ArtifactChild::new(id,target_ref);
+ let(id,target_ref)=target(results);let results=store::os_store::artifact_child::ArtifactChild::new(id,target_ref);
+ let(id,target_ref)=target(computed);let computed=store::os_store::artifact_child::ArtifactChild::new(id,target_ref);
  Ok(EquationSnapshot{graph,geometry,notation,results,computed,equation:EquationExprSnapshot{expr,next_label}})
 }

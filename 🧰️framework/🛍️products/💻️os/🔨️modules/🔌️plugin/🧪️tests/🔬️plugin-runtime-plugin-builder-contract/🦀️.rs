@@ -6,6 +6,18 @@ mod plugin_builder_contract_tests {
     //! (history/clipboard/revert/filter/noteShellCommand) still dispatch by string via `handle_action`/
     //! `handle_command` — everything app-specific dispatches via `dispatch_typed`.
     use crate::__semio_dispatch_PluginApp;
+    use crate::interaction_topology::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE;
+    use crate::typed_operation::TypedCommandFullOperationJobFactory;
+    use crate::typed_operation::test_retained_document_cancellation;
+    use crate::typed_operation::test_retained_latest_wins_slot_and_publication_fairness;
+    use crate::typed_operation::test_retained_cancellation_publication_boundaries;
+    use crate::typed_operation::test_typed_operation_lands_its_edit_inside_the_admitting_call;
+    use crate::typed_operation::test_typed_operation_completes_under_a_status_only_host_call;
+    use crate::typed_operation::test_typed_operation_never_parks_a_turn_that_reports_no_runnable_work;
+    use crate::typed_operation::test_typed_operation_slot_release_on_every_outcome;
+    use crate::typed_operation::test_typed_operation_slot_retirement_under_storm;
+    use crate::typed_operation::test_typed_operation_slot_preadmission;
+    use crate::typed_operation::test_retained_keyed_dispatch;
     use semio_framework_value::DslValue;
     use semio_framework_value_derive::{FromValue, ToValue};
     use semio_framework_ui_locale::Locale;
@@ -25,7 +37,7 @@ mod plugin_builder_contract_tests {
     fn prepare_original_fixture_child(emit:&mut Emit<TestMutation,TestConfigMutation>,maximum_items:usize,maximum_bytes:usize)->Result<ChildEmitPreparationStep,Fault>{
         let demand=emit.child_preparation_demands(maximum_bytes).expect("original child preparation quote");
         assert!(demand.copy_bytes<=maximum_bytes&&demand.capacity_bytes<=maximum_bytes&&demand.release_bytes<=maximum_bytes&&demand.depth<=128);
-        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,..crate::app::plugin_demand_grant(demand)};
+        let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items,..crate::bounded_ownership::plugin_demand_grant(demand)};
         emit.prepare_child_one(grant)
     }
     fn label_in(label: &LocalizedLabel, locale: Locale) -> &str {
@@ -43,7 +55,7 @@ mod plugin_builder_contract_tests {
     /// 🎟️ Funds exactly the next close turn an interactive job quotes on its copy, capacity, release and depth axes.
     fn job_close_grant<J: semio_framework_job::InteractiveJob + ?Sized>(job: &J) -> semio_framework_value::retained_clone::RetainedCloneGrant {
         let copy = job.next_close_copy_byte_demand().expect("quoted copy demand");
-        crate::app::plugin_demand_grant(semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: job.next_close_capacity_byte_demand(copy).expect("quoted capacity demand"), release_bytes: job.next_close_release_byte_demand().expect("quoted release demand"), depth: job.next_close_depth_demand().expect("quoted depth demand") })
+        crate::bounded_ownership::plugin_demand_grant(semio_framework_value::RetirementDemand { copy_bytes: copy, capacity_bytes: job.next_close_capacity_byte_demand(copy).expect("quoted capacity demand"), release_bytes: job.next_close_release_byte_demand().expect("quoted release demand"), depth: job.next_close_depth_demand().expect("quoted depth demand") })
     }
 
     /// 🧹️ Drives one interactive job to its terminal-empty witness, granting exactly each quoted turn and checking every receipt fits.
@@ -61,9 +73,9 @@ mod plugin_builder_contract_tests {
     }
 
     /// 🎟️ Spends exactly the quoted close turn of a hosted app.
-    fn app_close_turn<P: PluginApp>(app: &mut P) -> Result<crate::app::PluginLifecycleStep, Fault> {
-        let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
-        let grant = crate::app::plugin_demand_grant(demand);
+    fn app_close_turn<P: PluginApp>(app: &mut P) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+        let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
+        let grant = crate::bounded_ownership::plugin_demand_grant(demand);
         let step = app.close_step(grant)?;
         let _ = app.take_constructor_receipt();
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "close receipt {step:?} exceeds its exact grant {grant:?}");
@@ -71,9 +83,9 @@ mod plugin_builder_contract_tests {
     }
 
     /// 🎟️ Spends exactly the quoted maintenance turn of a hosted app.
-    fn app_maintenance_turn<P: PluginApp>(app: &mut P) -> Result<crate::app::PluginLifecycleStep, Fault> {
-        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
-        let grant = crate::app::plugin_demand_grant(demand);
+    fn app_maintenance_turn<P: PluginApp>(app: &mut P) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
+        let grant = crate::bounded_ownership::plugin_demand_grant(demand);
         let step = app.maintenance_step(grant)?;
         assert!(step.progress().is_none_or(|progress| progress.fits(grant)), "maintenance receipt {step:?} exceeds its exact grant {grant:?}");
         Ok(step)
@@ -81,15 +93,29 @@ mod plugin_builder_contract_tests {
 
     /// ✍️ Authors one `Apply` of document mutations under the plugin's caller-owned identity authority.
     async fn apply_test_mutations(store: &mut store::ArtifactStore<crate::test_app_mutation_fixture::TestSnapshot, crate::test_app_mutation_fixture::TestMutation>, mutations: Vec<crate::test_app_mutation_fixture::TestMutation>) -> Result<store::CommandReceipt, store::VcsError> {
-        crate::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::ArtifactCommand::Apply { mutations, transaction: None }, &mut identity)).await)
+        crate::with_authoring_identity!(|identity| Box::pin(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations, transaction: None }, &mut identity)).await)
     }
 
     use super::{ContextMenuWireRequest, media_export_complete_status};
-    use crate::app::{
-        ActionMeta, App, AppActionRegistry, ArtifactApp, ArtifactDownloadOutput, ArtifactMediaExportHandle, ArtifactOutputChunks, ArtifactView, AsyncTask, ChildEmit, CommandView, ConfigView, DraftView, Emit, EphemeralSnapshot, HistoryCommandFilter, HistoryView, InteractionHoverState, InteractionView, Menu, NoDraft,
-        NoDraftMutation, NoPresence, NoPresenceMutation, PeerPresence, PluginApp, TaskCtx, TaskResolution, VcsArtifactApp, ui_history_panel,
-    };
-    use crate::app::{ArtifactDeserializer, ArtifactSerializer, Dialect, ErasedComposeSource, IoPayload, StandardId, SubsetId, deserializer_entry_of,  serializer_entry_of};
+    use crate::app_emission::{ActionMeta, AsyncTask, ChildEmit, Emit, TaskCtx, TaskResolution};
+    use crate::app_builder::App;
+    use crate::app_contract::{ArtifactApp, EphemeralSnapshot};
+    use crate::plugin_app::PluginApp;
+    use crate::window_kits::AppActionRegistry;
+    use crate::media_contract::ArtifactDownloadOutput;
+    use crate::media_contract::ArtifactMediaExportHandle;
+    use crate::media_contract::ArtifactOutputChunks;
+    use crate::app_views::{ArtifactView, ConfigView, DraftView, InteractionHoverState, InteractionView, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
+    use crate::command_history::ui_history_panel;
+    use crate::history_view::CommandView;
+    use crate::history_view::HistoryCommandFilter;
+    use crate::history_view::HistoryView;
+    use crate::window_kits::Menu;
+    use crate::app_views::PeerPresence;
+    use crate::artifact_instance::VcsArtifactApp;
+    use crate::artifact_io::{ArtifactDeserializer, ArtifactSerializer, deserializer_entry_of, serializer_entry_of};
+    use semio_framework_artifact_reference::{Dialect, StandardId, SubsetId};
+    use semio_framework_os_kernel::io::{ErasedComposeSource, IoPayload};
     use crate::publication_fixture::{ChangePublicationPresence, ChangePublicationTransient, PublicationPresence, PublicationPresenceMutation, PublicationTransient, PublicationTransientMutation};
     use semio_framework_diagnostic::FaultFrom;
     use crate::{IconName, MediaClass, MediaType, ViewModel, selection_count_phrase};
@@ -105,7 +131,7 @@ mod plugin_builder_contract_tests {
     /// 🎯️ M1 (ticket 26/08/17 `design-unified.md`): this module names every other type
     /// explicitly (no `use super::*;`), so the `🕹️IntentDispatchTests` fixture needs its own
     /// import too, rather than relying on `mod app`'s outer glob.
-    use crate::app::TREE_WINDOW_DEFAULT_ROWS;
+    use crate::tree_kit::TREE_WINDOW_DEFAULT_ROWS;
     use semio_framework::TreeWindowRequest;
     use semio_framework_ui_contract::{ActionId, BuiltNode, SurfaceId, Trigger, TreeWindow, UiIntent, UiNodeId, UiRevision, UI_BUILT_CHILDREN_MAX, UI_VALUE_PAGE_ROWS};
     use serde::{Deserialize, Serialize};
@@ -113,8 +139,8 @@ mod plugin_builder_contract_tests {
     use std::collections::BTreeMap;
     use {semio_framework_artifact_reference::ArtifactRef};
     use semio_framework_2d::compute::EngineHandles;
-    use store::{ArtifactPack, };
-    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{os_store::serialization::ArtifactPack, };
+    use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     use store::{MemberFactory, SpaceMember};
     use ui_wgpu::wgpu::FRAMEWORK_HISTORY_BODY_KEY;
     use ui_wgpu::wgpu::{ContextMenuItemSpec, ContextMenuRequest, UiMenuRef};
@@ -149,7 +175,7 @@ mod plugin_builder_contract_tests {
         let transient_generation = fixture["transientGeneration"].as_u64().expect("transient generation");
         let children_digest = u64::from_str_radix(fixture["childrenDigestHex"].as_str().expect("children digest hex"), 16).expect("children digest");
         let identity = test_artifact_owned_tool_job_context_identity_digest;
-        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs"));
+        let source = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../👷️job/🦀️.rs"));
         let tag = source.split("let mut digest = extend(0xcbf2_9ce4_8422_2325, b\"").nth(1).expect("the identity digest seeds itself with its own domain tag").split('"').next().expect("domain tag literal");
         assert_eq!(tag, fixture["domainTag"].as_str().expect("fixture domain tag"), "the recorded oracle belongs to a different identity domain — re-record the digest with the tag that replaced it");
         assert_eq!(identity(app_instance_id, revision, draft_generation, transient_generation, children_digest), expected);
@@ -361,7 +387,7 @@ mod plugin_builder_contract_tests {
 
     #[derive(Debug,semio_framework_value::RetireOwned)]
     struct SpawnCountTask;
-    impl crate::app::AsyncTaskSource<TestMutation,TestConfigMutation,NoDraftMutation> for SpawnCountTask{
+    impl crate::app_emission::AsyncTaskSource<TestMutation,TestConfigMutation,NoDraftMutation> for SpawnCountTask{
         type Future=std::pin::Pin<Box<dyn std::future::Future<Output=Result<TaskResolution<TestMutation,TestConfigMutation,NoDraftMutation>,Fault>>>>;
         fn run(self,ctx:TaskCtx)->Self::Future{Box::pin(async move{
             let bytes=ctx.host.storage_read("counter").await?;
@@ -385,19 +411,19 @@ mod plugin_builder_contract_tests {
         tool: String,
         label: String,
         args: Option<DslValue>,
-        read: Option<store::SnapshotRead<TestSnapshot>>,
+        read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
         completion: Option<ArtifactToolCompletion<TestApp<RETAINED, TOOLS>>>,
-        rejected: Option<crate::app::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
+        rejected: Option<crate::tool_contract::ArtifactToolCompletionRejection<TestApp<RETAINED, TOOLS>>>,
         retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
-        outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes,
+        outcomes: crate::tool_contract::ReservedJobOutcomes,
         completed: bool,
         closing: bool,
     }
 
     impl<const RETAINED: bool, const TOOLS: u8> TestClipboardJob<RETAINED, TOOLS> {
-        fn new(request: crate::app::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
-            let crate::app::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
-            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: crate::reserved_job_outcomes::ReservedJobOutcomes::new(), completed: false, closing: false })
+        fn new(request: crate::tool_contract::ArtifactReservedToolJobRequest<TestApp<RETAINED, TOOLS>>) -> Result<Self, Fault> {
+            let crate::tool_contract::ArtifactReservedToolInput::Action { args, .. } = request.input else { return Err(Fault::from("the contract clipboard requires an action input")) };
+            Ok(Self { tool: request.tool_id, label: request.snapshot.label.clone(), args, read: Some(request.snapshot_read), completion: Some(request.completion), rejected: None, retirement: None, outcomes: crate::tool_contract::ReservedJobOutcomes::new(), completed: false, closing: false })
         }
 
         fn emit(&self) -> Result<Emit<TestMutation, TestConfigMutation, NoDraftMutation>, Fault> {
@@ -431,10 +457,10 @@ mod plugin_builder_contract_tests {
 
         fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
             if !self.outcomes.terminal_is_empty() { return self.outcomes.close_demands(); }
-            if let Some(active) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(active, body); }
-            if self.rejected.is_some() { return store::artifact_retirement_owned_birth_demands(&self.rejected); }
-            if self.read.is_some() { return store::artifact_retirement_owned_birth_demands(&self.read); }
-            if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
+            if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
+            if self.rejected.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.rejected); }
+            if self.read.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.read); }
+            if self.completion.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion); }
             Ok(Default::default())
         }
     }
@@ -470,15 +496,15 @@ mod plugin_builder_contract_tests {
             use semio_framework_job::InteractiveJobCloseStep;
             use semio_framework_value::retained_clone::{RetainedCloneProgress, RetainedCloneStep};
             if !self.closing { return InteractiveJobCloseStep::Blocked; }
-            if !self.outcomes.terminal_is_empty() { return crate::reserved_job_outcomes::close_result(self.outcomes.close_step(grant)); }
+            if !self.outcomes.terminal_is_empty() { return crate::tool_contract::close_result(self.outcomes.close_step(grant)); }
             if grant.maximum_items == 0 { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
             let demand = match self.close_demands(grant.maximum_copy_bytes) { Ok(demand) => demand, Err(error) => return InteractiveJobCloseStep::Refused { kind: error.kind, progress: Default::default() } };
             if grant.maximum_depth < demand.depth { return InteractiveJobCloseStep::Refused { kind: semio_framework_value::ValueRefusalKind::DepthLimit, progress: Default::default() }; }
             if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return InteractiveJobCloseStep::Pending { progress: Default::default() }; }
-            let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
-                else if self.rejected.is_some() { store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
-                else if self.read.is_some() { store::artifact_retirement_admit_owned(&mut self.read, &mut self.retirement, grant) }
-                else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
+            let step = if self.retirement.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) }
+                else if self.rejected.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
+                else if self.read.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.read, &mut self.retirement, grant) }
+                else if self.completion.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
                 else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
             match step {
                 Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
@@ -497,7 +523,7 @@ mod plugin_builder_contract_tests {
         }
     }
 
-    impl<const RETAINED: bool, const TOOLS: u8> crate::app::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
+    impl<const RETAINED: bool, const TOOLS: u8> crate::tool_contract::ArtifactReservedJob for TestClipboardJob<RETAINED, TOOLS> {}
     //#endregion 📋️ContractClipboardFixture
 
     //#region 🧵️RetainedCommandReplayFixture
@@ -804,7 +830,7 @@ mod plugin_builder_contract_tests {
             }
             TestCommand::CompositeEdit { slot, child_id, child_value } => Ok(Emit {
                 artifact_mutations: vec![TestMutation::SetLabel(SetLabel { value: "composite".into() })],
-                child_preparations:std::collections::VecDeque::from([crate::app::ChildEmitPreparation::of::<TestSnapshot,_>(slot.clone(),child_id.clone(),vec![TestMutation::SetCount(SetCount{value:*child_value})])]),
+                child_preparations:std::collections::VecDeque::from([crate::child_emit_preparation::ChildEmitPreparation::of::<TestSnapshot,_>(slot.clone(),child_id.clone(),vec![TestMutation::SetCount(SetCount{value:*child_value})])]),
                 ..Default::default()
             }),
             TestCommand::ProbeChild { slot, child_id } => {
@@ -828,7 +854,7 @@ mod plugin_builder_contract_tests {
         })
     }
 
-    fn test_document_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation>> {
+    fn test_document_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<TestSnapshot, TestMutation>> {
         store::operation_wire_preparation_factory(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>(), test_prepared_operation_wire_source, |operation| {
             let semantics = protocol::SemanticMutation::semantics(operation);
             Some((semantics.entity, semantics.kind))
@@ -851,14 +877,14 @@ mod plugin_builder_contract_tests {
             test_restart_build::<RETAINED, TOOLS>(request).await
         }
 
-        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             if RETAINED {
                 return Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>());
             }
             (TOOLS != TEST_APP_TOOLS_NONE).then(test_document_preparation_factory)
         }
 
-        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+        fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
             (TOOLS != TEST_APP_TOOLS_NONE).then(|| store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
         }
 
@@ -947,7 +973,7 @@ mod plugin_builder_contract_tests {
         }
 
         fn build_transient_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-            Some(crate::app::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default())))
+            Some(crate::transient_publication::transient_store_disposer::<PublicationTransient, PublicationTransientMutation>(std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<PublicationTransient>::default())))
         }
 
         async fn initial_snapshot() -> TestSnapshot {
@@ -1029,7 +1055,7 @@ mod plugin_builder_contract_tests {
             view_state.active_tool_id.iter().map(|tool| (tool.clone(), vec![ui_wgpu::wgpu::WindowMeasure::measure_group(format!("{tool}-measure"), format!("{tool} tool"), Vec::new())])).collect()
         }
 
-        fn build_reserved_tool_job(request: crate::app::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
+        fn build_reserved_tool_job(request: crate::tool_contract::ArtifactReservedToolJobRequest<Self>) -> Result<Option<ArtifactReservedToolJob>, Fault> {
             if !matches!(request.tool_id.as_str(), "copy" | "cut" | "paste") {
                 return Ok(None);
             }
@@ -1114,7 +1140,7 @@ mod plugin_builder_contract_tests {
         for case in fixture["cases"].as_array().expect("projection cases") {
             let rows = case["rows"].as_array().expect("declared rows");
             let text = |row: &Value, name: &str| row[name].as_str().expect("literal child field").to_string();
-            let snapshot = TestSnapshot { count: i32::MIN, label: "parent\0引用😀".into(), slot: rows.iter().map(|row| store::ArtifactChild::new(text(row, "childId"), ArtifactRef { artifact_id: text(row, "artifactId"), dialect: ArtifactDialect { artifact_kind: text(row, "kind"), standard: text(row, "standard"), subset: text(row, "subset") } })).collect() };
+            let snapshot = TestSnapshot { count: i32::MIN, label: "parent\0引用😀".into(), slot: rows.iter().map(|row| store::os_store::artifact_child::ArtifactChild::new(text(row, "childId"), ArtifactRef { artifact_id: text(row, "artifactId"), dialect: ArtifactDialect { artifact_kind: text(row, "kind"), standard: text(row, "standard"), subset: text(row, "subset") } })).collect() };
             let projected = <KeyedTestApp as ArtifactApp>::child_restore_projection(&snapshot).expect("default projects the actual declared snapshot");
             assert_eq!(projected.len(), rows.len());
             assert_eq!(projected.is_empty(), rows.is_empty());
@@ -1205,23 +1231,23 @@ mod plugin_builder_contract_tests {
 
     impl ArtifactOwnedDisposer<TestCommand> for KeyedTestCommandDisposer {
         fn retirement_demands(&self, _: &TestCommand, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-            if let Some(active) = self.active.as_ref() { return store::artifact_retirement_box_demands(active, body); }
-            if self.pending.is_some() { return store::artifact_retirement_owned_birth_demands(&self.pending); }
+            if let Some(active) = self.active.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
+            if self.pending.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending); }
             Ok(if self.moved { Default::default() } else { semio_framework_value::RetirementDemand { copy_bytes: std::mem::size_of::<TestCommand>(), depth: 1, ..Default::default() } })
         }
 
-        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+        fn close_step(&mut self, command: &mut TestCommand, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
             use semio_framework_value::retained_clone::RetainedCloneProgress;
-            if grant.maximum_items == 0 { return Ok(crate::app::PluginLifecycleStep::Progress(Default::default())); }
-            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(crate::app::plugin_retirement_fault)?;
-            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(crate::app::PluginLifecycleStep::Progress(Default::default())); }
+            if grant.maximum_items == 0 { return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
+            let demand = self.retirement_demands(command, grant.maximum_copy_bytes).map_err(crate::bounded_ownership::plugin_retirement_fault)?;
+            if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes || grant.maximum_depth < demand.depth { return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default())); }
             if !self.moved {
                 self.pending = Some(std::mem::replace(command, TestCommand::NoopMutation));
                 self.moved = true;
-                return Ok(crate::app::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
+                return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: std::mem::size_of::<TestCommand>(), ..Default::default() }));
             }
-            let step = if self.active.is_some() { store::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(crate::app::plugin_retirement_fault)?;
-            Ok(crate::app::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
+            let step = if self.active.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant) } else { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.active, grant) }.map_err(crate::bounded_ownership::plugin_retirement_fault)?;
+            Ok(crate::bounded_ownership::PluginLifecycleStep::retained(step, self.terminal_is_empty(command)))
         }
 
         fn terminal_is_empty(&self, command: &TestCommand) -> bool { self.moved && self.pending.is_none() && self.active.is_none() && matches!(command, TestCommand::NoopMutation) }
@@ -1229,16 +1255,16 @@ mod plugin_builder_contract_tests {
     }
 
     struct KeyedTestJobSources {
-        raw_wire: Option<crate::app::ArtifactToolRawInput>,
-        read: Option<store::SnapshotRead<TestSnapshot>>,
+        raw_wire: Option<crate::tool_contract::ArtifactToolRawInput>,
+        read: Option<store::os_store::snapshot_read::SnapshotRead<TestSnapshot>>,
         snapshot: Option<std::sync::Arc<TestSnapshot>>,
         config: Option<std::sync::Arc<TestConfig>>,
         history: Option<std::sync::Arc<HistoryView>>,
-        window_config: Option<crate::app::WindowConfigSnapshot>,
+        window_config: Option<crate::window_config::WindowConfigSnapshot>,
         interaction: Option<std::sync::Arc<InteractionState>>,
         hover: Option<std::sync::Arc<InteractionHoverState>>,
         context: Option<ArtifactOwnedContextHandle<KeyedTestApp>>,
-        instance_owner: Option<crate::app::ArtifactInstanceOperationOwnerHandle>,
+        instance_owner: Option<crate::tool_contract::ArtifactInstanceOperationOwnerHandle>,
         output: Option<ArtifactOutputChunks>,
         parent_document_id: Option<String>,
         authoring_seed: Option<String>,
@@ -1247,8 +1273,8 @@ mod plugin_builder_contract_tests {
     impl KeyedTestJobSources {
         /// 🧹️ The next original request input to retire, quoted as the typed retirement lane that owns it: `None` once every input is physically returned.
         fn demands(&self) -> Result<Option<semio_framework_value::RetirementDemand>, semio_framework_value::ValueError> {
-            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_owned_birth_demands(&self.$field).map(Some); } }; }
-            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_shared_lease_birth_demands(&self.$field).map(Some); } }; }
+            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.$field).map(Some); } }; }
+            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_shared_lease_birth_demands(&self.$field).map(Some); } }; }
             if self.raw_wire.is_some() { return Ok(Some(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
             if self.window_config.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner, "keyed fixture has no retirement lane for a window config snapshot")); }
             owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
@@ -1257,8 +1283,8 @@ mod plugin_builder_contract_tests {
         }
 
         fn step(&mut self, active: &mut Option<Box<dyn store::ErasedSnapshotRetirement>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<semio_framework_value::retained_clone::RetainedCloneStep>, semio_framework_value::ValueError> {
-            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
-            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::artifact_retirement_admit_shared_lease(&mut self.$field, active, grant).map(Some); } }; }
+            macro_rules! owned { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.$field, active, grant).map(Some); } }; }
+            macro_rules! lease { ($field:ident) => { if self.$field.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_shared_lease(&mut self.$field, active, grant).map(Some); } }; }
             if self.raw_wire.take().is_some() { return Ok(Some(semio_framework_value::retained_clone::RetainedCloneStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, ..Default::default() }))); }
             owned!(read); owned!(context); owned!(instance_owner); owned!(output); owned!(parent_document_id); owned!(authoring_seed);
             lease!(snapshot); lease!(config); lease!(history); lease!(interaction); lease!(hover);
@@ -1268,7 +1294,7 @@ mod plugin_builder_contract_tests {
 
     struct KeyedTestJob {
         sources: Option<KeyedTestJobSources>,
-        rejected: Option<crate::app::ArtifactToolCompletionRejection<KeyedTestApp>>,
+        rejected: Option<crate::tool_contract::ArtifactToolCompletionRejection<KeyedTestApp>>,
         admitted: bool,
         retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
         command: Option<Box<TestCommand>>,
@@ -1282,11 +1308,11 @@ mod plugin_builder_contract_tests {
     impl KeyedTestJob {
         fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
             if let Some(raw) = self.raw.as_ref() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: raw.next_close_copy_byte_demand()?, capacity_bytes: raw.next_close_capacity_byte_demand(body)?, release_bytes: raw.next_close_release_byte_demand()?, depth: raw.next_close_depth_demand()? }); }
-            if let Some(active) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(active, body); }
-            if self.command.is_some() { return store::artifact_retirement_owned_birth_demands(&self.command); }
-            if self.completion.is_some() { return store::artifact_retirement_owned_birth_demands(&self.completion); }
+            if let Some(active) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(active, body); }
+            if self.command.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.command); }
+            if self.completion.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion); }
             if let Some(sources) = self.sources.as_ref() { return Ok(sources.demands()?.unwrap_or(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() })); }
-            if self.rejected.is_some() { return store::artifact_retirement_owned_birth_demands(&self.rejected); }
+            if self.rejected.is_some() { return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.rejected); }
             Ok(Default::default())
         }
     }
@@ -1327,7 +1353,7 @@ mod plugin_builder_contract_tests {
         }
 
         fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
+        crate::app_testing::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -1347,9 +1373,9 @@ mod plugin_builder_contract_tests {
                 if raw.terminal_is_empty() { self.raw.take(); }
                 return match step { InteractiveJobCloseStep::Complete { progress } => InteractiveJobCloseStep::Pending { progress }, step => step };
             }
-            let step = if self.retirement.is_some() { store::artifact_retirement_box_close_step(&mut self.retirement, grant) }
-                else if self.command.is_some() { store::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
-                else if self.completion.is_some() { store::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
+            let step = if self.retirement.is_some() { store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) }
+                else if self.command.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.command, &mut self.retirement, grant) }
+                else if self.completion.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.retirement, grant) }
                 else if let Some(sources) = self.sources.as_mut() {
                     match sources.step(&mut self.retirement, grant) {
                         Ok(Some(step)) => Ok(step),
@@ -1357,7 +1383,7 @@ mod plugin_builder_contract_tests {
                         Err(error) => Err(error),
                     }
                 }
-                else if self.rejected.is_some() { store::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
+                else if self.rejected.is_some() { store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.rejected, &mut self.retirement, grant) }
                 else { Ok(RetainedCloneStep::Complete(RetainedCloneProgress::default())) };
             match step {
                 Ok(step) if self.terminal_is_empty() => InteractiveJobCloseStep::Complete { progress: step.progress() },
@@ -1460,7 +1486,7 @@ mod plugin_builder_contract_tests {
             let job = KeyedTestJob { command: Some(request.command), completion: Some(request.completion), raw: None, page: 0, base_count, closing: false, sources: Some(sources), rejected: None, admitted: false, retirement: None };
             Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
         }
-        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             Some(store::mutation_apply_preparation_factory::<TestSnapshot, TestMutation>())
         }
         fn build_document_store_disposer() -> Option<Box<dyn ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
@@ -1510,11 +1536,11 @@ mod plugin_builder_contract_tests {
 
     #[test]
     fn keyed_fixture_no_state_disposers_and_retirement_factories_close_live_owners() {
-        use crate::app::{plugin_demand_grant, plugin_page_grant, PluginLifecycleStep};
+        use crate::bounded_ownership::{plugin_demand_grant, plugin_page_grant, PluginLifecycleStep};
         use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress};
-        let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+        let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
         fn close_root<T: Send + Sync + 'static>(factory: std::sync::Arc<dyn store::SnapshotRetirementFactory<T>>, root: T) {
-            let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+            let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
             let admission = plugin_page_grant(page);
             let (mut retirement, born) = match store::SnapshotRetirementFactory::retire(factory.as_ref(), std::sync::Arc::new(root), admission) {
                 Ok(admitted) => admitted,
@@ -1631,7 +1657,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_latest_wins_registered_dispatch_rebases_worker_and_publishes_real_document() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1653,7 +1679,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn typed_operation_ingress_pre_admits_the_exact_slot_before_it_mints_an_operation_id() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1666,7 +1692,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn every_admitted_typed_operation_slot_is_released_by_the_host_continuation_that_reports_it_runnable() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1679,7 +1705,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_settled_a_replaced_and_a_cancelled_typed_operation_all_release_their_exact_slot() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1692,7 +1718,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_mounted_typed_operation_never_parks_a_turn_that_reports_no_runnable_work() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1705,7 +1731,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_status_only_host_call_finishes_every_typed_operation_it_admitted() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1718,7 +1744,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn an_admitting_host_call_hands_back_the_terminal_lane_it_earned() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1731,7 +1757,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn microsecond_registered_factory_dispatch_preserves_exact_half_ms_fake_clock() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1762,7 +1788,7 @@ mod plugin_builder_contract_tests {
     /// `🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts`'s `poll`, which stamps `maxFrames: 8` — so a law that
     /// drives the continuation reads the exact grant production does, not a generous test one.
     fn reactor_native_budget() -> semio_framework::kernel::Budget {
-        semio_framework::kernel::Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
+        semio_framework::kernel::Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 50_000_000, deadline_ms: 100, max_effects: 64, max_patch_bytes: 1 << 20, max_frames: 8 }
     }
 
     /// 📄️ LAW: k live operations each holding a presentable result page retire in ONE host crossing.
@@ -1780,7 +1806,7 @@ mod plugin_builder_contract_tests {
     /// published as its own acknowledgeable `Fault` page on exactly the wire this law measures.
     #[semio_framework_async_macros::async_test]
     async fn concurrent_typed_operations_hand_every_presentable_page_to_one_turn() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1792,21 +1818,21 @@ mod plugin_builder_contract_tests {
         const OPERATIONS: usize = 4;
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         for index in 0..OPERATIONS {
             let command = TestCommand::CompositeEdit { slot: String::new(), child_id: format!("batch-{index}").into(), child_value: index as i32 + 1 };
             app.dispatch_typed(command, &meta, &mut identity).await.unwrap();
         }
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let (mut pages, mut crossings, mut widest) = (0usize, 0usize, 0usize);
         for _ in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() * OPERATIONS as u64 {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
             let more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -1854,7 +1880,7 @@ mod plugin_builder_contract_tests {
     /// capacity").
     #[semio_framework_async_macros::async_test]
     async fn a_many_mutation_publication_folds_every_mutation_and_is_never_terminated_as_stalled() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1865,18 +1891,18 @@ mod plugin_builder_contract_tests {
 
         const ROWS: i32 = 4_400;
         let id = 4_103;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         app.dispatch_typed(TestCommand::BulkEdit { rows: ROWS }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.unwrap();
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
         let mut faults: Vec<String> = Vec::new();
         let mut units = 0u64;
         for _ in 0..(ROWS as u64 * 8) {
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
             units += 1;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -1911,7 +1937,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn a_host_crossing_outranks_every_background_hold_on_the_same_app() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1921,10 +1947,10 @@ mod plugin_builder_contract_tests {
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 4_101;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let background_entered = std::sync::atomic::AtomicBool::new(false);
@@ -1973,7 +1999,7 @@ mod plugin_builder_contract_tests {
     /// runnable turn still carried its exact receipt. The ceiling constant is untouched.
     #[semio_framework_async_macros::async_test]
     async fn retained_operation_continues_after_command_admission_until_publication_and_retirement() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -1984,13 +2010,13 @@ mod plugin_builder_contract_tests {
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🧫️fixtures/🔣️.json")).unwrap();
         let id = fixture["wire"]["receiver"].as_u64().unwrap() as u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let value = fixture["command"]["value"].as_i64().unwrap() as i32;
         let command = TestCommand::CompositeEdit { slot: String::new(), child_id: fixture["command"]["target"].as_str().unwrap().into(), child_value: value };
         app.dispatch_typed(command, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.unwrap();
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let mut terminal = false;
@@ -1999,7 +2025,7 @@ mod plugin_builder_contract_tests {
         let mut turns: Vec<(bool, bool, bool)> = Vec::new();
         for turn in 0..fixture["command"]["maximumTurns"].as_u64().unwrap() {
             super::plugin_step_live_cleanup(&runtime).unwrap();
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.unwrap();
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.unwrap();
             let more = scan.runnable || scan.contended;
             spent += u64::from(scan.runnable || !scan.contended);
             turns.push((scan.runnable, scan.contended, output.is_some()));
@@ -2062,7 +2088,7 @@ mod plugin_builder_contract_tests {
 
     #[semio_framework_async_macros::async_test]
     async fn retained_child_group_publishes_one_acknowledged_parent_child_gesture_and_retires() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -2074,16 +2100,16 @@ mod plugin_builder_contract_tests {
 use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactReferenceText as _};
 
         let id = 41;
-        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp, TestMembers>::with_registry(KeyedTestApp, keyed_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let declared = ArtifactRef { artifact_id: "child-1".into(), dialect: test_child_dialect().await }.to_uri();
         apply_test_mutations(app.test_store_mut().await, vec![TestMutation::SetSlotChildren(SetSlotChildren { children: vec![declared] })]).await.expect("the actual parent declares the exact member before registration");
         let child = new_test_child("child-1").await.expect("construct child");
-        app.register_child("slot", "child-1", test_child_dialect().await, child, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child");
+        app.register_child("slot", "child-1", test_child_dialect().await, child, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child");
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 9 }, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("admit retained child gesture");
 
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(id, cell.clone());
         let acknowledgement_fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/🥇️tool-latest-wins.json")).expect("language-neutral result ACK fixture");
@@ -2106,7 +2132,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     pump.faulted
                 );
             }
-            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("drive one production publication turn");
+            let (output, scan) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::turn(reactor_native_budget()), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("drive one production publication turn");
             let mut more = scan.runnable || scan.contended;
             if let Some((receiver, output)) = output {
                 assert_eq!(receiver, id);
@@ -2133,7 +2159,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                                 }
                             }
                             assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= expected_entries, "production maintenance callback must execute before counting one delayed ACK poll");
-                            let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("delayed renderer ACK does not fault continuation");
+                            let (output, _) = super::plugin_continue_typed_operations(&runtime, super::TypedOperationGrant::UNIT, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("delayed renderer ACK does not fault continuation");
                             assert!(output.as_ref().and_then(|(_, output)| output.typed_operation_results.first()).is_none(), "presented result page must not be republished before an explicit retry deadline");
                         }
                         assert!(cell.maintenance_probe_entries.load(std::sync::atomic::Ordering::Relaxed) >= maintenance_entries_before + pre_ack_polls);
@@ -2179,8 +2205,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("child snapshot").count, 9);
 
             let admitted = active.app.dispatch_action("undo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("undo retained group");
-            let undone = crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo publication");
+            let undone = crate::artifact_instance::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("undo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("undo publication");
             let skipped: Vec<String> = undone.diagnostics.iter().map(|diagnostic| diagnostic.message.clone()).collect();
             assert!(skipped.is_empty(), "the group undo skips no member of its own gesture: {skipped:?}");
             assert_eq!(active.app.snapshot().expect("undone parent snapshot").count, 0, "the parent's edit of the gesture is undone with its group (parent tail group {:?})", store::SpaceMember::tail_group_id(&active.app.store).await);
@@ -2188,8 +2214,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(child.snapshot().expect("undone child snapshot").count, 0);
 
             let admitted = active.app.dispatch_action("redo", None, &ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None }, &mut identity).await.expect("redo retained group");
-            crate::app::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
-            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("redo publication");
+            crate::artifact_instance::settle_framework_reserved_admission(&mut active.app, admitted).await.expect("redo reserved-job commit");
+            artifact_app_laws::settle_registered_typed_operation(&mut active.app, id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("redo publication");
             assert_eq!(active.app.snapshot().expect("redone parent snapshot").count, 9);
             let TestMembers::Child(child) = &mut active.app.children.get_mut(&("slot".to_string(), "child-1".to_string())).expect("redone child").member;
             assert_eq!(child.snapshot().expect("redone child snapshot").count, 9);
@@ -2267,7 +2293,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     async fn settle_reserved(app: &mut VcsArtifactApp<TestApp>, admitted: semio_framework::InvocationResult) -> semio_framework::InvocationResult {
-        crate::app::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
+        crate::artifact_instance::settle_framework_reserved_admission(app, admitted).await.expect("settle reserved")
     }
 
     async fn reserved_action(app: &mut VcsArtifactApp<TestApp>, action: &str, args: Option<&DslValue>, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> semio_framework::InvocationResult {
@@ -2284,7 +2310,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..MAINTENANCE_STAGES {
             app.maintenance_stage = stage;
             match app_maintenance_turn(app) {
-                Ok(crate::app::PluginLifecycleStep::Blocked { .. }) => return,
+                Ok(crate::bounded_ownership::PluginLifecycleStep::Blocked { .. }) => return,
                 Ok(_) => {}
                 Err(fault) => panic!("{what}: bounded maintenance faulted: {fault:?}"),
             }
@@ -2299,7 +2325,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn drain_and_close_fixture(app: &mut VcsArtifactApp<TestApp>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
-                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
+                let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let _ = PluginApp::maintenance_step(app, grant);
             }
         }
@@ -2310,7 +2336,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     fn drain_and_close_composed_fixture(app: &mut VcsArtifactApp<TestApp, TestMembers>, mounted_policy: crate::MountedOwnerPolicyV1) {
         for _ in 0..64 {
             for _ in 0..MAINTENANCE_STAGES {
-                let grant=crate::app::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
+                let grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1.min(mounted_policy.maintenance.maximum_items),..mounted_policy.maintenance};
                 let _ = PluginApp::maintenance_step(app, grant);
             }
         }
@@ -2382,7 +2408,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// slot — twelve more of them overflowed the 2 MiB bounded thread stack that
     /// `one_framework_reserved_route_fits_a_bounded_thread_stack` pins. One `resolve_ready` per
     /// statement drops each temporary at its own semicolon instead.
-    fn declare_test_app_verbs(builder: crate::app::AppBuilder) -> crate::app::AppBuilder {
+    fn declare_test_app_verbs(builder: crate::app_builder::AppBuilder) -> crate::app_builder::AppBuilder {
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("increment", LocalizedLabel::data("Increment")));
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("setLabel", LocalizedLabel::data("Set Label")));
         let builder = ::semio_framework_async::poll::resolve_ready(builder.mutation("streamLabel", LocalizedLabel::data("Stream Label")));
@@ -2485,7 +2511,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2513,8 +2539,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
-            let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+            let mut admitted = crate::artifact_instance::settle_framework_reserved_admission(&mut self.0, admitted).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2540,7 +2566,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let before_edit_id = app.0.test_last_edit_id();
         let before_tail = app.0.test_edit_tail_lengths();
         let mut admitted = PluginApp::handle_intent_frame(&mut app.0, intent, meta, identity).await?;
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
         admitted.requested_effects.extend(receipt.effects);
         admitted.events.extend(receipt.events);
         if let Some(scope) = receipt.ui_scope {
@@ -2562,7 +2588,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// hands its reducer to a worker too, so a law that reads the store right after one observed the
     /// pre-dispatch revision.
     async fn settle_contract_app(app: &mut ContractApp) {
-        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("registered fixture settles its addressed dispatch");
+        artifact_app_laws::settle_registered_typed_operation(&mut app.0, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("registered fixture settles its addressed dispatch");
     }
 
     async fn contract_app_under_test(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
@@ -2572,8 +2598,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🧪️ [`contract_app_under_test`] over an explicit registry — the flat-menu and interaction
     /// fixtures declare their own manifests but need the same mounted, self-closing shape.
     async fn contract_app_with(registry: AppActionRegistry, mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractApp {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractApp(app, mounted_policy)
     }
@@ -2590,16 +2616,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// generic surface (a generic bound never applies a `Deref` coercion). Those laws own the close
     /// themselves, exactly as they did before.
     async fn contract_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
 
     /// 🧩️ [`contract_app_raw`] over the composed member roster.
     async fn contract_composed_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp, TestMembers> {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -2611,7 +2637,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// verbs and supplying no proof row cannot be CONSTRUCTED at all (`interactive-job.catalog-incomplete`),
     /// which is the same fail-closed join from the other side.
     async fn unproved_contract_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp<false, TEST_APP_TOOLS_NONE>> {
-        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await
+        VcsArtifactApp::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity).await
     }
 
     /// 🧩️ [`ContractApp`] over the composed member roster — same three laws by construction.
@@ -2662,7 +2688,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let mut admitted = self.0.dispatch_typed(command, meta, identity).await?;
-            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+            let mut receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2693,8 +2719,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             let before_edit_id = self.0.test_last_edit_id();
             let before_tail = self.0.test_edit_tail_lengths();
             let admitted = self.0.dispatch_action(action, args, meta, identity).await?;
-            let mut admitted = crate::app::settle_framework_reserved_admission(&mut self.0, admitted).await?;
-            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await?;
+            let mut admitted = crate::artifact_instance::settle_framework_reserved_admission(&mut self.0, admitted).await?;
+            let receipt = artifact_app_laws::settle_registered_typed_operation(&mut self.0, meta.instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await?;
             admitted.requested_effects.extend(receipt.effects);
             admitted.events.extend(receipt.events);
             if let Some(scope) = receipt.ui_scope {
@@ -2712,8 +2738,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     async fn contract_composed_app(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> ContractComposedApp {
-        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = Box::pin(VcsArtifactApp::<TestApp, TestMembers>::with_registry(TestApp::<false>::default(), migrated_contract_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         ContractComposedApp(app, mounted_policy)
     }
@@ -2739,7 +2765,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// not the cause — the clause above still proves there is no factory to find.
     #[semio_framework_async_macros::async_test]
     async fn activated_tool_factory_keys_are_an_exact_bijection_with_migrated_declarations() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
@@ -2750,7 +2776,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let declared = registry.test_migrated_tool_ids();
         let controller_id = registry.test_controller_id().to_string();
         let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry_on_bus(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), registry.clone(), platform.action_bus.clone(), protocol::ActorId(LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         let registered: std::collections::BTreeSet<String> = app
             .test_registered_tool_keys()
             .into_iter()
@@ -2769,24 +2795,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(registered.difference(&declared).cloned().collect::<std::collections::BTreeSet<_>>(), framework_registered_without_declaration, "an activated factory without a manifest declaration must be one of the framework's own reserved surface verbs");
         assert_eq!(declared.difference(&registered).cloned().collect::<std::collections::BTreeSet<_>>(), framework_directly_routed_migrated, "a migrated declaration with no activated factory is a dead action unless the framework routes it directly");
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).contains("} else if matches!(action, SET_ACTIVE_TOOL_ACTION_ID | SET_ACTIVE_UTILITY_ACTION_ID) {"),
             "the only reason `setActiveUtility` may carry no factory is its direct `dispatch_emit` arm in `handle_action_invocation`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==CANCEL_TYPED_OPERATION_ACTION_ID{returnself.dispatch_operation_cancellation(args,meta).await;}"),
             "the only reason `cancelTypedOperation` may carry no factory is its direct `dispatch_operation_cancellation` arm at the head of `dispatch_action`"
         );
-        let runtime_source: String = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect();
+        let runtime_source: String = include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect();
         assert!(
             runtime_source.split("ifis_time_travel_action_id(action){").nth(1).and_then(|arm| arm.split('}').next()).is_some_and(|arm| arm.ends_with("returnBox::pin(self.dispatch_time_travel_action(action,args,meta,identity)).await;")),
             "the only reason the history-edit verbs may carry no factory is their host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifaction==semio_framework::HOST_EVENT_ACTION_ID{returnBox::pin(self.dispatch_host_event_action(args,meta,identity)).await;}"),
             "the only reason `hostEvent` may carry no factory is its host-driven, boxed arm at the head of `dispatch_action`"
         );
         assert!(
-            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🦀️.rs")).split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧵️instance/🦀️.rs")).split_whitespace().collect::<String>().contains("ifmatches!(action,semio_framework::EXPORT_ARTIFACT_DOCUMENT_ACTION_ID|semio_framework::IMPORT_ARTIFACT_DOCUMENT_ACTION_ID){returnErr(Fault::new(FaultOrigin::Framework,FaultCode::new(\"framework.document-transfer.shell-owned\")"),
             "the only reason the document transfer verbs may carry no factory is their shell-owned refusal at the head of `dispatch_action`"
         );
         let platform_visible = platform.action_bus.keys().into_iter().filter(|key| key.controller_id == controller_id).map(|key| key.tool_id).collect::<std::collections::BTreeSet<_>>();
@@ -2812,7 +2838,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 1 MiB wire admission that the bus has never granted them.
     #[semio_framework_async_macros::async_test]
     async fn shared_framework_actions_have_exact_registered_factory_and_joined_bus_identity() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
@@ -2872,24 +2898,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[test]
     fn shared_framework_job_is_cancellable_resumable_and_boundedly_closeable() {
         fn context<'a>(cancel: semio_framework_job::CancelToken, preview_sequence: &'a mut u64) -> semio_framework_job::StepContext<'a> {
-            semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), preview_sequence, crate::app::artifact_app_laws::fixture_progress())
+            semio_framework_job::StepContext::new(semio_framework_job::allocate_operation_id(), semio_framework_job::Generation(7), semio_framework_job::StepBudget::new(4_096, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), preview_sequence, crate::app_testing::artifact_app_laws::fixture_progress())
         }
 
         let cancel_before = semio_framework_job::CancelToken::root_now();
         cancel_before.cancel_now();
         let mut cancelled_before = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
         let mut preview_sequence = 0;
-        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled_before, &mut context(cancel_before, &mut preview_sequence)), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        assert!(matches!(crate::app_testing::artifact_app_laws::fixture_step(&mut cancelled_before, &mut context(cancel_before, &mut preview_sequence)), crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled));
 
         let cancel_after = semio_framework_job::CancelToken::root_now();
         let mut cancelled_after = FrameworkSetSelectionModeJob::new(vec![1; 8_193], 1);
         let mut preview_sequence = 0;
-        match crate::app::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after.clone(), &mut preview_sequence)) {
-            crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {}
+        match crate::app_testing::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after.clone(), &mut preview_sequence)) {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Preview(_) => {}
             _ => panic!("first retained step must publish preview"),
         }
         cancel_after.cancel_now();
-        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after, &mut preview_sequence)), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        assert!(matches!(crate::app_testing::artifact_app_laws::fixture_step(&mut cancelled_after, &mut context(cancel_after, &mut preview_sequence)), crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled));
 
         let operation = semio_framework_job::Operation::new(semio_framework_job::allocate_operation_id(), semio_framework_job::RevisionId(11), semio_framework_job::Generation(3), 29);
         let mut retained = ArtifactReservedToolJob::new(FrameworkSetSelectionModeJob::new(vec![2; 8_193], 1));
@@ -3067,7 +3093,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let chunks = ArtifactOutputChunks::new(4);
         assert_eq!(chunks.push(vec![1, 2, 3, 4]), Ok(4));
         assert_eq!(chunks.seal(), Ok(4));
-        let result = crate::app::ArtifactMediaExportResult::structured(MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence }, "stdio.mp4.isobmff", "video/mp4", chunks).expect("completed media");
+        let result = crate::media_contract::ArtifactMediaExportResult::structured(MediaType { class: MediaClass::Presentation, form: MediaForm::Sequence }, "stdio.mp4.isobmff", "video/mp4", chunks).expect("completed media");
         let handle = protocol::MediaExportHandleWire { app_instance_id: 23, parent_document_id: "document-mp4-1".into(), operation_id: 9_007_199_254_740_993, base_revision: 9_007_199_254_740_994, generation: 9_007_199_254_740_995 };
         let protocol::AppFrame::MediaExportStatus { mime_type, total_bytes, state, .. } = media_export_complete_status(9_007_199_254_740_996, handle, &result) else { panic!("completed status") };
         assert_eq!(mime_type, "video/mp4");
@@ -3077,7 +3103,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn segmented_download_remains_addressable_until_terminal_none_is_observed() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3101,7 +3127,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn completed_media_cancel_moves_exact_output_to_bounded_cleanup() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3133,20 +3159,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(chunks.bytes_remaining(), ARTIFACT_OUTPUT_CHUNK_BYTES + 17, "cancellation performs no synchronous output destruction");
 
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app).expect("first bounded cleanup"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app).expect("first bounded cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 17);
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app).expect("second bounded cleanup"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app).expect("second bounded cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: 17, ..Default::default() }));
         assert_eq!(chunks.bytes_remaining(), 0);
         app.maintenance_stage = 2;
-        assert_eq!(app_maintenance_turn(&mut *app).expect("terminal cleanup"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(app_maintenance_turn(&mut *app).expect("terminal cleanup"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.test_segmented_closure_contains(operation_id.0));
         artifact_app_laws::close_registered_fixture_app(&mut *app, mounted_policy);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn app_maintenance_reclaims_late_envelope_field_returns_before_close_terminal() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3160,20 +3186,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
         }
 
-        impl store::ArtifactEnvelopeFieldDecoder<TestSnapshot, TestMutation> for ReturnedDecoder {
+        impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<TestSnapshot, TestMutation> for ReturnedDecoder {
             fn accept_field_token(
                 &mut self,
                 _field_id: u16,
-                _token: store::OwnedSchemaToken,
+                _token: store::os_store::owned_schema_decode::OwnedSchemaToken,
                 _terminal: bool,
-                _source: &store::OwnedSchemaRecordCursor,
+                _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
                 _cx: &mut semio_framework_job::StepContext<'_>,
-            ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+            ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending)
             }
 
-            fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
-                Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending)
+            fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
+                Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending)
             }
 
             fn maximum_close_byte_demand(&self) -> usize {
@@ -3184,23 +3210,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 0
             }
 
-            fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+            fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 Ok(0)
             }
 
-            fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+            fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 Ok(0)
             }
 
-            fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+            fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 Ok(0)
             }
 
-            fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+            fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 Ok(0)
             }
 
-            fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+            fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
                 if grant.maximum_items == 0 {
                     return Ok(store::RetainedCloneStep::Progress(Default::default()));
                 }
@@ -3234,7 +3260,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.envelope_field_decoder_retirements.is_empty());
         assert!(app.envelope_field_decoders.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        assert_eq!(app.drive_envelope_field_decoder_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close hierarchy observes exact terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
@@ -3243,7 +3269,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the law — ordinary maintenance never retires an unconsumed completed output — is not.
     #[semio_framework_async_macros::async_test]
     async fn app_maintenance_and_close_retain_completed_envelope_results_until_terminal_empty() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3258,8 +3284,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             drops: std::sync::Arc<std::sync::atomic::AtomicUsize>,
         }
 
-        impl store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation> for CompletedRecordSentinel {
-            fn try_publish_to(&mut self, _target: &mut dyn store::ArtifactEnvelopeCompletedRecordTarget<TestSnapshot, TestMutation>) -> bool {
+        impl store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation> for CompletedRecordSentinel {
+            fn try_publish_to(&mut self, _target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordTarget<TestSnapshot, TestMutation>) -> bool {
                 false
             }
 
@@ -3305,7 +3331,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
         let drops = std::sync::Arc::new(std::sync::atomic::AtomicUsize::new(0));
-        let owner: Box<dyn store::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
+        let owner: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecord<TestSnapshot, TestMutation>> = Box::new(CompletedRecordSentinel { remaining: 2, terminal: false, drops: drops.clone() });
         let ticket = match app.envelope_completed_records.try_admit(owner) {
             Ok(ticket) => ticket,
             Err((_fault, mut owner)) => {
@@ -3329,7 +3355,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
         }
         match app.envelope_completed_records.try_detach(ticket) {
-            Err(fault) => assert_eq!(fault, store::ArtifactEnvelopeCompletedRecordFault::Stale),
+            Err(fault) => assert_eq!(fault, store::os_store::owned_schema_decode::ArtifactEnvelopeCompletedRecordFault::Stale),
             Ok(mut owner) => {
                 while !owner.terminal_is_empty() {
                     let _ = owner.close_step(store::RetainedCloneGrant { maximum_items: 1, ..Default::default() }).expect("unexpected completed owner bounded close");
@@ -3340,7 +3366,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert!(app.envelope_completed_record_retirements.is_empty());
         assert!(app.envelope_completed_records.terminal_is_empty());
         assert_eq!(drops.load(std::sync::atomic::Ordering::SeqCst), 1);
-        assert_eq!(app.drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
+        assert_eq!(app.drive_envelope_completed_record_returns(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_capacity_bytes:0,maximum_release_bytes:store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES,maximum_depth:64},true).expect("close observes exact completed terminal state"), PluginLifecycleStep::Complete(Default::default()));
         artifact_app_laws::close_registered_fixture_app(&mut app, mounted_policy);
     }
 
@@ -3350,7 +3376,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// to that stage and then stands still there — which is itself the bounded-grant refusal.
     #[semio_framework_async_macros::async_test]
     async fn app_close_step_drains_at_most_one_segment_and_one_chunk_budget() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3372,9 +3398,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut parked = false;
         for _ in 0..(MAINTENANCE_STAGES as usize * ARTIFACT_LIVE_OUTPUT_SLOTS) {
             let demand = app.close_retirement_demands(ARTIFACT_OUTPUT_CHUNK_BYTES).expect("quoted pre-segment close demand");
-            let sub_chunk = store::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes.min(ARTIFACT_OUTPUT_CHUNK_BYTES - 1), ..crate::app::plugin_demand_grant(demand) };
+            let sub_chunk = store::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes.min(ARTIFACT_OUTPUT_CHUNK_BYTES - 1), ..crate::bounded_ownership::plugin_demand_grant(demand) };
             match { let step = app.close_step(sub_chunk).expect("bounded pre-segment close slice"); let _ = app.take_constructor_receipt(); step } {
-                crate::app::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => {
+                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => {
                     assert_eq!(demand.release_bytes, ARTIFACT_OUTPUT_CHUNK_BYTES, "the ladder parked before its segmented-download rung");
                     parked = true;
                     break;
@@ -3384,18 +3410,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(parked, "the close ladder never reached its segmented-download stage");
         assert_eq!(chunks.chunks_remaining(), 2, "walking the ladder to the segment stage released no chunk");
-        assert_eq!(app_close_turn(&mut *app).expect("first close slice"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app).expect("first close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.chunks_remaining(), 1);
-        assert_eq!(app_close_turn(&mut *app).expect("second close slice"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app).expect("second close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, released_bytes: ARTIFACT_OUTPUT_CHUNK_BYTES, ..Default::default() }));
         assert_eq!(chunks.chunks_remaining(), 0);
-        assert_eq!(app_close_turn(&mut *app).expect("terminal close slice"), crate::app::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
+        assert_eq!(app_close_turn(&mut *app).expect("terminal close slice"), crate::bounded_ownership::PluginLifecycleStep::Progress(store::RetainedCloneProgress { copied_items: 1, ..Default::default() }));
         assert!(!app.segmented_downloads.contains(37));
     }
 
     #[semio_framework_async_macros::async_test]
     async fn artifact_close_final_destructor_is_constant_after_every_owned_field_is_drained() {
-        let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
-        let mut app = contract_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+        let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+        let mut app = contract_app_raw(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
         let _ = app.test_history().await;
         let mut turns = 0;
         for _ in 0..4_096 {
@@ -3403,7 +3429,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 break;
             }
             let demand = app.retained_fields_close_demand(page).expect("quoted retained field demand");
-            let grant = crate::app::plugin_demand_grant(demand);
+            let grant = crate::bounded_ownership::plugin_demand_grant(demand);
             let starved = store::RetainedCloneGrant { maximum_items: 0, ..grant };
             assert_eq!(app.retained_fields_close_step(starved).expect("unfunded retained field turn yields").progress(), store::RetainedCloneProgress::default());
             let progress = app.retained_fields_close_step(grant).expect("retained field turn").progress();
@@ -3413,13 +3439,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(turns != 0, "the warmed projection cache and history view are retained fields the rung must release");
         assert!(app.retained_fields_own_terminal_is_empty());
-        assert!(matches!(app.retained_fields_close_step(crate::app::plugin_page_grant(page)).expect("repeated terminal turn"), store::RetainedCloneStep::Complete(progress) if progress == store::RetainedCloneProgress::default()));
-        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        assert!(matches!(app.retained_fields_close_step(crate::bounded_ownership::plugin_page_grant(page)).expect("repeated terminal turn"), store::RetainedCloneStep::Complete(progress) if progress == store::RetainedCloneProgress::default()));
+        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[test]
     fn retained_field_maximum_and_maximum_plus_one_are_language_neutral() {
-        use crate::app::plugin_demand_grant;
+        use crate::bounded_ownership::plugin_demand_grant;
         use store::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
         for (letter, length) in [("x", ARTIFACT_OUTPUT_CHUNK_BYTES), ("y", ARTIFACT_OUTPUT_CHUNK_BYTES + 1)] {
             let mut registry = AppActionRegistry::test_with_controller_id(letter.repeat(length));
@@ -3445,7 +3471,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         use crate::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep,ArtifactCommandInputs,ArtifactRetainedCommandJob};
         let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧵️retained-command/🔄️full-operation/🧫️fixtures/🔣️.json")).unwrap();let law=&fixture["download"];
         struct DownloadWork{output:Option<ArtifactDownloadOutput>,first:bool,closing:bool,retirement:Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>}
-        impl DownloadWork{fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.retirement.as_ref(){return store::artifact_retirement_box_demands(active,body)}store::artifact_retirement_owned_birth_demands(&self.output)}}
+        impl DownloadWork{fn close_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{if let Some(active)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(active,body)}store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.output)}}
         impl ArtifactCommandWork<TestApp> for DownloadWork{
             fn tool_id(&self)->&'static str{TEST_RETAINED_COMMAND_TOOL}
             fn extent(&self,_:&TestCommand,_:&TestSnapshot,_:&InteractionState,_:Option<&ArtifactOwnedToolJobContext<TestApp>>)->Option<usize>{Some(1)}
@@ -3456,7 +3482,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 let demand=match self.close_demands(grant.maximum_copy_bytes){Ok(demand)=>demand,Err(error)=>return InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()}};
                 if grant.maximum_depth<demand.depth{return InteractiveJobCloseStep::Refused{kind:semio_framework_value::ValueRefusalKind::DepthLimit,progress:Default::default()}}
                 if grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes{return InteractiveJobCloseStep::Pending{progress:Default::default()}}
-                let step=if self.retirement.is_some(){store::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::artifact_retirement_admit_owned(&mut self.output,&mut self.retirement,grant)};
+                let step=if self.retirement.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant)}else{store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.output,&mut self.retirement,grant)};
                 match step{Ok(step)if self.terminal_is_empty()=>InteractiveJobCloseStep::Complete{progress:step.progress()},Ok(step)=>InteractiveJobCloseStep::Pending{progress:step.progress()},Err(error)=>InteractiveJobCloseStep::Refused{kind:error.kind,progress:Default::default()}}
             }
             fn next_close_copy_byte_demand(&self)->Result<usize,semio_framework_value::ValueError>{Ok(self.close_demands(0)?.copy_bytes)}
@@ -3468,7 +3494,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let make=||{let length=law["payloadBytes"].as_u64().unwrap()as usize;assert!(length>law["wireBytes"].as_u64().unwrap()as usize);let chunks=ArtifactOutputChunks::new(length);for index in 0..length.div_ceil(ArtifactOutputChunks::CHUNK_BYTES){let start=index*ArtifactOutputChunks::CHUNK_BYTES;let end=(start+ArtifactOutputChunks::CHUNK_BYTES).min(length);chunks.push((start..end).map(|index|(index%251)as u8).collect()).unwrap();}chunks.seal().unwrap();ArtifactDownloadOutput::new("original.txt","text/plain",None,chunks).unwrap()};
         for (busy,cancel) in [(false,false),(true,false),(false,true)]{
             let completion=ArtifactToolCompletion::<TestApp>::new();let consumer=completion.clone();let mut payload=test_retained_command_payload(completion.clone()).await;payload.work=Box::new(DownloadWork{output:Some(make()),first:true,closing:false,retirement:None});let mut job=ArtifactRetainedCommandJob::new(payload);let mut sequence=0;let mut yielded=false;let token=semio_framework_job::root_cancel_token();
-            for _ in 0..128{let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),semio_framework_job::StepBudget::new(1,u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance),token.clone(),||Some(0),&mut sequence, crate::app::artifact_app_laws::fixture_progress());let result=if busy{completion.with_busy_test_lock(||crate::app::artifact_app_laws::fixture_step(&mut job,&mut cx))}else{crate::app::artifact_app_laws::fixture_step(&mut job,&mut cx)};match result{crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{token.cancel_now()}},crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},crate::app::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
+            for _ in 0..128{let mut cx=semio_framework_job::StepContext::new(semio_framework_job::OperationId(41),semio_framework_job::Generation(3),semio_framework_job::StepBudget::new(1,u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance),token.clone(),||Some(0),&mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());let result=if busy{completion.with_busy_test_lock(||crate::app_testing::artifact_app_laws::fixture_step(&mut job,&mut cx))}else{crate::app_testing::artifact_app_laws::fixture_step(&mut job,&mut cx)};match result{crate::app_testing::artifact_app_laws::FixtureStepOutcome::Preview(_)=>{yielded=true;if cancel{token.cancel_now()}},crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint{..}=>{},crate::app_testing::artifact_app_laws::FixtureStepOutcome::Complete{..}=>break,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)=>break,crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled=>{assert!(cancel);break},_=>{}}}
             assert!(yielded);job.begin_close();for _ in 0..100000{if job.terminal_is_empty(){break}let grant=job_close_grant(&job);let before=job.close_step(semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:0,..grant});assert!(matches!(before,InteractiveJobCloseStep::Pending{progress}if progress==Default::default())||matches!(before,InteractiveJobCloseStep::Blocked));let step=job.close_step(grant);assert!(step.progress().fits(grant));assert!(!matches!(step,InteractiveJobCloseStep::Refused{..}))}assert!(job.terminal_is_empty());
             if busy||cancel{assert!(consumer.test_take_download().unwrap().is_none())}else{let (Ok(output),_)=consumer.test_take_download().unwrap().unwrap()else{panic!("original download completion")};let mut actual=Vec::new();while let Some(chunk)=output.chunks.take_chunk().unwrap(){assert!(chunk.len()<=law["chunkBytes"].as_u64().unwrap()as usize);actual.extend(chunk)}let expected:Vec<u8>=serde_json::from_value(serde_json::json!((0..law["payloadBytes"].as_u64().unwrap()).map(|index|(index%251)as u8).collect::<Vec<_>>())).unwrap();assert_eq!(actual,expected);}
             eprintln!("[DEBUG] original Work download busy={busy} canceled={cancel} yields; source chunks preserved; exact quoted retirement");
@@ -3476,7 +3502,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut original=std::collections::VecDeque::with_capacity(law["queueSlots"].as_u64().unwrap()as usize);original.push_back("Mesh 😀".to_string());
         let payload_bytes=original[0].len();let backing_bytes=original.capacity()*std::mem::size_of::<String>();assert_eq!(std::mem::size_of::<String>(),law["vectorMetadataWords"].as_u64().unwrap()as usize*std::mem::size_of::<usize>());
         let birth=semio_framework_value::retirement::owned_retirement_birth_bytes::<std::collections::VecDeque<String>>();
-        let admission=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:birth,..crate::app::plugin_page_grant(4_096)};
+        let admission=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_capacity_bytes:birth,..crate::bounded_ownership::plugin_page_grant(4_096)};
         let (mut retirement,admitted)=semio_framework_value::retirement::admit_owned_retirement(original,admission).unwrap_or_else(|_|panic!("original queue typed constructor refused its funded grant"));
         assert!(admitted.fits(admission));let (mut born,mut released)=(admitted.retained_capacity_bytes,admitted.released_bytes);
         for _ in 0..100000{if retirement.terminal_is_empty(){break}
@@ -3507,10 +3533,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut checkpoint_bytes = None;
         let mut sequence = 0;
         for _ in 0..64 {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
-            match crate::app::artifact_app_laws::fixture_step(&mut original.job, &mut context) {
-                crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
-                crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { state: bytes, .. } => {
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+            match crate::app_testing::artifact_app_laws::fixture_step(&mut original.job, &mut context) {
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { state: bytes, .. } => {
                     if bytes.get(4) == Some(&3) && bytes.get(5) == Some(&1) && bytes.get(48) == Some(&1) {
                         checkpoint_bytes = Some(bytes);
                     }
@@ -3518,10 +3544,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                         break;
                     }
                 }
-                crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
-                crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("initial retained command cancelled"),
-                crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => panic!("initial retained command completed before its work checkpoint"),
-                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield | crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle => {}
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("initial retained command cancelled"),
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Complete { .. } => panic!("initial retained command completed before its work checkpoint"),
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
                     panic!("initial retained command faulted");
                 }
             }
@@ -3545,17 +3571,17 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         let mut completed = false;
         for _ in 0..96 {
-            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
-            match crate::app::artifact_app_laws::fixture_step(&mut resumed.job, &mut context) {
-                crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
-                crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { .. } => {},
-                crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
-                crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
+            let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+            match crate::app_testing::artifact_app_laws::fixture_step(&mut resumed.job, &mut context) {
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { .. } => {},
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield | crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle => {}
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
                     completed = true;
                     break;
                 }
-                crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("resumed retained command cancelled"),
-                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("resumed retained command cancelled"),
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_) => {
                     panic!("resumed retained command faulted");
                 }
             }
@@ -3579,8 +3605,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         };
         let cancel = semio_framework_job::root_cancel_token();
         cancel.cancel_now();
-        let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
-        assert!(matches!(crate::app::artifact_app_laws::fixture_step(&mut cancelled.job, &mut context), crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled));
+        let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), cancel, || Some(0), &mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+        assert!(matches!(crate::app_testing::artifact_app_laws::fixture_step(&mut cancelled.job, &mut context), crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled));
         cancelled.job.begin_close();
         drive_job_close(&mut cancelled.job);
         assert!(cancelled.job.terminal_is_empty(), "cancelled retained command retires every owner incrementally");
@@ -3609,9 +3635,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let operation = semio_framework_job::Operation::new(semio_framework_job::OperationId(42), semio_framework_job::RevisionId(2), semio_framework_job::Generation(3), 5);
         let drive_to_publish = |job: &mut crate::retained_command::ArtifactRetainedCommandJob<TestApp>, sequence: &mut u64| {
             for expected_stage in ["preflight", "work"] {
-                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), sequence, crate::app::artifact_app_laws::fixture_progress());
-                match crate::app::artifact_app_laws::fixture_step(job, &mut context) {
-                    crate::app::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
+                let mut context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+                match crate::app_testing::artifact_app_laws::fixture_step(job, &mut context) {
+                    crate::app_testing::artifact_app_laws::FixtureStepOutcome::Preview(_) => {},
                     _ => panic!("retained child job failed at {expected_stage}"),
                 }
             }
@@ -3673,9 +3699,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         duplicate_completion.complete(Ok(Emit::default()), EphemeralEmit::default()).expect("prefill completion once");
         let mut duplicate = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(duplicate_completion, build_emit()).await);
         drive_to_publish(&mut duplicate, &mut sequence);
-        let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
-        match crate::app::artifact_app_laws::fixture_step(&mut duplicate, &mut duplicate_context) {
-            crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
+        let mut duplicate_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+        match crate::app_testing::artifact_app_laws::fixture_step(&mut duplicate, &mut duplicate_context) {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
             _ => panic!("duplicate completion must reject the handoff"),
         }
         assert!(duplicate.test_pending_emit_shape().is_some(), "duplicate rejection returns the exact emit owner");
@@ -3688,9 +3714,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut busy = crate::retained_command::ArtifactRetainedCommandJob::new(test_retained_child_command_payload(busy_completion.clone(), build_emit()).await);
         drive_to_publish(&mut busy, &mut sequence);
         busy_completion.with_busy_test_lock(|| {
-            let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app::artifact_app_laws::fixture_progress());
-            match crate::app::artifact_app_laws::fixture_step(&mut busy, &mut busy_context) {
-                crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
+            let mut busy_context = semio_framework_job::StepContext::new(operation.operation, operation.generation, semio_framework_job::StepBudget::new(1, u64::MAX, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence, crate::app_testing::artifact_app_laws::fixture_progress());
+            match crate::app_testing::artifact_app_laws::fixture_step(&mut busy, &mut busy_context) {
+                crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_) => {},
                 _ => panic!("busy completion must reject the handoff"),
             }
         });
@@ -3701,7 +3727,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn unproved_command_fails_before_an_overrun_reducer_can_start() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -3765,8 +3791,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🕹️ [`interaction_app_under_test`] without the self-closing wrapper — for the local-interaction
     /// laws that move the app into a `PluginRuntime` cell.
     async fn interaction_app_raw(mounted_policy: crate::MountedOwnerPolicyV1, identity: &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> VcsArtifactApp<TestApp> {
-        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = Box::pin(VcsArtifactApp::with_registry(TestApp::<false>::default(), interaction_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, identity)).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(meta().instance_id).await;
         app
     }
@@ -3841,7 +3867,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     const INGRESS_TURNS_PER_COMMAND: usize = 512;
     
     fn command_page_authority_budget() -> Budget {
-        Budget { retained: crate::app::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
+        Budget { retained: crate::app_testing::artifact_app_laws::fixture_retained_turn(), fuel: 64, deadline_ms: 1000, max_effects: 16, max_patch_bytes: 65536, max_frames: 16 }
     }
     
     /// 📤️ Encodes one `AppCommand` into the exact page and cursor a host hands the guest — the bytes and
@@ -3865,7 +3891,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut carried = Some(page);
         let mut turns = 0;
         loop {
-            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns),
@@ -3907,7 +3933,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut carried = driver.next_page().expect("the host owner produces its first page");
         loop {
             declared = declared.max(carried.as_ref().map_or(0, |(cursor, _)| cursor.page_count as usize));
-            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(runtime, Vec::new(), carried.take(), None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             turns += 1;
             match result.command_ingress {
                 semio_framework::kernel::CommandIngressStatus::CommandComplete(_) => return (true, turns, declared),
@@ -3933,7 +3959,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// fails for every page count under that pacing, which is what makes it discriminating.
     #[semio_framework_async_macros::async_test]
     async fn a_command_page_set_reaches_its_terminal_status_in_one_turn_per_page() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_022;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-set".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -4093,7 +4119,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn a_command_page_that_is_not_the_next_one_is_refused_by_its_order() {
         let fixture: CommandIngressDisorderFixture =
             serde_json::from_str(include_str!("../../../../../../🔨️modules/📡️replication/📡️wire/🎮️command/📥️ingress/🧫️fixtures/📄️pages/🔣️.json")).expect("📥️command-ingress-pages fixture parses");
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_031;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-order".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -4106,7 +4132,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             assert_eq!(pages.len(), row.pages, "row {} must cut into {} pages", row.name, row.pages);
             for (delivery, page_index) in row.deliver.iter().copied().enumerate() {
                 let (cursor, page) = pages[page_index].clone();
-                let result = crate::reactor::poll_kernel(&runtime, Vec::new(), Some((cursor, page)), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+                let result = crate::reactor::poll_kernel(&runtime, Vec::new(), Some((cursor, page)), None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
                 match (&result.command_ingress, delivery == row.rejected_delivery) {
                     (semio_framework::kernel::CommandIngressStatus::Fault { fault, .. }, true) => {
                         assert_eq!(fault.as_slice(), b"plugin.command-page-order", "row {} delivery {delivery} must be refused by its order", row.name);
@@ -4143,7 +4169,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `📓️a2-mcp-plugin-host-instance-open.md` §6.1, `📓️r2-reactor-retained-command-owner.md`).
     #[semio_framework_async_macros::async_test]
     async fn an_abandoned_ingress_owner_never_answers_the_command_the_host_is_driving() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_024;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "abandoned-ingress-owner".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -4154,7 +4180,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let line = "p".repeat(semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES + 1);
         let mut abandoned = command_page_authority_driver(instance, abandoned_seq, &protocol::AppCommand::CommandText { seq: abandoned_seq, line }).await;
         let first = abandoned.next_page().expect("the abandoned owner produces its first page").expect("a two-page command has a first page");
-        let opened = crate::reactor::poll_kernel(&runtime, Vec::new(), Some(first), None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+        let opened = crate::reactor::poll_kernel(&runtime, Vec::new(), Some(first), None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
         assert!(
             matches!(opened.command_ingress, semio_framework::kernel::CommandIngressStatus::PageAccepted(_)),
             "the guest accepts the first page of a two-page command: {:?}",
@@ -4168,7 +4194,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut completed = false;
         for turn in 0..INGRESS_TURNS_PER_COMMAND {
             let carried = driver.next_page().expect("the host owner produces its pages");
-            let result = crate::reactor::poll_kernel(&runtime, Vec::new(), carried, None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+            let result = crate::reactor::poll_kernel(&runtime, Vec::new(), carried, None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
             let progress = driver.observe(&result.command_ingress, semio_framework::kernel::COMMAND_PAGE_MAXIMUM_BYTES).unwrap_or_else(|fault| {
                 panic!("turn {turn}: the guest answered {:?} for the command this host owns as seq {seq}: {}: {}", result.command_ingress, fault.code.0, fault.message)
             });
@@ -4186,7 +4212,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             if crate::reactor::retained_command_ingress_occupancy() == 0 {
                 break;
             }
-            crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, command_page_authority_budget(), &mut crate::app::artifact_app_laws::fixture_identity(), &mut crate::app::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
+            crate::reactor::poll_kernel(&runtime, Vec::new(), None, None, command_page_authority_budget(), &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut crate::app_testing::artifact_app_laws::fixture_step_context()).await.expect("one native ingress turn");
         }
         assert_eq!(crate::reactor::retained_command_ingress_occupancy(), 0, "the superseded owner retires on its own budget instead of pinning the authority");
         reactor_native_lifecycle_finish(&runtime, lifetime, 9).await;
@@ -4203,7 +4229,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// process-wide difference weighs every concurrent law in the binary as this command's own.
     #[semio_framework_async_macros::async_test]
     async fn a_long_command_stream_never_pins_the_retained_ingress_authority() {
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.unwrap());
         let instance = 4_021;
         let captured = reactor_native_lifecycle_poll(&runtime, vec![reactor_native_lifecycle_open(instance, 8, "command-page-authority".into())]).await.lifecycle_receipt.expect("Captured receipt");
@@ -4265,7 +4291,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn plugin_builder_wires_app_factory_for_create_app() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
@@ -4277,7 +4303,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = bundle.create_app(TestApp::<false>::APP_ID, actor.clone(), mounted_policy, &mut identity).expect("registered app");
         assert_eq!(app.app_id().await, TestApp::<false>::APP_ID);
         let TestRuntimeApps::Test(owner) = &mut app;
-        crate::app::artifact_app_laws::settle_store_constructor(owner, mounted_policy);
+        crate::app_testing::artifact_app_laws::settle_store_constructor(owner, mounted_policy);
         assert_eq!(owner.store.local_actor_id(), &actor);
         assert_eq!(owner.config_store.local_actor_id(), &actor);
         assert_eq!(owner.draft_store.local_actor_id(), &actor);
@@ -4293,7 +4319,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn merge_channel_commands_preserve_authoritative_policy_conflicts_and_payloads() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4317,11 +4343,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.dispatch_report().await.policy, protocol::MergePolicy::Vigilant, "invalid policy never changes the active policy");
 
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("seed one durable edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the seeded durable edit reaches its publication");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the seeded durable edit reaches its publication");
         let (mut envelope, applied_edit_ids) = {
             let store = app.test_store().await;
-            let files = store::print_document_pack(store.envelope()).await.expect("print retained test envelope");
-            (store::parse_document_pack::<TestSnapshot, TestMutation>(&files.pack, &files.spr).await.expect("parse retained test envelope").envelope, store.applied_edit_ids().to_vec())
+            let files = store::os_store::text_format::print_document_pack(store.envelope()).await.expect("print retained test envelope");
+            (store::os_store::text_format::parse_document_pack::<TestSnapshot, TestMutation>(&files.pack, &files.spr).await.expect("parse retained test envelope").envelope, store.applied_edit_ids().to_vec())
         };
         let kind = protocol::ConflictKind::Degraded { edit_ids: applied_edit_ids.clone() };
         let timestamp = HybridLogicalTimestamp::new(1, u64::MAX);
@@ -4363,7 +4389,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn operation_action_emits_kernel_op_with_true_inverse() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4389,7 +4415,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// were never part of the undoable gesture in the first place.
     #[semio_framework_async_macros::async_test]
     async fn a_command_reaches_both_ephemeral_lanes_without_touching_history() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4405,7 +4431,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.transient_store.generation().await, 0);
 
         let frame = meta();
-        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("mount increment");
+        let started = app.test_mount_typed_command(TestCommand::Increment, "increment", &frame, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("mount increment");
         assert!(started.mutations.is_empty(), "mounting does not publish a producer emission");
         assert_eq!(app.presence_store.generation().await, 0, "dispatch did not run an ephemeral prelude");
         assert_eq!(app.transient_store.generation().await, 0, "dispatch did not apply transient work before its worker completion");
@@ -4432,7 +4458,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn a_command_that_emits_nothing_ephemeral_leaves_both_lanes_untouched() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4457,7 +4483,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// the pick as an unknown id and the domain never shows up in `interaction_state()`.
     #[semio_framework_async_macros::async_test]
     async fn ephemeral_snapshot_carries_encoded_interaction_from_declared_broadcast_specs() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4499,7 +4525,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn one_framework_reserved_route_fits_a_bounded_thread_stack() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         std::thread::Builder::new()
             .stack_size(BOUNDED_THREAD_STACK_BYTES)
@@ -4579,7 +4605,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 👋 bob leaves the roster — a second call carrying only alice must drop bob from BOTH maps.
     #[semio_framework_async_macros::async_test]
     async fn retained_presence_fills_presence_store_and_peer_marks_and_drops_left_peers() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4617,7 +4643,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// fails at the exact call it happened on instead of hiding under a larger number.
     #[semio_framework_async_macros::async_test]
     async fn peer_presence_capture_is_one_arc_and_retirement_waits_for_then_drains_the_exact_root() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4657,8 +4683,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             }
             app.maintenance_stage = 6;
             match app_maintenance_turn(&mut app).expect("bounded app-typed peer retirement progresses") {
-                crate::app::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
-                crate::app::PluginLifecycleStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
+                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress == store::RetainedCloneProgress::default() => panic!("the app-typed peer retirement stalled after {calls} bounded calls"),
+                crate::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("the app-typed peer retirement blocked after {calls} bounded calls: {reason}"),
                 _ => {}
             }
         }
@@ -4672,7 +4698,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// stays mounted (next line).
     #[semio_framework_async_macros::async_test]
     async fn peer_roster_saturation_cancel_stale_and_interrupted_close_preserve_exact_authority() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -4716,10 +4742,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         cancel.cancel_now();
         cancelled.maintenance_stage = 7;
         let quote = cancelled.maintenance_retirement_demands(16).expect("quoted cancelled roster demand");
-        let exact = crate::app::plugin_demand_grant(quote);
+        let exact = crate::bounded_ownership::plugin_demand_grant(quote);
         let short = store::RetainedCloneGrant { maximum_copy_bytes: quote.copy_bytes.saturating_sub(1), maximum_capacity_bytes: quote.capacity_bytes.saturating_sub(1), maximum_release_bytes: quote.release_bytes.saturating_sub(1), ..exact };
         let interrupted = cancelled.maintenance_step(short).expect("sub-page close grant");
-        assert!(matches!(interrupted, crate::app::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
+        assert!(matches!(interrupted, crate::bounded_ownership::PluginLifecycleStep::Progress(progress) if progress.released_bytes == 0), "interrupted close released bytes under a grant one short of its retained page: {interrupted:?}");
         assert!(cancelled.peer_roster_publications.get(generation).is_some(), "cancelled publication stays mounted until its retained page closes");
         for _ in 0..64 {
             cancelled.maintenance_stage = 7;
@@ -4810,7 +4836,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// 🤝️ [`declare_test_child`], then the RUNTIME's half: a fresh [`new_test_child`] registered as that declared member.
     async fn register_test_child(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str) {
         declare_test_child(app, child_id).await;
-        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
+        app.register_child("slot", child_id, test_child_dialect().await, new_test_child(child_id).await.expect("construct child"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register the declared child");
     }
 
     /// 🧪️ A live child `ArtifactStore<TestSnapshot, TestMutation>`, wrapped as `TestMembers` —
@@ -4820,9 +4846,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// `TestApp` itself uses, so a "child" here is just a second, independently-owned instance
     /// of the identical document shape.
     async fn new_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        let mut child = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await?;
+        let mut child = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?;
         store::install_funded_member_store_owners(&mut child)?;
         Ok(TestMembers::Child(Box::new(child)))
     }
@@ -4832,9 +4858,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// member through `create_member_store`/`open_member_store`, which install the catalog, so this
     /// shape exists only to drive the refusal those laws assert.
     async fn new_bare_test_child(id: &str) -> Result<TestMembers, store::VcsError> {
-        let mut envelope = store::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, TestMutation>("semio.test/v1", id, TestSnapshot::default(), None);
         envelope.dialect = Some(test_child_dialect().await);
-        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await?)))
+        Ok(TestMembers::Child(Box::new(store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await?)))
     }
 
     struct TestSnapshotRetirement {
@@ -4850,7 +4876,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 self.lie_about_terminal = false;
                 return Ok(RetainedCloneStep::Complete(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
             }
-            store::artifact_retirement_box_close_step(&mut self.owner, grant)
+            store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owner, grant)
         }
 
         fn terminal_is_empty(&self) -> bool { self.owner.is_none() }
@@ -4863,7 +4889,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     impl TestSnapshotRetirement {
         fn demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
             if self.lie_about_terminal { return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() }); }
-            self.owner.as_ref().map_or(Ok(Default::default()), |owner| store::artifact_retirement_box_demands(owner, body))
+            self.owner.as_ref().map_or(Ok(Default::default()), |owner| store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body))
         }
     }
 
@@ -4891,7 +4917,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
     }
 
-    impl store::MemberStoreOwner<TestMutation> for TestSnapshot {
+    impl store::os_store::document_store_owners::MemberStoreOwner<TestMutation> for TestSnapshot {
         /// 🚪️ The fixture child is a real openable member, not an un-openable one. While this was
         /// `UnsupportedMemberSnapshotOpen` every composed replacement that carried a `TestMembers`
         /// candidate was refused at its first member-open step with `MemberOpenDiagnostic::Decode`
@@ -4902,15 +4928,15 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
         fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-            let base = store::DocumentStoreOwners::<Self, TestMutation>::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<Self, TestMutation>>()?;
+            let base = store::os_store::document_store_owners::DocumentStoreOwners::<Self, TestMutation>::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<Self>, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<Self, TestMutation>>()?;
             let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 })?;
             let capacity_bytes = base.checked_add(preparation.capacity_bytes).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "member original source tree capacity overflow"))?;
             Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: preparation.depth.max(1) })
         }
 
-        fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, TestMutation>> {
-            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 }).map_err(|error| store::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
-            store::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
+        fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, TestMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, TestMutation>> {
+            let preparation = store::operation_wire_preparation_factory_source_birth_demand::<Self, TestMutation>(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::paged_one_item_factory_birth_bytes::<Self, TestMutation, store::MutationApplyEdit<Self, TestMutation>>(), depth: 1 }).map_err(|error| store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError { error, owners: None, progress: Default::default() })?;
+            store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor_with_one_item_preparation(grant, preparation, || (
                 semio_framework_value::retirement::SharedValueRetirementFactory::<TestSnapshot>::default(),
                 semio_framework_value::retirement::OwnedValueRetirementFactory::<Self>::default(),
                 semio_framework_value::retirement::OwnedValueRetirementFactory::<TestMutation>::default(),
@@ -4936,7 +4962,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// owner and `Arc::into_inner` would never reach the owned-value factory.
     fn install_test_snapshot_retirement(app: &mut VcsArtifactApp<TestApp, TestMembers>, child_id: &str, lie_about_terminal: bool) {
         let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), child_id.to_string())).expect("exact child retirement owner").member;
-        type Catalog = store::DocumentStoreOwners<TestSnapshot, TestMutation>;
+        type Catalog = store::os_store::document_store_owners::DocumentStoreOwners<TestSnapshot, TestMutation>;
         let capacity = Catalog::source_birth_bytes::<semio_framework_value::retirement::SharedValueRetirementFactory<TestSnapshot>, TestLyingOwnedValueRetirementFactory, semio_framework_value::retirement::OwnedValueRetirementFactory<TestMutation>, store::ArtifactStoreCursorDisposer<TestSnapshot, TestMutation>>().expect("exact catalog source birth");
         let admitted = Catalog::admit_source_constructor(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }, || (
             semio_framework_value::retirement::SharedValueRetirementFactory::<TestSnapshot>::default(),
@@ -4944,7 +4970,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
             semio_framework_value::retirement::OwnedValueRetirementFactory::<TestMutation>::default(),
             store::ArtifactStoreCursorDisposer::<TestSnapshot, TestMutation>::new(),
         ));
-        store::install_unscheduled_catalog(child, store::complete_unscheduled_catalog(admitted)).expect("exact original lying-witness catalog");
+        store::install_unscheduled_catalog(child, store::os_store::document_store_owners::complete_unscheduled_catalog(admitted)).expect("exact original lying-witness catalog");
     }
 
     async fn test_child_dialect() -> ArtifactDialect {
@@ -4953,7 +4979,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     fn close_member_admission_fixture(member: &mut TestMembers) {
         for _ in 0..65_536 {
-            let grant = crate::app::retirement_self_grant(|body| member.close_owned_demands(body), 4_096).expect("actual member close demand");
+            let grant = crate::bounded_ownership::retirement_self_grant(|body| member.close_owned_demands(body), 4_096).expect("actual member close demand");
             let step = member.close_owned_step(grant).expect("actual member original close");
             assert!(step.progress().fits(grant));
             if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) {
@@ -4965,7 +4991,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     }
 
     fn close_member_admission_app<A: ArtifactApp>(app: &mut VcsArtifactApp<A, TestMembers>) {
-        artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     include!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧪️tests/🧩️composition/🦀️.rs"));
@@ -4974,26 +5000,26 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_open_failure_retains_pin_and_drains_exact_member() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
         let parent = ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() };
         assert_eq!(app.store.envelope().dialect.as_ref(), Some(&parent.dialect));
-        assert!(app.open_child("slot", "child-1", dialect.clone(), &[], &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err());
+        assert!(app.open_child("slot", "child-1", dialect.clone(), &[], &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err());
         assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).abort_empty);
         assert_eq!(app.test_child_admission_state(1).generation, 0);
-        let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
+        let mut persisted = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         persisted.set_owner(Some(store::OwnerRef { parent, slot: "slot".into(), child_id: "child-1".into() })).await;
         let packed = persisted.envelope_pack_bytes().await.expect("persist exact owned child");
         close_member_admission_fixture(&mut persisted);
-        assert!(app.open_child("slot", "child-1", dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err());
+        assert!(app.open_child("slot", "child-1", dialect, &packed, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err());
         assert!(app.test_child_admission_state(1).children_empty && app.test_child_admission_state(1).content_empty && app.test_child_admission_state(1).roots_retiring_empty);
         assert_eq!(app.test_child_admission_state(1).generation, 0);
         assert_eq!(app.pending_child_pins.len(), 1);
@@ -5004,9 +5030,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         for _ in 0..65_536 {
             app.maintenance_stage = 20;
             match app_maintenance_turn(&mut app).expect("live failed-member cleanup") {
-                crate::app::PluginLifecycleStep::Progress(_) | crate::app::PluginLifecycleStep::Complete(_) => {}
-                crate::app::PluginLifecycleStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
-                crate::app::PluginLifecycleStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
+                crate::bounded_ownership::PluginLifecycleStep::Progress(_) | crate::bounded_ownership::PluginLifecycleStep::Complete(_) => {}
+                crate::bounded_ownership::PluginLifecycleStep::AwaitingInput { reason } => panic!("failed member cleanup awaited input: {reason}"),
+                crate::bounded_ownership::PluginLifecycleStep::Blocked { reason } => panic!("failed member must have a real cleanup owner: {reason}"),
             }
             if app.test_child_admission_state(1).abort_empty {
                 break;
@@ -5014,13 +5040,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         }
         assert!(app.test_child_admission_state(1).abort_empty);
         app.maintenance_stage = 20;
-        assert!(matches!(app_maintenance_turn(&mut app).unwrap(), crate::app::PluginLifecycleStep::Complete(_)));
+        assert!(matches!(app_maintenance_turn(&mut app).unwrap(), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
         close_member_admission_app(&mut app);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_register_rejects_pin_without_mutating_member() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5033,10 +5059,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let dialect = test_child_dialect().await;
         let expected = ArtifactRef { artifact_id: "child-1".into(), dialect: dialect.clone() };
         app.pending_child_pins.push(vcs::CompositionPin { child_ref: expected.clone(), checkpoint_id: "missing-checkpoint".into() });
-        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
+        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
         let before = member.envelope_pack_bytes().await.unwrap();
         declare_test_child(&mut app, "child-1").await;
-        let error = app.register_child("slot", "child-1", dialect, member, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("direct transfer must not apply a deferred restore pin");
+        let error = app.register_child("slot", "child-1", dialect, member, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("direct transfer must not apply a deferred restore pin");
         let mut returned = error.member.expect("exact caller member returned");
         assert_eq!(returned.envelope_pack_bytes().await.unwrap(), before);
         assert_eq!(returned.artifact_ref().as_ref(), Some(&expected));
@@ -5051,23 +5077,23 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn member_factory_closed_dialect_fresh_register_and_restore_publish_exact_parent_owner() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
-        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let dialect = test_child_dialect().await;
-        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
-        app.register_child("slot", "child-1", dialect.clone(), member, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
+        let member = TestMembers::create("child-1", &dialect, &TestSnapshot::default().encode_pack(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.unwrap();
+        app.register_child("slot", "child-1", dialect.clone(), member, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pure fresh member is adopted");
         assert_eq!(app.test_child_admission_state(1).generation, 1);
         let owner = store::OwnerRef { parent: ArtifactRef { artifact_id: app.store.envelope().id.clone(), dialect: ComposedParentApp::<true>::DIALECT.into() }, slot: "slot".into(), child_id: "child-1".into() };
         let member = app.child_store("slot", "child-1").await.unwrap();
         assert_eq!(member.owner_ref(), Some(owner.clone()));
         let packed = member.envelope_pack_bytes().await.unwrap();
-        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        restored.open_child("slot", "child-1", dialect, &packed, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("fresh factory restores exact parent owner");
+        let mut restored = VcsArtifactApp::<ComposedParentApp, TestMembers>::new(ComposedParentApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        restored.open_child("slot", "child-1", dialect, &packed, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("fresh factory restores exact parent owner");
         assert_eq!(restored.test_child_admission_state(1).generation, 1);
         assert_eq!(restored.child_store("slot", "child-1").await.unwrap().owner_ref(), Some(owner.clone()));
         assert_eq!(restored.composition.graph_mut().await.owner_of("child-1").await, Some(owner.parent.artifact_id.as_str()));
@@ -5092,7 +5118,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// one composite row names the child's edit, and it is the row that carries the parent's.
     #[semio_framework_async_macros::async_test]
     async fn composite_gesture_produces_one_undo_group_spanning_parent_and_child_with_real_handles() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5141,7 +5167,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     #[semio_framework_async_macros::async_test]
     async fn an_agent_transaction_carries_owned_child_op_groups_and_commits_undoes_and_redoes_them_as_one_group() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5162,7 +5188,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let parent_op = <TestMutation as ::protocol::OpBinary>::encode_op(&TestMutation::SetLabel(SetLabel { value: "agent".into() })).expect("encode parent op");
         let outcome = app.transaction_prepare("txn-agent-1", "", &[], &[parent_op], &wire, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "prepare admits a held child: {:?}", outcome.rejection.as_ref().map(|fault| &fault.message));
-        let edit_id = app.transaction_commit("txn-agent-1", &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("commit the composite transaction");
+        let edit_id = app.transaction_commit("txn-agent-1", &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("commit the composite transaction");
         assert!(!edit_id.is_empty());
         macro_rules! child_count {
             ($app:expr) => {{
@@ -5174,20 +5200,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         assert_eq!(app.test_snapshot().await.label, "agent", "the parent applied the agent's op");
         assert_eq!(app.store.tail_group_id().await.as_deref(), Some("txn-agent-1"), "the group identity is the transaction id");
 
-        app.transaction_undo("txn-agent-1", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
+        app.transaction_undo("txn-agent-1", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("undo the whole group");
         assert_eq!(child_count!(app), 0, "undo reverts the child");
         assert_ne!(app.test_snapshot().await.label, "agent", "undo reverts the parent");
-        app.transaction_redo("txn-agent-1", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
+        app.transaction_redo("txn-agent-1", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("redo the whole group");
         assert_eq!(child_count!(app), 5, "redo reapplies the child");
         assert_eq!(app.test_snapshot().await.label, "agent", "redo reapplies the parent");
-        assert!(app.transaction_undo("txn-someone-else", &mut crate::app::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
+        assert!(app.transaction_undo("txn-someone-else", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.is_err(), "a group no member carries is refused by name");
 
         let only_child = ChildEmit::encode_groups(&[test_child_emit("slot", "child-1", &[TestMutation::SetCount(SetCount { value: 8 })])]);
         let outcome = app.transaction_prepare("txn-agent-2", "", &[], &[], &only_child, Some(protocol::MutationOrigin::Owner)).await;
         assert!(outcome.rejection.is_none(), "a children-only transaction is a pre-planned transaction");
-        app.transaction_commit("txn-agent-2", &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("commit the children-only transaction");
+        app.transaction_commit("txn-agent-2", &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("commit the children-only transaction");
         assert_eq!(child_count!(app), 8);
-        app.transaction_undo("txn-agent-2", &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("undo the children-only group");
+        app.transaction_undo("txn-agent-2", &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("undo the children-only group");
         assert_eq!(child_count!(app), 5);
 
         let stray = ChildEmit::encode_groups(&[test_child_emit("slot", "ghost", &[TestMutation::SetCount(SetCount { value: 1 })])]);
@@ -5199,7 +5225,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     async fn drive_test_archive_load(app: &mut VcsArtifactApp<TestApp, TestMembers>, operation: u64, archive: protocol::DocumentArchivePack) -> protocol::DocumentArchiveLoadStatus {
         PluginApp::begin_document_archive_load(app, operation, archive).expect("the runtime admits the archive");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(app, operation, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(app, operation, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5224,7 +5250,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// "parent first, children later" route.
     #[semio_framework_async_macros::async_test]
     async fn a_child_survives_a_full_persist_and_reload_cycle_through_the_channel_frames() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5236,7 +5262,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the migrated composite gesture settles before it is persisted");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the migrated composite gesture settles before it is persisted");
         assert_eq!(app.test_snapshot().await.slot.len(), 1, "the live parent declares exactly its one member");
 
         let archive = PluginApp::document_archive(&app).await.expect("the composed document archives its closure");
@@ -5275,7 +5301,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
     /// its slot, id and dialect: a reader that composes on read decodes the child's live value from it, no history fold.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_documents_child_heads_answer_each_owned_childs_current_head_snapshot() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5289,7 +5315,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut app, "child-1").await;
         app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
+        artifact_app_laws::settle_registered_typed_operation(&mut app, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
 
         let heads = PluginApp::child_head_packs(&app).await.expect("child heads");
         assert_eq!(heads.iter().map(|entry| (entry.slot.as_str(), entry.child_id.as_str(), entry.dialect.clone())).collect::<Vec<_>>(), vec![("slot", "child-1", test_child_dialect().await.to_coordinate())]);
@@ -5305,7 +5331,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// a text-only host edge carries it losslessly. A foreign document schema is refused under the localized framework code.
     #[semio_framework_async_macros::async_test]
     async fn a_whole_document_media_import_is_a_stepped_archive_load_and_never_folds_inside_the_call() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5318,7 +5344,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         source
             .test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 41 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("the source edits its document");
         let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
@@ -5328,14 +5354,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let source_id = PluginApp::document_identity(&source).expect("the source's identity");
         assert!(std::str::from_utf8(&artifact.data).is_ok_and(|text| text.starts_with("pk:")), "the whole-document carrier is pk: base64 text");
 
-        let crate::app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact.clone()).await.expect("a whole document of the own schema is consumed") else {
+        let crate::app_contract::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact.clone()).await.expect("a whole document of the own schema is consumed") else {
             panic!("a whole document is answered as a document archive load");
         };
         assert_eq!(consumer.test_snapshot().await, before, "consuming folded nothing: the document is unchanged until the load runs");
         assert!(archive.members.is_empty() && !archive.parent_pack.is_empty() && !archive.parent_spr.is_empty());
         PluginApp::begin_document_archive_load(&mut consumer, 7, archive).expect("the runtime admits the archive");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(&mut consumer, 7, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 7, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5346,10 +5372,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(PluginApp::document_identity(&consumer).as_deref(), Some(source_id.as_str()), "a whole-document transfer loads the source document verbatim");
 
         let mut foreign = artifact;
-        foreign.descriptor.wire = crate::app::MediaWireFormat::Document { schema: "foreign.document".into() };
+        foreign.descriptor.wire = semio_framework::MediaWireFormat::Document { schema: "foreign.document".into() };
         let refusal = PluginApp::consume_media(&mut consumer, "artifact:in", foreign).await.expect_err("a foreign document schema is refused");
-        let fault = crate::app::media_artifact_fault(refusal);
-        assert_eq!(fault.code.0, crate::app::MEDIA_SCHEMA_MISMATCH_CODE);
+        let fault = crate::app_contract::media_artifact_fault(refusal);
+        assert_eq!(fault.code.0, crate::app_contract::MEDIA_SCHEMA_MISMATCH_CODE);
         let notice = semio_framework::kernel::fault_notice(&fault, &[], semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::De).expect("the refusal earns its localized notice");
         assert!(notice.text.contains("foreign.document") && notice.text.contains(<TestApp as ArtifactApp>::DOCUMENT_SCHEMA), "{}", notice.text);
         drain_and_close_composed_fixture(&mut consumer, mounted_policy);
@@ -5361,7 +5387,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// adopts the members: the child comes back as its own live store at the value its history ended on.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_document_crosses_a_media_edge_with_its_children() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5373,19 +5399,19 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut source = contract_composed_app_raw(mounted_policy, &mut identity).await;
         register_test_child(&mut source, "child-1").await;
         source.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: "child-1".into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
-        artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
+        artifact_app_laws::settle_registered_typed_operation(&mut source, meta().instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the composite gesture settles");
         let media_fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎞️media/🧫️fixtures/🔣️.json")).unwrap();let media_grant=serde_json::from_value(media_fixture["grant"].clone()).unwrap();let mut media_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let original=identity.pause().expect("same original composed media admission receipt");assert_eq!(original.maximum_bytes(),media_fixture["originalNativeMaximumBytes"].as_u64().unwrap()as usize);let original=match original.with_retirement_recipient(&mut media_recipient){Ok(original)=>original,Err((error,_original))=>panic!("{error}")};let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::resume_retirement(original,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>);
         let mut artifact = identity.encode(|native| { let mut owner=store::NativeSnapshotEncodeOwner::new(native,media_grant); ::semio_framework_async::poll::resolve_ready(PluginApp::produce_media(&mut source, "artifact:out", &mut owner)) }).expect("the composed source hands out its whole document through its original authority");
         artifact.data = String::from_utf8(artifact.data).expect("a text-only host edge carries the carrier").into_bytes();
 
         let mut consumer = contract_composed_app_raw(mounted_policy, &mut identity).await;
-        let crate::app::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact).await.expect("consumed") else {
+        let crate::app_contract::MediaConsumption::DocumentLoad(archive) = PluginApp::consume_media(&mut consumer, "artifact:in", artifact).await.expect("consumed") else {
             panic!("a whole document is answered as a document archive load");
         };
         assert_eq!(archive.members.iter().map(|entry| (entry.owner.slot.as_str(), entry.owner.child_id.as_str())).collect::<Vec<_>>(), vec![("slot", "child-1")]);
         PluginApp::begin_document_archive_load(&mut consumer, 9, archive).expect("admit");
         let status = loop {
-            let status = PluginApp::poll_document_archive_load(&mut consumer, 9, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("poll");
+            let status = PluginApp::poll_document_archive_load(&mut consumer, 9, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("poll");
             if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
                 break status;
             }
@@ -5406,11 +5432,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             .requested_effects
             .iter()
             .find_map(|effect| match effect {
-                Effect::SpawnJob { job, kind, input, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
+                Effect::SpawnJob { job, kind, input, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND => Some((*job, input.clone())),
                 _ => None,
             })
             .expect("a reserved route admits its spawn-job");
-        (job, crate::app::drive_framework_reserved_registry_job(job, input, crate::app::artifact_app_laws::fixture_mounted_policy().preparation))
+        (job, crate::reactor::jobs::reserved::drive_framework_reserved_registry_job(job, input, crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation))
     }
 
     /// 🧪️ One reactor-turn continuation unit, polled exactly the way the guest bridges it: ONCE, with
@@ -5419,8 +5445,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     fn continuation_unit_is_ready_on_first_poll(app: &mut VcsArtifactApp<TestApp, TestMembers>) {
         let waker = std::task::Waker::noop();
         let mut cx = std::task::Context::from_waker(waker);
-        let mut identity = crate::app::artifact_app_laws::fixture_identity();
-        let mut unit = Box::pin(PluginApp::advance_typed_operation_publication(app, &mut identity, crate::app::artifact_app_laws::fixture_mounted_policy().maintenance));
+        let mut identity = crate::app_testing::artifact_app_laws::fixture_identity();
+        let mut unit = Box::pin(PluginApp::advance_typed_operation_publication(app, &mut identity, crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance));
         match std::future::Future::poll(unit.as_mut(), &mut cx) {
             std::task::Poll::Ready(result) => result.expect("continuation unit"),
             std::task::Poll::Pending => panic!("a reserved commit unit suspended inside one turn"),
@@ -5433,7 +5459,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// publishes its result — pins included — only after the last unit.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_checkpoint_commit_is_driven_one_ready_unit_per_turn_with_progress() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5447,7 +5473,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
-        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
         assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
         assert!(PluginApp::has_runnable_typed_operations(&*app), "a queued commit keeps the actor's turn armed");
@@ -5478,7 +5504,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// still closes to terminal emptiness.
     #[semio_framework_async_macros::async_test]
     async fn a_composed_checkpoint_commit_cancels_between_units() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5492,12 +5518,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             register_test_child(&mut app, child).await;
             app.dispatch_typed(TestCommand::CompositeEdit { slot: "slot".into(), child_id: child.into(), child_value: 7 }, &meta(), &mut identity).await.expect("composite edit");
         }
-        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
+        let admitted = PluginApp::handle_action(&mut *app, "commitCheckpoint", Some(&dv(serde_json::json!({ "message": "v1" }))), &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("admit checkpoint");
         let (job, output) = finish_reserved_spawn_job(&admitted).await;
         assert!(PluginApp::admit_reserved_spawned_job(&mut *app, job, output).expect("JobCompleted queues the commit"));
         continuation_unit_is_ready_on_first_poll(&mut app);
         assert_eq!(PluginApp::reserved_commit_progress(&*app).map(|step| step.applied), Some(1));
-        assert!(app.tool_cancellation_handle().cancel_document(crate::app::ArtifactDocumentAuthority(meta().instance_id)).expect("cancel the document's operations"));
+        assert!(app.tool_cancellation_handle().cancel_document(crate::tool_cancellation::ArtifactDocumentAuthority(meta().instance_id)).expect("cancel the document's operations"));
         continuation_unit_is_ready_on_first_poll(&mut app);
         let fault = PluginApp::take_reserved_commit_outcome(&mut *app).expect("a cancelled commit answers").expect_err("cancelled");
         assert_eq!(fault.code.0, "interactive-job.cancelled");
@@ -5514,7 +5540,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// otherwise a restored composition silently mixes an old parent with a new child.
     #[semio_framework_async_macros::async_test]
     async fn a_checkpoint_pins_its_children_and_a_checkout_cascades_back_to_them() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5552,7 +5578,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// already run against it.
     #[semio_framework_async_macros::async_test]
     async fn child_content_publication_path_copies_fixed_pages_and_command_capture_retains_one_root() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5585,7 +5611,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// authority never reports a block at all, so nothing here is weakened.
     #[semio_framework_async_macros::async_test]
     async fn child_snapshot_retirement_rejection_preserves_exact_erased_owner() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5596,7 +5622,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         assert_maintenance_reports_block(&mut app, 4, "the rejected child snapshot transfer");
@@ -5632,7 +5658,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// law proves the refusal, not a leak.
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_requires_terminal_empty_before_reclaim() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5643,7 +5669,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", true);
         {
             let TestMembers::Child(child) = &mut app.children.get_mut(&("slot".to_string(), "child-a".to_string())).expect("exact child owner").member;
@@ -5655,14 +5681,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     break;
                 }
                 let demand = child.maintenance_retirements_demands(4096).expect("quoted displaced snapshot demand");
-                let _ = child.maintenance_retirements_step(crate::app::plugin_demand_grant(demand)).expect("member drains its displaced snapshot aliases");
+                let _ = child.maintenance_retirements_step(crate::bounded_ownership::plugin_demand_grant(demand)).expect("member drains its displaced snapshot aliases");
             }
             assert!(child.maintenance_retirements_terminal_is_empty(), "the member released every snapshot alias it displaced");
         }
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
         app.maintenance_stage = 4;
-        assert!(matches!(app_maintenance_turn(&mut app).expect("transfer retirement authority"), crate::app::PluginLifecycleStep::Progress(_)));
+        assert!(matches!(app_maintenance_turn(&mut app).expect("transfer retirement authority"), crate::bounded_ownership::PluginLifecycleStep::Progress(_)));
         let mut faulted = None;
         for turn in 0..64 * usize::from(MAINTENANCE_STAGES) {
             app.maintenance_stage = 4;
@@ -5689,7 +5715,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn child_root_maintenance_reclaims_completed_owner_for_later_publication() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5700,7 +5726,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let generation = app.admit_child_content_publication().expect("admit replacement root");
         app.publish_child_content_member(generation, "slot", "child-a").await.expect("replace the exact child snapshot lease");
@@ -5724,7 +5750,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reports maintenance pressure until maintenance returned it below its quarter-occupancy bound.
     #[semio_framework_async_macros::async_test]
     async fn child_publications_at_the_maximum_rate_wait_on_retirement_instead_of_faulting() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5735,7 +5761,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = contract_composed_app_raw(mounted_policy, &mut identity).await;
         declare_test_child(&mut app, "child-a").await;
-        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("register child-a");
+        app.register_child("slot", "child-a", test_child_dialect().await, new_bare_test_child("child-a").await.expect("construct child-a"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("register child-a");
         install_test_snapshot_retirement(&mut app, "child-a", false);
         let start = app.child_content_generation;
         for index in 1..=10_000u64 {
@@ -5745,7 +5771,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             assert!(app.child_content_retirements.len() <= ARTIFACT_LIVE_OUTPUT_SLOTS, "the child-root retirement registry stays within its fixed slots");
         }
         assert!(PluginApp::maintenance_under_pressure(&app), "a saturated child-root retirement registry reports maintenance pressure");
-        crate::app::artifact_app_laws::drain_maintenance_pressure(&mut app);
+        crate::app_testing::artifact_app_laws::drain_maintenance_pressure(&mut app);
         assert!(app.child_content_retirements.len() < MAINTENANCE_CHILD_RETIREMENT_PRESSURE_OCCUPANCY, "pressure maintenance returns the child roots below their quarter-occupancy bound");
         drain_and_close_composed_fixture(&mut app, mounted_policy);
     }
@@ -5759,7 +5785,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 4 MiB snapshot would have to clone it or pack-encode it, and both are counted.
     #[semio_framework_async_macros::async_test]
     async fn maximum_child_public_dispatch_reaches_first_continuation_without_clone_or_encode() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5790,7 +5816,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `thread_local!` child caches this view replaces used to go stale.
     #[semio_framework_async_macros::async_test]
     async fn the_child_content_view_never_goes_stale_across_undo_and_redo() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5822,7 +5848,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// SKIPPED, not silently dropped nor allowed to abort the rest of the group.
     #[semio_framework_async_macros::async_test]
     async fn group_undo_skips_a_foreign_tail_child_but_still_undoes_parent_and_touched_child() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5858,7 +5884,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// doc comment, skipping this step would make `ChildGenesis` pointless.
     #[semio_framework_async_macros::async_test]
     async fn created_children_survive_absorb_into_the_child_store_map() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5886,7 +5912,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 👁️ A view command never advances the document.
     #[semio_framework_async_macros::async_test]
     async fn view_action_emits_no_operations() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5907,7 +5933,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// config lane answered for them (ticket 26/09/18 S11 §3.4b, S12 §4); no lane but the document and its children can.
     #[test]
     fn a_row_follows_its_parent_document_lane_and_else_its_children() {
-        use crate::app::history_row_applied as applied;
+        use crate::command_history::history_row_applied as applied;
         assert!(!applied(true, false, true), "a row that published a parent edit is UNDONE once that edit is retracted, however live its child edit is");
         assert!(!applied(true, false, false), "a parent-lane row with nothing applied anywhere is undone");
         assert!(applied(true, true, false), "a parent-lane row whose document edit is applied is applied");
@@ -5921,7 +5947,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// config the select wrote stays.
     #[semio_framework_async_macros::async_test]
     async fn a_config_lane_edit_is_never_a_history_row_and_undo_never_steps_over_it() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5947,7 +5973,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// after it" — reverting to the first increment undoes the second and leaves the config the interleaved selects wrote.
     #[semio_framework_async_macros::async_test]
     async fn revert_to_command_walks_the_document_lane_and_leaves_config_alone() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -5977,7 +6003,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// instead of replaying anything locally, and does NOT append a new log entry on its own.
     #[semio_framework_async_macros::async_test]
     async fn shell_action_with_inverse_bubbles_a_replay_effect_instead_of_replaying_locally() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6004,7 +6030,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn shell_action_emits_host_effect_without_operations() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6021,7 +6047,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn copy_emits_clipboard_write_effect_with_no_operations() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6042,7 +6068,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn copy_on_empty_selection_is_a_benign_no_operation() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6060,7 +6086,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// ✂️ One undo restores the cut label — cut is a single coalesced edit, not two.
     #[semio_framework_async_macros::async_test]
     async fn cut_removes_label_and_emits_clipboard_write_as_one_undo_unit() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6081,7 +6107,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn paste_materializes_fragment_at_original_anchor() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6106,7 +6132,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn paste_with_non_original_anchor_reaches_the_app_placement() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6131,7 +6157,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn paste_with_no_fragment_arg_is_a_benign_no_operation() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6164,7 +6190,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// and one undo reverts the whole gesture back to the empty label.
     #[semio_framework_async_macros::async_test]
     async fn streamed_ticks_and_their_commit_are_one_undo_step() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6187,7 +6213,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reverts exactly the last dispatch.
     #[semio_framework_async_macros::async_test]
     async fn plain_emissions_never_coalesce() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6206,7 +6232,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn history_actions_round_trip_through_the_store() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6235,7 +6261,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_invocation_does_not_require_window_ownership() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6260,12 +6286,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let admitted = app.handle_action_invocation(&invocation, Some("edit"), &meta(), &mut identity).await.expect("reserved undo without window ownership");
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
-        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_actor_ingress_admits_undeclared_window_kind() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6278,7 +6304,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
@@ -6304,18 +6330,18 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let meta = ActionMeta { view_state: Some(admitted), ..meta() };
         let admitted = super::drive_self_waking_ready(app.handle_action_invocation(&invocation, Some("edit"), &meta, &mut identity)).expect("actor reserved undo");
         assert!(admitted.mutations.is_empty());
-        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
+        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)), "first turn must admit spawn-job");
         assert_eq!(app.test_snapshot().await.count, 1, "first turn must not commit history");
         let result = settle_reserved(&mut app, admitted).await;
         assert!(result.mutations.is_empty());
         assert_eq!(app.test_snapshot().await.count, 0, "history order must regress through actor ingress");
         assert!(app.test_store().await.applied_edit_ids().len() < before);
-        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_first_turn_admits_spawn_job_and_drive_commits_history_route() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6327,24 +6353,24 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
         assert_eq!(app.test_snapshot().await.count, 1);
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit undo");
-        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)));
+        assert!(admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)));
         assert!(admitted.events.iter().all(|event| event.kind != "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 1, "first turn answers without committing");
         let settled = settle_reserved(&mut app, admitted).await;
         assert!(settled.events.iter().any(|event| event.kind == "history-changed"));
         assert_eq!(app.test_snapshot().await.count, 0, "driving the spawned job must run commit_framework_history_route");
-        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(&mut app.0, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     /// 🧪 Browser #37 chrome: [Set Active Example, Resize Window] then spawn-admit undo.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_pops_chrome_top_shell_then_publishes_history_patch() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6383,7 +6409,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit chrome undo");
         assert!(
-            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
         );
         assert!(admitted.history_patch.is_none(), "first turn answers with an empty patch");
@@ -6433,7 +6459,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 #38 host-drive contract: spawn-admit undo reaches Done in 2 Isolated steps with the browser budget.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_reaches_done_within_host_drive_contract() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6467,10 +6493,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         .await;
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit chrome undo");
         assert!(
-            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
         );
-        let (settled, steps) = crate::app::drive_framework_reserved_spawn_like_host(&mut app, admitted).await.expect("host-like Isolated drive");
+        let (settled, steps) = crate::artifact_instance::drive_framework_reserved_spawn_like_host(&mut app, admitted).await.expect("host-like Isolated drive");
         assert!(steps > 1, "the reserved dummy job is a multi-turn bounded job; every turn is one funded step ({steps})");
         assert_eq!(
             settled.requested_effects,
@@ -6483,7 +6509,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 Browser #37 mixed stack: document example under chrome-top Resize Window.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_pops_shell_then_falls_through_to_document_store() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6495,7 +6521,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("document example");
         let _ = app.test_history().await;
@@ -6536,7 +6562,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 Host `handleAction` JSON (`windowKindId=puzzle3d-main`, `actionId=undo`) through `plugin_handle_action`.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_host_json_export_admits_isolated_spawn_job() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6550,10 +6576,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         app.bind_instance_id(1).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("seed document edit");
-        let runtime = super::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         super::install_plugin_bundle(&runtime, __semio_plugin_bundle().await.expect("host-wire bundle"));
         super::test_push_instance(&runtime, super::AppInstance { id: 1, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         super::test_admit_instance_actor(&runtime, 1, "local");
@@ -6568,16 +6594,16 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)
         };
         let context_json = serde_json::to_string(&json!({ "actor": "local", "viewState": view })).expect("context json");
-        let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("host JSON undo through plugin_handle_action");
+        let admitted = super::plugin_handle_action(&runtime, 1, &action_json, &context_json, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("host JSON undo through plugin_handle_action");
         assert!(
-            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)),
             "export first turn must admit Isolated framework.reserved.tool, got {:?}",
             admitted.requested_effects,
         );
         assert!(admitted.output.get("operationId").and_then(semio_framework_value::DslValue::as_str).is_some(), "first-turn output names the spawn-job");
         let cell = runtime.instances.borrow().get(1).cloned().expect("live export instance");
         let mut instance = cell.instance.lock().expect("export instance");
-        artifact_app_laws::close_registered_fixture_app(&mut instance.app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(&mut instance.app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
 
@@ -6588,7 +6614,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// is what the window-kind gate refused `undeclared-action` on every undo (ticket 26/09/18 §3.2).
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_browser_note_without_inverse_is_not_an_undo_target() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6611,7 +6637,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         }
         let admitted = app.handle_action("undo", None, &meta(), &mut identity).await.expect("admit browser-note undo");
         assert!(
-            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == crate::app::FRAMEWORK_RESERVED_JOB_KIND)),
+            admitted.requested_effects.iter().any(|effect| matches!(effect, Effect::SpawnJob { kind, placement: semio_framework::kernel::JobPlacement::Isolated, .. } if kind == semio_framework::kernel::FRAMEWORK_RESERVED_JOB_KIND)),
             "first turn must admit Isolated framework.reserved.tool"
         );
         assert!(admitted.requested_effects.iter().all(|effect| !matches!(effect, Effect::ReplayShellCommand { .. })), "first turn must not apply the inverse");
@@ -6642,7 +6668,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// not an undo target, so the DOCUMENT edit is what `undo` pops and no replay leaves the guest.
     #[semio_framework_async_macros::async_test]
     async fn reserved_undo_steps_over_undeclared_chrome_and_pops_the_document_edit() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6654,7 +6680,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = contract_app(mounted_policy, &mut identity).await;
         app.test_store_mut()
             .await
-            .dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity())
+            .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity())
             .await
             .expect("document edit");
         let _ = app.test_history().await;
@@ -6706,7 +6732,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// rather than untranslated English, which is the property this clause exists for.
     #[semio_framework_async_macros::async_test]
     async fn an_operation_action_appends_one_command_log_entry_linked_to_its_edit() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6731,7 +6757,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_gesture_appends_exactly_one_command_log_entry() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6754,7 +6780,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// costs the same per tick at the end of a long gesture as at its start.
     #[semio_framework_async_macros::async_test]
     async fn a_long_streamed_gesture_previews_its_newest_operations_only() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6782,7 +6808,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn undo_and_redo_append_entries_and_never_shrink_the_log() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6809,7 +6835,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧾️ `commands` is newest-first — the just-appended revert entry is the FIRST element, not the last.
     #[semio_framework_async_macros::async_test]
     async fn revert_to_command_restores_the_snapshot_and_appends_one_entry() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6836,7 +6862,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧾️ The receiver never dispatched anything itself — any log entry it has must come from backfill.
     #[semio_framework_async_macros::async_test]
     async fn ingested_remote_edits_are_backfilled_into_the_command_log() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -6847,7 +6873,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc-history-backfill", "mem://doc-history-backfill").await;
-        sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+        sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
         sender.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
 
         let mut envelopes = Vec::new();
@@ -6859,7 +6885,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = contract_app(mounted_policy, &mut identity).await;
-        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest");
+        receiver.ingest_operations(&operations, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest");
         let history = receiver.test_history().await;
         assert_eq!(history.commands.len(), 1);
         assert!(history.commands[0].edit_id.is_some());
@@ -6868,7 +6894,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_emits_no_operations_and_updates_the_view() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7158,7 +7184,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn a_config_only_view_action_is_not_a_history_row() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7175,7 +7201,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn consecutive_config_only_view_dispatches_add_no_history_rows() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7194,7 +7220,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn interleaved_config_only_views_leave_only_the_document_row() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7214,7 +7240,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn note_shell_command_is_intercepted_before_the_app_and_records_each_repeat() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7248,7 +7274,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// shell instead of leaking a locale it does not have.
     #[semio_framework_async_macros::async_test]
     async fn a_shell_noted_row_carries_the_same_text_in_every_locale() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7271,7 +7297,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn history_delivery_does_not_widen_a_none_ui_scope() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7289,7 +7315,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// dispatch; the first view of a window, an unchanged utility and a window the view names no utility for deliver none.
     #[semio_framework_async_macros::async_test]
     async fn a_utility_switch_in_a_dispatch_view_delivers_one_host_event_to_its_window() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7314,7 +7340,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// answer dispatches without a history row of its own, and an unknown kind is refused.
     #[semio_framework_async_macros::async_test]
     async fn a_forwarded_host_event_reaches_the_app_and_its_answer_is_never_a_history_row() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7343,7 +7369,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🙈️ A `View` verb that edited no store and carries no inverse is no history row, while a mutation next to it is.
     #[semio_framework_async_macros::async_test]
     async fn a_pure_view_verb_is_no_history_row() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7380,7 +7406,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn history_delivery_preserves_partial_ui_scope() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7398,7 +7424,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn scope_upgrade_full_stays_full() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7414,7 +7440,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn benign_undo_with_nothing_to_undo_stays_unlogged_with_scope_none() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7433,7 +7459,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn set_history_command_filter_is_never_logged() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7451,7 +7477,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn rendering_the_history_body_reflects_a_log_only_change_with_no_store_generation_bump() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7470,7 +7496,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn an_operation_kind_action_with_zero_operations_still_logs_one_entry() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7493,7 +7519,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn undo_on_empty_history_is_a_benign_no_operation() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7511,7 +7537,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn document_round_trips_through_serialization() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7532,7 +7558,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn ingest_operations_is_idempotent() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7543,7 +7569,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut sender = contract_app(mounted_policy, &mut identity).await;
         let (near, mut far) = MemoryBackbone::pair("mem://doc", "mem://doc").await;
-        sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+        sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
         sender.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment");
 
         let mut envelopes = Vec::new();
@@ -7556,14 +7582,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let operations = protocol::encode_envelopes(&envelopes);
 
         let mut receiver = contract_app(mounted_policy, &mut identity).await;
-        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest once");
-        receiver.ingest_operations(&operations, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
+        receiver.ingest_operations(&operations, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest once");
+        receiver.ingest_operations(&operations, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest twice");
         assert_eq!(receiver.test_snapshot().await.count, 1, "feeding the same operation twice must not double-apply");
     }
 
     #[semio_framework_async_macros::async_test]
     async fn attach_detach_reattach_resumes_backbone_convergence() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7576,7 +7602,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(app.backbone_ref().is_none(), "default is unattached");
 
         let (near, mut far) = MemoryBackbone::pair("mem://reattach", "mem://reattach").await;
-        app.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+        app.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment while attached");
         assert!(!far.receive().await.expect("receive after attach").is_empty(), "attached edits reach the peer");
 
@@ -7587,7 +7613,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert!(far.receive().await.expect("receive while detached").is_empty(), "detached edits never reach the peer");
 
         let (near_again, mut far_again) = MemoryBackbone::pair("mem://reattach-2", "mem://reattach-2").await;
-        app.attach_backbone(store::Backbones::Memory(near_again)).await.expect("re-attach");
+        app.attach_backbone(store::os_store::backbone::Backbones::Memory(near_again)).await.expect("re-attach");
         assert!(app.backbone_ref().is_some());
         app.dispatch_typed(TestCommand::Increment, &meta(), &mut identity).await.expect("increment after re-attach");
         assert_eq!(app.test_snapshot().await.count, 3);
@@ -7606,7 +7632,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// "something is selected"), both rows resolve label/icon from the declared registry entries.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_resolves_labels_from_the_registry_and_respects_guards() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7695,7 +7721,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `organize_context_menu` to every emitter, not just ones that call `Menu::group` themselves.
     #[semio_framework_async_macros::async_test]
     async fn context_menu_funnel_organizes_a_synthetic_apps_flat_overflow_menu() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7742,7 +7768,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_reaches_real_app_render_and_rejects_hidden_surfaces() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7753,7 +7779,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let app = contract_app_raw(mounted_policy, &mut identity).await;
         let cell = std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy));
         runtime.instances.borrow_mut().insert_admitted(7, cell);
@@ -7779,7 +7805,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_refresh_projects_panels_from_focused_window_state() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7791,7 +7817,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         let focused = host_view.for_window_instance("right").unwrap();
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let app = contract_app_raw(mounted_policy, &mut identity).await;
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let response = super::plugin_refresh_ui(&runtime, 7, &serde_json::to_string(&json!({"viewState":focused,"panels":[{"key":"properties","bodyKey":"properties"}]})).unwrap()).await.unwrap();
@@ -7804,7 +7830,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn reserved_section_surfaces_render_accessor_maps_instead_of_app_bodies() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -7816,7 +7842,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-context-lifecycle/🔣️.json")).unwrap();
         let mut host_view: ViewModel = serde_json::from_value(fixture["view"].clone()).unwrap();
         host_view.active_tool_id = Some("fill".into());
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let app = contract_app_raw(mounted_policy, &mut identity).await;
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         let mut payloads = BTreeMap::new();
@@ -7932,8 +7958,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 🚚️ Projects one built surface node and returns `(projection, lane subtree by carrier key)`.
-    fn project_scene_surface(node: crate::app::BuiltNode) -> (Value, BTreeMap<String, Value>) {
-        let projection: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(crate::app::built_to_component_tree(node)).unwrap()).unwrap();
+    fn project_scene_surface(node: semio_framework_ui_contract::BuiltNode) -> (Value, BTreeMap<String, Value>) {
+        let projection: Value = serde_json::from_str(&artifact_app_laws::project_and_retire_fixture_tree(crate::window_surface::built_to_component_tree(node)).unwrap()).unwrap();
         let lanes = projection["children"]
             .as_array()
             .unwrap()
@@ -7985,7 +8011,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let assembled_bytes = <semio_framework_ui_scene::World3dScene as semio_framework_ui_scene::SceneDoc>::encode_pack(&scene).unwrap().len();
         assert!(assembled_bytes > semio_framework_ui_contract::UI_FIXED_BYTES, "the unsplit scene must be past the fixed doc ceiling to prove anything");
 
-        let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let node = crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
         let (projection, lanes) = project_scene_surface(node);
 
         let doc_bytes = projection["component"]["doc"]["bytes"].as_array().unwrap().len();
@@ -8014,13 +8040,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     async fn world3d_scene_surface_republishes_only_the_lanes_that_changed() {
         let selection = r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#;
-        let (_, first) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
+        let (_, first) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", selection)).unwrap());
 
-        let (moved_projection, moved) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
+        let (moved_projection, moved) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene(r#"{"position":[9,9,9]}"#, selection)).unwrap());
         assert_eq!(moved, first, "a camera move must leave every lane carrier byte-identical");
 
         let picked = r#"{"method":"rectangle","mode":"replace","ids":["capsule-0007"],"hoveredId":null}"#;
-        let (picked_projection, picked_lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
+        let (picked_projection, picked_lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &oversized_world_scene("{}", picked)).unwrap());
         let changed: Vec<&String> = picked_lanes.keys().filter(|key| picked_lanes.get(*key) != first.get(*key)).collect();
         assert_eq!(changed, vec![semio_framework_ui_scene::World3dSceneLane::Selection.body_key()]);
         assert_ne!(picked_projection["component"], moved_projection["component"], "a changed lane must still move the spine so its consumer re-reads");
@@ -8031,7 +8057,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let instances = serde_json::to_string(&(0..3_000).map(|index| json!({"id": format!("capsule-{index:05}"), "meshId": "box"})).collect::<Vec<_>>()).unwrap();
         assert!(instances.len() > UI_TEXT_MAX_BYTES * UI_BUILT_CHILDREN_MAX, "one lane must be past a single carrier level to prove paging");
         let scene = semio_framework_ui_scene::World3dScene::base("{}".into(), "[]".into(), instances.clone(), "{}".into());
-        let (_, lanes) = project_scene_surface(crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
+        let (_, lanes) = project_scene_surface(crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap());
         let (leaves, depth) = assert_lane_carrier(lanes.get(semio_framework_ui_scene::World3dSceneLane::Instances.body_key()).unwrap(), &instances);
         let pack = UI_TEXT_MAX_BYTES * (1 + UI_FIXED_LIST_ITEMS);
         assert!(leaves <= instances.len().div_ceil(pack).max(1) + 2, "packed instances leaves must stay near ceil(bytes/pack), got {leaves} for {} bytes", instances.len());
@@ -8041,7 +8067,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     async fn a_scene_that_declares_no_lanes_still_publishes_one_childless_surface() {
         let scene = semio_framework_ui_scene::IconRenderScene { request_json: r#"{"meshId":"box"}"#.into(), footer: None, frame_json: None };
-        let (projection, lanes) = project_scene_surface(crate::app::scene_surface("preview", semio_framework_ui_contract::SurfaceKind::IconRender, &scene).unwrap());
+        let (projection, lanes) = project_scene_surface(crate::window_surface::scene_surface("preview", semio_framework_ui_contract::SurfaceKind::IconRender, &scene).unwrap());
         assert!(lanes.is_empty());
         assert_eq!(projection["component"]["type"], "surface");
         assert_eq!(artifact_app_laws::decode_fixture_scene_with_lanes::<semio_framework_ui_scene::IconRenderScene>(&serde_json::to_string(&projection).unwrap()).unwrap(), scene);
@@ -8050,7 +8076,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     async fn nakagin_scale_world3d_surface_fits_document_node_cap() {
         let scene = oversized_world_scene("{}", r#"{"method":"rectangle","mode":"replace","ids":[],"hoveredId":null}"#);
-        let node = crate::app::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
+        let node = crate::window_surface::scene_surface("viewport", semio_framework_ui_contract::SurfaceKind::World3d, &scene).unwrap();
         let (projection, _) = project_scene_surface(node);
         let nodes = count_projected_nodes(&projection);
         assert!(nodes <= semio_framework_ui_contract::UI_DOCUMENT_NODES, "Nakagin-scale world-3d surface presented {nodes} nodes over UI_DOCUMENT_NODES");
@@ -8070,7 +8096,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn surface_context_presence_targets_each_concrete_surface() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8091,7 +8117,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             }),
         }).unwrap();
         *app.peer_presence = std::sync::Arc::new(peers);
-        let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         runtime.instances.borrow_mut().insert_admitted(7, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 7, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
         for surface in fixture["surfaces"].as_array().unwrap() {
             let id = surface["id"].as_str().unwrap();
@@ -8107,7 +8133,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn view_action_emitting_ops_is_rejected() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8130,7 +8156,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `dirty_render` pass.
     #[semio_framework_async_macros::async_test]
     async fn activate_intent_dispatches_through_the_typed_command_path_same_turn() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8164,7 +8190,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// command path uses.
     #[semio_framework_async_macros::async_test]
     async fn view_kind_intent_returning_operations_hard_faults() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8212,7 +8238,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn set_active_utility_carries_its_value_directly_and_emits_no_operations() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8232,7 +8258,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// only reverts the last one.
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_gesture_is_one_undo_step_while_each_commit_is_its_own() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8265,7 +8291,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// The narrowed per-dispatch reporting must not affect the one-edit/undo semantics of the transaction.
     #[semio_framework_async_macros::async_test]
     async fn a_streamed_tick_reports_only_its_own_new_operation() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8295,7 +8321,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn operation_command_emits_kernel_op_with_true_inverse() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8314,7 +8340,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_command_dispatch_validates_structural_app_ownership() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8336,7 +8362,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn ui_dispatch_backstop_rejects_every_non_migrated_action_and_command() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8351,8 +8377,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for classification in [Unclassified, BatchOnlyPendingRewrite, ForbiddenFromUi, Deleted] {
             let mut action_registry = contract_registry().await;
             action_registry.test_set_action_classification("badView", classification);
-            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-            crate::app::artifact_app_laws::settle_store_constructor(&mut action_app, mounted_policy);
+            let mut action_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), action_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            crate::app_testing::artifact_app_laws::settle_store_constructor(&mut action_app, mounted_policy);
             assert!(!action_app.test_registered_tool_keys().iter().any(|key| key.1 == "badView"));
             let action_error = action_app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("non-migrated action must be rejected before its handler runs");
             assert_eq!(action_error.code.0, "interactive-job.not-ui-safe");
@@ -8360,8 +8386,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
             let mut command_registry = contract_registry().await;
             command_registry.test_set_app_command_classification("incrementViaCommand", classification);
-            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-            crate::app::artifact_app_laws::settle_store_constructor(&mut command_app, mounted_policy);
+            let mut command_app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_NONE>>::with_registry(TestApp::<false, TEST_APP_TOOLS_NONE>::default(), command_registry, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+            crate::app_testing::artifact_app_laws::settle_store_constructor(&mut command_app, mounted_policy);
             assert!(!command_app.test_registered_tool_keys().iter().any(|key| key.1 == "incrementViaCommand"));
             let invocation =
                 CommandInvocation { address: CommandAddress { owner: CommandOwnerAddress::App { plugin_id: "test".into(), app_id: TestApp::<false>::APP_ID.into() }, command_id: "incrementViaCommand".into() }, arguments: Default::default() };
@@ -8375,7 +8401,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn manifest_mode_command_requires_the_active_structural_owner() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8399,7 +8425,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn addressed_window_action_injects_the_exact_window_instance_into_the_typed_handler() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8453,7 +8479,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn command_op_records_history_exactly_like_an_operation_action() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8472,13 +8498,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn registry_less_construction_rejects_before_the_reducer() {
-        let mounted_grant=crate::app::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
+        let mounted_grant=semio_framework_value::retained_clone::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32_768,maximum_capacity_bytes:262_144,maximum_release_bytes:1_048_576,maximum_depth:4_096};
         let mounted_policy=crate::MountedOwnerPolicyV1{preparation:mounted_grant,maintenance:mounted_grant,close:mounted_grant};
         let identity_started=std::time::Instant::now();
         let mut identity_progress=|progress:semio_framework_value::native_encoding::NativeEncodeProgress|{eprintln!("[DEBUG] fixture identity completed={} total={} owned={}",progress.completed,progress.total,progress.owned_bytes);progress.owned_bytes<=1_048_576&&identity_started.elapsed()<std::time::Duration::from_secs(60)};
         let mut identity=semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576,&mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
-        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        let mut app = VcsArtifactApp::<TestApp<false, TEST_APP_TOOLS_FACTORIES>>::new(TestApp::<false, TEST_APP_TOOLS_FACTORIES>::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
         let error = app.dispatch_typed(TestCommand::BadView, &meta(), &mut identity).await.expect_err("an empty registry must fail closed");
         assert_eq!(error.code.0, "interactive-job.unknown-key");
         assert_eq!(app.test_snapshot().await, TestSnapshot::default());
@@ -8489,7 +8515,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🕹️ `interaction_topology` requires a non-empty `label` for "item-1" to exist.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_replace_persists_through_the_interaction_store() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8509,7 +8535,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🐁️ Empty targets clears the channel (see `next_hover`'s "empty batch clears" law).
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_is_ephemeral_and_never_touches_the_persisted_interaction_store() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8536,7 +8562,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// DOCUMENT store) — with only the label-seed edit on it, one undo reverts THAT, not the pick.
     #[semio_framework_async_macros::async_test]
     async fn a_pick_is_never_undoable_the_default_undo_only_ever_walks_the_document_store() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8560,7 +8586,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reserved job's commit, exactly where `reserved_action` above drives the accepted ones.
     #[semio_framework_async_macros::async_test]
     async fn set_selection_mode_and_set_interaction_granularity_persist_immediately() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8577,13 +8603,13 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app.interaction_state().await.active_granularity.get("items").map(String::as_str), Some("item"));
 
         let admitted = app.handle_action(SET_INTERACTION_GRANULARITY_ACTION_ID, Some(&dv(json!({ "domainId": "items", "granularityId": "bogus" }))), &meta(), &mut identity).await.expect("undeclared granularity admission");
-        let error = crate::app::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
+        let error = crate::artifact_instance::settle_framework_reserved_admission(&mut *app, admitted).await.expect_err("undeclared granularity must be rejected");
         assert!(error.message.contains("bogus"), "unexpected error: {}", error.message);
     }
 
     #[semio_framework_async_macros::async_test]
     async fn clear_selection_and_select_all_apply_across_every_declared_domain() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8606,7 +8632,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// "item-1 was deleted from the document" — task 4: revalidated after EVERY artifact dispatch.
     #[semio_framework_async_macros::async_test]
     async fn validate_state_prunes_a_stale_selection_id_after_the_document_deletes_it() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8629,7 +8655,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// only the seeding edit stays in the log.
     #[semio_framework_async_macros::async_test]
     async fn interaction_verbs_never_become_history_rows() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8685,7 +8711,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// threaded through, with the app-local body key before runtime surface binding.
     #[semio_framework_async_macros::async_test]
     async fn ui_tree_stamping_caches_interaction_topology_from_a_domain_bound_tree() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8769,7 +8795,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// for the life of the session on BOTH renderers — the row the user deselected never hears about it.
     #[semio_framework_async_macros::async_test]
     async fn a_dropped_selection_publishes_a_cleared_presence_update() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8837,7 +8863,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 W-G3 §8.21 — `interactionSelect` leftover `Invocation.output` carries InteractionView selected ids + lock.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_job_completion_publishes_interaction_view_on_leftover() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8862,7 +8888,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 W-G3 §8.30 — leftover `interactionSelect` of an object id on a vortex-domain-shaped pick still lands in `selectedIds`.
     #[semio_framework_async_macros::async_test]
     async fn leftover_interaction_select_object_id_on_vortex_domain_lands_in_selected_ids() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8887,7 +8913,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 W-G3 §8.21 — `interactionHover` leftover publishes the hover target on the same leftover output.
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_job_completion_publishes_hover_target_on_leftover() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8913,7 +8939,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// (ticket 26/09/02 `📓️2026-09-12-wave-B32-world-lane-after-completion.md` §3.2).
     #[semio_framework_async_macros::async_test]
     async fn interaction_hover_dirties_only_the_hovering_windows_own_lane() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8937,7 +8963,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// panel bodies included, so an app can widen a select beyond a hover without widening the hover.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_carries_the_apps_declared_selection_lane() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -8972,7 +8998,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// reached only when not even a window declares the touched domain (the sibling law below).
     #[semio_framework_async_macros::async_test]
     async fn an_undeclared_interaction_verb_falls_through_to_the_declared_surface_scope() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9013,8 +9039,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for verb in InteractionVerb::ALL {
             assert_eq!(InteractionVerb::of_action(verb.action_id()), Some(verb), "{verb:?}");
         }
-        assert_eq!(InteractionVerb::ALL.len(), crate::app::INTERACTION_ACTION_IDS.len());
-        for action in crate::app::INTERACTION_ACTION_IDS {
+        assert_eq!(InteractionVerb::ALL.len(), crate::interaction_topology::INTERACTION_ACTION_IDS.len());
+        for action in crate::interaction_topology::INTERACTION_ACTION_IDS {
             assert!(InteractionVerb::of_action(action).is_some(), "{action} is intercepted but names no verb");
         }
         assert_eq!(InteractionVerb::of_action("undo"), None);
@@ -9023,7 +9049,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 🧪 Empty-target `interactionSelect` with `replace` clears the domain (background deselect) even when an object is hovered.
     #[semio_framework_async_macros::async_test]
     async fn emitted_empty_replace_write_clears_selection_while_hover_remains() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9036,7 +9062,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), &mut identity).await;
         reserved_action(&mut app, INTERACTION_HOVER_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": "items", "channel": "pointer" }), "item-1")), &mut identity).await;
         let clear = Emit { interaction_writes: vec![InteractionWrite::replace("items", "object", std::iter::empty::<String>())], ..Default::default() };
-        app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
+        app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("explicit selection clear lands");
         let snapshot = app.test_interaction_selection_snapshot();
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.ids.is_empty()));
         assert!(snapshot.selection.get("items").is_none_or(|selection| selection.anchor_id.is_none()));
@@ -9046,7 +9072,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     #[semio_framework_async_macros::async_test]
     async fn empty_target_interaction_select_clears_selection_while_hover_remains() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9082,7 +9108,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// host and the pick landed one guest round trip later, behind any pointer input issued meanwhile.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_interaction_select_is_folded_into_the_carrying_turn() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9097,7 +9123,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             ui_scope: UiDirtyScope::None,
             ..Default::default()
         };
-        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
+        let result = app.test_dispatch_emit("canvasPointerUp", emit, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9118,7 +9144,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// refresh is dropped.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_empty_replace_select_clears_and_unions_the_carrier_scope() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9129,12 +9155,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let pick = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::None, ..Default::default() };
-        app.test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("pick lands");
+        app.test_dispatch_emit("canvasPointerUp", pick, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("pick lands");
         assert_eq!(app.test_interaction_selection_snapshot().selection.get("items").map(|selection| selection.ids.len()), Some(1));
 
         let carrier_scope = UiDirtyScope::Partial { window_bodies: vec!["some.window".into()], panel_bodies: Vec::new(), utilities: true, tools: false, engagements: false, measures: false, labels: false };
         let clear = Emit { effects: vec![inline_interaction_select(interaction_empty_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" })))], ui_scope: carrier_scope, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("clear lands");
+        let result = app.test_dispatch_emit("canvasPointerDown", clear, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("clear lands");
         assert!(result.requested_effects.is_empty(), "nothing is left for the host to replay: {:?}", result.requested_effects);
         assert!(result.diagnostics.is_empty(), "{:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9154,7 +9180,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// untouched. A `Full` carrier scope stays `Full`.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_interaction_select_on_an_undeclared_domain_is_a_diagnostic_not_a_fault() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9165,10 +9191,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let bad = Emit { effects: vec![inline_interaction_select(interaction_target_args(json!({ "domainId": "ghosts", "merge": "replace", "method": "pick" }), "item-1"))], ui_scope: UiDirtyScope::Full, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("a refused inline verb never fails its carrier");
+        let result = app.test_dispatch_emit("canvasPointerUp", bad, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("a refused inline verb never fails its carrier");
         assert!(result.requested_effects.is_empty(), "the refused verb is consumed, not bounced to the host: {:?}", result.requested_effects);
         assert_eq!(result.diagnostics.len(), 1, "{:?}", result.diagnostics);
-        assert_eq!(result.diagnostics[0].code.0, crate::app::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE);
+        assert_eq!(result.diagnostics[0].code.0, crate::interaction_topology::INLINE_INTERACTION_VERB_DIAGNOSTIC_CODE);
         assert!(result.diagnostics[0].message.contains("ghosts"), "the diagnostic names the refused domain: {}", result.diagnostics[0].message);
         assert_eq!(result.ui_scope, UiDirtyScope::Full);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9180,7 +9206,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// shell relay riding the same `ReplayShellCommand` variant keeps reaching the host untouched.
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_replay_shell_commands_still_reach_the_host() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9191,7 +9217,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let relay = Effect::ReplayShellCommand { action_id: "os.setThemeId".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "themeId": "light" }))) };
-        let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("relay lands");
+        let result = app.test_dispatch_emit("relayTheme", Emit { effects: vec![relay.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("relay lands");
         assert_eq!(result.requested_effects, vec![relay]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
@@ -9207,7 +9233,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// The placeholder `req` an app literal carries is awaited by nothing, so dropping it is silent.
     #[semio_framework_async_macros::async_test]
     async fn guest_emitted_dispatch_action_interaction_select_is_folded_into_the_carrying_turn() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9219,7 +9245,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let verb = Effect::DispatchAction { req: RequestId(115), action: INTERACTION_SELECT_ACTION_ID.into(), args: Some(interaction_target_args(json!({ "domainId": "items", "merge": "replace", "method": "pick" }), "item-1")), delay_ms: 0 };
         let emit = Emit { effects: vec![Effect::Navigate { uri: "semio://home".into() }, verb], ui_scope: UiDirtyScope::None, ..Default::default() };
-        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
+        let result = app.test_dispatch_emit("canvasPointerDown", emit, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the carrying command lands");
         assert_eq!(result.requested_effects, vec![Effect::Navigate { uri: "semio://home".into() }], "the DispatchAction interaction verb never reaches the host; every other effect does, in order");
         assert!(result.diagnostics.is_empty(), "a well-formed verb applies without diagnostics: {:?}", result.diagnostics);
         let snapshot = app.test_interaction_selection_snapshot();
@@ -9240,7 +9266,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `delay_ms` intact.
     #[semio_framework_async_macros::async_test]
     async fn non_interaction_dispatch_actions_still_reach_the_host() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9251,7 +9277,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
         let chain = Effect::DispatchAction { req: RequestId(91_002), action: "probeChildContinuation".into(), args: Some(semio_framework_value::DslValue::from(&json!({ "pass": 2 }))), delay_ms: 16 };
-        let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("chain lands");
+        let result = app.test_dispatch_emit("stagedPass", Emit { effects: vec![chain.clone()], ui_scope: UiDirtyScope::None, ..Default::default() }, &meta(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("chain lands");
         assert_eq!(result.requested_effects, vec![chain]);
         assert_eq!(result.ui_scope, UiDirtyScope::None, "no verb was folded, so no scope was widened");
         assert!(result.diagnostics.is_empty());
@@ -9282,7 +9308,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 📡️ EXACTLY the host's per-turn effect drain — every effect this turn hands out.
     #[semio_framework_async_macros::async_test]
     async fn typed_ladder_never_hands_a_guest_interaction_verb_to_the_host_on_any_turn() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9292,8 +9318,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let id = 47u32;
-        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
+        let mut app = VcsArtifactApp::<KeyedTestApp>::with_registry(KeyedTestApp, keyed_pick_test_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, mounted_policy);
         app.bind_instance_id(id).await;
         let meta = ActionMeta { actor: "fixture".into(), instance_id: id, view_state: None };
         let outcome: Result<(), String> = async {
@@ -9308,7 +9334,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                     return Err(format!("the pick did not retire within 30 s: turns={turns} lanes={lanes:?}"));
                 }
                 app_maintenance_turn(&mut app).map_err(|error| format!("maintenance: {error:?}"))?;
-                app.advance_typed_operation_publication(&mut crate::app::artifact_app_laws::fixture_identity(), crate::app::artifact_app_laws::fixture_mounted_policy().maintenance).await.map_err(|error| format!("turn {turns}: {error:?}"))?;
+                app.advance_typed_operation_publication(&mut crate::app_testing::artifact_app_laws::fixture_identity(), crate::app_testing::artifact_app_laws::fixture_mounted_policy().maintenance).await.map_err(|error| format!("turn {turns}: {error:?}"))?;
                 turns += 1;
                 while let Some(page) = app.take_typed_operation_result_page(id) {
                     if page.lane == TypedOperationResultLane::Fault {
@@ -9321,8 +9347,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 }
                 while let Some(effect) = app.take_typed_operation_effect() {
                     let verb = match &effect {
-                        Effect::ReplayShellCommand { action_id, .. } => crate::app::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
-                        Effect::DispatchAction { action, .. } => crate::app::INTERACTION_ACTION_IDS.contains(&action.as_str()),
+                        Effect::ReplayShellCommand { action_id, .. } => crate::interaction_topology::INTERACTION_ACTION_IDS.contains(&action_id.as_str()),
+                        Effect::DispatchAction { action, .. } => crate::interaction_topology::INTERACTION_ACTION_IDS.contains(&action.as_str()),
                         _ => false,
                     };
                     if verb {
@@ -9381,7 +9407,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             Ok(())
         }
         .await;
-        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        crate::app_testing::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
         outcome.expect("typed-ladder per-turn fold law");
     }
 
@@ -9398,7 +9424,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let started = |operation: &str| store::pack_rt::encode_wire_value(&semio_framework_value::DslValue::Object(vec![("operationId".into(), semio_framework_value::DslValue::String(operation.into())), ("generation".into(), semio_framework_value::DslValue::String("7".into()))]));
         let invocation = |in_reply_to: u64, output: Vec<u8>| protocol::AppFrame::Invocation { in_reply_to, output, diagnostics: Vec::new(), ui_scope: Vec::new(), history_patch: Vec::new(), messages: Vec::new(), mutations: Vec::new(), inverse_group: Vec::new() };
         let view = semio_framework_value::DslValue::Object(vec![("interactionView".into(), semio_framework_value::DslValue::Object(vec![("selectedIds".into(), semio_framework_value::DslValue::Array(vec![semio_framework_value::DslValue::String("item-1".into())]))]))]);
-        let leftover = crate::app::TypedOperationLeftover { operation: 42, view };
+        let leftover = crate::tool_jobs::TypedOperationLeftover { operation: 42, view };
         let mut frames = vec![protocol::AppFrame::Done { in_reply_to: 1 }, invocation(2, started("41")), invocation(0, started("42")), invocation(3, started("42"))];
         let untouched: Vec<Vec<u8>> = frames.iter().take(3).map(|frame| ::semio_framework_async::poll::resolve_ready(protocol::encode_app_frame(frame))).collect();
         assert!(super::merge_typed_operation_leftover_into_reply(&mut frames, &leftover), "the reply that started operation 42 receives the leftover");
@@ -9422,7 +9448,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// Fails-before: one plain pick published the id twice, once per mirroring domain.
     #[semio_framework_async_macros::async_test]
     async fn leftover_interaction_view_selected_ids_are_a_set_for_every_merge() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9473,7 +9499,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// 'add'` and only the unmodified `replace` pick worked.
     #[semio_framework_async_macros::async_test]
     async fn interaction_select_speaks_exactly_the_schema_merge_vocabulary() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9496,7 +9522,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         for word in &deleted {
             let mut app = interaction_app_under_test(mounted_policy, &mut identity).await;
             let admitted = app.handle_action(INTERACTION_SELECT_ACTION_ID, Some(&interaction_targets_args(json!({ "domainId": "items", "merge": word, "method": "pick" }), "item", &["item-1".to_string()])), &meta(), &mut identity).await.expect("the reserved job is admitted before its args are decoded");
-            let fault = crate::app::settle_framework_reserved_admission(&mut app, admitted).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
+            let fault = crate::artifact_instance::settle_framework_reserved_admission(&mut app, admitted).await.expect_err("a merge word outside the schema vocabulary must fault the reserved job, never fall back to a replace");
             assert!(format!("{fault:?}").contains(&format!("unknown merge '{word}'")), "the deleted word '{word}' must be rejected outright — no adapter, no silent replace; got {fault:?}");
             close_reserved_app(&mut app, mounted_policy);
         }
@@ -9555,7 +9581,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// nothing at all and applies nothing.
     #[semio_framework_async_macros::async_test]
     async fn a_spawned_task_awaits_a_real_request_and_its_resume_mutates_the_store_under_the_original_meta() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9567,11 +9593,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let instance = 501;
         let spawn_meta = ActionMeta { actor: "alice".into(), instance_id: instance, view_state: None };
         let mut app = contract_app_raw(mounted_policy, &mut identity).await;
-        crate::app::PluginApp::bind_instance_id(&mut app, instance).await;
+        crate::plugin_app::PluginApp::bind_instance_id(&mut app, instance).await;
 
         let result = app.dispatch_typed(TestCommand::SpawnCountTask, &spawn_meta, &mut identity).await.expect("dispatching SpawnCountTask must succeed");
         assert!(result.mutations.is_empty(), "SpawnCountTask itself must emit no document mutation — only the LATER resume does");
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the spawning operation's publication settles");
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut app, instance, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the spawning operation's publication settles");
         assert_eq!(
             receipt.lanes,
             vec![TypedOperationResultLane::Ui, TypedOperationResultLane::Terminal],
@@ -9599,10 +9625,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let decoded_command = <TestCommand as ::protocol::OpBinary>::decode_op(&command_bytes).expect("must decode back to a TestCommand");
         assert_eq!(decoded_command, TestCommand::ApplyCountFromTask { value: 42 }, "the resolved command must carry the value the injected completion delivered");
 
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::test_push_instance(&runtime, AppInstance { id: resumed_instance, app: TestRuntimeApps::from(app), surface_contexts: Default::default() }).await;
         crate::plugin_runtime::test_admit_instance_actor(&runtime, resumed_instance, "local");
-        let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+        let output = crate::plugin_runtime::plugin_resume_task(&runtime, resumed_instance, &resumed_meta, crate::plugin_runtime::TaskResumeInput::Command(command_bytes), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
         assert_eq!(output.frames.len(), 1, "a successful resume must frame exactly one AppFrame::Emit");
         let frame = protocol::decode_app_frame(&output.frames[0]).await.expect("must decode back to an AppFrame");
         assert!(
@@ -9612,11 +9638,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
         let cell = crate::plugin_runtime::runtime_instance_cell(&runtime, resumed_instance).expect("the resumed instance stays mounted");
         let mut active = cell.instance.try_lock().expect("no other owner holds the resumed instance");
-        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the resumed follow-up publishes");
+        let receipt = artifact_app_laws::settle_registered_typed_operation(&mut active.app, resumed_instance, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the resumed follow-up publishes");
         assert!(receipt.lanes.contains(&TypedOperationResultLane::Artifact), "the follow-up must have published on the ARTIFACT lane — it applies, it does not preview: {:?}", receipt.lanes);
         assert_eq!(receipt.completions, 1, "the follow-up is exactly one terminated operation");
 
-        let history = crate::app::PluginApp::history_snapshot(&mut active.app).await.expect("history after the resumed follow-up");
+        let history = crate::plugin_app::PluginApp::history_snapshot(&mut active.app).await.expect("history after the resumed follow-up");
         let row = history.upserts.iter().find(|entry| entry.action_id == "applyCountFromTask").unwrap_or_else(|| panic!("the follow-up dispatch is recorded under its own verb: {:?}", history.upserts.iter().map(|entry| entry.action_id.clone()).collect::<Vec<_>>()));
         assert!(row.applied, "the follow-up is an APPLIED edit, not a staged preview");
         assert!(row.op_lines.iter().any(|line| line.contains("42")), "the applied edit carries the value the injected completion delivered: {:?}", row.op_lines);
@@ -9686,7 +9712,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         F: FnOnce(TaskCtx) -> Fut + Send + 'static,
         Fut: std::future::Future<Output = Result<TaskResolution<TestMutation, TestConfigMutation, NoDraftMutation>, Fault>> + 'static,
     {
-        AsyncTask::new(label.to_string(), TestTaskSource(run), crate::app::artifact_app_laws::fixture_mounted_policy().preparation).unwrap_or_else(|(error, _, _)| panic!("test task constructor refused: {error}")).0
+        AsyncTask::new(label.to_string(), TestTaskSource(run), crate::app_testing::artifact_app_laws::fixture_mounted_policy().preparation).unwrap_or_else(|(error, _, _)| panic!("test task constructor refused: {error}")).0
     }
 
     /// 🚫️ The (quota+1)th task on one instance is refused with a typed `Fault` — never a
@@ -9817,7 +9843,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     async fn checkpoint_then_restore_requeues_a_restartable_tasks_command_as_a_resume() {
         let completion: Value = serde_json::from_str(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🧫️fixtures/⏳️completion/🔣️.json"))).unwrap();
-        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::<TestRuntimeApps>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         let instance = 507;
         crate::plugin_runtime::test_admit_instance_actor(&runtime, instance, "local");
         let meta = ActionMeta { actor: "local".into(), instance_id: instance, view_state: None };
@@ -9880,7 +9906,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     include!("../🔬️surface-view-state-routing/🦀️.rs");
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_original_pages_retain_exact_app_close_authority() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9890,11 +9916,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        crate::app::test_mounted_command_history_pages(&mut app);
+        crate::child_content::test_mounted_command_history_pages(&mut app);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_command_history_document_replacement_keeps_original_held_rows() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9904,12 +9930,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        app.test_store_mut().await.dispatch(store::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app::artifact_app_laws::fixture_identity()).await.unwrap();
-        crate::app::test_mounted_command_history_replacement(&mut app);
+        app.test_store_mut().await.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![TestMutation::SetCount(SetCount { value: 1 })], transaction: None }, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.unwrap();
+        crate::child_content::test_mounted_command_history_replacement(&mut app);
     }
     #[semio_framework_async_macros::async_test]
     async fn mounted_private_child_frame_retains_exact_admission_and_close_authority() {
-        let mounted_grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
+        let mounted_grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 };
         let mounted_policy = crate::MountedOwnerPolicyV1 { preparation: mounted_grant, maintenance: mounted_grant, close: mounted_grant };
         let identity_started = std::time::Instant::now();
         let mut identity_progress = |progress: semio_framework_value::native_encoding::NativeEncodeProgress| {
@@ -9919,8 +9945,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(1_048_576, &mut identity_progress as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).expect("explicit original fixture identity authority");
 
         let mut app = Box::pin(contract_app_raw(mounted_policy, &mut identity)).await;
-        crate::app::test_mounted_private_child_frame(&mut app);
-        crate::app::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        crate::child_content::test_mounted_private_child_frame(&mut app);
+        crate::app_testing::artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
     mod mounted_owned_child_laws { include!("🪟️mounted-owned-child/🦀️.rs"); }
     mod owned_child_dispatch_laws { include!("📨️owned-child-dispatch/🦀️.rs"); }
@@ -9928,7 +9954,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 /// 👷️ Original reserved route returns physical backing separately from logical payload work.
 #[test]
 fn original_reserved_job_currency_law_retains_spare_backing_until_exact_release(){
- use crate::app::FrameworkSetSelectionModeJob;
+ use crate::reserved_jobs::FrameworkSetSelectionModeJob;
  use semio_framework_job::{InteractiveJob,InteractiveJobCloseStep};
  use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress};
  use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;

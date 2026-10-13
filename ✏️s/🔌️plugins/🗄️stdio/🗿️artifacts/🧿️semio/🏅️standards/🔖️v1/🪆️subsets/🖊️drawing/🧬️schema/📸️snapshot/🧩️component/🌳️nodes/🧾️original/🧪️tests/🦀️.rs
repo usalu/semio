@@ -4,7 +4,7 @@ use semio_framework_value::{DslValue,FromValue,ToValue,ErasedSnapshotRetirement,
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::native_decoding::{NativeDecodeControl,NativeDecodeRetirementRecipient};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneStep,RetainedCloneProgress};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode,DrawStyle,DrawCanvas,DrawLayer,SemioDrawingSnapshot};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, DrawCanvas, DrawLayer, SemioDrawingSnapshot};
 #[global_allocator]
 static DRAW_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn fixture()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}
@@ -28,8 +28,8 @@ fn close(owner:&mut dyn ErasedSnapshotRetirement,denials:&mut Vec<serde_json::Va
  panic!("Drawing original close did not converge")
 }
 fn close_owned<T:RetireOwned>(value:T,denials:&mut Vec<serde_json::Value>)->(usize,usize){
- let mut pending=Some(value);let mut active=None;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::artifact_retirement_admit_owned(&mut pending,&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=(physical.requested_bytes,physical.released_bytes);
- while let Some(owner)=active.as_mut(){let(b,f)=close(owner.as_mut(),denials);born+=b;freed+=f;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::artifact_retirement_box_close_step(&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;}
+ let mut pending=Some(value);let mut active=None;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending,&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=(physical.requested_bytes,physical.released_bytes);
+ while let Some(owner)=active.as_mut(){let(b,f)=close(owner.as_mut(),denials);born+=b;freed+=f;let(step,physical)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active,grant()).unwrap());assert_eq!(physical.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(physical.released_bytes,step.progress().released_bytes);born+=physical.requested_bytes;freed+=physical.released_bytes;}
  assert!(pending.is_none());(born,freed)
 }
 #[test]
@@ -54,7 +54,7 @@ fn drawing_original_exact_variants_reject_foreign_fields_and_missing_payload(){
 /// 🪶️ Relational reconstruction keeps rows, ordering scratch and original typed layers in the caller return scope.
 #[test]
 fn drawing_original_sqlite_reconstruction_keeps_all_partial_original_storage(){
- use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase}};
+ use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SqliteSnapshotPhase}};
  let corpus:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🌱️defaults.json")).unwrap();let snapshot=SemioDrawingSnapshot::from_value(DslValue::from(&corpus["defaults"][2]["input"])).unwrap();
  let database=semio_s_artifact_stdio_contract::testing::with_sqlite_recipient(SqliteDatabaseLimits::default(), &mut |_|true, |control| snapshot.to_sqlite_database(control)).unwrap();let mut denials=Vec::new();let mut interrupted=0;
  for stop in [0,1,3,7,13,21,34,55,89,144,233,377,usize::MAX]{

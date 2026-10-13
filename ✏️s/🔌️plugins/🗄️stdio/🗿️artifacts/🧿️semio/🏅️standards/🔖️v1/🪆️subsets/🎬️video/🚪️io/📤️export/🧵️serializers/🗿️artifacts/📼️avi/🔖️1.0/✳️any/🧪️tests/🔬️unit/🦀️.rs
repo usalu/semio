@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::video::io::avi_deserializer::SemioVideoFromAvi;
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_video_import::deserializers::artifacts::avi::v1_0::any::SemioVideoFromAvi;
+use semio_s_artifact_stdio_semio_video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoStream, STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

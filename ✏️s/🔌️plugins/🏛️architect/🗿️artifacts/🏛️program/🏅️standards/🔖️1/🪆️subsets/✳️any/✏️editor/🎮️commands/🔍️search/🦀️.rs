@@ -5,7 +5,7 @@ pub mod query {
     use crate::editor::architect::config::{parse_search_history, snapshot, ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use crate::standards::v1::subsets::any::schema::inferences::{search_plugin, SearchQuery};
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 

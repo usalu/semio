@@ -165,18 +165,18 @@ impl SnapshotRetirementFactory<u64> for FixtureSnapshotRetirement {
 }
 
 pub(super) fn authority() -> Arc<ArtifactStoreOneItemLiveAuthority> {
-    Arc::new(ArtifactStoreOneItemLiveAuthority {
-        operation: semio_framework_job::OperationId(11),
-        generation: semio_framework_job::Generation(7),
-        base_revision: [9; 32],
-        base_applied_edit_count: 3,
-        next_sequence_number: 4,
-        next_clock: HybridLogicalTimestamp { actor: 1, physical_ms: 42, logical: 2 },
-        actor: "actor-1".into(),
-        group_id: Some("group-1".into()),
-        stamped_edit_id: None,
-        line: None,
-    })
+    Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        semio_framework_job::OperationId(11),
+        semio_framework_job::Generation(7),
+        [9; 32],
+        3,
+        4,
+        HybridLogicalTimestamp { actor: 1, physical_ms: 42, logical: 2 },
+        "actor-1".into(),
+        None,
+        Some("group-1".into()),
+        None,
+    ))
 }
 
 pub(super) fn admit_sealer<P, M:semio_framework_value::retirement::RetireOwned+Sync+ArtifactCanonicalJsonTree>(authority: Arc<ArtifactStoreOneItemLiveAuthority>, edit: Edit<M>, post: Arc<P>, mutation: Arc<dyn ArtifactOwnedValueRetirementFactory<M>>, snapshot: Arc<dyn SnapshotRetirementFactory<P>>) -> ArtifactStoreOneItemSealer<P, M> {
@@ -298,16 +298,16 @@ fn canonical_sealer_rejects_stale_checkpoint_forged_prefix_and_rebound_owners() 
     close(&mut replay, 1);
     finish(&mut owner, 4096);
     let prepared = owner.prepared.as_mut().unwrap();
-    prepared.edit_digest[0] ^= 1;
+    prepared.sealed_parts_mut().1[0] ^= 1;
     assert!(authority.validate_prepared(prepared).is_err());
-    prepared.edit_digest[0] ^= 1;
-    let replacement = Box::new(prepared.edit.as_ref().clone());
-    let original = std::mem::replace(&mut prepared.edit, replacement);
+    prepared.sealed_parts_mut().1[0] ^= 1;
+    let replacement = Box::new(prepared.edit().clone());
+    let original = std::mem::replace(prepared.sealed_parts_mut().0, replacement);
     assert!(authority.validate_prepared(prepared).is_err());
-    prepared.edit = original;
-    let original = std::mem::replace(&mut prepared.post_snapshot, Arc::new(17));
+    *prepared.sealed_parts_mut().0 = original;
+    let original = std::mem::replace(prepared.sealed_parts_mut().2, Arc::new(17));
     assert!(authority.validate_prepared(prepared).is_err());
-    prepared.post_snapshot = original;
+    *prepared.sealed_parts_mut().2 = original;
     assert!(tests::authority().validate_prepared(prepared).is_err());
     authority.validate_prepared(prepared).unwrap();
     close(&mut owner, 1);
@@ -387,7 +387,7 @@ fn canonical_authority_final_unicode_strings_retire_under_single_byte_grants() {
     let payload_bytes = fields.iter().map(String::len).sum::<usize>();
     let [actor, group, edit, line] = fields;
     let original = Arc::get_mut(&mut authority).unwrap();
-    original.actor = actor.into(); original.group_id = Some(group); original.stamped_edit_id = Some(edit); original.line = Some(line);
+    original.rebind_identity_for_law(actor.into(), group, edit, line);
     let pointer = Arc::as_ptr(&authority);
     let birth = authority.retirement_birth_demand();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: law["maximumCopyBytes"].as_u64().unwrap() as usize, maximum_capacity_bytes: birth.capacity_bytes, maximum_release_bytes: 0, maximum_depth: birth.depth };

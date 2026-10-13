@@ -4,7 +4,7 @@
 //! no `serde_json::Value`, no bare tuples/nested fixed arrays (geometry fields reuse
 //! `engine::geometry`'s named structs throughout).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioRgba, SemioTransform};
 
 
 use framework_schema::ArtifactSchema;
@@ -51,7 +51,7 @@ pub enum PathSegment {
 /// — dangling references are a real referential-invariant breach, not silently tolerated).
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetainedClone)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_node")]
+#[value(tag = "kind", rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_node")]
 pub enum DrawNode {
     Path {
         segments: Vec<PathSegment>,
@@ -88,7 +88,7 @@ impl Default for DrawNode {
 /// (serde-derive's bound inference for `#[value(default)]` fields on a generic container reaches
 /// every type parameter, not just the immediately-defaulted field's own type).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_style")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_style")]
 pub struct DrawStyle {
     pub name: String,
     #[value(default, skip_serializing_if = "Option::is_none")]
@@ -108,12 +108,12 @@ pub struct DrawStyle {
 /// 🩹 `Default` derived for the same reason as `DrawStyle` above (needed as the `T` of
 /// `triples::IndexedTripleDiff<DrawLayerDiff, DrawLayer>`).
 #[derive(Clone, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_layer")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_layer")]
 pub struct DrawLayer {
     pub id: String,
     pub name: String,
     pub visible: bool,
-    #[value(serialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::encode_node")]
+    #[value(serialize_controlled_with="crate::schema::snapshot::native_binding::nodes::encode_node")]
     pub root: DrawNode,
 }
 
@@ -163,7 +163,7 @@ pub const STDIO_SEMIODRAWING_DOCUMENT_SCHEMA: &str = "stdio.semio.drawing";
 
 //#region 🔖️Snapshot
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetainedClone)]
-#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::standards::v1::subsets::drawing::schema::snapshot::native_binding::nodes::decode_snapshot")]
+#[value(rename_all = "camelCase", deny_unknown_fields, deserialize_controlled_with="crate::schema::snapshot::native_binding::nodes::decode_snapshot")]
 #[artifact_schema(id = "s.stdio.semio.drawing")]
 pub struct SemioDrawingSnapshot {
     #[state(artifact)]
@@ -339,7 +339,7 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 //#endregion 🔁️Re-exports
 
 

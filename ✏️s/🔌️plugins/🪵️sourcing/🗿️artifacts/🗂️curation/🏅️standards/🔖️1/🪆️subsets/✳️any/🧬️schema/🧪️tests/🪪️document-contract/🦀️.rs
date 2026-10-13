@@ -1,6 +1,6 @@
 //! 🧪 Curation's native record and transports agree with neutral JSON inputs.
 use crate::{CurationSnapshot, schema::{CurationArtifact, diff::CurationDiff}};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn curation_document_contract_exact_children_and_native_transports() {

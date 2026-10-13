@@ -15,11 +15,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_csv_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <CsvSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <CsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <CsvSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -124,7 +124,7 @@ async fn zzz_generate_p2p1_fixtures() {
     let mut assets = repo_root.clone();
     assets.push("✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/📊️csv/📚️examples/🎬️demo/🖼️assets");
     let demo = demo_csv_snapshot();
-    let pack_bytes = <CsvSnapshot as store::ArtifactPack>::encode_pack(&demo);
+    let pack_bytes = <CsvSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo);
     let mut pack_path = assets.clone();
     pack_path.push("🎒️.pack.semio");
     std::fs::write(pack_path, &pack_bytes).unwrap();

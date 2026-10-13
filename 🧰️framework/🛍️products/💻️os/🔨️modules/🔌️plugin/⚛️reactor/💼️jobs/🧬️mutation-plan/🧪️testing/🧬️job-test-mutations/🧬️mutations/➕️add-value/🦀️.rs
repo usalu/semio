@@ -7,8 +7,8 @@ use super::super::{JobTestDiff, JobTestOp, JobTestSnapshot};
 #[mutation_leaf(contract=::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct AddValue {
-    pub(crate) delta: i32,
+struct AddValue {
+    delta: i32,
 }
 
 impl protocol::MutationKind<JobTestSnapshot, JobTestOp> for AddValue {

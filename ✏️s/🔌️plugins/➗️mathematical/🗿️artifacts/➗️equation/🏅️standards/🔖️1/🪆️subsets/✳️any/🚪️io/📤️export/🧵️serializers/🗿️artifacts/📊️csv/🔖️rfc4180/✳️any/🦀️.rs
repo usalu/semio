@@ -33,6 +33,6 @@ impl Serializer<EquationSnapshot> for EquationIntoCsv {
             })
             .collect();
         let csv = CsvSnapshot { schema: STDIO_CSV_DOCUMENT_SCHEMA.into(), has_header: false, records };
-        Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::ArtifactPack>::encode_pack(&csv))))
+        Ok(IoOutcome::clean(IoPayload::Binary(<CsvSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&csv))))
     }
 }

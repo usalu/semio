@@ -9,7 +9,7 @@ pub const TXT_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.txt", standar
 
 /// 📖️ Typed decode of native `.wfcbitmap` DSL text into `BitmapSnapshot`.
 pub fn deserialize(text: &str) -> Result<BitmapSnapshot, semio_framework_diagnostic::TextError> {
-    <BitmapSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 pub struct TxtIntoBitmap;

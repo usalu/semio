@@ -74,10 +74,7 @@
       "projectPath": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🧪️test/📦️packages/🟦️typescript/📋️project.json",
       "inputSet": "htmlSourcePairs",
       "targets": [
-        "test",
-        "test-quick",
-        "test-long",
-        "test-exhaustive"
+        "test"
       ],
       "sourceInputs": [
         "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🧹️normalization/🟦️.ts",

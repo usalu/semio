@@ -271,7 +271,7 @@ mod mount_contract {
     use crate::examples::{flowers_24, rooms_16};
     use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
     use crate::{BitmapSnapshot, WFC_BITMAP_DIALECT};
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     const CONTRACT: &str = include_str!("../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🧩️mount-contract/🔣️.json");
 

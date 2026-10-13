@@ -165,12 +165,12 @@ async fn empty_snapshot_matches_schema() {
 async fn codec_round_trip() {
     let snap = decode_bcf(&encode_bcf(&sample_snapshot()).unwrap()).unwrap();
 
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <BcfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed, snap);
 
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <BcfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -513,10 +513,10 @@ mod conformance_laws {
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
 
         for source in [demo_bcf_snapshot(), BcfSnapshot::default()] {
-            let text = store::ArtifactDsl::print_dsl(&source);
+            let text = store::os_store::serialization::ArtifactDsl::print_dsl(&source);
             let (_, body) = store::semio_format::split_text_preamble(&text).unwrap();
             assert!(recognizer.recognize(body).unwrap(), "{body}");
-            assert_eq!(<BcfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(), source);
+            assert_eq!(<BcfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap(), source);
         }
     }
 
@@ -549,14 +549,14 @@ mod conformance_laws {
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v2_1::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
         let demo = demo_bcf_snapshot();
-        let packed = store::ArtifactPack::encode_pack(&demo);
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo);
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         assert_eq!(pack_spec.schema, "stdio.bcf");
         assert_eq!(pack_spec.blocks.iter().filter(|block| matches!(block, semio_framework_dsl::Block::Record { .. })).count(), 11);
-        let spec = <BcfSnapshot as store::ArtifactPack>::record_spec().unwrap();
+        let spec = <BcfSnapshot as store::os_store::serialization::ArtifactPack>::record_spec().unwrap();
         let (record, _) = store::pack_rt::decode_document(&inner, &spec, &store::PackDecodeOptions::default()).unwrap();
         assert_eq!(record, demo.__dsl_to_record());
-        assert_eq!(<BcfSnapshot as store::ArtifactPack>::decode_pack(&packed).unwrap(), demo);
+        assert_eq!(<BcfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).unwrap(), demo);
 
         let op_spec = semio_framework_dsl::parse_protocol(crate::standards::v2_1::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO).expect("parse mutations protocol");
         for mutation in mutations::demo_mutation_cases() {
@@ -581,13 +581,13 @@ mod conformance_laws {
 
         let demo = demo_bcf_snapshot();
 
-        let parsed = <BcfSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <BcfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed, demo, "shipped .dsl.semio fixture does not parse back to demo_bcf_snapshot()");
-        assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_bcf_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_bcf_snapshot()) drifted from the shipped .dsl.semio fixture");
 
-        let decoded = <BcfSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
+        let decoded = <BcfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode shipped .pack.semio fixture");
         assert_eq!(decoded, demo, "shipped .pack.semio fixture does not decode back to demo_bcf_snapshot()");
-        assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_bcf_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_bcf_snapshot()) drifted from the shipped .pack.semio fixture");
     }
 
 }

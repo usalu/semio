@@ -82,7 +82,7 @@ use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::plugin_app_close_prelude::SurfaceKind as SemanticSurfaceKind;
 use std::collections::HashMap;
 use semio_framework_2d::compute::EngineHandles;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 //#region 🔖️Constants
 pub(crate) const TRINITY_JACK_PLAY_CONTROLLER_ID: &str = "trinity-jack-play";
@@ -113,11 +113,11 @@ pub(crate) fn default_snapshot() -> JackSnapshot {
 /// 🧬️ Whole-document replace is banned from the `Mutation` enum outright (`SetFixture` — see
 /// `📓️taxonomy.md`'s forbidden vocabulary), so `setActiveExample`/`loadDocumentJson` build a
 /// `Effect::LoadDocument` (outside undo history) instead of an `artifact_mutations` entry. The spr is a
-/// fresh, edit-free op-log (`store::empty_document_spr`): a live `ArtifactEnvelope` minted only to print
+/// fresh, edit-free op-log (`store::os_store::text_format::empty_document_spr`): a live `ArtifactEnvelope` minted only to print
 /// it owns a bounded retirement authority whose Drop traps the guest.
 pub(crate) fn reset_document_effect(snapshot: &JackSnapshot) -> Effect {
     let pack = <JackSnapshot as ArtifactPack>::encode_pack(snapshot);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("jack", TRINITY_GRAPH_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("jack", TRINITY_GRAPH_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -187,9 +187,9 @@ pub fn snapshot_to_workflow(snapshot: &JackSnapshot) -> Result<(Vec<NodeGraphNod
 }
 
 /// 🕸️ Projects one Semio graph into the shared node-graph view under `camera`.
-pub fn content_to_workflow(camera: &crate::Camera, content: &semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, Viewport2d) {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphPortKind;
-    let ports = |node: &semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphNode, inbound: bool| -> Vec<NodeGraphPortRecord> {
+pub fn content_to_workflow(camera: &crate::Camera, content: &semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot) -> (Vec<NodeGraphNodeRecord>, Vec<NodeGraphEdgeRecord>, Viewport2d) {
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphPortKind;
+    let ports = |node: &semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphNode, inbound: bool| -> Vec<NodeGraphPortRecord> {
         node.ports.iter().filter(|port| matches!((&port.kind, inbound), (SemioGraphPortKind::In | SemioGraphPortKind::InOut, true) | (SemioGraphPortKind::Out | SemioGraphPortKind::InOut, false))).map(|port| NodeGraphPortRecord { id: crate::port_key(&node.id.value, &port.name), label: Some(port.name.clone()), ..Default::default() }).collect()
     };
     let nodes = content
@@ -906,20 +906,20 @@ impl ArtifactEditor for TrinityJackPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::jack_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::host::jack_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

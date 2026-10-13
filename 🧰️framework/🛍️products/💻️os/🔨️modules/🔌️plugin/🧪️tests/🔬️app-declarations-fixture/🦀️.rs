@@ -1,15 +1,24 @@
-pub(crate) mod fixture {
-    // 🎯️ Deliberately NOT `use super::super::*` (the `app` module glob `declarations` itself
-    // uses) — that would re-import `app`'s OWN `ArtifactDeclaration` (old, debt D1) bare,
-    // colliding with `declarations::ArtifactDeclaration` (new, this region) also brought in by
-    // `use super::*` below: `error[E0659]: ArtifactDeclaration is ambiguous`. Explicit named
-    // imports instead, for exactly what this fixture needs from `app`.
-    use super::super::super::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
+#[cfg(test)] use crate::surface_contract::SnapshotBuilder;
+#[cfg(test)] use crate::artifact_io::ArtifactBuilder;
+#[cfg(test)] use crate::window_surface::built_text_to_component_tree;
+#[cfg(test)] use crate::app_emission::ArtifactMutationOutcome;
+mod fixture {
+    // 🎯️ Explicit named imports, never an `app` glob: that would re-import `app`'s OWN `ArtifactDeclaration` (old, debt D1)
+    // bare, colliding with `declarations::ArtifactDeclaration` (new) brought in by `use super::*` below (E0659).
+    use crate::__semio_dispatch_PluginApp;
+    use crate::component::declaration_fixture_mutations::{std1_any as std1_any_mutations, std1_strict as std1_strict_mutations, std2_any as std2_any_mutations};
     use semio_framework_2d::compute::EngineHandles;
-    use super::super::{
-        AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactKindId, ArtifactPack, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, Fault, IconName, InteractionView, LocalizedLabel,
-        artifact_app_laws, Mutation, MutationDiff, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, SurfaceKind, UiAssemblyResult, ViewEmit, Viewer, ViewModel,
+    use crate::app::{
+        AppDefinition, ArtifactDialect, ArtifactEditor, ArtifactView, ArtifactViewer, ComponentTree, ConfigView, Dialect, DraftView, Editor, Emit, InteractionView, artifact_app_laws, NoConfig, NoConfigMutation, NoDraft,
+        NoDraftMutation, NoPresence, NoPresenceMutation, Plugin, StandardId, SubsetId, UiAssemblyResult, ViewEmit, Viewer,
     };
+    use semio_framework::{Fault, IconName, ViewModel};
+    use semio_framework_artifact_reference::ArtifactKindId;
+    use semio_framework_ui_contract::SurfaceKind;
+    use semio_framework_ui_locale::LocalizedLabel;
+    use semio_framework_value::retained_clone::RetainedCloneGrant;
+    use protocol::{OpBinary, OpText};
+    use store::{os_store::serialization::ArtifactPack, Mutation, MutationDiff};
     use super::*;
     use serde::{Deserialize, Serialize};
     use std1_any_mutations::Std1AnyMutation;
@@ -36,9 +45,9 @@ pub(crate) mod fixture {
     }
 
     //#region 🔖️Dialects
-    pub(crate) const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
-    pub(crate) const STD1_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId("strict") };
-    pub(crate) const STD2_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("2"), subset: SubsetId::ANY };
+    const STD1_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId::ANY };
+    const STD1_STRICT_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("1"), subset: SubsetId("strict") };
+    const STD2_ANY_DIALECT: Dialect = Dialect { artifact_kind: "s.testkit.w1c-fixture", standard: StandardId("2"), subset: SubsetId::ANY };
     //#endregion 🔖️Dialects
 
     //#region 🔖️FixtureChannel
@@ -59,7 +68,7 @@ pub(crate) mod fixture {
                     Ok(())
                 }
             }
-            impl store::ArtifactDsl for $snapshot {
+            impl store::os_store::serialization::ArtifactDsl for $snapshot {
                 const EXTENSION: &'static str = $schema;
                 fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
                     if text.trim().is_empty() {
@@ -73,8 +82,8 @@ pub(crate) mod fixture {
             }
             impl ArtifactPack for $snapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
                 fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -109,7 +118,7 @@ pub(crate) mod fixture {
                 }
             }
 
-            impl store::ArtifactSqliteSnapshot for $snapshot {
+            impl store::os_store::serialization::ArtifactSqliteSnapshot for $snapshot {
                 const SQLITE_SCHEMA: &'static str = include_str!("../../../🚪️io/🧫️fixtures/🪶️sqlite-snapshot-registration/🗄️.sql");
                 fn preflight_sqlite_snapshot_encoding(&self, _: store::sqlite_snapshot::SnapshotEncoding, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), semio_framework_value::ValueError> {
                     let mut bound = store::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
@@ -210,7 +219,7 @@ pub(crate) mod fixture {
     fixture_channel!(Std2AnySnapshot, Std2AnyDiff, Std2AnyMutation, std2_any_mutations, Std2AnyCommand, STD2_ANY_DIALECT, "semio.testkit.w1c-fixture.std2-any/v1");
 
     #[derive(Default)]
-    pub(crate) struct Std1AnyEditor;
+    struct Std1AnyEditor;
     impl ArtifactEditor for Std1AnyEditor {
         const DIALECT: Dialect = STD1_ANY_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-any/v1";
@@ -222,8 +231,8 @@ pub(crate) mod fixture {
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std1AnyCommand;
         fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
         fn handle(_command: &Std1AnyCommand, doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1AnyMutation> {
@@ -235,7 +244,7 @@ pub(crate) mod fixture {
     }
 
     #[derive(Default)]
-    pub(crate) struct Std1AnyViewer;
+    struct Std1AnyViewer;
     impl ArtifactViewer for Std1AnyViewer {
         const DIALECT: Dialect = STD1_ANY_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-any/v1";
@@ -245,8 +254,8 @@ pub(crate) mod fixture {
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std1AnyCommand;
         fn initial_snapshot() -> Std1AnySnapshot { Std1AnySnapshot::default() }
         fn handle(_command: &Std1AnyCommand, _doc: &ArtifactView<'_, Std1AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -258,7 +267,7 @@ pub(crate) mod fixture {
     }
 
     #[derive(Default)]
-    pub(crate) struct Std1StrictEditor;
+    struct Std1StrictEditor;
     impl ArtifactEditor for Std1StrictEditor {
         const DIALECT: Dialect = STD1_STRICT_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-strict/v1";
@@ -270,8 +279,8 @@ pub(crate) mod fixture {
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std1StrictCommand;
         fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
         fn handle(_command: &Std1StrictCommand, doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std1StrictMutation> {
@@ -283,7 +292,7 @@ pub(crate) mod fixture {
     }
 
     #[derive(Default)]
-    pub(crate) struct Std1StrictViewer;
+    struct Std1StrictViewer;
     impl ArtifactViewer for Std1StrictViewer {
         const DIALECT: Dialect = STD1_STRICT_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std1-strict/v1";
@@ -293,8 +302,8 @@ pub(crate) mod fixture {
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std1StrictCommand;
         fn initial_snapshot() -> Std1StrictSnapshot { Std1StrictSnapshot::default() }
         fn handle(_command: &Std1StrictCommand, _doc: &ArtifactView<'_, Std1StrictSnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -306,7 +315,7 @@ pub(crate) mod fixture {
     }
 
     #[derive(Default)]
-    pub(crate) struct Std2AnyEditor;
+    struct Std2AnyEditor;
     impl ArtifactEditor for Std2AnyEditor {
         const DIALECT: Dialect = STD2_ANY_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std2-any/v1";
@@ -318,8 +327,8 @@ pub(crate) mod fixture {
         type DraftMutation = NoDraftMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std2AnyCommand;
         fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
         fn handle(_command: &Std2AnyCommand, doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _draft: &DraftView<'_, NoDraft>, _engines: &EngineHandles) -> ArtifactMutationOutcome<Std2AnyMutation> {
@@ -331,7 +340,7 @@ pub(crate) mod fixture {
     }
 
     #[derive(Default)]
-    pub(crate) struct Std2AnyViewer;
+    struct Std2AnyViewer;
     impl ArtifactViewer for Std2AnyViewer {
         const DIALECT: Dialect = STD2_ANY_DIALECT;
         const DOCUMENT_SCHEMA: &'static str = "semio.testkit.w1c-fixture.std2-any/v1";
@@ -341,8 +350,8 @@ pub(crate) mod fixture {
         type ConfigMutation = NoConfigMutation;
         type Presence = NoPresence;
         type PresenceMutation = NoPresenceMutation;
-        type Transient = crate::app::NoTransient;
-        type TransientMutation = crate::app::NoTransientMutation;
+        type Transient = crate::app_views::NoTransient;
+        type TransientMutation = crate::app_views::NoTransientMutation;
         type Command = Std2AnyCommand;
         fn initial_snapshot() -> Std2AnySnapshot { Std2AnySnapshot::default() }
         fn handle(_command: &Std2AnyCommand, _doc: &ArtifactView<'_, Std2AnySnapshot>, _cfg: &ConfigView<'_, NoConfig>, _interaction: &InteractionView<'_>, _view_state: Option<&ViewModel>, _engines: &EngineHandles) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -361,7 +370,7 @@ pub(crate) mod fixture {
     /// fixture's stand-in "profile" rule), proving §3's payload-law hop AND the W1-C
     /// conformance decision (`Deserializer::CONFORMANCE`, not `IoDeclaration.conformance`) in
     /// one exercise.
-    pub(crate) struct StrictFromAny;
+    struct StrictFromAny;
     impl semio_framework_os_kernel::io::io_mechanism::Deserializer<Std1StrictSnapshot> for StrictFromAny {
         const FROM: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Semantic;
@@ -380,7 +389,7 @@ pub(crate) mod fixture {
         if snapshot.value < 0 { vec![semio_framework_diagnostic::Diagnostic::error("s.testkit.w1c-fixture.negative-value", semio_framework_diagnostic::TextSpan::at(0, 0), "conformance profile requires a non-negative value")] } else { Vec::new() }
     }
 
-    pub(crate) struct StrictIntoAny;
+    struct StrictIntoAny;
     impl semio_framework_os_kernel::io::io_mechanism::Serializer<Std1StrictSnapshot> for StrictIntoAny {
         const INTO: Dialect = STD1_ANY_DIALECT;
         const FIDELITY: semio_framework::io_schema::IoFidelity = semio_framework::io_schema::IoFidelity::Exact;
@@ -408,7 +417,7 @@ pub(crate) mod fixture {
 
     fn native_codecs<S, M>(schema: &str) -> NativeCodecs
     where
-        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + semio_framework_value::retirement::RetireOwned + store::ArtifactDsl + ArtifactPack + store::ArtifactSqliteSnapshot + 'static,
+        S: Clone + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + semio_framework_value::retirement::RetireOwned + store::os_store::serialization::ArtifactDsl + ArtifactPack + store::os_store::serialization::ArtifactSqliteSnapshot + 'static,
         M: Mutation<S> + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + semio_framework_value::retirement::RetireOwned + Send + Sync + OpText + OpBinary + store::ArtifactCanonicalJsonTree + 'static,
     {
         NativeCodecs {
@@ -416,7 +425,7 @@ pub(crate) mod fixture {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::of::<S, M>(schema.to_string()),
+            codec: store::artifact_codec::<S, M>(schema.to_string()),
         }
     }
 
@@ -439,22 +448,28 @@ pub(crate) mod fixture {
             .build_definition()
     }
 
-    semio_framework_dispatch_macros::dyn_enum_close! {
-        /// 🗃️ Closed fixture app set for every declared editor and viewer surface.
-        pub(crate) enum FixtureApps: PluginApp {
-            Std1AnyEditorApp(VcsArtifactApp<EditorApp<Std1AnyEditor>>),
-            Std1AnyViewerApp(VcsArtifactApp<ViewerApp<Std1AnyViewer>>),
-            Std1StrictEditorApp(VcsArtifactApp<EditorApp<Std1StrictEditor>>),
-            Std1StrictViewerApp(VcsArtifactApp<ViewerApp<Std1StrictViewer>>),
-            Std2AnyEditorApp(VcsArtifactApp<EditorApp<Std2AnyEditor>>),
-            Std2AnyViewerApp(VcsArtifactApp<ViewerApp<Std2AnyViewer>>),
+    /// 🔒️ Closes the fixture app set under the `dyn_enum_close!` vocabulary without importing it into the fixture itself.
+    mod closed_apps {
+        use super::*;
+        use crate::plugin_app_close_prelude::*;
+        semio_framework_dispatch_macros::dyn_enum_close! {
+            /// 🗃️ Closed fixture app set for every declared editor and viewer surface.
+            enum FixtureApps: PluginApp {
+                Std1AnyEditorApp(VcsArtifactApp<EditorApp<Std1AnyEditor>>),
+                Std1AnyViewerApp(VcsArtifactApp<ViewerApp<Std1AnyViewer>>),
+                Std1StrictEditorApp(VcsArtifactApp<EditorApp<Std1StrictEditor>>),
+                Std1StrictViewerApp(VcsArtifactApp<ViewerApp<Std1StrictViewer>>),
+                Std2AnyEditorApp(VcsArtifactApp<EditorApp<Std2AnyEditor>>),
+                Std2AnyViewerApp(VcsArtifactApp<ViewerApp<Std2AnyViewer>>),
+            }
         }
     }
+    use closed_apps::FixtureApps;
 
     /// 🌳️ The fixture's whole tree: TWO standards, THREE subsets total — `standard "1"` owns
     /// `any` (base) and `strict` (conformance profile of `any`, wired via `std1_strict_entries`);
     /// `standard "2"` owns one independent `any` subset, proving the walk covers >1 standard.
-    pub(crate) fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
+    fn build_declaration() -> ArtifactDeclaration<FixtureApps> {
         ArtifactDeclaration {
             kind: ArtifactKindId::parse("s.testkit.w1c-fixture").expect("canonical fixture kind"),
             localization: &[],
@@ -549,7 +564,7 @@ pub(crate) mod fixture {
             panic!("a codec call constructed an app")
         }
         let projected = project_artifact_declarations(&[build_declaration()]);
-        let mut plugin = crate::app::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
+        let mut plugin = crate::plugin_program::Plugin::<FixtureApps>::new("testkit", "Testkit", "1.0.0");
         for (app, mut factory) in projected.app_defs {
             assert_eq!(factory.document_schema, app.definition.io.artifact_schema, "{}", app.definition.id);
             factory.create = refuse_construction;
@@ -567,7 +582,7 @@ pub(crate) mod fixture {
             assert_eq!(owner.role, AppRole::Editor, "{schema}: the editor is the creation authority");
         }
         assert!(crate::plugin_runtime::artifact_codec_owner(&plugin, "semio.testkit.nobody/v1").is_err(), "no owner is refused");
-        let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+        let runtime = crate::plugin_runtime::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
         crate::plugin_runtime::install_plugin_bundle(&runtime, plugin);
         for schema in schemas {
             let hash = crate::plugin_runtime::plugin_artifact_pack_schema_hash(&runtime, schema).await;
@@ -623,13 +638,13 @@ pub(crate) mod fixture {
     }
 
     fn sqlite_fixture_strict_validate(payload: &semio_framework::io_schema::IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
-        let decoded = match payload { semio_framework::io_schema::IoPayload::Binary(bytes) => Std1StrictSnapshot::decode_pack(bytes).map_err(|error| error.to_string()), semio_framework::io_schema::IoPayload::Text(text) => <Std1StrictSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) };
+        let decoded = match payload { semio_framework::io_schema::IoPayload::Binary(bytes) => Std1StrictSnapshot::decode_pack(bytes).map_err(|error| error.to_string()), semio_framework::io_schema::IoPayload::Text(text) => <Std1StrictSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) };
         if decoded.as_ref().is_ok_and(|snapshot| snapshot.value >= 0) { return Vec::new(); }
         let fatal=decoded.as_ref().is_ok_and(|snapshot|snapshot.value==i32::MIN);
         vec![semio_framework_diagnostic::Diagnostic { code: semio_framework_diagnostic::FaultCode::new(if fatal{"fixture.strict.fatal-value"}else{"fixture.strict.negative-value"}), severity: if fatal{semio_framework_diagnostic::Severity::Fatal}else{semio_framework_diagnostic::Severity::Error}, span: semio_framework_diagnostic::TextSpan::at(1, 1), message: "strict fixture requires a non-negative value".into(), expected: None, scope: semio_framework_diagnostic::FaultScope::default() }]
     }
 
-    static SQLITE_FIXTURE_STRICT_VALIDATOR: semio_framework_os_kernel::io::SubsetValidatorEntry = semio_framework_os_kernel::io::SubsetValidatorEntry { dialect: STD1_STRICT_DIALECT, validate: sqlite_fixture_strict_validate };
+    static SQLITE_FIXTURE_STRICT_VALIDATOR: semio_framework_os_kernel::io::SubsetValidatorEntry = semio_framework_os_kernel::io::SubsetValidatorEntry { dialect: STD1_STRICT_DIALECT, validate: sqlite_fixture_strict_validate, validate_snapshot: None };
 
     #[semio_framework_async_macros::async_test]
     async fn sqlite_snapshot_covers_every_declared_subset() {
@@ -710,10 +725,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
             assert_eq!(restored.diagnostics, exported.diagnostics);
         }
         let snapshot = Std1StrictSnapshot { value: 1 };
-        let provider = <Std1StrictSnapshot as store::ArtifactSqliteSnapshot>::sqlite_codec();
+        let provider = <Std1StrictSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec();
         let mut progress = |_| true;
         let mut control = semio_framework::sqlite_snapshot::SqliteSnapshotControl::new(&mut progress, SqliteDatabaseLimits::default());
-        let database = <Std1StrictSnapshot as store::ArtifactSqliteSnapshot>::to_sqlite_database(&snapshot, &mut control).unwrap();
+        let database = <Std1StrictSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::to_sqlite_database(&snapshot, &mut control).unwrap();
         let foreign = ArtifactDialect::from(STD2_ANY_DIALECT);
         let mut foreign_strict = foreign.clone();
         foreign_strict.subset = "strict".into();
@@ -728,12 +743,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let mut database = Some(database);
         assert!((provider.import)("fixture.foreign/v1", &foreign_strict, &mut database, semio_framework::sqlite_snapshot::SnapshotEncoding::Binary, &mut control, &mut encode_owner).is_err());
 
-        let mut missing_provider = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1");
+        let mut missing_provider = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.w1c-fixture.std1-any/v1");
         missing_provider.snapshot_sqlite = None;
         assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: missing_provider }]).is_err());
-        let conflicting = store::ArtifactCodec::of::<Std2AnySnapshot, Std2AnyMutation>("conflicting.snapshot.owner");
+        let conflicting = store::artifact_codec::<Std2AnySnapshot, Std2AnyMutation>("conflicting.snapshot.owner");
         assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: conflicting }]).is_err());
-        let alias = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("foreign.schema.alias");
+        let alias = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>("foreign.schema.alias");
         assert!(preflight_native_snapshots(&[NativeSnapshotRegistration { dialect: STD1_ANY_DIALECT.into(), codec: alias }]).is_ok());
     }
 
@@ -742,7 +757,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use semio_framework_os_kernel::io::io_mechanism::{io_export_sqlite_snapshot, io_import_sqlite_snapshot, NativeSnapshotRegistration};
         use semio_framework::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotPhase};
         const TYPED: Dialect = Dialect { artifact_kind: "s.testkit.typed-fixture", standard: StandardId("1"), subset: SubsetId("*") };
-        let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.typed-fixture/v1");
+        let codec = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.typed-fixture/v1");
         let binding = semio_framework_os_kernel::io::ArtifactCodecBinding::from_codec(semio_framework_os_kernel::io::ArtifactCodecBindingChannel::DirectNative, "testkit", Some(TYPED.artifact_kind.to_string()), Vec::new(), Some(TYPED.into()), None, &codec);
         let assembly = semio_framework_schema_registry::assembly::begin().unwrap();
         semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly, semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan { document_bindings: vec![binding], document_codecs: vec![codec.clone()], native_snapshots: vec![NativeSnapshotRegistration { dialect: TYPED.into(), codec }], ..Default::default() }).unwrap();
@@ -769,7 +784,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     #[semio_framework_async_macros::async_test]
     #[ignore = "activate mandatory document capability enforcement after the semantic provider roster is complete"]
     async fn sqlite_snapshot_missing_document_owner_capability_is_rejected_before_publication(){
-        let schema="semio.testkit.missing-sqlite-owner/v1";let mut codec=store::ArtifactCodec::of::<Std1AnySnapshot,Std1AnyMutation>(schema);codec.snapshot_sqlite=None;let mut plan=semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan::new().await;plan.document_codecs.push(codec);let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly,plan).is_err());drop(assembly);assert!(store::document_codec(schema).await.unwrap().is_none());
+        let schema="semio.testkit.missing-sqlite-owner/v1";let mut codec=store::artifact_codec::<Std1AnySnapshot,Std1AnyMutation>(schema);codec.snapshot_sqlite=None;let mut plan=semio_framework_os_kernel::io::ArtifactAssemblyRegistryPlan::new().await;plan.document_codecs.push(codec);let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(semio_framework_os_kernel::io::commit_artifact_assembly_registry_plan(&assembly,plan).is_err());drop(assembly);assert!(store::os_store::codec_registry::document_codec(schema).await.unwrap().is_none());
     }
 
     #[semio_framework_async_macros::async_test]
@@ -779,7 +794,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         use semio_framework::io_schema::{IoPayload, SQLITE_SNAPSHOT};
         const HEADLESS: Dialect = Dialect { artifact_kind: "s.testkit.headless-fixture", standard: StandardId("1"), subset: SubsetId("*") };
         const REJECTED: Dialect = Dialect { artifact_kind: "s.testkit.rejected-headless", standard: StandardId("1"), subset: SubsetId("*") };
-        let codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.headless-fixture/v1");
+        let codec = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.headless-fixture/v1");
         let mut plan = ArtifactAssemblyRegistryPlan::new().await;
         plan.document_codecs.push(codec.clone());
         plan.native_snapshots.push(NativeSnapshotRegistration { dialect: HEADLESS.into(), codec });
@@ -792,7 +807,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let payload = IoPayload::Binary(Std1AnySnapshot { value: 12 }.encode_pack());
         let database = run_route(&export, payload.clone()).await.expect("headless SQLite file").value;
         assert_eq!(run_route(&import, database).await.expect("headless restore").value, payload);
-        let mut rejected_codec = store::ArtifactCodec::of::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.rejected-headless/v1");
+        let mut rejected_codec = store::artifact_codec::<Std1AnySnapshot, Std1AnyMutation>("semio.testkit.rejected-headless/v1");
         rejected_codec.snapshot_sqlite = None;
         let mut rejected = ArtifactAssemblyRegistryPlan::new().await;
         rejected.document_codecs.push(rejected_codec.clone());
@@ -800,7 +815,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let assembly = semio_framework_schema_registry::assembly::begin().expect("rejected assembly barrier");
         assert!(commit_artifact_assembly_registry_plan(&assembly, rejected).is_err());
         drop(assembly);
-        assert!(store::document_codec("semio.testkit.rejected-headless/v1").await.expect("codec registry").is_none());
+        assert!(store::os_store::codec_registry::document_codec("semio.testkit.rejected-headless/v1").await.expect("codec registry").is_none());
         assert!(!io_entries().iter().any(|entry| entry.from == REJECTED.into() || entry.into == REJECTED.into()));
     }
 
@@ -818,30 +833,31 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// authoring-trait default of `None` would silently take the framework default back out.
     #[semio_framework_async_macros::async_test]
     async fn the_framework_owns_every_bounded_close_lane_an_app_declares_nothing_for() {
-        type Edit = crate::app::EditorApp<Std1AnyEditor>;
-        type View = crate::app::ViewerApp<Std1AnyViewer>;
+        type Edit = crate::surface_contract::EditorApp<Std1AnyEditor>;
+        type View = crate::surface_contract::ViewerApp<Std1AnyViewer>;
         let lanes = [
-            ("editor document-store", <Edit as crate::app::ArtifactApp>::build_document_store_disposer().is_some()),
-            ("editor config-store", <Edit as crate::app::ArtifactApp>::build_config_store_disposer().is_some()),
-            ("editor draft-store", <Edit as crate::app::ArtifactApp>::build_draft_store_disposer().is_some()),
-            ("editor presence-store", <Edit as crate::app::ArtifactApp>::build_presence_store_disposer().is_some()),
-            ("editor transient-store", <Edit as crate::app::ArtifactApp>::build_transient_store_disposer().is_some()),
-            ("viewer document-store", <View as crate::app::ArtifactApp>::build_document_store_disposer().is_some()),
-            ("viewer config-store", <View as crate::app::ArtifactApp>::build_config_store_disposer().is_some()),
-            ("viewer draft-store", <View as crate::app::ArtifactApp>::build_draft_store_disposer().is_some()),
-            ("viewer presence-store", <View as crate::app::ArtifactApp>::build_presence_store_disposer().is_some()),
-            ("viewer transient-store", <View as crate::app::ArtifactApp>::build_transient_store_disposer().is_some()),
+            ("editor document-store", <Edit as crate::app_contract::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("editor config-store", <Edit as crate::app_contract::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("editor draft-store", <Edit as crate::app_contract::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("editor presence-store", <Edit as crate::app_contract::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("editor transient-store", <Edit as crate::app_contract::ArtifactApp>::build_transient_store_disposer().is_some()),
+            ("viewer document-store", <View as crate::app_contract::ArtifactApp>::build_document_store_disposer().is_some()),
+            ("viewer config-store", <View as crate::app_contract::ArtifactApp>::build_config_store_disposer().is_some()),
+            ("viewer draft-store", <View as crate::app_contract::ArtifactApp>::build_draft_store_disposer().is_some()),
+            ("viewer presence-store", <View as crate::app_contract::ArtifactApp>::build_presence_store_disposer().is_some()),
+            ("viewer transient-store", <View as crate::app_contract::ArtifactApp>::build_transient_store_disposer().is_some()),
         ];
         let missing: Vec<&str> = lanes.iter().filter(|(_, present)| !present).map(|(lane, _)| *lane).collect();
         assert!(missing.is_empty(), "an app that declares no store ownership must still close: {} of {} lanes are fail-closed: {missing:?}", missing.len(), lanes.len());
         assert!(
-            <Edit as crate::app::ArtifactApp>::build_presence_peer_retirement_factory().is_some() && <View as crate::app::ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
+            <Edit as crate::app_contract::ArtifactApp>::build_presence_peer_retirement_factory().is_some() && <View as crate::app_contract::ArtifactApp>::build_presence_peer_retirement_factory().is_some(),
             "the peer half of the presence lane is framework-owned too"
         );
     }
     #[semio_framework_async_macros::async_test]
     async fn vcs_app_retained_composition_query_funds_exact_large_identifier() {
-        use crate::app::{PluginApp, VcsArtifactApp};
+        use crate::plugin_app::PluginApp;
+        use crate::artifact_instance::VcsArtifactApp;
         let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/🌳️graph/📏️demand/🧫️fixtures/🔣️.json")).unwrap();
         let items = fixture["maximumItems"].as_u64().unwrap() as usize;
         let extent = fixture["identifierBytes"].as_u64().unwrap() as usize;
@@ -849,10 +865,10 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         let identifier = char::from(fixture["identifierByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let parent = char::from(fixture["parentByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
         let slot = char::from(fixture["slotByte"].as_u64().unwrap() as u8).to_string().repeat(extent);
-        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-        crate::app::artifact_app_laws::settle_store_constructor(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        let mut app = VcsArtifactApp::<EditorApp<Std1AnyEditor>>::new(EditorApp::default(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+        crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
         assert_eq!(app.close_retirement_demands(4096).unwrap(), app.constructor_close_demands(4096).unwrap());
-        crate::app::artifact_app_laws::settle_store_constructor_close(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        crate::app_testing::artifact_app_laws::settle_store_constructor_close(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
         app.composition.graph_mut().await.insert_owns(&parent, &slot, &identifier).await.unwrap();
         app.close_owned_stage = fixture["finalOwnedStage"].as_u64().unwrap() as u8;
         assert!(app.command_log.is_empty() && app.history_dirty_sequences.is_empty() && app.pending_child_pins.is_empty());
@@ -888,7 +904,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         assert_eq!(app_demand, semio_framework_value::RetirementDemand { depth: graph_demand.depth + 1, ..graph_demand }, "final application phase must forward the exact retained composition allocation one owner level deeper");
         println!("[DEBUG] Vcs composition query={app_demand:?} exact={graph_demand:?}; denied0/4096/8193 retain owner; whole8194 releases actual8194 with zero allocation");
         app.close_owned_stage = 0;
-        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        artifact_app_laws::close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     }
 
     include!("⚠️refusal/🦀️.rs");

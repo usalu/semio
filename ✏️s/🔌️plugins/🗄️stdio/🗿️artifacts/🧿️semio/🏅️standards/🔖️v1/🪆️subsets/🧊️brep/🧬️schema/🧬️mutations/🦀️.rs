@@ -26,7 +26,7 @@
 //! `📸️set-snapshot` is DELETED, with no replacement, per the locked decision
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
-use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
+use crate::schema::diff::SemioBrepDiff;
 
 
 
@@ -43,7 +43,7 @@ use crate::standards::v1::subsets::brep::schema::diff::{SemioBrepDiff};
 
 
 
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::snapshot::SemioBrepSnapshot;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary` block below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code too, not merely under `#[cfg(test)]` (same fix this facet's OLD file already
@@ -152,8 +152,8 @@ pub fn inverse_semio_brep_mutation(mutation: &SemioBrepMutation, base: &SemioBre
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn fixture() -> SemioBrepSnapshot {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use crate::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex};
     let mut s = SemioBrepSnapshot::default();
     s.vertices = vec![BrepVertex { tol: 1e-7, id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 } }, BrepVertex { tol: 1e-7, id: "v2".into(), point: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } }];
     s.edges = vec![BrepEdge { tol: 1e-7, id: "e1".into(), start_vertex: "v1".into(), end_vertex: "v2".into(), curve: BrepCurve::Line { origin: SemioPoint3::default(), direction: SemioPoint3 { x: 1.0, y: 0.0, z: 0.0 } } }];
@@ -167,8 +167,8 @@ pub(crate) fn fixture() -> SemioBrepSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioBrepMutation> {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-    use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+    use crate::schema::snapshot::{BrepCurve, BrepShellFace, BrepSolidShell, BrepSurface};
     vec![
         SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v-new".into(), point: SemioPoint3 { x: 9.0, y: 9.0, z: 9.0 }, tol: 2e-7, at: None }),
         SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: "v1".into() }),
@@ -217,4 +217,4 @@ mod fixture_tests;
 //#endregion 🧪️FixtureTests
 
 #[cfg(test)]
-use protocol::{OpBinary,OpText};
+use protocol::OpBinary;

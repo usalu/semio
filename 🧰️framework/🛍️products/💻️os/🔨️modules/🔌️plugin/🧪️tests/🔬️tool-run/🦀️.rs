@@ -13,7 +13,7 @@ use semio_framework_tool_run::{
     ToolRunTickWriter, ToolRunTraceCursor, ToolRunTraceDelta, ToolRunTraceKind, ToolRunTraceSubject, ToolRunVerdict,
 };
 use semio_framework_ui_scene::{Board2dScene, World3dScene};
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 #[path="🌱️operation/🦀️.rs"]
 mod original_toy_operation;
@@ -126,12 +126,12 @@ fn original_toy_run_job_closes_same_writer_counts_under_fixed_full_grant(){
 #[test]
 fn original_mounted_child_frontier_closes_after_actual_ack_under_original_policy(){
  let grant=toy_fixture_caller_policy().0.close;
- crate::app::test_original_mounted_child_frontier::<ToyRunApp>(||vec![SetCount{value:17}.into(),SetLabel{value:"original child metadata 🧵\0".repeat(8192)}.into()],grant);
+ crate::typed_operation::test_original_mounted_child_frontier::<ToyRunApp>(||vec![SetCount{value:17}.into(),SetLabel{value:"original child metadata 🧵\0".repeat(8192)}.into()],grant);
 }
 
 #[test]
 fn a_mounted_operation_reports_the_structural_refusal_it_retains(){
- crate::app::test_retained_structural_refusal::<ToyRunApp>();
+ crate::typed_operation::test_retained_structural_refusal::<ToyRunApp>();
 }
 
 impl ToyRunJob {
@@ -341,16 +341,16 @@ impl WindowConfigOwner for ToyWorldWindowConfig {
     const MAXIMUM_PREPARATION_DEPTH:usize=64;
     fn build_retained_edit()->std::sync::Arc<Self::Edit>{std::sync::Arc::new(crate::component::test_app_mutation_fixture::config::preparation::SelectionRetainedEdit)}
 
-    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
-        crate::app::bounded_window_config_store_owners::<Self>()
+    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
+        crate::window_config::bounded_window_config_store_owners::<Self>()
     }
 
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
-        crate::app::bounded_window_config_preparation_factory::<Self>()
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
+        crate::window_config::bounded_window_config_preparation_factory::<Self>()
     }
 
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> {
-        crate::app::bounded_window_config_store_disposer::<Self>()
+        crate::window_config::bounded_window_config_store_disposer::<Self>()
     }
 }
 
@@ -448,23 +448,23 @@ impl ArtifactApp for ToyRunApp {
             .map_err(|_| PluginAssemblyError::new("toy", "world build"))
     }
 
-    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+    fn build_document_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
-    fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Config, Self::ConfigMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
         Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>(grant))
     }
 
-    fn build_draft_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Draft, Self::DraftMutation>>> {
+    fn build_draft_store_owners(grant: RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Draft, Self::DraftMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Draft, Self::DraftMutation>>> {
         Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>(grant))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
@@ -592,7 +592,7 @@ fn toy_fixture_caller_policy()->(crate::MountedOwnerPolicyV1,usize){let law:serd
 struct ToyFixtureCaller<'a>{policy:crate::MountedOwnerPolicyV1,identity:semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'a>,receipts:Vec<artifact_app_laws::TypedOperationFixtureOwnershipReceipt>}
 impl ToyFixtureCaller<'_>{
     fn retain_original_receipts<P:PluginApp>(&mut self,app:&mut P){
-        if let Some((kind,phase,grant,progress))=app.take_constructor_receipt(){let expected=match phase{crate::app::ArtifactStoreConstructorPhase::Preparation=>self.policy.preparation,crate::app::ArtifactStoreConstructorPhase::Close=>self.policy.close};assert_eq!(grant,expected);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Constructor{kind,phase,grant,progress});}
+        if let Some((kind,phase,grant,progress))=app.take_constructor_receipt(){let expected=match phase{crate::document_ingress::ArtifactStoreConstructorPhase::Preparation=>self.policy.preparation,crate::document_ingress::ArtifactStoreConstructorPhase::Close=>self.policy.close};assert_eq!(grant,expected);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Constructor{kind,phase,grant,progress});}
         if let Some((operation,grant,progress))=app.take_typed_operation_preparation_receipt(){assert_eq!(grant,self.policy.preparation);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Preparation{operation,grant,progress});}
         if let Some((operation,grant,progress))=app.take_typed_operation_retirement_receipt(){assert_eq!(grant,self.policy.close);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::Retirement{operation,grant,progress});}
         if let Some((grant,progress))=app.take_history_command_receipt(){assert_eq!(grant,self.policy.maintenance);assert!(progress.fits(grant));assert!(grant.maximum_depth>0||progress==Default::default());self.receipts.push(artifact_app_laws::TypedOperationFixtureOwnershipReceipt::History{grant,progress});}
@@ -664,7 +664,7 @@ fn find_node<'a>(node: &'a Value, key: &str) -> Option<&'a Value> {
 
 async fn attach_probe(app: &mut ToyApp, channel: &str) -> MemoryBackbone {
     let (backbone, probe) = MemoryBackbone::pair(channel, channel).await;
-    app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("attach probe backbone");
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach probe backbone");
     probe
 }
 
@@ -946,7 +946,7 @@ async fn the_runtime_installs_its_canonical_operation_wire_on_every_store_it_min
     let rows = app.config_store.authored_operation_bytes(std::slice::from_ref(&config_mutation), &mut caller.identity).expect("the config mutation authors through the runtime's wire");
     assert_eq!(rows.len(), 1);
     assert!(rows[0].starts_with(b"op"), "{:?}", String::from_utf8_lossy(&rows[0]));
-    let interaction = <crate::app::InteractionConfigMutation>::set_state(protocol::InteractionState::default());
+    let interaction = <crate::local_interaction::mutations::InteractionConfigMutation>::set_state(protocol::InteractionState::default());
     let interaction_rows = app.interaction_store.authored_operation_bytes(std::slice::from_ref(&interaction), &mut caller.identity).expect("the interaction mutation authors through the runtime's wire");
     let oracle = format!("op{}", serde_json::json!({ "setInteractionState": { "activeGranularity": {}, "activeMode": {}, "hover": {}, "selection": {} } }));
     assert_eq!(String::from_utf8(interaction_rows[0].clone()).expect("canonical JSON is text"), oracle, "the interaction wire is the independent serde_json document");
@@ -1394,14 +1394,14 @@ fn every_action_arg_carrier_of_an_exact_integer_reads_the_same_identity() {
     for row in fixture()["actionArgCarriers"]["rows"].as_array().expect("carrier rows") {
         let id = text(&row["id"]);
         let args = DslValue::Object(vec![("generation".to_string(), carrier_value(row)), ("runId".to_string(), carrier_value(row))]);
-        let read = crate::app::tool_run::tool_run_arg_u64(Some(&args), "generation");
+        let read = crate::tool_jobs::tool_run::tool_run_arg_u64(Some(&args), "generation");
         let expected = row["reads"].as_u64();
         println!("[STATS] actionArgCarriers {id}: carrier={} read={read:?}", text(&row["carrier"]));
         assert_eq!(read, expected, "{id}: generation");
-        assert_eq!(crate::app::tool_run::tool_run_arg_u64(Some(&args), "runId"), expected, "{id}: runId — one reader, both identity arguments");
+        assert_eq!(crate::tool_jobs::tool_run::tool_run_arg_u64(Some(&args), "runId"), expected, "{id}: runId — one reader, both identity arguments");
     }
-    assert_eq!(crate::app::tool_run::tool_run_arg_u64(Some(&DslValue::Object(Vec::new())), "generation"), None, "an absent argument names no identity");
-    assert_eq!(crate::app::tool_run::tool_run_arg_u64(None, "generation"), None, "an action with no arguments at all names no identity");
+    assert_eq!(crate::tool_jobs::tool_run::tool_run_arg_u64(Some(&DslValue::Object(Vec::new())), "generation"), None, "an absent argument names no identity");
+    assert_eq!(crate::tool_jobs::tool_run::tool_run_arg_u64(None, "generation"), None, "an action with no arguments at all names no identity");
 }
 
 /// ⚖️ LAW: a `toolRunFinalize` whose `generation` arrives in the fixture's declared wire carrier really
@@ -2186,21 +2186,21 @@ async fn a_retained_config_over_one_envelope_page_closes_after_a_render() {
                 break;
             }
             turns += 1;
-            let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
+            let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("original fixture close demand");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-            assert!(grant.maximum_copy_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
+            assert!(grant.maximum_copy_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && grant.maximum_release_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "original fixture body and physical grant limits remain unchanged");
             match { let step = app.close_step(grant).expect("close step"); let _ = app.take_constructor_receipt(); step } {
-                crate::app::PluginLifecycleStep::Progress(progress) => {
+                crate::bounded_ownership::PluginLifecycleStep::Progress(progress) => {
                     assert!(progress.fits(grant));
                     let released_items = progress.copied_items;
                     let released_bytes = progress.released_bytes;
-                    assert!(released_items <= 1 && released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a close page stays inside its exact grant");
+                    assert!(released_items <= 1 && released_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, "a close page stays inside its exact grant");
                     if released_items != 0 || released_bytes != 0 {
                         productive = turns;
                     }
                     last = format!("Pending {{ {released_items}, {released_bytes} }}");
                 }
-                crate::app::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
+                crate::bounded_ownership::PluginLifecycleStep::Complete(progress) => { assert!(progress.fits(grant)); assert!(app.close_terminal_is_empty()); break; },
                 step => last = format!("{step:?}"),
             }
         }

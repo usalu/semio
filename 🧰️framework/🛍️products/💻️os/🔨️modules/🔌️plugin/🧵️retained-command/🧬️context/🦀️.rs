@@ -1,10 +1,11 @@
 //! 🎒️ Captured command contexts retain their original sealed header and concrete payload issuers.
-use crate::app::{ArtifactApp,ArtifactOwnedToolJobContext};
+use crate::app_contract::ArtifactApp;
+use crate::tool_contract::ArtifactOwnedToolJobContext;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement,shared::sealed::{SealedShared,SharedIssuer}},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use std::mem::ManuallyDrop;
 #[path="📸️fields/🦀️.rs"]
 mod original_fields;
-pub(crate) use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
+use original_fields::{ContextOwnedFields,ContextOriginalResidual,ContextRetirementParts,ContextToolRunMetadata,ContextToolRunSources};
 
 enum Source<A:ArtifactApp>{Admitted(SealedShared<ArtifactOwnedToolJobContext<A>>),Refused{original:ArtifactOwnedToolJobContext<A>,fault:ValueError}}
 

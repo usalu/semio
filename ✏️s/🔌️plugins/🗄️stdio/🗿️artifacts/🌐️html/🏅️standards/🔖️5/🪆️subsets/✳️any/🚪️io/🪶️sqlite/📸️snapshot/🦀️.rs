@@ -1,7 +1,7 @@
 //! 🌐️ HTML's own element, text, comment, raw-text and optional attribute relations.
 
 use crate::standards::v5::subsets::any::schema::snapshot::{HtmlAttr, HtmlNode, HtmlSnapshot, RawTextKind};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_os_kernel::io_schema::IoError;

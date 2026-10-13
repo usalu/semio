@@ -1,0 +1,71 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-hub-stdio-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Feature-free full stdio artifact catalog: contribution registry, capability ledger, native codec receipts and the catalog topic"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
+semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
+semio-framework-schema = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-hash = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+pack = { workspace = true }
+# 🧩️ Composition Dependencies
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-txt = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+semio-s-artifact-stdio-deflate = { workspace = true }
+semio-s-artifact-stdio-zip = { workspace = true }
+semio-s-artifact-stdio-json = { workspace = true }
+semio-s-artifact-stdio-csv = { workspace = true }
+semio-s-artifact-stdio-md = { workspace = true }
+semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-obj = { workspace = true }
+semio-s-artifact-stdio-stl = { workspace = true }
+semio-s-artifact-stdio-ply = { workspace = true }
+semio-s-artifact-stdio-las = { workspace = true }
+semio-s-artifact-stdio-step = { workspace = true }
+semio-s-artifact-stdio-ifc = { workspace = true }
+semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-dxf = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-jpg = { workspace = true }
+semio-s-artifact-stdio-gif = { workspace = true }
+semio-s-artifact-stdio-bmp = { workspace = true }
+semio-s-artifact-stdio-tiff = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-docx = { workspace = true }
+semio-s-artifact-stdio-pptx = { workspace = true }
+semio-s-artifact-stdio-xlsx = { workspace = true }
+semio-s-artifact-stdio-bcf = { workspace = true }
+semio-s-artifact-stdio-semio-catalog = { workspace = true }
+semio-s-artifact-stdio-mp4 = { workspace = true }
+semio-s-artifact-stdio-avi = { workspace = true }
+semio-s-artifact-stdio-mp3 = { workspace = true }
+semio-s-artifact-stdio-wav = { workspace = true }
+semio-s-artifact-stdio-epw = { workspace = true }
+semio-s-artifact-stdio-tsv = { workspace = true }
+semio-s-artifact-stdio-html = { workspace = true }
+# /🧩️ Composition Dependencies
+serde = { workspace = true }
+serde_json = { workspace = true }

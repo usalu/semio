@@ -3,7 +3,7 @@
 use crate::standards::v_ecma_376::subsets::base::schema::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 use semio_s_artifact_stdio_xml::schema::snapshot::XmlSnapshot;
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::XmlSqliteTables;

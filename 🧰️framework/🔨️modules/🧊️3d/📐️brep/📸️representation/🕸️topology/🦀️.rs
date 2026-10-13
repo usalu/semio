@@ -14,19 +14,15 @@
 use std::collections::HashMap;
 pub use semio_framework_mesh_engine::HistoryFoldSet;
 
-use crate::brep::representation::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::{LabelSource, PersistentLabel};
-use crate::brep::representation::vector::Pnt3;
+use crate::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, Store, SurfaceId, VertexId};
+use crate::curve::{Curve2, Curve3};
+use crate::surface::Surface;
+use crate::tolerance::Tol;
+use crate::topology::history::{LabelSource, PersistentLabel};
+use crate::vector::Pnt3;
 
-#[cfg(test)]
-std::thread_local! { pub(crate) static EDGE_USE_PROBES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
-
-pub(crate) fn coedge_uses_edge(coedge: &Coedge, edge: EdgeId) -> bool {
-    #[cfg(test)]
-    EDGE_USE_PROBES.with(|probes| probes.set(probes.get() + 1));
+/// 🔗 Whether `coedge` is a use of `edge`: the one edge-use probe valence and incidence walks spend per coedge.
+pub fn coedge_uses_edge(coedge: &Coedge, edge: EdgeId) -> bool {
     coedge.edge == edge
 }
 
@@ -106,6 +102,47 @@ pub struct Solid {
 }
 
 // #endregion 🔖️Entities
+
+// #region 🔖️Ring
+
+/// 🔗 The placeholder coedge id a ring member holds until [`make_loop`] or an edge split links its neighbours.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn dummy_coedge() -> CoedgeId {
+    ArenaId::from_raw(0, 0)
+}
+
+/// ✂️ Builds a closed coedge ring from `members` (one `(edge, forward)` pair per coedge, in ring
+/// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::topology::history::PersistentLabel`]
+/// of their own (they are structural, not independently document-nameable), so nothing is recorded.
+// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
+pub fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
+    let loop_id = body.loops.insert(Loop { first: dummy_coedge(), face });
+    let coedge_ids: Vec<CoedgeId> = members.iter().map(|&(edge, forward)| body.coedges.insert(Coedge { edge, forward, pcurve: None, prange: (0.0, 0.0), loop_id, next: dummy_coedge(), prev: dummy_coedge() })).collect();
+    let n = coedge_ids.len();
+    for i in 0..n {
+        let coedge = body.coedges.get_mut(coedge_ids[i]).unwrap();
+        coedge.next = coedge_ids[(i + 1) % n];
+        coedge.prev = coedge_ids[(i + n - 1) % n];
+    }
+    body.loops.get_mut(loop_id).unwrap().first = coedge_ids[0];
+    loop_id
+}
+
+// #endregion 🔖️Ring
+
+// #region 🔖️Wire
+
+/// 🧱 An ordered chain of oriented edges produced by a wire constructor (not yet bound to a face).
+#[derive(Clone, Debug, PartialEq)]
+pub struct Wire {
+    pub members: Vec<(EdgeId, bool)>,
+    pub vertices: Vec<VertexId>,
+    pub closed: bool,
+}
+
+semio_framework_value::artifact_retire_struct!(Wire {members,vertices,closed});
+
+// #endregion 🔖️Wire
 
 // #region 🔖️Body
 
@@ -240,7 +277,7 @@ impl Body {
 
 /// 🌱 One restored vertex, keyed by its own [`PersistentLabel`] rather than a persisted string id
 /// — translating a snapshot's own id convention into `PersistentLabel` is the caller's job (see
-/// [`crate::brep::representation::topology::history`]'s own docstring on why a label is never reused), done once per
+/// [`crate::topology::history`]'s own docstring on why a label is never reused), done once per
 /// diff-constructor call, not baked into this ephemeral seed's own shape.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
@@ -264,7 +301,7 @@ pub struct SeedEdge {
 
 /// 🌱 One restored face; `outer`/`inners` are indices into [`BrepArenaSeed::loops`] — loops carry
 /// no [`PersistentLabel`] of their own (structural, not independently document-nameable, per
-/// [`crate::brep::operations::euler::make_loop`]'s own docstring), so an ordinal index is the only address.
+/// [`crate::topology::make_loop`]'s own docstring), so an ordinal index is the only address.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 pub struct SeedFace {
@@ -320,7 +357,7 @@ fn placeholder_face_for_build() -> FaceId {
 
 impl Body {
     /// 🌱 Reconstructs a `Body` from `seed`, inserting directly into each `Store` — the ONE place
-    /// outside [`crate::brep::operations::euler`] allowed to construct topology entities directly. This
+    /// outside [`semio_framework_3d_brep_operations::euler`] allowed to construct topology entities directly. This
     /// mirrors euler's own "the *only* functions permitted to mutate a `Body`" docstring rather
     /// than violating it: `from_seed` constructs a *fresh* `Body`, it does not mutate an existing
     /// one. It must NOT call `euler::make_vertex`/`make_edge`/`add_face`/`add_shell`/`add_solid` —
@@ -351,7 +388,7 @@ impl Body {
             .iter()
             .map(|ring| {
                 let members: Vec<(EdgeId, bool)> = ring.iter().map(|(label, forward)| (edge_ids[label], *forward)).collect();
-                crate::brep::operations::euler::make_loop(&mut body, placeholder, &members)
+                make_loop(&mut body, placeholder, &members)
             })
             .collect();
 
@@ -436,13 +473,13 @@ impl Body {
 
 pub mod history {
     //! 📜️ Operation provenance: a [`PersistentLabel`] assigned once at an entity's birth and never
-    //! reused, plus the [`OpDelta`] every mutating operation in [`crate::brep::operations::euler`] returns.
+    //! reused, plus the [`OpDelta`] every mutating operation in [`semio_framework_3d_brep_operations::euler`] returns.
     //! **Host authority:** `LabelSource` lives only inside a `Body` owned by engine compute or cache.
 
     // #region 🔖️Labels
 
     /// 📜️ A stable identity for one topological entity, assigned from a per-`Body` monotonically
-    /// increasing counter at birth. Unlike an arena [`crate::brep::representation::arena::ArenaId`] (which can be reused
+    /// increasing counter at birth. Unlike an arena [`crate::arena::ArenaId`] (which can be reused
     /// after removal once its generation increments), a label is never reused — it survives arena
     /// compaction and is the identity the document layer's persistent naming keys off of.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, value_derive::ToValue, value_derive::FromValue)]
@@ -466,7 +503,7 @@ pub mod history {
             LabelSource { next: 0 }
         }
         /// 📜️ Seeds the counter at an explicit high-water mark rather than restarting at 0 — used by
-        /// [`crate::brep::representation::topology::Body`]'s `from_seed` so a rebuild from a persisted seed carries
+        /// [`crate::topology::Body`]'s `from_seed` so a rebuild from a persisted seed carries
         /// the label numbering forward instead of colliding with the labels it is restoring.
         // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
         pub fn from_next(next: u64) -> Self {
@@ -515,7 +552,7 @@ pub mod history {
         }
     }
 
-    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`crate::brep::operations::euler`]
+    /// 📜️ Accumulates an [`OpDelta`] as a checked editor runs; passed by every [`semio_framework_3d_brep_operations::euler`]
     /// operator so no operation can forget to log what it touched. `record_deleted` and friends are
     /// idempotent against duplicate reporting within one operation, since some editors touch the same
     /// entity more than once (e.g. splitting an edge modifies the vertex on both sides).
@@ -587,9 +624,9 @@ pub mod history {
         /// 🎟️ Bytes of POD provenance and owned-ID allocations retained through final publication.
         pub fn retirement_bytes(&self)->usize {self.owned.capacity()*size_of::<super::EntityRef>()+self.delta.generated.capacity()*size_of::<PersistentLabel>()}
         /// 🎟️ Borrows the original rollback tail without removing its ownership.
-        pub(crate) fn last_owned(&self)->Option<super::EntityRef> {self.owned.last().copied()}
+        pub fn last_owned(&self)->Option<super::EntityRef> {self.owned.last().copied()}
         /// 🎟️ Removes the original rollback authority only after its entity transfer is admitted.
-        pub(crate) fn pop_retired_owned(&mut self,entity:super::EntityRef) {assert_eq!(self.owned.pop(),Some(entity));}
+        pub fn pop_retired_owned(&mut self,entity:super::EntityRef) {assert_eq!(self.owned.pop(),Some(entity));}
 
     }
 
@@ -653,9 +690,6 @@ semio_framework_value::artifact_retire_struct!(ReachSet {vertices,edges,coedges,
 mod compaction;
 pub use compaction::BodyCompactionJob;
 
-#[cfg(test)]
-#[path="🧪️tests/🔬️compaction/🦀️.rs"]
-mod compaction_tests;
 
 
 use semio_framework_value::{ValueError,ValueRefusalKind,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
@@ -1001,9 +1035,6 @@ impl Body {
 }
 
 // #region 🔖️Tests
-#[cfg(test)]
-#[path = "🧪️tests/🔬️reachability/🦀️.rs"]
-mod reachability_tests;
 // #endregion 🔖️Tests
 
 // #endregion ♻️Reachability

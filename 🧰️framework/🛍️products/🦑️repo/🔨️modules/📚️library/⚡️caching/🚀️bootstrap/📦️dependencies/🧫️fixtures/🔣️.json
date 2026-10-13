@@ -52,7 +52,7 @@
   ],
   "spool": {
     "forwarded": [
-      "> nx run @semio-tech/process-plugin:component-release",
+      "> nx run semio-hub-process-component:component",
       " NX   Running target build for project @semio-tech/semio-tech-play and 375 tasks it depends on",
       "\u001b[1m\u001b[7m NX \u001b[27m\u001b[22m Successfully ran target build",
       " Successfully ran target build for project x and 3 tasks it depends on",
@@ -65,7 +65,7 @@
     "suppressed": [
       "@semio-tech/process-plugin: [cargo-provenance] {\"phase\":\"read\",\"bytes\":10,\"totalBytes\":20,\"work\":3}",
       "@semio-tech/process-plugin: warning: unused import: `x`",
-      "- @semio-tech/process-plugin:component-dev",
+      "- @semio-tech/process-plugin:describe",
       "   Compiling serde v1.0.228",
       ""
     ],

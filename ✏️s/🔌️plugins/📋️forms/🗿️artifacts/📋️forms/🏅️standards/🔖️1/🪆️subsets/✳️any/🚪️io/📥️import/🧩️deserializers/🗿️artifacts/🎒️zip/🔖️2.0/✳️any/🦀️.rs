@@ -19,10 +19,10 @@ impl Deserializer<FormsSnapshot> for ZipIntoForms {
         let IoPayload::Binary(bytes) = payload else {
             return Err(invalid("ZipIntoForms: expected a binary zip snapshot".to_string()));
         };
-        let archive = <ZipSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| IoError::from_value_error(match e.into_value_error() { Ok(cause) => cause, Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("in-memory decode reported a transport failure: {error}")) }))?;
+        let archive = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| IoError::from_value_error(match e.into_value_error() { Ok(cause) => cause, Err(error) => semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvariantViolated, format!("in-memory decode reported a transport failure: {error}")) }))?;
         let member = document_archive_member::<FormsSnapshot>();
         let entry = archive.entries.iter().find(|entry| entry.name == member).ok_or_else(|| invalid(format!("ZipIntoForms: the archive has no {member} member")))?;
         let text = std::str::from_utf8(&entry.data).map_err(|e| invalid(e.to_string()))?;
-        Ok(IoOutcome::clean(store::ArtifactDsl::parse_dsl(text).map_err(|e| IoError::from_value_error(semio_framework_value::ValueError::new(e.kind,e.message)))?))
+        Ok(IoOutcome::clean(store::os_store::serialization::ArtifactDsl::parse_dsl(text).map_err(|e| IoError::from_value_error(semio_framework_value::ValueError::new(e.kind,e.message)))?))
     }
 }

@@ -1,14 +1,14 @@
 //! 🔺️ Diff for `CreateTexture`.
 
-use crate::standards::v1::subsets::mesh::schema::diff::SemioMeshDiff;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::diff::SemioMeshDiff;
+use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn diff(payload: &super::CreateTexture, base: &SemioMeshSnapshot) -> protocol::MutationOutcome<SemioMeshDiff> {
-    if crate::standards::v1::subsets::mesh::schema::diff::texture_at(base, &payload.texture.id).is_some() {
+    if crate::schema::diff::texture_at(base, &payload.texture.id).is_some() {
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Texture \"{}\" already exists.", payload.texture.id), [payload.texture.id.clone()]);
     }
-    protocol::MutationOutcome::new(crate::standards::v1::subsets::mesh::schema::diff::diff_add_texture(base, payload.texture.clone(), payload.at))
+    protocol::MutationOutcome::new(crate::schema::diff::diff_add_texture(base, payload.texture.clone(), payload.at))
 }
 //#endregion 🔖️Diff

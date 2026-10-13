@@ -3,8 +3,8 @@
 //! replaces an authored content body per `📓️taxonomy.md`, the same shape `🔤️text`'s `edit-run`
 //! uses one level down for a run's `content`.
 
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitConnection, SemioKitPiece, SemioKitSnapshot};
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::{SemioKitConnection, SemioKitPiece, SemioKitSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

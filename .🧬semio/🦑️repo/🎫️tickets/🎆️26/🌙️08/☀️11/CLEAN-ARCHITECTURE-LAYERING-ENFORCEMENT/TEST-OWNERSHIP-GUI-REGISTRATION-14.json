@@ -1,0 +1,98 @@
+{
+  "version": 1,
+  "rows": [
+    {
+      "name": "⚖️test🦑️repo🧩️native-prerequisites",
+      "command": "bun nx run @semio-tech/repo-lib:test-native-prerequisites --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.13
+      }
+    },
+    {
+      "name": "⚖️test🦑️repo🛬️decoder-absence",
+      "command": "bun nx run @semio-tech/repo-lib:test-decoder-absence --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.131
+      }
+    },
+    {
+      "name": "⚖️test💻️os📇️native-entrypoint-catalog",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-native-entrypoint-catalog --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.132
+      }
+    },
+    {
+      "name": "⚖️test💻️os🏭️returned-read-factory-mount",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-returned-read-factory-mount --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.133
+      }
+    },
+    {
+      "name": "⚖️test🌱️value🔐️shared-factory-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test-shared-factory-retirement --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.134
+      }
+    },
+    {
+      "name": "⚖️test🌱️value📥️forward-deque-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache -- long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13"
+      },
+      "presentation": {
+        "group": "9_gates",
+        "order": 902.135
+      }
+    }
+  ],
+  "retireNames": [
+    "⚖️test🕸️graph🧩️native-prerequisites"
+  ]
+}

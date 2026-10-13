@@ -2,7 +2,7 @@
 
 use super::*;
 use crate::standards::v1::subsets::any::io::export::sheets::testkit::{house_with_sheets, inferred};
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
 fn finished(job: &mut SheetsJob, snapshot: &ModelSnapshot) -> (Output, Vec<&'static str>) {
     let mut stages = Vec::new();

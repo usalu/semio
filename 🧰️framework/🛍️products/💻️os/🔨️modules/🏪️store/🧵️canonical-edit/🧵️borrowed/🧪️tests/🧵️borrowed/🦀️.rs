@@ -314,7 +314,7 @@ fn member_canonical_reader_map_retirement_preserves_refused_original_and_paid_ca
 }
 /// 📏️ The canonical bytes the original edit must seal to, projected independently through serde.
 fn expected_json(edit: &Edit<MapMutation>) -> Vec<u8> {
-    serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(edit))).unwrap()
+    serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::ledger::CursorRevisionAccumulator::revision_value(edit))).unwrap()
 }
 
 /// 🎟️ Funds exactly the next quoted preparation turn: one item and the sealer's own five quoted currencies.

@@ -16,9 +16,9 @@ fn causal_error_contract_preserves_transparent_sources_and_conversions() {
         assert_eq!(error.to_string(), message);
         assert!(std::error::Error::source(&error).is_none());
     }
-    let stats: CausalError = crate::standards::v1::subsets::table::schema::statistics_internals::StatisticsError::SingularMatrix.into();
-    let tabular: CausalError = crate::standards::v1::subsets::table::schema::tabular_internals::TabularError::IndexOutOfBounds(5).into();
-    let probability: CausalError = crate::standards::v1::subsets::table::schema::probability_internals::ProbabilityError::NoConvergence { what: "sample" }.into();
+    let stats: CausalError = crate::schema::statistics_internals::StatisticsError::SingularMatrix.into();
+    let tabular: CausalError = crate::schema::tabular_internals::TabularError::IndexOutOfBounds(5).into();
+    let probability: CausalError = crate::schema::probability_internals::ProbabilityError::NoConvergence { what: "sample" }.into();
     for error in [&stats, &tabular, &probability] {
         assert!(std::error::Error::source(error).is_some());
     }
@@ -158,12 +158,12 @@ fn meek_rule3_orients_via_two_directed_co_parents() {
 // #region 🔖️CiTestTests
 #[test]
 fn fisher_z_ci_test_via_causal_dag_columns() {
-    let mut table = crate::standards::v1::subsets::table::schema::tabular_internals::Table::new();
+    let mut table = crate::schema::tabular_internals::Table::new();
     let n = 200;
     let mut rng = semio_framework_geometry::random::Rng::from_seed(7);
-    let x: Vec<f64> = (0..n).map(|_| crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
-    let y: Vec<f64> = x.iter().map(|&xi| xi * 0.8 + crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
-    let z: Vec<f64> = y.iter().map(|&yi| yi * 0.8 + crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
+    let x: Vec<f64> = (0..n).map(|_| crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
+    let y: Vec<f64> = x.iter().map(|&xi| xi * 0.8 + crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
+    let z: Vec<f64> = y.iter().map(|&yi| yi * 0.8 + crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.2).collect();
     table.push_continuous("x", x).unwrap();
     table.push_continuous("y", y).unwrap();
     table.push_continuous("z", z).unwrap();
@@ -180,14 +180,14 @@ fn fisher_z_ci_test_via_causal_dag_columns() {
 fn linear_chain_scm() -> LinearGaussianScm {
     // x -> m -> y, coefficients 2.0 and 1.5.
     let dag = CausalDag::from_named_edges(vec!["x".into(), "m".into(), "y".into()], &[("x", "m"), ("m", "y")]).unwrap();
-    let mut weights = crate::standards::v1::subsets::value::schema::algebra_internals::MatD::zeros(3, 3);
+    let mut weights = semio_s_artifact_stdio_semio_value::schema::algebra_internals::MatD::zeros(3, 3);
     weights.set(1, 0, 2.0);
     weights.set(2, 1, 1.5);
     LinearGaussianScm {
         dag,
         weights,
-        intercepts: crate::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![0.0, 0.0, 0.0]),
-        noise_var: crate::standards::v1::subsets::value::schema::algebra_internals::VecD::from_vec(vec![1.0, 0.25, 0.25]),
+        intercepts: semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::from_vec(vec![0.0, 0.0, 0.0]),
+        noise_var: semio_s_artifact_stdio_semio_value::schema::algebra_internals::VecD::from_vec(vec![1.0, 0.25, 0.25]),
     }
 }
 
@@ -199,7 +199,7 @@ fn local_bic_prefers_the_true_parent_set() {
     // An exogenous, causally unrelated column — unlike `y` (a downstream descendant of `m`
     // in the chain, and thus itself strongly correlated with `m`), this one has no relationship
     // to `m` at all, so it is a genuine negative control for "does BIC reward a real parent".
-    let unrelated: Vec<f64> = (0..data.n_rows()).map(|_| crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
+    let unrelated: Vec<f64> = (0..data.n_rows()).map(|_| crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
     data.push_continuous("unrelated", unrelated).unwrap();
     let with_true_parent = local_bic(&data, 1, &[0]).unwrap();
     let with_no_parent = local_bic(&data, 1, &[]).unwrap();
@@ -333,12 +333,12 @@ fn sprinkler_posterior_vs_interventional_distribution_contrast() {
 
 // #region 🔖️EstimationTests
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn confounded_dataset(true_ate: f64, n: usize, seed: u64) -> crate::standards::v1::subsets::table::schema::tabular_internals::Table {
+fn confounded_dataset(true_ate: f64, n: usize, seed: u64) -> crate::schema::tabular_internals::Table {
     let mut rng = semio_framework_geometry::random::Rng::from_seed(seed);
-    let z: Vec<f64> = (0..n).map(|_| crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
-    let t: Vec<f64> = z.iter().map(|&zi| f64::from(u8::from(zi + crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng) > 0.0))).collect();
-    let y: Vec<f64> = z.iter().zip(&t).map(|(&zi, &ti)| 2.0 * zi + true_ate * ti + crate::standards::v1::subsets::table::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.5).collect();
-    crate::standards::v1::subsets::table::schema::tabular_internals::Table::from_f64_columns(vec!["z".into(), "t".into(), "y".into()], vec![z, t, y]).unwrap()
+    let z: Vec<f64> = (0..n).map(|_| crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng)).collect();
+    let t: Vec<f64> = z.iter().map(|&zi| f64::from(u8::from(zi + crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng) > 0.0))).collect();
+    let y: Vec<f64> = z.iter().zip(&t).map(|(&zi, &ti)| 2.0 * zi + true_ate * ti + crate::schema::probability_internals::Normal::STANDARD.sample(&mut rng) * 0.5).collect();
+    crate::schema::tabular_internals::Table::from_f64_columns(vec!["z".into(), "t".into(), "y".into()], vec![z, t, y]).unwrap()
 }
 
 // #endregion 🔖️EstimationTests
@@ -352,7 +352,7 @@ fn cyclic_edges_are_rejected() {
 
 #[test]
 fn wrong_column_type_errors() {
-    let mut table = crate::standards::v1::subsets::table::schema::tabular_internals::Table::new();
+    let mut table = crate::schema::tabular_internals::Table::new();
     table.push_continuous("x", vec![1.0, 2.0]).unwrap();
     let err = GSquared.test(&table, 0, 0, &[]).unwrap_err();
     assert!(matches!(err, CausalError::Tabular(_)));
@@ -414,9 +414,9 @@ mod quick {
         // x -> y with uniform (non-Gaussian) noise.
         let n = 3000;
         let mut rng = semio_framework_geometry::random::Rng::from_seed(55);
-        let x: Vec<f64> = (0..n).map(|_| crate::standards::v1::subsets::table::schema::probability_internals::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
-        let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + crate::standards::v1::subsets::table::schema::probability_internals::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
-        let table = crate::standards::v1::subsets::table::schema::tabular_internals::Table::from_f64_columns(vec!["x".into(), "y".into()], vec![x, y]).unwrap();
+        let x: Vec<f64> = (0..n).map(|_| crate::schema::probability_internals::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
+        let y: Vec<f64> = x.iter().map(|&xi| 2.0 * xi + crate::schema::probability_internals::Uniform::new(-1.0, 1.0).unwrap().sample(&mut rng)).collect();
+        let table = crate::schema::tabular_internals::Table::from_f64_columns(vec!["x".into(), "y".into()], vec![x, y]).unwrap();
         let result = direct_lingam(&table, 0.05).unwrap();
         assert_eq!(result.order[0], 0, "x should be recovered as the earlier (more exogenous) variable");
         assert!(result.dag.parents(1).contains(&0), "y should have x as a parent after pruning");

@@ -13,7 +13,7 @@ pub fn diff(payload: &super::InsertListItem, base: &SemioValueSnapshot) -> proto
         Some(SemioValue::List { items }) => diff_at_path(
             path,
             Some(SemioValueDiff::List {
-                diff: crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }] },
+                diff: semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff { removed: Vec::new(), modified: Vec::new(), added: vec![IndexAdded { index: (*index).min(items.len()), item: value.clone() }] },
             }),
         ),
         _ => SemioValueTreeDiff::default(),

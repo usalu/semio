@@ -9,7 +9,7 @@ use semio_framework_plugin::NoConfig;
 use semio_framework_plugin::NoConfigMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 /// 🪪️ The verb a `moveMediaNode` drag-tool transaction is scoped by.
 pub const MOVE_MEDIA_NODE_VERB: &str = "moveMediaNode";

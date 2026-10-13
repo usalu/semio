@@ -18,7 +18,7 @@ use framework_schema::ArtifactSchema;
 /// 🗜️ Declares the actual cumulative bare RFC1950 producer authority for domain consumers.
 use crate::standards::v_rfc1950::subsets::any::io::sqlite::snapshot::native::{compress_zlib,decompress_zlib};
 
-impl store::ArtifactDsl for DeflateSnapshot {
+impl store::os_store::serialization::ArtifactDsl for DeflateSnapshot {
     const EXTENSION: &'static str = "zz";
     fn envelope_id() -> &'static str {
         "stdio.deflate"
@@ -45,7 +45,7 @@ impl store::ArtifactDsl for DeflateSnapshot {
     fn print_dsl(&self) -> String {
         let zlib_bytes = crate::standards::v_rfc1950::subsets::any::io::encode_deflate_snapshot(self);
         let body: String = zlib_bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

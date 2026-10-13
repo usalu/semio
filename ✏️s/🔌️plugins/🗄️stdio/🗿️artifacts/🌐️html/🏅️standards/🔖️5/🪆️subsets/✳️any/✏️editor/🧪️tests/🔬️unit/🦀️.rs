@@ -97,7 +97,7 @@ async fn kit_fixture_holding(document: &HtmlSnapshot) -> KitFixtureApp {
     use semio_framework_plugin::PluginApp;
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::new_registered_app::<EditorApp<HtmlEditor>, _>(async { semio_framework_plugin::App { definition: create_html_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(document, STDIO_HTML_DOCUMENT_SCHEMA) else { panic!("the example switch hands the host one whole document") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("the host loads the example document");
     app
 }
 
@@ -118,7 +118,7 @@ async fn dispatch_settled(app: &mut KitFixtureApp, action: &str, args: &[(&str, 
 async fn the_kit_verb_loads_the_document_through_its_exact_retained_factory() {
     let target = html_example_snapshot(crate::examples::demo::ID);
     let mut app = kit_fixture_holding(&HtmlSnapshot::default()).await;
-    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::ArtifactDsl>::print_dsl(&target))]).await.expect("textEdit settles");
+    dispatch_settled(&mut app, "textEdit", &[("text", &<HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&target))]).await.expect("textEdit settles");
     assert_eq!(app.snapshot().expect("html snapshot"), target);
     semio_framework_plugin::artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
@@ -139,7 +139,7 @@ async fn text_edit_refuses_text_that_is_not_the_artifacts_dsl() {
 #[test]
 fn an_applied_envelope_is_a_load_and_publishes_no_mutation() {
     let next = html_example_snapshot(crate::examples::demo::ID);
-    let emit = html_emit(&HtmlEditCommand::LoadText { text: <HtmlSnapshot as store::ArtifactDsl>::print_dsl(&next) }).expect("the envelope parses");
+    let emit = html_emit(&HtmlEditCommand::LoadText { text: <HtmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&next) }).expect("the envelope parses");
     assert!(emit.artifact_mutations.is_empty());
     assert!(matches!(emit.effects.as_slice(), [semio_framework_plugin::Effect::LoadDocument { .. }]));
 }

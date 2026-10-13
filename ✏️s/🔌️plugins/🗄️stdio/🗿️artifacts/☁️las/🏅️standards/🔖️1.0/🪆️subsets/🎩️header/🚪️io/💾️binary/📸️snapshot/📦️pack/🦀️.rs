@@ -127,8 +127,8 @@ impl From<Snapshot> for LasSnapshot {
 
 
 
-impl store::ArtifactPack for LasSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+impl store::os_store::serialization::ArtifactPack for LasSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let snapshot = Snapshot::from(self);
         let inner = store::pack_rt::encode_document(&Snapshot::__dsl_spec(), &snapshot.__dsl_to_record(), options)?;
@@ -139,7 +139,7 @@ impl store::ArtifactPack for LasSnapshot {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity("stdio.las", store::semio_format::Component::Pack, 1) { return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "LAS snapshot pack identity differs"))); }
         let (record, _) = store::pack_rt::decode_document(&inner, &Snapshot::__dsl_spec(), options)?;
-        Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::text_error_to_pack_error)
+        Snapshot::__dsl_from_record(&record).map(Into::into).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Snapshot::__dsl_spec()) }
 }

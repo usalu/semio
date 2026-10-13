@@ -55,7 +55,7 @@
                   "id": "build-mode",
                   "kind": "choice",
                   "appliesTo": { "verbs": ["build", "test"] },
-                  "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "ship" }, "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }]
+                  "values": [{ "id": "ship", "env": { "SEMIO_BUILD_MODE": "release" }, "nxFlags": ["--skip-nx-cache", "--skip-remote-cache"] }]
                 },
                 { "id": "cargo-jobs", "kind": "text", "appliesTo": { "verbs": ["test"] }, "valueEnv": "CARGO_BUILD_JOBS" },
                 { "id": "trace", "kind": "flag", "env": { "SEMIO_TRACE": "1" } }
@@ -286,7 +286,7 @@
                 "build": { "executor": "nx:run-commands" },
                 "test": { "executor": "nx:run-commands" },
                 "test:native": { "executor": "nx:run-commands" },
-                "materialize-dev": { "executor": "nx:run-commands" }
+                "materialize": { "executor": "nx:run-commands" }
               }
             }
           },

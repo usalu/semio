@@ -1,12 +1,12 @@
-pub(crate) struct MemberReceiptOperation(pub(crate) String);
+struct MemberReceiptOperation(String);
 impl store::ArtifactCanonicalJson for MemberReceiptOperation {
     fn canonical_json_node(&self, path: &[usize]) -> Result<store::ArtifactCanonicalJsonNode<'_>, semio_framework_value::ValueError> { if path.is_empty() { Ok(store::ArtifactCanonicalJsonNode::String(&self.0)) } else { Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "neutral receipt operation has only its original string root")) } }
 }
-pub(crate) struct MemberReceiptPublication { pub(crate) edit: String, pub(crate) forward: Vec<MemberReceiptOperation>, pub(crate) inverse: Vec<MemberReceiptOperation>, pub(crate) metadata: Vec<protocol::MutationMeta>, pub(crate) schemas: Vec<(String,String)> }
-impl store::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
+struct MemberReceiptPublication { edit: String, forward: Vec<MemberReceiptOperation>, inverse: Vec<MemberReceiptOperation>, metadata: Vec<protocol::MutationMeta>, schemas: Vec<(String,String)> }
+impl store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any { self }
-    fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase { store::ArtifactStoreOneItemPublicationPhase::Publishing }
-    fn progress(&self) -> store::ArtifactStoreOneItemCheckpoint { Default::default() }
+    fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase { store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Publishing }
+    fn progress(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { Default::default() }
     fn prepared_edit_id(&self) -> Option<&str> { Some(&self.edit) }
     fn prepared_operation_count(&self, inverse: bool) -> Option<usize> { Some(if inverse { self.inverse.len() } else { self.forward.len() }) }
     fn prepared_operation(&self, inverse: bool, index: usize) -> Option<&dyn std::any::Any> { (if inverse { &self.inverse } else { &self.forward }).get(index).map(|operation| operation as &dyn std::any::Any) }
@@ -23,7 +23,7 @@ impl store::ErasedMemberStoreOneItemPublication for MemberReceiptPublication {
     fn close_step(&mut self, _: RetainedCloneGrant) -> Result<store::RetainedCloneStep, ValueError> { Ok(store::RetainedCloneStep::Progress(Default::default())) }
     fn terminal_is_empty(&self) -> bool { false }
 }
-pub(crate) fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {
+fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, inverse_count: usize) -> MemberReceiptPublication {
     let operation = |text: &str| { let mut original = String::with_capacity(fixture["payloadCapacity"].as_u64().unwrap() as usize); original.push_str(text); MemberReceiptOperation(original) };
     MemberReceiptPublication {
         edit: fixture["editId"].as_str().unwrap().into(),
@@ -33,7 +33,7 @@ pub(crate) fn member_receipt_fixture(fixture: &serde_json::Value, count: usize, 
         metadata: fixture["operations"].as_array().unwrap().iter().take(count).map(|row| protocol::MutationMeta { mutation_id: Some(MutationId(row["id"].as_str().unwrap().into())), dependencies: row["dependencies"].as_array().unwrap().iter().map(|id| MutationId(id.as_str().unwrap().into())).collect(), base_version: row["baseVersion"].as_u64().unwrap(), author_id: row["author"].as_str().map(|id| ActorId(id.into())), timestamp: HybridLogicalTimestamp { actor: row["clock"][0].as_u64().unwrap(), physical_ms: row["clock"][1].as_u64().unwrap(), logical: row["clock"][2].as_u64().unwrap() }, undo_policy: UndoPolicy::ExactBaseOnly, payload_hash: None, semantic_kind: None, label: None, group_id: Some(fixture["groupId"].as_str().unwrap().into()), origin: protocol::MutationOrigin::Owner, transaction: None }).collect(),
     }
 }
-pub(crate) fn member_receipt_source<'a>(fixture: &'a serde_json::Value, publication: &'a MemberReceiptPublication, _index: usize) -> MountedMemberReceiptSource<'a> {
+fn member_receipt_source<'a>(fixture: &'a serde_json::Value, publication: &'a MemberReceiptPublication, _index: usize) -> MountedMemberReceiptSource<'a> {
     MountedMemberReceiptSource { publication, document: ArtifactHandle(fixture["document"].as_u64().unwrap() as u128), invocation_id: fixture["invocationId"].as_str().unwrap(), group_id: fixture["groupId"].as_str().unwrap(), fallback_author: fixture["fallbackAuthor"].as_str().unwrap() }
 }
 fn member_receipt_close(owner: &mut MountedMemberReceipt) {

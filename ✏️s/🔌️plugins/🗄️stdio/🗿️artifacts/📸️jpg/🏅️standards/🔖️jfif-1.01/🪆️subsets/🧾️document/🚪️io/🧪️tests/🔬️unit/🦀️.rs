@@ -4,10 +4,10 @@ use crate::schema::demo_jpg_snapshot;
 /// 🧬️ Publishes the actual compiled JPG factory only after independent protocol and complete logical-carrier laws.
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers(){
- use store::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot};use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database};use std::{io::Write,process::{Command,Stdio}};
+ use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot};use store::sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits,SnapshotEncoding,export_sqlite_database};use std::{io::Write,process::{Command,Stdio}};
  let source=include_str!("../../🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json");let snapshot:JpgSnapshot=semio_framework_pack_json::from_json_str(source,semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();let demo=demo_jpg_snapshot();
  assert_eq!(demo.print_dsl(),include_str!("../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio"));assert_eq!(demo.encode_pack_with(&Default::default()).unwrap(),include_bytes!("../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio"));
- let factories=crate::native_codecs();assert_eq!(factories.len(),1);let factory=&factories[0];let codec=(factory.codec)();let kind=(factory.kind)();let bare=store::ArtifactCodec::bare::<JpgSnapshot,crate::JpgMutation>(crate::STDIO_JPG_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.expect("original JPG SQLite owner");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<JpgSnapshot>()));assert_eq!(bare.snapshot_sqlite.unwrap().snapshot_type,provider.snapshot_type);assert_eq!(codec.pack_schema_hash,bare.pack_schema_hash);assert_eq!(factory.id,"stdio.native.jpg.v1");assert_eq!(kind.id,crate::JPG_ARTIFACT_SCHEMA_ID);assert_eq!(codec.schema,crate::STDIO_JPG_DOCUMENT_SCHEMA);assert_eq!(codec.extension,"jpg");let dialect:semio_framework_artifact_reference::ArtifactDialect=crate::JPG_ANY_DIALECT.into();
+ let factories=crate::native_codecs();assert_eq!(factories.len(),1);let factory=&factories[0];let codec=(factory.codec)();let kind=(factory.kind)();let bare=store::bare_artifact_codec::<JpgSnapshot,crate::JpgMutation>(crate::STDIO_JPG_DOCUMENT_SCHEMA);let provider=codec.snapshot_sqlite.expect("original JPG SQLite owner");assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<JpgSnapshot>()));assert_eq!(bare.snapshot_sqlite.unwrap().snapshot_type,provider.snapshot_type);assert_eq!(codec.pack_schema_hash,bare.pack_schema_hash);assert_eq!(factory.id,"stdio.native.jpg.v1");assert_eq!(kind.id,crate::JPG_ARTIFACT_SCHEMA_ID);assert_eq!(codec.schema,crate::STDIO_JPG_DOCUMENT_SCHEMA);assert_eq!(codec.extension,"jpg");let dialect:semio_framework_artifact_reference::ArtifactDialect=crate::JPG_ANY_DIALECT.into();
  for owned in [&snapshot,&demo]{let text=owned.print_dsl();let binary=owned.encode_pack_with(&Default::default()).unwrap();assert_eq!(JpgSnapshot::parse_dsl(&text).unwrap(),*owned);assert_eq!(JpgSnapshot::decode_pack_with(&binary,&Default::default()).unwrap(),*owned);let expected=owned.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default())).unwrap();for(encoding,input)in[(SnapshotEncoding::Text,store::io_schema::IoPayload::Text(text)),(SnapshotEncoding::Binary,store::io_schema::IoPayload::Binary(binary))]{let database=semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| (provider.export)(&codec.schema,&dialect,&input,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(database,expected);let restored=semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (provider.import)(&codec.schema,&dialect,&mut Some(database),encoding,&mut SqliteSnapshotControl::new(&mut |_|true,SqliteDatabaseLimits::default()), native_owner)).unwrap().value;assert_eq!(restored,input);}}
  let compiled=include_bytes!("../../💾️binary/📸️snapshot/📡️.protocol.semio");let current=std::fs::read(std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔖️jfif-1.01/🪆️subsets/🧾️document/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio")).unwrap();assert_eq!(current.as_slice(),compiled,"publication requires unchanged compiled protocol");let digest=semio_framework_hash::Sha256::digest(compiled);assert_eq!(codec.pack_schema_hash,digest);let hex=|bytes:&[u8]|bytes.iter().map(|byte|format!("{byte:02x}")).collect::<String>();
  let mut child=Command::new("bun").args(["-e","import{createHash}from'node:crypto';process.stdout.write(createHash('sha256').update(new Uint8Array(await Bun.stdin.arrayBuffer())).digest('hex')); "]).stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();child.stdin.take().unwrap().write_all(compiled).unwrap();let output=child.wait_with_output().unwrap();assert!(output.status.success(),"{}",String::from_utf8_lossy(&output.stderr));assert_eq!(String::from_utf8(output.stdout).unwrap(),hex(&digest));
@@ -325,7 +325,7 @@ mod conformance_laws {
     async fn grammar_conformance_law() {
         let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_jfif_1_01::subsets::document::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).expect("parse snapshot grammar");
         let recognizer = semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments");
-        let text = store::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&demo_jpg_snapshot());
         let (envelope, body) = store::semio_format::split_text_preamble(&text).expect("split preamble");
         let reconstructed = format!("{}\n{body}", envelope.envelope_id());
         assert!(recognizer.recognize(&reconstructed).expect("recognize"), "grammar did not recognize demo dsl body:\n{reconstructed}");
@@ -363,7 +363,7 @@ mod conformance_laws {
     #[semio_framework_async_macros::async_test]
     async fn protocol_walk_law() {
         let pack_spec = semio_framework_dsl::parse_protocol(crate::standards::v_jfif_1_01::subsets::document::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
-        let packed = store::ArtifactPack::encode_pack(&demo_jpg_snapshot());
+        let packed = store::os_store::serialization::ArtifactPack::encode_pack(&demo_jpg_snapshot());
         let (_, inner) = store::semio_format::unwrap_binary(&packed).expect("unwrap semio envelope");
         let trace = semio_framework_dsl::walk_protocol(&pack_spec, &inner).unwrap_or_else(|e| panic!("walk_protocol(pack) failed @{}: {}", e.offset, e.message));
         assert_eq!(trace.consumed, inner.len(), "pack walk did not consume every byte");
@@ -391,12 +391,12 @@ mod conformance_laws {
 
         let demo = demo_jpg_snapshot();
 
-        assert_eq!(store::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_jpg_snapshot()) drifted from the shipped .dsl.semio fixture");
-        assert_eq!(store::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), FIXTURE_DSL, "print_dsl(demo_jpg_snapshot()) drifted from the shipped .dsl.semio fixture");
+        assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), FIXTURE_PACK, "encode_pack(demo_jpg_snapshot()) drifted from the shipped .pack.semio fixture");
 
-        let parsed = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
+        let parsed = <JpgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FIXTURE_DSL).expect("parse shipped .dsl.semio fixture");
         assert_eq!(parsed,demo);
-        let decoded=<JpgSnapshot as store::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode owned Pack fixture");
+        let decoded=<JpgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(FIXTURE_PACK).expect("decode owned Pack fixture");
         assert_eq!(decoded,demo);
     }
 }

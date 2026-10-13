@@ -50,7 +50,7 @@ export async function proveVcsNativeCodecReceipts(repoRoot: string): Promise<voi
   
   
   for (const row of documentIds.cases) if (/^artifact-(?!0{32}$)[0-9a-f]{32}$/u.test(row.documentId) !== row.accepted) throw new Error(`artifact document-id oracle mismatch ${row.id}`);
-  const manifest = Bun.TOML.parse(readFileSync(join(owner, "📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
+  const manifest = Bun.TOML.parse(readFileSync(join(owner, "🧩️component/📦️packages/🦀️rust/Cargo.toml"), "utf8")) as any;
   if (manifest.package.metadata.component.package !== fixture.packageId) throw new Error("VCS Cargo package identity differs from receipt owner");
   const workspace = Bun.TOML.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
   const version = manifest.package.version?.workspace === true ? workspace.workspace.package.version : manifest.package.version;

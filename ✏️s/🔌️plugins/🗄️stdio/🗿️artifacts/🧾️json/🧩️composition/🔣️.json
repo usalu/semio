@@ -3,10 +3,7 @@
   "artifact": "json",
   "package": "semio-s-artifact-stdio-json",
   "order": 5,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio",
@@ -62,7 +59,8 @@
       "surfaceId": "stdio.json.editor"
     }
   ],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio",

@@ -315,11 +315,11 @@ fn window_config_apply_refuses_invalid_lane_payload_and_exchange() {
     let edit = WindowConfigApplyEdit::<TextState, TextMutation>::new();
     let finite = TextMutation::SetZoom(SetZoom { zoom: 2.0 });
     let infinite = TextMutation::SetZoom(SetZoom { zoom: f64::INFINITY });
-    assert!(edit.preflight(&finite, store::HistoryLane::Document).unwrap().is_admissible());
-    assert!(edit.preflight(&finite, store::HistoryLane::Interaction).is_err());
-    assert!(edit.preflight(&infinite, store::HistoryLane::Document).is_err());
-    let oversize = TextMutation::SetActiveRegister(SetActiveRegister { active_register: "a".repeat(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) });
-    assert!(edit.preflight(&oversize, store::HistoryLane::Document).is_err());
+    assert!(edit.preflight(&finite, store::os_store::store_schema::HistoryLane::Document).unwrap().is_admissible());
+    assert!(edit.preflight(&finite, store::os_store::store_schema::HistoryLane::Interaction).is_err());
+    assert!(edit.preflight(&infinite, store::os_store::store_schema::HistoryLane::Document).is_err());
+    let oversize = TextMutation::SetActiveRegister(SetActiveRegister { active_register: "a".repeat(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES) });
+    assert!(edit.preflight(&oversize, store::os_store::store_schema::HistoryLane::Document).is_err());
     let base = json!({ "activeRegister": "main", "label": "keep", "ids": ["a"], "zoom": 1.5 });
     let grant = RetainedCloneGrant { maximum_copy_bytes: 1 << 16, ..WIDE };
     let refused = drive::<TextState, TextMutation>(&base, &|| infinite.clone(), grant, None).unwrap_err();
@@ -329,11 +329,11 @@ fn window_config_apply_refuses_invalid_lane_payload_and_exchange() {
 
 #[test]
 fn window_config_apply_factory_quotes_the_store_preparation() {
-    use store::ArtifactStoreOneItemPreparationFactory;
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
     let factory = store::snapshot_clone_preparation::config_apply_preparation_factory::<TextState, TextMutation>();
     let mutation = TextMutation::SetZoom(SetZoom { zoom: 2.0 });
-    assert!(factory.preflight(&mutation, store::HistoryLane::Document).unwrap().is_admissible());
-    assert!(factory.preflight(&mutation, store::HistoryLane::Interaction).is_err());
-    let demand = factory.begin_demand(&mutation, store::HistoryLane::Document).unwrap();
+    assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).unwrap().is_admissible());
+    assert!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Interaction).is_err());
+    let demand = factory.begin_demand(&mutation, store::os_store::store_schema::HistoryLane::Document).unwrap();
     assert_eq!((demand.capacity_bytes > 0, demand.depth), (true, 1));
 }

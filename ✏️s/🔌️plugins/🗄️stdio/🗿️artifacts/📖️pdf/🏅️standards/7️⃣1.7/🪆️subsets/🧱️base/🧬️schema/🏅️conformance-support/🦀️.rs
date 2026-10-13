@@ -623,7 +623,8 @@ pub fn document_of(values: Vec<PdfObject>) -> PdfSnapshot {
 /// 🧪️ A real one-page document read back from its own encoding, so its typed lanes and its retained graph agree.
 #[cfg(test)]
 pub fn document() -> PdfSnapshot {
-    use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
+    use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
     use crate::standards::v1_7::subsets::base::schema::snapshot::PdfPage;
     let typed = PdfSnapshot { pages: vec![PdfPage::new(612.0, 792.0)], ..PdfSnapshot::default() };
     decode_pdf(&encode_pdf(&typed).expect("the fixture document encodes")).expect("the fixture document decodes")
@@ -632,7 +633,7 @@ pub fn document() -> PdfSnapshot {
 /// 🧪️ A committed `lopdf` pair read through this subset's reader: `(before, after)`.
 #[cfg(test)]
 pub fn snapshots(before: &[u8], after: &[u8]) -> (PdfSnapshot, PdfSnapshot) {
-    use crate::standards::v1_7::subsets::base::io::decode_pdf;
+    use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
     (decode_pdf(before).expect("the committed before-document decodes"), decode_pdf(after).expect("the committed after-document decodes"))
 }
 

@@ -21,20 +21,6 @@
         "command": "bun ./📜️script.ts test"
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long"
-      }
-    },
     "test-coverage": {
       "executor": "nx:run-commands",
       "options": {
@@ -66,13 +52,6 @@
         "command": "bun ./📜️script.ts test smoke"
       },
       "cache": false
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/🎛️dashboard/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive"
-      }
     },
     "run": {
       "metadata": {

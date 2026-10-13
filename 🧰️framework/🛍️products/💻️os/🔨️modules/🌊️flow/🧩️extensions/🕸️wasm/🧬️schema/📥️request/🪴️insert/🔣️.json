@@ -1,0 +1,14 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object", "additionalProperties": false,
+  "required": ["copyGrants", "wholeOriginalSource", "boundedComparison", "mutationRestart", "actualInsertedSlot", "zeroGrantMoves", "terminalDrop"],
+  "properties": {
+    "copyGrants": {"const": [1, 3, 64]},
+    "wholeOriginalSource": {"const": true},
+    "boundedComparison": {"const": true},
+    "mutationRestart": {"const": true},
+    "actualInsertedSlot": {"const": true},
+    "zeroGrantMoves": {"const": false},
+    "terminalDrop": {"const": 0}
+  }
+}

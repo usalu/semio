@@ -94,10 +94,10 @@ describe("registry rust artifacts projection", () => {
     const previous = process.env.CARGO_TARGET_DIR;
     process.env.CARGO_TARGET_DIR = "/tmp/semio-private-uplift-must-not-land-in-catalog";
     try {
-      const note = { pluginId: "note", cratePath: "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_hub_note.wasm" };
+      const note = { pluginId: "note", cratePath: "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", wasmOut: "semio_hub_note_component.wasm" };
       const body = emitRustArtifacts([note], getWorkspaceRoot());
-      expect(body).toContain('pub const PLUGIN_COMPONENT_PROFILE_DIRS: &[&str] = &["dist/component-dev", "dist/component-release"];');
-      expect(body).toContain('("note", "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", "semio_hub_note.wasm"),');
+      expect(body).toContain('pub const PLUGIN_COMPONENT_DIRECTORY: &str = "dist/components/release";');
+      expect(body).toContain('("note", "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust", "semio_hub_note_component.wasm"),');
       expect(body).not.toContain("cache/cargo/target");
       expect(body).not.toContain("semio-private-uplift-must-not-land-in-catalog");
     } finally {

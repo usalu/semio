@@ -1,12 +1,11 @@
 //! 📐️ CAD layers, block ownership and nine independently typed entity geometries.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn, FloatRow as SqliteRow};
-#[cfg(test)] use semio_framework_os_kernel::sqlite_snapshot::artifact::{RowIndex};
-use crate::standards::v1::subsets::cad::schema::snapshot::{SemioCadSnapshot,CadLayer,CadBlock,CadEntityRecord,CadEntity};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,reconstruct_text},validate_sqlite_database_schema,SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use crate::schema::snapshot::{SemioCadSnapshot, CadLayer, CadBlock, CadEntityRecord, CadEntity};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🧮️semantic/🦀️.rs"]
 mod semantic;
 /// 🪪️ Builds a paid name frontier in authored ordinal order with bounded comparisons.
@@ -24,7 +23,7 @@ fn cad_records(records:&[CadEntityRecord],block:Option<i64>,layers:&[(&str,i64)]
  let _handles=cad_frontier(records.iter().map(|record|record.handle.as_str()),records.len(),out)?;for(ordinal,record)in records.iter().enumerate(){project_record(record,block,ordinal,layers,blocks,out)?;}Ok(())
 }
 /// 🫳️ Visits every authored CAD cell using the same actual RowWriter for admission and projection.
-pub(crate)fn visit_rows(snapshot:&SemioCadSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioCadSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  let layers=cad_frontier(snapshot.layers.iter().map(|layer|layer.name.as_str()),snapshot.layers.len(),out)?;let blocks=cad_frontier(snapshot.blocks.iter().map(|block|block.name.as_str()),snapshot.blocks.len(),out)?;
  out.insert_key("semio_cad_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,layer)in snapshot.layers.iter().enumerate(){out.insert("semio_cad_layer",&[Cell::Integer(1),Cell::Integer(number(ordinal)?),Cell::Text(&layer.name),Cell::Integer(i64::from(layer.color_index)),Cell::Text(&layer.line_type),Cell::Integer(i64::from(layer.visible))])?;}
@@ -62,7 +61,7 @@ fn cad_invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::Inval
 /// 📐️ Restores only the declared binary64 point words.
 fn point(row:SqliteRow<'_>,x:usize)->Result<SemioPoint2,ValueError>{Ok(SemioPoint2{x:row.real(x)?,y:row.real(x+1)?})}
 impl ArtifactSqliteSnapshot for SemioCadSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 
  fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -102,15 +101,12 @@ semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHE
 }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;
 
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;

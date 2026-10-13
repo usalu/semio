@@ -819,6 +819,7 @@ name = "semio-framework-value"
 version = "0.1.0"
 dependencies = [
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",
@@ -860,6 +861,16 @@ dependencies = [
  "semio-framework-plugin",
  "semio-framework-value",
  "semio-s-imperative-extension-sdk",
+]
+
+[[package]]
+name = "semio-s-plugin-imperative-math-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-plugin",
+ "semio-s-plugin-imperative-math",
 ]
 
 [[package]]

@@ -105,7 +105,7 @@ const BCF_RETAINED_PUBLICATION_CONTRACTS: &[ArtifactToolPublicationContract] = &
 
 fn bcf_example_snapshot(example_id: &str) -> BcfSnapshot {
     if example_id == crate::examples::demo::ID {
-        <BcfSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+        <BcfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         BcfSnapshot::default()
     }
@@ -317,7 +317,7 @@ impl ArtifactEditor for BcfAnyEditor {
 
     /// 📬️ `set-cell` publishes on the `Artifact` lane; without this authority every cell edit fails closed with
     /// `interactive-job.publication-authority-missing`.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏷️update-meta` per Wave C.
 
 use super::ReplaceMeta;
-use crate::diff::ProgramMetaEdit;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramMetaEdit;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 🔁️ Replaces the whole section. Root-scoped singleton — always present, so Warning
 /// `mutation.no-op` (empty diff) covers the only degenerate case: the value is unchanged.

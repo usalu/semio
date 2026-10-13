@@ -902,10 +902,10 @@ fn diff_binary_tokens(name: &Type) -> proc_macro2::TokenStream {
     quote! {
         impl ::semio_framework_os_kernel::DiffBinary for #name {
             fn encode_diff(&self) -> Result<Vec<u8>, ::semio_framework_os_kernel::ProtocolError> {
-                ::semio_framework_os_kernel::os_store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
+                ::semio_framework_os_kernel::os_pack::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), &::semio_framework_os_kernel::os_store::PackEncodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)
             }
             fn decode_diff(bytes: &[u8]) -> Result<Self, ::semio_framework_os_kernel::ProtocolError> {
-                let (record, _report) = ::semio_framework_os_kernel::os_store::pack_rt::decode_document(bytes, &Self::__dsl_spec(), &::semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
+                let (record, _report) = ::semio_framework_os_kernel::os_pack::pack_rt::decode_document(bytes, &Self::__dsl_spec(), &::semio_framework_os_kernel::os_store::PackDecodeOptions::default()).map_err(::semio_framework_os_kernel::ProtocolError::from)?;
                 Self::__dsl_from_record(&record).map_err(|error| ::semio_framework_os_kernel::ProtocolError::Malformed { what: "diff record", offset: 0, detail: error.to_string() })
             }
         }
@@ -1273,7 +1273,7 @@ fn mutation_payload_law_test(name: &syn::Ident, snapshot_ty: &Type, authority: &
             let count = ops.len();
             let mut failures = ::semio_framework_os_kernel::mutation_input_schema_failures::<#snapshot_ty, #name>();
             failures.extend(::semio_framework_os_kernel::mutation_label_failures::<#snapshot_ty, #name>(&ops));
-            failures.extend(::semio_framework_os_kernel::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
+            failures.extend(::semio_framework_os_kernel::os_store::one_item::mutation_inverse_rows_declaration_failures::<#snapshot_ty, #name>(&ops));
             failures.extend(::semio_framework_os_kernel::mutation_payload_round_trip_failures::<#snapshot_ty, #name>(ops));
             let (footprint_failures, cases) = ::semio_framework_os_kernel::os_spr::fold::mutation_inverse_rows_failures::<#snapshot_ty, #name>(&::std::path::Path::new(::core::env!("CARGO_MANIFEST_DIR")).join(#footprint_relative));
             failures.extend(footprint_failures);

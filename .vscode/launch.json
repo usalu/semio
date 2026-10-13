@@ -2,6 +2,360 @@
   "version": "0.2.0",
   "configurations": [
     {
+      "name": "⏯️ToolRun General And Repository Permanent Policy Strict Source 9",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-diagnostic-inputs/📜️script.ts\" receive-tool-run 9 eada1165e822b4b13089d13306b37513230d5a7ec44772272d838b2788a4966f c965b6fe388cd823217ea67888521d8154a6f036685779ee3cbfc4cef08dad6c",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/rt9/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/rt9/data"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.12
+      }
+    },
+    {
+      "name": "📚️Library Whole Owner Public And Prefix Green 42",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-green8 2143176e06ed5f23dc0cf3d4a0f73133c2122ebbdd31228bf26ff5ff80085d2a eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green8/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green8/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green8/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Public Bootstrap Green 43",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-bootstrap8 2143176e06ed5f23dc0cf3d4a0f73133c2122ebbdd31228bf26ff5ff80085d2a eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap8/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap8/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap8/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Current Public Graph 44",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-graph6 2143176e06ed5f23dc0cf3d4a0f73133c2122ebbdd31228bf26ff5ff80085d2a eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff eab07b9f5b8e19be3fa7e4e124941998489a16336f29d389254595be999f97ff",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph6/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph6/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph6/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+
+    {
+      "name": "📥️catalogue12-repository-command-original-control-complete53-red3🧪️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-interface-current-origin --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cr12/📜️script.ts\" run red3 b550d0c378ba3d62ceffa19e46b4161cdb28702d321f8732d67272af53d915b2 > \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/cr12/red3.outer.log\" 2>&1",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/cargo-inputs/📥️current-origin/🧪️nx",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/cr12/nx-data",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/cr12/nx-cache"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 901.89
+      }
+    },
+    {
+      "name": "📚️Library Whole Owner Public And Prefix Green 39",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-green7 6f62fc94db81ba2b98914dcf8afe5c49b2c9310d71fe164862ecc3c10668de0a 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green7/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green7/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green7/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Public Bootstrap Green 40",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-bootstrap7 6f62fc94db81ba2b98914dcf8afe5c49b2c9310d71fe164862ecc3c10668de0a 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap7/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap7/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap7/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Current Public Graph 41",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-graph5 6f62fc94db81ba2b98914dcf8afe5c49b2c9310d71fe164862ecc3c10668de0a 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072 87e288391108ec6b67b99ba67d717d89d659e6a79eb4851fd9b29ab7417a7072",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph5/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph5/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph5/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "⚖️test🦑️repo🧩️native-prerequisites",
+      "command": "bun nx run @semio-tech/repo-lib:test-native-prerequisites --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🦑️repo🧩️native-prerequisites\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test🦑️repo🛬️decoder-absence",
+      "command": "bun nx run @semio-tech/repo-lib:test-decoder-absence --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🦑️repo🛬️decoder-absence\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test💻️os📇️native-entrypoint-catalog",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-native-entrypoint-catalog --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test💻️os📇️native-entrypoint-catalog\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test💻️os🏭️returned-read-factory-mount",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-returned-read-factory-mount --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test💻️os🏭️returned-read-factory-mount\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test🌱️value🔐️shared-factory-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test-shared-factory-retirement --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🌱️value🔐️shared-factory-retirement\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test🌱️value📥️forward-deque-retirement",
+      "command": "bun nx run @semio-tech/value-rs:test --skip-nx-cache -- long --lib retirement_forward_deque_keeps_original_source_and_exact_physical_backing --success-output immediate -- --nocapture",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🌱️value📥️forward-deque-retirement\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+    {
+      "name": "⚖️test🦑️repo⏯️tool-run-policy-source",
+      "command": "bun nx run @semio-tech/repo-lib:test-tool-run-policy-source --skip-nx-cache",
+      "type": "node-terminal",
+      "request": "launch",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/test-ownership-13",
+        "SEMIO_SCRIPT_PROCESS_INVOCATION": "{\"version\":1,\"policy\":{\"version\":1,\"owner\":\"⚖️test🦑️repo⏯️tool-run-policy-source\",\"maximumElapsedMilliseconds\":0},\"deadlineEpochMilliseconds\":null,\"capabilities\":{}}"
+      },
+      "presentation": {
+        "group": "4_test",
+        "order": 903.13
+      }
+    },
+
+    {
+      "name": "📚️Library Whole Owner Public And Prefix Green 36",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-green6 1f16d3fefe9387c163f9c3f334cac02016d8bf7f5eb8193cfea75b5be36a46ef 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green6/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green6/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-green6/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Public Bootstrap Green 37",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-bootstrap6 1f16d3fefe9387c163f9c3f334cac02016d8bf7f5eb8193cfea75b5be36a46ef 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap6/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap6/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-bootstrap6/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+    {
+      "name": "📚️Library Whole Current Public Graph 38",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun \"${workspaceFolder}/node_modules/nx/dist/bin/nx.js\" exec --projects=ticket-fixed-slots --excludeTaskDependencies -- bun \"${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/pa11/📜️script.ts\" receive pa11-graph4 1f16d3fefe9387c163f9c3f334cac02016d8bf7f5eb8193cfea75b5be36a46ef 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd 3b39b33459be311ac0225667e5e6cd96ed3b383472b716446d08d6adb58544dd",
+      "cwd": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+      "env": {
+        "NX_DAEMON": "false",
+        "NX_ISOLATE_PLUGINS": "false",
+        "NX_WORKSPACE_ROOT_PATH": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/root-launch-seed-inputs/🧪️nx",
+        "NX_CACHE_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph4/cache",
+        "NX_WORKSPACE_DATA_DIRECTORY": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph4/data",
+        "SEMIO_TEST_LEVEL": "quick",
+        "SEMIO_TEST_BUDGET_MS": "45000",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/pa11-graph4/a"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 902.11
+      }
+    },
+
+    {
       "name": "🎟️artifact-io-canonical-preparation-control-source🧪️",
       "type": "node-terminal",
       "request": "launch",
@@ -25499,11 +25853,76 @@
       "name": "📦️build🏢️semio-tech🎡️play🆕️fresh",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/semio-tech-play:build-fresh",
+      "command": "bun nx run @semio-tech/semio-tech-play:build --skip-nx-cache --skip-remote-cache --parallel=8 --output-style=stream",
       "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_BUILD_MODE": "ship",
+        "SEMIO_RELEASE_GENERATION": "fresh",
+        "NX_DAEMON": "false",
+        "NX_SKIP_NX_CACHE": "true",
+        "NX_SKIP_REMOTE_CACHE": "true",
+        "NX_TUI": "false"
+      },
       "presentation": {
         "group": "4_build",
         "order": 11.01
+      }
+    },
+    {
+      "name": "📦️build🦑️workspace🚀️release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:release",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 11.011
+      }
+    },
+    {
+      "name": "📦️build🦑️workspace🚀️release🆕️fresh",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:release",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_RELEASE_GENERATION": "fresh",
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 11.012
+      }
+    },
+    {
+      "name": "📦️describe🦑️workspace🧩️components",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:components describe --all",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_build",
+        "order": 11.013
+      }
+    },
+    {
+      "name": "⚖️gate🦑️workspace🧩️profile-independence",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:components profile-independence --sample 8",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.013
       }
     },
     {
@@ -25518,14 +25937,14 @@
       }
     },
     {
-      "name": "📇️catalog🏢️semio-tech🎡️play📦️release",
+      "name": "⚖️gate🏢️semio-tech🎡️play🚀️release-verify",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/semio-tech-play:catalog-release",
+      "command": "bun nx run @semio-tech/semio-tech-play:release-verify",
       "cwd": "${workspaceFolder}",
       "presentation": {
-        "group": "4_build",
-        "order": 11.02
+        "group": "4_gate",
+        "order": 11.01
       }
     },
     {
@@ -25543,7 +25962,7 @@
       "name": "📇️catalog🏢️semio-tech🎡️play🏢️aec-building",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/cad-extension-aec-building-rust:describe --skip-nx-cache --skip-remote-cache",
+      "command": "bun nx run @semio-tech/cad-extension-aec-building-rust:component --skip-nx-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_MODE": "ship",
@@ -25575,7 +25994,7 @@
       "name": "🛠️component🏢️semio-tech🎡️play🎪️demonstrator",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/demonstrator-plugin:component-dev --skip-nx-cache --skip-remote-cache",
+      "command": "bun nx run semio-hub-demonstrator-component:component --skip-nx-cache --skip-remote-cache",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_MODE": "ship",
@@ -26659,6 +27078,35 @@
       "presentation": {
         "group": "4_gate",
         "order": 11.5
+      }
+    },
+    {
+      "name": "⚖️gate🧰️framework🏃️process🏗️native-artifacts",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-native-artifacts --skip-nx-cache --skip-remote-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/tna",
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.491
+      }
+    },
+    {
+      "name": "⚖️gate🧰️framework🏃️process🎟️build-scheduler",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-build-scheduler:test --skip-nx-cache --skip-remote-cache",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_TUI": "false"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 11.492
       }
     },
     {
@@ -32986,7 +33434,7 @@
       "name": "📦️describe🖍️draw🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/draw-plugin:describe --skip-nx-cache",
+      "command": "bun nx run semio-hub-draw-component:component --skip-nx-cache",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_BUDGET_MS": "1800000"
@@ -33011,10 +33459,10 @@
       }
     },
     {
-      "name": "📦️materialize-dev🖍️draw🦀️",
+      "name": "📦️iterate🖍️draw🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/draw-plugin:materialize-dev --skip-nx-cache",
+      "command": "bun nx run workspace:components iterate draw",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_BUILD_BUDGET_MS": "1800000"
@@ -34461,7 +34909,7 @@
       "name": "⚖️gate🗄️stdio✏️editing🪟️details renderer",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-react:test-long --skip-nx-cache -- ../../../../🧪️tests/🗄️stdio-details-tree/🟦️.tsx",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test --skip-nx-cache -- long ../../../../🧪️tests/🗄️stdio-details-tree/🟦️.tsx",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -40299,6 +40747,17 @@
       }
     },
     {
+      "name": "⚖️gate🌳️hub-prebuild🧮️unit-census",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run os-hub:unit-census-check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 411.107555
+      }
+    },
+    {
       "name": "⚖️gate🧭️local-relay📛️admission",
       "type": "node-terminal",
       "request": "launch",
@@ -40900,7 +41359,7 @@
       "name": "⚖️build🧪️host-test-component🦀️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-host-test-component:component-dev",
+      "command": "bun nx run @semio-tech/framework-plugin-host-test-component:component",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -42624,7 +43083,7 @@
       "name": "⚖️test-component-picking📐️brep🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-3d-js:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-3d-js:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43263,7 +43722,7 @@
       "name": "⚖️test-original-ray-closest-oracle📐️3d🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-3d-js:test-quick --skip-nx-cache --args=\"-t exact.multi-object\"",
+      "command": "bun nx run @semio-tech/framework-3d-js:test --skip-nx-cache --args=\"quick -t exact.multi-object\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_CACHE_PROJECT_GRAPH": "false",
@@ -43316,7 +43775,7 @@
       "name": "⚖️test-original-inline-source-oracle🌍️world🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-3d-js:test-quick --skip-nx-cache --args=\"-t inline.World.source\"",
+      "command": "bun nx run @semio-tech/framework-3d-js:test --skip-nx-cache --args=\"quick -t inline.World.source\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_CACHE_PROJECT_GRAPH": "false",
@@ -43633,7 +44092,7 @@
       "name": "⚖️test-browser-actor-action-receipt-schema🖥️os🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os:test-quick -- ../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts --testNamePattern='browser actor action handoff validates the neutral schema and exact owner with an independent oracle'",
+      "command": "bun nx run @semio-tech/framework-os:test -- quick ../../🔨️modules/🔌️plugin/🌐️browser-bundle/🎯️action-handoff/🟦️.ts --testNamePattern='browser actor action handoff validates the neutral schema and exact owner with an independent oracle'",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43678,7 +44137,7 @@
       "name": "⚖️test-browser-actor-operation-completion🖥️os🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os:test-quick -- ../../🧪️tests/🧪️backbone-envelope-io/🟦️.ts --testNamePattern='projects real browser intent publications and preserves bounded owned inference effects' --reporter=verbose",
+      "command": "bun nx run @semio-tech/framework-os:test -- quick ../../🧪️tests/🧪️backbone-envelope-io/🟦️.ts --testNamePattern='projects real browser intent publications and preserves bounded owned inference effects' --reporter=verbose",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43821,7 +44280,7 @@
       "name": "⚖️test-exact-app-frame-channel-oracles🖥️os🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os:test-quick -- ../../🟦️.ts --testNamePattern='matches the shared cross-language typed-operation completion fixture vector, byte-for-byte'",
+      "command": "bun nx run @semio-tech/framework-os:test -- quick ../../🟦️.ts --testNamePattern='matches the shared cross-language typed-operation completion fixture vector, byte-for-byte'",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -43940,7 +44399,7 @@
       "name": "⚖️test-source-draft📝️react🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-renderer-react:test-long --args=\"../../../../🧱️elements/✏️TextEditor/🧪️tests/📝️explicit-draft\"",
+      "command": "bun nx run @semio-tech/framework-renderer-react:test --args=\"long ../../../../🧱️elements/✏️TextEditor/🧪️tests/📝️explicit-draft\"",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -44160,7 +44619,7 @@
       "name": "⚖️test-source-cancellation-target🔌️plugin🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os:test-quick -- ../../🔨️modules/🔌️plugin/⏳️operation-progress/🧪️tests/🟦️.ts",
+      "command": "bun nx run @semio-tech/framework-os:test -- quick ../../🔨️modules/🔌️plugin/⏳️operation-progress/🧪️tests/🟦️.ts",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
@@ -52756,20 +53215,6 @@
       }
     },
     {
-      "name": "⚖️test🕸️graph🧩️native-prerequisites",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-graph:test-manifest-contract -- native-prerequisites",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "9_gates",
-        "order": 900.05713
-      },
-      "env": {
-        "SEMIO_TEST_ARTIFACTS_DIR": "${workspaceFolder}/${input:graphContractArtifacts}"
-      }
-    },
-    {
       "name": "🕸️Graph 🛂️manifest 🧪️contract",
       "type": "node-terminal",
       "request": "launch",
@@ -53125,6 +53570,60 @@
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/${input:processContractArtifacts}"
       }
+    },
+    {
+      "name": "🧰️framework 🏃️process 🎚️build mode 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.05734 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
+    },
+    {
+      "name": "🧰️framework 🏃️process 🏗️native build modes 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-native-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.05735 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
+    },
+    {
+      "name": "🧰️framework 🏃️process 🔷️managed build modes 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-process:test-managed-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.057355 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
+    },
+    {
+      "name": "🦑️Repo 🎚️Nx build modes 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-build-mode --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.05736 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
+    },
+    {
+      "name": "🦑️Repo 🌐️web build modes 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run repo:test-web-build --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.05737 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
+    },
+    {
+      "name": "🦑️Repo 🏗️workspace build ownership 🧪️contract",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:test-workspace-build --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "🧹clean🛡️gates", "order": 900.05738 },
+      "env": { "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️10/☀️13/MODULAR-MONOREPO-BUILDS-AND-SHARED-CACHES/🗑️generated/tests" }
     },
     {
       "name": "🦑️Repo 🧱️fixture law ownership",
@@ -54071,7 +54570,7 @@
       "name": "🏗️mesh 🎨️attributes ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-quick"
@@ -54085,7 +54584,7 @@
       "name": "🏗️mesh 🎨️attributes ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-long"
@@ -54099,7 +54598,7 @@
       "name": "🏗️mesh 🎨️attributes ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-mesh-attributes-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/mesh-fixture-owner/gui-exhaustive"
@@ -54296,7 +54795,7 @@
       "name": "@semio-tech/puzzle-3d-rs-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54312,7 +54811,7 @@
       "name": "@semio-tech/puzzle-3d-rs-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54328,7 +54827,7 @@
       "name": "@semio-tech/puzzle-3d-rs-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/puzzle-3d-rs-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54344,7 +54843,7 @@
       "name": "@semio-tech/framework-plugin-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54360,7 +54859,7 @@
       "name": "@semio-tech/framework-plugin-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54376,7 +54875,7 @@
       "name": "@semio-tech/framework-plugin-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54392,7 +54891,7 @@
       "name": "@semio-tech/framework-plugin-host-test-component-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54408,7 +54907,7 @@
       "name": "@semio-tech/framework-plugin-host-test-component-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54424,7 +54923,7 @@
       "name": "@semio-tech/framework-plugin-host-test-component-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-plugin-host-test-component-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54440,7 +54939,7 @@
       "name": "@semio-tech/space-plugin-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54470,7 +54969,7 @@
       "name": "@semio-tech/space-plugin-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54500,7 +54999,7 @@
       "name": "@semio-tech/space-plugin-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/space-plugin-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54516,7 +55015,7 @@
       "name": "@semio-tech/framework-os-flow-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54532,7 +55031,7 @@
       "name": "@semio-tech/framework-os-flow-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54548,7 +55047,7 @@
       "name": "@semio-tech/framework-os-flow-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-flow-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54564,7 +55063,7 @@
       "name": "@semio-tech/framework-os-compute-ownership compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54580,7 +55079,7 @@
       "name": "@semio-tech/framework-os-compute-ownership compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54596,7 +55095,7 @@
       "name": "@semio-tech/framework-os-compute-ownership compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/framework-os-compute-ownership:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54612,7 +55111,7 @@
       "name": "@semio-tech/compute-ownership-runner compute ownership quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/compute-ownership-runner:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/compute-ownership-runner:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "quick",
@@ -54628,7 +55127,7 @@
       "name": "@semio-tech/compute-ownership-runner compute ownership long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/compute-ownership-runner:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/compute-ownership-runner:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "long",
@@ -54673,7 +55172,7 @@
       "name": "@semio-tech/compute-ownership-runner compute ownership exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/compute-ownership-runner:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/compute-ownership-runner:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_LEVEL": "exhaustive",
@@ -54801,7 +55300,7 @@
       "name": "🧪️test🧬️schema📶️state🦀️test-quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-state-rs:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -54815,7 +55314,7 @@
       "name": "🧪️test🧬️schema📶️state🦀️test-long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-state-rs:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -54829,7 +55328,7 @@
       "name": "🧪️test🧬️schema📶️state🦀️test-exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-state-rs:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-state-rs:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -54857,7 +55356,7 @@
       "name": "🧪️test🧬️schema🧩️composition🦀️test-quick",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-composition-rs:test-quick --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-composition-rs:test --skip-nx-cache -- quick",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -54886,7 +55385,7 @@
       "name": "🧪️test🧬️schema🧩️composition🦀️test-long",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-composition-rs:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-composition-rs:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -54900,7 +55399,7 @@
       "name": "🧪️test🧬️schema🧩️composition🦀️test-exhaustive",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/schema-composition-rs:test-exhaustive --skip-nx-cache",
+      "command": "bun nx run @semio-tech/schema-composition-rs:test --skip-nx-cache -- exhaustive",
       "cwd": "${workspaceFolder}",
       "env": {
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️11/CLEAN-ARCHITECTURE-LAYERING-ENFORCEMENT/🗑️generated/goal-schema-neutrality"
@@ -55282,7 +55781,7 @@
       "name": "🧪️test📜️history📈️processed🔮️wire",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-kernel:test-long --excludeTaskDependencies --skip-nx-cache -- 🧪️history-reprojection 🧪️history-patch",
+      "command": "bun nx run @semio-tech/framework-kernel:test --excludeTaskDependencies --skip-nx-cache -- long 🧪️history-reprojection 🧪️history-patch",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false"
@@ -55327,7 +55826,7 @@
       "name": "🧪️test💻️host🧾️actor🦀️retirement",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-os-host-rs:test-long --excludeTaskDependencies --skip-nx-cache -- rust workflow_host_preserves_the_opened_actor_context -- --nocapture",
+      "command": "bun nx run @semio-tech/framework-os-host-rs:test --excludeTaskDependencies --skip-nx-cache -- long rust workflow_host_preserves_the_opened_actor_context -- --nocapture",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "9_gates",
@@ -61375,7 +61874,7 @@
       "type": "node-terminal",
       "request": "launch",
       "name": "⚖️test-quick🧪️repo-test-host🦀️",
-      "command": "bun nx run semio-repo-test-host:test-quick",
+      "command": "bun nx run semio-repo-test-host:test -- quick",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -62256,7 +62755,7 @@
       "type": "node-terminal",
       "request": "launch",
       "name": "⚖️test-long🧪️repo-test-host🦀️",
-      "command": "bun nx run semio-repo-test-host:test-long",
+      "command": "bun nx run semio-repo-test-host:test -- long",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -62687,7 +63186,7 @@
       "type": "node-terminal",
       "request": "launch",
       "name": "⚖️test-exhaustive🧪️repo-test-host🦀️",
-      "command": "bun nx run semio-repo-test-host:test-exhaustive",
+      "command": "bun nx run semio-repo-test-host:test -- exhaustive",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -82705,7 +83204,7 @@
       "name": "⚖️test📋️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run ${input:projectTarget.test}:test",
+      "command": "bun nx run ${input:projectTarget.test}:test -- ${input:testLevel}",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -82746,28 +83245,6 @@
       }
     },
     {
-      "name": "⚖️test-exhaustive📋️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run ${input:projectTarget.test-exhaustive}:test-exhaustive",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 899.0013
-      }
-    },
-    {
-      "name": "⚖️test-long📋️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run ${input:projectTarget.test-long}:test-long",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 899.0014
-      }
-    },
-    {
       "name": "⚖️test-native📋️",
       "type": "node-terminal",
       "request": "launch",
@@ -82798,17 +83275,6 @@
       "presentation": {
         "group": "4_gate",
         "order": 899.0017
-      }
-    },
-    {
-      "name": "⚖️test-quick📋️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run ${input:projectTarget.test-quick}:test-quick",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_gate",
-        "order": 899.0018
       }
     },
     {
@@ -83140,6 +83606,22 @@
         "group": "4_build",
         "order": 900.0009
       }
+    },
+    {
+      "name": "📦️build Prototype",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:build --configuration=prototype",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 900.00091 }
+    },
+    {
+      "name": "📦️build Release",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run workspace:build --configuration=release",
+      "cwd": "${workspaceFolder}",
+      "presentation": { "group": "4_build", "order": 900.00092 }
     },
     {
       "name": "▶️cpp-configure",
@@ -84938,7 +85420,7 @@
       "name": "⚖️test-fundamental",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run workspace:test-fundamental",
+      "command": "bun nx run workspace:test -- fundamental",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -87175,17 +87657,6 @@
       }
     },
     {
-      "name": "📦️prepare-release🎡️play",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/semio-tech-play:prepare-release",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "4_build",
-        "order": 900.0031
-      }
-    },
-    {
       "name": "🛠️serve-e2e🎡️play",
       "type": "node-terminal",
       "request": "launch",
@@ -88278,7 +88749,7 @@
       "name": "⚖️test-fundamental📓️print🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/print:test-fundamental",
+      "command": "bun nx run @semio-tech/print:test -- fundamental",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -89166,6 +89637,28 @@
       }
     },
     {
+      "name": "⚖️check🔌️plugin🧠️interpreter🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin-interpreter:check",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.04421
+      }
+    },
+    {
+      "name": "🧪️test🔌️plugin🧠️interpreter🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/framework-plugin-interpreter:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.04422
+      }
+    },
+    {
       "name": "⚖️artifact-admission-check🔌️plugin🦀️",
       "type": "node-terminal",
       "request": "launch",
@@ -89312,21 +89805,10 @@
       }
     },
     {
-      "name": "🛠️support-dev🔌️plugin🟦️",
+      "name": "📦️support🔌️plugin🟦️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-web:support-dev",
-      "cwd": "${workspaceFolder}",
-      "presentation": {
-        "group": "3_dev",
-        "order": 900.0017
-      }
-    },
-    {
-      "name": "📦️support-release🔌️plugin🟦️",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "bun nx run @semio-tech/framework-plugin-web:support-release",
+      "command": "bun nx run @semio-tech/framework-plugin-web:support",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_build",
@@ -93139,12 +93621,35 @@
         "CARGO_NET_OFFLINE": "true",
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
         "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"geometry-original-orientation-initialization-native\",\"maximumElapsedMilliseconds\":3600000}",
-        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/geometry-2026-10-10/snapshot-native",
-        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_initialization_requires_original_authority) | test(original_modeling_orientation_initialization_preserves_fullgrant_and_custody)\",\"--success-output\",\"immediate\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_initialization_requires_original_authority) | test(original_modeling_orientation_initialization_preserves_fullgrant_and_custody)\",\"--success-output\",\"immediate\"]}"
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/geometry-2026-10-13",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_initialization_requires_original_authority) | test(original_modeling_orientation_initialization_preserves_fullgrant_and_custody)\",\"--success-output\",\"immediate\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\u26a1\\ufe0fcache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--configuration=prototype\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_initialization_requires_original_authority) | test(original_modeling_orientation_initialization_preserves_fullgrant_and_custody)\",\"--success-output\",\"immediate\"]}"
       },
       "presentation": {
         "group": "4_gate",
         "order": 900.05860649
+      }
+    },
+    {
+      "name": "⚖️test-original-modeling-orientation-incidence-native🧊️🦀️",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run semio-framework-3d:test --skip-nx-cache --excludeTaskDependencies -- long --offline -E 'test(original_modeling_orientation_incidence_requires_original_authority)' --success-output immediate",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "NX_CACHE_PROJECT_GRAPH": "true",
+        "NX_DAEMON": "false",
+        "NX_VERBOSE_LOGGING": "true",
+        "NX_ISOLATE_PLUGINS": "false",
+        "CARGO_BUILD_JOBS": "2",
+        "CARGO_NET_OFFLINE": "true",
+        "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/canonical-architecture",
+        "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"geometry-original-orientation-incidence-native\",\"maximumElapsedMilliseconds\":3600000}",
+        "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️06/☀️08/PROCEDURAL-FEATURE-COMPLETE/🗑️generated/geometry-2026-10-13",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_incidence_requires_original_authority)\",\"--success-output\",\"immediate\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.\\ud83e\\uddecsemio/\\ud83e\\udd91\\ufe0frepo/\\u26a1\\ufe0fcache/cargo/canonical-architecture\",\"transport\":{\"maximumBytes\":134217728,\"maximumLines\":1000000},\"child\":{\"maximumElapsedMilliseconds\":3600000},\"network\":{\"offline\":true}},\"selection\":[\"nx\",\"run\",\"semio-framework-3d:test\",\"--skip-nx-cache\",\"--excludeTaskDependencies\",\"--configuration=prototype\",\"--\",\"long\",\"--offline\",\"-E\",\"test(original_modeling_orientation_incidence_requires_original_authority)\",\"--success-output\",\"immediate\"]}"
+      },
+      "presentation": {
+        "group": "4_gate",
+        "order": 900.058606491
       }
     },
     {
@@ -94106,7 +94611,7 @@
       "name": "📐️artifact-io-construct-text-native🧪️",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/cad-js:test-quick --skip-nx-cache --args=\"✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts --reporter=verbose\"",
+      "command": "bun nx run @semio-tech/cad-js:test --skip-nx-cache --args=\"quick ✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/📝️text/💡️inferences/🟦️.ts --reporter=verbose\"",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "4_gate",
@@ -95081,12 +95586,12 @@
       "name": "🧪️Artifact IO Services Whole Native Receiving",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun nx run @semio-tech/os-services-rs:test-long --skip-nx-cache",
+      "command": "bun nx run @semio-tech/os-services-rs:test --skip-nx-cache -- long",
       "cwd": "${workspaceFolder}",
       "env": {
         "NX_DAEMON": "false",
         "SEMIO_SCRIPT_POLICY": "{\"version\":1,\"owner\":\"services.compute.original-whole-native\",\"maximumElapsedMilliseconds\":900000}",
-        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test-long\",\"--skip-nx-cache\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/target\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":900000},\"network\":{\"offline\":false}},\"selection\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test-long\",\"--skip-nx-cache\"]}",
+        "SEMIO_SCRIPT_CAPABILITIES": "{\"workspaceRoot\":\"${workspaceFolder}\",\"arguments\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test\",\"--skip-nx-cache\",\"--\",\"long\"],\"native\":{\"artifactDirectory\":\"${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/target\",\"transport\":{\"maximumBytes\":67108864,\"maximumLines\":65536},\"child\":{\"maximumElapsedMilliseconds\":900000},\"network\":{\"offline\":false}},\"selection\":[\"nx\",\"run\",\"@semio-tech/os-services-rs:test\",\"--skip-nx-cache\",\"--\",\"long\"]}",
         "SEMIO_BUILD_BUDGET_MS": "0",
         "SEMIO_TEST_ARTIFACT_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️10/ARTIFACTIO/🗑️generated/services-native",
         "CARGO_TARGET_DIR": "${workspaceFolder}/.🧬semio/🦑️repo/⚡️cache/cargo/target",
@@ -110525,6 +111030,18 @@
       ]
     },
     {
+      "id": "testLevel",
+      "type": "pickString",
+      "description": "Test level passed to the test target",
+      "options": [
+        "fundamental",
+        "quick",
+        "long",
+        "exhaustive"
+      ],
+      "default": "quick"
+    },
+    {
       "id": "projectTarget.test-command-ingress-consumer",
       "type": "pickString",
       "description": "Project whose test-command-ingress-consumer target runs",
@@ -110553,424 +111070,6 @@
         "@semio-tech/mit-bestand-demonstrator",
         "@semio-tech/semio-tech-play",
         "@teaching/architecture-quiz"
-      ]
-    },
-    {
-      "id": "projectTarget.test-exhaustive",
-      "type": "pickString",
-      "description": "Project whose test-exhaustive target runs",
-      "options": [
-        "@semio-tech/animate-js",
-        "@semio-tech/animate-plugin",
-        "@semio-tech/architect-plugin",
-        "@semio-tech/async-macros-rs",
-        "@semio-tech/block-plugin",
-        "@semio-tech/cad-js",
-        "@semio-tech/cad-js-module-aec-building",
-        "@semio-tech/cad-js-module-aec-building-energy",
-        "@semio-tech/cad-js-module-aec-building-structure",
-        "@semio-tech/cad-js-module-spatial-shape",
-        "@semio-tech/cad-plugin",
-        "@semio-tech/dag-plugin",
-        "@semio-tech/demonstrator-plugin",
-        "@semio-tech/dispatch-macros-rs",
-        "@semio-tech/draw-plugin",
-        "@semio-tech/dsl-derive-rs",
-        "@semio-tech/energy-plugin",
-        "@semio-tech/fem-plugin",
-        "@semio-tech/flow-extension-bim-rust",
-        "@semio-tech/flow-extension-brep-rust",
-        "@semio-tech/flow-extension-core-rust",
-        "@semio-tech/flow-extension-dictionary-rust",
-        "@semio-tech/flow-extension-draw-rust",
-        "@semio-tech/flow-extension-list-rust",
-        "@semio-tech/flow-extension-logic-rust",
-        "@semio-tech/flow-extension-math-rust",
-        "@semio-tech/flow-extension-text-rust",
-        "@semio-tech/flow-js",
-        "@semio-tech/flow-plugin",
-        "@semio-tech/forms-plugin",
-        "@semio-tech/framework",
-        "@semio-tech/framework-actor",
-        "@semio-tech/framework-actor-rs",
-        "@semio-tech/framework-async-rs",
-        "@semio-tech/framework-editor-rs",
-        "@semio-tech/framework-graph",
-        "@semio-tech/framework-graph-layout-run-rs",
-        "@semio-tech/framework-job-rs",
-        "@semio-tech/framework-kernel",
-        "@semio-tech/framework-machine",
-        "@semio-tech/framework-math",
-        "@semio-tech/framework-os",
-        "@semio-tech/framework-os-dev",
-        "@semio-tech/framework-os-host-rs",
-        "@semio-tech/framework-os-mcp",
-        "@semio-tech/framework-os-mcp-rs",
-        "@semio-tech/framework-os-shell",
-        "@semio-tech/framework-os-shell-rs",
-        "@semio-tech/framework-raster",
-        "@semio-tech/framework-renderer-react",
-        "@semio-tech/framework-renderer-wgpu",
-        "@semio-tech/framework-rs",
-        "@semio-tech/framework-surface-rs",
-        "@semio-tech/framework-time-travel-rs",
-        "@semio-tech/framework-tool-machine-rs",
-        "@semio-tech/framework-tool-run-rs",
-        "@semio-tech/framework-trace-rs",
-        "@semio-tech/framework-typeset",
-        "@semio-tech/gis-plugin",
-        "@semio-tech/imperative-extension-control-rust",
-        "@semio-tech/imperative-extension-effect-rust",
-        "@semio-tech/imperative-extension-logic-rust",
-        "@semio-tech/imperative-extension-math-rust",
-        "@semio-tech/imperative-extension-text-rust",
-        "@semio-tech/imperative-plugin",
-        "@semio-tech/canvas-react-renderer",
-        "@semio-tech/infinite-world-r3f",
-        "@semio-tech/layout-plugin",
-        "@semio-tech/lowpoly-plugin",
-        "@semio-tech/machine",
-        "@semio-tech/machine-derive-rs",
-        "@semio-tech/mathematical-plugin",
-        "@semio-tech/mit-bestand-bericht",
-        "@semio-tech/norm-plugin",
-        "@semio-tech/note-plugin",
-        "@semio-tech/os-plugin-describe-rs",
-        "@semio-tech/os-services-rs",
-        "@semio-tech/pets",
-        "@semio-tech/pets-react",
-        "@semio-tech/pets-rs",
-        "@semio-tech/playbook-extension-procedural-rust",
-        "@semio-tech/playbook-plugin",
-        "@semio-tech/presentation",
-        "@semio-tech/presentation-react",
-        "@semio-tech/print",
-        "@semio-tech/print-viz-inference",
-        "@semio-tech/procedural-plugin",
-        "@semio-tech/process-extension-concrete-rust",
-        "@semio-tech/process-extension-metal-rust",
-        "@semio-tech/process-extension-robotic-rust",
-        "@semio-tech/process-extension-wood-rust",
-        "@semio-tech/process-plugin",
-        "@semio-tech/puzzle-plugin",
-        "@semio-tech/quiz",
-        "@semio-tech/quiz-react",
-        "@semio-tech/quiz-rs",
-        "@semio-tech/raster-plugin",
-        "@semio-tech/reasoning-plugin",
-        "@semio-tech/remodel-plugin",
-        "@semio-tech/repo-cli-go",
-        "@semio-tech/repo-cli-rs",
-        "@semio-tech/repo-client",
-        "@semio-tech/repo-codebase-go",
-        "@semio-tech/repo-codebase-rs",
-        "@semio-tech/repo-contributors-go",
-        "@semio-tech/repo-contributors-rs",
-        "@semio-tech/repo-coordinator",
-        "@semio-tech/repo-coordinator-rs",
-        "@semio-tech/repo-dashboard-rs",
-        "@semio-tech/repo-events-go",
-        "@semio-tech/repo-events-rs",
-        "@semio-tech/repo-goals-go",
-        "@semio-tech/repo-goals-rs",
-        "@semio-tech/repo-graphql-go",
-        "@semio-tech/repo-graphql-rs",
-        "@semio-tech/repo-hooks-go",
-        "@semio-tech/repo-hooks-rs",
-        "@semio-tech/repo-identity-go",
-        "@semio-tech/repo-identity-rs",
-        "@semio-tech/repo-languages-go",
-        "@semio-tech/repo-languages-rs",
-        "@semio-tech/repo-lib",
-        "@semio-tech/repo-mcp-rs",
-        "@semio-tech/repo-mcp-schema",
-        "@semio-tech/repo-metrics-go",
-        "@semio-tech/repo-metrics-rs",
-        "@semio-tech/repo-model-go",
-        "@semio-tech/repo-model-rs",
-        "@semio-tech/repo-move-go",
-        "@semio-tech/repo-move-rs",
-        "@semio-tech/repo-providers-go",
-        "@semio-tech/repo-providers-rs",
-        "@semio-tech/repo-search-go",
-        "@semio-tech/repo-search-rs",
-        "@semio-tech/repo-sqlite",
-        "@semio-tech/repo-statutes-go",
-        "@semio-tech/repo-statutes-rs",
-        "@semio-tech/repo-test",
-        "@semio-tech/repo-test-runner-go",
-        "@semio-tech/repo-test-runner-rs",
-        "@semio-tech/repo-todos-go",
-        "@semio-tech/repo-todos-rs",
-        "@semio-tech/repo-tree-go",
-        "@semio-tech/repo-tree-rs",
-        "@semio-tech/repo-vscode",
-        "@semio-tech/repo-workspace-go",
-        "@semio-tech/repo-workspace-rs",
-        "@semio-tech/repo-yaml-rs",
-        "@semio-tech/framework-2d-js",
-        "@semio-tech/framework-3d-js",
-        "@semio-tech/s-fixture-sweep-rs",
-        "@semio-tech/s-imperative",
-        "@semio-tech/schema-composition-rs",
-        "@semio-tech/schema-derive-rs",
-        "@semio-tech/schema-registry-rs",
-        "@semio-tech/schema-state-rs",
-        "@semio-tech/schema-validator-rs",
-        "@semio-tech/sequence-plugin",
-        "@semio-tech/shooting-plugin",
-        "@semio-tech/sourcing-extension-beams-rust",
-        "@semio-tech/sourcing-extension-slabs-rust",
-        "@semio-tech/sourcing-extension-windows-rust",
-        "@semio-tech/sourcing-plugin",
-        "@semio-tech/space-plugin",
-        "@semio-tech/stdio-bim-plugin",
-        "@semio-tech/stdio-binary-plugin",
-        "@semio-tech/stdio-cad-plugin",
-        "@semio-tech/stdio-image-plugin",
-        "@semio-tech/stdio-js",
-        "@semio-tech/stdio-media-plugin",
-        "@semio-tech/stdio-mesh-plugin",
-        "@semio-tech/stdio-office-plugin",
-        "@semio-tech/stdio-pdf-plugin",
-        "@semio-tech/stdio-plugin",
-        "@semio-tech/stdio-semio-plugin",
-        "@semio-tech/trinity-jack-lsp",
-        "@semio-tech/trinity-jack-lsp-worker",
-        "@semio-tech/trinity-jack-shell",
-        "@semio-tech/trinity-plugin",
-        "@semio-tech/ui-contract-rs",
-        "@semio-tech/ui-locale-rs",
-        "@semio-tech/ui-react",
-        "@semio-tech/ui-render-rs",
-        "@semio-tech/ui-rs",
-        "@semio-tech/ui-runtime-rs",
-        "@semio-tech/ui-scene-rs",
-        "@semio-tech/ui-styling",
-        "@semio-tech/ui-styling-py",
-        "@semio-tech/ui-styling-tokens",
-        "@semio-tech/vcs-plugin",
-        "@semio-tech/wfc-plugin",
-        "@semio-tech/writer-plugin",
-        "@teaching/proctor",
-        "os-hub",
-        "os-hub-ts",
-        "repo-mcp",
-        "semio-framework-2d",
-        "semio-framework-3d",
-        "semio-framework-os-flow-core",
-        "semio-framework-os-infinite",
-        "semio-repo-test-host",
-        "workspace"
-      ]
-    },
-    {
-      "id": "projectTarget.test-long",
-      "type": "pickString",
-      "description": "Project whose test-long target runs",
-      "options": [
-        "@semio-tech/animate-js",
-        "@semio-tech/animate-plugin",
-        "@semio-tech/architect-plugin",
-        "@semio-tech/async-macros-rs",
-        "@semio-tech/block-plugin",
-        "@semio-tech/cad-js",
-        "@semio-tech/cad-js-module-aec-building",
-        "@semio-tech/cad-js-module-aec-building-energy",
-        "@semio-tech/cad-js-module-aec-building-structure",
-        "@semio-tech/cad-js-module-spatial-shape",
-        "@semio-tech/cad-plugin",
-        "@semio-tech/dag-plugin",
-        "@semio-tech/demonstrator-plugin",
-        "@semio-tech/dispatch-macros-rs",
-        "@semio-tech/draw-plugin",
-        "@semio-tech/dsl-derive-rs",
-        "@semio-tech/energy-plugin",
-        "@semio-tech/fem-plugin",
-        "@semio-tech/flow-extension-bim-rust",
-        "@semio-tech/flow-extension-brep-rust",
-        "@semio-tech/flow-extension-core-rust",
-        "@semio-tech/flow-extension-dictionary-rust",
-        "@semio-tech/flow-extension-draw-rust",
-        "@semio-tech/flow-extension-list-rust",
-        "@semio-tech/flow-extension-logic-rust",
-        "@semio-tech/flow-extension-math-rust",
-        "@semio-tech/flow-extension-text-rust",
-        "@semio-tech/flow-js",
-        "@semio-tech/flow-plugin",
-        "@semio-tech/forms-plugin",
-        "@semio-tech/framework",
-        "@semio-tech/framework-actor",
-        "@semio-tech/framework-actor-rs",
-        "@semio-tech/framework-async-rs",
-        "@semio-tech/framework-editor-rs",
-        "@semio-tech/framework-graph",
-        "@semio-tech/framework-graph-layout-run-rs",
-        "@semio-tech/framework-job-rs",
-        "@semio-tech/framework-kernel",
-        "@semio-tech/framework-machine",
-        "@semio-tech/framework-math",
-        "@semio-tech/framework-os",
-        "@semio-tech/framework-os-dev",
-        "@semio-tech/framework-os-host-rs",
-        "@semio-tech/framework-os-mcp",
-        "@semio-tech/framework-os-mcp-rs",
-        "@semio-tech/framework-os-shell",
-        "@semio-tech/framework-os-shell-rs",
-        "@semio-tech/framework-raster",
-        "@semio-tech/framework-renderer-react",
-        "@semio-tech/framework-renderer-wgpu",
-        "@semio-tech/framework-rs",
-        "@semio-tech/framework-surface-rs",
-        "@semio-tech/framework-time-travel-rs",
-        "@semio-tech/framework-tool-machine-rs",
-        "@semio-tech/framework-tool-run-rs",
-        "@semio-tech/framework-trace-rs",
-        "@semio-tech/framework-typeset",
-        "@semio-tech/gis-plugin",
-        "@semio-tech/imperative-extension-control-rust",
-        "@semio-tech/imperative-extension-effect-rust",
-        "@semio-tech/imperative-extension-logic-rust",
-        "@semio-tech/imperative-extension-math-rust",
-        "@semio-tech/imperative-extension-text-rust",
-        "@semio-tech/imperative-plugin",
-        "@semio-tech/canvas-react-renderer",
-        "@semio-tech/infinite-world-r3f",
-        "@semio-tech/layout-plugin",
-        "@semio-tech/lowpoly-plugin",
-        "@semio-tech/machine",
-        "@semio-tech/machine-derive-rs",
-        "@semio-tech/mathematical-plugin",
-        "@semio-tech/mit-bestand-bericht",
-        "@semio-tech/norm-plugin",
-        "@semio-tech/note-plugin",
-        "@semio-tech/os-plugin-describe-rs",
-        "@semio-tech/os-services-rs",
-        "@semio-tech/pets",
-        "@semio-tech/pets-react",
-        "@semio-tech/pets-rs",
-        "@semio-tech/playbook-extension-procedural-rust",
-        "@semio-tech/playbook-plugin",
-        "@semio-tech/presentation",
-        "@semio-tech/presentation-react",
-        "@semio-tech/print",
-        "@semio-tech/print-viz-inference",
-        "@semio-tech/procedural-plugin",
-        "@semio-tech/process-extension-concrete-rust",
-        "@semio-tech/process-extension-metal-rust",
-        "@semio-tech/process-extension-robotic-rust",
-        "@semio-tech/process-extension-wood-rust",
-        "@semio-tech/process-plugin",
-        "@semio-tech/puzzle-plugin",
-        "@semio-tech/quiz",
-        "@semio-tech/quiz-react",
-        "@semio-tech/quiz-rs",
-        "@semio-tech/raster-plugin",
-        "@semio-tech/reasoning-plugin",
-        "@semio-tech/remodel-plugin",
-        "@semio-tech/repo-cli-go",
-        "@semio-tech/repo-cli-rs",
-        "@semio-tech/repo-client",
-        "@semio-tech/repo-codebase-go",
-        "@semio-tech/repo-codebase-rs",
-        "@semio-tech/repo-contributors-go",
-        "@semio-tech/repo-contributors-rs",
-        "@semio-tech/repo-coordinator",
-        "@semio-tech/repo-coordinator-rs",
-        "@semio-tech/repo-dashboard-rs",
-        "@semio-tech/repo-events-go",
-        "@semio-tech/repo-events-rs",
-        "@semio-tech/repo-goals-go",
-        "@semio-tech/repo-goals-rs",
-        "@semio-tech/repo-graphql-go",
-        "@semio-tech/repo-graphql-rs",
-        "@semio-tech/repo-hooks-go",
-        "@semio-tech/repo-hooks-rs",
-        "@semio-tech/repo-identity-go",
-        "@semio-tech/repo-identity-rs",
-        "@semio-tech/repo-languages-go",
-        "@semio-tech/repo-languages-rs",
-        "@semio-tech/repo-lib",
-        "@semio-tech/repo-mcp-rs",
-        "@semio-tech/repo-mcp-schema",
-        "@semio-tech/repo-metrics-go",
-        "@semio-tech/repo-metrics-rs",
-        "@semio-tech/repo-model-go",
-        "@semio-tech/repo-model-rs",
-        "@semio-tech/repo-move-go",
-        "@semio-tech/repo-move-rs",
-        "@semio-tech/repo-providers-go",
-        "@semio-tech/repo-providers-rs",
-        "@semio-tech/repo-search-go",
-        "@semio-tech/repo-search-rs",
-        "@semio-tech/repo-sqlite",
-        "@semio-tech/repo-statutes-go",
-        "@semio-tech/repo-statutes-rs",
-        "@semio-tech/repo-test",
-        "@semio-tech/repo-test-runner-go",
-        "@semio-tech/repo-test-runner-rs",
-        "@semio-tech/repo-todos-go",
-        "@semio-tech/repo-todos-rs",
-        "@semio-tech/repo-tree-go",
-        "@semio-tech/repo-tree-rs",
-        "@semio-tech/repo-vscode",
-        "@semio-tech/repo-workspace-go",
-        "@semio-tech/repo-workspace-rs",
-        "@semio-tech/repo-yaml-rs",
-        "@semio-tech/framework-2d-js",
-        "@semio-tech/framework-3d-js",
-        "@semio-tech/s-fixture-sweep-rs",
-        "@semio-tech/s-imperative",
-        "@semio-tech/schema-composition-rs",
-        "@semio-tech/schema-derive-rs",
-        "@semio-tech/schema-registry-rs",
-        "@semio-tech/schema-state-rs",
-        "@semio-tech/schema-validator-rs",
-        "@semio-tech/sequence-plugin",
-        "@semio-tech/shooting-plugin",
-        "@semio-tech/sourcing-extension-beams-rust",
-        "@semio-tech/sourcing-extension-slabs-rust",
-        "@semio-tech/sourcing-extension-windows-rust",
-        "@semio-tech/sourcing-plugin",
-        "@semio-tech/space-plugin",
-        "@semio-tech/stdio-bim-plugin",
-        "@semio-tech/stdio-binary-plugin",
-        "@semio-tech/stdio-cad-plugin",
-        "@semio-tech/stdio-image-plugin",
-        "@semio-tech/stdio-js",
-        "@semio-tech/stdio-media-plugin",
-        "@semio-tech/stdio-mesh-plugin",
-        "@semio-tech/stdio-office-plugin",
-        "@semio-tech/stdio-pdf-plugin",
-        "@semio-tech/stdio-plugin",
-        "@semio-tech/stdio-semio-plugin",
-        "@semio-tech/trinity-jack-lsp",
-        "@semio-tech/trinity-jack-lsp-worker",
-        "@semio-tech/trinity-jack-shell",
-        "@semio-tech/trinity-plugin",
-        "@semio-tech/ui-contract-rs",
-        "@semio-tech/ui-locale-rs",
-        "@semio-tech/ui-react",
-        "@semio-tech/ui-render-rs",
-        "@semio-tech/ui-rs",
-        "@semio-tech/ui-runtime-rs",
-        "@semio-tech/ui-scene-rs",
-        "@semio-tech/ui-styling",
-        "@semio-tech/ui-styling-py",
-        "@semio-tech/ui-styling-tokens",
-        "@semio-tech/vcs-plugin",
-        "@semio-tech/wfc-plugin",
-        "@semio-tech/writer-plugin",
-        "@teaching/proctor",
-        "os-hub",
-        "os-hub-ts",
-        "repo-mcp",
-        "semio-framework-2d",
-        "semio-framework-3d",
-        "semio-framework-os-flow-core",
-        "semio-framework-os-infinite",
-        "semio-repo-test-host",
-        "workspace"
       ]
     },
     {
@@ -111026,221 +111125,6 @@
         "@semio-tech/framework-sqlite-snapshot-rs",
         "@semio-tech/hub-puzzle-retained-test",
         "@semio-tech/hub-space-document-sources-test"
-      ]
-    },
-    {
-      "id": "projectTarget.test-quick",
-      "type": "pickString",
-      "description": "Project whose test-quick target runs",
-      "options": [
-        "@semio-tech/animate-js",
-        "@semio-tech/animate-plugin",
-        "@semio-tech/architect-plugin",
-        "@semio-tech/async-macros-rs",
-        "@semio-tech/block-plugin",
-        "@semio-tech/cad-extension-aec-building-energy-rust",
-        "@semio-tech/cad-extension-aec-building-rust",
-        "@semio-tech/cad-extension-aec-building-structure-rust",
-        "@semio-tech/cad-extension-spatial-shape-rust",
-        "@semio-tech/cad-js",
-        "@semio-tech/cad-js-module-aec-building",
-        "@semio-tech/cad-js-module-aec-building-energy",
-        "@semio-tech/cad-js-module-aec-building-structure",
-        "@semio-tech/cad-js-module-spatial-shape",
-        "@semio-tech/cad-plugin",
-        "@semio-tech/dag-plugin",
-        "@semio-tech/demonstrator-plugin",
-        "@semio-tech/dispatch-macros-rs",
-        "@semio-tech/draw-plugin",
-        "@semio-tech/dsl-derive-rs",
-        "@semio-tech/energy-plugin",
-        "@semio-tech/fem-plugin",
-        "@semio-tech/flow-extension-bim-rust",
-        "@semio-tech/flow-extension-brep-rust",
-        "@semio-tech/flow-extension-core-rust",
-        "@semio-tech/flow-extension-dictionary-rust",
-        "@semio-tech/flow-extension-draw-rust",
-        "@semio-tech/flow-extension-list-rust",
-        "@semio-tech/flow-extension-logic-rust",
-        "@semio-tech/flow-extension-math-rust",
-        "@semio-tech/flow-extension-text-rust",
-        "@semio-tech/flow-js",
-        "@semio-tech/flow-plugin",
-        "@semio-tech/forms-plugin",
-        "@semio-tech/framework",
-        "@semio-tech/framework-actor",
-        "@semio-tech/framework-actor-rs",
-        "@semio-tech/framework-async-rs",
-        "@semio-tech/framework-editor-rs",
-        "@semio-tech/framework-graph",
-        "@semio-tech/framework-graph-layout-run-rs",
-        "@semio-tech/framework-job-rs",
-        "@semio-tech/framework-kernel",
-        "@semio-tech/framework-machine",
-        "@semio-tech/framework-math",
-        "@semio-tech/framework-os",
-        "@semio-tech/framework-os-dev",
-        "@semio-tech/framework-os-host-rs",
-        "@semio-tech/framework-os-mcp",
-        "@semio-tech/framework-os-mcp-rs",
-        "@semio-tech/framework-os-shell",
-        "@semio-tech/framework-os-shell-rs",
-        "@semio-tech/framework-raster",
-        "@semio-tech/framework-renderer-react",
-        "@semio-tech/framework-renderer-wgpu",
-        "@semio-tech/framework-rs",
-        "@semio-tech/framework-surface-rs",
-        "@semio-tech/framework-time-travel-rs",
-        "@semio-tech/framework-tool-machine-rs",
-        "@semio-tech/framework-tool-run-rs",
-        "@semio-tech/framework-trace-rs",
-        "@semio-tech/framework-typeset",
-        "@semio-tech/gis-plugin",
-        "@semio-tech/imperative-extension-control-rust",
-        "@semio-tech/imperative-extension-effect-rust",
-        "@semio-tech/imperative-extension-logic-rust",
-        "@semio-tech/imperative-extension-math-rust",
-        "@semio-tech/imperative-extension-text-rust",
-        "@semio-tech/imperative-plugin",
-        "@semio-tech/canvas-react-renderer",
-        "@semio-tech/infinite-world-r3f",
-        "@semio-tech/layout-plugin",
-        "@semio-tech/lowpoly-plugin",
-        "@semio-tech/machine",
-        "@semio-tech/machine-derive-rs",
-        "@semio-tech/mathematical-plugin",
-        "@semio-tech/norm-plugin",
-        "@semio-tech/note-plugin",
-        "@semio-tech/os-plugin-describe-rs",
-        "@semio-tech/os-services-rs",
-        "@semio-tech/pets",
-        "@semio-tech/pets-react",
-        "@semio-tech/pets-rs",
-        "@semio-tech/playbook-extension-procedural-rust",
-        "@semio-tech/playbook-plugin",
-        "@semio-tech/plugin-extension-store",
-        "@semio-tech/presentation",
-        "@semio-tech/presentation-react",
-        "@semio-tech/print",
-        "@semio-tech/print-viz-inference",
-        "@semio-tech/procedural-plugin",
-        "@semio-tech/process-extension-concrete-rust",
-        "@semio-tech/process-extension-metal-rust",
-        "@semio-tech/process-extension-robotic-rust",
-        "@semio-tech/process-extension-wood-rust",
-        "@semio-tech/process-plugin",
-        "@semio-tech/puzzle-5d-react",
-        "@semio-tech/puzzle-plugin",
-        "@semio-tech/quiz",
-        "@semio-tech/quiz-react",
-        "@semio-tech/quiz-rs",
-        "@semio-tech/raster-plugin",
-        "@semio-tech/reasoning-plugin",
-        "@semio-tech/remodel-plugin",
-        "@semio-tech/repo-cli-go",
-        "@semio-tech/repo-cli-rs",
-        "@semio-tech/repo-client",
-        "@semio-tech/repo-codebase-go",
-        "@semio-tech/repo-codebase-rs",
-        "@semio-tech/repo-contributors-go",
-        "@semio-tech/repo-contributors-rs",
-        "@semio-tech/repo-coordinator",
-        "@semio-tech/repo-coordinator-rs",
-        "@semio-tech/repo-dashboard-rs",
-        "@semio-tech/repo-events-go",
-        "@semio-tech/repo-events-rs",
-        "@semio-tech/repo-goals-go",
-        "@semio-tech/repo-goals-rs",
-        "@semio-tech/repo-graphql-go",
-        "@semio-tech/repo-graphql-rs",
-        "@semio-tech/repo-hooks-go",
-        "@semio-tech/repo-hooks-rs",
-        "@semio-tech/repo-identity-go",
-        "@semio-tech/repo-identity-rs",
-        "@semio-tech/repo-languages-go",
-        "@semio-tech/repo-languages-rs",
-        "@semio-tech/repo-lib",
-        "@semio-tech/repo-mcp-rs",
-        "@semio-tech/repo-mcp-schema",
-        "@semio-tech/repo-metrics-go",
-        "@semio-tech/repo-metrics-rs",
-        "@semio-tech/repo-model-go",
-        "@semio-tech/repo-model-rs",
-        "@semio-tech/repo-move-go",
-        "@semio-tech/repo-move-rs",
-        "@semio-tech/repo-providers-go",
-        "@semio-tech/repo-providers-rs",
-        "@semio-tech/repo-search-go",
-        "@semio-tech/repo-search-rs",
-        "@semio-tech/repo-sqlite",
-        "@semio-tech/repo-statutes-go",
-        "@semio-tech/repo-statutes-rs",
-        "@semio-tech/repo-test",
-        "@semio-tech/repo-test-runner-go",
-        "@semio-tech/repo-test-runner-rs",
-        "@semio-tech/repo-todos-go",
-        "@semio-tech/repo-todos-rs",
-        "@semio-tech/repo-tree-go",
-        "@semio-tech/repo-tree-rs",
-        "@semio-tech/repo-vscode",
-        "@semio-tech/repo-workspace-go",
-        "@semio-tech/repo-workspace-rs",
-        "@semio-tech/repo-yaml-rs",
-        "@semio-tech/framework-2d-js",
-        "@semio-tech/framework-3d-js",
-        "@semio-tech/s-composition-laws-rs",
-        "@semio-tech/s-fixture-sweep-rs",
-        "@semio-tech/s-imperative",
-        "@semio-tech/schema-composition-rs",
-        "@semio-tech/schema-derive-rs",
-        "@semio-tech/schema-registry-rs",
-        "@semio-tech/schema-state-rs",
-        "@semio-tech/schema-validator-rs",
-        "@semio-tech/sequence-plugin",
-        "@semio-tech/shooting-plugin",
-        "@semio-tech/sourcing-extension-beams-rust",
-        "@semio-tech/sourcing-extension-slabs-rust",
-        "@semio-tech/sourcing-extension-windows-rust",
-        "@semio-tech/sourcing-plugin",
-        "@semio-tech/space-plugin",
-        "@semio-tech/stdio-bim-plugin",
-        "@semio-tech/stdio-binary-plugin",
-        "@semio-tech/stdio-cad-plugin",
-        "@semio-tech/stdio-image-plugin",
-        "@semio-tech/stdio-js",
-        "@semio-tech/stdio-media-plugin",
-        "@semio-tech/stdio-mesh-plugin",
-        "@semio-tech/stdio-office-plugin",
-        "@semio-tech/stdio-pdf-plugin",
-        "@semio-tech/stdio-plugin",
-        "@semio-tech/stdio-semio-plugin",
-        "@semio-tech/trinity-jack-lsp",
-        "@semio-tech/trinity-jack-lsp-worker",
-        "@semio-tech/trinity-jack-shell",
-        "@semio-tech/trinity-plugin",
-        "@semio-tech/ui-contract-rs",
-        "@semio-tech/ui-locale-rs",
-        "@semio-tech/ui-react",
-        "@semio-tech/ui-render-rs",
-        "@semio-tech/ui-rs",
-        "@semio-tech/ui-runtime-rs",
-        "@semio-tech/ui-scene-rs",
-        "@semio-tech/ui-styling",
-        "@semio-tech/ui-styling-py",
-        "@semio-tech/ui-styling-tokens",
-        "@semio-tech/vcs-plugin",
-        "@semio-tech/wfc-plugin",
-        "@semio-tech/writer-plugin",
-        "@teaching/proctor",
-        "os-hub",
-        "os-hub-ts",
-        "repo-mcp",
-        "semio-framework-2d",
-        "semio-framework-3d",
-        "semio-framework-os-flow-core",
-        "semio-framework-os-infinite",
-        "semio-repo-test-host",
-        "workspace"
       ]
     },
     {

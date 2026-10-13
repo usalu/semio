@@ -3,7 +3,7 @@
 //! is a single length read, not a fold over per-frame content), so this holds only the value type
 //! + its pure `compute` fn (no `InferredField`).
 
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
+use crate::schema::snapshot::{SemioColorspace, SemioImageSnapshot};
 
 //#region 🔖️Dimensions
 /// 📐️ Semio image header-derived raster geometry. `has_alpha` reads the explicit `colorspace`

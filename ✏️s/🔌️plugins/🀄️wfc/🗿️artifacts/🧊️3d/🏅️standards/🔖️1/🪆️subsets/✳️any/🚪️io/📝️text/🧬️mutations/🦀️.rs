@@ -2,7 +2,7 @@
 //!
 //! One keyword per `Wfc3dMutation` variant, in the `KINDS` order the catalog
 //! (`../../../🔮️oracles/🔣️.json`) declares. The operation twin exists for the same reason the
-//! snapshot's does — `Tile::media` reaches a foreign `store::ArtifactChild` — and is bridged through
+//! snapshot's does — `Tile::media` reaches a foreign `store::os_store::artifact_child::ArtifactChild` — and is bridged through
 //! the snapshot facet's own `slot_to_dsl`/`edge_to_dsl`/`tile_to_dsl`/`rule_to_dsl` pairs, never a
 //! second conversion.
 

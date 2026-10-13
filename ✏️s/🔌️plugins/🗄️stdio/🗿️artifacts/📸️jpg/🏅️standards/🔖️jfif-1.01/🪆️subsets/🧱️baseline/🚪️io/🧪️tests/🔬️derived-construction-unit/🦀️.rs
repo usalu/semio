@@ -22,7 +22,7 @@ mod tests {
         let snap = JpgSnapshot { schema: crate::STDIO_JPG_DOCUMENT_SCHEMA.into(), image: crate::schema::snapshot::JpgImage { width: w,height: h,pixels: gradient_image(w, h),..crate::schema::snapshot::JpgImage::default() } };
         let bytes = crate::standards::v_jfif_1_01::subsets::document::io::encode_jpg(&snap, &crate::standards::v_jfif_1_01::subsets::document::io::JpgEncodeOptions::default()).expect("encode");
         let decoded = crate::standards::v_jfif_1_01::subsets::document::io::decode_jpg(&bytes).expect("decode");
-        let packed = <JpgSnapshot as store::ArtifactPack>::encode_pack(&decoded);
+        let packed = <JpgSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&decoded);
         let built = JpgBaselineBuilderConstruction::from_binary(&packed).expect("from_binary").build().expect("real baseline JPEG must build clean");
         assert_eq!(built,decoded);
     }

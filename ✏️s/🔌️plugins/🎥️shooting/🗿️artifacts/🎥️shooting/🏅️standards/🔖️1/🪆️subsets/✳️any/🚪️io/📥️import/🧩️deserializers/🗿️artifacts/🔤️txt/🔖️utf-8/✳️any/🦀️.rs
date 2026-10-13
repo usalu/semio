@@ -6,5 +6,5 @@ pub fn register() {}
 
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ShootingSnapshot, semio_framework_diagnostic::TextError> {
     let text = std::str::from_utf8(bytes).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("shooting←txt: {error}"), semio_framework_diagnostic::TextSpan::at(1, 1)))?;
-    <ShootingSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <ShootingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }

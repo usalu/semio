@@ -24,15 +24,15 @@ use semio_framework_mesh_engine::HistoryFoldIndex;
 
 type EdgeSampleCache = HistoryFoldIndex<EdgeId, Vec<(f64, Pnt3)>>;
 
-use crate::brep::operations::primitives::Wire;
-use crate::brep::engine::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind, VertexGroup};
-use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::surface_ops;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::{Body, Coedge, Edge};
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_representation::topology::Wire;
+use semio_framework_3d_brep_representation::contract::{CurveKind, EdgeGroup, EdgeInfo, FaceGroup, FaceInfo, MeshTransfer, SurfaceKind, VertexGroup};
+use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::surface_ops;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge};
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 // #region 🔖️Constants
 
@@ -1336,6 +1336,6 @@ fn triangle_needs_refine(surface: &Surface, positions: &[Pnt3], uvs: &[(f64, f64
 
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;
 
 // #endregion 🔖️Tests

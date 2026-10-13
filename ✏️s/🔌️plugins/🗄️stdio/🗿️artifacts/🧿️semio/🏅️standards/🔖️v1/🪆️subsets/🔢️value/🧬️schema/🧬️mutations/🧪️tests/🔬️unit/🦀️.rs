@@ -1,6 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-use protocol::MutationDiff;
+use crate::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
@@ -40,7 +39,7 @@ fn base_fixture() -> SemioValueSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn apply_and_check(base: &SemioValueSnapshot, mutation: SemioValueMutation) -> (SemioValueSnapshot, protocol::MutationOutcome<SemioValueTreeDiff>) {
     let mut via_apply = base.clone();
-    let (__next, returned) = crate::applied(&via_apply, &mutation);
+    let (__next, returned) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
     via_apply = __next;
     let expected_diff = mutation.diff(base);
     assert_eq!(returned, expected_diff, "apply_semio_value_mutation must return mutation.diff(base)");
@@ -112,9 +111,9 @@ async fn inverse_law_mutation_level_round_trips() {
     ];
     for mutation in mutations {
         let mut state = base.clone();
-        state = crate::applied(&state, &mutation).0;
+        state = semio_s_artifact_stdio_semio_base::applied(&state, &mutation).0;
         for undo in <SemioValueMutation as Mutation<SemioValueSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-            state = crate::applied(&state, &undo).0;
+            state = semio_s_artifact_stdio_semio_base::applied(&state, &undo).0;
         }
         assert_eq!(state, base, "mutation {mutation:?} did not round-trip via its inverse");
     }
@@ -195,11 +194,11 @@ fn kinds_match_the_enum_and_the_catalog() {
 /// 🎯️ Position law: removing ANY map entry or node (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn removals_invert_at_every_position() {
-    let base = crate::standards::v1::subsets::value::schema::snapshot::demo_semio_value_snapshot();
+    let base = crate::schema::snapshot::demo_semio_value_snapshot();
     for node in &base.nodes {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioValueMutation::RemoveNode(remove_node::RemoveNode { id: node.id.clone() }), &base).await;
     }
-    if let crate::standards::v1::subsets::value::schema::snapshot::SemioValue::Map { entries } = &base.root {
+    if let SemioValue::Map { entries } = &base.root {
         for entry in entries {
             protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioValueMutation::RemoveMapEntry(remove_map_entry::RemoveMapEntry { path: vec![], key: entry.key.clone() }), &base).await;
         }

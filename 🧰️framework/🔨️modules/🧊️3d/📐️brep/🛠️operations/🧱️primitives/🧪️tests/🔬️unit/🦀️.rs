@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::queries::validation::validate_body;
+use semio_framework_3d_brep_queries::validation::validate_body;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn solid_counts(body: &Body, solid: SolidId) -> (usize, usize, usize) {
@@ -227,7 +227,7 @@ async fn open_polyline_wire() {
 /// quadrature — see `w1e-primitives.md` for the honest pass/fail report on each shape.
 #[semio_framework_async_macros::async_test]
 async fn closed_form_volumes_via_mass_properties() {
-    use crate::brep::queries::mass_properties::solid_volume;
+    use semio_framework_3d_brep_queries::mass_properties::solid_volume;
     let tol = 1e-3;
 
     let mut body = Body::new();

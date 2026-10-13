@@ -1,6 +1,6 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
 use crate::standards::v_rfc4180::subsets::any::schema::snapshot::{CsvSnapshot,CsvRecord,CsvField};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError}};
 #[path="💰️backing/🦀️.rs"] mod backing;
 #[path="🫴️receiving/🦀️.rs"]mod receiving;
 pub(super) fn semantic(snapshot:&CsvSnapshot,control:&mut SqliteSnapshotControl<'_>,phase:semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotPhase)->Result<usize,ValueError>{backing::semantic(snapshot,control,phase)}

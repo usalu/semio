@@ -4,8 +4,8 @@ use super::*;
 use semio_framework_plugin::WindowTransientOwner;
 
 /// 🎟️ One five-currency one-item grant whose byte currencies all equal `bytes`.
-fn one_item_grant(items: usize, bytes: usize) -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 }
+fn one_item_grant(items: usize, bytes: usize) -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+    store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_copy_bytes: bytes, maximum_capacity_bytes: bytes, maximum_release_bytes: bytes, maximum_depth: 64 }
 }
 
 /// 🎟️ The generous wallet a maintenance turn spends when the store publishes no quote of its own.
@@ -21,7 +21,7 @@ fn close_publication(publication: &mut store::ArtifactEphemeralOneItemPublicatio
         }
         let demand = publication.retirement_demands(crate::JACK_SELF_FUNDED_BODY_BYTES).expect("Jack results publication close quote");
         let funded = crate::jack_self_funded_grant(demand);
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: funded.maximum_items, maximum_copy_bytes: funded.maximum_copy_bytes, maximum_capacity_bytes: funded.maximum_capacity_bytes, maximum_release_bytes: funded.maximum_release_bytes, maximum_depth: funded.maximum_depth };
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: funded.maximum_items, maximum_copy_bytes: funded.maximum_copy_bytes, maximum_capacity_bytes: funded.maximum_capacity_bytes, maximum_release_bytes: funded.maximum_release_bytes, maximum_depth: funded.maximum_depth };
         let step = publication.close_step(grant).expect("Jack results publication close");
         assert!(step.progress().fits(funded));
     }
@@ -45,11 +45,11 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let mut publication =
         state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap_or_else(|rejected| panic!("large Jack result admission: {}", rejected.reason));
     let zero = one_item_grant(fixture["grants"]["blocked"]["maximumItems"].as_u64().unwrap() as usize, fixture["grants"]["blocked"]["maximumBytes"].as_u64().unwrap() as usize);
-    assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
+    assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
     assert_eq!(publication.progress().completed_items, 0);
     let grant = one_item_grant(fixture["grants"]["advance"]["maximumItems"].as_u64().unwrap() as usize, fixture["grants"]["advance"]["maximumBytes"].as_u64().unwrap() as usize);
     for _ in 0..16 {
-        if matches!(state.advance_publish_one(&mut publication, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+        if matches!(state.advance_publish_one(&mut publication, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
             assert!(publication.acknowledge());
             break;
         }
@@ -78,7 +78,7 @@ fn results_window_large_output_preserves_alias_cancel_and_bounded_disposal() {
     let mut cancellation =
         state.begin_publish_one_leased(semio_framework_job::OperationId(2), 1, cancelled, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap_or_else(|rejected| panic!("cancellation admission: {}", rejected.reason));
     assert!(state.cancel_publish_one(&mut cancellation));
-    assert!(matches!(state.advance_publish_one(&mut cancellation, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
+    assert!(matches!(state.advance_publish_one(&mut cancellation, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
     close_publication(&mut cancellation);
     assert!(std::sync::Arc::ptr_eq(&before_cancel, &state.current_root()));
     drop(before_cancel);

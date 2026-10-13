@@ -1,0 +1,19 @@
+{
+  "target": "🧬️schema/📜️space-history/🦀️.rs",
+  "module": "space_history_document",
+  "anchor": "//#region SpaceHistoryDocument\n",
+  "doc": [
+    "//! 📜️ The space history document: checkpoints, alternatives and member pins of a space, its snapshot, diff and steps.",
+    "//! Its SQLite snapshot io and its mutations live in `📜️space-history` and `🧬️schema/🧬️mutations`.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "SpaceHistoryDocument"
+  ],
+  "items": [],
+  "movableTraits": [
+    "ArtifactDsl",
+    "ArtifactPack"
+  ]
+}

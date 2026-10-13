@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📦bounds/`, honestly derivable from
 //! `entities` and `blocks[].entities` alone).
 
-use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+use crate::schema::snapshot::SemioCadSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::bounds::compute_semio_cad_bounds;

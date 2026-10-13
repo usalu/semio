@@ -3,7 +3,7 @@
 use super::*;
 use super::super::fixture_mutations::demo::{AddN, DemoMutation, SetN};
 use super::super::tests::DemoSnapshot;
-use crate::os_store::{create_document_envelope, fund_document_store_owners, install_unscheduled_catalog, MemberStoreOwner, parse_document_pack, print_document_pack, ArtifactCommand, SupersedeInput};
+use crate::os_store::{document_materialize::create_document_envelope, document_store_owners::fund_document_store_owners, install_unscheduled_catalog, document_store_owners::MemberStoreOwner, text_format::parse_document_pack, text_format::print_document_pack, store_schema::ArtifactCommand, store_schema::SupersedeInput};
 use semio_framework_job::StepBudget;
 
 const SCHEMA: &str = "demo/v1";

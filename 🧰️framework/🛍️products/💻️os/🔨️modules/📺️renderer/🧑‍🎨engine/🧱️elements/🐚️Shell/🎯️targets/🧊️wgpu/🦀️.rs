@@ -1635,12 +1635,12 @@ fn route_document_backbone_effects(actor_uri: &str, cmd_tx: &ArtifactMailboxSend
                 if uri != actor_uri {
                     return Err("plugin document-backbone effect targeted a different actor owner".into());
                 }
-                match store_sync::os_store::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())? {
-                    store_sync::os_store::BackboneMessage::Mutations { .. } => cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: payload }).map_err(|_| "document-backbone mailbox refused the canonical mutation message".to_string())?,
-                    store_sync::os_store::BackboneMessage::Ack { .. } => {}
-                    store_sync::os_store::BackboneMessage::Genesis { .. } => return Err("hot document-backbone egress cannot publish genesis".into()),
-                    store_sync::os_store::BackboneMessage::Member { .. } => return Err("a composed member requires its exact member transport lane".into()),
-                    store_sync::os_store::BackboneMessage::Retract { .. } => return Err("a retraction flows from the actor to its store, never back".into()),
+                match store_sync::os_store::backbone::decode_hot_backbone_message_exact(&payload).map_err(|error| error.to_string())? {
+                    store_sync::os_store::backbone::BackboneMessage::Mutations { .. } => cmd_tx.send(ArtifactActorMsg::DocumentBackbone { message: payload }).map_err(|_| "document-backbone mailbox refused the canonical mutation message".to_string())?,
+                    store_sync::os_store::backbone::BackboneMessage::Ack { .. } => {}
+                    store_sync::os_store::backbone::BackboneMessage::Genesis { .. } => return Err("hot document-backbone egress cannot publish genesis".into()),
+                    store_sync::os_store::backbone::BackboneMessage::Member { .. } => return Err("a composed member requires its exact member transport lane".into()),
+                    store_sync::os_store::backbone::BackboneMessage::Retract { .. } => return Err("a retraction flows from the actor to its store, never back".into()),
                 }
             }
             other => remaining.push(other),
@@ -11762,7 +11762,7 @@ impl ShellState {
     /// 🪪️ A hub document's execution-target lease for the exact scope and the surface this shell requests: its
     /// `checkpoint` is what the document's canonical pair must be ([`ShellHubDocumentSeed`]), and for a kind this
     /// process resolves no codec for (neither linked nor a mounted component's,
-    /// [`store_sync::os_store::document_kind_codec`]) it is also the kind identity, bound onto the document host
+    /// [`store_sync::os_store::codec_registry::document_kind_codec`]) it is also the kind identity, bound onto the document host
     /// only when it names the package this shell mounted ([`document_execution_target_admitted`]). A hub
     /// resolution that already read the lease hands its `checkpoint` in, and a kind that resolves a codec then
     /// needs no second read. A document with no hub binding has no seed. Both targets walk this one body.
@@ -11785,7 +11785,7 @@ impl ShellState {
         };
         let client = self.directory_client.clone().ok_or("document open requires a signed-in hub session")?;
         let scope = semio_framework_os_kernel::os_directory::DocumentScope::new(space_id.as_str(), document_id);
-        let codec_resolves = store_sync::os_store::document_kind_codec(schema).await.map_err(|error| format!("document codec registry: {error}"))?.is_some();
+        let codec_resolves = store_sync::os_store::codec_registry::document_kind_codec(schema).await.map_err(|error| format!("document codec registry: {error}"))?.is_some();
         let surface_id = wgpu_document_socket_surface(program, app, window_kind_id)?;
         let intent = semio_framework_os_kernel::os_directory::DocumentOpenIntentV1 {
             schema: "semio.hub.document-open-intent/v1".into(),
@@ -13767,7 +13767,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
                 .map_err(|error| format!("document execution target: {error}"))?;
             let app_id = resolved.lease.surface.app_id.clone();
             let program = match resolved.files {
-                Some(files) => Some(crate::program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.component.sha256).await?),
+                Some(files) => Some(crate::program_bridge::load_resolved_program(&plugin_id, &files.component, &files.descriptor, &resolved.lease.package.component_receipt).await?),
                 None => None,
             };
             Ok::<ShellDocumentOpenAnswer, crate::program_bridge::ProgramFault>(ShellDocumentOpenAnswer::Resolved { plugin_id, app_id, program, checkpoint: resolved.lease.checkpoint.clone() })

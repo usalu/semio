@@ -3,7 +3,7 @@ use semio_framework_os_kernel::sqlite_snapshot::{ValueError, ValueRefusalKind};
 use semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding;
 use crate::standards::v2_0::subsets::base::schema::snapshot::*;
 use std::collections::{BTreeMap, BTreeSet};
-use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{artifact::{Cell, Projection, reconstruct_text}, validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshot};
 
 #[path="🚦️native/🦀️.rs"]
 mod native;

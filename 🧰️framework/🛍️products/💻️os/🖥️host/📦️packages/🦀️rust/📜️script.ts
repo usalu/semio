@@ -3,7 +3,7 @@ import { configuredExactCargoLawPolicyV1 } from "../../../../../🔨️modules/�
 import { receiveScriptProcessInvocation } from "../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🖥️ `@semio-tech/framework-os` host router. */
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import Ajv, { type ValidateFunction } from "ajv";
@@ -1135,6 +1135,7 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildRepositoryWasmWebV1({
       rsDir: this.root,
+      componentDir: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "framework/os/host/rs",
       wasmBaseName: "semio_framework_os",
       pkg: {

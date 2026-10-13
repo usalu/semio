@@ -2,8 +2,8 @@ use super::*;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_dwg() -> DwgSnapshot {
-    let bytes = semio_s_artifact_stdio_dwg::dwg_to_bytes(&semio_s_artifact_stdio_dwg::DwgDrawing::default()).expect("encode sample");
-    semio_s_artifact_stdio_dwg::standards::v_ac1024::subsets::any::io::binary::snapshot::decode_dwg(&bytes).expect("decode sample")
+    let bytes = semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing::default()).expect("encode sample");
+    semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg(&bytes).expect("decode sample")
 }
 
 #[semio_framework_async_macros::async_test]

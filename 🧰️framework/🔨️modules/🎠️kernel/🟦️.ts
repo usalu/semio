@@ -4,6 +4,7 @@ import { dialectCoordinate, parseDialectCoordinate, type IoFidelity, type IoEntr
 import { base64StandardDecode } from "../🚪️io/🔤️base64/🟦️.ts";
 import { GUEST_CONTIGUOUS_REQUEST_CEILING_BYTES } from "../⏱️trace/🧮️memory/🟦️.ts";
 import { surfaceAppId, parseSurfaceAppId, type AppRole, type AppRef } from "../🛂️manifest/🧬️schema/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, parseComponentReceiptV1, type ComponentReceiptV1 } from "../../🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 // #region 🎠️Kernel
 /// <reference types="vitest/importMeta" />
 /** 🎠️ `@semio-tech/framework` — plugin runtime, leases, invocation responses, and playground boot. */
@@ -58,25 +59,47 @@ async function readDescriptorText(response: Response, onProgress: () => void): P
   return text + decoder.decode();
 }
 
-/** 🪪️ The package a served module was admitted as: its descriptor's own package id and component digest,
- * beside the manifest {@link fetchDescriptorManifest} answers. */
+/** 🪪️ The package a served module was admitted as: its semantic descriptor's own package id and the component digest the
+ * module's `ComponentReceiptV1` names, beside the manifest {@link fetchDescriptorManifest} answers. */
 export interface PluginPackageDescriptor {
   readonly manifest: PluginManifest;
   readonly packageId: string;
   readonly componentSha256: string;
 }
 
-/** 🪪️ {@link fetchDescriptorManifest} plus the package identity a host binds hub documents by — a
- * descriptor without a package id or a 64-digit lower-hex component digest is refused, never guessed. */
+/** 🧾️ The component receipt a served plugin module carries beside its entry. */
+export function pluginReceiptUrl(moduleUrl: string): string {
+  const path = moduleUrl.split(/[?#]/u)[0]!;
+  return path.slice(0, path.lastIndexOf("/") + 1) + COMPONENT_RECEIPT_FILE;
+}
+
+/** 🪪️ {@link fetchDescriptorManifest} plus the package identity a host binds hub documents by: the descriptor's package id and
+ * the component digest of the module's own receipt, which must name exactly this plugin and package — a semantic descriptor names
+ * no bytes, and a missing, foreign or malformed receipt is refused, never guessed. */
 export async function fetchPackageDescriptor(pluginId: string, moduleUrl: string, signal?: AbortSignal, onProgress: () => void = () => {}): Promise<PluginPackageDescriptor> {
-  const { descriptor, manifest } = await fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress);
+  const [{ descriptor, manifest }, receipt] = await Promise.all([fetchDescriptorDocument(pluginId, moduleUrl, signal, onProgress), fetchModuleReceipt(pluginId, moduleUrl, signal, onProgress)]);
   const packageId = "packageId" in descriptor && typeof descriptor.packageId === "string" ? descriptor.packageId : "";
-  const hashes = "hashes" in descriptor && descriptor.hashes && typeof descriptor.hashes === "object" ? descriptor.hashes : undefined;
-  const componentSha256 = hashes && "wasmSha256" in hashes && typeof hashes.wasmSha256 === "string" ? hashes.wasmSha256 : "";
-  if (packageId.length === 0 || !/^[0-9a-f]{64}$/u.test(componentSha256)) {
+  if (packageId.length === 0 || "hashes" in descriptor || receipt.pluginId !== pluginId || receipt.packageId !== packageId) {
     throw new SemioFaultError({ origin: "os", code: "plugin.descriptor-invalid", severity: "error", message: "plugin.descriptor-invalid: missing package identity", scope: { pluginId }, retryable: true });
   }
-  return { manifest, packageId, componentSha256 };
+  return { manifest, packageId, componentSha256: receipt.wasmSha256 };
+}
+
+/** 🧾️ Reads and strict-decodes the canonical receipt a served module carries beside its entry. */
+async function fetchModuleReceipt(pluginId: string, moduleUrl: string, signal: AbortSignal | undefined, onProgress: () => void): Promise<ComponentReceiptV1> {
+  signal?.throwIfAborted();
+  const receiptUrl = pluginReceiptUrl(moduleUrl);
+  const response = await fetch(receiptUrl, signal ? { signal } : undefined);
+  onProgress();
+  signal?.throwIfAborted();
+  const refused = (detail: string) => new SemioFaultError({ origin: "os", code: "plugin.descriptor-invalid", severity: "error", message: `plugin.descriptor-invalid: ${receiptUrl} ${detail}`, scope: { pluginId }, retryable: true });
+  if (!response.ok) throw refused(`(HTTP ${response.status})`);
+  try {
+    return parseComponentReceiptV1(await readDescriptorText(response, onProgress));
+  } catch (error) {
+    signal?.throwIfAborted();
+    throw refused((error as Error).message);
+  }
 }
 
 /** `onProgress` is called on the response headers and on every streamed chunk — see

@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::sample_plugin;
+    use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_registers_csv;
     use crate::standards::v1::subsets::any::io::export::serializers::artifacts::tsv::v_iana::any::export_registers_tsv;
 
@@ -35,7 +35,7 @@ mod tests {
         };
         let operations = apply_template(&template);
         assert!(!operations.is_empty());
-        let program = fold(&crate::empty_plugin(), &operations);
+        let program = fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &operations);
         assert_eq!(program.stakeholders.len(), 1);
         assert_eq!(program.elements.len(), 1);
         assert_eq!(program.requirements.len(), 1);
@@ -66,7 +66,7 @@ mod tests {
             source_organization: None,
         };
         let operations = apply_template(&template);
-        let target = fold(&crate::empty_plugin(), &operations);
+        let target = fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &operations);
         assert_eq!(target.functions.len(), 1);
     }
 
@@ -90,7 +90,7 @@ mod tests {
     async fn csv_round_trip_preserves_element_names() {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("csv export");
-        let reloaded = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
+        let reloaded = import_registers_csv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.elements.len(), program.elements.len());
     }
 
@@ -106,14 +106,14 @@ mod tests {
     #[semio_framework_async_macros::async_test]
     async fn duplicate_import_is_rejected() {
         let csv = "register,id,name,status,priority,tags,source\nelements,e1,A,Draft,Preferred,,\nelements,e1,B,Draft,Preferred,,\n";
-        assert!(import_registers_csv(&crate::empty_plugin(), csv, MergeStrategy::Upsert).is_err());
+        assert!(import_registers_csv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), csv, MergeStrategy::Upsert).is_err());
     }
 
     #[semio_framework_async_macros::async_test]
     async fn tsv_round_trip_preserves_element_names() {
         let program = sample_plugin();
         let tsv = export_registers_tsv(&program).expect("tsv export");
-        let reloaded = import_registers_tsv(&crate::empty_plugin(), &tsv, MergeStrategy::Upsert).expect("tsv import").snapshot;
+        let reloaded = import_registers_tsv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &tsv, MergeStrategy::Upsert).expect("tsv import").snapshot;
         assert_eq!(reloaded.elements.len(), program.elements.len());
     }
 
@@ -134,7 +134,7 @@ mod tests {
         assert!(!program.adjacencies.is_empty(), "sample_plugin must carry adjacencies for this fidelity case");
         let csv = export_registers_csv(&program).expect("csv export");
         let elements: Vec<ProgramMutation> = program.elements.iter().map(|element| ProgramMutation::CreateProgramElement(leaves::create_program_element::CreateProgramElement { program_element: element.clone(), index: None })).collect();
-        let reloaded = import_registers_csv(&fold(&crate::empty_plugin(), &elements), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
+        let reloaded = import_registers_csv(&fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &elements), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.adjacencies.len(), program.adjacencies.len());
         for expected in &program.adjacencies {
             let got = reloaded.adjacencies.iter().find(|a| a.header.id == expected.header.id).expect("adjacency id");
@@ -150,7 +150,7 @@ mod tests {
         assert!(!program.knowledge_payload.is_empty());
         assert!(!program.benchmarks_payload.is_empty());
         let csv = export_registers_csv(&program).expect("csv export");
-        let reloaded = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
+        let reloaded = import_registers_csv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import").snapshot;
         assert_eq!(reloaded.knowledge_payload.len(), program.knowledge_payload.len());
         assert_eq!(reloaded.benchmarks_payload.len(), program.benchmarks_payload.len());
         assert_eq!(reloaded.knowledge_payload[0].header.name, program.knowledge_payload[0].header.name);
@@ -186,9 +186,9 @@ mod tests {
     async fn csv_import_emits_mutations_that_replay_to_the_imported_program() {
         let program = sample_plugin();
         let csv = export_registers_csv(&program).expect("csv export");
-        let import = import_registers_csv(&crate::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import");
+        let import = import_registers_csv(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &csv, MergeStrategy::Upsert).expect("csv import");
         assert!(!import.mutations.is_empty());
-        assert_eq!(fold(&crate::empty_plugin(), &import.mutations), import.snapshot, "folding the emitted mutations through the central applier reproduces the imported program");
+        assert_eq!(fold(&crate::standards::v1::subsets::any::schema::snapshot::empty_plugin(), &import.mutations), import.snapshot, "folding the emitted mutations through the central applier reproduces the imported program");
         assert!(import.mutations.iter().all(|mutation| matches!(mutation, ProgramMutation::CreateProgramElement(_) | ProgramMutation::CreateStakeholder(_) | ProgramMutation::CreateRequirement(_) | ProgramMutation::CreateRelationship(_) | ProgramMutation::ConnectAdjacency(_) | ProgramMutation::CreateKnowledgeRecord(_) | ProgramMutation::CreateBenchmarkRecord(_))), "an import into an empty program only creates rows");
     }
 

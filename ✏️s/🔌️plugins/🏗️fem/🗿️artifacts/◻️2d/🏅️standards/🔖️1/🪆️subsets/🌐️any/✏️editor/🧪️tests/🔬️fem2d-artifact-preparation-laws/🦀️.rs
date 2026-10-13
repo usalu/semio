@@ -1,7 +1,7 @@
 use super::*;
 use semio_framework_value::retained_clone::RetainedCloneStep;
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
-use store::{ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory};
+use store::{os_store::one_item_publication::ArtifactStoreOneItemPreparation, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory};
 
 #[test]
 fn admitted_document_mutations_make_bounded_progress_and_retire() {
@@ -10,15 +10,15 @@ fn admitted_document_mutations_make_bounded_progress_and_retire() {
     let pointer = id.as_ptr();
     let capacity = id.capacity();
     let mutation = Fem2dMutation::CreateNode(crate::standards::v1::subsets::any::schema::mutations::create_node::CreateNode { node: crate::FemNode { id, x: 0.0, y: 0.0 }, index: None });
-    assert_eq!(factory.preflight(&mutation, store::HistoryLane::Document).expect("document admission").work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    assert_eq!(factory.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).expect("document admission").work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     let owners = store::OneItemOwners::detached(mutation, std::sync::Arc::new(OwnedValueRetirementFactory::<Fem2dMutation>::default()), std::sync::Arc::new(SharedValueRetirementFactory::<Fem2dSnapshot>::default()));
-    let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false };
-    let policy = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
-    assert!(matches!(work.advance(store::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+    let mut work = Fem2dArtifactPreparation { owners, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false };
+    let policy = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 65536, maximum_capacity_bytes: 1048576, maximum_release_bytes: 1048576, maximum_depth: 64 };
+    assert!(matches!(work.advance(store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.cancel();
-    assert!(matches!(work.advance(policy), Ok(store::ArtifactStoreOneItemPreparationStep::Blocked)));
+    assert!(matches!(work.advance(policy), Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked)));
     work.begin_close();
-    for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }, store::ArtifactStoreOneItemGrant { maximum_capacity_bytes: 0, ..policy }, store::ArtifactStoreOneItemGrant { maximum_depth: 0, ..policy }] {
+    for grant in [store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_capacity_bytes: 0, ..policy }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_depth: 0, ..policy }] {
         let result = work.close_step(grant);
         assert!(result.is_err() || result.as_ref().is_ok_and(|step| step.progress() == Default::default()));
         let Some(Fem2dMutation::CreateNode(value)) = work.owners.mutation.as_ref() else { panic!("denial moved the original mutation") };

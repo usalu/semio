@@ -39,8 +39,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<DeflateSnapshot, DeflateMutation>(STDIO_DEFLATE_DOCUMENT_SCHEMA);
     codec.extension = "zz";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️rfc1950/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -60,7 +60,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// plugin root called unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🔋️energy`'s `s.model` exemplar exactly: a headless library artifact with zero `ArtifactApp`s,
 /// so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::of::<DeflateSnapshot,
+/// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<DeflateSnapshot,
 /// DeflateMutation>(...))`. `.composers(...)` reaches the SUBSET IO module's own `io_registry`
 /// (returns `&'static [ComposerEntry]`, owned rows) by its full path
 /// (`standards::v_rfc1950::subsets::any::io::io_registry` — the former `⚙️engine`'s `io_registry`,

@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::PropertyValue;
 use crate::*;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()
 }
@@ -220,7 +220,7 @@ fn sqlite_snapshot_rewriting_real_large_authored_string_control_is_interior() {
 #[test]
 fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_strings() {
     use store::sqlite_snapshot::*;
-    let codec = store::ArtifactCodec::bare::<RewritingSnapshot, crate::RewriteRuleMutation>(crate::REWRITE_RULE_SCHEMA).snapshot_sqlite.expect("missing parent capability");
+    let codec = store::bare_artifact_codec::<RewritingSnapshot, crate::RewriteRuleMutation>(crate::REWRITE_RULE_SCHEMA).snapshot_sqlite.expect("missing parent capability");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.trinity.rewriting".into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(0));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -249,8 +249,8 @@ fn sqlite_snapshot_rewriting_actual_erased_parent_queries_independent_authored_s
 #[test]
 fn sqlite_snapshot_rewriting_composed_child_retains_actual_rich_graph_fields() {
     use semio_framework_value::{DslValue, FromValue, Number, ToValue};
-    use semio_framework_os_kernel::{ArtifactSqliteSnapshot, sqlite_snapshot::*};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot, sqlite_snapshot::*};
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
     fn read(value: &serde_json::Value) -> DslValue {
         match value {
             serde_json::Value::Object(fields) if fields.len() == 1 && fields.contains_key("bits") => {

@@ -6,13 +6,21 @@
 //! 🔖 `IoFidelity::Lossy`: objects and names survive, n-gons come back as triangles, paint does not.
 use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
 use crate::schema::snapshot::LowpolySnapshot;
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{encode_glb};
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
-use semio_s_artifact_stdio_gltf::schema::snapshot::{
-    GltfAccessor, GltfAsset, GltfBuffer, GltfBufferView, GltfDocument, GltfMesh, GltfNode, GltfPrimitive, GltfScene, GltfSourceForm,
-    GltfSnapshot,
-};
-use semio_s_artifact_stdio_gltf::STDIO_GLTF_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAsset;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfBuffer;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfBufferView;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfMesh;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfScene;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSourceForm;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
 
 pub fn register() {}
 

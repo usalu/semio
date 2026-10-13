@@ -1,13 +1,13 @@
 use super::node_graph_edit::{NodeGraphEdit, handle};
 use crate::editor::architect::{catalog::new_adjacency, config::ArchitectConfig};
-use crate::{EntityId, registers::AdjacencyKind, schema::mutations::ProgramMutation};
+use crate::standards::v1::subsets::any::schema::{kernel::EntityId, registers::AdjacencyKind, mutations::ProgramMutation};
 use semio_framework_plugin::{ArtifactView, ConfigView};
 
 #[test]
 fn graph_tools_follow_the_language_neutral_transaction_law() {
     let fixture = semio_framework_pack_json::parse(include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧫️fixtures/🛠️graph-tool/🔣️.json")), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("fixture");
     for case in fixture.get("cases").unwrap().as_array().unwrap() {
-        let mut program = crate::sample_plugin();
+        let mut program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
         program.elements[0].header.id = EntityId("a".into());
         program.elements[1].header.id = EntityId("b".into());
         program.adjacencies = vec![new_adjacency(&program, &EntityId("a".into()), &EntityId("b".into()), AdjacencyKind::Preferred)];

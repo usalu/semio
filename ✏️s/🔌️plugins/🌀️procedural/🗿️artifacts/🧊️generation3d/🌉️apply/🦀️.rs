@@ -7,7 +7,7 @@ use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 /// 🎬️ Fallible in-place `vcs::apply_mutation` boundary. A diff builder that REJECTED the mutation
 /// answers `MutationOutcome::{error,fatal}`, whose diff side is forced to `Default` (LAW 1,

@@ -13,11 +13,11 @@ pub(crate) struct RefusedWorkerSource<J: InteractiveJob> {
 
 impl<J: InteractiveJob> RefusedWorkerSource<J> {
     /// 🛑️ The structural refusal, absent when the session slots or the grant were merely exhausted.
-    pub(crate) fn error(&self) -> Option<&ValueError> {
+    fn error(&self) -> Option<&ValueError> {
         self.error.as_ref()
     }
 
-    pub(crate) fn job(&self) -> Option<&J> {
+    fn job(&self) -> Option<&J> {
         self.job.as_ref()
     }
 
@@ -33,7 +33,7 @@ impl<J: InteractiveJob> RefusedWorkerSource<J> {
         Ok(RetirementDemand { depth: usize::from(self.params.is_some()), ..Default::default() })
     }
 
-    pub(crate) fn begin_close(&mut self) {
+    fn begin_close(&mut self) {
         if !self.closing {
             self.closing = true;
             if let Some(job) = self.job.as_mut() {

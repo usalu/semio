@@ -9,7 +9,7 @@ use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 use crate::standards::v1::subsets::any::schema::mutations::*;
 
 pub(crate) const GENERATION2D_OWNER_BYTES: usize = 4_096;

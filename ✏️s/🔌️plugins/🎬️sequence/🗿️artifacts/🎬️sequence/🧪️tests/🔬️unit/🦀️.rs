@@ -21,9 +21,9 @@ async fn step_content_round_trips_through_the_composed_child_snapshot() {
 async fn fixture_projection_rejects_a_wire_only_parent_instead_of_defaulting_empty() {
     let snapshot = neural_engine::ColdOwner::new(default_snapshot());
     assert!(!snapshot.try_to_host_snapshot().expect("owned scene projects").steps.is_empty());
-    let bytes = <SequenceSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let decoded = <SequenceSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("parent wire decodes");
-    assert_eq!(decoded.try_to_host_snapshot(), Err(store::ArtifactChildMaterializationError::Absent));
+    let bytes = <SequenceSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let decoded = <SequenceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("parent wire decodes");
+    assert_eq!(decoded.try_to_host_snapshot(), Err(store::os_store::artifact_child::ArtifactChildMaterializationError::Absent));
 }
 
 #[semio_framework_async_macros::async_test]

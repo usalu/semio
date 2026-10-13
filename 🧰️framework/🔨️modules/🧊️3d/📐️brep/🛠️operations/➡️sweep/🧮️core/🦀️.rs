@@ -10,18 +10,18 @@
 
 use std::collections::HashMap;
 
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_loop, make_vertex};
-use crate::brep::operations::primitives::line_edge;
-use crate::brep::operations::transform::transform_face;
-use crate::brep::representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::{Affine3, Frame3};
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use {crate::euler::{add_face, add_shell, add_solid, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use crate::primitives::line_edge;
+use crate::transform::transform_face;
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3};
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 // #region 🔖️Face
 
@@ -107,7 +107,7 @@ pub(super) fn planar_outward_normal(body: &Body, face: FaceId) -> Result<Vec3, K
 /// own frame, used to compose consecutive sweep-station placements.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(super) fn frame_to_affine(frame: &Frame3) -> Affine3 {
-    Affine3 { linear: crate::brep::representation::vector::matrix::Mat3::from_columns(frame.x, frame.y, frame.z), translation: frame.origin.to_vec() }
+    Affine3 { linear: semio_framework_3d_brep_representation::vector::matrix::Mat3::from_columns(frame.x, frame.y, frame.z), translation: frame.origin.to_vec() }
 }
 
 // #endregion 🔖️Placement
@@ -163,7 +163,7 @@ pub(super) fn translate_lateral(curve: &Curve3, range: (f64, f64), offset: Vec3)
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| p + offset).collect();
             let surface = Surface::Nurbs {
                 u_knots: nc.knots.clone(),
-                v_knots: crate::brep::representation::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
+                v_knots: semio_framework_3d_brep_representation::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
                 controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(),
                 weights: nc.weights.iter().map(|&w| vec![w, w]).collect(),
             };
@@ -334,7 +334,7 @@ pub(super) fn general_lateral(curve: &Curve3, range: (f64, f64), map: &Affine3) 
             let top: Vec<Pnt3> = nc.controls.iter().map(|&p| map.apply_point(p)).collect();
             let surface = Surface::Nurbs {
                 u_knots: nc.knots.clone(),
-                v_knots: crate::brep::representation::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
+                v_knots: semio_framework_3d_brep_representation::curve::bspline::KnotVector::new(vec![0.0, 0.0, 1.0, 1.0], 1, 2).unwrap(),
                 controls: nc.controls.iter().copied().zip(top).map(|(a, b)| vec![a, b]).collect(),
                 weights: nc.weights.iter().map(|&w| vec![w, w]).collect(),
             };

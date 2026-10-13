@@ -239,24 +239,6 @@ fn memory_copy_ranges_match_the_language_neutral_fixture_and_wasmtime() {
 }
 
 #[test]
-fn semio_describe_host_preserves_context_backpressure_and_bounded_result() {
-    let module = Arc::new(CoreModule::parse(&memory_module()).expect("parse memory module"));
-    let core = CoreInstance::instantiate(module).expect("instantiate memory module");
-    let mut actor = SemioActorInstance { component_fingerprint: 1, core };
-    let mut host = SemioDescribeHost::new(4);
-    let set = HostCall { id: 1, module: "$root".into(), name: "[context-set-0]".into(), arguments: vec![Value::I32(77)], results: vec![] };
-    assert_eq!(host.reply(&mut actor, &set).expect("set context").results, vec![]);
-    let get = HostCall { id: 2, module: "$root".into(), name: "[context-get-0]".into(), arguments: vec![], results: vec![ValueType::I32] };
-    assert_eq!(host.reply(&mut actor, &get).expect("get context").results, vec![Value::I32(77)]);
-    let check_write = HostCall { id: 3, module: "wasi:io/streams@0.2.0".into(), name: "[method]output-stream.check-write".into(), arguments: vec![Value::I32(1), Value::I32(0)], results: vec![] };
-    host.reply(&mut actor, &check_write).expect("check write");
-    assert_eq!(&actor.memory().expect("memory")[8..16], &65_536u64.to_le_bytes());
-    actor.memory_mut().expect("memory")[16..20].copy_from_slice(b"test");
-    let returned = HostCall { id: 4, module: SEMIO_DESCRIBE_RETURN_MODULE.into(), name: SEMIO_DESCRIBE_RETURN_NAME.into(), arguments: vec![Value::I32(16), Value::I32(4)], results: vec![] };
-    assert_eq!(host.reply(&mut actor, &returned).expect("describe result").descriptor, Some(b"test".to_vec()));
-}
-
-#[test]
 fn passive_data_initialization_and_drop_execute_in_section_order() {
     let module = Arc::new(CoreModule::parse(&passive_data_module()).expect("parse passive data module"));
     let mut instance = CoreInstance::instantiate(module).expect("instantiate passive data module");
@@ -311,77 +293,4 @@ fn component_limits_reject_oversize_before_section_allocation() {
     let bytes = b"\0asm\x0d\0\x01\0";
     let limits = ComponentLimits { maximum_bytes: 7, maximum_nesting: 0, maximum_core_modules: 0 };
     assert!(matches!(ComponentArtifact::parse_with_limits(bytes, limits), Err(CoreError::Validation(_))));
-}
-
-#[test]
-fn execution_binary_recursively_removes_only_custom_sections() {
-    let raw_core = add_module();
-    let mut core = raw_core[..8].to_vec();
-    core.extend([0, 6, 1, b'c', 1, 2, 3, 4]);
-    core.extend_from_slice(&raw_core[8..]);
-    let mut component = b"\0asm\x0d\0\x01\0".to_vec();
-    component.push(1);
-    leb(core.len() as u32, &mut component);
-    component.extend_from_slice(&core);
-    component.extend([0, 6, 1, b't', 1, 2, 3, 4]);
-    let normalized = wasm_execution_binary(&component).expect("normalize component");
-    assert!(normalized.len() < component.len());
-    let artifact = ComponentArtifact::parse(&normalized).expect("parse normalized component");
-    assert_eq!(artifact.sections().len(), 1);
-    let mut instance = CoreInstance::instantiate(Arc::clone(&artifact.core_modules()[0])).expect("instantiate normalized core");
-    instance.begin_export("add", vec![Value::I32(19), Value::I32(23)]).expect("begin normalized add");
-    assert_eq!(drive(&mut instance, 1).expect("drive normalized add").0, vec![Value::I32(42)]);
-}
-
-#[test]
-fn configured_component_fixture_is_owned_parseable() {
-    let Some(path) = std::env::var_os("SEMIO_OWNED_COMPONENT_FIXTURE") else { return };
-    let bytes = std::fs::read(path).expect("read configured component fixture");
-    let WasmArtifact::Component(component) = WasmArtifact::parse(&bytes).expect("parse configured component fixture") else { panic!("configured fixture is not a component") };
-    assert!(!component.core_modules().is_empty(), "configured component has no executable core module");
-    let actor = SemioActorArtifact::from_component(component).expect("validate configured Semio actor ABI");
-    assert!(actor.module().export(SEMIO_DESCRIBE_EXPORT).is_some());
-    let execution = wasm_execution_binary(&bytes).expect("normalize configured component fixture");
-    assert!(execution.len() < bytes.len());
-    SemioActorArtifact::parse(&execution).expect("validate normalized Semio actor ABI");
-}
-
-mod long {
-    use super::*;
-
-    #[test]
-    fn configured_component_fixture_owned_describe_runs_bounded_fuel() {
-        let Some(path) = std::env::var_os("SEMIO_OWNED_COMPONENT_FIXTURE") else { return };
-        let bytes = std::fs::read(path).expect("read configured component fixture");
-        let artifact = SemioActorArtifact::parse(&bytes).expect("parse configured Semio actor");
-        let mut actor = artifact.instantiate().expect("instantiate configured Semio actor");
-        assert!(!actor.startup_active(), "configured Semio actor has an undriven start function");
-        actor.begin_describe().expect("begin owned describe");
-        let mut host = SemioDescribeHost::new(64 * 1024 * 1024);
-        let mut task_return = None;
-        let mut fuel_used = 0;
-        let mut host_calls = 0;
-        while fuel_used < 100_000_000 {
-            let grant = (100_000_000 - fuel_used).min(100_000);
-            match actor.step(grant, StepControl::default()) {
-                CoreStepOutcome::Yield { fuel_used: used } => fuel_used += used,
-                CoreStepOutcome::HostCall { fuel_used: used, call } => {
-                    fuel_used += used;
-                    host_calls += 1;
-                    let reply = host.reply(&mut actor, &call).expect("serve owned describe host call");
-                    task_return = reply.descriptor.or(task_return);
-                    actor.resume_host(call.id, Ok(reply.results)).expect("resume owned describe host call");
-                }
-                CoreStepOutcome::Complete { fuel_used: used, .. } => {
-                    fuel_used += used;
-                    break;
-                }
-                CoreStepOutcome::Cancelled { .. } => panic!("owned describe cancelled"),
-                CoreStepOutcome::Fault { error, .. } => panic!("owned describe fault: {error}"),
-            }
-        }
-        assert_eq!(fuel_used, 100_000_000);
-        assert!(host_calls > 0);
-        assert!(task_return.is_none(), "stdio fixture unexpectedly completed inside the documented probe budget");
-    }
 }

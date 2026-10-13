@@ -5,8 +5,8 @@ use semio_framework_value::{ValueType,ValueError,ValueRefusalKind};
 use semio_framework_value::retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep};
 use semio_framework_value::retirement::controlled::{ControlledRetirement,RetainedOwnerGate};
 use semio_framework_mesh_engine::HistoryFoldIndex;
-use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, GeometryKind, ParamDomain, PointClassification, Vec3};
-use semio_framework_3d::brep::queries::tessellation::{TessellationJob, TessellationStep};
+use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle, GeometryKind}, semio_framework_3d_brep_representation::contract::{ParamDomain, PointClassification, Vec3}};
+use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationStep};
 use std::collections::{BTreeMap, BTreeSet, HashSet};
 use std::mem::ManuallyDrop;
 use std::sync::{Arc,Weak};
@@ -195,7 +195,7 @@ pub fn classify_number(classification: PointClassification) -> f64 {
 
 
 
-pub fn map_kernel_error(error: &semio_framework_3d::brep::engine::BrepError) -> EvalError {
+pub fn map_kernel_error(error: &semio_framework_3d_brep_engine::BrepError) -> EvalError {
     EvalError::InvalidInput(error.to_string())
 }
 
@@ -503,7 +503,7 @@ pub fn text_schema() -> Schema {
 #[derive(Debug)]
 pub enum BrepModuleError {
     OwnerBusy,
-    Kernel(semio_framework_3d::brep::engine::BrepError),
+    Kernel(semio_framework_3d_brep_engine::BrepError),
     Codec(EvalError),
     Mesh(String),
     UnsupportedExportFormat(String),
@@ -537,8 +537,8 @@ impl std::error::Error for BrepModuleError {
     }
 }
 
-impl From<semio_framework_3d::brep::engine::BrepError> for BrepModuleError {
-    fn from(error: semio_framework_3d::brep::engine::BrepError) -> Self {
+impl From<semio_framework_3d_brep_engine::BrepError> for BrepModuleError {
+    fn from(error: semio_framework_3d_brep_engine::BrepError) -> Self {
         Self::Kernel(error)
     }
 }
@@ -587,7 +587,7 @@ struct RetainedTessellation {
     job:TessellationJob,
     last_step:u64,
     retired:bool,
-    output:Option<semio_framework_3d::brep::engine::MeshTransfer>,
+    output:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>,
     previous_mesh:Option<CachedMesh>,
 }
 semio_framework_value::artifact_retire_struct!(RetainedTessellation {validation_units,validated,job,last_step,retired,output,previous_mesh});
@@ -692,7 +692,7 @@ pub fn export_glb_via_tessellation(kernel: &Brep, shapes: &[GeometryHandle], def
     let mut merged = semio_framework::MeshData::default();
     for shape in shapes {
         let transfer = kernel.tessellate(shape, deflection)?;
-        let mesh = semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(&transfer)?;
+        let mesh = semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer(&transfer)?;
         let offset = (merged.positions.len() / 3) as u32;
         merged.positions.extend(mesh.positions);
         merged.normals.extend(mesh.normals);
@@ -795,7 +795,7 @@ fn unit_result() -> semio_framework_pack_json::Value {
     semio_framework_pack_json::object([])
 }
 
-fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> semio_framework_pack_json::Value {
+fn topology_result(topology: semio_framework_3d_brep_engine::BrepTopology) -> semio_framework_pack_json::Value {
     let handle_array = |handles: Vec<GeometryHandle>| semio_framework_pack_json::array(handles.into_iter().map(|handle| semio_framework_pack_json::Value::String(handle.0)));
     semio_framework_pack_json::object([
         ("vertices".to_string(), handle_array(topology.vertices)),
@@ -805,7 +805,7 @@ fn topology_result(topology: semio_framework_3d::brep::engine::BrepTopology) -> 
     ])
 }
 
-fn mesh_result(mesh: &semio_framework_3d::brep::engine::MeshTransfer) -> semio_framework_pack_json::Value {
+fn mesh_result(mesh: &semio_framework_3d_brep_representation::contract::MeshTransfer) -> semio_framework_pack_json::Value {
     semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(mesh))
 }
 
@@ -1070,19 +1070,19 @@ pub fn with_kernel_read<T>(&self, f: impl FnOnce(&Brep) -> Result<T, EvalError>)
     f(&guard)
 }
 /// 📦 Advances an owned mesh import and admits exactly its final published handle.
-pub fn step_mesh_import(&self,cursor:&mut semio_framework_3d::brep::engine::MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,EvalError> {
+pub fn step_mesh_import(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,budget:usize)->Result<Option<GeometryHandle>,EvalError> {
     if self.is_closed() {return Err(EvalError::InvalidInput("geometry.session-closed".into()));}
     let mut claims=self.state.claims.try_lock().map_err(|_|EvalError::InvalidInput("geometry claims owner busy".into()))?;let mut guard=self.kernel().try_lock().map_err(|_|EvalError::InvalidInput("brep kernel owner busy".into()))?;
     let result=guard.step_mesh_import_sync(cursor,budget).map_err(|error|map_kernel_error(&error))?;
     if let Some(handle)=&result {claims.entry(self.state.authority).or_default().insert(handle.as_str().to_string());self.claims_changed();}Ok(result)
 }
-pub fn close_mesh_import(&self,cursor:&mut semio_framework_3d::brep::engine::MeshImportCursor,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
+pub fn close_mesh_import(&self,cursor:&mut semio_framework_3d_brep_engine::MeshImportCursor,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
     let mut guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;guard.close_mesh_import_sync(cursor,grant)
 }
-pub fn next_mesh_import_copy_byte_demand(&self,cursor:&semio_framework_3d::brep::engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_copy_byte_demand(guard.tessellation_body())}
-pub fn next_mesh_import_capacity_byte_demand(&self,cursor:&semio_framework_3d::brep::engine::MeshImportCursor,copy:usize)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_capacity_byte_demand(guard.tessellation_body(),copy)}
-pub fn next_mesh_import_release_byte_demand(&self,cursor:&semio_framework_3d::brep::engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_release_byte_demand(guard.tessellation_body())}
-pub fn next_mesh_import_depth_demand(&self,cursor:&semio_framework_3d::brep::engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_depth_demand(guard.tessellation_body())}
+pub fn next_mesh_import_copy_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_copy_byte_demand(guard.tessellation_body())}
+pub fn next_mesh_import_capacity_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor,copy:usize)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_capacity_byte_demand(guard.tessellation_body(),copy)}
+pub fn next_mesh_import_release_byte_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_release_byte_demand(guard.tessellation_body())}
+pub fn next_mesh_import_depth_demand(&self,cursor:&semio_framework_3d_brep_engine::MeshImportCursor)->Result<usize,ValueError> {let guard=self.kernel().try_lock().map_err(|_|ownership_busy())?;cursor.next_close_depth_demand(guard.tessellation_body())}
 
 pub fn retain_geometry_handles(&self, live: &[String]) {
     let mut claims = self.state.claims.try_lock().expect("geometry claims");
@@ -1282,7 +1282,7 @@ pub fn tessellate_step(&self, handle: &str, tolerance: f64, budget: usize) -> Te
             retained.retired=true;registry.retire_slot=0;
             let Some((transfer,_report))=retained.job.take_mesh() else {return TessellationStepOutcome::Failed {message:"finished tessellation job produced no mesh".into()};};
             retained.output=Some(transfer);
-            let mesh=match semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer(retained.output.as_ref().unwrap()) {Ok(mesh)=>mesh,Err(error)=>return TessellationStepOutcome::Failed {message:error.to_string()}};
+            let mesh=match semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer(retained.output.as_ref().unwrap()) {Ok(mesh)=>mesh,Err(error)=>return TessellationStepOutcome::Failed {message:error.to_string()}};
             if let Ok(mut cache)=self.mesh_cache().try_lock() {retained.previous_mesh=cache.insert(key,CachedMesh {mesh:mesh.clone(),valid:true});}
             TessellationStepOutcome::Ready { mesh, units_total:progress.units_total.saturating_add(validation_units),faces_total:progress.faces_total }
         }

@@ -261,6 +261,6 @@
   "hubBundle": "withheld",
   "componentAdmission": {
     "status": "absent",
-    "limitBytes": 67108864
+    "limitBytes": 268435456
   }
 }

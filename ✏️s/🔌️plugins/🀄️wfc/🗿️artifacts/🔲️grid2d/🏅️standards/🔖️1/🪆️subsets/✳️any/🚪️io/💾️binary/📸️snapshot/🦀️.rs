@@ -11,12 +11,12 @@ use store::{ErasedSnapshotRetirement, PackError};
 
 /// 📦️ Encodes a `Grid2dSnapshot` to its binary pack form.
 pub fn encode(document: &Grid2dSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(document)
+    store::os_store::serialization::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Grid2dSnapshot` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Grid2dSnapshot, PackError> {
-    <Grid2dSnapshot as store::ArtifactPack>::decode_pack(bytes)
+    <Grid2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 
 //#region ♻️Retirement
@@ -49,7 +49,7 @@ use super::*;
 use crate::standards::v1::subsets::any::schema::snapshot::*;
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 const BASE64_ALPHABET: &[u8; 64] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 /// 🔤️ Encodes one palette index per pixel, row-major, as the base64 stream `Bitmap.pixels` carries.
@@ -109,10 +109,10 @@ mod native_codec {
 use crate::schema::snapshot::Grid2dSnapshot;
 use crate::standards::v1::subsets::any::io::text::snapshot::{Grid2dSnapshotDsl,grid2d_document_to_dsl,grid2d_document_from_dsl};
 
-impl store::ArtifactPack for Grid2dSnapshotDsl {
+impl store::os_store::serialization::ArtifactPack for Grid2dSnapshotDsl {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
@@ -120,36 +120,36 @@ impl store::ArtifactPack for Grid2dSnapshotDsl {
             return Ok(Self::default());
         }
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
     }
 }
 
-impl store::ArtifactPack for Grid2dSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+impl store::os_store::serialization::ArtifactPack for Grid2dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
-        <Grid2dSnapshotDsl as store::ArtifactPack>::encode_pack_with(&grid2d_document_to_dsl(self), options)
+        <Grid2dSnapshotDsl as store::os_store::serialization::ArtifactPack>::encode_pack_with(&grid2d_document_to_dsl(self), options)
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
-        let parsed = <Grid2dSnapshotDsl as store::ArtifactPack>::decode_pack_with(bytes, options)?;
-        grid2d_document_from_dsl(parsed).map_err(store::text_error_to_pack_error)
+        let parsed = <Grid2dSnapshotDsl as store::os_store::serialization::ArtifactPack>::decode_pack_with(bytes, options)?;
+        grid2d_document_from_dsl(parsed).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
-        <Grid2dSnapshotDsl as store::ArtifactPack>::record_spec()
+        <Grid2dSnapshotDsl as store::os_store::serialization::ArtifactPack>::record_spec()
     }
 }
 }
 
 /// 🫴️ Declares this owner’s actual controlled native record factories.
 impl store::ArtifactNativeSnapshot for Grid2dSnapshot {
- fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::construct(record,native,maximum)},control)}
- fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|native|crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::project(self,native),control)}
+ fn decode_native_snapshot(payload:store::NativeSnapshotInput<'_>,control:&mut semio_framework_value::NativeDecodeControl<'_>)->Result<Self,semio_framework_value::ValueError>{store::decode_native_snapshot_record(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|record,native|{let maximum=native.maximum_bytes();crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::construct(record,native,maximum)},control)}
+ fn encode_native_snapshot(&self,encoding:store::NativeSnapshotEncoding,control:&mut semio_framework_value::NativeEncodeControl<'_>)->Result<store::io_schema::IoPayload,semio_framework_value::ValueError>{store::encode_native_snapshot_record(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),crate::standards::v1::subsets::any::io::text::snapshot::Grid2dSnapshotDsl::__dsl_spec_producer(),|native|crate::standards::v1::subsets::any::io::text::snapshot::controlled_native::project(self,native),control)}
 }

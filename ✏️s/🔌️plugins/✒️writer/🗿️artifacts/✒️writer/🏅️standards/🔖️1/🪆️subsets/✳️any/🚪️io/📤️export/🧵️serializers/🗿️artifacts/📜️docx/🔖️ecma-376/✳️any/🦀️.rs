@@ -21,7 +21,7 @@ impl Serializer<WriterSnapshot> for WriterIntoDocx {
         let body: Vec<DocxBlock> = writer_text(from).split('\n').map(DocxBlock::paragraph).collect();
         let document = semio_s_artifact_stdio_docx::schema::snapshot::DocxDocument { body, styles: Vec::new() };
         let docx = semio_s_artifact_stdio_docx::schema::construction::build_minimal_docx(document);
-        Ok(IoOutcome { value: IoPayload::Binary(<DocxSnapshot as store::ArtifactPack>::encode_pack(&docx)), diagnostics: Vec::new() })
+        Ok(IoOutcome { value: IoPayload::Binary(<DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&docx)), diagnostics: Vec::new() })
     }
 }
 //#endregion 🔖️Serializer

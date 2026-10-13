@@ -8,7 +8,7 @@
         "variant": "counter"
       },
       "valid": true,
-      "path": "owners/neutral-dev/package/dist/build-counter-react-release"
+      "path": "owners/neutral-dev/package/dist/build-counter-react/release"
     },
     {
       "id": "declared",
@@ -17,7 +17,7 @@
         "distDir": "owners/counter/site"
       },
       "valid": true,
-      "path": "owners/counter/site"
+      "path": "owners/counter/site/release"
     },
     {
       "id": "unicode",
@@ -26,7 +26,7 @@
         "distDir": "🌿️owner/🚚️site"
       },
       "valid": true,
-      "path": "🌿️owner/🚚️site"
+      "path": "🌿️owner/🚚️site/release"
     },
     {
       "id": "absolute",

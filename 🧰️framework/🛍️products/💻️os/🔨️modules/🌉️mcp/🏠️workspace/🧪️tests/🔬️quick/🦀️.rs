@@ -104,7 +104,7 @@ fn a_hub_session_edit_is_refused_before_its_guest_runs_unless_an_author_holds_a_
         relay: Arc::default(),
         used: 1,
     };
-    let document = binding("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`");
+    let document = binding("no `store::os_store::serialization::ArtifactCodec` is registered for artifact schema `s.note.note`");
     let spectator = hub_edit_refusal(Ok(DirectorySpaceRole::Spectator), "note", Some(("hub-note", &document))).expect("a spectator never edits");
     assert_eq!(spectator.code, crate::actions::VIEWER_READ_ONLY_FAULT_CODE);
     let unready = hub_edit_refusal(Err("hub descriptor binding is refreshing".to_string()), "note", Some(("hub-note", &document))).expect("no role, no edit");
@@ -193,10 +193,11 @@ fn authenticated_hub_workspace_fixture() -> HeadlessWorkspace {
     lease.package.plugin_id = descriptor.manifest.plugin_id.clone();
     lease.package.package_id = descriptor.package_id.clone();
     lease.package.version = descriptor.manifest.version.clone();
-    lease.package.component_sha256 = descriptor.hashes.wasm_sha256.clone();
+    lease.package.component_sha256 = lease.component.sha256.clone();
     lease.package.descriptor_byte_sha256 = framework_hash::sha256_hex(&descriptor_bytes);
     lease.descriptor.sha256 = lease.package.descriptor_byte_sha256.clone();
     lease.descriptor.byte_length = descriptor_bytes.len() as u64;
+    lease.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: lease.package.plugin_id.clone(), package_id: lease.package.package_id.clone(), wasm_sha256: lease.package.component_sha256.clone(), wasm_bytes: lease.component.byte_length, semantic_descriptor_sha256: lease.package.descriptor_byte_sha256.clone(), ..lease.package.component_receipt.clone() };
     binding.install_catalog_for_test(vec![remote::AuthorizedPackageSelection { scope: lease.scope.clone(), descriptor_digest_v1: lease.descriptor_digest_v1.clone(), lease, descriptor }]);
     let mut workspace = HeadlessWorkspace::new(WorkspaceOrigin::Hub { base_url: "https://hub.invalid".to_string(), space_id: "space-a".to_string() }, "forged-local-principal".to_string(), vec!["admin".to_string()], empty_catalog());
     workspace.catalog = Arc::new(WorkspaceCatalog::following(Arc::clone(&binding)).expect("the fixture's authority compiles"));
@@ -658,7 +659,7 @@ fn routing_artifact_channel_routes_two_capabilities_to_two_different_plugins_ope
             return;
         };
         if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-            eprintln!("skipped: {plugin_id}.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+            eprintln!("skipped: {plugin_id} has no shipped component under its crate's dist/components");
             return;
         }
     }
@@ -795,7 +796,7 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
             surface_id: Some("s.note.note@1/*#editor".to_string()),
             document: None,
             backbone: None,
-            backbone_blocked_by: Some("no `store::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
+            backbone_blocked_by: Some("no `store::os_store::serialization::ArtifactCodec` is registered for artifact schema `s.note.note`".to_string()),
             relayed: Arc::new(std::sync::atomic::AtomicU64::new(0)),
             relay: Arc::default(),
             used: 0,
@@ -803,12 +804,12 @@ fn a_committed_backbone_message_with_no_document_actor_faults_with_its_reason() 
     );
     let blocked = router.relay_backbone_egress(&note, vec![vec![1, 2, 3]]).expect_err("bound, but no document actor");
     assert_eq!(blocked.code, "channel.not-wired");
-    assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
+    assert!(blocked.message.contains("hub-note") && blocked.message.contains("no `store::os_store::serialization::ArtifactCodec` is registered"), "the fault carries the binding's own recorded reason: {}", blocked.message);
 }
 //#endregion 🧵️DocumentBackboneEgress
 
 //#region 🗂️GuestDocumentCodec
-/// 🗂️ ticket 26/09/18 slice M10: `store::ArtifactCodec`'s four operations are bare, non-capturing
+/// 🗂️ ticket 26/09/18 slice M10: `store::os_store::serialization::ArtifactCodec`'s four operations are bare, non-capturing
 /// `fn` pointers, so a guest-backed codec's thunks resolve their route out of a process-global
 /// table. With NO route registered every one of them must refuse in a typed, countable way — a
 /// thunk that answered anything at all with no component behind it would be fabricating a document.

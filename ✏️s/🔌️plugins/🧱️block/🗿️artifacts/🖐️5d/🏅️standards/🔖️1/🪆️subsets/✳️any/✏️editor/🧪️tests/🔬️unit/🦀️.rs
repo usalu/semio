@@ -35,10 +35,10 @@ pub(crate) mod context {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                let Ok(demand) = self.0.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
+                let Ok(demand) = self.0.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) else {
                     break;
                 };
-                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+                let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
                 if self.0.close_step(grant).is_err() {
                     break;
                 }
@@ -90,7 +90,7 @@ pub(crate) mod context {
         assert!(emit.artifact_mutations.is_empty(), "an example load is not a document edit");
         for effect in emit.effects {
             if let semio_framework::kernel::Effect::LoadDocument { pack, spr } = effect {
-                semio_framework_plugin::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the example loads");
+                semio_framework_plugin::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the example loads");
             }
         }
     }

@@ -344,8 +344,8 @@ fn retirement_struct_macro_defers_exact_field_birth_and_release_allocations() {
 fn retirement_forward_deque_keeps_original_source_and_exact_physical_backing() {
     use crate::{retained_clone::{RetainedCloneGrant, RetainedCloneStep}, value::observe_retirement_allocations};
     use std::collections::VecDeque;
-    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🛍️products/💻️os/🔨️modules/🏪️store/🧩️composition/📨️emission/📦️owned/🧫️fixtures/🔣️.json")).unwrap();
-    for count in fixture["census"]["rowCounts"].as_array().unwrap() {
+    let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📥️forward-deque/🔣️.json")).unwrap();
+    for count in fixture["rowCounts"].as_array().unwrap() {
         let count = count.as_u64().unwrap() as usize;
         let expected = (0..count).map(|index| index as u32).collect::<Vec<_>>();
         let pointer = expected.as_ptr();

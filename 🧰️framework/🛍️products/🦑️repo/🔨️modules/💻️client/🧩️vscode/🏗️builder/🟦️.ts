@@ -1,3 +1,4 @@
+import { buildModePolicy, readBuildMode, type BuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { builtinModules } from "node:module";
 import { resolve } from "node:path";
 
@@ -9,7 +10,8 @@ export function extensionPackageEnvironment(environment: NodeJS.ProcessEnv): Nod
 }
 
 /** 📦️Defines a dependency-bundled CommonJS entry while retaining VS Code and Node host modules. */
-export function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, watch: boolean) {
+export function extensionBuildConfig(root: string, entry: string, outputDirectory: string, outputFile: string, watch: boolean, mode: BuildMode = readBuildMode(process.env.SEMIO_BUILD_MODE)) {
+  const policy = buildModePolicy(mode);
   const define = { "import.meta.vitest": "undefined" };
   return {
     configFile: false as const,
@@ -20,7 +22,7 @@ export function extensionBuildConfig(root: string, entry: string, outputDirector
       async transform(code: string, id: string) {
         if (!/\.[cm]?[jt]sx?(?:\?|$)/.test(id) || !code.includes("import.meta.vitest")) return;
         const { transformWithEsbuild } = await import("vite");
-        const result = await transformWithEsbuild(code, id, { define, treeShaking: true, minifySyntax: true, sourcemap: false });
+        const result = await transformWithEsbuild(code, id, { define, treeShaking: true, minifySyntax: policy.optimize, sourcemap: policy.sourceMap });
         return { code: result.code, map: null };
       },
     }],
@@ -28,10 +30,10 @@ export function extensionBuildConfig(root: string, entry: string, outputDirector
     build: {
       emptyOutDir: true,
       lib: { entry: resolve(root, entry), formats: ["cjs" as const], fileName: () => outputFile },
-      minify: false,
+      minify: policy.optimize ? "esbuild" as const : false as const,
       outDir: resolve(root, outputDirectory),
       rollupOptions: { external: (id: string) => id.startsWith("node:") || extensionExternals.has(id) },
-      sourcemap: false,
+      sourcemap: policy.sourceMap,
       target: "node22",
       watch: watch ? {} : undefined,
     },

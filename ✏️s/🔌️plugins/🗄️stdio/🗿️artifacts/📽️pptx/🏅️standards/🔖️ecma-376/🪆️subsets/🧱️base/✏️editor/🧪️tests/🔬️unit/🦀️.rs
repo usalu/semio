@@ -87,7 +87,7 @@ async fn registered_shape_draft_publishes_once_refuses_stale_and_undoes_redoes()
     let authored = deck(vec![PptxShape::TextBox { text_frame: vec![PptxParagraph::text("before")], position: Default::default() }]);
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<PptxEditor>, _>(async { semio_framework_plugin::App { definition: create_pptx_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&authored, STDIO_PPTX_DOCUMENT_SCHEMA) else { panic!("PPTX fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let original = app.snapshot().unwrap().clone();
     assert_eq!(original, authored, "the host opens the authored canonical package");
     let meta = artifact_app_laws::meta("local");

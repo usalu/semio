@@ -5,9 +5,9 @@
 //! exclusive clone; this module owns the sealed source, the clone, the sealer and the whole grant-based close ladder.
 
 use crate::{
-    admit_artifact_batch_digest, artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, ArtifactCanonicalJsonTree, ArtifactOwnedValueRetirementFactory, ArtifactStoreBatchDigest, ArtifactStoreOneItemCheckpoint,
-    ArtifactStoreOneItemFootprint, ArtifactStoreOneItemGrant, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPreparationStep, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, Edit,
-    ErasedSnapshotRetirement, HistoryLane, Mutation, SnapshotRead, SnapshotRetirementFactory, ARTIFACT_STORE_ONE_ITEM_ID_BYTES, ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
+    admit_artifact_batch_digest, os_store::snapshot_read::artifact_retirement_admit_owned, os_store::snapshot_read::artifact_retirement_box_close_step, os_store::snapshot_read::artifact_retirement_box_demands, os_store::snapshot_read::artifact_retirement_owned_birth_demands, ArtifactCanonicalJsonTree, ArtifactOwnedValueRetirementFactory, ArtifactStoreBatchDigest, os_store::one_item::ArtifactStoreOneItemCheckpoint,
+    os_store::one_item::ArtifactStoreOneItemFootprint, os_store::one_item::ArtifactStoreOneItemGrant, os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, os_store::one_item_publication::ArtifactStoreOneItemPreparation, os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory, os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest, os_store::one_item::ArtifactStoreOneItemPreparationStep, os_store::one_item_publication::ArtifactStoreOneItemPrepared, ArtifactStoreOneItemSealer, Edit,
+    ErasedSnapshotRetirement, os_store::store_schema::HistoryLane, Mutation, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory, os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES, os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,
 };
 use crate::os_spr::ActorId;
 use semio_framework_value::retained_clone::{RetainedClone, RetainedCloneBirthDemand, RetainedCloneClose, RetainedCloneCursor, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneSource, RetainedCloneStep};

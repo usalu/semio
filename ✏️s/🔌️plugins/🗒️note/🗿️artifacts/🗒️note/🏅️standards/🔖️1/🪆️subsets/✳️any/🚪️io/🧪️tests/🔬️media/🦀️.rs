@@ -1,6 +1,8 @@
 use super::*;
 use crate::{NoteImageAsset, NoteTableCell};
-use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity, DwgLayer};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer;
 
 /// 🧪️ Relocated from the deleted `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES).
 #[semio_framework_async_macros::async_test]

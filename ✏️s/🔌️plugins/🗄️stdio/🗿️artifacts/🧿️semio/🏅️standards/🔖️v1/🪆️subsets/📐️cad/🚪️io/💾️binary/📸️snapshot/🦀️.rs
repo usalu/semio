@@ -6,10 +6,10 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::cad::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real LEB128-varint-length-prefixed binary primitives (`store::pack_rt::write_varint_u64` /
@@ -267,21 +267,21 @@ pub(crate) fn decode_cad_snapshot_binary(bytes: &[u8]) -> Result<SemioCadSnapsho
     Ok(SemioCadSnapshot { schema, layers, blocks, entities })
 }
 
-impl store::ArtifactPack for SemioCadSnapshot {
+impl store::os_store::serialization::ArtifactPack for SemioCadSnapshot {
     /// 🪶️ Publishes the owned typed relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let _ = options;
         let raw = encode_cad_snapshot_binary(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &raw))
     }
 
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let _ = options;
         decode_cad_snapshot_binary(&inner).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))
@@ -293,24 +293,24 @@ impl store::ArtifactPack for SemioCadSnapshot {
 mod native_snapshot_codec {
 use super::*;
 use super::*;
-use crate::standards::v1::subsets::cad::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::cad::io::text::snapshot::*;
+use crate::io::text::snapshot::*;
 /// 📥️ Decodes this subset's own committed `.pack.semio` bytes into a real [`SemioCadSnapshot`] — the
 /// binary half of the same bridge, so a caller outside this crate can check the two codecs against
 /// each other on the two real committed artifacts instead of against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_semio_cad_pack(bytes: &[u8]) -> Result<SemioCadSnapshot, String> {
-    <SemioCadSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
+    <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| error.to_string())
 }
-/// 📤️ The `store::ArtifactPack::encode_pack` inverse of [`decode_semio_cad_pack`].
+/// 📤️ The `store::os_store::serialization::ArtifactPack::encode_pack` inverse of [`decode_semio_cad_pack`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_semio_cad_pack(snapshot: &SemioCadSnapshot) -> Vec<u8> {
-    <SemioCadSnapshot as store::ArtifactPack>::encode_pack(snapshot)
+    <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

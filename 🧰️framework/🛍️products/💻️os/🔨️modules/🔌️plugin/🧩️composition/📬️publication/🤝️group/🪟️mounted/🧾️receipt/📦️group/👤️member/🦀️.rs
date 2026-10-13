@@ -1,19 +1,25 @@
-use super::*;
+use crate::child_content::mounted_child_group_receipt::mounted_nested_retirement_demand;
+use crate::child_content::mounted_child_group_receipt::MOUNTED_RECEIPT_MAXIMUM_BYTES;
+use crate::child_content::mounted_child_group_receipt::MountedKernelMutationReceipt;
+use crate::child_content::mounted_child_group_receipt::MountedPreparedOperationBytes;
+use crate::child_content::mounted_child_group_receipt::MountedPreparedOperationsBytes;
+use crate::child_content::mounted_child_group_receipt::MountedReceiptBytes;
+use crate::child_content::mounted_child_group_receipt::MountedKernelMutationReceiptSource;
 use std::collections::VecDeque;
 
 type MemberMutationTriple = (KernelMutation, MutationId, InverseMutation);
 
 pub(crate) struct MountedMemberReceiptSource<'a> {
-    pub(crate) publication: &'a dyn store::ErasedMemberStoreOneItemPublication,
-    pub(crate) document: ArtifactHandle,
-    pub(crate) invocation_id: &'a str,
-    pub(crate) group_id: &'a str,
-    pub(crate) fallback_author: &'a str,
+    publication: &'a dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication,
+    document: ArtifactHandle,
+    invocation_id: &'a str,
+    group_id: &'a str,
+    fallback_author: &'a str,
 }
 impl MountedMemberReceiptSource<'_> {
     fn identity(&self) -> [(usize, usize); 5] {
         let edit = self.publication.prepared_edit_id().unwrap_or("");
-        [(self.publication as *const dyn store::ErasedMemberStoreOneItemPublication as *const () as usize, 0), (edit.as_ptr() as usize, edit.len()), (self.invocation_id.as_ptr() as usize, self.invocation_id.len()), (self.group_id.as_ptr() as usize, self.group_id.len()), (self.fallback_author.as_ptr() as usize, self.fallback_author.len())]
+        [(self.publication as *const dyn store::os_store::one_item_publication::ErasedMemberStoreOneItemPublication as *const () as usize, 0), (edit.as_ptr() as usize, edit.len()), (self.invocation_id.as_ptr() as usize, self.invocation_id.len()), (self.group_id.as_ptr() as usize, self.group_id.len()), (self.fallback_author.as_ptr() as usize, self.fallback_author.len())]
     }
     fn kernel<'a>(&'a self, index: usize, inverse: &'a [u8]) -> Result<MountedKernelMutationReceiptSource<'a>, ValueError> {
         let (schema, kind) = self.publication.prepared_operation_schema_parts(index).ok_or_else(|| MountedMemberReceipt::refusal("member receipt requires its original operation semantic schema"))?;
@@ -24,10 +30,10 @@ impl MountedMemberReceiptSource<'_> {
     }
 }
 
-pub(crate) struct MountedMemberReceiptOutput {
-    pub(crate) document: ArtifactHandle,
-    pub(crate) edit_id: String,
-    pub(crate) triples: VecDeque<MemberMutationTriple>,
+struct MountedMemberReceiptOutput {
+    document: ArtifactHandle,
+    edit_id: String,
+    triples: VecDeque<MemberMutationTriple>,
 }
 
 pub(crate) struct MountedMemberReceipt {
@@ -73,7 +79,7 @@ impl MountedMemberReceipt {
         Ok(())
     }
     /// 🔢️ Exposes the current original forward ordinal so its exact schema can be borrowed per turn.
-    pub(crate) fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
+    fn operation_index(&self) -> Option<usize> { (!self.closing && !self.transferred && self.index < self.operation_count).then_some(self.index) }
     pub(crate) fn next_capacity_byte_demand(&self, source: &MountedMemberReceiptSource<'_>) -> Result<usize, ValueError> {
         self.validate(source)?;
         match self.phase {
@@ -124,7 +130,7 @@ impl MountedMemberReceipt {
         self.triples.pop_front()
     }
     /// 🧳️ Transfers the original complete row backing and exact edit identity through constant moves.
-    pub(crate) fn take(&mut self, grant: RetainedCloneGrant) -> Option<MountedMemberReceiptOutput> {
+    fn take(&mut self, grant: RetainedCloneGrant) -> Option<MountedMemberReceiptOutput> {
         if !self.is_complete() || grant.maximum_items == 0 { return None; }
         let edit_id = unsafe { String::from_utf8_unchecked(self.edit.take(grant)?) }; self.transferred = true;
         Some(MountedMemberReceiptOutput { document: self.document, edit_id, triples: std::mem::take(&mut *self.triples) })
@@ -154,7 +160,7 @@ impl MountedMemberReceipt {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         let bytes = self.next_close_byte_demand()?;
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if let Some(owner) = self.kernel.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); if owner.terminal_is_empty() { self.kernel = None; } return Ok(step); }
         if let Some(owner) = self.forward.as_mut() { let step = owner.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if owner.terminal_is_empty() { self.forward = None; } return Ok(step); }

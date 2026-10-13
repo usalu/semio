@@ -1,0 +1,27 @@
+{
+  "target": "🚪️io/🦀️.rs",
+  "module": "serialization",
+  "anchor": "//#region 🔖️Text\n//#region 🔖️Text\n",
+  "doc": [
+    "//! 🚪️ The serialization seam every artifact implements: `ArtifactDsl`, `ArtifactPack`, their file bundles, the native and",
+    "//! SQLite snapshot capabilities and the erased `ArtifactCodec` table. The table's generic constructors stay with the engine",
+    "//! (they instantiate it), so this vocabulary never names the engine.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️Pack",
+    "🔖️Text"
+  ],
+  "items": [
+    "ArtifactCodec",
+    "ArtifactNativeSnapshotIdentity",
+    "ArtifactSqliteSnapshot",
+    "ArtifactSqliteSnapshotCodec",
+    "ArtifactCodecApplyFuture"
+  ],
+  "keepInherentImplsOf": [
+    "ArtifactCodec"
+  ],
+  "movableTraits": []
+}

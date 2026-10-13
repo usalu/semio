@@ -1,7 +1,7 @@
 //! ⚖️ Law driver: runs any one-item preparation factory through the real canonical sealer to `Prepared` and closes it under exact quoted grants.
 //!
 //! Allocation receipts are checked against the allocator witness, so call it from test binaries that install `semio_framework_trace::HeapWitness`.
-use crate::os_store::{ArtifactCanonicalJsonTree, ArtifactStoreOneItemGrant, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPreparationStep, HistoryLane, SnapshotRead, SnapshotReadRegistryHandle};
+use crate::os_store::{ArtifactCanonicalJsonTree, one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, one_item::ArtifactStoreOneItemPreparationStep, store_schema::HistoryLane, snapshot_read::SnapshotRead, SnapshotReadRegistryHandle};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, RetireOwned, SharedValueRetirementFactory};
 use std::sync::Arc;
@@ -25,7 +25,7 @@ where
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(snapshot);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("law registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1), base_revision: [0; 32], base_applied_edit_count: 0, next_sequence_number: 1, next_clock: crate::os_spr::HybridLogicalTimestamp::new(1, 0), actor: "law-actor".into(), line: None, group_id: None, stamped_edit_id: None });
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1, 0), "law-actor".into(), None, None, None));
     let request = ArtifactStoreOneItemPreparationRequest {
         operation: semio_framework_job::OperationId(1),
         generation: semio_framework_job::Generation(1),
@@ -70,7 +70,7 @@ where
             }
         }
     };
-    let report = OneItemPreparationLaw { post: Arc::clone(&prepared.post_snapshot), inverse: prepared.edit.inverse.iter().cloned().collect(), turns, close_turns: 0, retained_capacity_bytes: retained, peak_live_capacity_bytes: peak };
+    let report = OneItemPreparationLaw { post: Arc::clone(&prepared.post_snapshot()), inverse: prepared.edit().inverse.iter().cloned().collect(), turns, close_turns: 0, retained_capacity_bytes: retained, peak_live_capacity_bytes: peak };
     drop(prepared);
     owner.begin_close();
     let mut report = report;

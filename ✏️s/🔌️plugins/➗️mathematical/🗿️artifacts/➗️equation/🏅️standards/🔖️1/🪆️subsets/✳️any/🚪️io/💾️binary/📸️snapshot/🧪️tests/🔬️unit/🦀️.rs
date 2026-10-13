@@ -23,7 +23,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::op::EquationMutation;
     use crate::standards::v1::subsets::graph::schema::mutations::update_graph_algorithm::UpdateGraphAlgorithm;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     // 🔐️ Owner-installing guard — a bare `ArtifactStore::new` refuses every `Apply` with
     // `edit history insertion requires its exact mutation retirement factory`.

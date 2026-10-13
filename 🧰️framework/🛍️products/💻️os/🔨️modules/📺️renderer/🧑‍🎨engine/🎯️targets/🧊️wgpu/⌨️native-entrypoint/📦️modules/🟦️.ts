@@ -3,8 +3,11 @@ import { lstatSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync 
 import { dirname, join, relative, sep } from "node:path";
 import { stageRepositoryArtifacts } from "../../../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts";
 import { fileDigest } from "../../../../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
+import { COMPONENT_RECEIPT_MAX_BYTES, componentReceiptBindsV1, parseComponentReceiptV1 } from "../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 
-export type NativeModuleSource = { readonly pluginId: string; readonly wasm: string; readonly descriptor: string };
+/** 🧩️ One native component input: its shipped bytes, the JSON projection of its semantic descriptor, the semantic descriptor pack and
+ * the `ComponentReceiptV1` binding that pack to those bytes. */
+export type NativeModuleSource = { readonly pluginId: string; readonly wasm: string; readonly descriptor: string; readonly descriptorPack: string; readonly receipt: string };
 
 /** 📂️ Isolates a completed native runtime by variant and compilation profile. */
 export function nativeRuntimeDirectory(packageRoot: string, variant: string, profile: string): string {
@@ -20,14 +23,17 @@ export async function publishNativeRuntime(packageRoot: string, variant: string,
   for (const module of [...modules].sort((a, b) => a.pluginId.localeCompare(b.pluginId))) {
     signal.throwIfAborted();
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(module.pluginId) || entries.some(entry => entry.pluginId === module.pluginId)) throw new Error("Invalid or duplicate native plugin ID");
-    for (const path of [module.wasm, module.descriptor]) if (!lstatSync(path).isFile()) throw new Error("Native runtime inputs must be regular files");
+    for (const path of [module.wasm, module.descriptor, module.descriptorPack, module.receipt]) if (!lstatSync(path).isFile()) throw new Error("Native runtime inputs must be regular files");
     const handle = await open(module.wasm, "r");
     try {
       const header = Buffer.alloc(8), read = await handle.read(header, 0, 8, 0);
       if (read.bytesRead !== 8 || header.toString("hex") !== "0061736d0d000100") throw new Error("Native runtime requires component-model WASM");
     } finally { await handle.close(); }
     const wasmSha256 = await fileDigest(module.wasm, signal), descriptor = JSON.parse(readFileSync(module.descriptor, "utf8"));
-    if (descriptor.manifest?.pluginId !== module.pluginId || descriptor.hashes?.wasmSha256 !== wasmSha256) throw new Error("Native component descriptor identity or digest mismatch");
+    if (lstatSync(module.receipt).size > COMPONENT_RECEIPT_MAX_BYTES) throw new Error("Native component receipt exceeds its bound");
+    const receipt = parseComponentReceiptV1(readFileSync(module.receipt, "utf8"));
+    const binding = { pluginId: module.pluginId, packageId: receipt.packageId, wasmSha256, semanticDescriptorSha256: await fileDigest(module.descriptorPack, signal) };
+    if (descriptor.manifest?.pluginId !== module.pluginId || "hashes" in descriptor || !componentReceiptBindsV1(receipt, binding) || receipt.wasmBytes !== lstatSync(module.wasm).size) throw new Error("Native component descriptor identity or digest mismatch");
     const paths = { wasmPath: relative(output, module.wasm).split(sep).join("/"), descriptorPath: relative(output, module.descriptor).split(sep).join("/") };
     if (Object.values(paths).some(path => !path || [...path].length > 4096 || path.startsWith("/") || /[\\:<>"|?*\u0000-\u001f]/.test(path) || path.split("/").some(part => !part || part === "."))) throw new Error("Native runtime inputs must have portable relative paths");
     entries.push({ pluginId: module.pluginId, wasmSha256, ...paths });

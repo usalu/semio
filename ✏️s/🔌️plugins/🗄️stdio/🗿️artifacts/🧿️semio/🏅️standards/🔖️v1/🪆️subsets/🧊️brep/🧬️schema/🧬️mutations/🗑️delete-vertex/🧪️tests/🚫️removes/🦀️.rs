@@ -6,13 +6,13 @@
 //! when nothing cascaded — here two edges are incident, so the committed diff must carry BOTH
 //! collections. The before-snapshot deliberately stops at edges: the leaf performs no loop/face
 //! cascade, so a fixture carrying loops would encode a dangling reference the code never cleans.
-use crate::standards::v1::subsets::brep::io::text::diff::decode_semio_brep_diff_json;
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation};
-use crate::standards::v1::subsets::brep::io::text::mutations::{decode_semio_brep_mutation_json};
-use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot};
-use crate::standards::v1::subsets::brep::io::text::snapshot::{decode_semio_brep_snapshot_json};
+use crate::io::text::diff::decode_semio_brep_diff_json;
+use crate::schema::mutations::SemioBrepMutation;
+use crate::io::text::mutations::decode_semio_brep_mutation_json;
+use crate::schema::snapshot::SemioBrepSnapshot;
+use crate::io::text::snapshot::decode_semio_brep_snapshot_json;
 use pack::value::ToValue;
-use protocol::{Mutation, MutationDiff};
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-vertex/🚫️removes/📸️snapshot/➡️after/🔣️.json");

@@ -6,9 +6,9 @@
 //! reports their units as its own, so the boolean engine's phases stay visible through it.
 
 use super::*;
-use crate::brep::operations::primitives::ConvexHullJob;
-use crate::brep::operations::staged::{BooleanStage, ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::queries::tessellation::{TessellationJob, TessellationStep};
+use crate::primitives::ConvexHullJob;
+use crate::staged::{BooleanStage, ChildLedger, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationStep};
 
 // #region 🔖️Section
 
@@ -79,7 +79,7 @@ impl StagedOperation for SectionJob {
                 if self.points.len() < 3 {
                     return Ok(StageStep::Done(StageOutput::Faces(Vec::new())));
                 }
-                let face = crate::brep::operations::primitives::make_planar_face_from_points(body, &self.points, rec)?;
+                let face = crate::primitives::make_planar_face_from_points(body, &self.points, rec)?;
                 return Ok(StageStep::Done(StageOutput::Faces(vec![face])));
             }
         }
@@ -198,7 +198,7 @@ impl StagedOperation for SplitJob {
         match unit.phase {
             TESSELLATE => {
                 let job = self.tessellation.as_mut().ok_or_else(|| KernelError::Operation("split: tessellation already finished".into()))?;
-                let step=job.step(body,crate::brep::queries::tessellation::TessellationInput::Solid(self.solid),1)?;
+                let step=job.step(body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(self.solid),1)?;
                 if matches!(step,TessellationStep::Working(_)) {self.plan.grow(TESSELLATE,1);}
                 if let TessellationStep::Done(_) = step {
                     let (mesh, _) = self.tessellation.take().and_then(TessellationJob::into_mesh).ok_or_else(|| KernelError::Operation("split: tessellation produced no mesh".into()))?;

@@ -15,15 +15,15 @@ pub mod surface_ops;
 
 // #endregion 🔖️Submodules
 
-use crate::brep::representation::curve::bspline::{basis_function_derivatives, surface_derivatives_rational, KnotVector};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use crate::curve::bspline::{basis_function_derivatives, surface_derivatives_rational, KnotVector};
+use crate::curve::Curve3;
+use crate::vector::matrix::Frame3;
+use crate::vector::{Pnt3, Vec3};
 
 // #region 🔖️Surface
 
 /// 🗺️ A parametric surface `S(u, v)`. Domain and periodicity are documented per variant; as with
-/// [`crate::brep::representation::curve::Curve3`], a face's *used* trim domain is stored by the topology layer, not here.
+/// [`crate::curve::Curve3`], a face's *used* trim domain is stored by the topology layer, not here.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
 #[value(crate = "::protocol::value")]
 pub enum Surface {
@@ -240,11 +240,11 @@ mod tests;
 
 // #region 🔁️Transform
 
-use crate::brep::representation::vector::matrix::Affine3;
+use crate::vector::matrix::Affine3;
 
 /// 🗺️ A generous, explicitly finite stand-in for the mathematically unbounded `v`-extent of a
 /// `Cylinder`/`Cone` when a non-similarity map forces a NURBS conversion (a clamped B-spline knot
-/// vector cannot represent a literal infinite domain — the same reason [`crate::brep::representation::curve::Curve3::to_nurbs`]
+/// vector cannot represent a literal infinite domain — the same reason [`crate::curve::Curve3::to_nurbs`]
 /// requires an explicit `domain` for `Line`). Every double-precision kernel already operates within
 /// some finite practical range; `1e6` is far beyond any plausible model extent while staying exact
 /// (not tessellated/approximated) within that range.
@@ -252,8 +252,8 @@ const PRACTICAL_UNBOUNDED_EXTENT: f64 = 1.0e6;
 
 /// 🗺️ The largest per-span half-angle keeping [`circular_profile_with_span`]'s rational-quadratic
 /// parametrization within `1e-9` of the true `radius·(cos t, sin t)` point at every `t`, mirroring
-/// [`crate::brep::representation::curve::Curve3`]'s
-/// identical fix for [`crate::brep::representation::curve::Curve3::transformed`] —
+/// [`crate::curve::Curve3`]'s
+/// identical fix for [`crate::curve::Curve3::transformed`] —
 /// same leading-order bound `peak ≈ 0.0321·radius·half_span³` (a rational quadratic Bezier's
 /// parameter is a Möbius, not linear, reparametrization of angle), same derivation, same 2×
 /// margin against the series' next term. [`revolve_to_nurbs`]'s non-similarity transform path
@@ -270,7 +270,7 @@ fn refined_max_span(radius: f64) -> f64 {
 
 /// 🗺️ Exact rational-quadratic NURBS control points for a circular arc of `radius` centered at
 /// `center` in a generic 2D `(radial, height)` half-plane, split every `max_span` — the same
-/// per-span construction [`crate::brep::representation::curve::Curve3::to_nurbs`] uses for `Circle`/`Ellipse`,
+/// per-span construction [`crate::curve::Curve3::to_nurbs`] uses for `Circle`/`Ellipse`,
 /// generalized to an off-origin circle (a torus's meridian) and reused, at `center = (0,0), radius
 /// = 1`, as the shared angular sweep for every surface of revolution built below. Callers that
 /// only need the SHAPE (not a pointwise angle-to-parameter correspondence) can pass a coarse span

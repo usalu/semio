@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits};
+use crate::os_store::{owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, owned_schema_decode::OwnedSchemaDecodeCredits};
 
 pub(super) fn request_for(bytes: &[u8]) -> MemberOpenRequest {
     let _ = request_close_policy();
@@ -377,7 +377,7 @@ fn member_input_buffer_birth_and_retirement_preserve_actual_system_and_original_
     assert_eq!(refused.kind,semio_framework_value::ValueRefusalKind::InvariantViolated);assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert_eq!(original.as_ref().unwrap().as_ptr(),pointer);
     let mut active=None;let mut allocated=capacity;let mut released=0;
     for turn in 0..32{
-        let (step,heap)=observe_heap_allocations_on_this_thread(||if active.is_some(){crate::os_store::artifact_retirement_box_close_step(&mut active,policy)}else{crate::os_store::artifact_retirement_admit_owned(&mut original,&mut active,policy)});
+        let (step,heap)=observe_heap_allocations_on_this_thread(||if active.is_some(){crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut active,policy)}else{crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut original,&mut active,policy)});
         let progress=step.unwrap().progress();assert!(progress.fits(policy));assert_eq!(heap.requested_bytes,progress.retained_capacity_bytes);assert_eq!(heap.released_bytes,progress.released_bytes);
         allocated+=heap.requested_bytes;released+=heap.released_bytes;
         if original.is_none()&&active.is_none(){break;}

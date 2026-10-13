@@ -1,0 +1,130 @@
+{
+ "order": [
+  "model",
+  "cos",
+  "read",
+  "write",
+  "facets",
+  "conformance",
+  "legacy",
+  "editor",
+  "aggregator"
+ ],
+ "allow": {
+  "cos": [
+   "model"
+  ],
+  "read": [
+   "model",
+   "cos"
+  ],
+  "write": [
+   "model",
+   "cos",
+   "read"
+  ],
+  "facets": [
+   "model",
+   "cos",
+   "read"
+  ],
+  "conformance": [
+   "model",
+   "cos",
+   "read",
+   "write",
+   "facets"
+  ],
+  "legacy": [
+   "model",
+   "cos",
+   "read",
+   "write"
+  ],
+  "editor": [
+   "model",
+   "cos",
+   "read",
+   "write",
+   "facets",
+   "conformance",
+   "legacy"
+  ],
+  "aggregator": [
+   "model",
+   "cos",
+   "read",
+   "write",
+   "facets",
+   "conformance",
+   "legacy",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "^🏅️standards/7️⃣1.7/🦀️\\.rs$",
+   "aggregator"
+  ],
+  [
+   "^🏅️standards/7️⃣1.7/🪆️subsets/🧱️base/🦀️\\.rs$",
+   "facets"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "editor"
+  ],
+  [
+   "/📚️examples/",
+   "editor"
+  ],
+  [
+   "^🏅️standards/4️⃣1.4/",
+   "legacy"
+  ],
+  [
+   "^🏅️standards/7️⃣1.7/🪆️subsets/(🗄️a|🖨️x|📐️e|♿️ua|🧾️vt|⚕️h)/",
+   "conformance"
+  ],
+  [
+   "/🚪️io/📥️import/",
+   "read"
+  ],
+  [
+   "/🚪️io/📤️export/",
+   "write"
+  ],
+  [
+   "/🔨️modules/⬇️lift/",
+   "read"
+  ],
+  [
+   "/🔨️modules/(⬆️lower|📝️writer)/",
+   "write"
+  ],
+  [
+   "/🔨️modules/",
+   "cos"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/",
+   "model"
+  ],
+  [
+   ".",
+   "?"
+  ]
+ ]
+}

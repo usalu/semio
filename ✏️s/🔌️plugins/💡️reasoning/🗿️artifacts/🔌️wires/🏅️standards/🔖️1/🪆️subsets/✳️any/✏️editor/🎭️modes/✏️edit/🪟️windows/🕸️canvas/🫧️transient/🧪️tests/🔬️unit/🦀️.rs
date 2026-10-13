@@ -143,9 +143,9 @@ async fn wires_pointer_move_document_replacement_clears_only_successful_reload_p
         let initial = semio_framework_pack_json::from_json_str::<semio_framework_value::DslValue>(&vectors["initialNode"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::load_graph_snapshot(&mut app, vec![initial.clone()], Vec::new()).await.map_err(|error| format!("{error:?}"))?;
         let snapshot = app.snapshot().map_err(|error| format!("{error:?}"))?.clone();
-        let mut envelope = store::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<crate::WiresSnapshot, crate::WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
-        let mut malformed = store::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
+        let mut malformed = store::os_store::text_format::print_document_pack(&envelope).await.map_err(|error| format!("{error:?}"))?;
         crate::editor::wires::unit_tests::context::retire_envelope(envelope);
         malformed.pack.truncate(4);
         app.dispatch_typed(

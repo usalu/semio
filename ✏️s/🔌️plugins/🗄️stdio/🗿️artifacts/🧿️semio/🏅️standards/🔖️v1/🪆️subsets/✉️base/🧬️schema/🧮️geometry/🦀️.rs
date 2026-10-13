@@ -10,19 +10,19 @@
 //! on), never an engine. Reached at `standards::v1::subsets::any::schema::geometry` (no shorter
 //! shim — every consumer, in-plugin and cross-plugin, now uses this full path).
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 use serde::{Deserialize, Serialize};
 
 //#region 🔖️Point
-/// 🧪️ `Serialize`/`Deserialize` are test-only (`#[cfg_attr(test, ...)]`) — this module's own
+/// 🧪️ `Serialize`/`Deserialize` are test-only (`#[cfg_attr(any(test, feature = "testing"), ...)]`) — this module's own
 /// `identity_transform_round_trips_through_json` test uses `serde_json` as a differential
 /// round-trip oracle over `SemioTransform` (and transitively this struct); no production call
 /// site needs it, `ToValue`/`FromValue` is the real production codec.
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioPoint3 {
     pub x: f64,
@@ -33,8 +33,8 @@ pub struct SemioPoint3 {
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioPoint2 {
     pub x: f64,
@@ -44,8 +44,8 @@ pub struct SemioPoint2 {
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioUv {
     pub u: f64,
@@ -57,8 +57,8 @@ pub struct SemioUv {
 #[derive(Clone, Copy, Debug, Default, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioRgba {
     pub r: f32,
@@ -74,8 +74,8 @@ pub struct SemioRgba {
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioQuaternion {
     pub x: f64,
@@ -93,8 +93,8 @@ impl Default for SemioQuaternion {
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::CanonicalJsonTree, value_derive::RetainedClone)]
 #[retained_clone(bitwise)]
 #[canonical_json(owner = semio_framework_pack_json)]
-#[cfg_attr(test, derive(Serialize, Deserialize))]
-#[cfg_attr(test, serde(rename_all = "camelCase", deny_unknown_fields))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize, Deserialize))]
+#[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase", deny_unknown_fields))]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct SemioTransform {
     pub translation: SemioPoint3,
@@ -124,7 +124,7 @@ mod tests;
 //#endregion 🔖️Tests
 
 #[path="🔢️native/🦀️.rs"]
-pub(crate) mod native;
+pub mod native;
 
 /// 🔢️ The actual Semio binary64 text role retains exceptional IEEE words.
 pub fn binary64_lexeme(value:f64)->String { native::NativeF64(value).to_string() }

@@ -3,8 +3,8 @@
 //! `create`/`delete`, never `connect`/`disconnect` (see the snapshot facet's module doc comment for
 //! the full ruling).
 
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -20,7 +20,7 @@ pub struct CreateEdge {
     pub label: String,
     pub source_port: Option<String>,
     pub target_port: Option<String>,
-    pub properties: Vec<crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry>,
+    pub properties: Vec<semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry>,
     #[value(default, skip_serializing_if = "Option::is_none")]
     pub at: Option<usize>,
 }

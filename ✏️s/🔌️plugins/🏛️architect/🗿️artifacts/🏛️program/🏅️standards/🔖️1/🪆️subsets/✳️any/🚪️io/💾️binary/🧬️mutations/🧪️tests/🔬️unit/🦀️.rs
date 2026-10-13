@@ -1,5 +1,5 @@
 use crate::standards::v1::subsets::any::io::binary::mutations::*;
-use crate::kernel::EntityId;
+use crate::standards::v1::subsets::any::schema::kernel::EntityId;
 
 #[semio_framework_async_macros::async_test]
 async fn disconnect_adjacency_round_trips_through_the_binary_codec() {

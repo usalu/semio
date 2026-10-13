@@ -21,8 +21,8 @@ pub mod curve_ops;
 
 // #endregion 🔖️Submodules
 
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::vector::matrix::Frame3;
+use crate::vector::{Pnt2, Pnt3, Vec2, Vec3};
 use bspline::{curve_derivatives_rational, de_boor, KnotVector};
 
 // #region 🔖️Curve3
@@ -368,13 +368,13 @@ mod tests;
 
 // #region 🔁️Transform
 
-use crate::brep::representation::vector::matrix::Affine3;
+use crate::vector::matrix::Affine3;
 
 impl Curve3 {
     /// 🌀️ Exact affine transform. `Line` stays exact under ANY invertible affine map — a line's
     /// image under any invertible linear map is again a line, with no orthonormality or domain
     /// constraint (unlike every other variant). `Circle`/`Ellipse` stay analytic under a similarity
-    /// (uniform scale/rotation/translation, optionally with reflection — [`crate::brep::representation::vector::matrix::Affine3::is_similarity`]),
+    /// (uniform scale/rotation/translation, optionally with reflection — [`crate::vector::matrix::Affine3::is_similarity`]),
     /// with `frame` mapped via [`Frame3::transformed`] and `radius`/`major_radius`/`minor_radius`
     /// scaled uniformly; a non-similarity map converts to the equivalent exact NURBS
     /// ([`Self::to_nurbs`] over the curve's own bounded natural domain) and transforms its control
@@ -435,8 +435,8 @@ mod transform_tests;
 
 // #region 🎯️Pcurve
 
-use crate::brep::representation::surface::surface_ops::closest_uv;
-use crate::brep::representation::surface::Surface;
+use crate::surface::surface_ops::closest_uv;
+use crate::surface::Surface;
 
 /// 🎯️ Fits a p-curve for `curve` on `surface` restricted to `domain` — the [`Surface::project_curve`]
 /// worker, split out so the seam-splitting entry point ([`Surface::project_curve_pieces`]) can call
@@ -568,7 +568,7 @@ impl Surface {
     /// a [`Surface::Plane`] whose in-plane axes already match the curve's own frame exactly (the
     /// common case for edges constructed directly in a face's frame); otherwise samples by
     /// (adaptively densified) subdivision, projects each sample through the certified
-    /// [`crate::brep::representation::surface::surface_ops::closest_uv`], unwraps periodic directions for continuity, and interpolates
+    /// [`crate::surface::surface_ops::closest_uv`], unwraps periodic directions for continuity, and interpolates
     /// via [`curve_ops::interpolate_curve`], refining the sample density until the actual 3D
     /// deviation (checked at inter-sample midpoints, not just at the fitted points themselves) is
     /// within `tol`. Delegates to [`Surface::project_curve_pieces`] when the curve crosses a
@@ -602,7 +602,7 @@ impl Surface {
 
 /// 🎯️ Exact p-curve for the narrow (but common) case a curve's own frame is already aligned with
 /// the plane's frame — a line always projects to a 2D line exactly; a circle/ellipse whose frame
-/// shares the plane's `x`/`y`/`z` axes (not merely coplanar — [`crate::brep::representation::curve::Curve2::Circle`] has no
+/// shares the plane's `x`/`y`/`z` axes (not merely coplanar — [`crate::curve::Curve2::Circle`] has no
 /// independent rotation of its own) projects to the matching 2D conic exactly, parameter for
 /// parameter. Any other in-plane rotation, or any non-planar surface, falls through to the
 /// general numeric fit.

@@ -64,9 +64,9 @@ fn kind_infos() -> &'static HashMap<String, neural_engine::OperatorInfo> {
     &CACHE
         .get_or_init(|| {
             let mut registry = neural_engine::ColdOwner::new(neural_engine::Registry::new());
-            semio_s_plugin_flow_extension_primitive::register(&mut registry);
-            semio_s_plugin_flow_extension_math::register(&mut registry);
-            semio_s_plugin_flow_extension_brep::register(&mut registry, geometry_session());
+            semio_s_plugin_flow_primitive::register(&mut registry);
+            semio_s_plugin_flow_math::register(&mut registry);
+            semio_s_plugin_flow_brep::register(&mut registry, geometry_session());
             registry.finalize();
             let infos = registry.operator_infos().map(|info| (info.id.clone(), info.clone())).collect();
             (registry, infos)

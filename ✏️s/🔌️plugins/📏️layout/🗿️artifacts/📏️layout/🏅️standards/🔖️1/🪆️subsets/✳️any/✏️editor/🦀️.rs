@@ -958,7 +958,7 @@ impl LayoutImportJob {
 
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         if let Some(active) = self.active.as_ref() {
-            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if let Some(rejected) = self.pending_completion_rejection.as_ref() {
             if let Ok(emit) = rejected.emit.as_ref() {
@@ -969,13 +969,13 @@ impl LayoutImportJob {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
         if self.mutations.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.mutations)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutations)?);
         }
         if self.media.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.media)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media)?);
         }
         if self.port.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.port)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.port)?);
         }
         if self.history.is_some() || self.completion.is_some() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -1007,7 +1007,7 @@ impl LayoutImportJob {
         }
         let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if let Some(rejected) = self.pending_completion_rejection.as_mut() {
             if let Ok(emit) = rejected.emit.as_mut() {
@@ -1019,13 +1019,13 @@ impl LayoutImportJob {
             return unit();
         }
         if self.mutations.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, child);
         }
         if self.media.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.media, &mut self.active, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media, &mut self.active, child);
         }
         if self.port.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.active, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.active, child);
         }
         if self.history.take().is_some() || self.completion.take().is_some() {
             return unit();
@@ -1357,7 +1357,7 @@ impl ArtifactEditor for LayoutPlayApp {
     /// preparation clones the snapshot page by page, so `CreatePage` (a whole page with its layers) and
     /// `ChangeDataFields` (a `fields:in` dictionary) are bounded only by their own encoded mutation footprint
     /// (`ArtifactStoreOneItemFootprint::for_leaf`).
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
@@ -1481,7 +1481,7 @@ impl ArtifactEditor for LayoutPlayApp {
     fn export_media(port: &str, doc: &ArtifactView<'_, LayoutSnapshot>) -> Result<Media, MediaError> {
         match port {
             "artifact:out" => {
-                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: MediaPayload::Structured { schema: crate::LAYOUT_DOCUMENT_SCHEMA.into(), json: store::pack_rt::pack_value_to_base64(&bytes) } })
             }
             "layout:out" => Err(MediaError::NotImplemented),

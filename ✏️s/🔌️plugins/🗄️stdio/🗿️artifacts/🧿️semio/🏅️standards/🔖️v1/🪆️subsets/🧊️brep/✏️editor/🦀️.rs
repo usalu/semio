@@ -2,12 +2,12 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioBrepEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::editor::semio_brep::modes::edit;
-use crate::editor::semio_brep::modes::edit::windows::main;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::brep::schema::mutations::move_vertex::MoveVertex;
-use crate::standards::v1::subsets::brep::schema::mutations::{SemioBrepMutation};
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::editor::modes::edit;
+use crate::editor::modes::edit::windows::main;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::mutations::move_vertex::MoveVertex;
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::SemioBrepSnapshot;
 use semio_framework::DslValue;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::ArtifactCommandInputs;
@@ -200,7 +200,7 @@ fn semio_brep_set_vertex_work(_tool_id: &'static str) -> Box<dyn ArtifactCommand
 //#endregion 🔖️Mutation
 
 #[path = "🧭️edit-rules/🦀️.rs"]
-pub(crate) mod edit_rules;
+pub mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]

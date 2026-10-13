@@ -8,9 +8,9 @@ use super::*;
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct SetVersionInfo {
-    pub(crate) version: String,
-    pub(crate) maintenance_version: u8,
-    pub(crate) codepage: u16,
+    pub version: String,
+    pub maintenance_version: u8,
+    pub codepage: u16,
 }
 
 impl protocol::MutationKind<DwgSnapshot, DwgMutation> for SetVersionInfo {

@@ -434,7 +434,7 @@ impl ArtifactEditor for HomeApp {
     const DIALECT: Dialect = crate::HOME_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = crate::S_HOME_DOCUMENT_SCHEMA;
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(HomeConfigPreparationFactory))
     }
 
@@ -469,7 +469,7 @@ impl ArtifactEditor for HomeApp {
     }
 
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         semio_s_space_core::space_retained_store_preparation::<Self::Snapshot, Self::Mutation>("space-home-artifact-retained", HOME_RETAINED_RAW_BYTES)
     }
 

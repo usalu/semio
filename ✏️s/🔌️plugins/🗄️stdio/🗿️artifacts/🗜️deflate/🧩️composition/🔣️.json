@@ -3,10 +3,7 @@
   "artifact": "deflate",
   "package": "semio-s-artifact-stdio-deflate",
   "order": 3,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio-binary",
@@ -33,7 +30,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio-binary",

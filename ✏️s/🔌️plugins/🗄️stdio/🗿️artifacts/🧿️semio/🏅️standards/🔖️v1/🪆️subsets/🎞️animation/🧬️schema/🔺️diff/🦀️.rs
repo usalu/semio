@@ -11,15 +11,14 @@
 //! wire codecs (`enc_indexed_triple`/`dec_indexed_triple`) come from the shared
 //! `engine::triples` module per the ticket's explicit instruction — not re-derived here.
 
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-#[cfg(test)] use crate::standards::v1::subsets::animation::schema::snapshot::{AnimTargetProperty};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+#[cfg(test)] use crate::schema::snapshot::AnimTargetProperty;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 
 
 
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
-#[cfg(test)] use protocol::{DiffCodec};
 use protocol::MutationDiff;
 
 //#region 🔖️IndexedCollectionAlgebra
@@ -405,7 +404,7 @@ impl MutationDiff<SemioAnimationSnapshot> for SemioAnimationDiff {
     fn apply(&self, base: &SemioAnimationSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioAnimationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.timelines {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.timelines.len(), ["timelines"])?;
             next.timelines = apply_indexed(d, &next.timelines, |d, item| d.apply_row(item));
         }
         Ok(next)

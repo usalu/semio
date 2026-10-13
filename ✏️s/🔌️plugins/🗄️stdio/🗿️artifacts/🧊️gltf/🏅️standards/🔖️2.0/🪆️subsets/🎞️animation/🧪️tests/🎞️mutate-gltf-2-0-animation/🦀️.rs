@@ -104,11 +104,15 @@ fn inverse_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{parse_gltf_document, serialize_gltf_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::{create_animation,delete_animation,move_animation,reorder_animations};
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::serialize_gltf_document;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::create_animation;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::delete_animation;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::move_animation;
+    use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::reorder_animations;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::gltf_inverse_restored_document;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Params

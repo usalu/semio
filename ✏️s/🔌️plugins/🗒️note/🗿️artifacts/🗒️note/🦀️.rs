@@ -8,7 +8,7 @@ extern crate semio_framework_schema as framework_schema;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use std::collections::BTreeMap;
@@ -285,7 +285,7 @@ pub enum NoteBlockNode {
 #[canonical_json(owner = semio_framework_pack_json)]
 #[value(rename_all = "camelCase")]
 pub struct NoteTextChild {
-    pub handle: store::ArtifactChild<SemioTextSnapshot>,
+    pub handle: store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>,
     #[value(default)]
     pub paragraphs: Vec<NoteTextParagraph>,
 }
@@ -354,7 +354,7 @@ pub fn note_text_child_handle(block_id: &str, paragraphs: &[NoteTextParagraph]) 
     let child_id = store::content_id("note-text", format!("{block_id}\u{1f}{content_json}").as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{block_id}-text"), dialect };
-    NoteTextChild { handle: store::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
+    NoteTextChild { handle: store::os_store::artifact_child::ArtifactChild::new(child_id, target), paragraphs: paragraphs.to_vec() }
 }
 //#endregion 🔖️TextBridge
 

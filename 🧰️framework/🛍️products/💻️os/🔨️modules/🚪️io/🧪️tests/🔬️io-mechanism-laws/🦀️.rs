@@ -152,7 +152,7 @@ mod laws {
         assert_eq!(existing.len(), 1, "existing registry state must be untouched by a failed validation");
     }
 
-    // 🌉️ `serde_json::Value` retired in favor of `dsl::DslValue` — `impl store::ArtifactPack for
+    // 🌉️ `serde_json::Value` retired in favor of `dsl::DslValue` — `impl crate::os_store::serialization::ArtifactPack for
     // DslValue` (`🏪️store/🦀️.rs`) already gives it the same "schema-agnostic fixture type" role
     // `serde_json::Value`'s own `impl ArtifactPack` used to play, with no serde dependency.
     struct JsonDeserializer;
@@ -194,7 +194,7 @@ mod laws {
         let artifact = |id: &str, dialect: Dialect| store::channel::DocumentArchiveArtifactRef { artifact_id: id.into(), artifact_kind: dialect.artifact_kind.into(), standard: dialect.standard.0.into(), subset: dialect.subset.0.into() };
         let owner = store::channel::DocumentArchiveOwnerRef { parent: artifact("parent", A), slot: "content".into(), child_id: "child-1".into() };
         let member = store::channel::OwnedDocumentMemberPackEntry { ordinal: 0, reference: artifact("child-1", B), owner, envelope_pack: vec![7] };
-        store::channel::encode_document_archive_bytes(&store::channel::DocumentArchivePack { parent_pack: store::ArtifactPack::encode_pack(parent), parent_spr, members: vec![member] }).expect("the carrier encodes")
+        store::channel::encode_document_archive_bytes(&store::channel::DocumentArchivePack { parent_pack: crate::os_store::serialization::ArtifactPack::encode_pack(parent), parent_spr, members: vec![member] }).expect("the carrier encodes")
     }
 
     /// 🪆️ LAW (design §20.15, readers compose on read): a serializer entry run over a composed head carrier receives the parent and
@@ -208,7 +208,7 @@ mod laws {
             IoPayload::Binary(_) => panic!("the echo serializes text"),
         };
         assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, Vec::new())),control))), format!("{parent:?}|content/child-1"));
-        assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(store::ArtifactPack::encode_pack(&parent)),control))), format!("{parent:?}|"));
+        assert_eq!(text(with_control(|control|(entry.run)(&IoPayload::Binary(crate::os_store::serialization::ArtifactPack::encode_pack(&parent)),control))), format!("{parent:?}|"));
         assert!(with_control(|control|(entry.run)(&IoPayload::Binary(composed_carrier(&parent, vec![1])),control)).is_err(), "a carrier with parent history is not a head carrier");
         assert!(with_control(|control|(entry.run)(&IoPayload::Binary(vec![store::channel::DOCUMENT_ARCHIVE_VERSION, 0xff]),control)).is_err(), "a malformed carrier is refused");
     }

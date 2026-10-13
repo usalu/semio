@@ -38,7 +38,7 @@ async fn playback_export_route_streams_the_real_fixture_with_exact_mime_and_byte
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&snapshot, STDIO_MP3_DOCUMENT_SCHEMA) else {
         panic!("MP3 snapshot builds one document load");
     };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real MP3 document");
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).expect("host loads the real MP3 document");
     let handle = app.submit_media_export(crate::standards::mpeg1_layer3::subsets::any::io::playback::PORT_ID).await.expect("registered MP3 playback producer");
     let mut completed = None;
     for _ in 0..10_000 {

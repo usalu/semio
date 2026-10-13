@@ -1,6 +1,6 @@
 //! 🧭️ The animation editor's edit rules: which snapshot pointer raises which ONE concrete animation mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{ent, ins, rem, INDEX};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, ins, rem, INDEX};
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector};
 
 const TIMELINE: Selector = Selector::Index("timelineIndex");

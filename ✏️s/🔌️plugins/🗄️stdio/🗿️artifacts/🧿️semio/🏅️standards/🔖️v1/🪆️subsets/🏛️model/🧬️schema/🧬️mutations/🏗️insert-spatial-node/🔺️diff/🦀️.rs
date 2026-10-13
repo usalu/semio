@@ -9,6 +9,6 @@ pub fn diff(payload: &super::InsertSpatialNode, base: &SemioModelSnapshot) -> pr
         return protocol::MutationOutcome::fatal("mutation.duplicate-id", format!("Spatial node \"{}\" already exists.", payload.node.id), [payload.node.id.clone()]);
     }
     let super::InsertSpatialNode { node, at } = payload;
-    protocol::MutationOutcome::new(SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(base.spatial.len(), |at| at.min(base.spatial.len())), item: node.clone() }], ..Default::default() }), ..Default::default() })
+    protocol::MutationOutcome::new(SemioModelDiff { spatial: Some(NamedTripleDiff { added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(base.spatial.len(), |at| at.min(base.spatial.len())), item: node.clone() }], ..Default::default() }), ..Default::default() })
 }
 //#endregion 🔖️Diff

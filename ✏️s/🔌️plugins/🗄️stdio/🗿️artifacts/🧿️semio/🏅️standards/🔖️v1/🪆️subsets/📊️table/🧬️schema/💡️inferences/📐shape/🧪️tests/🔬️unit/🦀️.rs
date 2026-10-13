@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn populated() -> SemioTableSnapshot {

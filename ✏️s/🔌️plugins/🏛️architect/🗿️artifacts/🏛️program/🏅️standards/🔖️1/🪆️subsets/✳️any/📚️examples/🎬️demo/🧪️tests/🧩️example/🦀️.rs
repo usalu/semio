@@ -6,7 +6,7 @@ async fn primary_asset_is_nonempty() {
 
 //#region 🧪️InferenceLaws
 use crate::standards::v1::subsets::any::schema::inferences::ProgramInference;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]

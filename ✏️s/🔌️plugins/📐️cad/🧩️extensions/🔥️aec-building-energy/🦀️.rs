@@ -61,7 +61,7 @@ fn computers_manifest() -> JsonValue {
 // plain sync fn). `.mode`/`.contributes_topic` are still `fn` in
 // `🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs` (out of this packet's path_scope);
 // bridged via `semio_framework_os_kernel::io::resolve_ready` — see this packet's lease-request. See R9.
-fn bundle() -> ExtensionBundle {
+pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building Energy", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`).
@@ -78,7 +78,6 @@ fn bundle() -> ExtensionBundle {
     )
 }
 
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 //#endregion 🔖️Manifest
 
 //#region 🧪️Tests

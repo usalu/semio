@@ -37,8 +37,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<Mp3Snapshot, Mp3Mutation>(STDIO_MP3_DOCUMENT_SCHEMA);
     codec.extension = "semio";
     codec
 }
@@ -89,7 +89,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 /// shadow, whose `entries()` returns `&[&ComposerEntry]` — the wrong type for `.composers()`, which
 /// wants `&'static [ComposerEntry]`) by its fully qualified path, per the silent-rebind hazard this
 /// ticket calls out. `.document_codec_bare::<Mp3Snapshot, Mp3Mutation>(...)` folds in what
-/// `subsets::any::io::register()`'s `store::register_document_codec(store::ArtifactCodec::of::<..>())`
+/// `subsets::any::io::register()`'s `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<..>())`
 /// call did — mp3 is a headless stdio artifact with no `ArtifactApp` to bind `.document_codec::<A>()`
 /// to.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.

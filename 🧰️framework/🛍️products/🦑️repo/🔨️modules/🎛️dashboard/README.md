@@ -306,7 +306,7 @@ and checks the XXH3 vectors of the graph-reuse decision against Bun's own hash:
 `🌀️control-plane` defines language-neutral lifecycle scenarios and protocol vectors. The owned
 Rust codec and the existing Ajv library validate the same vectors. The quick suite runs actual
 Bun PTYs, Nx server/build/test targets, output replay, cancellation, restart, process-tree
-termination, singleton enforcement and reattachment: `bun nx run @semio-tech/repo-dashboard-rs:test-quick`.
+termination, singleton enforcement and reattachment: `bun nx run @semio-tech/repo-dashboard-rs:test -- quick`.
 
 `🧊️execution` pins the native launch vectors of `🧫️fixtures/🧊️execution`, the Nx scheduling of
 `run` and `install`, the immutable installation that keeps a running executable's bytes while

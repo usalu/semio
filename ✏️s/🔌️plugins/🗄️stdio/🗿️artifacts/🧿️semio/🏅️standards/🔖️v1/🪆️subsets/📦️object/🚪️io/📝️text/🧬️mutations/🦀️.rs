@@ -2,13 +2,10 @@
 //! Mutations)]` only generates `Mutation`/`SemanticMutation` — the wire-text codec stays
 //! handcrafted here, one keyword per semantic verb, grammar `keyword:arg1,arg2,...`.
 
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
+use crate::schema::mutations::SemioObjectMutation;
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::object::schema::mutations::{
-    create_brep::CreateBrep, create_mesh::CreateMesh, create_properties::CreateProperties, delete_brep::DeleteBrep, delete_mesh::DeleteMesh, delete_properties::DeleteProperties, move_object::MoveObject, rotate_object::RotateObject,
-    scale_object::ScaleObject,
-};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use {crate::schema::mutations::create_brep::CreateBrep, crate::schema::mutations::create_mesh::CreateMesh, crate::schema::mutations::create_properties::CreateProperties, crate::schema::mutations::delete_brep::DeleteBrep, crate::schema::mutations::delete_mesh::DeleteMesh, crate::schema::mutations::delete_properties::DeleteProperties, crate::schema::mutations::move_object::MoveObject, crate::schema::mutations::rotate_object::RotateObject, crate::schema::mutations::scale_object::ScaleObject};
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -42,11 +39,11 @@ fn parse_f64(s: &str) -> Result<f64, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn enc_ref(r: &semio_framework_artifact_reference::ArtifactRef) -> String {
-    crate::standards::v1::subsets::object::io::text::snapshot::enc_ref(r)
+    semio_s_artifact_stdio_semio_base::io::text::codec::enc_ref(r)
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn dec_ref(s: &str) -> Result<semio_framework_artifact_reference::ArtifactRef, String> {
-    crate::standards::v1::subsets::object::io::text::snapshot::dec_ref(s)
+    semio_s_artifact_stdio_semio_base::io::text::codec::dec_ref(s)
 }
 //#endregion 🔖️Primitives
 
@@ -150,18 +147,18 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::object::schema::mutations::*;
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::object::schema::mutations::create_brep;
-use crate::standards::v1::subsets::object::schema::mutations::create_mesh;
-use crate::standards::v1::subsets::object::schema::mutations::create_properties;
-use crate::standards::v1::subsets::object::schema::mutations::delete_brep;
-use crate::standards::v1::subsets::object::schema::mutations::delete_mesh;
-use crate::standards::v1::subsets::object::schema::mutations::delete_properties;
-use crate::standards::v1::subsets::object::schema::mutations::move_object;
-use crate::standards::v1::subsets::object::schema::mutations::rotate_object;
-use crate::standards::v1::subsets::object::schema::mutations::scale_object;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::mutations::create_brep;
+use crate::schema::mutations::create_mesh;
+use crate::schema::mutations::create_properties;
+use crate::schema::mutations::delete_brep;
+use crate::schema::mutations::delete_mesh;
+use crate::schema::mutations::delete_properties;
+use crate::schema::mutations::move_object;
+use crate::schema::mutations::rotate_object;
+use crate::schema::mutations::scale_object;
 
 /// 📥️ Decodes this facet's own externally-tagged (`{"<VariantName>": {<snake_case payload>}}`)
 /// JSON projection — no `#[value(rename_all)]` sits on this enum or its payload structs, which is

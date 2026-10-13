@@ -27,7 +27,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn conforming_snapshot_composes_and_stamps_transitional() {
-        let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&transitional_snapshot());
+        let bytes = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&transitional_snapshot());
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let composed = DocxTransitionalComposerComposition::compose(&sources).expect("clean transitional document must compose");
         assert!(composed.diagnostics.iter().all(|d| d.severity != Severity::Error), "got {:?}", composed.diagnostics);
@@ -57,7 +57,7 @@ mod tests {
                 },
             ],
         ).expect("bounded test OPC converts to retained ownership");
-        let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+        let bytes = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
         let sources = vec![ComposeSource { dialect: DIALECT_ANY, payload: AnalyzeSource::Binary(&bytes) }];
         let err = DocxTransitionalComposerComposition::compose(&sources).expect_err("mixed-in strict namespace must not stamp transitional");
         assert!(err.diagnostics.iter().any(|d| d.code.0 == CODE_STRICT_NS_PRESENT && d.severity == Severity::Error), "got {:?}", err.diagnostics);
@@ -65,7 +65,7 @@ mod tests {
 
     #[semio_framework_async_macros::async_test]
     async fn subset_validator_rechecks_wire_payload() {
-        let bytes = <DocxSnapshot as store::ArtifactPack>::encode_pack(&transitional_snapshot());
+        let bytes = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&transitional_snapshot());
         let diagnostics = DocxTransitionalValidator::validate(&IoPayload::Binary(bytes)).await;
         assert!(diagnostics.iter().all(|d| d.severity != Severity::Error), "got {diagnostics:?}");
     }

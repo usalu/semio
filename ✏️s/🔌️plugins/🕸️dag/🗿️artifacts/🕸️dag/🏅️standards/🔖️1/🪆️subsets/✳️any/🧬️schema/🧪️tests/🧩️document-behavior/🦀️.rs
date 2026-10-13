@@ -1,8 +1,8 @@
 use super::*;
 use crate::{DagHostSnapshotEdge, DagScene};
-use semio_s_artifact_stdio_semio::apply_diff;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{diff_semio_graph_mutation, inverse_semio_graph_mutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_framework_os_kernel::apply_diff;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::{diff_semio_graph_mutation, inverse_semio_graph_mutation};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 
 /// 🧬️ Applies one graph leaf through its diff and the central applier, returning how many messages it raised.
 // 🚫️async: E1 pure test helper (file verified I/O-free).
@@ -71,7 +71,7 @@ async fn node_field_leaves_are_empty_for_an_unknown_field_or_an_unchanged_value(
 /// point-invertible; undoing them in reverse restores the composed content byte for byte.
 #[semio_framework_async_macros::async_test]
 async fn remove_nodes_leaves_delete_incident_edges_first_and_undo_exactly() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let scene = demo();
     let node_id = scene.nodes.first().expect("fixture has a node").id.clone();
     let touching = scene.edges.iter().filter(|edge| split_endpoint(&edge.source).0 == node_id || split_endpoint(&edge.target).0 == node_id).count();

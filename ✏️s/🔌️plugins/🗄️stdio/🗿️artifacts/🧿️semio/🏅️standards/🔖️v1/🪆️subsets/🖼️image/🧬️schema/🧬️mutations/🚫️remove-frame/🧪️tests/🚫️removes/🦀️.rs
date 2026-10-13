@@ -4,12 +4,11 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `frames.removed[index]` — note it does
 //! NOT carry the removed frame's content, which is why the INVERSE has to read it back out of
 //! `base`. Removing index 0 is the case that renumbers everything behind it.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
-use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::insert_frame;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫️remove-frame/🚫️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🚫️remove-frame/🚫️removes/📸️snapshot/➡️after/🔣️.json");
@@ -40,7 +39,7 @@ async fn removes_the_frame_at_index_zero() {
     assert_eq!(produced.frames[0], base.frames[1], "the frame that followed the removed head must take index 0");
     assert_eq!(produced.metadata, base.metadata, "removing a frame must not touch the metadata");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -53,9 +52,9 @@ async fn the_undo_insert_frame_restores_the_head_frame_from_base() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::InsertFrame(insert_frame::InsertFrame { index: 0, frame: base.frames[0].clone() })], "the undo must recapture the removed frame's full content from base");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "remove-frame/removes-the-leading-frame: the undo did not restore the before-snapshot");
 }

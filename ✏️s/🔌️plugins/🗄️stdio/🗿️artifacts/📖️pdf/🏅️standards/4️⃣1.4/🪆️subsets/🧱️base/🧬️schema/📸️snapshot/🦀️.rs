@@ -28,7 +28,7 @@
 //! `stdio.pdf.{a,x}.schema-gap-unverifiable` — an honest statement about this schema, unchanged by
 //! this wave and not weakened by it.
 
-use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Page

@@ -2,7 +2,7 @@
 
 use super::{ErasedSnapshotRetirement, MemberOpenDiagnostic, conflict_from_history_conflict, mutation_meta_from_history_op_meta};
 use {semio_framework_artifact_reference::ArtifactRef};
-use crate::os_store::{ArtifactEnvelope, ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, DocumentStoreOwners, EditReplay, OwnerRef, ReplayStep};
+use crate::os_store::{store_schema::ArtifactEnvelope, serialization::ArtifactPack, ArtifactStore, ArtifactStoreInitializationRuntime, document_store_owners::DocumentStoreOwners, replay::EditReplay, OwnerRef, replay::ReplayStep};
 use crate::{CompositionPin, Edit, FromValue, Mutation, OpBinary, OpText, ToValue};
 use semio_framework_job::{Generation, OperationId, StepContext};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
@@ -10,13 +10,13 @@ use std::mem::ManuallyDrop;
 
 fn hydration_fold_byte_grant(logical_bytes: usize, demand: usize) -> Option<usize> {
     let grant = logical_bytes.max(demand);
-    (grant <= crate::os_store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES).then_some(grant)
+    (grant <= crate::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES).then_some(grant)
 }
 
 /// 🎫️ Debits nested depth and clips logical work without enlarging physical authority.
 fn hydration_child_grant(grant: RetainedCloneGrant, fuel: u64) -> Result<RetainedCloneGrant, MemberOpenDiagnostic> {
     let depth = grant.maximum_depth.checked_sub(1).ok_or(MemberOpenDiagnostic::Capacity)?;
-    let bytes = usize::try_from(fuel).map_err(|_| MemberOpenDiagnostic::Capacity)?.min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES);
+    let bytes = usize::try_from(fuel).map_err(|_| MemberOpenDiagnostic::Capacity)?.min(crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES);
     Ok(RetainedCloneGrant { maximum_items: grant.maximum_items.min(1), maximum_copy_bytes: grant.maximum_copy_bytes.min(bytes), maximum_depth: depth, ..grant })
 }
 
@@ -138,7 +138,7 @@ struct HydratedReplayEdits<'a, M> {
     positions: &'a std::collections::BTreeMap<String, usize>,
 }
 
-impl<M> crate::os_store::ReplayEdits<M> for HydratedReplayEdits<'_, M> {
+impl<M> crate::os_store::replay::ReplayEdits<M> for HydratedReplayEdits<'_, M> {
     fn replay_edit(&self, id: &str) -> Option<&Edit<M>> {
         self.edits.get(*self.positions.get(id)?).filter(|edit| edit.id == id)
     }
@@ -409,7 +409,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                     cx.consume_fuel(1);
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
-                let scanned = remaining.min(crate::os_store::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
+                let scanned = remaining.min(crate::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).min(usize::try_from(cx.fuel_remaining()).unwrap_or(usize::MAX));
                 if scanned == 0 {
                     return PersistedDocumentHydrationStep::Pending(self.progress());
                 }
@@ -445,7 +445,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 if history.doc_id != expected.artifact_id || history.schema != *schema || !dialect_matches || history_owner.as_ref() != self.owner.as_ref() {
                     return self.reject(MemberOpenDiagnostic::Identity);
                 }
-                if P::publish_native_snapshot().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
+                if crate::io::publish_native_snapshot::<P>().is_err() { return self.reject(MemberOpenDiagnostic::Initialization); }
                 *self.fold_job = Some(crate::os_spr::HistoryLog::fold_job(history.clone(), crate::os_spr::HistoryShape::Document));
                 self.phase = Phase::Fold;
                 cx.consume_fuel(1);
@@ -503,7 +503,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
                 };
                 let expected = self.expected.take().expect("document identity remains retained");
                 let schema = self.schema.take().expect("document schema remains retained");
-                let mut envelope = crate::os_store::empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id, genesis, None);
+                let mut envelope = crate::os_store::document_materialize::empty_document_envelope_from_genesis_owners::<P, M>(schema, expected.artifact_id, genesis, None);
                 envelope.dialect = Some(expected.dialect);
                 envelope.owner = self.owner.take();
                 envelope.active_alternative_id = fold.alternative.take();

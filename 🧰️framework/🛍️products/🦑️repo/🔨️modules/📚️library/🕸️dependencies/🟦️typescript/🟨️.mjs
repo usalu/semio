@@ -1,6 +1,8 @@
-import { existsSync, readFileSync, realpathSync } from "node:fs";
+import { observedFs } from "../../🔌️nx-plugin/👁️observation/🟨️.mjs";
 import { dirname, isAbsolute, relative, resolve } from "node:path";
 import { createRequire, isBuiltin } from "node:module";
+
+const { existsSync, readFileSync, realpathSync } = observedFs;
 
 const require = createRequire(import.meta.url);
 const pathPattern = /^(?![/\\])(?![A-Za-z]:)(?!.*(?:^|\/)\.\.(?:\/|$))(?!.*\\).+$/;

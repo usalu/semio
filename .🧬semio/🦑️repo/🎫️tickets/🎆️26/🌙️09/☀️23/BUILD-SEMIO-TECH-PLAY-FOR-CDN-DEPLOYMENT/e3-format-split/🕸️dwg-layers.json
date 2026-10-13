@@ -1,0 +1,8 @@
+{"order":["model","read","write","editor","aggregator"],
+ "allow":{"read":["model"],"write":["model"],"editor":["model","read","write"],"aggregator":["model","read","write","editor"]},
+ "rules":[
+  ["^🦀️\\.rs$","aggregator"],
+  ["/✏️editor/","editor"],["/👁️viewer/","editor"],["/📚️examples/","editor"],
+  ["/🚪️io/📥️import/","read"],["/🚪️io/📤️export/","write"],
+  ["/🧬️schema/","model"],["/🚪️io/","model"],
+  [".","?"]]}

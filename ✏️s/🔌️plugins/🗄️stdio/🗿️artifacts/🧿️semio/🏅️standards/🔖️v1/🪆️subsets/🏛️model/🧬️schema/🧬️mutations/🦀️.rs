@@ -3,14 +3,11 @@
 //! variant's `diff()`/`inverse()` is HAND-WRITTEN below (schema-design.md: apply-and-capture via
 //! clone+apply+re-diff is banned -- each variant constructs its `SemioModelDiff` directly).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
 
 
-use crate::standards::v1::subsets::model::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
-
-
-
+use crate::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
 
 
 
@@ -33,7 +30,10 @@ use crate::standards::v1::subsets::model::schema::diff::{ModelRelationDiff, Semi
 
 
 
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+
+
+
+use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
@@ -230,7 +230,7 @@ fn element_count_label(count: usize) -> (String, String) {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sample_transform() -> SemioTransform {
-    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
     SemioTransform { translation: SemioPoint3 { x: 5.0, y: 6.0, z: 7.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } }
 }
 
@@ -247,7 +247,7 @@ pub(crate) fn fixture() -> SemioModelSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_mutation_cases() -> Vec<SemioModelMutation> {
-    let base = fixture();
+    let _base = fixture();
     vec![
         SemioModelMutation::InsertSpatialNode(insert_spatial_node::InsertSpatialNode { node: SpatialNode { id: "s2".into(), kind: SpatialKind::Space, name: "Room".into(), parent_id: None, placement: SemioTransform::identity() }, at: None }),
         SemioModelMutation::RemoveSpatialNode(remove_spatial_node::RemoveSpatialNode { id: "s1".into() }),

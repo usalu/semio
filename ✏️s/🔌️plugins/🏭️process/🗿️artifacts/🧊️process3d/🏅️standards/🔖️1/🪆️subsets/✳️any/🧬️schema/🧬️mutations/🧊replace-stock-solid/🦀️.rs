@@ -3,7 +3,7 @@
 //!
 //! 🌉️ Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM` wave 4: `new_solid` used to carry a
 //! literal `SolidSpec` (now deleted — duplicated `brep` content); it now carries the real, already-
-//! minted `store::ArtifactChild<SemioBrepSnapshot>` HANDLE the caller mints via
+//! minted `store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>` HANDLE the caller mints via
 //! `crate::brep_child_handle` from real content (e.g.
 //! `brep_snapshot_for_working_solid`). This stays a REAL mutation (unlike the step-content triads)
 //! because it is a pure handle SWAP — no read of the child's prior content is needed to compute
@@ -14,7 +14,7 @@ use crate::diff::Process3dDiff;
 use crate::mutations::Process3dMutation;
 use crate::Process3dSnapshot;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️ReplaceStockSolid
 #[derive(Clone, Debug, PartialEq, ToValue, FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]
@@ -22,7 +22,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot
 #[mutation_leaf(contract = ::protocol)]
 #[value(rename_all = "camelCase")]
 pub struct ReplaceStockSolid {
-    pub new_solid: store::ArtifactChild<SemioBrepSnapshot>,
+    pub new_solid: store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>,
 }
 
 impl protocol::MutationKind<Process3dSnapshot, Process3dMutation> for ReplaceStockSolid {

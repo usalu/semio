@@ -90,7 +90,7 @@ fn computers_manifest() -> JsonValue {
 // but is dressed as `async` with zero real suspension — same shape `.depends_on` already bridges in
 // that same file); bridged here via `semio_framework_os_kernel::io::resolve_ready`, matching that established
 // idiom. See this packet's lease-request asking the SDK owner to revert these to sync directly.
-fn bundle() -> ExtensionBundle {
+pub fn bundle() -> ExtensionBundle {
     let bundle = ExtensionBundle::new(EXTENSION_ID, "CAD AEC Building", env!("CARGO_PKG_VERSION")).extends("cad").depends_on("cad", semio_framework::tree_pin!());
     // 🚦️ `📓️design-abi.md` §5 — zero `.handler(…)`, never instantiated as an actor: this
     // extension only contributes a topic (`cad.computer`) and, onto cad's OWN `s.cad.cad`
@@ -111,7 +111,6 @@ fn bundle() -> ExtensionBundle {
     ::semio_framework_async::poll::resolve_ready(bundle.contributes(building_storey_contribution()))
 }
 
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 //#endregion 🔖️Manifest
 
 //#region 🔖️Composite
@@ -155,7 +154,7 @@ fn building_structure_summary_service() -> ArtifactInferenceService {
 // `for<'a> fn(&ArtifactInferenceExecutionRequest<'a>) -> Result<..>` type alias (an `fn` item's
 // pointer type is unnameable); also E1 pure (pack decode + struct literal, zero suspension) — see R9.
 fn infer_building_structure_summary(request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
-    let snapshot = <CadSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
+    let snapshot = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("cad-extension-aec-building.inference.snapshot-decode", error.to_string()))?;
     let summary = BuildingStructureSummary { building_model_present: snapshot.building_model.is_some(), storey_count: snapshot.nodes.iter().filter(|node| node.kind == "building-storey").count() as u32 };
     let canonical_payload = pack_rt::encode_wire_value(&ToValue::to_value(&summary));
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload:Some(canonical_payload), diagnostics: Vec::new(), validity: "valid".into(), quality: "complete".into(), complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))

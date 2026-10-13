@@ -7,7 +7,7 @@
 //! derived from each stream's own `pts`/`rate`, never the opaque sample payload this subset's own
 //! module doc comment names as W3/W4's job, not this snapshot's).
 
-use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use crate::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::duration::compute_semio_video_duration;

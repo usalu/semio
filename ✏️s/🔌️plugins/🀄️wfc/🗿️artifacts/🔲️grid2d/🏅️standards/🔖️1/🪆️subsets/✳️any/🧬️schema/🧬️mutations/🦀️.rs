@@ -93,7 +93,7 @@ pub use super::unmask_cell::unmask_cell;
 pub use super::unpin_cell::unpin_cell;
 //#endregion 🔖️Builders
 
-pub type Grid2dEnvelope = store::ArtifactEnvelope<Grid2dSnapshot, Grid2dMutation>;
+pub type Grid2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Grid2dSnapshot, Grid2dMutation>;
 pub type Grid2dStore = store::ArtifactStore<Grid2dSnapshot, Grid2dMutation>;
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.

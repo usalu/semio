@@ -16,7 +16,7 @@ use crate::standards::v_raw::subsets::any::schema::snapshot::*;
 use crate::STDIO_BINARY_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::ArtifactDsl for BinarySnapshot {
+impl store::os_store::serialization::ArtifactDsl for BinarySnapshot {
     const EXTENSION: &'static str = "bin";
     fn envelope_id() -> &'static str {
         "stdio.binary"
@@ -42,7 +42,7 @@ impl store::ArtifactDsl for BinarySnapshot {
     }
     fn print_dsl(&self) -> String {
         let body: String = self.bytes.iter().map(|b| format!("{b:02x}")).collect();
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

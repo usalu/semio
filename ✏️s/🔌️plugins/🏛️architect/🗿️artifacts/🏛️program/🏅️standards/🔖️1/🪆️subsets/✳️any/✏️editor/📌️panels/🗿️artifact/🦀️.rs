@@ -12,7 +12,7 @@ use crate::editor::architect::ARCHITECT_INTERACTION_PROGRAM;
 use crate::editor::architect::{architect_action, ui_node, ui_text, ui_value_map, ui_value_text, ARCHITECT_APP_ID, ARCHITECT_INTERACTION_GRANULARITY_ENTITY};
 use crate::standards::v1::subsets::any::schema::inferences::status_summary;
 use crate::standards::v1::subsets::any::schema::registers::ProgramElement;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_plugin::tree_item_desc;
 use semio_framework_plugin::tree_item_with_action;
 use semio_framework_plugin::ui_node_list;

@@ -8,7 +8,8 @@
     "buildDirectory",
     "leaseDirectory",
     "captureDirectory",
-    "budgetMs"
+    "budgetMs",
+    "mode"
   ],
   "properties": {
     "version": {
@@ -38,6 +39,12 @@
       "type": "integer",
       "minimum": 0,
       "maximum": 86400000
+    },
+    "mode": {
+      "enum": [
+        "prototype",
+        "release"
+      ]
     }
   },
   "$id": "https://semio.tech/framework/process/native-build/policy/v1"

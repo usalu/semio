@@ -12,7 +12,7 @@ fn vcs_guest_descriptor_has_one_canonical_native_openable_identity() {
     let codec = semio_s_artifact_vcs_vcs::standards::v1::subsets::any::io::io().native.codec;
     assert_eq!(codec.schema, authority["artifactSchema"].as_str().unwrap());
     assert_eq!(codec.extension, "vcs");
-    let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as semio_framework_os_kernel::ArtifactPack>::record_spec().expect("VCS schema-owned record");
+    let record = <semio_s_artifact_vcs_vcs::VcsSnapshot as semio_framework_os_kernel::os_store::serialization::ArtifactPack>::record_spec().expect("VCS schema-owned record");
     assert_eq!(codec.pack_schema_hash, semio_framework_os_kernel::os_pack::schema_hash(&record));
     assert_ne!(codec.pack_schema_hash, [0; 32]);
     let runtime = PluginRuntime::<semio_hub_vcs::VcsApps>::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");

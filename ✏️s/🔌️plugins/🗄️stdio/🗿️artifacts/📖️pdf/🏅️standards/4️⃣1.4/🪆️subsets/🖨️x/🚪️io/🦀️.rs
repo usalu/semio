@@ -1,8 +1,8 @@
 //! 🚪️ IO stdio.pdf (1.4/🖨️x) — reuses the 🧱️base subset's `binary`/`deflate` raw-codec DAG
 //! leaves rather than duplicating them (same `PdfSnapshot` type, same catalog DAG edges).
-//! Registration flows through `🎹️composer::register` (the `ComposerEntry` via the standard-level
-//! aggregator, and the `SubsetValidator` directly), not per-leaf `register()` — same pattern
-//! `🧱️base/🚪️io` already established for this artifact.
+//! The standard-level aggregator registers the `ComposerEntry`; the declaration's subset-validator table
+//! registers this subset's validator, whose `SnapshotSubsetValidator` half is the owned-snapshot policy the
+//! base SQLite codec resolves by dialect.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
@@ -12,8 +12,7 @@ pub mod derived_composition {
 use semio_framework_diagnostic::FaultCode;
 use semio_framework_diagnostic::Severity;
 use semio_framework_diagnostic::TextSpan;
-    use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
-    use std::sync::OnceLock;
+    use {semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator};
 
     const DIALECT_X: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("x") };
     const DIALECT_ANY: Dialect = Dialect { artifact_kind: "s.stdio.pdf", standard: StandardId("1.4"), subset: SubsetId("*") };
@@ -48,8 +47,8 @@ use semio_framework_diagnostic::TextSpan;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <PdfSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <PdfSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <PdfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_pdf_x_conformance(&snapshot),
@@ -65,19 +64,13 @@ use semio_framework_diagnostic::TextSpan;
         }
     }
 
-    static VALIDATOR_ENTRY: OnceLock<SubsetValidatorEntry> = OnceLock::new();
+    impl store::io::SnapshotSubsetValidator for PdfXValidator {
+        type Snapshot = PdfSnapshot;
 
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn validator_entry() -> &'static SubsetValidatorEntry {
-        VALIDATOR_ENTRY.get_or_init(subset_validator_entry_of::<PdfXValidator>)
-    }
-
-    /// 📌️ Registers this subset's `SubsetValidator`. Called from 1.4's own `⚙️engine::register()`.
-    /// The `ComposerEntry` itself is registered separately via this standard's own
-    /// `composer::entries()` aggregation.
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn register() {
-        register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
+        fn validate_snapshot(snapshot: &PdfSnapshot, _database: &store::sqlite_snapshot::SqliteDatabase, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> store::io_schema::IoResult<()> {
+            control.checkpoint(store::sqlite_snapshot::SqliteSnapshotPhase::ProjectSnapshot, 1, 1).map_err(store::io_schema::IoError::from_value_error)?;
+            Ok(store::io_schema::IoOutcome { value: (), diagnostics: check_pdf_x_conformance(snapshot) })
+        }
     }
     //#endregion 🔖️SubsetValidator
 
@@ -126,11 +119,11 @@ pub mod derived_construction {
         }
 
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
 
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<PdfSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<PdfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {

@@ -579,7 +579,7 @@ impl ColdFutureExecutor {
 
     /// 🚫️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (design-abi.md §4): cancels a spawned task
     /// outright — drops its future (and everything IT owns, including any parked `RequestFuture`
-    /// from `⚛️reactor/📮️requests`) without ever polling it again, and frees its slot for reuse.
+    /// from `🌐host/📮️requests`) without ever polling it again, and frees its slot for reuse.
     /// Used for key-dedupe (spawning onto a live `(instance, key)` cancels the stale task first)
     /// and `Event::InstanceClose` (every task that instance owns). Idempotent: cancelling an
     /// already-finished or unknown id is a no-op.

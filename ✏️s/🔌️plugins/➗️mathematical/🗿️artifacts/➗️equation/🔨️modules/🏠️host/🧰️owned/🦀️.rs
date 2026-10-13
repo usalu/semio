@@ -9,7 +9,7 @@ pub type EquationStore = store::ArtifactStore<crate::EquationSnapshot, crate::sc
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_equation_store(envelope: EquationEnvelope, actor: protocol::ActorId) -> Result<OwnedEquationStore, store::VcsError> {
     let mut store = EquationStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>().expect("funded document owners")).unwrap_or_else(|(error, _owners)| panic!("{}", error.into_message()));
     Ok(OwnedEquationStore(store))
 }
 
@@ -51,4 +51,4 @@ impl Drop for OwnedEquationStore {
     }
 }
 
-pub type EquationEnvelope = store::ArtifactEnvelope<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;
+pub type EquationEnvelope = store::os_store::store_schema::ArtifactEnvelope<crate::EquationSnapshot, crate::schema::mutations::EquationMutation>;

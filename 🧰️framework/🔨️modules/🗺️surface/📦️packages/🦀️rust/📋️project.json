@@ -1,6 +1,11 @@
 {
   "name": "@semio-tech/framework-surface-rs",
   "$schema": "../../../../../node_modules/nx/schemas/project-schema.json",
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🧩️component/**/*"
+    ]
+  },
   "targets": {
     "test-scene-wire-native": {
       "executor": "nx:run-commands",
@@ -32,42 +37,6 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test"
-      },
-      "inputs": [
-        "production",
-        "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
-      ]
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick"
-      },
-      "inputs": [
-        "production",
-        "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
-      ]
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long"
-      },
-      "inputs": [
-        "production",
-        "^production",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/✏️editing/🔣️.json"
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive"
       },
       "inputs": [
         "production",

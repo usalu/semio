@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏢organizational` per Wave C.
 
 use super::RenameOrganizationalRequirement;
-use crate::diff::{ProgramOrganizationalDelta, ProgramOrganizationalPatchEntry};
-use crate::registers::OrganizationalRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramOrganizationalDelta, ProgramOrganizationalPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::OrganizationalRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameOrganizationalRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

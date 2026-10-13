@@ -9,6 +9,14 @@ const schema = schemaModule.$defs.DeploymentCatalogV1;
 const idSpec = schema.properties.modules.items.properties.pluginId;
 const idPattern = new RegExp(idSpec.pattern, "u");
 
+/** 🧩️ The owner of a component crate: a component crate sits at `<owner>/🧩️component/📦️packages/🦀️rust` beside its library at
+ * `<owner>/📦️packages/🦀️rust`, so its sources (library, component root and committed descriptor pair) are everything under `<owner>`. */
+export function componentOwnerRootV1(cratePath: string): string {
+  const parts = cratePath.split("/");
+  if (parts.length < 4 || parts.at(-1) !== "🦀️rust" || parts.at(-2) !== "📦️packages" || parts.at(-3) !== "🧩️component") throw new Error(`Component crate ${cratePath} lies outside a 🧩️component facet`);
+  return parts.slice(0, -3).join("/");
+}
+
 /** 🛣️Admits only the two explicitly selected distribution route owners. */
 export function parseModuleRoutes(input: unknown): ModuleRoutes {
   if (!input || typeof input !== "object" || Array.isArray(input)) throw new Error("Invalid module routes");
@@ -135,3 +143,8 @@ export function installPublishedPageFetch(): void {
 }
 
 installPublishedPageFetch();
+
+/** 🔑️ The one `stageRepositoryArtifacts` ownership key of a component's module directory, whichever profile produced it. */
+export function componentModuleOwnerV1(cratePath: string): string {
+  return `${cratePath.split(/[\\/]/u).join("/")}/Cargo.toml:browser`;
+}

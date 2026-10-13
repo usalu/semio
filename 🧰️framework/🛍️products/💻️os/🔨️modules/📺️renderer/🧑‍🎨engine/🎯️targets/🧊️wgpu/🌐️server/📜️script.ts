@@ -23,7 +23,7 @@ class ServeScript extends BundleScript {
     process.env.S_OS_PORT = String(port);
     process.env.SEMIO_PLUGIN = variant;
     process.env.SEMIO_RENDERER = "wgpu";
-    process.env.SEMIO_BUILD_MODE = profile === "release" ? "ship" : "dev";
+    process.env.SEMIO_BUILD_MODE = profile === "release" ? "release" : "prototype";
     const controller = new AbortController(), cancel = () => controller.abort();
     process.once("SIGINT", cancel);
     process.once("SIGTERM", cancel);

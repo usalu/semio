@@ -9,8 +9,8 @@
 use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
 use semio_s_artifact_stdio_ply::PlySnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::ply::v1_0::any::SemioMeshToPly;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<PlySnapshot, semio_framework_diagnostic::TextError> {
     ::semio_framework_async::poll::resolve_ready(SemioMeshToPly::serialize(mesh)).map_err(|error| io_error(format!("generation3d→ply: {error}")))

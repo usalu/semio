@@ -5,37 +5,37 @@ use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, RowKey, Selector, SnapshotEditError, SnapshotEditEvent};
 
-pub(crate) type Entries = Vec<(String, DslValue)>;
-pub(crate) type Reshape = fn(&DslValue, &mut Entries) -> Result<(), String>;
+pub type Entries = Vec<(String, DslValue)>;
+pub type Reshape = fn(&DslValue, &mut Entries) -> Result<(), String>;
 
-pub(crate) const INDEX: Selector = Selector::Index("index");
-pub(crate) const ITEM: &str = "$item";
+pub const INDEX: Selector = Selector::Index("index");
+pub const ITEM: &str = "$item";
 
 /// ✏️ An entity rule: the value at `path` becomes `value` of `kind`, addressed through `selectors`.
-pub(crate) const fn ent(path: &'static str, kind: &'static str, selectors: &'static [Selector], value: &'static str) -> EntityRule {
+pub const fn ent(path: &'static str, kind: &'static str, selectors: &'static [Selector], value: &'static str) -> EntityRule {
     EntityRule::new(path, kind, value).selecting(selectors)
 }
 
 /// ➕ An insert rule: an insert into the list at `path` raises `kind` carrying the position as `index` (none appends) and the row as `item`.
-pub(crate) const fn ins(path: &'static str, kind: &'static str, selectors: &'static [Selector], index: Option<&'static str>, item: &'static str) -> InsertRule {
+pub const fn ins(path: &'static str, kind: &'static str, selectors: &'static [Selector], index: Option<&'static str>, item: &'static str) -> InsertRule {
     InsertRule { path, kind, selectors, index, item, item_fields: &[], with: &[] }
 }
 
 /// ➖ A remove rule: a remove of a row of the list at `path` raises `kind` naming the row as `row` says.
-pub(crate) const fn rem(path: &'static str, kind: &'static str, selectors: &'static [Selector], row: RowKey) -> RemoveRule {
+pub const fn rem(path: &'static str, kind: &'static str, selectors: &'static [Selector], row: RowKey) -> RemoveRule {
     RemoveRule { path, kind, selectors, row, with: &[] }
 }
 
-pub(crate) const fn named(payload: &'static str, field: &'static str) -> Selector {
+pub const fn named(payload: &'static str, field: &'static str) -> Selector {
     Selector::Field { payload, field }
 }
 
-pub(crate) const fn keyed(payload: &'static str, field: &'static str) -> RowKey {
+pub const fn keyed(payload: &'static str, field: &'static str) -> RowKey {
     RowKey::Field { payload, field }
 }
 
 /// 🚫️ A refusal with one of the module's `snapshot-edit.*` codes at the pointer `path`.
-pub(crate) fn fault(code: &'static str, path: &str, message: impl Into<String>) -> Fault {
+pub fn fault(code: &'static str, path: &str, message: impl Into<String>) -> Fault {
     let fault = Fault::new(FaultOrigin::App, FaultCode::new(code), message);
     if path.is_empty() {
         fault
@@ -44,12 +44,12 @@ pub(crate) fn fault(code: &'static str, path: &str, message: impl Into<String>) 
     }
 }
 
-pub(crate) fn unsupported(path: &str, message: impl Into<String>) -> Fault {
+pub fn unsupported(path: &str, message: impl Into<String>) -> Fault {
     fault("snapshot-edit.unsupported-path", path, message)
 }
 
 /// 🚫️ The fault of a contract refusal.
-pub(crate) fn edit_fault(error: SnapshotEditError) -> Fault {
+pub fn edit_fault(error: SnapshotEditError) -> Fault {
     let mut fault = Fault::new(FaultOrigin::App, FaultCode::new(error.code), error.message);
     if !error.path.is_empty() {
         fault = fault.with_param("path", error.path);
@@ -59,7 +59,7 @@ pub(crate) fn edit_fault(error: SnapshotEditError) -> Fault {
 }
 
 /// 📍️ The pointer an event addresses.
-pub(crate) fn event_path(event: &SnapshotEditEvent) -> &str {
+pub fn event_path(event: &SnapshotEditEvent) -> &str {
     match event {
         SnapshotEditEvent::SetValue { path, .. } | SnapshotEditEvent::InsertValue { path, .. } | SnapshotEditEvent::RemoveValue { path } | SnapshotEditEvent::MoveValue { path, .. } | SnapshotEditEvent::RenameKey { path, .. } => path,
         SnapshotEditEvent::ReplaceSource { .. } => "",
@@ -67,7 +67,7 @@ pub(crate) fn event_path(event: &SnapshotEditEvent) -> &str {
 }
 
 /// 🧩️ Decodes an RFC 6901 pointer into its segments.
-pub(crate) fn segments(path: &str) -> Result<Vec<String>, Fault> {
+pub fn segments(path: &str) -> Result<Vec<String>, Fault> {
     if path.is_empty() {
         return Ok(Vec::new());
     }
@@ -76,7 +76,7 @@ pub(crate) fn segments(path: &str) -> Result<Vec<String>, Fault> {
 }
 
 /// 🔢️ A list position spelled by one pointer segment; `-` addresses the end when `end` is the list length.
-pub(crate) fn position(segment: &str, end: Option<usize>, path: &str) -> Result<usize, Fault> {
+pub fn position(segment: &str, end: Option<usize>, path: &str) -> Result<usize, Fault> {
     match (segment, end) {
         ("-", Some(end)) => Ok(end),
         _ => segment.parse::<usize>().map_err(|_| fault("snapshot-edit.index-invalid", path, format!("'{segment}' is not a list position"))),
@@ -84,7 +84,7 @@ pub(crate) fn position(segment: &str, end: Option<usize>, path: &str) -> Result<
 }
 
 /// 🔎️ The member `name` of a record.
-pub(crate) fn field<'a>(value: &'a DslValue, name: &str) -> Option<&'a DslValue> {
+pub fn field<'a>(value: &'a DslValue, name: &str) -> Option<&'a DslValue> {
     match value {
         DslValue::Object(entries) => entries.iter().find(|(key, _)| key == name).map(|(_, value)| value),
         _ => None,
@@ -92,7 +92,7 @@ pub(crate) fn field<'a>(value: &'a DslValue, name: &str) -> Option<&'a DslValue>
 }
 
 /// 🔎️ The row at `index` of a list.
-pub(crate) fn item(value: &DslValue, index: usize) -> Option<&DslValue> {
+pub fn item(value: &DslValue, index: usize) -> Option<&DslValue> {
     match value {
         DslValue::Array(items) => items.get(index),
         _ => None,
@@ -100,19 +100,19 @@ pub(crate) fn item(value: &DslValue, index: usize) -> Option<&DslValue> {
 }
 
 /// 🔎️ The first row of the list `name` of a record whose `by` member equals `wanted`.
-pub(crate) fn find<'a>(record: &'a DslValue, name: &str, key_field: &str, wanted: &DslValue) -> Option<&'a DslValue> {
+pub fn find<'a>(record: &'a DslValue, name: &str, key_field: &str, wanted: &DslValue) -> Option<&'a DslValue> {
     match field(record, name) {
         Some(DslValue::Array(rows)) => rows.iter().find(|row| field(row, key_field) == Some(wanted)),
         _ => None,
     }
 }
 
-pub(crate) fn uint(value: &DslValue) -> Option<usize> {
+pub fn uint(value: &DslValue) -> Option<usize> {
     value.as_i64().and_then(|number| usize::try_from(number).ok())
 }
 
 /// 🧲️ Removes the payload entry `name`.
-pub(crate) fn take(entries: &mut Entries, name: &str) -> Result<DslValue, String> {
+pub fn take(entries: &mut Entries, name: &str) -> Result<DslValue, String> {
     let at = entries.iter().position(|(key, _)| key == name).ok_or_else(|| format!("the edit carries no '{name}'"))?;
     Ok(entries.remove(at).1)
 }
@@ -122,7 +122,7 @@ fn has(entries: &Entries, name: &str) -> bool {
 }
 
 /// 💧️ Replaces the inserted record `$item`, when the payload carries one, by its members.
-pub(crate) fn spread_item(_: &DslValue, entries: &mut Entries) -> Result<(), String> {
+pub fn spread_item(_: &DslValue, entries: &mut Entries) -> Result<(), String> {
     if !has(entries, ITEM) {
         return Ok(());
     }
@@ -132,7 +132,7 @@ pub(crate) fn spread_item(_: &DslValue, entries: &mut Entries) -> Result<(), Str
 }
 
 /// 🐍️ [`spread_item`] for the subsets whose payload members are snake_case: the inserted row's camelCase members take their payload spelling.
-pub(crate) fn spread_snake(tree: &DslValue, entries: &mut Entries) -> Result<(), String> {
+pub fn spread_snake(tree: &DslValue, entries: &mut Entries) -> Result<(), String> {
     let spread = has(entries, ITEM);
     let before = entries.len();
     spread_item(tree, entries)?;
@@ -145,7 +145,7 @@ pub(crate) fn spread_snake(tree: &DslValue, entries: &mut Entries) -> Result<(),
 }
 
 /// 📎️ Completes the payload with the members `names` it lacks, read from `row`.
-pub(crate) fn complete(entries: &mut Entries, row: &DslValue, names: &[&str]) -> Result<(), String> {
+pub fn complete(entries: &mut Entries, row: &DslValue, names: &[&str]) -> Result<(), String> {
     for name in names {
         if !has(entries, name) {
             let value = field(row, name).ok_or_else(|| format!("the row has no '{name}'"))?;
@@ -156,7 +156,7 @@ pub(crate) fn complete(entries: &mut Entries, row: &DslValue, names: &[&str]) ->
 }
 
 /// 📎️ [`complete`] with the row reached through `route`: each step names a list of the current record and the payload member holding the position in it.
-pub(crate) fn complete_in(tree: &DslValue, entries: &mut Entries, route: &[(&str, &str)], names: &[&str]) -> Result<(), String> {
+pub fn complete_in(tree: &DslValue, entries: &mut Entries, route: &[(&str, &str)], names: &[&str]) -> Result<(), String> {
     let mut row = tree;
     for (list, payload) in route {
         let index = entries.iter().find(|(key, _)| key == *payload).and_then(|(_, value)| uint(value)).ok_or_else(|| format!("the edit carries no position '{payload}'"))?;
@@ -166,14 +166,14 @@ pub(crate) fn complete_in(tree: &DslValue, entries: &mut Entries, route: &[(&str
 }
 
 /// 📎️ [`complete`] with the row of the list `list` of the document whose `by` member the payload already names.
-pub(crate) fn complete_by(tree: &DslValue, entries: &mut Entries, list: &str, key_field: &str, names: &[&str]) -> Result<(), String> {
+pub fn complete_by(tree: &DslValue, entries: &mut Entries, list: &str, key_field: &str, names: &[&str]) -> Result<(), String> {
     let wanted = entries.iter().find(|(key, _)| key == key_field).map(|(_, value)| value.clone()).ok_or_else(|| format!("the edit carries no '{key_field}'"))?;
     let row = find(tree, list, key_field, &wanted).ok_or_else(|| format!("'{list}' has no row with that '{key_field}'"))?;
     complete(entries, row, names)
 }
 
 /// 🎯️ Builds the one kind of a payload.
-pub(crate) fn build<S, M>(tree: &DslValue, reshapes: &[(&str, Reshape)], kind: &str, mut entries: Entries, path: &str) -> Result<Vec<M>, Fault>
+pub fn build<S, M>(tree: &DslValue, reshapes: &[(&str, Reshape)], kind: &str, mut entries: Entries, path: &str) -> Result<Vec<M>, Fault>
 where
     M: Mutation<S>,
 {
@@ -184,7 +184,7 @@ where
 }
 
 /// 🎯️ The concrete kind a pointer edit denotes through `rules`, its payload completed by `reshapes`; none when the edit changes nothing.
-pub(crate) fn resolve<S, M>(rules: &EditRules, reshapes: &[(&str, Reshape)], snapshot: &S, event: &SnapshotEditEvent) -> Result<Vec<M>, Fault>
+pub fn resolve<S, M>(rules: &EditRules, reshapes: &[(&str, Reshape)], snapshot: &S, event: &SnapshotEditEvent) -> Result<Vec<M>, Fault>
 where
     S: ToValue,
     M: Mutation<S>,
@@ -197,7 +197,7 @@ where
 }
 
 /// 🎯️ The one kind a computed gesture denotes, its payload the list positions `numbers` names.
-pub(crate) fn positions<S, M>(snapshot: &S, event: &SnapshotEditEvent, kind: &str, numbers: &[(&str, usize)]) -> Result<Vec<M>, Fault>
+pub fn positions<S, M>(snapshot: &S, event: &SnapshotEditEvent, kind: &str, numbers: &[(&str, usize)]) -> Result<Vec<M>, Fault>
 where
     S: ToValue,
     M: Mutation<S>,
@@ -208,14 +208,14 @@ where
 
 /// 📚️ A record member holding one optional child: the kind creating it and the kind deleting it.
 #[derive(Clone, Copy, Debug)]
-pub(crate) struct Slot {
+pub struct Slot {
     pub field: &'static str,
     pub create: &'static str,
     pub delete: &'static str,
 }
 
 /// 🪆️ The create or delete kind of an edit of an optional child member; `None` when the edit addresses no slot.
-pub(crate) fn slot_edit<S, M>(slots: &[Slot], spread: Reshape, snapshot: &S, event: &SnapshotEditEvent) -> Result<Option<Vec<M>>, Fault>
+pub fn slot_edit<S, M>(slots: &[Slot], spread: Reshape, snapshot: &S, event: &SnapshotEditEvent) -> Result<Option<Vec<M>>, Fault>
 where
     S: ToValue,
     M: Mutation<S>,
@@ -237,7 +237,7 @@ where
 }
 
 /// 🔀️ The two positions of a move of one row of the list at `list` (a document-level pointer prefix), none when the event moves something else.
-pub(crate) fn list_move(event: &SnapshotEditEvent, list: &[&str]) -> Result<Option<(usize, usize)>, Fault> {
+pub fn list_move(event: &SnapshotEditEvent, list: &[&str]) -> Result<Option<(usize, usize)>, Fault> {
     let SnapshotEditEvent::MoveValue { from, path } = event else { return Ok(None) };
     let (origin, target) = (segments(from)?, segments(path)?);
     let row = |parts: &[String]| -> Option<String> {
@@ -250,7 +250,7 @@ pub(crate) fn list_move(event: &SnapshotEditEvent, list: &[&str]) -> Result<Opti
 }
 
 /// 🧱️ A record made of `entries`.
-pub(crate) fn record(entries: impl IntoIterator<Item = (&'static str, DslValue)>) -> DslValue {
+pub fn record(entries: impl IntoIterator<Item = (&'static str, DslValue)>) -> DslValue {
     DslValue::object(entries.into_iter().map(|(name, value)| (name.to_string(), value)))
 }
 
@@ -315,7 +315,7 @@ fn insert_at(root: &mut DslValue, relative: &[String], value: DslValue, path: &s
 }
 
 /// 📝️ A clone of `entity` with the event applied at the pointer below the first `depth` segments of the event's pointer.
-pub(crate) fn edited(entity: &DslValue, event: &SnapshotEditEvent, depth: usize) -> Result<DslValue, Fault> {
+pub fn edited(entity: &DslValue, event: &SnapshotEditEvent, depth: usize) -> Result<DslValue, Fault> {
     let path = event_path(event);
     let below = |pointer: &str| -> Result<Vec<String>, Fault> { Ok(segments(pointer)?.into_iter().skip(depth).collect()) };
     let mut next = entity.clone();

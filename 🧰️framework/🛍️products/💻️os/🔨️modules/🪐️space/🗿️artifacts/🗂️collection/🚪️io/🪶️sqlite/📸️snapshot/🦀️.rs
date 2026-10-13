@@ -3,13 +3,13 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{CollectionSnapshot,CollectionFolder,CollectionEntry,ArtifactBody,S_COLLECTION_SCHEMA};
 use semio_framework_os_kernel as store;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_COLLECTION_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
-pub fn register_sqlite_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<CollectionSnapshot,crate::CollectionMutation>(S_COLLECTION_SCHEMA))}
+pub fn register_sqlite_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::bare_artifact_codec::<CollectionSnapshot,crate::CollectionMutation>(S_COLLECTION_SCHEMA))}
 fn rows(value:&CollectionSnapshot)->Result<usize,ValueError>{fields::add(fields::add(1,value.folders.len())?,value.entries.len().checked_mul(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit, "collection row count overflow"))?)}
 fn schema(control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{if CollectionSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "collection authored schema byte limit exceeded"))}else{Ok(())}}
 fn word(row:&store::sqlite_snapshot::SqliteRow,index:usize)->Result<u64,ValueError>{let high=u32::try_from(row.integer(index)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue, "collection unsigned high word exceeds u32"))?;let low=u32::try_from(row.integer(index+1)?).map_err(|_|ValueError::new(ValueRefusalKind::InvalidValue, "collection unsigned low word exceeds u32"))?;Ok((u64::from(high)<<32)|u64::from(low))}

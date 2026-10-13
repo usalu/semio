@@ -10,7 +10,8 @@ while True:
     for line in out:
         parts = line.split(None, 2)
         if len(parts) < 3: continue
-        rss, pc, cmd = int(parts[0]), float(parts[1]), parts[2]
+        try: rss, pc, cmd = int(parts[0]), float(parts[1]), parts[2]
+        except ValueError: continue
         cpu += pc
         toks = cmd.split()
         if toks and toks[0].endswith("/rustc") and "--crate-name" in toks:

@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::apply_pdf_mutation;
-use crate::standards::v1_7::subsets::base::io::text_document;
+use crate::standards::v1_7::subsets::base::io::export::text_document;
 use crate::standards::v1_7::subsets::base::io::{binary::mutations as binary, text::mutations as text};
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::{OpBinary, OpText, SemanticMutation};
@@ -64,7 +64,7 @@ fn samples_apply_and_invert_on_a_real_document() {
         let mut working = base.clone();
         let _outcome = apply_pdf_mutation(&mut working, &mutation);
         let mut restored = working.clone();
-        for inverse in crate::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
+        for inverse in semio_s_artifact_stdio_contract::mutation_inverse(&mutation, &base).expect("valid retained mutation inverse fixture") {
             apply_pdf_mutation(&mut restored, &inverse);
         }
         assert_eq!(restored, base, "inverse of {} lands back on the base", mutation.label().resolve(semio_framework_ui_locale::Terminology::Native, semio_framework_ui_locale::Locale::En));

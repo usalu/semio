@@ -32,9 +32,9 @@ use crate::standards::v1::subsets::any::schema::inferences::{
     CAD_MODEL_DEFINITION_STRUCTURE_CLASSIC,
 };
 use crate::{artifact_kind, CadCamera, CadComposedPanes, CadPaneId, CadSnapshot, CadWorkingScene, CAD_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{remove_element::RemoveElement, set_element::SetElement, SemioModelMutation};
-#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{insert_element::InsertElement};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelElement;
+use {semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement, semio_s_artifact_stdio_semio_model::schema::mutations::set_element::SetElement, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
+#[cfg(test)] use semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelElement;
 use semio_framework::kernel::Effect;
 use semio_framework::{InteractiveJobClassification, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolJobFactoryError};
 use semio_framework_plugin::retained_command::{ArtifactCommandInputs, ArtifactCommandWork, ArtifactCommandWorkStep, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload};
@@ -84,7 +84,7 @@ use semio_framework_plugin::ViewModel;
 use semio_framework_plugin::WindowEngagement;
 use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::WorldSunConfig;
-use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
+use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 // 🚧️ SDK GAP: `ArtifactEditor`/`Editor`/`Dialect` (ticket 26/08/16 contract §2.1/§2.4)? are not yet
 // in `semio_framework_plugin`'s curated crate-root re-export list (`🔌️plugin/🦀️.rs:17858`)
 // — only reachable through the `app` submodule they're actually declared in. Not fixable here
@@ -654,11 +654,11 @@ pub fn export_spatial_json(_envelope: &CadPlayView, mode: &str, pane: Option<Cad
 /// of an `Emit::mutations([...])`. The spr is a fresh, edit-free op-log for `scene`'s own
 /// `schema`/`id` — a genesis envelope with no history to encode.
 pub fn reset_document_effect(scene: &CadSnapshot) -> Effect {
-    let pack = <CadSnapshot as store::ArtifactPack>::encode_pack(scene);
+    let pack = <CadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(scene);
     // 🪪️ An edit-free history log, never a throwaway `create_document_envelope`: an envelope dropped
     // without its bounded retirement authority traps (`terminal shell reached Drop …`). The host
     // re-stamps the log's identity with the live store's before archive hydration.
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -1602,8 +1602,8 @@ impl ArtifactCommandWork<EditorApp<CadPlayApp>> for CadMediaWork {
             Ok(RetainedCloneStep::Progress(progress)) | Ok(RetainedCloneStep::Complete(progress)) => InteractiveJobCloseStep::Pending { progress },
             Err(error) => InteractiveJobCloseStep::Refused { kind: error.kind, progress: error.retained_progress() },
         };
-        if self.retirement.is_some() { return mapped(store::artifact_retirement_box_close_step(&mut self.retirement, child)); }
-        if self.pending.is_some() { return mapped(store::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child)); }
+        if self.retirement.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child)); }
+        if self.pending.is_some() { return mapped(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending, &mut self.retirement, child)); }
         if self.media.is_some() {
             let payload = self.media.take().expect("admitted media owner").payload;
             let (schema, value) = match payload {
@@ -1629,10 +1629,10 @@ impl CadMediaWork {
             Ok(demand)
         };
         if let Some(retirement) = self.retirement.as_ref() {
-            return nested(store::artifact_retirement_box_demands(retirement, body)?);
+            return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, body)?);
         }
         if self.pending.is_some() {
-            return nested(store::artifact_retirement_owned_birth_demands(&self.pending)?);
+            return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending)?);
         }
         Ok(if self.media.is_some() || self.children.is_some() { semio_framework_value::RetirementDemand { depth: 1, ..Default::default() } } else { Default::default() })
     }
@@ -1644,7 +1644,7 @@ struct CadConfigStorePreparationFactory;
 
 struct CadConfigStorePreparation {
     owners: store::OneItemOwners<CadConfig, CadConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
@@ -1678,13 +1678,13 @@ fn admit_cad_config(config: &CadConfig) -> Result<usize, String> {
     Ok(retained_bytes)
 }
 
-fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_cad_config_mutation(mutation: &CadConfigMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = match mutation {
         CadConfigMutation::Set(SetEdit { config }) => admit_cad_config(config)?,
         CadConfigMutation::SetContributions(SetContributionsEdit { json }) if json.len() <= CAD_CONFIG_STORE_MAXIMUM_BYTES => json.len(),
         CadConfigMutation::SetContributions(_) => return Err("CAD config mutation exceeds its fixed retained byte envelope".into()),
     };
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn cad_refusal(message: impl Into<String>) -> semio_framework_value::ValueError {
@@ -1700,41 +1700,41 @@ fn prepare_cad_config(base: &CadConfig, mutation: &CadConfigMutation) -> Result<
     Ok((post, inverse))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<CadConfig, CadConfigMutation> for CadConfigStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &CadConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &CadConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("CAD config preparation rejected its lane".into());
         }
         admit_cad_config_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &CadConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &CadConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadConfigStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadConfig, CadConfigMutation, CadConfigMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation rejected original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(CadConfigStorePreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for CadConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for CadConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD config preparation lost its mutation owner"))?;
         let (post, inverse) = prepare_cad_config(base.get(), mutation)?;
@@ -1745,17 +1745,17 @@ impl store::ArtifactStoreOneItemPreparation<CadConfig, CadConfigMutation> for Ca
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadConfig, CadConfigMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -1773,11 +1773,11 @@ struct CadArtifactStorePreparationFactory;
 
 struct CadArtifactStorePreparation {
     owners: store::OneItemOwners<CadSnapshot, CadMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-fn cad_child_retained_bytes<S>(child: &store::ArtifactChild<S>) -> usize {
+fn cad_child_retained_bytes<S>(child: &store::os_store::artifact_child::ArtifactChild<S>) -> usize {
     child.child_id.len()+child.target.artifact_id.len()+child.target.dialect.artifact_kind.len()+child.target.dialect.standard.len()+child.target.dialect.subset.len()
 }
 
@@ -1821,12 +1821,12 @@ fn admit_cad_snapshot(snapshot: &CadSnapshot) -> Result<usize, String> {
     Ok(retained_bytes)
 }
 
-fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_cad_artifact_mutation(mutation: &CadMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = semio_framework_pack_json::to_json_string(mutation).len();
     if retained_bytes > CAD_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("CAD Artifact mutation exceeds its fixed retained byte envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 fn prepare_cad_artifact(base: &CadSnapshot, mutation: &CadMutation) -> Result<(CadSnapshot, Vec<CadMutation>), semio_framework_value::ValueError> {
@@ -1839,7 +1839,7 @@ fn prepare_cad_artifact(base: &CadSnapshot, mutation: &CadMutation) -> Result<(C
     Ok((post, inverse))
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for CadArtifactStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<CadMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
@@ -1853,36 +1853,36 @@ impl store::ArtifactStoreOneItemPreparationFactory<CadSnapshot, CadMutation> for
         Some((semantics.entity, semantics.kind))
     }
 
-    fn preflight(&self, mutation: &CadMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &CadMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("CAD Artifact preparation rejected its lane".into());
         }
         admit_cad_artifact_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &CadMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &CadMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<CadArtifactStorePreparation>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<CadSnapshot, CadMutation, CadMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation rejected original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         Ok((Box::new(CadArtifactStorePreparation {
             owners: store::OneItemOwners::from_request(request),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
-        if !grant.permits_one() || self.cancelled { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+        if !grant.permits_one() || self.cancelled { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
         if self.owners.refused.is_some() { return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal")); }
-        if self.owners.prepared.is_some() { return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
+        if self.owners.prepared.is_some() { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default())); }
         let base = self.owners.base.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its exact base root"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "CAD Artifact preparation lost its mutation owner"))?;
         let (post, inverse) = prepare_cad_artifact(base.get(), mutation)?;
@@ -1893,17 +1893,17 @@ impl store::ArtifactStoreOneItemPreparation<CadSnapshot, CadMutation> for CadArt
             Ok(prepared) => prepared,
             Err((error, edit, post)) => { *self.owners.refused = Some((edit, post)); return Err(error); }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint { self.checkpoint }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.as_ref() }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.take() }
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint { self.checkpoint }
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.as_ref() }
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<CadSnapshot, CadMutation>> { self.owners.prepared.take() }
     fn cancel(&mut self) { self.cancelled = true; }
     fn begin_close(&mut self) { self.owners.begin_close(); }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> { self.owners.close_step(grant.retained_grant()) }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
     fn next_close_capacity_byte_demand(&self, body: usize) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(body)?.capacity_bytes) }
     fn next_close_release_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.release_bytes) }
@@ -2012,11 +2012,11 @@ impl ArtifactEditor for CadPlayApp {
     const DIALECT: Dialect = crate::CAD_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = CAD_DOCUMENT_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(CadArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(CadConfigStorePreparationFactory))
     }
 
@@ -2152,7 +2152,7 @@ impl ArtifactEditor for CadPlayApp {
                 return Err(MediaError::Payload(port.to_string(), "default document:in importer only accepts a Structured (base64 pack) payload".into()));
             };
             let bytes = store::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-            let projection = <CadSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
+            let projection = <CadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
             return Ok(Emit { effects: vec![reset_document_effect(&projection)], ..Default::default() });
         }
         let name = match &media.media_type.form {
@@ -2178,7 +2178,7 @@ impl ArtifactEditor for CadPlayApp {
                 return Err(MediaError::NotImplemented);
             }
             let media_type = Self::io().map_or(MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep }, |io| io.artifact_media_type);
-            let bytes = <CadSnapshot as store::ArtifactPack>::encode_pack(doc.snapshot);
+            let bytes = <CadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(doc.snapshot);
             return Ok(Media { media_type, payload: MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) } });
         }
         let view = CadPlayView::of(doc.snapshot, &doc.children, CadPlayRuntime::default(), CadInteractionSnapshot::default());

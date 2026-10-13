@@ -77,18 +77,18 @@ pub(crate) mod context {
     pub async fn metabolism_app() -> OwnedWiresApp {
         let mut app = new_app().await;
         let document = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("valid metabolism fixture mutations");
-        let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", document, None);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
-        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_envelope(envelope);
         semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load metabolism");
         app
     }
     
     /// ♻️ Retires a seed envelope through its bounded owner retirement; an envelope may never reach `Drop` owning.
-    pub fn retire_envelope(envelope: store::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::retire_document_envelope_birth_bytes::<WiresSnapshot, WiresMutation>(), maximum_depth: 4, ..Default::default() };
-        let (mut retirement, _) = store::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()), grant).map_err(|(error, ..)| error).expect("seed envelope retirement admission");
+    pub fn retire_envelope(envelope: store::os_store::store_schema::ArtifactEnvelope<WiresSnapshot, WiresMutation>) {
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<WiresSnapshot, WiresMutation>(), maximum_depth: 4, ..Default::default() };
+        let (mut retirement, _) = store::os_store::snapshot_read::retire_document_envelope(envelope, std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresSnapshot>::default()), std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<WiresMutation>::default()), grant).map_err(|(error, ..)| error).expect("seed envelope retirement admission");
         store::test_support::drive_retirement(retirement.as_mut()).expect("seed envelope retirement");
         assert!(retirement.terminal_is_empty(), "seed envelope retires completely");
     }
@@ -117,15 +117,15 @@ pub(crate) mod context {
         let content = crate::wires_content_snapshot(&nodes, &edges);
         let snapshot = WiresSnapshot { content: crate::wires_content_handle(&content), ..crate::empty_wires_snapshot() };
         let handle = snapshot.content.clone();
-        let mut envelope = store::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
+        let mut envelope = store::os_store::document_materialize::create_document_envelope::<WiresSnapshot, WiresMutation>(crate::MINDMAP_WIRES_SCHEMA, "reasoning-wires", snapshot, None);
         envelope.dialect = Some(crate::WIRES_DIALECT.into());
-        let files = store::print_document_pack(&envelope).await.expect("graph fixture parent pack");
+        let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("graph fixture parent pack");
         retire_envelope(envelope);
         let mut archive = app.document_load_archive(&files)?;
         let parent = semio_framework_artifact_reference::ArtifactRef { artifact_id: app.document_identity().expect("live parent identity"), dialect: crate::WIRES_DIALECT.into() };
         let owner = store::OwnerRef { parent: parent.clone(), slot: crate::WIRES_CONTENT_SLOT.into(), child_id: handle.child_id.clone() };
-        let child_pack = store::ArtifactPack::encode_pack(&content);
-        let envelope_pack = store::genesis_member_envelope_pack("stdio.semio", &handle.target, &owner, &child_pack).await.expect("full fixture child envelope");
+        let child_pack = store::os_store::serialization::ArtifactPack::encode_pack(&content);
+        let envelope_pack = store::os_store::text_format::genesis_member_envelope_pack("stdio.semio", &handle.target, &owner, &child_pack).await.expect("full fixture child envelope");
         archive.members.push(protocol::OwnedDocumentMemberPackEntry {
             ordinal: 0,
             reference: protocol::DocumentArchiveArtifactRef { artifact_id: handle.target.artifact_id, artifact_kind: handle.target.dialect.artifact_kind, standard: handle.target.dialect.standard, subset: handle.target.dialect.subset },
@@ -367,11 +367,11 @@ async fn undo_redo_round_trip_through_the_wrapper() {
 async fn a_redelivered_member_lane_is_idempotent() {
     use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
     use semio_framework_plugin::PluginApp;
-    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     let nodes = |app: &crate::editor::wires::unit_tests::context::WiresApp| crate::schema::board_snapshot_nodes(&context::board(app)).len();
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://wires-idempotent", "mem://wires-idempotent").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     sender.dispatch_typed(WiresCommand::AddNode(add_node::AddNode { kind: "identity".into() }), &meta("local")).await.expect("apply command");
     settle_registered_typed_operation(&mut *sender, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit publishes");
     let received = far.receive().await.expect("receive");
@@ -380,7 +380,7 @@ async fn a_redelivered_member_lane_is_idempotent() {
     assert!(!lanes.is_empty(), "the board edit reaches the channel on the content child's member lane");
     let mut receiver = new_app().await;
     let (inbound, mut peer) = MemoryBackbone::pair("mem://wires-idempotent-receiver", "mem://wires-idempotent-receiver").await;
-    receiver.attach_backbone(store::Backbones::Memory(inbound)).await.expect("attach receiver");
+    receiver.attach_backbone(store::os_store::backbone::Backbones::Memory(inbound)).await.expect("attach receiver");
     let genesis = nodes(&receiver);
     for message in &lanes {
         peer.send(message.clone()).await.expect("deliver the member lane");
@@ -406,7 +406,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     use crate::schema::board_node;
     use semio_framework_plugin::artifact_app_laws::meta;
     use semio_framework_plugin::PluginApp;
-    use store::MemoryBackbone;
+    use store::os_store::backbone::MemoryBackbone;
 
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;
@@ -419,8 +419,8 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
     context::load_graph_snapshot(&mut instance_a, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load a and its graph child");
     context::load_graph_snapshot(&mut instance_b, vec![seed_node("node-1"), seed_node("node-2")], Vec::new()).await.expect("load b and its graph child");
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://mindmap-convergence", "mem://mindmap-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     // A adds node-3; B relates node-1 to node-2 — disjoint edits on the graph.
     let receiver = meta("local").instance_id;
@@ -449,7 +449,7 @@ async fn two_instances_converge_disjoint_graph_edits_via_backbone() {
 
 #[semio_framework_async_macros::async_test]
 async fn reset_document_ownership_wires_preserves_pack_with_an_edit_free_history() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let expected: Value = serde_json::from_str(include_str!("../../🧫️fixtures/♻️reset-document.json")).unwrap();
     let source = crate::empty_wires_snapshot();
     let before = serde_json::from_str::<Value>(&semio_framework_pack_json::to_json_string(&source)).unwrap();

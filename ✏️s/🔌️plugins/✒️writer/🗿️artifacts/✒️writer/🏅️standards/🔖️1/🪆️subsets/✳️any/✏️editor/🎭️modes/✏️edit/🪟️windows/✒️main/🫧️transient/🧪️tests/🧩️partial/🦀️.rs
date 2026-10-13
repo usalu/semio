@@ -17,11 +17,11 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
             let mutation: WriterMainWindowTransientMutation = semio_framework_pack_json::from_json_str(&row["mutation"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
             let mut state = store::TransientStore::<_, WriterMainWindowTransientMutation>::new(base);
             let mut publication = state.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, mutation, owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-            let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
-            assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
+            let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            assert!(matches!(state.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
             assert_eq!(publication.progress().completed_bytes, 0);
-            let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
-            let close = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
+            let close = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 };
             for turn in 0..32_768 {
                 let previous = publication.progress();
                 let step = state.advance_publish_one(&mut publication, grant).unwrap();
@@ -29,7 +29,7 @@ fn writer_window_state_partial_construction_preserves_large_utf8_and_cancels() {
                 assert!(next.completed_bytes - previous.completed_bytes <= 1);
                 assert!(next.completed_items - previous.completed_items <= 1);
                 if cancel && turn == 1 { assert!(state.cancel_publish_one(&mut publication)); break; }
-                if matches!(step, store::ArtifactStoreOneItemAdvance::Published(_)) { assert!(publication.acknowledge()); break; }
+                if matches!(step, store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) { assert!(publication.acknowledge()); break; }
             }
             let expected = if cancel { before } else {
                 let mut expected = before;

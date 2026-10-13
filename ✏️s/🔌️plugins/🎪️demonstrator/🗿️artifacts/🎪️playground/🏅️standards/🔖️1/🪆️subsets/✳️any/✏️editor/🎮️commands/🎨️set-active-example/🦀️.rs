@@ -19,7 +19,7 @@ pub fn handle(payload: &SetActiveExample, _doc: &ArtifactView<'_, PlaygroundSnap
     let schema = if payload.example_id.is_empty() {
         empty_playground_snapshot().schema
     } else if payload.example_id == demo::ID {
-        <PlaygroundSnapshot as store::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))?.schema
+        <PlaygroundSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(demo::PRIMARY_TEXT).map_err(|error| Fault::from(error.to_string()))?.schema
     } else {
         return Ok(Emit::default());
     };

@@ -2,10 +2,10 @@
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET contract §2.1). `SemioCadEditor`
 //! implements `ArtifactEditor`, wiring the shared `MeshWindowKit` to a single Main window.
 
-use crate::editor::semio_cad::modes::edit;
-use crate::editor::semio_cad::modes::edit::windows::main;
-use crate::standards::v1::subsets::cad::schema::mutations::{SemioCadMutation};
-use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
+use crate::editor::modes::edit;
+use crate::editor::modes::edit::windows::main;
+use crate::schema::mutations::SemioCadMutation;
+use crate::schema::snapshot::SemioCadSnapshot;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::retained_command::{ArtifactRetainedCommandInputs, ArtifactRetainedCommandJob, ArtifactRetainedCommandPayload, BoundedArtifactCommandWork};
 use semio_framework_plugin::AppOperationContext;
@@ -85,8 +85,8 @@ const SEMIO_CAD_DOCUMENT_SCHEMA_EXAMPLE_SCHEMA: &str = "stdio.semio.cad.tool-com
 const SEMIO_CAD_DOCUMENT_SCHEMA_EXAMPLE_BYTES: usize = 8_192;
 
 fn semio_cad_editor_example_snapshot(example_id: &str) -> SemioCadSnapshot {
-    if example_id == crate::examples::demo::ID {
-        <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_default()
+    if example_id == semio_s_artifact_stdio_semio_base::examples::demo::ID {
+        <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(semio_s_artifact_stdio_semio_base::examples::demo::PRIMARY_TEXT).unwrap_or_default()
     } else {
         SemioCadSnapshot::default()
     }
@@ -166,7 +166,7 @@ impl ArtifactOwnedToolJobFactory for SemioCadEditorExampleFactory {
     const PUBLICATION_CONTRACTS: &'static [ArtifactToolPublicationContract] = &[SEMIO_CAD_DOCUMENT_SCHEMA_EXAMPLE_CONTRACT];
 }
 #[path = "🧭️edit-rules/🦀️.rs"]
-pub(crate) mod edit_rules;
+pub mod edit_rules;
 
 //#region 🔖️Editor
 #[derive(Default, Clone, Copy)]
@@ -175,7 +175,7 @@ pub struct SemioCadEditor;
 impl ArtifactEditor for SemioCadEditor {
     /// 📚️ Artifact catalogue stamped by `PluginBuilder::editor` onto the navbar dropdown.
     fn examples() -> Vec<semio_framework_plugin::ExampleSource> {
-        vec![crate::examples::demo::source()]
+        vec![semio_s_artifact_stdio_semio_base::examples::demo::source()]
     }
     type Snapshot = SemioCadSnapshot;
     type Mutation = SemioCadMutation;
@@ -297,7 +297,7 @@ impl editing::SnapshotEditingEditor for SemioCadEditor {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn create_semio_cad_editor() -> semio_framework_plugin::AppDefinition {
     let builder = Editor::builder(SEMIO_CAD_DIALECT).document(["stdio", "semio"]).icon_id("box").mode_def(edit::definition()).default_mode_id(edit::SEMIO_CAD_EDIT_MODE_ID).window_kind_def(main::definition()).window_kind_def(editing::snapshot_details_window_definition()).default_layout(edit::layout()).action_with(semio_s_artifact_stdio_contract::set_active_example_action())
-        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(crate::examples::demo::ID, crate::examples::demo::label())], crate::examples::demo::ID))
+        .action_args(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_args(&[(semio_s_artifact_stdio_semio_base::examples::demo::ID, semio_s_artifact_stdio_semio_base::examples::demo::label())], semio_s_artifact_stdio_semio_base::examples::demo::ID))
         .action_destructive(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID)
         .action_describe(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, semio_s_artifact_stdio_contract::set_active_example_description())
         .action_interactive_job(semio_s_artifact_stdio_contract::SET_ACTIVE_EXAMPLE_ACTION_ID, InteractiveJobClassification::Migrated)

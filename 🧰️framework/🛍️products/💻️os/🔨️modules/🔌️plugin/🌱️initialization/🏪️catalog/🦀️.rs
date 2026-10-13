@@ -7,10 +7,10 @@ pub enum ArtifactStoreConstructorKind { Recipient, Document, Config, Draft, Inte
 #[derive(Clone,Copy,Debug,PartialEq,Eq)]
 pub enum ArtifactStoreConstructorPhase { Preparation, Close }
 
-pub(super) struct OriginalCatalogConstructor<P,Mu>
+pub(crate) struct OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue,
 Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>{
- original:ManuallyDrop<Option<Result<store::DocumentStoreOwners<P,Mu>,store::DocumentStoreOwnersAdmissionError<P,Mu>>>>,
+ original:ManuallyDrop<Option<Result<store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>>,
  refusal:ManuallyDrop<Option<ValueError>>,
  refusal_close:ManuallyDrop<Option<Box<dyn store::ErasedSnapshotRetirement>>>,
  done:bool,
@@ -18,30 +18,30 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
 impl<P,Mu> OriginalCatalogConstructor<P,Mu>
 where P:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+ArtifactPack+Send+Sync+'static,
 Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutation<P>+OpBinary+OpText+Send+'static{
- pub(super) fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
+ fn new()->Self{Self{original:ManuallyDrop::new(None),refusal:ManuallyDrop::new(None),refusal_close:ManuallyDrop::new(None),done:false}}
  fn refusal_demands(&self,body:usize)->Option<Result<RetirementDemand,ValueError>>{
-  if let Some(owner)=self.refusal_close.as_ref(){return Some(store::artifact_retirement_box_demands(owner,body))}
-  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::artifact_retirement_owned_birth_demands(&self.refusal))}
+  if let Some(owner)=self.refusal_close.as_ref(){return Some(store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body))}
+  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.refusal))}
   if self.original.as_ref().is_some_and(|original|matches!(original,Err(error)if matches!(error.error.message,std::borrow::Cow::Owned(_)))){return Some(Ok(RetirementDemand{depth:1,..Default::default()}))}
   None
  }
  fn close_refusal(&mut self,grant:RetainedCloneGrant)->Option<Result<RetainedCloneProgress,ValueError>>{
   let demand=match self.refusal_demands(grant.maximum_copy_bytes)?{Ok(demand)=>demand,Err(error)=>return Some(Err(error))};
   if grant.maximum_items==0||grant.maximum_copy_bytes<demand.copy_bytes||grant.maximum_capacity_bytes<demand.capacity_bytes||grant.maximum_release_bytes<demand.release_bytes||grant.maximum_depth<demand.depth{return Some(Ok(Default::default()))}
-  if self.refusal_close.is_some(){return Some(store::artifact_retirement_box_close_step(&mut self.refusal_close,grant).map(|step|step.progress()))}
-  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,grant).map(|step|step.progress()))}
+  if self.refusal_close.is_some(){return Some(store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.refusal_close,grant).map(|step|step.progress()))}
+  if self.refusal.as_ref().is_some_and(|error|matches!(error.message,std::borrow::Cow::Owned(_))){return Some(store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refusal,&mut self.refusal_close,grant).map(|step|step.progress()))}
   let Some(Err(original))=self.original.as_mut()else{unreachable!()};
   *self.refusal=Some(std::mem::replace(&mut original.error,ValueError::literal(semio_framework_value::ValueRefusalKind::Canceled,"original constructor refusal is retiring")));
   Some(Ok(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }
- pub(super) fn demands(&self,body:usize,closing:bool,source:impl FnOnce()->Result<RetirementDemand,ValueError>)->Result<RetirementDemand,ValueError>{
+ fn demands(&self,body:usize,closing:bool,source:impl FnOnce()->Result<RetirementDemand,ValueError>)->Result<RetirementDemand,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}
   let parent=0usize;
   if let Some(demand)=self.refusal_demands(body){let mut demand=demand?;demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"catalog refusal parent depth overflow"))?;return Ok(demand)}
   let child=match self.original.as_ref(){Some(Ok(owner))=>if closing{owner.uninstalled_owners_demands(body.saturating_sub(parent))?}else if owner.constructor_is_complete(){RetirementDemand::default()}else{owner.constructor_demands(body.saturating_sub(parent))?},Some(Err(error))=>match error.owners.as_ref(){Some(owner)=>if closing{owner.uninstalled_owners_demands(body.saturating_sub(parent))?}else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"denied original catalog remains retained"))},None=>RetirementDemand::default()},None=>if closing{RetirementDemand::default()}else{source()?}};
   Ok(RetirementDemand{copy_bytes:parent.checked_add(child.copy_bytes).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"catalog source quote copy overflow"))?,capacity_bytes:child.capacity_bytes,release_bytes:child.release_bytes,depth:child.depth.max(1).checked_add(1).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit,"catalog quote depth overflow"))?})
  }
- pub(super) fn advance(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant,build:impl FnOnce(RetainedCloneGrant)->Option<Result<(store::DocumentStoreOwners<P,Mu>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<P,Mu>>>)->Result<RetainedCloneProgress,ValueError>{
+ fn advance(&mut self,store:&mut ArtifactStore<P,Mu>,grant:RetainedCloneGrant,build:impl FnOnce(RetainedCloneGrant)->Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<P,Mu>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<P,Mu>>>)->Result<RetainedCloneProgress,ValueError>{
   if self.done{return Ok(Default::default())}
   let parent=0usize;
   if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth<2{return Ok(Default::default())}
@@ -55,7 +55,7 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
    let Some(Ok(owners))=self.original.as_mut()else{return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::UnsupportedOwner,"original denied catalog sources remain retained"))};
    if owners.constructor_is_complete(){
     let Some(Ok(owners))=self.original.take()else{unreachable!()};
-    match store.install_document_store_owners_exact(owners){Ok(())=>self.done=true,Err((error,owners))=>*self.original=Some(Err(store::DocumentStoreOwnersAdmissionError{error,owners:Some(owners),progress:Default::default()}))}RetainedCloneProgress{copied_items:1,..Default::default()}
+    match store.install_document_store_owners_exact(owners){Ok(())=>self.done=true,Err((error,owners))=>*self.original=Some(Err(store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError{error,owners:Some(owners),progress:Default::default()}))}RetainedCloneProgress{copied_items:1,..Default::default()}
    }else{let demand=owners.constructor_demands(child.maximum_copy_bytes)?;if child.maximum_copy_bytes<demand.copy_bytes||child.maximum_capacity_bytes<demand.capacity_bytes||child.maximum_release_bytes<demand.release_bytes||child.maximum_depth<demand.depth{return Ok(Default::default())}match owners.admit_constructor(child){Ok(receipt)=>receipt,Err((error,mut receipt))=>{*self.refusal=Some(error);receipt.copied_items=1;receipt}}}
   };
   if receipt==Default::default(){return Ok(receipt)}
@@ -63,8 +63,8 @@ Mu:Clone+semio_framework_value::ToValue+semio_framework_value::FromValue+Mutatio
   receipt.copied_bytes=receipt.copied_bytes.checked_add(parent).ok_or_else(||ValueError::literal(semio_framework_value::ValueRefusalKind::WorkLimit,"catalog parent copy extent overflow"))?;
   Ok(receipt)
  }
- pub(super) fn terminal_is_empty(&self)->bool{self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none()}
- pub(super) fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+ fn terminal_is_empty(&self)->bool{self.done&&self.original.is_none()&&self.refusal.is_none()&&self.refusal_close.is_none()}
+ fn close(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
   if self.terminal_is_empty(){return Ok(Default::default())}
   let parent=0usize;
   if grant.maximum_items==0||grant.maximum_copy_bytes<parent||grant.maximum_depth<2{return Ok(Default::default())}

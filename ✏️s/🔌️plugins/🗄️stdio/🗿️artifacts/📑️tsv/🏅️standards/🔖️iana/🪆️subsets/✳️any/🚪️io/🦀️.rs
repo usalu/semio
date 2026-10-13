@@ -47,7 +47,7 @@ pub mod derived_composition {
     pub fn register() {
         ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::iana::subsets::any::schema::tsv_artifact_schema_descriptor()).expect("schema descriptor publication");
         register_artifact_inferences();
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") }, store::ArtifactCodec::of::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA))
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.tsv", standard: StandardId("iana"), subset: SubsetId("*") }, store::artifact_codec::<TsvSnapshot, crate::standards::iana::subsets::any::schema::mutations::TsvMutation>(crate::standards::iana::subsets::any::schema::snapshot::STDIO_TSV_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
     }
 
@@ -113,7 +113,7 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::text::snapshot::read_tsv_source_text(text)?))
+            Ok(Self::from_snapshot(<TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
             Ok(Self::from_snapshot(crate::standards::iana::subsets::any::io::binary::snapshot::read_tsv_source_binary(bytes)?))
@@ -178,7 +178,7 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match crate::standards::iana::subsets::any::io::text::snapshot::read_tsv_source_text(text) {
+                    AnalyzeSource::Text(text) => match <TsvSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

@@ -1,6 +1,6 @@
 //! 🏠️ Literal Home schema and full unsigned64 generation with separately editable words.
 use crate::standards::v1::subsets::any::schema::snapshot::SHomeSnapshot;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,Reconstruction,RowWriter}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Cell,Reconstruction,RowWriter}}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::{FieldValue,RecordValue};
 fn schema(control:&SqliteSnapshotControl<'_>)->Result<(),ValueError>{if SHomeSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Home authored schema byte limit exceeded"))}Ok(())}

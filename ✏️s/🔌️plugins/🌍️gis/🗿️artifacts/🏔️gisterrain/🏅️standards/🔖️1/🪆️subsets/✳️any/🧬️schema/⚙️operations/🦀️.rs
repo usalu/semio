@@ -7,7 +7,7 @@
 use crate::schema::mutations::GisTerrainMutation;
 use crate::GisTerrainSnapshot;
 use protocol::Mutation;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 pub type GisTerrainEnvelope = ArtifactEnvelope<GisTerrainSnapshot, GisTerrainMutation>;
 pub type GisTerrainStore = ArtifactStore<GisTerrainSnapshot, GisTerrainMutation>;

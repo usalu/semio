@@ -1,11 +1,11 @@
 use super::*;
-use crate::standards::v1::subsets::model::io::import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
-use crate::standards::v1::subsets::model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
+use semio_s_artifact_stdio_semio_model_import::deserializers::artifacts::ifc::v4::any::model_from_ifc;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{GeometryRef, ModelRelation, Property, PropertySet, RelationKind, SemioModelElement, SpatialNode};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn rich_model() -> SemioModelSnapshot {
     SemioModelSnapshot {
-        schema: crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
         spatial: vec![
             SpatialNode { id: "site-1".into(), kind: SpatialKind::Site, name: "Site One".into(), parent_id: None, placement: SemioTransform::identity() },
             SpatialNode {
@@ -14,9 +14,9 @@ fn rich_model() -> SemioModelSnapshot {
                 name: "Ground Floor".into(),
                 parent_id: Some("site-1".into()),
                 placement: SemioTransform {
-                    translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 },
+                    translation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 0.0, y: 0.0, z: 3.0 },
                     rotation: SemioQuaternion::default(),
-                    scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                    scale: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
                 },
             },
         ],
@@ -75,16 +75,16 @@ async fn non_unit_rotation_round_trips_through_the_quaternion_matrix_conversion(
     let half = std::f64::consts::FRAC_PI_8;
     let rotation = SemioQuaternion { x: 0.0, y: 0.0, z: half.sin(), w: half.cos() };
     let s1 = SemioModelSnapshot {
-        schema: crate::standards::v1::subsets::model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
+        schema: semio_s_artifact_stdio_semio_model::schema::snapshot::STDIO_SEMIOMODEL_DOCUMENT_SCHEMA.into(),
         spatial: vec![SpatialNode {
             id: "site-1".into(),
             kind: SpatialKind::Site,
             name: "Rotated Site".into(),
             parent_id: None,
             placement: SemioTransform {
-                translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 },
+                translation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 5.0, y: -2.0, z: 0.0 },
                 rotation,
-                scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+                scale: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
             },
         }],
         elements: vec![],

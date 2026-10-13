@@ -13,8 +13,8 @@
 use crate::standards::v1::subsets::any::io::mesh_bridge::{base64_encode, import_document, io_error};
 use crate::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::stl::v_ascii::any::SemioMeshFromStl;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_s_artifact_stdio_stl::StlSnapshot;
 
 /// 🔧️ The neuron kind that re-enters STL bytes into the flow graph.

@@ -16,6 +16,9 @@
       },
       {
         "runtime": "bun --version"
+      },
+      {
+        "env": "SEMIO_BUILD_MODE"
       }
     ],
     "schemaSources": [
@@ -36,8 +39,10 @@
     "cargo": [
       "{projectRoot}/**/*.rs",
       "{projectRoot}/Cargo.toml",
-      "{workspaceRoot}/**/Cargo.lock",
-      "{workspaceRoot}/**/Cargo.toml"
+      "{workspaceRoot}/Cargo.toml",
+      "{workspaceRoot}/Cargo.lock",
+      "{workspaceRoot}/.cargo/config.toml",
+      "{workspaceRoot}/rust-toolchain.toml"
     ],
     "go": [
       "{projectRoot}/**/*.go",

@@ -10,7 +10,7 @@ use crate::Block3dSnapshot;
 use protocol::Mutation;
 
 //#region 🔖️Store
-pub type Block3dEnvelope = store::ArtifactEnvelope<Block3dSnapshot, Block3dMutation>;
+pub type Block3dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Block3dSnapshot, Block3dMutation>;
 pub type Block3dStore = store::ArtifactStore<Block3dSnapshot, Block3dMutation>;
 //#endregion 🔖️Store
 

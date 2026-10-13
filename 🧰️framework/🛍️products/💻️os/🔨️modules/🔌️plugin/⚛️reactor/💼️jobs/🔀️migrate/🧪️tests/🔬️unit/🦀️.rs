@@ -17,8 +17,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     let from = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "1".to_string(), subset: "*".to_string() };
     let to = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.jobtest.migrate".to_string(), standard: "2".to_string(), subset: "*".to_string() };
-    let migration = store::DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_job_test_marker };
-    let _ = store::register_dialect_migration(migration);
+    let migration = store::os_store::codec_registry::DialectMigration { from: from.clone(), to: to.clone(), lossless: true, migrate_pack: append_job_test_marker };
+    let _ = store::os_store::codec_registry::register_dialect_migration(migration);
     (from.to_coordinate(), to.to_coordinate())
 }
 
@@ -28,7 +28,7 @@ async fn input_bytes(from: &str, to: &str, pack: Vec<u8>) -> Vec<u8> {
 
 /// 🔀️ Registers a real `DialectMigration` (not mocked away) and drives `semio.migrate` through
 /// two real `step_job` slices to `Done`, proving `job_migrate` really reaches
-/// `store::migrate_document` and runs the registered re-encode, not just `job.unknown-kind`.
+/// `store::os_store::codec_registry::migrate_document` and runs the registered re-encode, not just `job.unknown-kind`.
 #[semio_framework_async_macros::async_test]
 async fn a_two_slice_migrate_job_decodes_then_dispatches_to_the_registered_migration() {
     let (from, to) = register_job_test_migration().await;

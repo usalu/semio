@@ -16,12 +16,12 @@ pub const BLOCK5D_NAKAGIN_CAPSULE_EXAMPLE_TEXT: &str = include_str!("../../../�
 
 /// 📖️ Parses `.block5d` DSL text into a `Block5dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block5dSnapshot, semio_framework_diagnostic::TextError> {
-    <Block5dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Block5dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block5dSnapshot` back to `.block5d` DSL text.
 pub fn print_dsl(document: &Block5dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -44,7 +44,7 @@ use crate::{BlockAttribute, BlockAuthor, BlockCamera2d, BlockCamera3d, BlockComp
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Block5dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Block5dSnapshot {
     const EXTENSION: &'static str = "block5d";
     fn envelope_id() -> &'static str {
         "block.block5d"
@@ -59,7 +59,7 @@ impl store::ArtifactDsl for Block5dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

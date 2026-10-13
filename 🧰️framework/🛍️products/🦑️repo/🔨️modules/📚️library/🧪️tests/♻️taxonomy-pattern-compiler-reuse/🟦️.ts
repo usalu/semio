@@ -173,7 +173,7 @@ test("every normalizer pattern query has a required invocation-owned matcher and
   expect(nodes(parser, ts.isShorthandPropertyAssignment).some((node) => node.name.text === "pathMatcher")).toBe(false);
   const loader = declaration(normalizer, "loadTaxonomy"), loaderCalls = nodes(loader, ts.isCallExpression).map((node) => node.expression.getText(normalizer));
   expect(nodes(loader, ts.isPropertyAssignment).some((node) => node.name.getText(normalizer) === "pathMatcher" && ts.isCallExpression(node.initializer) && node.initializer.expression.getText(normalizer) === "createTaxonomyPathMatcher")).toBe(true);
-  for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
+  for (const name of ["assertLexicalInputOutsideOpaque", "semanticOwnedInputFileSnapshot", "parseTaxonomy", "JSON.parse", "lexicalInputOutsideOpaque", "noFollowAncestors"]) expect(loaderCalls.filter((entry) => entry === name)).toHaveLength(1);
   expect(loader.getText(normalizer)).toContain('if (!Buffer.from(text).equals(bytes)) throw new Error("Taxonomy schema has lossy UTF-8: " + path)');
   const validator = declaration(source, "validateTaxonomy"), validationCalls = nodes(validator, ts.isCallExpression);
   expect(validationCalls.filter((node) => node.expression.getText(source) === "createTaxonomyPathMatcher")).toHaveLength(1);
@@ -183,7 +183,7 @@ test("every normalizer pattern query has a required invocation-owned matcher and
 
 for (const compiler of compilers) test("actual load caches content facts while capturing fresh isolated schema and matcher sessions: " + compiler.id, () => {
   const repoRoot = resolve(library, "../../../../.."), schemaPath = join(library, "🔣️taxonomy.json");
-  const names = ["loadTaxonomy", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain", "assertLexicalInputOutsideOpaque", "assertNoFollowAncestors", "lstatOrNull", "parseTaxonomy", "requireRecord", "canonicalJson", "canonicalValue", "canonicalArrayKey", "requireLiteral", "requireString", "requireStringArray", "requireExactKeys", "normalizeRelative", "sourceRelative", "fixedExpiry", "splitLeadingEmoji", "graphemes", "isEmojiGrapheme", "emojiFold"];
+  const names = ["loadTaxonomy", "noFollowDirectoryChain", "verifyNoFollowDirectoryChain", "assertLexicalInputOutsideOpaque", "lexicalInputOutsideOpaque", "assertNoFollowAncestors", "noFollowAncestors", "lstatOrNull", "parseTaxonomy", "requireRecord", "canonicalJson", "canonicalValue", "canonicalArrayKey", "requireLiteral", "requireString", "requireStringArray", "requireExactKeys", "normalizeRelative", "sourceRelative", "fixedExpiry", "splitLeadingEmoji", "graphemes", "isEmojiGrapheme", "emojiFold"];
   const functions = names.map((name) => {
     const provider = ["canonicalJson", "canonicalValue", "canonicalArrayKey"].includes(name) ? serialization : normalizer;
     return declaration(provider, name).getText(provider).replace(/^export\s+/u, "");
@@ -285,7 +285,7 @@ for (const path of matcherTypeOwners) test("changed runtime matcher declarations
   const file = program.getSourceFile(path)!;
   const diagnostics = [...program.getSyntacticDiagnostics(file), ...program.getSemanticDiagnostics(file)];
   const declarations = file.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === vector.factory || ts.isInterfaceDeclaration(node) && node.name.text === "TaxonomyPathMatcher");
-  const calls = nodes(file, ts.isCallExpression).filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.expression.getText(file)) || ["createTaxonomyPathMatcher", "matchingFixedContracts"].includes(node.expression.getText(file)));
+  const calls = nodes(file, ts.isCallExpression).filter((node) => /(?:^|\.)pathMatcher\.matches$/u.test(node.expression.getText(file)) || ["createTaxonomyPathMatcher", "matchingFixedContracts", "fixedContractCandidates", "fixedContractLeafIndex", "fixedContractLeafIndexes", "fixedContractLiteralLeaf", "fixedContractSpecificity", "fixedContractSpecificities"].includes(node.expression.getText(file)));
   const spans = [...declarations, ...calls];
   const selected = diagnostics.filter((diagnostic) => diagnostic.start !== undefined && spans.some((node) => diagnostic.start! >= node.pos && diagnostic.start! < node.end));
   expect(selected.map((diagnostic) => `${relative(library, path)}:${file.getLineAndCharacterOfPosition(diagnostic.start ?? 0).line + 1} TS${diagnostic.code} ${ts.flattenDiagnosticMessageText(diagnostic.messageText, "\n")}`)).toEqual([]);

@@ -23,18 +23,18 @@ fn the_two_panes_own_two_distinct_config_instances() {
 #[test]
 fn the_config_round_trips_through_its_text_and_pack_envelopes() {
     let config = Grid2dWindowConfig { camera_x: 3.0, camera_y: -2.0, camera_zoom: 1.5, grid_visible: false, grid_snap_enabled: false, grid_factor: 8.0, active_tile_id: "empty".into(), solve_json: "{}".into() };
-    let text = <Grid2dWindowConfig as store::ArtifactDsl>::print_dsl(&config);
-    assert_eq!(<Grid2dWindowConfig as store::ArtifactDsl>::parse_dsl(&text).expect("config dsl parses"), config);
-    let bytes = <Grid2dWindowConfig as store::ArtifactPack>::encode_pack(&config);
-    assert_eq!(<Grid2dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("config pack decodes"), config);
-    assert!(<Grid2dWindowConfig as store::ArtifactPack>::record_spec().is_some(), "a missing record spec fails every retained window load");
+    let text = <Grid2dWindowConfig as store::os_store::serialization::ArtifactDsl>::print_dsl(&config);
+    assert_eq!(<Grid2dWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("config dsl parses"), config);
+    let bytes = <Grid2dWindowConfig as store::os_store::serialization::ArtifactPack>::encode_pack(&config);
+    assert_eq!(<Grid2dWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("config pack decodes"), config);
+    assert!(<Grid2dWindowConfig as store::os_store::serialization::ArtifactPack>::record_spec().is_some(), "a missing record spec fails every retained window load");
 }
 
 #[test]
 fn the_transient_round_trips_and_absorbs_wholesale() {
     let transient = Grid2dWindowTransient { hovered_cell: "2,1".into() };
-    let bytes = <Grid2dWindowTransient as store::ArtifactPack>::encode_pack(&transient);
-    assert_eq!(<Grid2dWindowTransient as store::ArtifactPack>::decode_pack(&bytes).expect("transient decodes"), transient);
+    let bytes = <Grid2dWindowTransient as store::os_store::serialization::ArtifactPack>::encode_pack(&transient);
+    assert_eq!(<Grid2dWindowTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("transient decodes"), transient);
     let mut base = Grid2dWindowTransient::default();
     protocol::MutationDiff::absorb(&mut base, transient.clone());
     assert_eq!(base, transient);

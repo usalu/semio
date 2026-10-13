@@ -72,7 +72,7 @@ pub(crate) mod context {
         result.requested_effects.extend(settled.effects);
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                let files = store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
+                let files = store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() };
                 semio_framework_plugin::artifact_app_laws::load_document(app, &files, &mut identity).await.expect("test host applies load-document effect");
             }
         }
@@ -638,7 +638,7 @@ async fn every_example_load_settles_through_the_host_document_archive_door() {
         let settled = artifact_app_laws::settle_registered_typed_operation(&mut *app, context::SHOOTING_TEST_INSTANCE, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut artifact_app_laws::fixture_identity()).await.expect("the example settles");
         let loaded = settled.effects.into_iter().find_map(|effect| if let Effect::LoadDocument { pack, spr } = effect { Some((pack, spr)) } else { None });
         let (parent_pack, parent_spr) = loaded.expect("an example publishes one whole-document load");
-        let expected = <ShootingSnapshot as store::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
+        let expected = <ShootingSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&parent_pack).expect("the load carries a shooting document");
         PluginApp::begin_document_archive_load(&mut *app, archive_id, protocol::DocumentArchivePack { parent_pack, parent_spr, members: Vec::new() }).expect("archive admission");
         let mut status = None;
         for _ in 0..1_000_000 {

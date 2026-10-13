@@ -10,8 +10,8 @@ use crate::standards::v2_0::subsets::base::schema::snapshot::*;
 use crate::STDIO_ZIP_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 
-impl store::ArtifactPack for ZipSnapshot{
-    fn sqlite_snapshot_codec()->Option<store::ArtifactSqliteSnapshotCodec>{Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())}
+impl store::os_store::serialization::ArtifactPack for ZipSnapshot{
+    fn sqlite_snapshot_codec()->Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec>{Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())}
     fn encode_pack_with(&self,options:&store::PackEncodeOptions)->Result<Vec<u8>,store::PackError>{
         let inner=store::pack_rt::encode_document(&Self::__dsl_spec(),&self.__dsl_to_record(),options)?;
         let envelope=store::semio_format::SemioEnvelope::from_envelope_id("stdio.zip",store::semio_format::Component::Pack,1).map_err(|e|store::PackError::from(e.into_value_error()))?;
@@ -21,7 +21,7 @@ impl store::ArtifactPack for ZipSnapshot{
         let(envelope,inner)=store::semio_format::unwrap_binary(bytes).map_err(|e|store::PackError::from(e.into_value_error()))?;
         if !envelope.matches_identity("stdio.zip",store::semio_format::Component::Pack,1){return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "ZIP snapshot pack identity differs")));}
         let(record,_)=store::pack_rt::decode_document(&inner,&Self::__dsl_spec(),options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec()->Option<semio_framework_dsl_record::RecordSpec>{Some(Self::__dsl_spec())}
 }

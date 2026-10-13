@@ -1,5 +1,5 @@
 //! 🧩️ Trusted plugin module bundles: the browser plugin module of one catalog package (host shim,
-//! component module, core Wasm, descriptor and vendored imports), content-addressed inside the same
+//! component module, core Wasm, semantic descriptor, component receipt and vendored imports), content-addressed inside the same
 //! generation as the package's component and verified like it. The normative shape is
 //! `TrustedPluginModuleBundleV1` / `TrustedPluginModuleIndexV1` in [`🔣️.json`](../🧬️schema/🔣️.json);
 //! the language-agnostic law is `🧫️fixtures/🧩️plugin-module/🔣️.json`.
@@ -15,8 +15,8 @@ use std::path::Path;
 pub const TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES: u64 = 65_536;
 /// 🧯️ Maximum accepted bytes of one plugin module file: a core module never exceeds its component.
 pub const TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES: u64 = TRUSTED_COMPONENT_MAX_BYTES;
-/// 🧯️ Fewest files a module can have: its entry and its two descriptor forms.
-pub const TRUSTED_PLUGIN_MODULE_MIN_FILES: usize = 3;
+/// 🧯️ Fewest files a module can have: its entry, its two descriptor forms and its component receipt.
+pub const TRUSTED_PLUGIN_MODULE_MIN_FILES: usize = 4;
 /// 🧯️ Most files one plugin module manifest may list.
 pub const TRUSTED_PLUGIN_MODULE_MAX_FILES: usize = 256;
 /// 🧯️ Most modules one generation index may list.
@@ -35,6 +35,9 @@ pub const TRUSTED_PLUGIN_MODULE_BRIDGE_FILE: &str = "🌉️bridge.js";
 pub const TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE: &str = "🔣️.json";
 /// 🛂️ The packed descriptor, byte-identical to the package's trusted descriptor.
 pub const TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE: &str = "🛂️.descriptor.semio";
+/// 🧾️ The canonical `ComponentReceiptV1`, byte-identical to the package's trusted receipt: the component identity a shell
+/// reads beside the entry, since a semantic descriptor names no bytes.
+pub const TRUSTED_PLUGIN_MODULE_RECEIPT_FILE: &str = directory::os_component_receipt::COMPONENT_RECEIPT_FILE;
 /// 🪞️ The one shared root a module's vendored imports resolve under (`../🪞️vendor/…`).
 pub const TRUSTED_PLUGIN_MODULE_VENDOR_DIRECTORY: &str = "🪞️vendor";
 /// 🗃️ The generation directory every plugin module file is stored in, named by its SHA-256.
@@ -48,6 +51,7 @@ pub struct TrustedPluginModuleSourceV1<'a> {
     pub version: &'a str,
     pub component_sha256: &'a str,
     pub descriptor_byte_sha256: &'a str,
+    pub receipt_sha256: &'a str,
 }
 
 fn valid_segment(segment: &str) -> bool {
@@ -111,6 +115,9 @@ pub fn validate_plugin_module_bundle(bundle: &TrustedPluginModuleBundleV1, sourc
     if file(TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE).is_none_or(|pack| pack.sha256 != bundle.source_descriptor_byte_sha256) {
         return refused("packed descriptor is not the package's own descriptor");
     }
+    if file(TRUSTED_PLUGIN_MODULE_RECEIPT_FILE).is_none_or(|receipt| receipt.sha256 != source.receipt_sha256) {
+        return refused("component receipt is not the package's own receipt");
+    }
     if bundle.plugin_id != source.plugin_id || bundle.package_id != source.package_id || bundle.version != source.version || bundle.source_component_sha256 != source.component_sha256 || bundle.source_descriptor_byte_sha256 != source.descriptor_byte_sha256 {
         return refused("was not derived from its package");
     }
@@ -157,6 +164,7 @@ pub fn validate_plugin_module_index(index: &TrustedPluginModuleIndexV1) -> Resul
             || !valid_identity(&entry.version)
             || !valid_digest(&entry.component_sha256)
             || !valid_digest(&entry.descriptor_byte_sha256)
+            || !valid_digest(&entry.receipt_sha256)
             || !valid_digest(&entry.bundle_sha256)
             || !(1..=TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES).contains(&entry.bundle_byte_length)
             || !valid_plugin_module_path(&entry.entry)

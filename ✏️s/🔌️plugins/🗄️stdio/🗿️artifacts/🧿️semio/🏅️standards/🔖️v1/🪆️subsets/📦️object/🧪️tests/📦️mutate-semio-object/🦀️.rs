@@ -16,7 +16,7 @@
 //!
 //! `s.stdio.semio.object` was the first COMPOSITE subset: alongside the composite `transform` value
 //! field (`move`/`rotate`/`scale`) it carries three optional owned CHILD slots — `brep`, `mesh` and
-//! `properties` — each an `Option<store::ArtifactChild<S>>` holding a two-string handle, never
+//! `properties` — each an `Option<store::os_store::artifact_child::ArtifactChild<S>>` holding a two-string handle, never
 //! embedded content. `store` is this crate's PRIVATE `extern crate semio_framework_os_kernel as
 //! store;`, unnameable from a test host, which is why every handle here is DESERIALIZED through this
 //! subset's own `decode_semio_object_snapshot_json`/`decode_semio_object_mutation_json` rather than
@@ -52,17 +52,17 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::mutations::{diff_semio_object_mutation, inverse_semio_object_mutation, SemioObjectMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::text::mutations::{decode_semio_object_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::snapshot::{SemioObjectSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::binary::snapshot::{decode_semio_object_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::binary::snapshot::{encode_semio_object_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::text::snapshot::{print_semio_object_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::text::snapshot::{parse_semio_object_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::text::snapshot::{decode_semio_object_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::object::io::text::snapshot::{encode_semio_object_snapshot_json};
+    use semio_framework_os_kernel::apply_diff;
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_object::schema::mutations::{diff_semio_object_mutation, inverse_semio_object_mutation, SemioObjectMutation};
+    use semio_s_artifact_stdio_semio_object::io::text::mutations::decode_semio_object_mutation_json;
+    use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+    use semio_s_artifact_stdio_semio_object::io::binary::snapshot::decode_semio_object_pack;
+    use semio_s_artifact_stdio_semio_object::io::binary::snapshot::encode_semio_object_pack;
+    use semio_s_artifact_stdio_semio_object::io::text::snapshot::print_semio_object_dsl;
+    use semio_s_artifact_stdio_semio_object::io::text::snapshot::parse_semio_object_dsl;
+    use semio_s_artifact_stdio_semio_object::io::text::snapshot::decode_semio_object_snapshot_json;
+    use semio_s_artifact_stdio_semio_object::io::text::snapshot::encode_semio_object_snapshot_json;
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Bridges

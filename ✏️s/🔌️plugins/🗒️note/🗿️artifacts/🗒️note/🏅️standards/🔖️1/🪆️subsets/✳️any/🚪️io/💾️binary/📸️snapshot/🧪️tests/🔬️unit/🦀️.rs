@@ -72,7 +72,7 @@ async fn pack_round_trips_representative_document() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::NoteMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let initial = crate::standards::v1::subsets::any::io::text::snapshot::parse_dsl(crate::standards::v1::subsets::any::io::text::snapshot::SEMIO_NOTE_EXAMPLE_TEXT).expect("parse semio example");
     let envelope = create_document_envelope::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA, "note-command-envelope-demo", initial, None);

@@ -6,8 +6,8 @@ use crate::standards::v1::subsets::any::io::binary::snapshot::tile_media_png_dat
 #[test]
 fn printed_text_parses_back_to_the_authored_document() {
     let document = crate::examples::terrain_ring::document();
-    let text = store::ArtifactDsl::print_dsl(&document);
-    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&document);
+    let parsed: crate::Wfc2dSnapshot = <crate::Wfc2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the printed example parses");
     assert_eq!(parsed, document, "the printed text is not the document it was printed from");
 }
 

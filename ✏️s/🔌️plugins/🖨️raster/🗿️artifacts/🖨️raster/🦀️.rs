@@ -746,15 +746,15 @@ pub struct RasterImageAsset {
 /// `page_drawing_from_world`, `🚪️io/🦀️.rs`). That already satisfies "consumes/reads drawing
 /// content but doesn't own it" — no `ArtifactLink` was needed because there was no persisted/duplicated
 /// drawing field to convert.
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+pub use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 
-pub type RasterAssetChild = store::ArtifactChild<SemioImageSnapshot>;
+pub type RasterAssetChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
 
 fn mint_asset_child_handle(asset_id: &str, content: &[u8]) -> RasterAssetChild {
     let child_id = store::content_id("raster-asset", content);
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🕸️ Deterministic content-addressed CHILD handle, hashed off the RAW `(mime, data)` bytes — the
@@ -778,7 +778,7 @@ fn image_content_child_handle(asset_id: &str, image: &SemioImageSnapshot) -> Ras
     let child_id = raster_image_content_id("raster-asset", image);
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{asset_id}-image"), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🌉️ The single funnel-through "add real content" primitive: converts the real bytes into the

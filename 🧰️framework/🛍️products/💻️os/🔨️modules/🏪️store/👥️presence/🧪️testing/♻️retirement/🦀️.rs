@@ -80,7 +80,7 @@ pub(crate) fn observed_step(grant: RetainedCloneGrant, close: impl FnOnce() -> R
 pub(crate) fn observed_close(owner: &mut (impl ErasedSnapshotRetirement + ?Sized), grant: RetainedCloneGrant) -> RetainedCloneStep { observed_step(grant, || owner.close_step(grant)) }
 
 pub(crate) fn observed_box_close(owner: &mut Option<Box<dyn ErasedSnapshotRetirement>>, grant: RetainedCloneGrant) -> RetainedCloneStep {
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::os_store::artifact_retirement_box_close_step(owner, grant).unwrap());
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| crate::os_store::snapshot_read::artifact_retirement_box_close_step(owner, grant).unwrap());
     assert!(step.progress().fits(grant));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (step.progress().retained_capacity_bytes, step.progress().released_bytes));
     step
@@ -104,7 +104,7 @@ pub(crate) fn admit_returned_string(registry: &crate::os_store::SnapshotReadRegi
     }));
     match result {
         Ok((owner, receipt)) => { assert!(receipt.fits(CLOSE_GRANT)); assert_eq!((heap.requested_bytes, heap.released_bytes), (receipt.retained_capacity_bytes, receipt.released_bytes)); owner }
-        Err(crate::os_store::SnapshotReadLeaseRefusal::Busy) => { assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); None }
+        Err(crate::os_store::snapshot_read::SnapshotReadLeaseRefusal::Busy) => { assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0)); None }
         Err(_) => panic!("original returned String admission failed"),
     }
 }

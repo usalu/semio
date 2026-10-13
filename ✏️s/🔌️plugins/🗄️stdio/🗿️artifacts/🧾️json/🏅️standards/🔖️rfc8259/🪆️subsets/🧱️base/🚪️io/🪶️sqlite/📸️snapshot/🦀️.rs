@@ -1,7 +1,7 @@
 //! 🧾️ Handcrafted RFC8259 value/member/element relations for JSON artifact snapshots only.
 
 use crate::standards::v_rfc8259::subsets::base::schema::snapshot::{JsonMember, JsonSnapshot, JsonValue};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 use std::collections::{BTreeMap, BTreeSet};
 
 enum Parent<'a> { Root, Member(i64, usize, &'a str), Element(i64, usize) }

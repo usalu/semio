@@ -164,8 +164,8 @@ async fn canvas_layers_turns_a_rotated_proxy() {
 
 #[test]
 fn canvas_layers_emits_an_embedded_drawing_png() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot};
     let point = |x: f64, y: f64| SemioPoint2 { x, y };
     let mut encoded = semio_s_artifact_stdio_png::standards::v1_2::subsets::any::io::PngProjection {width:1,height:1,bit_depth:8,color_type:semio_s_artifact_stdio_png::schema::snapshot::PngColorType::Rgba,interlace:false,plte:None,trns:None,gama:None,chrm:None,srgb:None,phys:None,time:None,bkgd:None,text_chunks:Vec::new(),pixels:Vec::new(),chunk_order:Vec::new(),unknown_chunks:Vec::new()};
     encoded.width = 1;

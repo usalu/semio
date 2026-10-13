@@ -3,7 +3,7 @@
 use super::super::{MemberHistoryInputStep, MemberHistoryVerification};
 use super::*;
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework_artifact_reference::ArtifactRef};
-use crate::os_store::{OWNED_SCHEMA_DECODE_PAGE_BYTES, OwnedSchemaDecodeCredits, OwnedSchemaDecodePage, OwnedSchemaDecodePages, OwnerRef};
+use crate::os_store::{owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES, owned_schema_decode::OwnedSchemaDecodeCredits, owned_schema_decode::OwnedSchemaDecodePage, owned_schema_decode::OwnedSchemaDecodePages, OwnerRef};
 use semio_framework_job::{Generation, OperationId, StepBudget, root_cancel_token};
 use serde_json::Value;
 

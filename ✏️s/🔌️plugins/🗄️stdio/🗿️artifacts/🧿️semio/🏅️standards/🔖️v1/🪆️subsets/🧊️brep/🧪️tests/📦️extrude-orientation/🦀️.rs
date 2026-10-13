@@ -29,17 +29,17 @@
 // #region 🔖️Imports
 use parry3d::mass_properties::details::trimesh_signed_volume_and_center_of_mass;
 use parry3d::na::Point3;
-use semio_framework_3d::brep::operations::primitives::{make_planar_face_from_wire, make_polyline_wire, Wire};
-use semio_framework_3d::brep::operations::sweep::extrude_face;
-use semio_framework_3d::brep::engine::MeshTransfer;
-use semio_framework_3d::brep::queries::mass_properties::solid_signed_volume;
-use semio_framework_3d::brep::queries::tessellation::tessellate_solid;
-use semio_framework_3d::brep::queries::validation::validate_body;
-use semio_framework_3d::brep::representation::arena::SolidId;
-use semio_framework_3d::brep::representation::surface::Surface;
-use semio_framework_3d::brep::representation::topology::history::OpRecorder;
-use semio_framework_3d::brep::representation::topology::Body;
-use semio_framework_3d::brep::representation::vector::{Pnt3, Vec3};
+use {semio_framework_3d_brep_operations::primitives::{make_planar_face_from_wire, make_polyline_wire}, semio_framework_3d_brep_representation::topology::Wire};
+use semio_framework_3d_brep_operations::sweep::extrude_face;
+use semio_framework_3d_brep_representation::contract::MeshTransfer;
+use semio_framework_3d_brep_queries::mass_properties::solid_signed_volume;
+use semio_framework_3d_brep_queries::tessellation::tessellate_solid;
+use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_representation::arena::SolidId;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 use std::collections::HashMap;
 use std::f64::consts::TAU;
 // #endregion 🔖️Imports
@@ -297,7 +297,7 @@ fn hexagon_profile_with_backward_coedges_extruded_down_faces_outward() {
 
 #[test]
 fn retained_profiles_survive_every_repeated_extrusion_without_topology_aliases() {
-    use semio_framework_3d::brep::engine::{Brep, BrepKernel};
+    use semio_framework_3d_brep_engine::{Brep, BrepKernel};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔁️retained-extrusion/🔣️.json")).unwrap();
     let expected = &fixture["expect"];
     for case in fixture["cases"].as_array().unwrap() {

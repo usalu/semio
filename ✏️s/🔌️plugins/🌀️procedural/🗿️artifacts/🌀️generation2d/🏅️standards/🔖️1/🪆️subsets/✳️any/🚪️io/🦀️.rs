@@ -180,10 +180,10 @@ pub mod io_registry {
 /// `{transform, node, fill, stroke, opacity}` with rect/ellipse/circle/line/polygon/path/text nodes)
 /// as one drawing, every node's transform applied to its own geometry — the picture every page export
 /// writes. Text is placed at its baseline with the node's transform applied to the anchor only.
-pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioRgba, SemioTransform};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::geometry::{flatten_segments, transformed_segments};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioRgba, SemioTransform};
+    use semio_s_artifact_stdio_semio_drawing::schema::geometry::{flatten_segments, transformed_segments};
+    use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
     let p = |x: f64, y: f64| SemioPoint2 { x, y };
     let point = |value: &semio_framework_pack_json::Value| -> Option<SemioPoint2> {
         let pair = value.as_array()?;
@@ -294,7 +294,7 @@ pub fn semio_drawing_from_scenes(scenes_json: &[String]) -> Result<semio_s_artif
 /// every drawing it delivers into an output widget (`output_drawing_handles`) flattened by the flow
 /// drawing kernel — the picture the editor's `drawing:out` port publishes.
 #[cfg(feature = "component-app-assembly")]
-pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
+pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     let eval_json = crate::standards::v1::subsets::any::schema::with_host(&snapshot.host_snapshot, |host| host.evaluate().unwrap_or_default());
     let outputs = semio_framework_pack_json::parse(&eval_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?;
     let handles = text::snapshot::output_drawing_handles(&snapshot.host_snapshot, &outputs);
@@ -303,7 +303,7 @@ pub fn generation2d_drawing(snapshot: &crate::Generation2dSnapshot) -> Result<se
 
 /// 🖍️ Without the flow evaluator there is nothing to draw, and saying so beats an empty picture.
 #[cfg(not(feature = "component-app-assembly"))]
-pub fn generation2d_drawing(_snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, String> {
+pub fn generation2d_drawing(_snapshot: &crate::Generation2dSnapshot) -> Result<semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, String> {
     Err("generation2d export needs the flow evaluator (build with the `component-app-assembly` feature)".into())
 }
 //#endregion 🖍️EvaluatedDrawing
@@ -344,10 +344,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Generation2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Generation2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -398,14 +398,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <Generation2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Generation2dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Generation2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

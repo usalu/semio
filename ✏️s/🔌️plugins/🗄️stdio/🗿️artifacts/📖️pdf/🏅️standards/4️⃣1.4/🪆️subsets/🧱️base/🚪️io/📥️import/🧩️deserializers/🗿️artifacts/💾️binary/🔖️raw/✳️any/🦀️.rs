@@ -1,7 +1,7 @@
 //! Deserialize stdio.pdf from stdio.binary.
 
 use crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot;
-use crate::STDIO_PDF_DOCUMENT_SCHEMA;
+use crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA;
 use semio_s_artifact_stdio_binary::BinarySnapshot;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -16,5 +16,5 @@ pub fn deserialize(from: &BinarySnapshot) -> Result<PdfSnapshot, store::PackErro
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<PdfSnapshot, store::PackError> {
-    deserialize(&<BinarySnapshot as store::ArtifactPack>::decode_pack(bytes)?)
+    deserialize(&<BinarySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?)
 }

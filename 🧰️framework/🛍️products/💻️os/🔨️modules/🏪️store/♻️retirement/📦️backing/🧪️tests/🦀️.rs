@@ -33,18 +33,27 @@ fn artifact_store_resident_empty_backings_retain_undergrant_and_report_actual_fr
         assert_eq!(step.unwrap(), released(demand, history.capacity() == 0));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
     }
-    let registry = SnapshotReadLeaseRegistry::new();
+    let mut registry = SnapshotReadLeaseRegistry::new();
     assert_eq!(fixture["retainedSlots"].as_u64().unwrap() as usize, SNAPSHOT_READ_LEASE_CAPACITY);
-    let demand = registry.empty_backing_demands().unwrap();
-    let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_empty_backing_step(RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant }));
-    assert_eq!(step.unwrap(), denied());
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| registry.close_empty_backing_step(grant));
-    assert_eq!(step.unwrap(), released(demand.release_bytes, true));
-    assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand.release_bytes));
-    assert_eq!(registry.empty_backing_demands().unwrap().release_bytes, 0);
-    eprintln!("[DEBUG] Store resident original backing whole release independent of copy/capacity: reader slots={} physical={}", SNAPSHOT_READ_LEASE_CAPACITY, demand.release_bytes);
+    let mut physical = 0;
+    loop {
+        let demand = registry.owned_backing_demands().unwrap();
+        if demand.release_bytes == 0 { break; }
+        assert!(demand.release_bytes <= crate::os_store::snapshot_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
+        let shared = registry.empty_backing_demands().unwrap().release_bytes != 0;
+        let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 0, maximum_capacity_bytes: 0, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth };
+        let denied_grant = RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if shared { registry.close_empty_backing_step(denied_grant) } else { registry.close_owned_backing_step(denied_grant) });
+        assert_eq!(step.unwrap(), denied());
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| if shared { registry.close_empty_backing_step(grant) } else { registry.close_owned_backing_step(grant) });
+        let terminal = if shared { registry.empty_backing_demands().unwrap().release_bytes == 0 } else { registry.owned_backing_demands().unwrap().release_bytes == 0 };
+        assert_eq!(step.unwrap(), released(demand.release_bytes, terminal));
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand.release_bytes));
+        physical += demand.release_bytes;
+    }
+    assert_eq!(physical, SNAPSHOT_READ_LEASE_CAPACITY * (size_of::<crate::os_store::snapshot_read::SnapshotReadLeaseSlot>() + size_of::<u64>()));
+    eprintln!("[DEBUG] Store resident original backing paged release independent of copy/capacity: reader slots={} physical={physical}", SNAPSHOT_READ_LEASE_CAPACITY);
 }
 
 #[test]
@@ -93,9 +102,12 @@ fn artifact_store_resident_detached_dag_forwards_exact_backing_then_cursor_termi
 fn artifact_store_resident_registry_terminal_drop_has_no_unreported_native_lock_backing() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut registry = Some(SnapshotReadLeaseRegistry::new());
-    let demand = registry.as_ref().unwrap().empty_backing_demands().unwrap();
-    assert_eq!(registry.as_ref().unwrap().close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..Default::default() }).unwrap(), released(demand.release_bytes, true));
-    assert_eq!(registry.as_ref().unwrap().empty_backing_demands().unwrap().release_bytes, 0);
+    loop {
+        let demand = registry.as_ref().unwrap().owned_backing_demands().unwrap();
+        if demand.release_bytes == 0 { break; }
+        assert!(registry.as_mut().unwrap().close_owned_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth, ..Default::default() }).unwrap().progress().released_bytes == demand.release_bytes);
+    }
+    assert_eq!(registry.as_ref().unwrap().owned_backing_demands().unwrap().release_bytes, 0);
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(registry.take()));
     assert_eq!(heap.requested_bytes, 0);
     assert_eq!(heap.released_bytes, fixture["registryFinalDropBytes"].as_u64().unwrap() as usize);
@@ -135,24 +147,38 @@ fn artifact_store_resident_registry_arc_frame_retains_original_alias_until_whole
     let original = owner.0.as_ref().unwrap().identity();
     let alias = owner.0.as_ref().unwrap().alias_handle().clone();
     assert_eq!(alias.strong_count(), 1 + fixture["registryExternalAliases"].as_u64().unwrap() as usize);
-    let slots = owner.empty_backing_demands().unwrap();
-    assert_eq!(owner.close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: slots.release_bytes, maximum_depth: slots.depth, ..Default::default() }).unwrap(), released(slots.release_bytes, true));
-    let extent = owner.frame_byte_demand().unwrap();
+    loop {
+        let slots = owner.empty_backing_demands().unwrap();
+        if slots.release_bytes == 0 { break; }
+        assert_eq!(owner.close_empty_backing_step(RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: slots.release_bytes, maximum_depth: slots.depth, ..Default::default() }).unwrap().progress().released_bytes, slots.release_bytes);
+    }
+    let extent = owner.custody_byte_demand().unwrap();
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_release_bytes: extent, maximum_depth: 1, ..Default::default() };
     assert!(extent <= fixture["maximumAdmissionBytes"].as_u64().unwrap() as usize);
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_frame_step(grant));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(alias));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_frame_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: extent - 1, ..grant }));
     assert_eq!(step.unwrap(), denied());
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert_eq!(owner.0.as_ref().unwrap().identity(), original);
-    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_frame_step(grant));
-    assert_eq!(step.unwrap(), released(extent, true));
+    let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(grant));
+    assert_eq!(step.unwrap(), released(extent, false));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, extent));
-    assert_eq!(owner.frame_byte_demand().unwrap(), 0);
+    let mut pages = 0;
+    loop {
+        let page = owner.custody_byte_demand().unwrap();
+        if page == 0 { break; }
+        assert!(page <= crate::os_store::snapshot_read::SNAPSHOT_READ_RELEASE_PAGE_BYTES);
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_custody_step(RetainedCloneGrant { maximum_release_bytes: page, ..grant }));
+        assert_eq!(step.unwrap().progress().released_bytes, page);
+        assert_eq!((heap.requested_bytes, heap.released_bytes), (0, page));
+        pages += page;
+    }
+    while !owner.closed() { owner.close_custody_step(grant).unwrap(); }
+    assert_eq!(pages, SNAPSHOT_READ_LEASE_CAPACITY * size_of::<u64>());
     let (_, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(owner));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     eprintln!("[DEBUG] registry original Arc frame={} shared/one-below retained; exact free={} finalDrop=0", extent, extent);

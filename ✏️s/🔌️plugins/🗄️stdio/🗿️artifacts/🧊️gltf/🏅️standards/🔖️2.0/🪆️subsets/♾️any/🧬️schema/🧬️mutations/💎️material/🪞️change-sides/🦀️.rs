@@ -1,9 +1,9 @@
 //! 🧬️ Direct change-material-double-sided mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::material_animation::{index, GltfMaterialAnimationFailure};
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.change-material-double-sided.v1";
 pub const TOUCHED_PATHS: &[&str] = &["document/materials/{material}/doubleSided"];
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

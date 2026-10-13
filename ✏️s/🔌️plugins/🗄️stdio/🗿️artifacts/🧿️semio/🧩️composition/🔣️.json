@@ -12,8 +12,8 @@
       "order": 0,
       "variant": "SemioBrepEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_brep::SemioBrepEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_brep::create_semio_brep_editor",
+      "type": "semio_s_artifact_stdio_semio_brep::editor::SemioBrepEditor",
+      "factory": "semio_s_artifact_stdio_semio_brep::editor::create_semio_brep_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_brep_editor",
@@ -25,8 +25,8 @@
       "order": 1,
       "variant": "SemioBrepViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_brep::SemioBrepViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_brep::create_semio_brep_viewer",
+      "type": "semio_s_artifact_stdio_semio_brep::viewer::SemioBrepViewer",
+      "factory": "semio_s_artifact_stdio_semio_brep::viewer::create_semio_brep_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -35,8 +35,8 @@
       "order": 2,
       "variant": "SemioDrawingEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_drawing::SemioDrawingEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_drawing::create_semio_drawing_editor",
+      "type": "semio_s_artifact_stdio_semio_drawing::editor::SemioDrawingEditor",
+      "factory": "semio_s_artifact_stdio_semio_drawing::editor::create_semio_drawing_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_drawing_editor",
@@ -48,8 +48,8 @@
       "order": 3,
       "variant": "SemioDrawingViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_drawing::SemioDrawingViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_drawing::create_semio_drawing_viewer",
+      "type": "semio_s_artifact_stdio_semio_drawing::viewer::SemioDrawingViewer",
+      "factory": "semio_s_artifact_stdio_semio_drawing::viewer::create_semio_drawing_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -58,8 +58,8 @@
       "order": 4,
       "variant": "SemioGraphEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_graph::SemioGraphEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_graph::create_semio_graph_editor",
+      "type": "semio_s_artifact_stdio_semio_graph::editor::SemioGraphEditor",
+      "factory": "semio_s_artifact_stdio_semio_graph::editor::create_semio_graph_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_graph_editor",
@@ -71,8 +71,8 @@
       "order": 5,
       "variant": "SemioGraphViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_graph::SemioGraphViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_graph::create_semio_graph_viewer",
+      "type": "semio_s_artifact_stdio_semio_graph::viewer::SemioGraphViewer",
+      "factory": "semio_s_artifact_stdio_semio_graph::viewer::create_semio_graph_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -81,8 +81,8 @@
       "order": 6,
       "variant": "SemioKitEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_kit::SemioKitEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_kit::create_semio_kit_editor",
+      "type": "semio_s_artifact_stdio_semio_kit::editor::SemioKitEditor",
+      "factory": "semio_s_artifact_stdio_semio_kit::editor::create_semio_kit_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_kit_editor",
@@ -94,8 +94,8 @@
       "order": 7,
       "variant": "SemioKitViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_kit::SemioKitViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_kit::create_semio_kit_viewer",
+      "type": "semio_s_artifact_stdio_semio_kit::viewer::SemioKitViewer",
+      "factory": "semio_s_artifact_stdio_semio_kit::viewer::create_semio_kit_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -104,8 +104,8 @@
       "order": 8,
       "variant": "SemioMeshEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_mesh::SemioMeshEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_mesh::create_semio_mesh_editor",
+      "type": "semio_s_artifact_stdio_semio_mesh::editor::SemioMeshEditor",
+      "factory": "semio_s_artifact_stdio_semio_mesh::editor::create_semio_mesh_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_mesh_editor",
@@ -117,8 +117,8 @@
       "order": 9,
       "variant": "SemioMeshViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_mesh::SemioMeshViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_mesh::create_semio_mesh_viewer",
+      "type": "semio_s_artifact_stdio_semio_mesh::viewer::SemioMeshViewer",
+      "factory": "semio_s_artifact_stdio_semio_mesh::viewer::create_semio_mesh_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -127,8 +127,8 @@
       "order": 10,
       "variant": "SemioObjectEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_object::SemioObjectEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_object::create_semio_object_editor",
+      "type": "semio_s_artifact_stdio_semio_object::editor::SemioObjectEditor",
+      "factory": "semio_s_artifact_stdio_semio_object::editor::create_semio_object_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_object_editor",
@@ -140,8 +140,8 @@
       "order": 11,
       "variant": "SemioObjectViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_object::SemioObjectViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_object::create_semio_object_viewer",
+      "type": "semio_s_artifact_stdio_semio_object::viewer::SemioObjectViewer",
+      "factory": "semio_s_artifact_stdio_semio_object::viewer::create_semio_object_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -150,8 +150,8 @@
       "order": 12,
       "variant": "SemioTableEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_table::SemioTableEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_table::create_semio_table_editor",
+      "type": "semio_s_artifact_stdio_semio_table::editor::SemioTableEditor",
+      "factory": "semio_s_artifact_stdio_semio_table::editor::create_semio_table_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_table_editor",
@@ -163,8 +163,8 @@
       "order": 13,
       "variant": "SemioTableViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_table::SemioTableViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_table::create_semio_table_viewer",
+      "type": "semio_s_artifact_stdio_semio_table::viewer::SemioTableViewer",
+      "factory": "semio_s_artifact_stdio_semio_table::viewer::create_semio_table_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -173,8 +173,8 @@
       "order": 14,
       "variant": "SemioTextEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_text::SemioTextEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_text::create_semio_text_editor",
+      "type": "semio_s_artifact_stdio_semio_text::editor::SemioTextEditor",
+      "factory": "semio_s_artifact_stdio_semio_text::editor::create_semio_text_editor",
       "mutationRoster": true,
       "laws": {
         "editing": "semio_text_editor",
@@ -186,8 +186,8 @@
       "order": 15,
       "variant": "SemioTextViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_text::SemioTextViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_text::create_semio_text_viewer",
+      "type": "semio_s_artifact_stdio_semio_text::viewer::SemioTextViewer",
+      "factory": "semio_s_artifact_stdio_semio_text::viewer::create_semio_text_viewer",
       "mutationRoster": true,
       "laws": null
     },
@@ -196,8 +196,8 @@
       "order": 16,
       "variant": "SemioAnimationEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_animation::SemioAnimationEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_animation::create_semio_animation_editor",
+      "type": "semio_s_artifact_stdio_semio_animation::editor::SemioAnimationEditor",
+      "factory": "semio_s_artifact_stdio_semio_animation::editor::create_semio_animation_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_animation_editor",
@@ -209,8 +209,8 @@
       "order": 17,
       "variant": "SemioAnimationViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_animation::SemioAnimationViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_animation::create_semio_animation_viewer",
+      "type": "semio_s_artifact_stdio_semio_animation::viewer::SemioAnimationViewer",
+      "factory": "semio_s_artifact_stdio_semio_animation::viewer::create_semio_animation_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -219,8 +219,8 @@
       "order": 18,
       "variant": "SemioAnyEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_base::SemioAnyEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_base::create_semio_base_editor",
+      "type": "semio_s_artifact_stdio_semio::editor::SemioAnyEditor",
+      "factory": "semio_s_artifact_stdio_semio::editor::create_semio_base_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_any_editor",
@@ -232,8 +232,8 @@
       "order": 19,
       "variant": "SemioAnyViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_base::SemioAnyViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_base::create_semio_base_viewer",
+      "type": "semio_s_artifact_stdio_semio::viewer::SemioAnyViewer",
+      "factory": "semio_s_artifact_stdio_semio::viewer::create_semio_base_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -242,8 +242,8 @@
       "order": 20,
       "variant": "SemioAudioEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_audio::SemioAudioEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_audio::create_semio_audio_editor",
+      "type": "semio_s_artifact_stdio_semio_audio::editor::SemioAudioEditor",
+      "factory": "semio_s_artifact_stdio_semio_audio::editor::create_semio_audio_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_audio_editor",
@@ -255,8 +255,8 @@
       "order": 21,
       "variant": "SemioAudioViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_audio::SemioAudioViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_audio::create_semio_audio_viewer",
+      "type": "semio_s_artifact_stdio_semio_audio::viewer::SemioAudioViewer",
+      "factory": "semio_s_artifact_stdio_semio_audio::viewer::create_semio_audio_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -265,8 +265,8 @@
       "order": 22,
       "variant": "SemioCadEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_cad::SemioCadEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_cad::create_semio_cad_editor",
+      "type": "semio_s_artifact_stdio_semio_cad::editor::SemioCadEditor",
+      "factory": "semio_s_artifact_stdio_semio_cad::editor::create_semio_cad_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_cad_editor",
@@ -278,8 +278,8 @@
       "order": 23,
       "variant": "SemioCadViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_cad::SemioCadViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_cad::create_semio_cad_viewer",
+      "type": "semio_s_artifact_stdio_semio_cad::viewer::SemioCadViewer",
+      "factory": "semio_s_artifact_stdio_semio_cad::viewer::create_semio_cad_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -288,8 +288,8 @@
       "order": 24,
       "variant": "SemioDocumentEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_document::SemioDocumentEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_document::create_semio_document_editor",
+      "type": "semio_s_artifact_stdio_semio_document::editor::SemioDocumentEditor",
+      "factory": "semio_s_artifact_stdio_semio_document::editor::create_semio_document_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_document_editor",
@@ -301,8 +301,8 @@
       "order": 25,
       "variant": "SemioDocumentViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_document::SemioDocumentViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_document::create_semio_document_viewer",
+      "type": "semio_s_artifact_stdio_semio_document::viewer::SemioDocumentViewer",
+      "factory": "semio_s_artifact_stdio_semio_document::viewer::create_semio_document_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -311,8 +311,8 @@
       "order": 26,
       "variant": "SemioFlowEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_flow::SemioFlowEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_flow::create_semio_flow_editor",
+      "type": "semio_s_artifact_stdio_semio_flow::editor::SemioFlowEditor",
+      "factory": "semio_s_artifact_stdio_semio_flow::editor::create_semio_flow_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_flow_editor",
@@ -324,8 +324,8 @@
       "order": 27,
       "variant": "SemioFlowViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_flow::SemioFlowViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_flow::create_semio_flow_viewer",
+      "type": "semio_s_artifact_stdio_semio_flow::viewer::SemioFlowViewer",
+      "factory": "semio_s_artifact_stdio_semio_flow::viewer::create_semio_flow_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -334,8 +334,8 @@
       "order": 28,
       "variant": "SemioImageEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_image::SemioImageEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_image::create_semio_image_editor",
+      "type": "semio_s_artifact_stdio_semio_image::editor::SemioImageEditor",
+      "factory": "semio_s_artifact_stdio_semio_image::editor::create_semio_image_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_image_editor",
@@ -347,8 +347,8 @@
       "order": 29,
       "variant": "SemioImageViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_image::SemioImageViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_image::create_semio_image_viewer",
+      "type": "semio_s_artifact_stdio_semio_image::viewer::SemioImageViewer",
+      "factory": "semio_s_artifact_stdio_semio_image::viewer::create_semio_image_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -357,8 +357,8 @@
       "order": 30,
       "variant": "SemioModelEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_model::SemioModelEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_model::create_semio_model_editor",
+      "type": "semio_s_artifact_stdio_semio_model::editor::SemioModelEditor",
+      "factory": "semio_s_artifact_stdio_semio_model::editor::create_semio_model_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_model_editor",
@@ -370,8 +370,8 @@
       "order": 31,
       "variant": "SemioModelViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_model::SemioModelViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_model::create_semio_model_viewer",
+      "type": "semio_s_artifact_stdio_semio_model::viewer::SemioModelViewer",
+      "factory": "semio_s_artifact_stdio_semio_model::viewer::create_semio_model_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -380,8 +380,8 @@
       "order": 32,
       "variant": "SemioPresentationEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_presentation::SemioPresentationEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_presentation::create_semio_presentation_editor",
+      "type": "semio_s_artifact_stdio_semio_presentation::editor::SemioPresentationEditor",
+      "factory": "semio_s_artifact_stdio_semio_presentation::editor::create_semio_presentation_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_presentation_editor",
@@ -393,8 +393,8 @@
       "order": 33,
       "variant": "SemioPresentationViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_presentation::SemioPresentationViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_presentation::create_semio_presentation_viewer",
+      "type": "semio_s_artifact_stdio_semio_presentation::viewer::SemioPresentationViewer",
+      "factory": "semio_s_artifact_stdio_semio_presentation::viewer::create_semio_presentation_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -403,8 +403,8 @@
       "order": 34,
       "variant": "SemioValueEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_value::SemioValueEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_value::create_semio_value_editor",
+      "type": "semio_s_artifact_stdio_semio_value::editor::SemioValueEditor",
+      "factory": "semio_s_artifact_stdio_semio_value::editor::create_semio_value_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_value_editor",
@@ -416,8 +416,8 @@
       "order": 35,
       "variant": "SemioValueViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_value::SemioValueViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_value::create_semio_value_viewer",
+      "type": "semio_s_artifact_stdio_semio_value::viewer::SemioValueViewer",
+      "factory": "semio_s_artifact_stdio_semio_value::viewer::create_semio_value_viewer",
       "mutationRoster": false,
       "laws": null
     },
@@ -426,8 +426,8 @@
       "order": 36,
       "variant": "SemioVideoEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_semio::editor::semio_video::SemioVideoEditor",
-      "factory": "semio_s_artifact_stdio_semio::editor::semio_video::create_semio_video_editor",
+      "type": "semio_s_artifact_stdio_semio_video::editor::SemioVideoEditor",
+      "factory": "semio_s_artifact_stdio_semio_video::editor::create_semio_video_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "semio_video_editor",
@@ -439,27 +439,34 @@
       "order": 37,
       "variant": "SemioVideoViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_semio::viewer::semio_video::SemioVideoViewer",
-      "factory": "semio_s_artifact_stdio_semio::viewer::semio_video::create_semio_video_viewer",
+      "type": "semio_s_artifact_stdio_semio_video::viewer::SemioVideoViewer",
+      "factory": "semio_s_artifact_stdio_semio_video::viewer::create_semio_video_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [
-    "conversion-animation",
-    "conversion-audio",
-    "conversion-brep",
-    "conversion-cad",
-    "conversion-document",
-    "conversion-drawing",
-    "conversion-flow",
-    "conversion-image",
-    "conversion-mesh",
-    "conversion-model",
-    "conversion-presentation",
-    "conversion-value",
-    "conversion-video"
+  "catalogPackage": "semio-s-artifact-stdio-semio-catalog",
+  "symbolPackages": [
+      "semio-s-artifact-stdio-semio-base",
+      "semio-s-artifact-stdio-semio-animation",
+      "semio-s-artifact-stdio-semio-audio",
+      "semio-s-artifact-stdio-semio-brep",
+      "semio-s-artifact-stdio-semio-cad",
+      "semio-s-artifact-stdio-semio-document",
+      "semio-s-artifact-stdio-semio-drawing",
+      "semio-s-artifact-stdio-semio-flow",
+      "semio-s-artifact-stdio-semio-graph",
+      "semio-s-artifact-stdio-semio-image",
+      "semio-s-artifact-stdio-semio-kit",
+      "semio-s-artifact-stdio-semio-mesh",
+      "semio-s-artifact-stdio-semio-model",
+      "semio-s-artifact-stdio-semio-object",
+      "semio-s-artifact-stdio-semio-presentation",
+      "semio-s-artifact-stdio-semio-table",
+      "semio-s-artifact-stdio-semio-text",
+      "semio-s-artifact-stdio-semio-value",
+      "semio-s-artifact-stdio-semio-video"
   ],
   "playgrounds": [
     {
@@ -694,98 +701,98 @@
   "mutationDescriptors": [
     {
       "name": "SemioAnimationMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation"
     },
     {
       "name": "SemioAudioMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation"
     },
     {
       "name": "SemioMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::SemioMutation"
+      "snapshot": "semio_s_artifact_stdio_semio::schema::snapshot::SemioSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio::schema::mutations::SemioMutation"
     },
     {
       "name": "SemioBrepMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation"
     },
     {
       "name": "SemioCadMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation"
     },
     {
       "name": "SemioDocumentMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation"
     },
     {
       "name": "SemioDrawingMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation"
     },
     {
       "name": "SemioFlowMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation"
     },
     {
       "name": "SemioGraphMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation"
     },
     {
       "name": "SemioImageMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation"
     },
     {
       "name": "SemioKitMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation"
     },
     {
       "name": "SemioMeshMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation"
     },
     {
       "name": "SemioModelMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation"
     },
     {
       "name": "SemioObjectMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation"
     },
     {
       "name": "SemioPresentationMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation"
     },
     {
       "name": "SemioTableMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation"
     },
     {
       "name": "SemioTextMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation"
     },
     {
       "name": "SemioValueMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation"
     },
     {
       "name": "SemioVideoMutation",
-      "snapshot": "semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot",
-      "mutation": "semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation"
+      "snapshot": "semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot",
+      "mutation": "semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation"
     }
   ],
   "mutationCoordinates": [

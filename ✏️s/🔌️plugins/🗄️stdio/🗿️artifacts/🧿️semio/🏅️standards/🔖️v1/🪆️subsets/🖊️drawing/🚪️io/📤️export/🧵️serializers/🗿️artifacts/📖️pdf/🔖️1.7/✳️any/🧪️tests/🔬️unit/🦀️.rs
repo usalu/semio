@@ -1,8 +1,9 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::drawing::io::export::serializers::artifacts::png::v1_2::any::rasterize_drawing;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioTransform};
+use crate::serializers::artifacts::png::v1_2::any::rasterize_drawing;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::encode_pdf;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn p(x: f64, y: f64) -> SemioPoint2 {

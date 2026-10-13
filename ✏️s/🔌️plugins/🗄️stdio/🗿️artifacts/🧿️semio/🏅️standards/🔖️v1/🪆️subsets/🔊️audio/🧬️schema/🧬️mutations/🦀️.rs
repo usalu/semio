@@ -10,7 +10,7 @@
 //! tuple variant wrapping its own mutation leaf (`./*/🦀️.rs`), and this file's `agg_diff`/
 //! `agg_inverse` carry the handcrafted semantics every leaf's `MutationKind` impl delegates back to.
 
-use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
+use crate::schema::diff::{SemioAudioChannelDiff, SemioAudioDiff};
 
 
 
@@ -25,8 +25,8 @@ use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannel
 
 
 
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation};

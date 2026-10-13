@@ -10,17 +10,10 @@ description = "Plugin-based OS host: hot-swappable WASM plugins, workflow, docum
 role = "product"
 id = "os-host"
 
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
-
 [lints]
 workspace = true
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
@@ -85,4 +78,3 @@ semio-framework-plugin-host = { path = "../../../🔨️modules/🔌️plugin/�
 semio-framework-os-kernel = { path = "../../../📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["mutation-testing", "protocol-laws"] }
 png = "0.17.16"
 semio-framework-async-macros = { path = "../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
-

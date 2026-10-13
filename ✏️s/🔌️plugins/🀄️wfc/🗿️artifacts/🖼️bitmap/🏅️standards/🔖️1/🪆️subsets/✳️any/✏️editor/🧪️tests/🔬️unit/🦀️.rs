@@ -141,11 +141,11 @@ fn the_bridge_reads_stroke_points_in_both_spellings_and_refuses_garbage() {
 fn the_solve_transient_prints_and_packs_its_own_envelope() {
     use crate::editor::bitmap::transient::BitmapTransient;
     let transient = BitmapTransient { output_pixels: Some(encode_base64(&[0, 1, 2, 1])), contradiction: false, output_width: 2, output_height: 2 };
-    let text = <BitmapTransient as store::ArtifactDsl>::print_dsl(&transient);
+    let text = <BitmapTransient as store::os_store::serialization::ArtifactDsl>::print_dsl(&transient);
     assert!(text.starts_with("semio wfc.bitmaptransient.dsl v1"), "unexpected transient preamble: {:?}", text.lines().next());
-    assert_eq!(<BitmapTransient as store::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
-    let packed = <BitmapTransient as store::ArtifactPack>::encode_pack(&transient);
-    assert_eq!(<BitmapTransient as store::ArtifactPack>::decode_pack(&packed).expect("the transient unpacks"), transient);
+    assert_eq!(<BitmapTransient as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("the transient parses back"), transient);
+    let packed = <BitmapTransient as store::os_store::serialization::ArtifactPack>::encode_pack(&transient);
+    assert_eq!(<BitmapTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("the transient unpacks"), transient);
 }
 
 /// 🫧️ The `Solve` verb's own transient write really carries a collapse — not a uniform square, not a

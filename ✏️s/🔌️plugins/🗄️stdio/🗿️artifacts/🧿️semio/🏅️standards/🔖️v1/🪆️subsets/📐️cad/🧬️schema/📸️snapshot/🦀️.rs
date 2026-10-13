@@ -2,7 +2,7 @@
 //! `DwgDrawing`/`DwgEntity`/`DwgGeometry`, and the 📐️cad plugin's domain artifact (master plan
 //! "Subset snapshot cores" table, `cad` row). `CadEntity` carries the full 9-variant vocabulary
 //! (Line/Arc/Circle/Ellipse/Polyline/Text/Insert/Solid/Dimension).
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 use framework_schema::ArtifactSchema;
 //#region 🔖️Ids
 pub const STDIO_SEMIOCAD_DOCUMENT_SCHEMA: &str = "stdio.semio.cad";

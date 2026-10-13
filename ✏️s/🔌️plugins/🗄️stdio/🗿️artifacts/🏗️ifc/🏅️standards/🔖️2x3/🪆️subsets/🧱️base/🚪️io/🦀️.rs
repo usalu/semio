@@ -196,13 +196,13 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Ifc2x3Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }
@@ -285,7 +285,7 @@ pub mod derived_analysis {
                     AnalyzeSource::Text(text) => match if text.trim_start().starts_with("ISO-10303-21") {
                         crate::standards::v2x3::engine::decode_ifc2x3(text.as_bytes()).map_err(|error| semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue, error, semio_framework_diagnostic::TextSpan::at(1, 1)))
                     } else {
-                        <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(text)
+                        <Ifc2x3Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
                     } {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
@@ -293,7 +293,7 @@ pub mod derived_analysis {
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
+                    AnalyzeSource::Binary(bytes) => match <Ifc2x3Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).or_else(|_| crate::standards::v2x3::engine::decode_ifc2x3(bytes).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
@@ -347,7 +347,7 @@ pub fn register() {
     ::semio_framework_schema_registry::register_artifact_schema_descriptor(ifc2x3_artifact_schema_descriptor()).expect("schema descriptor publication");
     register_artifact_inferences();
     register_pilot_languages();
-    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::ArtifactCodec::bare::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
+    semio_framework_plugin::io::register_native_document_codec(semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.ifc", standard: semio_framework_artifact_reference::StandardId("2x3"), subset: semio_framework_artifact_reference::SubsetId("*") }, store::bare_artifact_codec::<Ifc2x3Snapshot, mutations::Ifc2x3Mutation>(STDIO_IFC2X3_DOCUMENT_SCHEMA))
         .expect("static Stdio registration must be available and conflict-free");
     // 🛡️ D5's generic validate-on-build hook: registers each real subset's `SubsetValidator` so
     // `io_dispatch`/`wire_artifact_compose` re-check them for free. Each subset's `ComposerEntry`

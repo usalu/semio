@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::En1993Snapshot;
 use crate::{SteelMaterial,SteelSection,SteelMember,LoadCase,MemberAction,DesignAction,SteelJoint,JointForceAction,FatigueDetail,FatigueBand,FireExposure,ColdFormedMember,PlatedPanel,SiloShell,TensionComponent,BridgeFatigue,TowerLeg,SteelPile,CraneRunway,ForceAction,document::AnnexChoice};
 use std::collections::BTreeMap;
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase,validate_sqlite_database_schema,artifact::{Cell,FloatColumn,FloatRow,RowWriter,reconstruct_text,NativeEncodingBound}}};
 use semio_framework_value::{ValueError, ValueRefusalKind};
 fn invalid(message: impl Into<String>) -> ValueError { ValueError::new(ValueRefusalKind::InvalidValue, message) }
 
@@ -37,7 +37,7 @@ fn read_annex(s:&str)->Result<AnnexChoice, ValueError>{match s{"En"=>Ok(AnnexCho
 fn write_forces(p:&mut RowWriter<'_,'_>,table:&str,parent:i64,values:&[ForceAction])->Result<(), ValueError>{for(n,a)in values.iter().enumerate(){p.insert_float(table,&[Cell::Integer(parent),ordinal(n)?,Cell::Text(&a.id),Cell::Text(&a.load_case_id),Cell::Real(a.force)],FORCE)?;}Ok(())}
 fn read_forces(rows:Vec<FloatRow<'_>>,parent:i64,c:&mut SqliteSnapshotControl<'_>)->Result<Vec<ForceAction>, ValueError>{let mut out=Vec::new();for a in ordered(rows,parent,c)?{checkpoint(c,out.len(),0)?;out.push(ForceAction{id:text(a,3,c)?,load_case_id:text(a,4,c)?,force:a.real(5)?});}Ok(out)}
 /// 🪪️ Optional relational capability supplied by the steel artifact owner.
-pub fn codec()->store::ArtifactSqliteSnapshotCodec{<En1993Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
+pub fn codec()->store::os_store::serialization::ArtifactSqliteSnapshotCodec{<En1993Snapshot as ArtifactSqliteSnapshot>::sqlite_codec()}
 impl En1993Snapshot{
  fn write_sqlite_rows(&self,p:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  p.insert_key("en1993_document",1,&[Cell::Text(annex(self.annex))])?;
@@ -64,7 +64,7 @@ impl En1993Snapshot{
 }
 impl ArtifactSqliteSnapshot for En1993Snapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
- fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+ fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {admission::admit(record,native,limits)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
 
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,c:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload, ValueError>{
   let mut rows=1usize;let mut visited=0usize;c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,0)?;
@@ -72,7 +72,7 @@ impl ArtifactSqliteSnapshot for En1993Snapshot{
   for n in[self.materials.len(),self.sections.len(),self.members.len(),self.load_cases.len(),self.member_actions.len(),self.joints.len(),self.fatigue_details.len(),self.fire_exposures.len(),self.cold_formed_members.len(),self.plated_panels.len(),self.silo_shells.len(),self.tension_components.len(),self.bridge_fatigue.len(),self.tower_legs.len(),self.piles.len(),self.crane_runways.len()]{add(n)?;}
   for v in &self.joints{add(v.actions.len())?;}for v in &self.fatigue_details{add(v.spectrum.len())?;}for v in &self.cold_formed_members{add(v.actions.len())?;}for v in &self.plated_panels{add(v.actions.len())?;}for v in &self.tension_components{add(v.actions.len())?;}for v in &self.tower_legs{add(v.actions.len())?;}for v in &self.piles{add(v.actions.len())?;}for v in &self.crane_runways{add(v.actions.len())?;}
   c.checkpoint(SqliteSnapshotPhase::EncodeNative,0,rows)?;
-  self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
+  self.admit_sqlite_values(c,SqliteSnapshotPhase::EncodeNative)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),c,native_owner)
  }
 
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{

@@ -13,7 +13,7 @@ role = "tool"
 workspace = true
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 path = "../../🦀️.rs"
 
 [dependencies]

@@ -1,6 +1,6 @@
 //! 🪶️ Raw Socket text owns one explicit relational entity and its exact UTF-8 carriers.
 use super::{NativeSocketProbeSnapshot,store};
-use store::{os_store::{ArtifactSqliteSnapshot,ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding,ArtifactPack},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase as Phase,SnapshotEncoding,artifact::{Projection,Cell,reconstruct_text},validate_sqlite_database_schema_controlled},io_schema::IoPayload};
+use store::{os_store::{serialization::ArtifactSqliteSnapshot,ArtifactNativeSnapshot,NativeSnapshotInput,NativeSnapshotEncoding,serialization::ArtifactPack},sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase as Phase,SnapshotEncoding,artifact::{Projection,Cell,reconstruct_text},validate_sqlite_database_schema_controlled},io_schema::IoPayload};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind as Kind};
 use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
@@ -48,9 +48,4 @@ impl ArtifactSqliteSnapshot for NativeSocketProbeSnapshot{
   let before=native.owned_bytes();let result=native.scoped_maximum(maximum(before,control)?,|native|self.encode_native_snapshot(encoding,native));control.admit_allocation_bytes(native.owned_bytes()-before)?;result
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{physical(self.0.len(),Phase::EncodeNative,control)}
-}
-
-/// 📣️ Publishes the original document and its declared SQLite IO coordinate atomically.
-pub(super) fn publish()->Result<(),store::io::ArtifactAssemblyRegistryError>{
- let(owner,codec)=NativeSocketProbeSnapshot::native_snapshot_registration().expect("Socket declares its original native IO owner");store::io::register_native_snapshot_codec(owner,codec)
 }

@@ -83,7 +83,7 @@ pub fn ordered_index<T>(items: &[T], key: &str, item_key: impl Fn(&T) -> String)
 }
 //#endregion 📐️CanonicalOrder
 
-pub type Grid3dEnvelope = store::ArtifactEnvelope<Grid3dSnapshot, Grid3dMutation>;
+pub type Grid3dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Grid3dSnapshot, Grid3dMutation>;
 pub type Grid3dStore = store::ArtifactStore<Grid3dSnapshot, Grid3dMutation>;
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.

@@ -6,7 +6,8 @@
 
 use super::encryption::{seal_standard_security, sha256, Decryptor};
 use super::filters::{encode_stream, flate_encode};
-use super::lexer::{object_bytes, write_dict, write_object};
+use crate::standards::v1_7::subsets::base::modules::lexer::{object_bytes, write_dict, write_object};
+use crate::standards::v1_7::subsets::base::modules::xref::WRITER_TRAILER_KEYS;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfDictEntry, PdfEncryption, PdfIndirectObject, PdfObject};
 use std::collections::BTreeMap;
 
@@ -19,10 +20,6 @@ pub struct WriteOptions {
     /// 🔐 Encrypt with the standard security handler.
     pub encryption: Option<PdfEncryption>,
 }
-
-/// 🧮 Trailer keys the writer derives from the file it lays out (ISO 32000-1 §7.5.5, §7.5.8.2) —
-/// never document content, so a reader drops them and a writer states them afresh.
-pub const WRITER_TRAILER_KEYS: [&str; 10] = ["Size", "Prev", "XRefStm", "Encrypt", "Type", "W", "Index", "Filter", "DecodeParms", "Length"];
 
 /// 🧾 The trailer-level identity of a document.
 #[derive(Clone, Debug, PartialEq)]

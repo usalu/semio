@@ -2,12 +2,12 @@
 
 use crate::{Puzzle5dFastener, Puzzle5dKindCompatibility, Puzzle5dMeta, Puzzle5dPart, Puzzle5dTargetVolume, PUZZLE_5D_SCHEMA};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 
 /// 🚪️ Owns the codec used by the actual subset's native declaration.
-pub(crate) fn native_codec()->store::ArtifactCodec {
-    store::ArtifactCodec::bare::<Puzzle5dSnapshot,crate::Puzzle5dMutation>(PUZZLE_5D_SCHEMA)
+pub(crate) fn native_codec()->store::os_store::serialization::ArtifactCodec {
+    store::bare_artifact_codec::<Puzzle5dSnapshot,crate::Puzzle5dMutation>(PUZZLE_5D_SCHEMA)
 }
 
 //#region 🔖️Snapshot
@@ -39,7 +39,7 @@ pub struct Puzzle5dSnapshot {
     #[value(default, skip_serializing_if = "Option::is_none")]
     #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
-    pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    pub kind_catalogs: Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>,
     /// 🧩️ The puzzle5d-owned overflow half `SemioKitType` cannot represent — sibling to
     /// `kind_catalogs`, id-joined back together by `kind_catalogs_of`.
     #[value(default, skip_serializing_if = "Option::is_none")]

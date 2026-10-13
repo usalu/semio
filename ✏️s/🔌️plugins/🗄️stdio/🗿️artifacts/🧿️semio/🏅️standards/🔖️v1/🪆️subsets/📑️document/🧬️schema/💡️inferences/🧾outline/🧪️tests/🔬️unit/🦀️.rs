@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::document::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{DocListItem, DocTableCell, DocTableRow, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 
 #[semio_framework_async_macros::async_test]
 async fn collects_headings_and_counts_words_and_blocks() {

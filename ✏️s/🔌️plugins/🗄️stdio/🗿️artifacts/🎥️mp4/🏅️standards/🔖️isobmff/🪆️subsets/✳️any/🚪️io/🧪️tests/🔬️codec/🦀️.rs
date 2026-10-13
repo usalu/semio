@@ -121,12 +121,12 @@ async fn exact_bauen_mit_bestand_fixture_round_trips_byte_for_byte() {
     let snapshot = decode_mp4(&bytes).expect("decode exact MP4 fixture");
     assert_eq!(encode_mp4(&snapshot), bytes);
 
-    let pack = <Mp4Snapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let from_pack = <Mp4Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
+    let pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let from_pack = <Mp4Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode MP4 pack");
     assert_eq!(encode_mp4(&from_pack), bytes);
 
-    let dsl = <Mp4Snapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-    let from_dsl = <Mp4Snapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
+    let dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
+    let from_dsl = <Mp4Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse MP4 DSL");
     assert_eq!(encode_mp4(&from_dsl), bytes);
 
     let analysis = Mp4AnalyzerAnalysis::analyze(&[AnalyzeSource::Binary(&pack)]);

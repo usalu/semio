@@ -1,10 +1,10 @@
 //! 🧬️ Direct bind-primitive-indices mutation owner: payload, validation, typed diff, inverse, and outcomes.
-use crate::schema::diff::*;
-use crate::schema::modules::mutation_support::top_level_collections::*;
-use crate::schema::modules::mutation_support::structure_geometry::checked_index;
-use crate::schema::modules::mutation_support::top_level::rejection_outcome;
-use crate::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level_collections::*;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::structure_geometry::checked_index;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome;
+use crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::{reject, GltfTopLevelMutationRejection};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 pub const ID: &str = "s.stdio.gltf.mutation.bind-primitive-indices.v1";
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -19,7 +19,7 @@ pub fn validate(payload: &GltfBindPrimitiveIndicesPayload, base: &GltfSnapshot) 
     checked_index(payload.mesh, base.document.meshes.len(), "document/meshes")?;
     checked_index(payload.primitive, base.document.meshes[payload.mesh].primitives.len(), "document/meshes/primitives")?;
     checked_index(payload.accessor, base.document.accessors.len(), "document/accessors")?;
-    if base.document.accessors[payload.accessor].kind != crate::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Scalar || base.document.accessors[payload.accessor].component_type == crate::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float {
+    if base.document.accessors[payload.accessor].kind != semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType::Scalar || base.document.accessors[payload.accessor].component_type == semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType::Float {
         return Err(reject("gltf.mutation.invalid-index-accessor", "document/accessors", "indices require a scalar integer accessor"));
     }
     Ok(())

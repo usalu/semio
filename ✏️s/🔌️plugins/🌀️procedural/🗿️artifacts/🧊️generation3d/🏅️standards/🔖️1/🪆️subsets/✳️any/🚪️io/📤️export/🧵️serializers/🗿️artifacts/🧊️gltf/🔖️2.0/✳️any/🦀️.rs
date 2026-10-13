@@ -13,13 +13,20 @@
 //! exports as a real `mode: 0/1/3` primitive instead of erroring.
 use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
-use semio_s_artifact_stdio_gltf::GltfSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::gltf::v2_0::any::SemioMeshToGltf;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::{MeshAttribute, MeshAttributeDomain, MeshAttributeSemantic, MeshData};
 use semio_framework_value::NativeEncodeControl;
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessor, GltfAccessorType, GltfAlphaMode, GltfBufferView, GltfComponentType, GltfJson, GltfSampler, GltfTexture};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessor;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfBufferView;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSampler;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfTexture;
 use std::collections::BTreeMap;
 
 pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
@@ -27,7 +34,7 @@ pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<GltfSnapshot, semio_fr
 }
 
 pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(semio_s_artifact_stdio_gltf::engine::serialize_gltf_document(&serialize_mesh(mesh)?))
+    Ok(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::serialize_gltf_document(&serialize_mesh(mesh)?))
 }
 
 /// 🎨️ Encodes retained prepared surfaces through the existing geometry and glTF owners.
@@ -43,7 +50,7 @@ pub fn serialize_prepared_meshes_bytes(meshes: &[MeshData]) -> Result<Vec<u8>, s
 /// 🧵️ Preserves the caller encoding control through geometry, metadata and final physical bytes.
 pub fn serialize_prepared_meshes_bytes_controlled(meshes: &[MeshData], control: &mut NativeEncodeControl<'_>) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let output = serialize_prepared_meshes_controlled(meshes, control)?;
-    semio_s_artifact_stdio_gltf::engine::serialize_gltf_document_owned_controlled(output, control).map_err(control_error)
+    semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::serialize_gltf_document_owned_controlled(output, control).map_err(control_error)
 }
 
 /// 🚦️ Admits enriched output through the existing caller encoding control before publication.

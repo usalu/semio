@@ -56,7 +56,7 @@ use semio_framework_plugin::TopologyNode;
 // `semio_framework::*` elsewhere) — see `crate::PROCEDURE_DIALECT`'s own
 // definition for the qualified form this file only reads back through that constant.
 use semio_framework_2d::compute::EngineHandles;
-use store::{ArtifactPack, };
+use store::{os_store::serialization::ArtifactPack, };
 
 /// 🏷️ Admits semantic labels for the imperative editor.
 pub fn ui_label(value: impl AsRef<str>) -> semio_framework_plugin::UiAssemblyResult<semio_framework_ui_contract::Label> {
@@ -347,14 +347,14 @@ impl semio_framework_plugin::ArtifactOwnedToolJobFactory for ImperativeRetainedC
 #[derive(Default)]
 pub struct ImperativePlayApp;
 
-/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::empty_document_spr` (never a
+/// 🧬️ The whole-document replacement `setActiveExample` emits. `store::os_store::text_format::empty_document_spr` (never a
 /// minted `create_document_envelope`) is what keeps the guest off the `terminal shell reached Drop
 /// before its app-owned bounded retirement authority detached` trap on this path; the framework
 /// re-stamps the log with the live mount's identity before hydration sees it
-/// (`store::stamp_document_spr_identity`), so no app ever states its own mount.
+/// (`store::os_store::text_format::stamp_document_spr_identity`), so no app ever states its own mount.
 pub fn reset_procedure_document_effect(document: &ProcedureSnapshot) -> semio_framework_plugin::Effect {
     let pack = <ProcedureSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("procedure", PROCEDURE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -389,12 +389,12 @@ impl ArtifactEditor for ImperativePlayApp {
 
     /// 📬️ The ARTIFACT lane's publication authority — a retained tool whose contract states `Artifact`
     /// has nowhere to stage its edit without one, and dies after reaching the typed operation.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ The CONFIG lane's twin, for `run` and `setContributions`.
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 

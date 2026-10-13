@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::schema::snapshot::{SemioSubsetSnapshot, STDIO_SEMIO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snapshot(subset: SemioSubsetSnapshot) -> SemioSnapshot {

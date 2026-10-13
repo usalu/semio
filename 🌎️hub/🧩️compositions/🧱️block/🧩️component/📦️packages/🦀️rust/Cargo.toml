@@ -1,0 +1,59 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-block-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `block` plugin component: the one cdylib of `semio-hub-block`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:block"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "🧱️block"
+component-kind = "plugin"
+
+[[package.metadata.semio.playground]]
+variant = "block2d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.block.block2d@1/*#editor"
+aliases = ["block 2d"]
+ports = { react = 6024, wgpu = 6124 }
+
+[[package.metadata.semio.playground]]
+variant = "block3d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.block.block3d@1/*#editor"
+aliases = ["block 3d"]
+ports = { react = 6025, wgpu = 6125 }
+
+[[package.metadata.semio.playground]]
+variant = "block5d"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.block.block5d@1/*#editor"
+aliases = ["block 5d"]
+ports = { react = 6026, wgpu = 6126 }
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "s.block.block3d@1/*#editor"
+catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json"
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../✏️s/🔌️plugins/🧱️block/🗿️artifacts"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-block = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }

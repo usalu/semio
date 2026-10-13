@@ -33,6 +33,6 @@ fn construct(rows:&Rows<'_>,native:&mut semio_framework_value::NativeDecodeContr
  value.curated=native.allocate_vec(rows.tables[13].len())?;for row in&rows.tables[13]{value.curated.push(CuratedItem{object_id:native.copy_text(row.text(3)?)?,count:uint(row,4)?});native.step()?;}value.validate().map_err(invalid)?;native.checkpoint()?;Ok(owner)
 }
 pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<CurationSnapshot,ValueError>{
- validate_sqlite_database_schema_controlled(database,<CurationSnapshot as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,PHASE,control)?;control.check_database(database,PHASE)?;let rows=Rows::new(database,control)?;
+ validate_sqlite_database_schema_controlled(database,<CurationSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,PHASE,control)?;control.check_database(database,PHASE)?;let rows=Rows::new(database,control)?;
  let owner=control.allocation_stage(PHASE,|remaining,progress,allocation|{let mut callback=|event:semio_framework_value::native_decoding::NativeDecodeProgress|progress(event.completed,event.total);let mut native_allocation=|request:semio_framework_value::native_decoding::NativeDecodeAllocation|allocation(request.bytes);let mut native=semio_framework_value::NativeDecodeControl::new_forwarded(remaining,&mut callback,&mut native_allocation);let result=construct(&rows,&mut native);(result,native.owned_bytes())})??;control.checkpoint(PHASE,rows.tables[2].len(),rows.tables[2].len())?;Ok(owner.take())
 }

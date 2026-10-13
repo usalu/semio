@@ -12,7 +12,7 @@ use std::sync::OnceLock;
 
 /// 📏️ Apps one stdio component may assemble. Every registered app monomorphises the whole app runtime
 /// (`VcsArtifactApp<EditorApp<E>/ViewerApp<V>, Members>`, its retained tool-job factories and snapshot-edit factory) and
-/// is live code inside its component: all 176 stdio apps as ONE component drove the wasm-dev rustc to 85 GB in one codegen
+/// is live code inside its component: all 176 stdio apps as ONE component drove an unoptimized rustc to 85 GB in one codegen
 /// unit and `wasm-component-ld` refused it ("functions count exceeds limit of 1000000", chain b3 run 2, 2026-09-27). A
 /// package ships whole artifact kinds, because the host resolves who opens a kind per kind (`on-artifact-kind:`), never per
 /// subset — so the largest kind, `s.stdio.semio` (19 subsets, 38 apps), sets the bound; ST1's wasm32 measurement of
@@ -48,16 +48,16 @@ const PACKAGE_IDS: [&str; 10] = ["stdio", "stdio-image", "stdio-media", "stdio-c
 /// 🧾️ Assembles and describes one stdio package by id.
 fn shipped(id: &'static str) -> ShippedPackage {
     let (manifest, descriptor) = match id {
-        "stdio" => (include_str!("../../📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio::plugin())),
-        "stdio-image" => (include_str!("../../🧩️extensions/🖼️image/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_image::plugin())),
-        "stdio-media" => (include_str!("../../🧩️extensions/🎵️media/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_media::plugin())),
-        "stdio-cad" => (include_str!("../../🧩️extensions/🛠️cad/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_cad::plugin())),
-        "stdio-bim" => (include_str!("../../🧩️extensions/🏠️bim/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_bim::plugin())),
-        "stdio-mesh" => (include_str!("../../🧩️extensions/🔺️mesh/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_mesh::plugin())),
-        "stdio-pdf" => (include_str!("../../🧩️extensions/📘️pdf/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_pdf::plugin())),
-        "stdio-office" => (include_str!("../../🧩️extensions/💼️office/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_office::plugin())),
-        "stdio-semio" => (include_str!("../../🧩️extensions/🧿️semio/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_semio::plugin())),
-        "stdio-binary" => (include_str!("../../🧩️extensions/🔢️binary/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_binary::plugin())),
+        "stdio" => (include_str!("../../🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio::plugin())),
+        "stdio-image" => (include_str!("../../🧩️extensions/🖼️image/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_image::plugin())),
+        "stdio-media" => (include_str!("../../🧩️extensions/🎵️media/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_media::plugin())),
+        "stdio-cad" => (include_str!("../../🧩️extensions/🛠️cad/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_cad::plugin())),
+        "stdio-bim" => (include_str!("../../🧩️extensions/🏠️bim/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_bim::plugin())),
+        "stdio-mesh" => (include_str!("../../🧩️extensions/🔺️mesh/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_mesh::plugin())),
+        "stdio-pdf" => (include_str!("../../🧩️extensions/📘️pdf/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_pdf::plugin())),
+        "stdio-office" => (include_str!("../../🧩️extensions/💼️office/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_office::plugin())),
+        "stdio-semio" => (include_str!("../../🧩️extensions/🧿️semio/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_semio::plugin())),
+        "stdio-binary" => (include_str!("../../🧩️extensions/🔢️binary/🧩️component/📦️packages/🦀️rust/Cargo.toml"), describe(semio_hub_stdio_binary::plugin())),
         other => panic!("{other} is not a stdio package"),
     };
     ShippedPackage { id, manifest, descriptor }
@@ -231,7 +231,7 @@ fn package_runtime_probe() {
     let id = std::env::var(PROBE_PACKAGE).expect("the parent law names one package");
     let package = shipped(PACKAGE_IDS.into_iter().find(|candidate| *candidate == id).expect("a stdio package id"));
     assert_eq!(package.descriptor.package_id, format!("semio:{id}"), "{id} assembles alone");
-    let assemblies = semio_hub_stdio::catalog::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("the stdio artifact assemblies");
     let mut unmet = Vec::new();
     for kind in activated_kinds(&package.descriptor) {
         let declaration = assemblies.iter().find_map(|assembly| match assembly {
@@ -266,7 +266,7 @@ fn requirement_is_live(requirement: &ArtifactRuntimeCapabilityRequirement) -> bo
             None => semio_framework_schema_registry::artifact_schema_descriptor_registered(&value("schema")),
         },
         "inference" => semio_framework_schema_registry::artifact_inference_descriptor_registered(&value("schema")),
-        "codec" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
+        "codec" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::codec_registry::document_codec(&value("codec"))).expect("the document codec registry").is_some(),
         "composer" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::io::list_composer_entries()).expect("the composer registry").iter().any(|(writes, _)| coordinate(writes) == value("dialect")),
         "subset-validator" => ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::io::list_registered_subset_validator_dialects()).expect("the subset validator registry").into_iter().any(|dialect| coordinate(&semio_framework::ArtifactDialect::from(dialect)) == value("validated-dialect")),
         "representation" => values("extension").iter().filter_map(|extension| semio_framework_os_kernel::io::format_descriptor(extension.trim_start_matches('.')).expect("the format catalog")).any(|format| format.mimes.iter().cloned().collect::<BTreeSet<_>>() == values("mime") && format.extensions.iter().cloned().collect::<BTreeSet<_>>() == values("extension")),
@@ -324,7 +324,7 @@ fn package_contract_probe() {
 /// explicitly; the owner `stdio` hosts nothing.
 #[test]
 fn every_family_descriptor_hosts_exactly_its_owners_codecs_for_the_kinds_it_opens() {
-    let assemblies = semio_hub_stdio::catalog::artifact_assemblies().expect("the stdio artifact assemblies");
+    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("the stdio artifact assemblies");
     let owner_codecs = assemblies
         .iter()
         .filter_map(|assembly| match assembly {
@@ -357,8 +357,8 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
     let expected_rows = law["artifactKinds"].as_array().unwrap();
     let expected = expected_rows.iter().map(|kind| kind.as_str().unwrap().to_string()).collect::<BTreeSet<_>>();
     assert_eq!(expected_rows.len(), expected.len(), "no duplicate authored artifact kinds");
-    let definitions = semio_hub_stdio::catalog::artifact_definitions().expect("actual selected definitions");
-    let assemblies = semio_hub_stdio::catalog::artifact_assemblies().expect("actual selected assemblies");
+    let definitions = semio_hub_stdio_catalog::artifact_definitions().expect("actual selected definitions");
+    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("actual selected assemblies");
     assert_eq!(definitions.iter().map(|definition| definition.identity().as_str().to_string()).collect::<BTreeSet<_>>(), expected);
     assert_eq!(assemblies.iter().map(|assembly| assembly.definition().identity().as_str().to_string()).collect::<BTreeSet<_>>(), expected);
     assert_eq!(definitions.len(), expected.len());
@@ -378,7 +378,7 @@ async fn sqlite_snapshot_primary_declared_owner_census() {
         }
     }
     for (kind, schema, owner) in &rows {
-        let Some(codec) = semio_framework_os_kernel::document_codec(schema).await.expect("actual document codec registry") else {
+        let Some(codec) = semio_framework_os_kernel::os_store::codec_registry::document_codec(schema).await.expect("actual document codec registry") else {
             failures.push(format!("{kind} schema={schema} owner={owner}: absent installed document codec"));
             continue;
         };
@@ -406,7 +406,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
     let expected_rows = law["dialectBindings"].as_array().unwrap();
     let expected = expected_rows.iter().map(|row| (row["kind"].as_str().unwrap().to_string(), row["standard"].as_str().unwrap().to_string(), row["subset"].as_str().unwrap().to_string(), row["schema"].as_str().unwrap().to_string())).collect::<BTreeSet<_>>();
     assert_eq!(expected_rows.len(), expected.len(), "no duplicate authored dialect bindings");
-    let assemblies = semio_hub_stdio::catalog::artifact_assemblies().expect("selected assemblies");
+    let assemblies = semio_hub_stdio_catalog::artifact_assemblies().expect("selected assemblies");
     let bindings = assemblies.iter().filter_map(|assembly| match assembly { ArtifactAssembly::Runtime(declaration) => Some(declaration.document_codec_bindings()), ArtifactAssembly::Definition(_) => None }).flatten().collect::<Vec<_>>();
     let actual = bindings.iter().map(|(dialect, codec)| (dialect.artifact_kind.to_string(), dialect.standard.0.to_string(), dialect.subset.0.to_string(), codec.schema.clone())).collect::<BTreeSet<_>>();
     assert_eq!(actual, expected, "authored dialect membership is independent of installed entries and editor membership");
@@ -421,7 +421,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
         if expected_provider.snapshot_type.is_none() { failures.push(format!("{label}: declared provider erases concrete Snapshot TypeId")); }
         macro_rules! typed_snapshot_owner {
             ($snapshot:ty, $mutation:ty, $schema:literal) => {
-                (std::any::TypeId::of::<$snapshot>(), <$snapshot as semio_framework_os_kernel::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, semio_framework_os_kernel::ArtifactCodec::bare::<$snapshot, $mutation>($schema))
+                (std::any::TypeId::of::<$snapshot>(), <$snapshot as semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA, semio_framework_os_kernel::bare_artifact_codec::<$snapshot, $mutation>($schema))
             };
         }
         let (expected_type, expected_sql, typed_codec) = match (declared.artifact_kind, declared.standard.0, declared.subset.0, codec.schema.as_str()) {
@@ -435,12 +435,12 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
             ("s.stdio.docx", "ecma-376", "strict", "stdio.docx") |
             ("s.stdio.docx", "ecma-376", "transitional", "stdio.docx") => typed_snapshot_owner!(semio_s_artifact_stdio_docx::DocxSnapshot, semio_s_artifact_stdio_docx::DocxMutation, "stdio.docx"),
             ("s.stdio.dwg", "ac1018", "*", "stdio.dwg") |
-            ("s.stdio.dwg", "ac1024", "*", "stdio.dwg") => typed_snapshot_owner!(semio_s_artifact_stdio_dwg::DwgSnapshot, semio_s_artifact_stdio_dwg::DwgMutation, "stdio.dwg"),
+            ("s.stdio.dwg", "ac1024", "*", "stdio.dwg") => typed_snapshot_owner!(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot, semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation, "stdio.dwg"),
             ("s.stdio.dxf", "r12", "*", "stdio.dxf") => typed_snapshot_owner!(semio_s_artifact_stdio_dxf::DxfSnapshot, semio_s_artifact_stdio_dxf::DxfMutation, "stdio.dxf"),
             ("s.stdio.epw", "energyplus", "*", "stdio.epw") => typed_snapshot_owner!(semio_s_artifact_stdio_epw::EpwSnapshot, semio_s_artifact_stdio_epw::EpwMutation, "stdio.epw"),
             ("s.stdio.gif", "87a", "*", "stdio.gif") => typed_snapshot_owner!(semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::snapshot::GifSnapshot, semio_s_artifact_stdio_gif::standards::v87a::subsets::any::schema::mutations::GifMutation, "stdio.gif"),
             ("s.stdio.gif", "89a", "*", "stdio.gif.89a") => typed_snapshot_owner!(semio_s_artifact_stdio_gif::GifSnapshot, semio_s_artifact_stdio_gif::GifMutation, "stdio.gif.89a"),
-            ("s.stdio.gltf", "2.0", "*", "stdio.gltf") => typed_snapshot_owner!(semio_s_artifact_stdio_gltf::GltfSnapshot, semio_s_artifact_stdio_gltf::GltfMutation, "stdio.gltf"),
+            ("s.stdio.gltf", "2.0", "*", "stdio.gltf") => typed_snapshot_owner!(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot, semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation, "stdio.gltf"),
             ("s.stdio.html", "5", "*", "stdio.html") => typed_snapshot_owner!(semio_s_artifact_stdio_html::HtmlSnapshot, semio_s_artifact_stdio_html::HtmlMutation, "stdio.html"),
             ("s.stdio.ifc", "2x3", "*", "stdio.ifc.2x3") |
             ("s.stdio.ifc", "2x3", "cobie", "stdio.ifc.2x3") |
@@ -466,31 +466,31 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
             ("s.stdio.pdf", "1.7", "h", "stdio.pdf.1.7") |
             ("s.stdio.pdf", "1.7", "ua", "stdio.pdf.1.7") |
             ("s.stdio.pdf", "1.7", "vt", "stdio.pdf.1.7") |
-            ("s.stdio.pdf", "1.7", "x", "stdio.pdf.1.7") => typed_snapshot_owner!(semio_s_artifact_stdio_pdf::PdfSnapshot, semio_s_artifact_stdio_pdf::PdfMutation, "stdio.pdf.1.7"),
+            ("s.stdio.pdf", "1.7", "x", "stdio.pdf.1.7") => typed_snapshot_owner!(semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot, semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::mutations::PdfMutation, "stdio.pdf.1.7"),
             ("s.stdio.ply", "1.0", "*", "stdio.ply") => typed_snapshot_owner!(semio_s_artifact_stdio_ply::PlySnapshot, semio_s_artifact_stdio_ply::PlyMutation, "stdio.ply"),
             ("s.stdio.png", "1.2", "*", "stdio.png") => typed_snapshot_owner!(semio_s_artifact_stdio_png::PngSnapshot, semio_s_artifact_stdio_png::PngMutation, "stdio.png"),
             ("s.stdio.pptx", "ecma-376", "*", "stdio.pptx") |
             ("s.stdio.pptx", "ecma-376", "strict", "stdio.pptx") |
             ("s.stdio.pptx", "ecma-376", "transitional", "stdio.pptx") => typed_snapshot_owner!(semio_s_artifact_stdio_pptx::PptxSnapshot, semio_s_artifact_stdio_pptx::PptxMutation, "stdio.pptx"),
-            ("s.stdio.semio", "v1", "*", "stdio.semio") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::SemioSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::SemioMutation, "stdio.semio"),
-            ("s.stdio.semio", "v1", "animation", "s.stdio.semio.animation") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::animation::schema::mutations::SemioAnimationMutation, "s.stdio.semio.animation"),
-            ("s.stdio.semio", "v1", "audio", "stdio.semio.audio") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::audio::schema::mutations::SemioAudioMutation, "stdio.semio.audio"),
-            ("s.stdio.semio", "v1", "brep", "stdio.semio.brep") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation, "stdio.semio.brep"),
-            ("s.stdio.semio", "v1", "cad", "stdio.semio.cad") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::cad::schema::mutations::SemioCadMutation, "stdio.semio.cad"),
-            ("s.stdio.semio", "v1", "document", "s.stdio.semio.document") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation, "s.stdio.semio.document"),
-            ("s.stdio.semio", "v1", "drawing", "stdio.semio.drawing") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation, "stdio.semio.drawing"),
-            ("s.stdio.semio", "v1", "flow", "stdio.semio.flow") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation, "stdio.semio.flow"),
-            ("s.stdio.semio", "v1", "graph", "s.stdio.semio.graph") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation, "s.stdio.semio.graph"),
-            ("s.stdio.semio", "v1", "image", "s.stdio.semio.image") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::mutations::SemioImageMutation, "s.stdio.semio.image"),
-            ("s.stdio.semio", "v1", "kit", "stdio.semio.kit") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::SemioKitMutation, "stdio.semio.kit"),
-            ("s.stdio.semio", "v1", "mesh", "stdio.semio.mesh") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation, "stdio.semio.mesh"),
-            ("s.stdio.semio", "v1", "model", "stdio.semio.model") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::SemioModelMutation, "stdio.semio.model"),
-            ("s.stdio.semio", "v1", "object", "stdio.semio.object") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::object::schema::mutations::SemioObjectMutation, "stdio.semio.object"),
-            ("s.stdio.semio", "v1", "presentation", "s.stdio.semio.presentation") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation, "s.stdio.semio.presentation"),
-            ("s.stdio.semio", "v1", "table", "s.stdio.semio.table") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::mutations::SemioTableMutation, "s.stdio.semio.table"),
-            ("s.stdio.semio", "v1", "text", "s.stdio.semio.text") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::SemioTextMutation, "s.stdio.semio.text"),
-            ("s.stdio.semio", "v1", "value", "stdio.semio.value") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation, "stdio.semio.value"),
-            ("s.stdio.semio", "v1", "video", "stdio.semio.video") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot, semio_s_artifact_stdio_semio::standards::v1::subsets::video::schema::mutations::SemioVideoMutation, "stdio.semio.video"),
+            ("s.stdio.semio", "v1", "*", "stdio.semio") => typed_snapshot_owner!(semio_s_artifact_stdio_semio::schema::snapshot::SemioSnapshot, semio_s_artifact_stdio_semio::schema::mutations::SemioMutation, "stdio.semio"),
+            ("s.stdio.semio", "v1", "animation", "s.stdio.semio.animation") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot, semio_s_artifact_stdio_semio_animation::schema::mutations::SemioAnimationMutation, "s.stdio.semio.animation"),
+            ("s.stdio.semio", "v1", "audio", "stdio.semio.audio") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot, semio_s_artifact_stdio_semio_audio::schema::mutations::SemioAudioMutation, "stdio.semio.audio"),
+            ("s.stdio.semio", "v1", "brep", "stdio.semio.brep") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation, "stdio.semio.brep"),
+            ("s.stdio.semio", "v1", "cad", "stdio.semio.cad") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot, semio_s_artifact_stdio_semio_cad::schema::mutations::SemioCadMutation, "stdio.semio.cad"),
+            ("s.stdio.semio", "v1", "document", "s.stdio.semio.document") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot, semio_s_artifact_stdio_semio_document::schema::mutations::SemioDocumentMutation, "s.stdio.semio.document"),
+            ("s.stdio.semio", "v1", "drawing", "stdio.semio.drawing") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot, semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation, "stdio.semio.drawing"),
+            ("s.stdio.semio", "v1", "flow", "stdio.semio.flow") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, "stdio.semio.flow"),
+            ("s.stdio.semio", "v1", "graph", "s.stdio.semio.graph") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation, "s.stdio.semio.graph"),
+            ("s.stdio.semio", "v1", "image", "s.stdio.semio.image") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot, semio_s_artifact_stdio_semio_image::schema::mutations::SemioImageMutation, "s.stdio.semio.image"),
+            ("s.stdio.semio", "v1", "kit", "stdio.semio.kit") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot, semio_s_artifact_stdio_semio_kit::schema::mutations::SemioKitMutation, "stdio.semio.kit"),
+            ("s.stdio.semio", "v1", "mesh", "stdio.semio.mesh") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot, semio_s_artifact_stdio_semio_mesh::schema::mutations::SemioMeshMutation, "stdio.semio.mesh"),
+            ("s.stdio.semio", "v1", "model", "stdio.semio.model") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation, "stdio.semio.model"),
+            ("s.stdio.semio", "v1", "object", "stdio.semio.object") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot, semio_s_artifact_stdio_semio_object::schema::mutations::SemioObjectMutation, "stdio.semio.object"),
+            ("s.stdio.semio", "v1", "presentation", "s.stdio.semio.presentation") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot, semio_s_artifact_stdio_semio_presentation::schema::mutations::SemioPresentationMutation, "s.stdio.semio.presentation"),
+            ("s.stdio.semio", "v1", "table", "s.stdio.semio.table") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot, semio_s_artifact_stdio_semio_table::schema::mutations::SemioTableMutation, "s.stdio.semio.table"),
+            ("s.stdio.semio", "v1", "text", "s.stdio.semio.text") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot, semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation, "s.stdio.semio.text"),
+            ("s.stdio.semio", "v1", "value", "stdio.semio.value") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot, semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation, "stdio.semio.value"),
+            ("s.stdio.semio", "v1", "video", "stdio.semio.video") => typed_snapshot_owner!(semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot, semio_s_artifact_stdio_semio_video::schema::mutations::SemioVideoMutation, "stdio.semio.video"),
             ("s.stdio.step", "ap214", "*", "stdio.step") => typed_snapshot_owner!(semio_s_artifact_stdio_step::StepSnapshot, semio_s_artifact_stdio_step::StepMutation, "stdio.step"),
             ("s.stdio.step", "ap214", "cc1", "stdio.step") => typed_snapshot_owner!(semio_s_artifact_stdio_step::StepSnapshot, semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc1::schema::mutations::StepCc1Mutation, "stdio.step"),
             ("s.stdio.step", "ap214", "cc2", "stdio.step") => typed_snapshot_owner!(semio_s_artifact_stdio_step::StepSnapshot, semio_s_artifact_stdio_step::standards::v_ap214::subsets::cc2::schema::mutations::StepCc2Mutation, "stdio.step"),
@@ -519,7 +519,7 @@ async fn sqlite_snapshot_primary_declared_binding_census() {
         assert_eq!(expected_provider.snapshot_type, Some(expected_type), "declared provider uses independently authored concrete owner");
         assert_eq!(expected_provider.schema.as_ref(), expected_sql, "declared SQL schema belongs to independently authored concrete owner");
         assert!(expected_provider.identical_to(typed_codec.snapshot_sqlite.as_ref().expect("independent concrete owner semantic provider")), "declared SQL/hooks differ from independently authored concrete owner");
-        match semio_framework_os_kernel::document_codec(&codec.schema).await.unwrap() {
+        match semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap() {
             Some(installed) if installed.snapshot_sqlite.as_ref().is_some_and(|provider| provider.identical_to(&expected_provider)) => {},
             _ => failures.push(format!("{label}: installed schema codec differs from declared Snapshot type/SQL/hooks")),
         }
@@ -554,7 +554,7 @@ fn primary_snapshot_physical_rows(bytes: &[u8]) -> serde_json::Value {
 
 /// 📸️ Runs ordinary public Binary/Text I/O and preserves the full concrete Snapshot owner.
 async fn assert_primary_snapshot_payload<S>(snapshot: S, row: &serde_json::Value)
-where S: semio_framework_os_kernel::ArtifactPack + semio_framework_os_kernel::ArtifactDsl + PartialEq + std::fmt::Debug {
+where S: semio_framework_os_kernel::os_store::serialization::ArtifactPack + semio_framework_os_kernel::os_store::serialization::ArtifactDsl + PartialEq + std::fmt::Debug {
     use semio_framework_os_kernel::io::io_mechanism::{io_identify, io_route};
     use semio_framework::io_schema::{Confidence, IoFidelity, IoPayload, SQLITE_SNAPSHOT};
     use semio_framework::ArtifactDialect;
@@ -604,7 +604,7 @@ async fn sqlite_snapshot_primary_new_declaration_trees() {
                 assert_eq!(codec.schema, expected["schema"].as_str().unwrap());
                 let declared = codec.snapshot_sqlite.as_ref().expect("public tree semantic SQLite owner");
                 assert!(declared.snapshot_type.is_some());
-                let installed = semio_framework_os_kernel::document_codec(&codec.schema).await.unwrap().expect("installed public tree document codec");
+                let installed = semio_framework_os_kernel::os_store::codec_registry::document_codec(&codec.schema).await.unwrap().expect("installed public tree document codec");
                 assert!(installed.snapshot_sqlite.as_ref().unwrap().identical_to(declared));
                 assert_eq!(native_snapshot_sqlite_schema(&subset.dialect.into()).unwrap(), declared.schema.as_ref());
             }
@@ -619,7 +619,7 @@ async fn sqlite_snapshot_primary_new_declaration_trees() {
 /// 💾️ Binary's actual authored demo crosses both public native forms and all byte relations.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_binary_public_payload() {
-    use semio_framework_os_kernel::ArtifactDsl;
+    use semio_framework_os_kernel::os_store::serialization::ArtifactDsl;
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     let row = &law["witnesses"][0];
     let snapshot = semio_s_artifact_stdio_binary::BinarySnapshot::parse_dsl(row["naturalText"].as_str().unwrap()).unwrap();
@@ -630,7 +630,7 @@ async fn sqlite_snapshot_primary_binary_public_payload() {
 /// 🔤️ Txt's authored demo crosses both public native forms and all line relations.
 #[semio_framework_async_macros::async_test]
 async fn sqlite_snapshot_primary_txt_public_payload() {
-    use semio_framework_os_kernel::ArtifactDsl;
+    use semio_framework_os_kernel::os_store::serialization::ArtifactDsl;
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🚢️shipped-fleet/🪶️sqlite/🧠️owners/🔣️.json")).unwrap();
     let row = &law["witnesses"][1];
     let snapshot = semio_s_artifact_stdio_txt::TxtSnapshot::parse_dsl(row["naturalText"].as_str().unwrap()).unwrap();
@@ -651,7 +651,7 @@ async fn sqlite_snapshot_primary_geojson_public_payload() {
     assert_eq!(snapshot.to_serde_value(), independent);
     assert!(semio_s_artifact_stdio_json::standards::v_rfc8259::subsets::geojson::schema::check_geojson_conformance(&snapshot).iter().all(|diagnostic| !matches!(diagnostic.severity, semio_framework::Severity::Error | semio_framework::Severity::Fatal)));
     assert_primary_snapshot_payload(snapshot, row).await;
-    use semio_framework_os_kernel::{ArtifactDsl, ArtifactPack};
+    use semio_framework_os_kernel::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     let native = semio_framework::ArtifactDialect { artifact_kind: row["kind"].as_str().unwrap().into(), standard: row["standard"].as_str().unwrap().into(), subset: row["subset"].as_str().unwrap().into() };
     let export = semio_framework_os_kernel::io::io_mechanism::io_route(&native, &semio_framework::io_schema::SQLITE_SNAPSHOT.into(), 1).await.unwrap().value;
     for invalid in row["invalidNaturalTexts"].as_array().unwrap() {

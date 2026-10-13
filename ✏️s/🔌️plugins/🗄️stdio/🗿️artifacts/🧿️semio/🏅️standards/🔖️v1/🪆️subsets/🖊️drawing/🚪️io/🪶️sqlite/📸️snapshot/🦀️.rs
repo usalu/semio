@@ -1,17 +1,16 @@
 //! 🖊️ Drawing node ownership, explicit path geometries, colors, layers and styles.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{FloatColumn,FloatRow as SqliteRow};
-#[cfg(test)] use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{SemioDrawingSnapshot,DrawCanvas,DrawStyle,DrawLayer,DrawNode,PathSegment};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3,SemioQuaternion,SemioRgba,SemioTransform};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter,Reconstruction},SqliteDatabase,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use crate::schema::snapshot::{SemioDrawingSnapshot, DrawCanvas, DrawStyle, DrawLayer, DrawNode, PathSegment};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{artifact::{Cell,RowWriter},SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase}};
 #[path="🔍️rows/🦀️.rs"]mod indexed;
 #[path="💰️reconstruction/🦀️.rs"]mod reconstruction;
 #[path="🧮️semantic/🦀️.rs"]
 pub(crate)mod semantic;
 /// 🫳️ Visits the complete real Drawing corpus through the actual admitted writer.
-pub(crate)fn visit_rows(snapshot:&SemioDrawingSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{snapshot.project_sqlite_component(out)}
+pub fn visit_rows(snapshot:&SemioDrawingSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{snapshot.project_sqlite_component(out)}
 /// 🎟️ Admits every typed Drawing cell before native forecasting or materialization.
 pub(crate)fn admit_values(snapshot:&SemioDrawingSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Admits the exact authored table and column layout before native ownership.
@@ -40,7 +39,7 @@ DrawNode::Text{value,at,style}=>{let style=style_cell(style.as_deref(),styles,p)
 DrawNode::Group{transform:t,children}=>{p.insert_key_float("semio_drawing_group",id,&[Cell::Real(t.translation.x),Cell::Real(t.translation.y),Cell::Real(t.translation.z),Cell::Real(t.rotation.x),Cell::Real(t.rotation.y),Cell::Real(t.rotation.z),Cell::Real(t.rotation.w),Cell::Real(t.scale.x),Cell::Real(t.scale.y),Cell::Real(t.scale.z)],float_columns("semio_drawing_group"))?;p.check_rows(stack.len().checked_add(children.len()).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"drawing traversal count overflow"))?)?;for(ordinal,child)in children.iter().enumerate(){let kind=match child{DrawNode::Path{..}=>"path",DrawNode::Text{..}=>"text",DrawNode::Group{..}=>"group",DrawNode::Image{..}=>"image"};let cid=p.insert_float("semio_drawing_node",&[Cell::Text(kind)],float_columns("semio_drawing_node"))?;p.insert_float("semio_drawing_child",&[Cell::Integer(id),Cell::Integer(number(ordinal)?),Cell::Integer(cid)],float_columns("semio_drawing_child"))?;p.push_frontier(&mut stack,(cid,child))?;}},
 DrawNode::Image{at,width,height,mime,bytes}=>p.insert_key_float("semio_drawing_image",id,&[Cell::Real(at.x),Cell::Real(at.y),Cell::Real(*width),Cell::Real(*height),Cell::Text(mime),Cell::Blob(bytes)],float_columns("semio_drawing_image"))?}p.checkpoint()?;}Ok(root)}
 impl ArtifactSqliteSnapshot for SemioDrawingSnapshot{
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
@@ -90,13 +89,10 @@ impl SemioDrawingSnapshot {
     pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()}
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;

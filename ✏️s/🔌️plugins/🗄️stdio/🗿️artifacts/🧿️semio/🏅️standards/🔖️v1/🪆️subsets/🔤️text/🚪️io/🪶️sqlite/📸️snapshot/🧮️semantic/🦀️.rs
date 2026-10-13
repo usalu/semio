@@ -1,8 +1,8 @@
 //! 🔤️ Complete Semio text cells are counted from borrowed native primitives before ownership.
 use super::{SemioTextSnapshot,SqliteDatabaseLimits,ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio text native primitive differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio text semantic extent overflow"))}
@@ -24,7 +24,7 @@ fn hex(value:&str,control:&mut NativeDecodeControl<'_>)->Result<usize>{native::h
 fn binary_kind(value:u8)->Result<usize>{match value{0|2|3=>Ok(4),1=>Ok(6),_=>Err(invalid())}}
 fn document_kind(value:&str)->Result<usize>{match value{"b"|"c"|"l"=>Ok(4),"i"=>Ok(6),_=>Err(invalid())}}
 /// 📦️ Counts the actual binary run and mark source while leaving typed parsing its original stage.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
   let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;let count=native::length(&mut reader)?;census.future(count)?;
@@ -36,7 +36,7 @@ pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlit
  })
 }
 /// 📃️ Counts required schema and optional run-list syntax without copying hexadecimal text.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","runs"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,hex(fields[0].ok_or_else(invalid)?,control)?)?)?;
   let mut runs=native::Items::new(fields[1].unwrap_or("[]"))?;let count=runs.count(control,limits.max_rows)?;census.future(count)?;

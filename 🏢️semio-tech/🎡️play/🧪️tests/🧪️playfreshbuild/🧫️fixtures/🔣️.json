@@ -1,40 +1,41 @@
 {
   "version": 1,
   "target": "@semio-tech/semio-tech-play:build",
-  "publicationOrder": [
-    "catalog-release",
-    "prepare-release",
-    "build"
-  ],
-  "generationPrefix": "f",
-  "viteStorage": "n/vite/semio-tech-play",
-  "storage": {
-    "NX_CACHE_DIRECTORY": "n",
-    "NX_WORKSPACE_DATA_DIRECTORY": "d",
-    "CARGO_TARGET_DIR": "t",
-    "CARGO_BUILD_TARGET_DIR": "t",
-    "CARGO_BUILD_BUILD_DIR": "b",
-    "SEMIO_CARGO_PREBUILD_PLAN": "p.json",
-    "SEMIO_NX_OUTPUT_LOG": "o.log"
+  "catalogAdmission": "refuse",
+  "launch": {
+    "name": "📦️build🏢️semio-tech🎡️play🆕️fresh",
+    "files": [
+      ".vscode/🧩️launch.seed.jsonc",
+      ".vscode/launch.json"
+    ],
+    "runner": "bun nx"
   },
-  "isolation": {
-    "SEMIO_BUILD_MODE": "ship",
+  "buildMachine": {
+    "cpus": 10,
+    "memoryGiB": 32
+  },
+  "environment": {
+    "SEMIO_BUILD_MODE": "release",
+    "SEMIO_RELEASE_GENERATION": "fresh",
     "NX_DAEMON": "false",
     "NX_SKIP_NX_CACHE": "true",
-    "NX_SKIP_REMOTE_CACHE": "true"
+    "NX_SKIP_REMOTE_CACHE": "true",
+    "NX_TUI": "false"
   },
-  "discard": [
-    "NX_TASK_HASH",
-    "NX_TASK_TARGET_PROJECT",
-    "NX_TASK_TARGET_TARGET",
-    "NX_TASK_TARGET_CONFIGURATION",
-    "NX_FORCE_REUSE_CACHED_GRAPH"
-  ],
-  "generations": [
-    "release-first",
-    "release-second"
-  ],
-  "catalogAdmission": "refuse",
+  "driver": {
+    "target": "release",
+    "command": "bun ./📜️script.ts release",
+    "generationEnvironment": "SEMIO_RELEASE_GENERATION",
+    "generationPrefix": "f",
+    "stores": {
+      "target": "t",
+      "build": "b",
+      "report": "r",
+      "logs": "l",
+      "jobserver": "j"
+    }
+  },
+  "viteStorage": "vite/semio-tech-play",
   "parallelRows": [
     {
       "cpus": 10,
@@ -62,7 +63,34 @@
       "parallel": 1
     }
   ],
-  "componentWorkspaces": [
-    "🌎️hub"
-  ]
+  "release": {
+    "target": "build",
+    "command": "bun ./🔨️modules/📦️site/📜️script.ts build",
+    "removedTargets": [
+      "catalog-release",
+      "prepare-release"
+    ],
+    "prerequisites": [
+      "workspace:deps-wasm-opt",
+      "@semio-tech/plugin-registry:generate"
+    ],
+    "bundleAfter": [
+      "job:flow-wasm",
+      "job:surface-wasm",
+      "job:puzzle-wasm",
+      "job:map-tiles"
+    ],
+    "pagesAfter": [
+      "job:bundle",
+      "job:support",
+      "components:publish"
+    ],
+    "laneJobs": [
+      "flow-wasm",
+      "surface-wasm",
+      "puzzle-wasm"
+    ],
+    "verifyTarget": "release-verify",
+    "verifyCommand": "bun ./🔨️modules/📦️site/📜️script.ts verify"
+  }
 }

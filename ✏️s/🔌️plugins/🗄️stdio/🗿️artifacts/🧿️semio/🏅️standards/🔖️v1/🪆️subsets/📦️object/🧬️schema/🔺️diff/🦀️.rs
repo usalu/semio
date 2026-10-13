@@ -1,16 +1,16 @@
 //! 🔺️ SemioObjectDiff — sparse per-field diff over `SemioObjectSnapshot`. Four independently
 //! diffable fields (`transform`, `brep`, `mesh`, `properties`) — an `Option<…>` slot per field
 //! (`None` = untouched by this diff), the same per-field shape `🖼️image`'s diff facet uses. The
-//! two-level `Option<Option<store::ArtifactChild<S>>>` on the three child fields is real, not
+//! two-level `Option<Option<store::os_store::artifact_child::ArtifactChild<S>>>` on the three child fields is real, not
 //! decorative: outer `None` = "this diff doesn't touch the slot", `Some(None)` = "clear it",
 //! `Some(Some(handle))` = "set it to this handle" — each triad's own `🔺️diff` leaf builds this
 //! directly from `(payload, base)`, never apply-then-capture.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -24,13 +24,13 @@ pub struct SemioObjectDiff {
     pub transform: Option<SemioTransform>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub brep: Option<Option<store::ArtifactChild<SemioBrepSnapshot>>>,
+    pub brep: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
+    pub mesh: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>>,
     #[state(artifact)]
     #[value(default, skip_serializing_if = "Option::is_none")]
-    pub properties: Option<Option<store::ArtifactChild<SemioValueSnapshot>>>,
+    pub properties: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>>,
 }
 
 impl semio_framework_value::FromValue for SemioObjectDiff {
@@ -53,7 +53,7 @@ impl semio_framework_value::FromValue for SemioObjectDiff {
 impl SemioObjectDiff {
     /// 🧩️ Validates every supplied child replacement before publication.
     pub fn validate(&self) -> Result<(), String> {
-        use crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if let Some(Some(child)) = &self.brep { validate_semio_child_identity(&child.child_id, &child.target, "brep")?; }
         if let Some(Some(child)) = &self.mesh { validate_semio_child_identity(&child.child_id, &child.target, "mesh")?; }
         if let Some(Some(child)) = &self.properties { validate_semio_child_identity(&child.child_id, &child.target, "value")?; }
@@ -135,13 +135,13 @@ impl protocol::command::DiffAlgebra<SemioObjectSnapshot> for SemioObjectDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioObjectDiff> {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
     vec![
         SemioObjectDiff::default(),
         SemioObjectDiff { transform: Some(SemioTransform { translation: SemioPoint3 { x: 5.0, y: 0.0, z: 0.0 }, ..SemioTransform::identity() }), ..Default::default() },
         SemioObjectDiff { brep: Some(None), ..Default::default() },
         SemioObjectDiff {
-            mesh: Some(Some(store::ArtifactChild::new(
+            mesh: Some(Some(store::os_store::artifact_child::ArtifactChild::new(
                 "m1".into(),
                 semio_framework_artifact_reference::ArtifactRef { artifact_id: "m1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() } },
             ))),

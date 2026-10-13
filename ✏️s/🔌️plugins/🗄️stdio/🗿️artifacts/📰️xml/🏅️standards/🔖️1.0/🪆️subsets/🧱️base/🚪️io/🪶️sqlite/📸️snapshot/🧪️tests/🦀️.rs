@@ -1,6 +1,6 @@
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot as sqlite;
 use crate::standards::v1_0::subsets::base::io::sqlite::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
 
 fn fixture() -> XmlSnapshot { let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap(); XmlSnapshot::import_utf8(fixture["xmlText"].as_str().unwrap().as_bytes()).unwrap() }
 fn project(snapshot: &XmlSnapshot) -> SqliteDatabase { snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() }
@@ -70,7 +70,7 @@ fn sqlite_snapshot_xml_whole_native_controls_owned_long_fields() {
     attrs.push(XmlAttr { name: "long".into(), value: corpus["unit"].as_str().unwrap().repeat(corpus["repeats"].as_u64().unwrap() as usize) });
     let mut failures = Vec::new();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
-        let payload = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
+        let payload = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)) };
         match semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("decode {encoding:?}: {error}")) }
         match semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(encoded) => assert_eq!(encoded, payload), Err(error) => failures.push(format!("encode {encoding:?}: {error}")) }
         for phase in [SqliteSnapshotPhase::DecodeNative, SqliteSnapshotPhase::EncodeNative] {
@@ -103,7 +103,7 @@ fn sqlite_snapshot_xml_whole_native_deep_partial_lifecycle() {
     let long = corpus["unit"].as_str().unwrap().repeat(corpus["repeats"].as_u64().unwrap() as usize);
     let mut root = XmlNode::Text { text: "leaf".into() }; for _ in 0..depth { root = XmlNode::Element { name: "n".into(), attrs: Vec::new(), children: vec![root] }; }
     let snapshot = XmlSnapshot { schema: "owned deep".into(), doc: XmlDocument { root: Some(root), doctype: Some(XmlDoctype { prolog_position: 0, name: "n".into(), external_id: Some(XmlExternalId::System { system_id: long }), declarations: Vec::new() }), ..Default::default() } };
-    let payloads = [semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))];
+    let payloads = [semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot))];
     retire_fixture_document(snapshot.doc);
     std::thread::Builder::new().stack_size(256 * 1024).spawn(move || {
         for payload in payloads {
@@ -149,7 +149,7 @@ fn sqlite_snapshot_xml_schema_admitted_intermediate_boundaries_preserve_owned_fi
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| snapshot.encode_sqlite_snapshot_native(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap();
         match semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| XmlSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)) { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("controlled {encoding:?}: {error}")) }
-        let ordinary = match payload { semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <XmlSnapshot as store::ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string()), semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <XmlSnapshot as store::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string()) };
+        let ordinary = match payload { semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).map_err(|error| error.to_string()), semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <XmlSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| error.to_string()) };
         match ordinary { Ok(restored) => assert_eq!(restored, snapshot), Err(error) => failures.push(format!("owned state {encoding:?}: {error}")) }
     }
     assert!(failures.is_empty(), "logical XML state was refused by wire policy: {failures:?}");
@@ -192,10 +192,10 @@ fn sqlite_snapshot_xml_domain_relations_roundtrip() {
     let bytes = export_sqlite_database(&database, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let database = import_sqlite_database(&bytes, SqliteDatabaseLimits::default(), &mut |_| true).unwrap();
     let restored = restore(&database).unwrap(); assert_eq!(restored, snapshot);
-    assert_eq!(<XmlSnapshot as store::ArtifactPack>::encode_pack(&restored), <XmlSnapshot as store::ArtifactPack>::encode_pack(&snapshot));
-    assert_eq!(<XmlSnapshot as store::ArtifactDsl>::print_dsl(&restored), <XmlSnapshot as store::ArtifactDsl>::print_dsl(&snapshot));
-    assert_eq!(<XmlSnapshot as store::ArtifactPack>::decode_pack(&<XmlSnapshot as store::ArtifactPack>::encode_pack(&restored)).unwrap(), snapshot);
-    assert_eq!(<XmlSnapshot as store::ArtifactDsl>::parse_dsl(&<XmlSnapshot as store::ArtifactDsl>::print_dsl(&restored)).unwrap(), snapshot);
+    assert_eq!(<XmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored), <XmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot));
+    assert_eq!(<XmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored), <XmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot));
+    assert_eq!(<XmlSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&<XmlSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&restored)).unwrap(), snapshot);
+    assert_eq!(<XmlSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<XmlSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&restored)).unwrap(), snapshot);
     assert_eq!(restore(&project(&XmlSnapshot::default())).unwrap(), XmlSnapshot::default());
 }
 
@@ -257,11 +257,11 @@ fn sqlite_snapshot_xml_owned_valid_guard_preserves_exact_warnings_and_errors(){l
 fn sqlite_snapshot_xml_erased_native_encoding_admission_and_large_field_limits() {
     let snapshot = fixture();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.xml".into(), standard: "1.0".into(), subset: "*".into() };
-    let codec = <XmlSnapshot as store::ArtifactPack>::sqlite_snapshot_codec().unwrap();
+    let codec = <XmlSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().unwrap();
     for encoding in [SnapshotEncoding::Text, SnapshotEncoding::Binary] {
         snapshot.preflight_sqlite_snapshot_encoding(encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default())).unwrap();
         let restored = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)("XML preflight", &dialect, &mut Some(project(&snapshot)), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, SqliteDatabaseLimits::default()), native_owner)).unwrap().value;
-        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot)) };
+        let expected = match encoding { SnapshotEncoding::Text => semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), SnapshotEncoding::Binary => semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot)) };
         assert_eq!(restored, expected);
     }
     let large = XmlSnapshot { schema: "stdio.xml".into(), doc: XmlDocument { root: Some(XmlNode::Element { name: "root".into(), attrs: vec![XmlAttr { name: "attribute".into(), value: "世界".repeat(30000) }], children: Vec::new() }), ..XmlDocument::default() } };

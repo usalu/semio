@@ -1,0 +1,25 @@
+{
+  "target": "📒️ledger/🦀️.rs",
+  "module": "ledger",
+  "anchor": "//#region 🔖️ArtifactStore\n//#region 🔖️ArtifactStore\n",
+  "doc": [
+    "//! 📒️ The edit ledger beneath the Store engine: the paged edit-message ledger and its retirement, the cursor revision",
+    "//! accumulator with its records and digest chains, the history commit reservation and pending command report, and the",
+    "//! envelope fold and projection helpers every history, replay, codec and composition facet reads.",
+    "//! It names the vocabulary below it (schemas, snapshot-read retirement, effective forwards) and never the",
+    "//! `ArtifactStore` engine, so the engine and every facet above it depend on it in one direction.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "items": [
+    "CursorRevisionRecord", "CursorRevisionAccumulator", "StackMirrorDirt", "EditDigestChains",
+    "ARTIFACT_EDIT_MESSAGE_INDEX_CAPACITY", "ARTIFACT_EDIT_MESSAGE_ID_BYTES", "ARTIFACT_EDIT_MESSAGE_ENTRY_BYTES", "ARTIFACT_EDIT_MESSAGE_OWNER_BYTES", "ARTIFACT_EDIT_MESSAGE_TARGET_BYTES",
+    "ARTIFACT_EDIT_MESSAGE_LEDGER_BYTES", "ARTIFACT_EDIT_MESSAGE_INDEX_EMPTY", "ARTIFACT_EDIT_MESSAGE_INDEX_TOMBSTONE", "ARTIFACT_EDIT_MESSAGE_LEDGER_SLOT_NONE",
+    "ArtifactEditMessageTicket", "ARTIFACT_EDIT_MESSAGE_PAGE_SLOTS", "ARTIFACT_EDIT_MESSAGE_SLOT_PAGES", "ArtifactEditMessageSlots",
+    "ArtifactEditMessageLedger", "ArtifactEditMessageLedgerRetirement", "ArtifactEditMessageLedgerIter", "ArtifactEditMessageLedgerRejected",
+    "ArtifactStoreHistoryCommitReservation", "PendingCommandReport", "ArtifactStorePendingReportRetirement", "validate_composition_pins",
+    "edit_from_operation_envelope", "retire_replayed_projection", "ReplayProjection", "retire_scratch_operations", "retire_supersede_inputs",
+    "retire_scratch_edits", "fold_envelope_history", "envelope_viewer_head", "fold_event_log", "operation_semantic_kind", "stamp_edit_semantics", "edit_timestamp"
+  ],
+  "movableTraits": ["FoldProjection"]
+}

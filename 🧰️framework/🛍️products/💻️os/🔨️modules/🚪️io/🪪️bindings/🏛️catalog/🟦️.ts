@@ -2,7 +2,7 @@
 import type {DocumentOpenArtifactV1,DocumentOpenPackageV1,DocumentOpenSurfaceV1,DocumentOpenGrantV1} from "../../../📇️directory/🧬️schema/🟦️.ts";
 import type {DocumentOpenBrowserActorV1} from "../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
 import {parseDocumentOpenBrowserActorV1} from "../../../📇️directory/🧬️schema/🌐️browser-actor/🟦️.ts";
-import {DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 as channelVersion} from "../../../📇️directory/🧬️schema/🟦️.ts";
+import {parseDocumentOpenPackageV1} from "../../../📇️directory/🧬️schema/🟦️.ts";
 export type ArtifactCatalogNativeIdentity={kind:"typed";owner:string}|{kind:"guest";pluginId:string;packageHash:string;schema:string};
 export type ArtifactCatalogCapability={kind:"unlinkedGuest"}|{kind:"linked";nativeIdentity:ArtifactCatalogNativeIdentity;sqliteSchema:string|null;factory:string|null};
 export interface ArtifactCatalogTarget{parentDialect:string;surface:DocumentOpenSurfaceV1;grant:DocumentOpenGrantV1;browserActor:DocumentOpenBrowserActorV1}
@@ -21,7 +21,7 @@ function equal(left:unknown,right:unknown):boolean{
 function closed(value:unknown,keys:readonly string[]):value is Record<string,unknown>{return !!value&&typeof value==="object"&&!Array.isArray(value)&&Object.keys(value).length===keys.length&&keys.every(key=>Object.hasOwn(value,key));}
 function text(value:unknown):value is string{return typeof value==="string"&&value.length>0&&!/[\u0000-\u001f\u007f]/u.test(value);}
 function digest(value:unknown):boolean{return typeof value==="string"&&/^[0-9a-f]{64}$/u.test(value)&&value!=="0".repeat(64);}
-function packageValid(value:unknown):boolean{return closed(value,["pluginId","packageId","version","componentSha256","componentBlake3","descriptorByteSha256","executionProtocol"])&&[value.pluginId,value.packageId,value.version].every(text)&&[value.componentSha256,value.componentBlake3,value.descriptorByteSha256].every(digest)&&closed(value.executionProtocol,["appChannelVersion"])&&value.executionProtocol.appChannelVersion===channelVersion;}
+function packageValid(value:unknown):boolean{try{parseDocumentOpenPackageV1(value,"artifact-catalog");return true;}catch{return false;}}
 function valid(row:ArtifactCatalogBinding):boolean{
  if(!closed(row,["contributor","owner","artifact","target","capability"])||!packageValid(row.contributor)||!packageValid(row.owner)||!closed(row.artifact,["kind","schema","packSchemaHash"])||![row.artifact.kind,row.artifact.schema].every(text)||!digest(row.artifact.packSchemaHash))return false;
  if(row.target!==null){const t=row.target;if(!closed(t,["parentDialect","surface","grant","browserActor"])||!text(t.parentDialect)||t.parentDialect.split("@").length!==2||t.parentDialect.split("@")[1]!.split("/").length!==2||t.parentDialect.split(/[@/]/u).some(part=>!part)||!closed(t.surface,["surfaceId","appId","windowKindId","role","rendererTarget"])||![t.surface.surfaceId,t.surface.appId,t.surface.windowKindId].every(text)||t.surface.surfaceId!==t.surface.appId||!["viewer","editor"].includes(t.surface.role)||!["react","wgpu","wasm"].includes(t.surface.rendererTarget)||!closed(t.grant,["read","write","observe"])||![t.grant.read,t.grant.write,t.grant.observe].every(value=>typeof value==="boolean"))return false;try{parseDocumentOpenBrowserActorV1(t.browserActor,row.contributor,t.surface.rendererTarget);}catch{return false;}}

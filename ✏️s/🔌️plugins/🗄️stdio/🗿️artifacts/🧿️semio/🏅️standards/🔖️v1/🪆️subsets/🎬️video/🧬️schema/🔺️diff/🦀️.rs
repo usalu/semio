@@ -16,11 +16,11 @@
 //! `Vec<T>`-of-struct field (streams→samples) plus this file's own generic collection-triple
 //! wrapper both individually block the derive macro.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 
 
 
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
+use crate::schema::snapshot::{SemioRational, SemioVideoSample, SemioVideoSnapshot, SemioVideoStream, SemioVideoStreamKind};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -358,7 +358,7 @@ impl MutationDiff<SemioVideoSnapshot> for SemioVideoDiff {
     fn apply(&self, base: &SemioVideoSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioVideoSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.streams {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.streams.len(), ["streams"])?;
             apply_indexed(&mut next.streams, d, apply_stream);
         }
         Ok(next)
@@ -463,7 +463,7 @@ fn wrap_stream_diff(stream_index: usize, diff: SemioVideoStreamDiff) -> SemioVid
 //#region 🔖️Demo
 /// 🌱 Representative `SemioVideoDiff` cases built declaratively (empty/no-op and a removed stream row) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-video"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioVideoDiff> {
     vec![SemioVideoDiff::default(), SemioVideoDiff { streams: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) }]

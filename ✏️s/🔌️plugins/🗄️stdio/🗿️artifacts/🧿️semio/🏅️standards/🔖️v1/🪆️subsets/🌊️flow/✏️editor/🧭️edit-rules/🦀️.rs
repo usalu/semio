@@ -1,8 +1,8 @@
 //! 🧭️ The flow editor's edit rules: which snapshot pointer raises which ONE concrete flow mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, spread_item, Entries, Reshape, ITEM};
-use crate::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, spread_item, Entries, Reshape, ITEM};
+use crate::schema::mutations::SemioFlowMutation;
+use crate::schema::snapshot::SemioFlowSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, Selector, SnapshotEditEvent};

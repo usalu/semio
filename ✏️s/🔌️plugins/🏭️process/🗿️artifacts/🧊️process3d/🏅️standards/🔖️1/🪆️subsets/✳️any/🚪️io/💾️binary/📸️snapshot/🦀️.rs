@@ -11,24 +11,24 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
 
-impl store::ArtifactPack for Process3dSnapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec()) }
+impl store::os_store::serialization::ArtifactPack for Process3dSnapshot {
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -45,8 +45,8 @@ use crate::{Capability, CapabilityParameter, CapabilityRule, MeasureRecipe, Pose
 #[cfg(test)] use framework_schema::ArtifactSchema;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-#[cfg(test)] use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+#[cfg(test)] use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use store::mounted_pack_rt as mounted;
 //#region 🔖️MountedTypedSnapshotOwner
 /// 📐️ Structural nesting bound of the mounted route: root → workshop → machine → capability →
@@ -54,7 +54,7 @@ use store::mounted_pack_rt as mounted;
 const PROCESS3D_MOUNTED_DEPTH: u16 = 32;
 
 /// 🧵️ The mounted canonical session of this artifact: its own semio pack header, then the unchanged
-/// canonical `.spk` stream the derived [`store::ArtifactPack`] encode writes.
+/// canonical `.spk` stream the derived [`store::os_store::serialization::ArtifactPack`] encode writes.
 pub type Process3dMountedPackSession = mounted::RetainedTypedPackSession<Process3dMountedSnapshotOwner>;
 
 
@@ -122,8 +122,8 @@ fn process3d_list_item(shape: &semio_framework_dsl_record::Shape) -> Result<semi
     }
 }
 
-fn process3d_empty_child<S>() -> store::ArtifactChild<S> {
-    store::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
+fn process3d_empty_child<S>() -> store::os_store::artifact_child::ArtifactChild<S> {
+    store::os_store::artifact_child::ArtifactChild::new(String::new(), semio_framework_artifact_reference::ArtifactRef { artifact_id: String::new(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: String::new(), standard: String::new(), subset: String::new() } })
 }
 
 fn process3d_text(value: semio_framework_dsl_record::FieldValue) -> Result<String, &'static str> {
@@ -546,14 +546,14 @@ impl mounted::RetainedTypedPackOwner for Process3dMountedSnapshotOwner {
             return false;
         }
         if self.retirement.is_some() {
-            if let Ok(demand) = store::artifact_retirement_box_demands(self.retirement.as_ref().expect("observed original retirement"), store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-                let _ = store::artifact_retirement_box_close_step(&mut self.retirement, process3d_self_funded_grant(demand));
+            if let Ok(demand) = store::os_store::snapshot_read::artifact_retirement_box_demands(self.retirement.as_ref().expect("observed original retirement"), store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                let _ = store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, process3d_self_funded_grant(demand));
             }
             return false;
         }
         if self.candidate.is_some() {
-            if let Ok(demand) = store::artifact_retirement_owned_birth_demands(&self.candidate) {
-                let _ = store::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, process3d_self_funded_grant(demand));
+            if let Ok(demand) = store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.candidate) {
+                let _ = store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.candidate, &mut self.retirement, process3d_self_funded_grant(demand));
             }
             return false;
         }
@@ -583,7 +583,7 @@ mod retained_mounted_laws;
 //#endregion 🔖️MountedTypedSnapshotOwner
 
 pub fn process3d_mounted_pack_session(expected_bytes: usize, maximum_items: usize) -> Result<Process3dMountedPackSession, &'static str> {
-    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Process3dSnapshot as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|_| "process3d-mounted.envelope")?;
+    let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|_| "process3d-mounted.envelope")?;
     Process3dMountedPackSession::new(store::semio_format::wrap_binary(&envelope, &[]), expected_bytes, maximum_items, PROCESS3D_MOUNTED_DEPTH, Process3dMountedSnapshotOwner::new)
 }
 }
@@ -595,9 +595,9 @@ use crate::standards::v1::subsets::any::schema::*;
 use crate::{Capability, CapabilityParameter, CapabilityRule, MachineCatalog, MeasureRecipe, Pose, ProcessStep, Stock, StockQuantity, Workshop, WorkshopMachine};
 use framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use store::ArtifactDsl;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use store::os_store::serialization::ArtifactDsl;
 use crate::standards::v1::subsets::any::io::text::snapshot::{PROCESS_3D_CONCRETE_FOREST_EXAMPLE_TEXT as CONCRETE_FOREST_EXAMPLE_DSL, PROCESS_3D_PLATE_EXAMPLE_TEXT as PLATE_EXAMPLE_DSL, PROCESS_3D_TIMBER_EXAMPLE_TEXT as TIMBER_EXAMPLE_DSL};
 
 }

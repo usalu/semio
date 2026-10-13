@@ -29,7 +29,7 @@ use crate::artifact::*;
 use crate::bridge::*;
 use crate::catalogue::*;
 use crate::drawing::*;
-use crate::os_store::{create_document_envelope, ArtifactCommand, MemberStoreOwner, SpaceMember};
+use crate::os_store::{document_materialize::create_document_envelope, store_schema::ArtifactCommand, document_store_owners::MemberStoreOwner, SpaceMember};
 use crate::registry::*;
 #[path="🧹️retirement/🦀️.rs"]
 mod original_retirement;

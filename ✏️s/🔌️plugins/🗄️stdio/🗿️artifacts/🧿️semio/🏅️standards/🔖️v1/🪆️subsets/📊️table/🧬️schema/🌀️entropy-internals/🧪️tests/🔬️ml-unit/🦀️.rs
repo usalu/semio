@@ -40,7 +40,7 @@ mod tests {
 
     #[test]
     fn ece_of_perfectly_calibrated_predictions_is_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let n = 5000;
         let confidences: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();
         let correct: Vec<bool> = confidences.iter().map(|&c| rng.next_f64() < c).collect();

@@ -5,8 +5,8 @@
 //! child handle into its target snapshot is a cross-artifact read, out of scope for a pure
 //! snapshot->inference fold).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Composition
 /// 🧩️ Semio object composition census.

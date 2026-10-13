@@ -1,5 +1,5 @@
 use semio_framework_value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetireOwned,owned_retirement_birth_bytes,admit_owned_retirement}};
-use crate::os_store::ArtifactCommand;
+use crate::os_store::store_schema::ArtifactCommand;
 
 #[test]
 fn original_command_all_variants_retire_whole_physical_custody(){

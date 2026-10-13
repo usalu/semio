@@ -33,7 +33,7 @@ impl protocol::MutationKind<RunArtifact, RunMutation> for StartRun {
             output_collection_ref: self.output_collection_ref.clone(),
             trigger: self.trigger.clone(),
             status: RunStatus::Running,
-            started_at: store::now_iso(),
+            started_at: store::os_store::document_materialize::now_iso(),
         })))
     }
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {

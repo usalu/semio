@@ -32,7 +32,7 @@ export function declaredNativeOwnerCommandV1(manifest,workingDirectory,command){
 }
 
 /** 📥️ Issues the exact discovered descendant with the original caller's unchanged deadline and resources. */
-export function issueNativeOwnerInvocationV1(options,context,environment,now){
+export async function issueNativeOwnerInvocationV1(options,context,environment,now){
  const wire=environment.SEMIO_SCRIPT_PROCESS_INVOCATION;if(typeof wire!=="string")throw Error("Original Nx native parent invocation required");
  const original=JSON.parse(wire),policy=original?.policy,caller=original?.capabilities;
  if(original?.version!==1||Object.keys(original).length!==4||!policy||Object.keys(policy).length!==3||policy.version!==1||typeof policy.owner!=="string"||policy.owner.length===0||!Number.isSafeInteger(policy.maximumElapsedMilliseconds)||policy.maximumElapsedMilliseconds<0||!Number.isFinite(now)||(policy.maximumElapsedMilliseconds===0?original.deadlineEpochMilliseconds!==null:!Number.isSafeInteger(original.deadlineEpochMilliseconds)||original.deadlineEpochMilliseconds<=now||original.deadlineEpochMilliseconds-now>policy.maximumElapsedMilliseconds)||!conforms(nativeCallerSchema,caller))throw Error("Original Nx native authority refused");
@@ -42,13 +42,18 @@ export function issueNativeOwnerInvocationV1(options,context,environment,now){
  let selectedTasks;
  if(caller.selection[1]==="run"){
   const parts=caller.selection[2].split(":"),selected={project:parts[0],target:parts[1],configuration:parts[2]};if(parts.length<2||parts.length>3||!selected.project||!selected.target)throw Error("Original selected Nx target refused");
-  const configuration=selected.configuration??context.projectsConfigurations?.projects?.[selected.project]?.targets?.[selected.target]?.defaultConfiguration;
+  const values=selected.configuration===undefined?[]:[selected.configuration],arguments_=caller.selection.slice(3),boundary=arguments_.indexOf("--"),flags=arguments_.slice(0,boundary<0?undefined:boundary);
+  for(let index=0;index<flags.length;index++){const flag=flags[index];if(flag==="--configuration"||flag==="-c")values.push(flags[++index]);else if(/^(?:--configuration|-c)=/u.test(flag))values.push(flag.slice(flag.indexOf("=")+1));}
+  if(values.some(value=>typeof value!=="string"||!value||value!==values[0]))throw Error("Original selected Nx configuration refused");
+  const configuration=values[0]??context.projectsConfigurations?.projects?.[selected.project]?.targets?.[selected.target]?.defaultConfiguration;
   selectedTasks=Object.keys(graph.tasks).filter(id=>{const target=graph.tasks[id]?.target;return target?.project===selected.project&&target?.target===selected.target&&(target.configuration??undefined)===configuration;});
   if(selectedTasks.length!==1)throw Error("Original selected Nx graph task refused");
- }else if(caller.selection[1]==="run-many"){
+ }else if(["run-many","affected"].includes(caller.selection[1])){
   if(!context.projectGraph?.nodes)throw Error("Original Nx project graph required");
   const require=createRequire(import.meta.url),nxRoot=dirname(require.resolve("nx/package.json")),{withOverrides}=require(resolve(nxRoot,"dist/src/command-line/yargs-utils/shared-options.js")),{yargsRunManyCommand}=require(resolve(nxRoot,"dist/src/command-line/run-many/command-object.js")),{splitArgsIntoNxArgsAndOverrides}=require(resolve(nxRoot,"dist/src/utils/command-line-utils.js")),{projectsToRun}=require(resolve(nxRoot,"dist/src/command-line/run-many/run-many.js")),yargs=createRequire(resolve(nxRoot,"package.json"))("yargs/yargs");
-  const parsed=withOverrides(yargsRunManyCommand.builder(yargs()).exitProcess(false).parseSync(caller.selection.slice(1))),{nxArgs}=splitArgsIntoNxArgsAndOverrides(parsed,"run-many",{printWarnings:false},context.nxJsonConfiguration??{}),projects=new Set(projectsToRun(nxArgs,context.projectGraph).map(project=>project.name));
+  const operation=caller.selection[1],command=operation==="run-many"?yargsRunManyCommand:require(resolve(nxRoot,"dist/src/command-line/affected/command-object.js")).yargsAffectedCommand;
+  const parsed=withOverrides(command.builder(yargs()).exitProcess(false).parseSync(caller.selection.slice(1))),{nxArgs}=splitArgsIntoNxArgsAndOverrides(parsed,operation,{printWarnings:false},context.nxJsonConfiguration??{});
+  const selected=operation==="run-many"?projectsToRun(nxArgs,context.projectGraph):await require(resolve(nxRoot,"dist/src/command-line/affected/affected.js")).getAffectedGraphNodes(nxArgs,context.projectGraph),projects=new Set(selected.map(project=>project.name));
   selectedTasks=Object.keys(graph.tasks).filter(id=>{const target=graph.tasks[id]?.target,configuration=nxArgs.configuration??context.projectsConfigurations?.projects?.[target?.project]?.targets?.[target?.target]?.defaultConfiguration;return projects.has(target?.project)&&nxArgs.targets.includes(target?.target)&&(target.configuration??undefined)===configuration;});
   if(selectedTasks.length===0)throw Error("Original selected Nx graph tasks refused");
  }else throw Error("Original selected Nx command required");
@@ -91,7 +96,7 @@ export async function executeOwnerArgumentsV1(options,context,delegate){
  if(options.forwardAllArgs!==false&&!Array.isArray(options.__unparsed__))throw Error("Nx did not admit the original forwarded arguments");
  const arguments_=options.forwardAllArgs===false?[]:[...options.args??[],...options.__unparsed__??[]];
  const environment={...process.env,...options.env};
- if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
+ if(options.nativeOwnerCommand!==undefined){environment.SEMIO_SCRIPT_PROCESS_INVOCATION=JSON.stringify(await issueNativeOwnerInvocationV1(options,context,environment,Date.now()));delete environment.SEMIO_SCRIPT_CAPABILITIES;}
  else if(/ native owner-command /u.test(options.command))throw Error("Original discovered native request required");
  const plan={...options,args:undefined,__unparsed__:[],forwardAllArgs:false,env:{...environment,[key]:encodeOwnerArgumentsV1(arguments_)}};
  return delegate(plan,context);

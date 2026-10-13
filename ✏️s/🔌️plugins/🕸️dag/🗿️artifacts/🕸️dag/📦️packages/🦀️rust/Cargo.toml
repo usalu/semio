@@ -40,6 +40,9 @@ semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-png = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-graph = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
 semio-s-artifact-stdio-svg = { workspace = true }
 semio-s-artifact-stdio-xml = { workspace = true }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
@@ -50,7 +53,7 @@ semio-framework-tool-machine.workspace = true
 infinite_canvas = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/📦️packages/🦀️rust", package = "semio-framework-os-infinite" }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel" }
 ui_wgpu = {path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/📦️packages/🦀️rust", package = "semio-framework-ui", features = ["wgpu"]}
-semio-framework-plugin = { workspace = true, features = ["component-guest"] }
+semio-framework-plugin = { workspace = true }
 semio-framework-dispatch-macros = { path = "../../../../../../../🧰️framework/🔨️modules/🔀️dispatch/📦️packages/🦀️rust", package = "semio-framework-dispatch-macros" }
 semio-framework-schema = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📦️packages/🦀️rust", package = "semio-framework-schema" }
 graph = { path = "../../../../../../../🧰️framework/🔨️modules/🕸️graph/📦️packages/🦀️rust", package = "semio-framework-graph" }
@@ -58,7 +61,7 @@ semio-framework-ui-contract.workspace = true
 
 [dev-dependencies]
 semio-framework-graph-layout-run = { workspace = true, features = ["testing"] }
-semio-framework-plugin = { workspace = true, features = ["component-guest", "artifact-app-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
 semio-framework-os-kernel = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/📦️packages/🦀️rust", package = "semio-framework-os-kernel", features = ["protocol-laws", "mutation-testing"] }
 semio-framework-ui-scene = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🎬️scene/📦️packages/🦀️rust" }
 serde.workspace = true

@@ -1,7 +1,7 @@
 //! 📄️ Trinity Jack app — Document panel (node/edge tree).
 
 use crate::editor::jack::terminology::TrinityJackLabels;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude::{Buildable, HasBase};
 use semio_framework_plugin::{PanelTreeBuilder, TreeWindows};
 use semio_framework_ui_contract as ui;

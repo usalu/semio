@@ -504,12 +504,12 @@ impl ArtifactEditor for Wfc3dEditor {
     /// 📬️ The document lane's one-item retained preparation. Without one, EVERY route declaring
     /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract
     /// and stays dispatch-dead however it is classified.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
     /// 📬️ The same, for the pane config the camera and armed-tile verbs publish into.
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(store::snapshot_clone_preparation::config_apply_preparation_factory::<Self::Config, Self::ConfigMutation>())
     }
 
@@ -813,8 +813,8 @@ pub fn example_snapshot(example_id: &str) -> Result<Wfc3dSnapshot, Fault> {
 /// different document, not an edit to this one, so it must never mint a history row (the "phantom
 /// boot edit" the sibling artifacts hit when they replayed a whole example as mutations).
 pub fn load_document_effect(document: &Wfc3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Wfc3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("wfc", WFC3D_DOCUMENT_SCHEMA));
+    let pack = <Wfc3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("wfc", WFC3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Examples

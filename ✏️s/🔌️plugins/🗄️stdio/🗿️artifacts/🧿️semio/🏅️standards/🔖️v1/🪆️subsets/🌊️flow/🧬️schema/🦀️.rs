@@ -1,7 +1,7 @@
 //! 🧬️ SemioFlowArtifact schema — full artifact state, mirrors `SemioFlowSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, SemioFlowSnapshot};
+use crate::schema::snapshot::{FlowEdge, FlowNode, SemioFlowSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

@@ -7,7 +7,7 @@ pub(crate) mod authority;
 pub(crate) mod live;
 
 #[path = "📖️capture/🦀️.rs"]
-pub(crate) mod capture;
+mod capture;
 
 #[path = "📃️query/🦀️.rs"]
 pub(crate) mod query;

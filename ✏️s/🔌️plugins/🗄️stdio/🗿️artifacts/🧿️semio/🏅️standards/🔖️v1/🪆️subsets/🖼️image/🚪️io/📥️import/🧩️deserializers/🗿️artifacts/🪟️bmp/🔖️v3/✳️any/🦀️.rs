@@ -2,7 +2,7 @@
 //! the source profile. Palette identity, packed sample precision, padding, gaps, and trailers remain
 //! BMP-only authority and cannot be reconstructed from this neutral image projection.
 
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_bmp::schema::snapshot::{BmpRowOrder, BmpProfile};
 use semio_s_artifact_stdio_bmp::schema::operations::bmp_rgba8_preview;

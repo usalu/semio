@@ -2130,7 +2130,6 @@ dependencies = [
  "semio-framework-hash",
  "semio-framework-value",
  "semio-framework-value-derive",
- "serde",
 ]
 
 [[package]]
@@ -2914,7 +2913,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-s-plugin-flow-extension-math"
+name = "semio-s-plugin-flow-math"
 version = "0.1.0"
 dependencies = [
  "semio-framework",
@@ -2925,6 +2924,16 @@ dependencies = [
  "semio-framework-pack-json",
  "semio-framework-plugin",
  "semio-framework-value",
+]
+
+[[package]]
+name = "semio-s-plugin-flow-math-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-plugin",
+ "semio-s-plugin-flow-math",
 ]
 
 [[package]]

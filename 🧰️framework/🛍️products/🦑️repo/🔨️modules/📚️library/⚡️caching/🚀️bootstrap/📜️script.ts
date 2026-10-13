@@ -4,16 +4,19 @@ import { resolveTestLevel } from "../../../../../../🔨️modules/🏃️proces
 import { createScriptProcessEnvelope, readScriptProcessEnvelope, scriptProcessEnvironment, SCRIPT_PROCESS_INVOCATION_ENV, withScriptProcessEnvelope } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { spawn as spawnNxProcess, spawnSync as stopNxProcessTree } from "node:child_process";
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, rmSync, writeSync } from "node:fs";
-import { lstat, readFile, readdir, writeFile } from "node:fs/promises";
+import { lstat, mkdir, readFile, readdir, rename, writeFile } from "node:fs/promises";
 import { createRequire } from "node:module";
-import { createHash } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { createInterface } from "node:readline";
 import { tmpdir } from "node:os";
 import { dirname, isAbsolute, join, resolve, win32, posix } from "node:path";
 import { Script, ScriptRouter, readScriptPolicy, scriptInvocationBudget, type ScriptInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { orchestratorBudgetOpts, semioShipEnv } from "../../🏃️process/🟦️.ts";
+import { orchestratorBudgetOpts } from "../../🏃️process/🟦️.ts";
 import { devToolingEnv, semioNxParallelFlag } from "../../🏃️process/🌿️environment/🟦️.ts";
 import { getWorkspaceRoot } from "../../🗂️workspaces/🟦️.ts";
+
+import { gitCollectionManifests } from "./📥️admission/🟦️.ts";
+import { resolveNxBuildMode } from "./🎚️mode/🟦️.ts";
 
 const WORKSPACE_ROOT = getWorkspaceRoot();
 
@@ -43,7 +46,59 @@ export function publishBootstrapSources(root: string): void {
   for (const source of sources) createRequire(import.meta.url)(join(root, source.module))[source.export](root);
 }
 
-/** 🛡️ Publishes exact real project exceptions before Nx core can admit testing collections. */
+/** 📂️ One directory the admission walk descended into: its identity stamp, the child directories it queues and the admitted manifest names it holds. */
+type NxAdmissionDirectory = { readonly dev: number; readonly ino: number; readonly mtimeMs: number; readonly ctimeMs: number; readonly children: readonly string[]; readonly manifests: readonly string[] };
+
+/** 🗄️ The admission snapshot persisted between invocations, keyed by the policy that produced it. */
+type NxAdmissionSnapshot = { readonly policy: string; readonly directories: Readonly<Record<string, NxAdmissionDirectory>> };
+
+/** ⏱️ Directory stamps younger than this at snapshot time are re-read next time: a later entry change within one coarse timestamp tick would otherwise keep the same mtime (racy-git rule). */
+const NX_ADMISSION_RACY_MS = 2000;
+
+/** 🚦️ Concurrent directory reads in flight during the admission walk. */
+const NX_ADMISSION_CONCURRENCY = 64;
+
+/** 🗂️ Where one workspace's admission snapshot lives: inside the excluded repository cache, so writing it never perturbs the walk. */
+function nxAdmissionSnapshotPath(root: string): string {
+  return join(root, ".🧬semio", "🦑️repo", "⚡️cache", "nx-admission", `${createHash("sha256").update(root).digest("hex").slice(0, 16)}.json`);
+}
+
+/** 📖️ Reads the previous admission snapshot for `policy`, or none when absent, unreadable or produced by another policy. */
+async function readNxAdmissionSnapshot(path: string, policy: string): Promise<NxAdmissionSnapshot["directories"]> {
+  try {
+    const snapshot = JSON.parse(await readFile(path, "utf8")) as NxAdmissionSnapshot;
+    return snapshot.policy === policy && snapshot.directories && typeof snapshot.directories === "object" ? snapshot.directories : {};
+  } catch { return {}; }
+}
+
+/** 💾️ Atomically replaces the admission snapshot; a concurrent invocation's write wins whole or loses whole. */
+async function writeNxAdmissionSnapshot(path: string, snapshot: NxAdmissionSnapshot): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  const temporary = `${path}.${process.pid}.${randomUUID()}.tmp`;
+  await writeFile(temporary, JSON.stringify(snapshot));
+  await rename(temporary, path);
+}
+
+/** 🧵️ Runs `visit` over a growing work list with at most `limit` visits in flight; the first failure stops scheduling and rejects. */
+function boundedWalk<T>(initial: readonly T[], limit: number, visit: (item: T, enqueue: (next: T) => void) => Promise<void>): Promise<void> {
+  return new Promise((accept, reject) => {
+    const pending = [...initial];
+    let active = 0, failed = false;
+    const pump = (): void => {
+      while (!failed && active < limit && pending.length) {
+        active++;
+        visit(pending.pop()!, (next) => { pending.push(next); }).then(() => { active--; if (!failed) { if (pending.length) pump(); else if (active === 0) accept(); } }, (error: unknown) => { if (!failed) { failed = true; reject(error); } });
+      }
+      if (!failed && active === 0 && pending.length === 0) accept();
+    };
+    pump();
+  });
+}
+
+/** 🛡️ Publishes exact real project exceptions before Nx core can admit testing collections. The walk is parallel and incremental: a directory
+ * whose identity stamp (dev, inode, mtime, ctime) matches the previous snapshot reuses its recorded children and manifests instead of being
+ * re-read, because adding, removing or renaming an entry always restamps its directory; every visited directory and admitted manifest is
+ * still re-proven real and unchanged before publication. */
 export async function publishNxCollectionBoundary(root: string, signal?: AbortSignal, progress?: (directories: number) => void): Promise<void> {
   signal?.throwIfAborted();
   if (!isAbsolute(root) || root.split(/[\\/]/u).some(part => part === "." || part === "..")) throw new Error("Nx collection publication requires raw absolute real ancestry");
@@ -55,8 +110,9 @@ export async function publishNxCollectionBoundary(root: string, signal?: AbortSi
     }
   };
   await real(root);
-  const policy = JSON.parse(await readFile(join(import.meta.dirname, "../🔣️policy.json"), "utf8")) as { generatedDirectories: string[]; manifestBasenames: string[] };
-  const ownership = JSON.parse(await readFile(join(import.meta.dirname, "../../🗂️workspaces/🔣️policy.json"), "utf8")) as { collections: { names: string[]; moduleMember: string } };
+  const policyText = await readFile(join(import.meta.dirname, "../🔣️policy.json"), "utf8"), ownershipText = await readFile(join(import.meta.dirname, "../../🗂️workspaces/🔣️policy.json"), "utf8");
+  const policy = JSON.parse(policyText) as { generatedDirectories: string[]; manifestBasenames: string[] };
+  const ownership = JSON.parse(ownershipText) as { collections: { names: string[]; moduleMember: string } };
   const { names, moduleMember } = ownership.collections;
   const { manifestBasenames } = policy;
   const target = join(root, ".nxignore");
@@ -64,42 +120,65 @@ export async function publishNxCollectionBoundary(root: string, signal?: AbortSi
     try { const value = await lstat(target); if (!value.isFile() || value.isSymbolicLink()) throw new Error("Nx ignore authority must be a real file"); return await readFile(target, "utf8"); }
     catch (error) { if ((error as NodeJS.ErrnoException).code === "ENOENT") return ""; throw error; }
   };
-  const before = await original(), pending: string[][] = [[]], admitted: { path: string; device: number; inode: number }[] = [];
+  const before = await original(), admitted: { path: string; device: number; inode: number }[] = [];
   const visited: { path: string; device: number; inode: number }[] = [];
   const excluded = new Set([...policy.generatedDirectories, ".🧬semio", "🤖️generated", "pkg"]);
-  let directories = 0;
-  while (pending.length) {
+  const snapshotPath = nxAdmissionSnapshotPath(root), snapshotPolicy = createHash("sha256").update(policyText).update("\0").update(ownershipText).digest("hex");
+  const previous = await readNxAdmissionSnapshot(snapshotPath, snapshotPolicy), current: Record<string, NxAdmissionDirectory> = {}, startedMs = Date.now();
+  const insideCollection = (parts: readonly string[]): boolean => parts.some((part, index) => names.includes(part) && parts[index - 1] === moduleMember);
+  let directories = 0, reused = 0;
+  const inventory = await gitCollectionManifests(root, policy, ownership.collections, signal);
+  if (inventory !== undefined) {
+    for (const path of inventory) {
+      signal?.throwIfAborted();
+      await real(dirname(join(root, path)));
+      const file = await lstat(join(root, path));
+      if (!file.isFile() || file.isSymbolicLink()) throw new Error("Nx admitted manifest requires a real file");
+      admitted.push({ path, device: file.dev, inode: file.ino });
+    }
+    progress?.(inventory.length);
+  } else await boundedWalk<readonly string[]>([[]], NX_ADMISSION_CONCURRENCY, async (parts, enqueue) => {
     signal?.throwIfAborted();
-    const parts = pending.pop()!;
     progress?.(++directories);
     signal?.throwIfAborted();
-    const directory = join(root, ...parts), current = await lstat(directory);
-    if (!current.isDirectory() || current.isSymbolicLink()) throw new Error("Nx queued owner requires a real directory");
-    visited.push({ path: directory, device: current.dev, inode: current.ino });
-    for (const entry of await readdir(directory, { withFileTypes: true })) {
-      signal?.throwIfAborted();
-      if (entry.isSymbolicLink()) continue;
-      const next = [...parts, entry.name];
-      if (names.some(name => next.some((part, index) => part === name && next[index - 1] !== moduleMember))) continue;
-      if (entry.isDirectory()) { if (!excluded.has(entry.name)) pending.push(next); continue; }
-      if (!entry.isFile() || !parts.some((part, index) => names.includes(part) && parts[index - 1] === moduleMember)) continue;
-      if (manifestBasenames.some(name => name === "*.patch" ? entry.name.endsWith(".patch") : entry.name === name)) {
-        const file = await lstat(join(root, ...next));
-        if (!file.isFile() || file.isSymbolicLink()) throw new Error("Nx admitted manifest requires a real file");
-        admitted.push({ path: next.join("/"), device: file.dev, inode: file.ino });
+    const directory = join(root, ...parts), stamp = await lstat(directory), key = parts.join("/");
+    if (!stamp.isDirectory() || stamp.isSymbolicLink()) throw new Error("Nx queued owner requires a real directory");
+    visited.push({ path: directory, device: stamp.dev, inode: stamp.ino });
+    const cached = previous[key];
+    let children: string[], manifests: string[];
+    if (cached && cached.dev === stamp.dev && cached.ino === stamp.ino && cached.mtimeMs === stamp.mtimeMs && cached.ctimeMs === stamp.ctimeMs) {
+      ({ children, manifests } = { children: [...cached.children], manifests: [...cached.manifests] });
+      reused++;
+    } else {
+      children = []; manifests = [];
+      const collection = insideCollection(parts);
+      for (const entry of await readdir(directory, { withFileTypes: true })) {
+        signal?.throwIfAborted();
+        if (entry.isSymbolicLink()) continue;
+        const next = [...parts, entry.name];
+        if (names.some(name => next.some((part, index) => part === name && next[index - 1] !== moduleMember))) continue;
+        if (entry.isDirectory()) { if (!excluded.has(entry.name)) children.push(entry.name); continue; }
+        if (entry.isFile() && collection && manifestBasenames.some(name => name === "*.patch" ? entry.name.endsWith(".patch") : entry.name === name)) manifests.push(entry.name);
       }
     }
-  }
-  for (const directory of visited) {
+    if (stamp.mtimeMs < startedMs - NX_ADMISSION_RACY_MS && stamp.ctimeMs < startedMs - NX_ADMISSION_RACY_MS) current[key] = { dev: stamp.dev, ino: stamp.ino, mtimeMs: stamp.mtimeMs, ctimeMs: stamp.ctimeMs, children, manifests };
+    for (const name of manifests) {
+      const file = await lstat(join(directory, name));
+      if (!file.isFile() || file.isSymbolicLink()) throw new Error("Nx admitted manifest requires a real file");
+      admitted.push({ path: [...parts, name].join("/"), device: file.dev, inode: file.ino });
+    }
+    for (const name of children) enqueue([...parts, name]);
+  });
+  await boundedWalk(visited, NX_ADMISSION_CONCURRENCY, async (directory) => {
     signal?.throwIfAborted();
-    const current = await lstat(directory.path);
-    if (!current.isDirectory() || current.isSymbolicLink() || current.dev !== directory.device || current.ino !== directory.inode) throw new Error("Nx current admission requires unchanged real directory custody");
-  }
+    const now = await lstat(directory.path);
+    if (!now.isDirectory() || now.isSymbolicLink() || now.dev !== directory.device || now.ino !== directory.inode) throw new Error("Nx current admission requires unchanged real directory custody");
+  });
   for (const file of admitted) {
     signal?.throwIfAborted();
     await real(dirname(join(root, file.path)));
-    const current = await lstat(join(root, file.path));
-    if (!current.isFile() || current.isSymbolicLink() || current.dev !== file.device || current.ino !== file.inode) throw new Error("Nx current admission requires unchanged real manifest custody");
+    const now = await lstat(join(root, file.path));
+    if (!now.isFile() || now.isSymbolicLink() || now.dev !== file.device || now.ino !== file.inode) throw new Error("Nx current admission requires unchanged real manifest custody");
   }
   const begin = "# 🧫️ Canonical Example Collection Admission", end = "# 🧫️ End Example Collection Admission";
   const start = before.indexOf(begin), finish = before.indexOf(end);
@@ -112,7 +191,17 @@ export async function publishNxCollectionBoundary(root: string, signal?: AbortSi
   await real(root);
   if (await original() !== before) throw new Error("Nx ignore authority changed during current owner admission");
   signal?.throwIfAborted();
-  if (result !== before) await writeFile(target, result);
+  if (result !== before) {
+    const temporary = join(dirname(snapshotPath), `ignore-${process.pid}-${randomUUID()}.tmp`);
+    await mkdir(dirname(temporary), { recursive: true });
+    try {
+      await writeFile(temporary, result);
+      signal?.throwIfAborted();
+      if (await original() !== before) throw new Error("Nx ignore authority changed before atomic publication");
+      await rename(temporary, target);
+    } finally { rmSync(temporary, { force: true }); }
+  }
+  if (inventory === undefined && (reused !== directories || Object.keys(previous).length !== directories)) await writeNxAdmissionSnapshot(snapshotPath, { policy: snapshotPolicy, directories: current });
 }
 
 /** 🧮️ Lets each watched build finish its graph while the daemon retains source watching. */
@@ -304,10 +393,21 @@ export class NxScript extends Script {
       force = setTimeout(() => killAll("SIGKILL"), 5000);
       force.unref();
     };
+    const graphChanges = new WeakMap<ReturnType<typeof spawnNxProcess>, { changed: boolean; executing: boolean; tail: string }>();
     const launch = (args: string[], capture = false, environment = env): ReturnType<typeof spawnNxProcess> => {
       const original=readScriptProcessEnvelope(JSON.parse(environment[SCRIPT_PROCESS_INVOCATION_ENV]!),Date.now()),ownedEnvironment=nativeNxChildEnvironmentV1(this.root,issueSelectedNxCallerEnvelopeV1(this.root,original,args),args,environment);
       const spooled = Boolean(outputLog) && !capture && !invocation.watch;
-      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)), stdio: spooled ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      const monitored = !invocation.watch;
+      const child = spawnNxProcess("node", [nxCli, ...args], { cwd: this.root, env: nxChildEnvironment(ownedEnvironment, args, Boolean(invocation.watch)), stdio: spooled || monitored ? ["inherit", "pipe", "pipe"] : capture ? ["inherit", "pipe", "inherit"] : "inherit", detached: process.platform !== "win32" });
+      if (monitored) {
+        const state = { changed: false, executing: false, tail: "" }; graphChanges.set(child, state);
+        for (const [input, output] of [[child.stdout!, process.stdout], [child.stderr!, process.stderr]] as const) input.on("data", chunk => {
+          state.tail = (state.tail + String(chunk)).slice(-4096);
+          state.executing ||= />\s+nx run\s/.test(state.tail) || state.tail.includes("[script]");
+          state.changed ||= state.tail.includes("Dependency resolution authority changed during graph construction");
+          if (!spooled) output.write(chunk);
+        });
+      }
       children.push(child);
       if (spooled) {
         const spool = NxOutputSpoolV1.open(outputLog!, (line) => process.stdout.write(`${line}\n`));
@@ -330,6 +430,10 @@ export class NxScript extends Script {
         if (installed !== 0 || cancelled) { process.exitCode = cancelled ? cancelled === "SIGINT" ? 130 : 143 : installed; return; }
       }
       if (!cancelled) {
+        const graphSeal = await import("../🕸️graph/🔏️seal/🟦️.ts"), workspaceData = env.NX_WORKSPACE_DATA_DIRECTORY!, inheritedReuse = env.NX_FORCE_REUSE_CACHED_GRAPH === "true" && env.SEMIO_NX_GRAPH_SEAL_REUSE === undefined;
+        const sealed = !inheritedReuse && !invocation.watch && env.NX_DAEMON !== "true" && await graphSeal.nxGraphSealHolds(this.root, workspaceData).catch(() => false);
+        if (!inheritedReuse) { env.NX_FORCE_REUSE_CACHED_GRAPH = sealed ? "true" : "false"; env.SEMIO_NX_GRAPH_SEAL_REUSE = sealed ? "true" : "false"; }
+        const launchedAt = Date.now();
         const child=launch(invocation.args,Boolean(invocation.watch));
         const status=new Promise<number>((accept,reject) => { child.once("error",reject);child.once("close",code=>accept(code??1)); });void status.catch(()=>{});
         if(invocation.watch) {
@@ -351,8 +455,18 @@ export class NxScript extends Script {
             activation.once("close",code=>{if(code&&!finishing&&!cancelled){watchFailure=code;stop("SIGTERM");}});
           },error=>{console.error(error.message);watchFailure=1;stop("SIGTERM");});
         }
-        const code=await status;
+        let code = await status, completed = child, attemptStart = launchedAt;
+        for (let attempt = 1; code !== 0 && !cancelled && !invocation.watch && graphChanges.get(completed)?.changed && !graphChanges.get(completed)?.executing && attempt <= 3; attempt++) {
+          this.invocation.control.signal.throwIfAborted();
+          console.log(`[nx] Source authority changed; admitting the current graph again (${attempt}/3)`);
+          await publishNxCollectionBoundary(this.root, this.invocation.control.signal);
+          env.NX_FORCE_REUSE_CACHED_GRAPH = "false";
+          env.SEMIO_NX_GRAPH_SEAL_REUSE = "false";
+          attemptStart = Date.now(); completed = launch(invocation.args);
+          code = await new Promise<number>((accept, reject) => { completed.once("error", reject); completed.once("close", value => accept(value ?? 1)); });
+        }
         await Promise.all(spooling);
+        if (code === 0 && !cancelled && !inheritedReuse && !sealed && !invocation.watch && completed.pid) await graphSeal.writeNxGraphSeal(this.root, workspaceData, completed.pid, attemptStart).catch(() => false);
         process.exitCode=watchFailure||(cancelled?cancelled==="SIGINT"?130:143:code);
       } else process.exitCode=cancelled==="SIGINT"?130:143;
     } catch (error) {
@@ -379,7 +493,7 @@ export class NxScript extends Script {
 }
 
 /** 🧭️ Resolves public selections before Nx creates the single task graph. */
-export function resolveNxInvocation(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
+function resolveNxSelection(segments: string[]): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
   if (segments[0] !== "run") return { args: segments, env: {} };
   const delimiter = segments.indexOf("--");
   const selected = delimiter < 0 ? [] : segments.slice(delimiter + 1);
@@ -405,16 +519,16 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     if (report[2] && !catalog.documents.some(document => document.id === report[2])) throw new Error(`Unknown report document: ${report[2]}`);
     return { args: ["run", target, ...options], env: {}, ...(report[1] === "watch" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: target.replace(":watch", ":build") } : {}) };
   }
-  const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(dev|release)|build|activate-dev|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
+  const demonstrator = target?.match(/^@semio-tech\/mit-bestand-demonstrator:(prepare-(dev|release)|prepare|build|activate-dev|serve|dev|prepare-e2e|serve-e2e|test-e2e)$/);
   if (demonstrator) {
     if (selected.length) throw new Error("Demonstrator targets accept no compiler arguments");
-    const release = demonstrator[1] === "build" || demonstrator[2] === "release";
-    return { args: segments, env: { SEMIO_BUILD_MODE: release ? "ship" : "dev", SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
+    const release = demonstrator[2] === "release";
+    return { args: segments, env: { ...(["prepare", "build"].includes(demonstrator[1]) ? {} : { SEMIO_BUILD_MODE: release ? "release" : "prototype" }), SEMIO_RENDERER: "react" }, ...(demonstrator[1] === "dev" && !options.some(argument => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: "@semio-tech/mit-bestand-demonstrator:activate-dev" } : {}) };
   }
   const nativeRuntime = target?.match(/^@semio-tech\/framework-os-dev:(prepare|run|smoke)-(.+)-native-(dev|release)$/);
-  if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2], SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "ship" : "dev" } };
+  if (nativeRuntime) return { args: segments, env: { SEMIO_PLUGIN: nativeRuntime[2], SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: nativeRuntime[3] === "release" ? "release" : "prototype" } };
   const preparation = target?.match(/^@semio-tech\/framework-os-dev:(prepare|activate|serve|dev|build)-(.+)-(react|wgpu)-(dev|release)$/);
-  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "ship" : "dev", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
+  if (preparation) return { args: segments, env: { SEMIO_BUILD_MODE: preparation[4] === "release" ? "release" : "prototype", SEMIO_PLUGIN: preparation[2], SEMIO_RENDERER: preparation[3] }, ...(preparation[1] === "dev" && !options.some((argument) => /^--(?:graph|help)(?:=|$)/.test(argument)) ? { watch: `@semio-tech/framework-os-dev:activate-${preparation[2]}-${preparation[3]}-${preparation[4]}` } : {}) };
   if (["@semio-tech/framework-renderer-wgpu:native-build"].includes(target) && selected.some((argument) => argument === "--release" || argument === "--dist")) {
     const args = selected.filter((argument) => argument !== "--release" && argument !== "--dist");
     return { args: ["run", `${target}-release`, ...options, ...(args.length ? ["--", ...args] : [])], env: {} };
@@ -443,11 +557,8 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
   }
   if (target === "workspace:test") {
     const { level, rest } = resolveTestLevel(selected);
-    if (!rest.length) return { args: ["run", `workspace:test-${level}`, ...options], env: { SEMIO_TEST_LEVEL: level } };
-    if (rest[0] === "repo-client" || rest[0] === "repo-mcp") {
-      const project = rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp";
-      return { args: ["run", `${project}:${level === "fundamental" ? "test" : `test-${level}`}`, ...options, ...(rest.length > 1 ? ["--", ...rest.slice(1)] : [])], env: { SEMIO_TEST_LEVEL: level } };
-    }
+    if (!rest.length) return { args: ["run", "workspace:test", ...options, "--", level], env: { SEMIO_TEST_LEVEL: level } };
+    if (rest[0] === "repo-client" || rest[0] === "repo-mcp") return { args: ["run", `${rest[0] === "repo-client" ? "@semio-tech/repo-client" : "repo-mcp"}:test`, ...options, "--", level, ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
     const taxonomy = JSON.parse(readFileSync(join(WORKSPACE_ROOT, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json"), "utf8"));
     if (((taxonomy.testPhases ?? []) as string[]).includes(rest[0])) return { args: ["run", `@semio-tech/repo-test-domain:test-${rest[0]}`, ...options, "--", ...(((taxonomy.testLevellessPhases ?? []) as string[]).includes(rest[0]) ? [] : [level]), ...rest.slice(1)], env: { SEMIO_TEST_LEVEL: level } };
   }
@@ -456,9 +567,14 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
     const targets: Record<string, string> = { assets: "@semio-tech/assets:build", storybook: "workspace:build-storybook", "repo-cli": "@semio-tech/repo-client:build", "repo-server": "@semio-tech/repo-coordinator:build", "repo-vscode": "@semio-tech/repo-vscode:build-vsix" };
     const resolved = targets[selected[0]];
     if (!resolved) throw new Error(`Unknown build selection: ${selected[0]}`);
-    return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: semioShipEnv() };
+    return { args: ["run", resolved, ...options, ...(selected.length > 1 ? ["--", ...selected.slice(1)] : [])], env: {} };
   }
-  return { args: segments, env: target === "workspace:build" ? semioShipEnv() : {} };
+  return { args: segments, env: {} };
+}
+/** 🎚️ Selects one compiler mode before Nx hashes or builds its task graph. */
+export function resolveNxInvocation(segments: string[], environment: NodeJS.ProcessEnv = process.env): { args: string[]; env: NodeJS.ProcessEnv; watch?: string } {
+  const selection = resolveNxSelection(segments);
+  return resolveNxBuildMode(selection, environment);
 }
 //#endregion 🔖️NxScript
 
@@ -466,7 +582,7 @@ export function resolveNxInvocation(segments: string[]): { args: string[]; env: 
 /** 🧭️ Declares the actual resolved user, provision and watcher launches before the original envelope exists. */
 export function createNxBootstrapCapabilitiesV1(root:string,args:readonly string[],environment:NodeJS.ProcessEnv):ReturnType<typeof createNativeNxCallerCapabilitiesV1>{
  if(args[0]!=="nx")throw Error("Original bootstrap Nx request required");
- const invocation=resolveNxInvocation(args.slice(1)),launches=[invocation.args,["run",NxScript.javascriptEnvironment,"--output-style=stream"]];
+ const invocation=resolveNxInvocation(args.slice(1),environment),launches=[invocation.args,["run",NxScript.javascriptEnvironment,"--output-style=stream"]];
  if(invocation.watch)launches.push(["watch","--all","--includeGlobalWorkspaceFiles","--verbose","--","bun","nx","run",invocation.watch,"--output-style=stream"],["run",invocation.watch,"--output-style=stream"]);
  return createNativeNxCallerCapabilitiesV1(root,args,invocation.args,{...environment,...invocation.env},launches);
 }

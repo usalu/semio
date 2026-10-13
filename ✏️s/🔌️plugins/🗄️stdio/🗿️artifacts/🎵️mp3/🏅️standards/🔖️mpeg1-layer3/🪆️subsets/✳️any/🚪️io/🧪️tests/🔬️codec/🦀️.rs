@@ -181,7 +181,7 @@ async fn id3v1_trailer_round_trips() {
 #[test]
 fn owned_fixture_publication_reports_canonical_logical_carriers() {
     playback_snapshot_retirement_preserves_original_observers_and_each_exact_grant();
-    use store::{ArtifactDsl, ArtifactPack};
+    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     use semio_s_artifact_stdio_mp3_test_oracle::standards::v_mpeg1_layer3::subsets::any::project_mp3;
     let native = real_fixture();
     let snapshot = decode_mp3(&native).unwrap();

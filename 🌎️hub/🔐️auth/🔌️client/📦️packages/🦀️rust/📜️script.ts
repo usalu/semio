@@ -11,7 +11,7 @@ import { runRepositoryCommand } from "../../../../../🧰️framework/🛍️pro
 class CheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("Credential provider check accepts no arguments");
-    await runRepositoryCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")], this.repoRoot, "hub-auth-client:check");
+    await runRepositoryCommand(this.invocation,"cargo",["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")],this.repoRoot,"hub-auth-client:check",{version:1,maximumElapsedMilliseconds:0,output:null});
   }
 }
 

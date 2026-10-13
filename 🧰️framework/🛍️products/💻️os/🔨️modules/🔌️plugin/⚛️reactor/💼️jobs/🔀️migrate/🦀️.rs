@@ -4,9 +4,9 @@
 //! three former export parameters into one JSON `{from, to, pack}` triple, the SAME "tuple-of-what-
 //! used-to-be-separate-params" idiom `job_io_run`/`job_io_sniff`'s own `IoRunInput` already
 //! established (a job only ever carries one opaque `list<u8>`). Dispatch goes through
-//! `store::migrate_document`, the process-global `DialectMigration` registry every plugin's own
+//! `store::os_store::codec_registry::migrate_document`, the process-global `DialectMigration` registry every plugin's own
 //! `PluginBuilder::migrations(...)` declarations already populate at build time (`🏗️builder/
-//! 🦀️.rs`'s `migrations` field, folded into `store::register_dialect_migrations` at
+//! 🦀️.rs`'s `migrations` field, folded into `store::os_store::codec_registry::register_dialect_migrations` at
 //! `try_build()` — outside this packet's owned paths, already wired by an earlier packet) — the
 //! SAME kind of process-global registry `job_io_run`/`job_io_sniff`/`💡️infer`/`🧬️mutation-plan`
 //! all read from, not a new mechanism.
@@ -40,7 +40,7 @@ fn decode_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     super::settle_in_step("job.migrate", decode(input))
 }
 
-// 🚫️async: E4 phase slot — see `decode_phase`; `store::migrate_document` is the unchunked native
+// 🚫️async: E4 phase slot — see `decode_phase`; `store::os_store::codec_registry::migrate_document` is the unchunked native
 // call this state action declares `WORK_UNITS_EXECUTE` for.
 fn execute_phase(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     super::settle_in_step("job.migrate", execute(input))
@@ -71,7 +71,7 @@ async fn execute(input: &[u8]) -> Result<Vec<u8>, semio_framework::Fault> {
     let parsed: MigrateInput =
         semio_framework_pack_json::from_json_str(input_text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| super::fault("job.migrate.decode", format!("invalid {} input: {error}", super::JOB_KIND_MIGRATE)))?;
     let (from, to) = parse_dialects(&parsed).await?;
-    store::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
+    store::os_store::codec_registry::migrate_document(&from, &to, &parsed.pack).await.map_err(|error| super::fault("job.migrate", format!("{error:?}")))
 }
 
 #[cfg(test)]

@@ -3,12 +3,18 @@ import {observeCargoPreparationSourceV1,observeCargoPreparationInputV1,observeCa
 /** 🏗️ Publishes the concrete Stdio composition from present artifact-owned contributions. */
 import { createHash } from "node:crypto";
 import { existsSync, lstatSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
-import { dirname, relative, resolve, sep } from "node:path";
+import { basename, dirname, relative, resolve, sep } from "node:path";
 import { admitCompositionContributionV1, selectCompositionContributionsV1, resolveCompositionNativeFactoriesV1, resolveCompositionOpenTargetsV1, type CompositionNativeReceiptV1, type CompositionContributionV1 } from "../../../../✏️s/🔌️plugins/🗄️stdio/📇️registry/🧬️contract/🧩️composition/🟦️.ts";
 
 type OwnerV1 = { id: string; root: string; enum: string; label: string; main: boolean };
-type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; appAssembly: boolean; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
+type InputV1 = { directory: string; manifest: string; contribution: CompositionContributionV1; observed: Map<string, string>; nativeReceipts: CompositionNativeReceiptV1[] };
 const boundary = 4 * 1024 * 1024;
+/** 📇️ The full artifact catalog crate's manifest, whose dependency region the composition publishes. */
+export const CATALOG_MANIFEST = "🔌️plugin/📇️catalog/📦️packages/🦀️rust/Cargo.toml";
+/** 🏭️ The mutation bridge crate's manifest, whose dependency region names every package a mutation descriptor lives in. */
+export const BRIDGE_MANIFEST = "🏭️bridge/📦️packages/🦀️rust/Cargo.toml";
+/** 🧩️ The catalog owner's component crate manifest: its deployment identity, playgrounds and artifact source authority. */
+export const COMPONENT_MANIFEST = "🧩️component/📦️packages/🦀️rust/Cargo.toml";
 
 function physical(root: string, path: string, file = true): string {
   const absolute = resolve(root, path), local = relative(root, absolute);
@@ -43,9 +49,20 @@ function rustSource(owner: OwnerV1, rows: CompositionContributionV1[]): string {
   const variants = apps.map((app) => `        ${app.variant}(VcsArtifactApp<${app.role === "editor" ? "EditorApp" : "ViewerApp"}<${app.type}>>),`).join("\n");
   const registrations = apps.map((app) => `    builder = builder.${app.role}::<${app.type}>(${app.factory}());${app.mutationRoster ? `\n    builder = builder.${app.role}_mutation_roster::<${app.type}>();` : ""}`).join("\n");
   const activations = hosted.map((row) => `    builder = builder.activation(ActivationEvent::OnArtifactKind { kind: ${crate(row)}::artifact_kind().id });`).join("\n");
-  const assembly = owner.main ? `    let registry = crate::catalog::selected_registry()?;\n    let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: ${JSON.stringify(owner.id)}, package_id: crate::catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;\n    let catalog = crate::catalog::artifact_catalog_contribution(plan.assemblies())?;\n    builder = plan.apply(builder);` : hosted.map((row) => `    builder = builder.host_artifact(${crate(row)}::declaration(${crate(row)}::definition()?).map_err(PluginAssemblyError::definition)?);`).join("\n");
-  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\n#![allow(async_fn_in_trait)]\n#![allow(long_running_const_eval)]\n\nuse semio_framework_plugin::__semio_dispatch_PluginApp;\nuse semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_framework_plugin::plugin_app_close_prelude::*;\nuse semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = Plugin::<${owner.enum}>::builder(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "crate::catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", crate::catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n${owner.main ? "" : `\n#[cfg(feature = "plugin-root")]\nsemio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, ${owner.enum});\n`}`;
+  const assembly = owner.main ? `    let registry = semio_hub_stdio_catalog::selected_registry()?;\n    let plan = semio_s_plugin_stdio::AssemblyPlan::new(&registry, semio_s_plugin_stdio::AssemblyOwner { plugin_id: ${JSON.stringify(owner.id)}, package_id: semio_hub_stdio_catalog::component_package_id()?, package_version: env!("CARGO_PKG_VERSION") })?;\n    let catalog = semio_hub_stdio_catalog::artifact_catalog_contribution(plan.assemblies())?;\n    builder = plan.apply(builder);` : hosted.map((row) => `    builder = builder.host_artifact(${(row.catalogPackage ?? row.package).replaceAll("-", "_")}::declaration(${crate(row)}::definition()?).map_err(PluginAssemblyError::definition)?);`).join("\n");
+  const source = `//! 🧩️ Typed runtime assembly published from artifact-owned composition contributions.\n\n#![allow(async_fn_in_trait)]\n#![allow(long_running_const_eval)]\n\nuse semio_framework_plugin::__semio_dispatch_PluginApp;\nuse semio_framework_plugin::kernel::{ActivationEvent, CapabilityId, CapabilityRequest};\nuse semio_framework_plugin::plugin_app_close_prelude::*;\nuse semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyError};\n\nsemio_framework_dispatch_macros::dyn_enum_close! {\n    /// 🗃️ The present owner-authored runtime app contributions.\n    pub enum ${owner.enum}: PluginApp {\n${variants}\n    }\n}\n\n/// 🔌️ Builds the exact present artifact and app contributions.\npub fn plugin() -> Result<Plugin<${owner.enum}>, PluginAssemblyError> {\n    let mut builder = Plugin::<${owner.enum}>::builder(${JSON.stringify(owner.id)}).label(${JSON.stringify(owner.label)}).version(env!("CARGO_PKG_VERSION")).package_id(${owner.main ? "semio_hub_stdio_catalog::component_package_id()?" : JSON.stringify(`semio:${owner.id}`)}).schema_documents("stdio", semio_s_artifact_stdio_contract::STDIO_REGISTRY_SCHEMA_DOCUMENTS)${owner.main ? '.schema_documents("stdio", semio_hub_stdio_catalog::CATALOG_SCHEMA_DOCUMENTS)' : '.depends_on("stdio", semio_framework::tree_pin!())'};\n${assembly}\n${registrations}\n${activations}\n    builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });\n    ${owner.main ? "builder.contributes_topic(catalog)" : "builder"}.try_build()\n}\n`;
   return source;
+}
+
+/** 🧩️ The one-line root of an owner's `🧩️component` cdylib crate: the entry point over its library's `plugin` and app enum. */
+function componentSource(owner: OwnerV1, library: string, emoji: string): string {
+  const crate = library.replaceAll("-", "_"), apps = owner.main ? `${crate}::plugin::${owner.enum}` : `${crate}::${owner.enum}`;
+  return `//! ${emoji} The \`${owner.id}\` plugin component: the one cdylib of \`${library}\`, holding only its entry point.\n\nsemio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, ${crate}::plugin, ${apps});\n`;
+}
+
+/** 📂️ An owner's directory inside the hub root: the hub root itself for the catalog owner, else its root file's directory. */
+function ownerDirectory(owner: OwnerV1): string {
+  return owner.main ? "." : dirname(owner.root);
 }
 
 function region(source: string, name: string, content: string): string {
@@ -55,14 +72,30 @@ function region(source: string, name: string, content: string): string {
   return source.slice(0, start + begin.length) + content + (content ? "\n" : "") + source.slice(finish);
 }
 
+/** 🔤️ The Rust path prefixes a contribution's symbols may start with: its package and its declared symbol packages. */
+function symbolPrefixes(contribution: CompositionContributionV1): string[] {
+  return [contribution.package, ...contribution.symbolPackages].map((name) => name.replaceAll("-", "_") + "::");
+}
+
+/** 🧮️ Keeps the first occurrence of every name, preserving contribution order. */
+function unique(names: readonly string[]): string[] {
+  return [...new Set(names)];
+}
+
+/** 📦️ The Cargo dependencies one hosted contribution brings: its package, the catalog package whose declaration hosts
+ * its complete runtime, and every symbol package its apps name. */
+function hostedPackages(row: CompositionContributionV1): string[] {
+  return [row.package, ...(row.catalogPackage === null ? [] : [row.catalogPackage]), ...row.symbolPackages];
+}
+
 /** 📇️ Reads all physically present declared contribution owners and validates their source bindings. */
 export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): InputV1[] {
-  const manifest = Bun.TOML.parse(read(hubRoot, "📦️packages/🦀️rust/Cargo.toml")) as any;
+  const manifest = Bun.TOML.parse(read(hubRoot, COMPONENT_MANIFEST)) as any;
   const roots = manifest.package?.metadata?.semio?.sources?.artifacts;
   if (!Array.isArray(roots) || roots.some((root) => typeof root !== "string")) throw new Error("Stdio composition has no authored artifact source authority");
   const inputs: InputV1[] = [];
   for (const root of roots) {
-    const directory = physical(repoRoot, relative(repoRoot, resolve(hubRoot, "📦️packages/🦀️rust", root)), false);
+    const directory = physical(repoRoot, relative(repoRoot, resolve(hubRoot, dirname(COMPONENT_MANIFEST), root)), false);
     observeCargoPreparationInputV1(directory,"directory");
     for (const entry of readdirSync(directory, { withFileTypes: true }).sort((a, b) => Buffer.compare(Buffer.from(a.name), Buffer.from(b.name)))) {
       if (entry.isSymbolicLink()) throw new Error(`Stdio contribution owner is a symlink: ${entry.name}`);
@@ -82,10 +115,10 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
       const authority = packageManifest.package?.metadata?.semio?.composition;
       if (!authority || Object.keys(authority).join(",") !== "manifest" || typeof authority.manifest !== "string") throw new Error(`Present Stdio artifact has no declared composition contribution: ${entry.name}`);
       const contribution = admitCompositionContributionV1(JSON.parse(capture(resolve(dirname(packagePath), authority.manifest))));
-      if (contribution.catalogFeatures.some((feature) => !Object.hasOwn(packageManifest.features ?? {}, feature))) throw new Error(`Contribution catalog feature is absent from its Cargo owner: ${entry.name}`);
+      if (Object.keys(packageManifest.features ?? {}).some((feature) => feature !== "default" && feature !== "testing")) throw new Error(`Contribution Cargo owner carries a consumer-selected feature: ${entry.name}`);
       if (contribution.package !== packageManifest.package.name) throw new Error(`Contribution package does not match its physical Cargo owner: ${entry.name}`);
-      const prefix = contribution.package.replaceAll("-", "_") + "::";
-      if (contribution.apps.some((app) => !app.type.startsWith(prefix) || !app.factory.startsWith(prefix))) throw new Error(`Contribution app symbols escape their Cargo owner: ${entry.name}`);
+      const prefixes = symbolPrefixes(contribution);
+      if (contribution.apps.some((app) => !prefixes.some((prefix) => app.type.startsWith(prefix)) || !prefixes.some((prefix) => app.factory.startsWith(prefix)))) throw new Error(`Contribution app symbols escape their Cargo owners: ${entry.name}`);
       const ownInput = (path: string): string => {
         const absolute = resolve(repoRoot, path), local = relative(artifactRoot, absolute);
         if (local === ".." || local.startsWith(".." + sep)) throw new Error("Native factory export escapes its actual artifact owner");
@@ -101,7 +134,7 @@ export function readStdioCompositionInputs(repoRoot: string, hubRoot: string): I
         capture(absolute);
         return observed.get(absolute)!;
       });
-      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, appAssembly: Object.hasOwn(packageManifest.features ?? {}, "component-app-assembly"), observed, nativeReceipts });
+      inputs.push({ directory: artifactRoot, manifest: packagePath, contribution, observed, nativeReceipts });
     }
   }
   selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full");
@@ -114,7 +147,6 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   const inputs = readStdioCompositionInputs(repoRoot, hubRoot), rows = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "full").map(row => ({ ...row, nativeReceipts: inputs.find(input => input.contribution.package === row.package)!.nativeReceipts }));
   const ownerSource = read(hubRoot, "🧩️composition/🔣️.json"), config = owners(JSON.parse(ownerSource)), ids = new Set(config.map((owner) => owner.id));
   if (rows.some((row) => row.apps.some((app) => !ids.has(app.owner)) || row.playgrounds.some((entry) => !ids.has(entry.owner)))) throw new Error("Artifact app contribution targets an undeclared composition owner");
-  const appAssembly = new Set(inputs.filter((input) => input.appAssembly).map((input) => input.contribution.package));
   const outputs = new Map<string, { previous: string | undefined; next: string }>();
   const publish = (path: string, next: string) => {
     const absolute = resolve(hubRoot, path), local = relative(hubRoot, absolute);
@@ -125,26 +157,28 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
   };
   for (const owner of config) {
     publish(owner.root, rustSource(owner, rows));
-    const path = owner.main ? "📦️packages/🦀️rust/Cargo.toml" : relative(hubRoot, resolve(hubRoot, dirname(owner.root), "📦️packages/🦀️rust/Cargo.toml"));
+    const directory = ownerDirectory(owner), path = relative(hubRoot, resolve(hubRoot, directory, "📦️packages/🦀️rust/Cargo.toml")) || "📦️packages/🦀️rust/Cargo.toml";
+    const componentPath = relative(hubRoot, resolve(hubRoot, directory, COMPONENT_MANIFEST));
     const hosted = rows.filter((row) => row.apps.some((app) => app.owner === owner.id));
-    const dependencies = (owner.main ? rows : hosted).map((row) => `${row.package} = { workspace = true${owner.main ? ", optional = true" : appAssembly.has(row.package) ? ', features = ["component-app-assembly"]' : ""} }`).join("\n");
+    const direct = unique([...(owner.main ? ["semio-hub-stdio-catalog"] : []), ...hosted.flatMap(hostedPackages)]);
+    const dependencies = direct.map((name) => `${name} = { workspace = true }`).join("\n");
     let manifest = region(read(hubRoot, path), "Composition Dependencies", dependencies);
-    if (owner.main) {
-      const full = rows.map((row) => `dep:${row.package}`), home = selectCompositionContributionsV1(inputs.map((input) => input.contribution), "home").map((row) => `dep:${row.package}`);
-      for (const row of rows) for (const feature of row.catalogFeatures) full.push(`${row.package}/${feature}`);
-      manifest = region(manifest, "Composition Features", `component-app-assembly = ${JSON.stringify(["full-artifact-catalog", ...hosted.filter((row) => appAssembly.has(row.package)).map((row) => `${row.package}/component-app-assembly`)])}\nfull-artifact-catalog = ${JSON.stringify(full)}\nhome-io = ${JSON.stringify(home)}`);
-    }
+    if (owner.main) manifest = region(manifest, "Composition Test Dependencies", unique(rows.flatMap(hostedPackages)).filter((name) => !direct.includes(name)).map((name) => `${name} = { workspace = true }`).join("\n"));
+    publish(path, manifest);
     const playgrounds = rows.flatMap((row) => row.playgrounds.filter((entry) => entry.owner === owner.id));
     const playgroundSource = playgrounds.map((entry) => `[[package.metadata.semio.playground]]\nvariant = ${JSON.stringify(entry.variant)}\napp = ${JSON.stringify(entry.app)}\naliases = ${JSON.stringify(entry.aliases)}\nports = { react = ${entry.ports.react}, wgpu = ${entry.ports.wgpu} }`).join("\n\n");
-    manifest = region(manifest, "Composition Playgrounds", playgroundSource);
-    publish(path, manifest);
+    publish(componentPath, region(read(hubRoot, componentPath), "Composition Playgrounds", playgroundSource));
+    const library = (Bun.TOML.parse(manifest) as { package: { name: string } }).package.name;
+    const emoji = basename(resolve(hubRoot, directory)).match(/^[^a-z0-9]+/u)?.[0] ?? "🧩️";
+    publish(relative(hubRoot, resolve(hubRoot, directory, "🧩️component/🦀️.rs")), componentSource(owner, library, emoji));
   }
-  const selected = (selection: string) => `vec![${selectCompositionContributionsV1(inputs.map((input) => input.contribution), selection).map((row) => `${row.package.replaceAll("-", "_")}::contribution()`).join(", ")}]`;
-  publish("🤖️generated/🧩️composition/🦀️.rs", `#[cfg(feature = "full-artifact-catalog")]\nfn selected_contributions() -> Vec<ArtifactContribution> { ${selected("full")} }\n#[cfg(all(feature = "home-io", not(feature = "full-artifact-catalog")))]\nfn selected_contributions() -> Vec<ArtifactContribution> { ${selected("home")} }\n#[cfg(not(any(feature = "full-artifact-catalog", feature = "home-io")))]\nfn selected_contributions() -> Vec<ArtifactContribution> { Vec::new() }\n`);
+  const catalogCrate = (row: CompositionContributionV1) => row.catalogPackage ?? row.package;
+  publish(CATALOG_MANIFEST, region(read(hubRoot, CATALOG_MANIFEST), "Composition Dependencies", rows.map((row) => `${catalogCrate(row)} = { workspace = true }`).join("\n")));
+  publish("🤖️generated/🧩️composition/🦀️.rs", `fn selected_contributions() -> Vec<ArtifactContribution> { vec![${rows.map((row) => `${catalogCrate(row).replaceAll("-", "_")}::contribution()`).join(", ")}] }\n`);
   const mutationDescriptors = rows.flatMap(row => row.mutationDescriptors);
   for (const row of rows) {
-    const prefix = row.package.replaceAll("-", "_") + "::";
-    if (row.mutationDescriptors.some(entry => !entry.snapshot.startsWith(prefix) || !entry.mutation.startsWith(prefix))) throw new Error("Mutation descriptor escapes its actual artifact package");
+    const prefixes = symbolPrefixes(row);
+    if (row.mutationDescriptors.some(entry => !prefixes.some((prefix) => entry.snapshot.startsWith(prefix)) || !prefixes.some((prefix) => entry.mutation.startsWith(prefix)))) throw new Error("Mutation descriptor escapes its artifact packages");
     for (const coordinate of row.mutationCoordinates) {
       const directory = physical(repoRoot, coordinate.owner, false);
       const source = inputs.find(input => input.contribution.package === row.package)!;
@@ -153,6 +187,8 @@ export function prepareStdioComposition(repoRoot: string, hubRoot: string): { co
       if (!lstatSync(directory).isDirectory() || coordinate.artifact !== row.nativeReceipts[0]?.artifact_kind && coordinate.artifact !== `s.stdio.${row.artifact}`) throw new Error("Invalid artifact-owned mutation coordinate");
     }
   }
+  const descriptorPackages = unique(rows.flatMap((row) => row.mutationDescriptors.flatMap((entry) => [entry.snapshot, entry.mutation].map((path) => hostedPackages(row).find((name) => path.startsWith(name.replaceAll("-", "_") + "::"))!))));
+  publish(BRIDGE_MANIFEST, region(read(hubRoot, BRIDGE_MANIFEST), "Composition Dependencies", descriptorPackages.map((name) => `${name} = { workspace = true }`).join("\n")));
   const aggregates = mutationDescriptors.map(entry => `    (${JSON.stringify(entry.name)}, descriptors::<${entry.snapshot}, ${entry.mutation}>),`).join("\n");
   const coordinates = rows.flatMap(row => row.mutationCoordinates).map(entry => `    (${[entry.artifact, entry.standard, entry.subset, entry.surface, entry.owner, entry.prefix].map(value => JSON.stringify(value)).join(", ")}),`).join("\n");
   publish("🤖️generated/🧩️mutations/🦀️.rs", `const AGGREGATES: &[(&str, fn() -> &'static [MutationLeafDescriptor])] = &[\n${aggregates}\n];\nconst COORDINATES: &[(&str, &str, &str, &str, &str, &str)] = &[\n${coordinates}\n];\n`);

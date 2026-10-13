@@ -69,7 +69,7 @@ fn preview_view_state() -> String {
 async fn arm_generation3d_preview(runtime: &ProceduralRuntime) {
     let dsl = semio_s_artifact_procedural_generation3d::examples::art_generation3d_hexagonal_mushroom_column::PRIMARY_TEXT;
     let booted = plugin_document_text(runtime, CLOSE_INSTANCE).await.expect("booted generation3d document text");
-    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("hexagonal-mushroom-column loads into the booted instance");
+    semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("hexagonal-mushroom-column loads into the booted instance");
     let view_state = preview_view_state();
     for _ in 0..4 {
         let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
@@ -171,7 +171,7 @@ async fn replay_session(runtime: &ProceduralRuntime, documents: usize, renders_p
     let view_state = preview_view_state();
     for dsl in example_documents().into_iter().take(documents) {
         let booted = settled_document_text(runtime).await;
-        semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("session example loads");
+        semio_framework_plugin::artifact_app_laws::plugin_load_document_text::<_, semio_s_artifact_procedural_generation3d::Generation3dSnapshot, semio_s_artifact_procedural_generation3d::Generation3dMutation>(runtime, CLOSE_INSTANCE, &store::os_store::text_format::ArtifactTextFiles { dsl: dsl.into(), ops: booted.ops }).await.expect("session example loads");
         for _ in 0..renders_per_document {
             let _ = plugin_render(runtime, CLOSE_INSTANCE, GENERATION3D_PREVIEW_BODY, &view_state).await;
             turn(runtime, Vec::new()).await;
@@ -182,7 +182,7 @@ async fn replay_session(runtime: &ProceduralRuntime, documents: usize, renders_p
 /// 📄️ Reads the instance's own document text once the live maintenance pump has let go of it — the
 /// pump runs on the maintenance worker lane natively, so a read issued in the same breath as the
 /// previous load answers `instance busy or poisoned` rather than a document.
-async fn settled_document_text(runtime: &ProceduralRuntime) -> store::ArtifactTextFiles {
+async fn settled_document_text(runtime: &ProceduralRuntime) -> store::os_store::text_format::ArtifactTextFiles {
     for _ in 0..256 {
         turn(runtime, Vec::new()).await;
         if let Ok(text) = plugin_document_text(runtime, CLOSE_INSTANCE).await {

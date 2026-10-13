@@ -1,9 +1,9 @@
 //! ↩️ Inverse for `UnflattenNode`: the node the restore overwrites is captured whole, so undoing it puts exactly that
 //! node back — for every payload the grammar admits, not only for one whose current node is `flatten(original)`.
 
-use crate::standards::v1::subsets::drawing::schema::diff::node_at;
-use crate::standards::v1::subsets::drawing::schema::mutations::{unflatten_node, SemioDrawingMutation};
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
+use crate::schema::diff::node_at;
+use crate::schema::mutations::{unflatten_node, SemioDrawingMutation};
+use crate::schema::snapshot::SemioDrawingSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

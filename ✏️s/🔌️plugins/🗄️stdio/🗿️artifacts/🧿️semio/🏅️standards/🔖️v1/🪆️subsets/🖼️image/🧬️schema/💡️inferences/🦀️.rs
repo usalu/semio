@@ -5,7 +5,7 @@
 //! inference gets its own `<emoji><slug>/` child (currently: `📐dimensions/`, honestly derivable
 //! from `width`/`height`/`colorspace`/`bitDepth`/`frames` alone).
 
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use crate::schema::snapshot::SemioImageSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::dimensions::compute_semio_image_dimensions;

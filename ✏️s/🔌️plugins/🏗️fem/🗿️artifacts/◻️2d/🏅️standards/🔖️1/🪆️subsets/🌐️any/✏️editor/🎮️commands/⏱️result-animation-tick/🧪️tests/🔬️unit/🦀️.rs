@@ -252,7 +252,7 @@ mod long {
             } else if frame >= frames - fifth {
                 last += elapsed;
             }
-            semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one fair maintenance step per frame");
+            semio_framework_plugin::PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one fair maintenance step per frame");
             assert!(!semio_framework_plugin::PluginApp::maintenance_under_pressure(&*app), "frame {frame}: a frame never displaces a store owner");
         }
         assert_eq!(app.window_config_generation(&results_view()).await.expect("config generation"), config_generation, "no frame amended the window config");

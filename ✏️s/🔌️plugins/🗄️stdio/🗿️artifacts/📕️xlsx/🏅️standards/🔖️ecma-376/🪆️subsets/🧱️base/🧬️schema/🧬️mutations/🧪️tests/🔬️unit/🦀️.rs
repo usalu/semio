@@ -294,8 +294,8 @@ async fn codec_retention_law() {
         }],
         shared_strings: vec!["Hello".into()],
     });
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <XlsxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️FieldSweep

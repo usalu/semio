@@ -20,6 +20,6 @@ pub fn deserialize(from: &DeflateSnapshot) -> Result<ZipSnapshot, store::PackErr
 /// Decode deflate pack then parse.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_bytes(bytes: &[u8]) -> Result<ZipSnapshot, store::PackError> {
-    deserialize(&<DeflateSnapshot as store::ArtifactPack>::decode_pack(bytes)?)
+    deserialize(&<DeflateSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?)
 }
 //#endregion Codec

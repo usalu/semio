@@ -8,19 +8,19 @@ import { closeServiceSession, openServiceSession, publishServiceReady, readServi
 import { PLAY_RUNTIME_PANES, playRuntimeModuleLayout } from "./🟦️.ts";
 import { readPlayActivation } from "./♻️activation/🟦️.ts";
 import { PLAY_E2E_OWNER, playE2eInvocationPid, playE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
+import { pluginModulesRootIn } from "../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/♻️activation/🟦️.ts";
 
-/** 🎡️ Verifies every runtime component the outer Nx preparation graph staged for the profile. */
+/** 🎡️ Verifies every runtime component the outer Nx preparation graph staged into the one plugin-modules root. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const profile = args[0];
-    if (args.length !== 1 || !["dev", "release"].includes(profile)) throw new Error("prepare <dev|release>");
-    const moduleRoot = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
+    if (args.length) throw new Error("prepare accepts no arguments");
+    const moduleRoot = pluginModulesRootIn(this.repoRoot);
     const { pluginModuleDirNames, extensionModuleDirNames } = playRuntimeModuleLayout();
     for (const name of [...pluginModuleDirNames.slice(2), ...extensionModuleDirNames]) {
       const directory = join(moduleRoot, name), marker = JSON.parse(readFileSync(join(directory, ".nx-artifact.json"), "utf8"));
       if (!Array.isArray(marker.files) || !marker.files.includes("🌉️bridge.js") || !marker.files.includes("🔣️.json") || marker.files.some((file: string) => !existsSync(join(directory, file)))) throw new Error(`Incomplete play runtime component: ${name}`);
     }
-    console.log(`Prepared play ${profile}: ${PLAY_RUNTIME_PANES.length} panes, ${pluginModuleDirNames.length - 2 + extensionModuleDirNames.length} components`);
+    console.log(`Prepared play: ${PLAY_RUNTIME_PANES.length} panes, ${pluginModuleDirNames.length - 2 + extensionModuleDirNames.length} components`);
   }
 }
 

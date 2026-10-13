@@ -79,8 +79,8 @@ use semio_framework_pack_json::Value;
 use semio_framework_tool_machine::{node_drag_emit, NodeDragEmit, NodeGraphEditRow};
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use semio_framework_2d::compute::EngineHandles;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 
 //#region 🔖️Constants
 pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
@@ -88,14 +88,14 @@ pub const SEQUENCE_PLAY_APP_ID: &str = "s.sequence.sequence@1/*#editor";
 /// 🔁️ The whole-document replacement `setActiveExample` publishes — the sanctioned non-history
 /// "replace the whole document" gesture (`ArtifactStore::reset`, applied host-side), which a
 /// composed-child document needs because the taxonomy forbids a whole-snapshot mutation variant.
-/// The spr is a fresh, edit-free op-log built with `store::empty_document_spr` — NEVER a live
+/// The spr is a fresh, edit-free op-log built with `store::os_store::text_format::empty_document_spr` — NEVER a live
 /// `ArtifactEnvelope` minted just to print one: such an envelope is a terminal store shell whose
 /// `Drop` asserts that its app-owned bounded retirement authority detached every nested owner first,
 /// and nothing on this path ever mounts or retires it, so the envelope route traps the guest
 /// (`🧊️process3d` lost its whole editor to exactly this).
 pub fn reset_sequence_document_effect(document: &SequenceSnapshot) -> semio_framework_plugin::Effect {
     let pack = crate::standards::v1::subsets::any::io::snapshot_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(SEQUENCE_PLAY_APP_ID, SEQUENCE_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 pub use catalogue_panel::SEQUENCE_PLAY_BODY_CATALOGUE;
@@ -2846,7 +2846,7 @@ impl SequenceImportJob {
                             Ok(mut control) => {
                                 let result = if let Some(projection) = self.projection.as_mut() {
                                     match projection.normal_step_demands() {
-                                        Ok(demand) => projection.step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, &mut control, sequence_demand_grant(demand)),
+                                        Ok(demand) => projection.step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES, &mut control, sequence_demand_grant(demand)),
                                         Err(error) => Err(error),
                                     }
                                 } else if let (Some(parser), Some(MediaPayload::Structured { json, .. })) = (self.parser.as_mut(), self.media.as_ref().map(|media| &media.payload)) {
@@ -2913,7 +2913,7 @@ impl SequenceImportJob {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
         if let Some(active) = self.retirement.as_ref() {
-            return Self::nested(store::artifact_retirement_box_demands(active, body)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?);
         }
         if self.children.is_some() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -2923,19 +2923,19 @@ impl SequenceImportJob {
             return Ok(semio_framework_value::RetirementDemand { copy_bytes, capacity_bytes: input.next_close_capacity_byte_demand(copy_bytes)?, release_bytes: input.next_close_release_byte_demand()?, depth: input.next_close_depth_demand()?.max(1) });
         }
         if self.params.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.params)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.params)?);
         }
         if self.media.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.media)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media)?);
         }
         if self.parser.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.parser)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.parser)?);
         }
         if self.projection.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.projection)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.projection)?);
         }
         if self.port.is_some() {
-            return Self::nested(store::artifact_retirement_owned_birth_demands(&self.port)?);
+            return Self::nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.port)?);
         }
         if self.completion.is_some() {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
@@ -2984,7 +2984,7 @@ impl SequenceImportJob {
             return unit();
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, child).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.children.take().is_some() {
             return unit();
@@ -2996,20 +2996,20 @@ impl SequenceImportJob {
             return Ok(RetainedCloneStep::Progress(step.progress()));
         }
         if self.params.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.params, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.params, &mut self.retirement, child);
         }
         if self.media.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.media, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media, &mut self.retirement, child);
         }
         if self.parser.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.parser, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.parser, &mut self.retirement, child);
         }
         if self.projection.is_some() {
             self.decode_receipt = None;
-            return store::artifact_retirement_admit_owned(&mut self.projection, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.projection, &mut self.retirement, child);
         }
         if self.port.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.retirement, child);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.retirement, child);
         }
         if self.completion.take().is_some() {
             return unit();

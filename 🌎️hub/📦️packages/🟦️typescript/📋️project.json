@@ -38,39 +38,6 @@
       },
       "outputs": []
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "cache": true,
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "cache": true,
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "cache": true,
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "two-client-e2e": {
       "metadata": {
         "semio": {

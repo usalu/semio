@@ -2,9 +2,9 @@
 //! the column's `column_name` (`📓️taxonomy.md`'s `edit` row literally lists "cell" as an example:
 //! "Replace an authored content body (text, cell, code)").
 
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

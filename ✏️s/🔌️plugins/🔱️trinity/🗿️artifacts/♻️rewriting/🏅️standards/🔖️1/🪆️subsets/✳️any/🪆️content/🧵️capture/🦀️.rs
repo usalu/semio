@@ -4,7 +4,7 @@ use store::ArtifactChildRead;
 use semio_framework_plugin::ChildContentView;
 use semio_framework_os_kernel::sqlite_snapshot::{SqliteSnapshotControl,SqliteSnapshotPhase};
 use semio_framework_value::{DecodedValue,NativeDecodeControl,NativeEncodeControl,ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
 
 pub(crate) const WORKING_CHILD_SLOT:&str="workingGraph";
 

@@ -920,12 +920,12 @@ fn generation2d_artifact_mutation_retained_bytes(mutation: &Generation2dMutation
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "generation2d-artifact-mutation-encode-failed".to_string())
 }
 
-fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_generation2d_artifact_mutation(mutation: &Generation2dMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = generation2d_artifact_mutation_retained_bytes(mutation)?;
     if retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES {
         return Err("generation2d-artifact-mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
 }
 
 /// 🧬️ Raises the mutation's delta, applies it and CLOSES the delta — a `Generation2dDiff` owns the
@@ -956,25 +956,25 @@ struct Generation2dArtifactStorePreparationFactory;
 
 struct Generation2dArtifactStorePreparation {
     owners: store::OneItemOwners<Generation2dSnapshot, Generation2dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation2dMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Generation2dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Generation2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("generation2d-artifact-lane".into());
         }
         admit_generation2d_artifact_mutation(mutation)
     }
 
-    fn begin_demand(&self, _mutation: &Generation2dMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        if lane != store::HistoryLane::Document {
+    fn begin_demand(&self, _mutation: &Generation2dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err(generation2d_preparation_refusal("generation2d-artifact-lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dArtifactStorePreparation>(), depth: 1 })
@@ -982,9 +982,9 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generat
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dSnapshot, Generation2dMutation, Generation2dMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) {
             Ok(demand) => demand,
             Err(error) => return Err((error, request)),
@@ -997,28 +997,28 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dSnapshot, Generat
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > GENERATION2D_ARTIFACT_STORE_MAXIMUM_BYTES
         {
             return Err((generation2d_preparation_refusal("generation2d-artifact-request-refused"), request));
         }
-        Ok((Box::new(Generation2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
+        Ok((Box::new(Generation2dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMutation> for Generation2dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(generation2d_preparation_refusal("generation2d-artifact-original-refusal-retained"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-artifact-mutation-owner-missing"))?;
@@ -1033,20 +1033,20 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation2dSnapshot, Generation2dMutation>> {
         self.owners.prepared.take()
     }
 
@@ -1058,7 +1058,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dSnapshot, Generation2dMu
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -1107,20 +1107,20 @@ fn generation2d_config_publication_bytes(mutation: &Generation2dConfigMutation) 
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct Generation2dConfigPreparationFactory;
 
-impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<Generation2dConfigMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<Generation2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Generation2dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Generation2dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("generation2d-config-lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, generation2d_config_publication_bytes(mutation)?))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, generation2d_config_publication_bytes(mutation)?))
     }
 
-    fn begin_demand(&self, _mutation: &Generation2dConfigMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        if lane != store::HistoryLane::Document {
+    fn begin_demand(&self, _mutation: &Generation2dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err(generation2d_preparation_refusal("generation2d-config-lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Generation2dConfigPreparation>(), depth: 1 })
@@ -1128,9 +1128,9 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Generation2dConfig, Generation2dConfigMutation, Generation2dConfigMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) {
             Ok(demand) => demand,
             Err(error) => return Err((error, request)),
@@ -1148,7 +1148,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
         {
             return Err((generation2d_preparation_refusal("generation2d-config-request-refused"), request));
         }
-        Ok((Box::new(Generation2dConfigPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
+        Ok((Box::new(Generation2dConfigPreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), cancelled: false }), progress))
     }
 }
 //#endregion 🎟️Admission
@@ -1156,20 +1156,20 @@ impl store::ArtifactStoreOneItemPreparationFactory<Generation2dConfig, Generatio
 //#region 🧵️Preparation
 struct Generation2dConfigPreparation {
     owners: store::OneItemOwners<Generation2dConfig, Generation2dConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConfigMutation> for Generation2dConfigPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || grant.maximum_copy_bytes < GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(generation2d_preparation_refusal("generation2d-config-original-refusal-retained"));
         }
         if self.checkpoint.cursor != 0 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         let base = self.owners.base.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-config-base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| generation2d_preparation_refusal("generation2d-config-mutation-owner-missing"))?;
@@ -1196,18 +1196,18 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, copied_bytes: GENERATION2D_CONFIG_PUBLICATION_MAXIMUM_BYTES, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
         self.owners.prepared.as_ref()
     }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Generation2dConfig, Generation2dConfigMutation>> {
         self.owners.prepared.take()
     }
     fn cancel(&mut self) {
@@ -1217,7 +1217,7 @@ impl store::ArtifactStoreOneItemPreparation<Generation2dConfig, Generation2dConf
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -1368,28 +1368,28 @@ impl Generation2dImportJob {
             return Ok(semio_framework_value::RetirementDemand { depth: 1, ..Default::default() });
         }
         if let Some(owner) = self.active.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.pending_completion_rejection.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection);
         }
         if self.mutations.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.mutations);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutations);
         }
         if self.media_intrinsic.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.media_intrinsic);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_intrinsic);
         }
         if self.media_json.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.media_json);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media_json);
         }
         if self.port.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.port);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.port);
         }
         if self.snapshot.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.snapshot);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot);
         }
         if self.completion.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.completion);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion);
         }
         Ok(Default::default())
     }
@@ -1415,28 +1415,28 @@ impl Generation2dImportJob {
             return Ok(RetainedCloneProgress { copied_items: 1, ..Default::default() });
         }
         if self.active.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, grant).map(|step| step.progress());
         }
         if self.pending_completion_rejection.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_completion_rejection, &mut self.active, grant).map(|step| step.progress());
         }
         if self.mutations.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutations, &mut self.active, grant).map(|step| step.progress());
         }
         if self.media_intrinsic.is_some() {
             self.media_position = 0;
-            return store::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_intrinsic, &mut self.active, grant).map(|step| step.progress());
         }
         if self.media_json.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.media_json, &mut self.active, grant).map(|step| step.progress());
         }
         if self.port.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.port, &mut self.active, grant).map(|step| step.progress());
         }
         if self.snapshot.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).map(|step| step.progress());
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.snapshot, &mut self.active, grant).map(|step| step.progress());
         }
-        store::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).map(|step| step.progress())
+        store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.completion, &mut self.active, grant).map(|step| step.progress())
     }
 }
 
@@ -1622,7 +1622,7 @@ impl ArtifactEditor for Generation2dPlayApp {
 
     const REQUIRES_DOCUMENT_STORE_PUBLICATION_AUTHORITY: bool = true;
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::generation2d_envelope_decode_owner_bundle())
     }
 
@@ -1632,11 +1632,11 @@ impl ArtifactEditor for Generation2dPlayApp {
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::host::owned::generation2d_document_store_initialization_job(envelope, operation, generation, actor))
     }
 
@@ -1654,11 +1654,11 @@ impl ArtifactEditor for Generation2dPlayApp {
     const DIALECT: Dialect = GENERATION2D_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GENERATION_2D_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Generation2dArtifactStorePreparationFactory))
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Generation2dConfigPreparationFactory))
     }
 
@@ -2008,7 +2008,7 @@ impl ArtifactEditor for Generation2dPlayApp {
                 Ok(semio_framework_plugin::Media { media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, payload: semio_framework_plugin::MediaPayload::Structured { schema: "2d.drawing".into(), json: layers_json } })
             }
             "artifact:out" => {
-                let bytes = store::ArtifactPack::encode_pack(doc.snapshot);
+                let bytes = store::os_store::serialization::ArtifactPack::encode_pack(doc.snapshot);
                 Ok(semio_framework_plugin::Media {
                     media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Flow },
                     payload: semio_framework_plugin::MediaPayload::Structured { schema: Self::DOCUMENT_SCHEMA.to_string(), json: store::pack_rt::pack_value_to_base64(&bytes) },
@@ -2347,10 +2347,10 @@ fn generation2d_render_body(
 }
 
 /// 🧬️ The whole-document replacement that picking an example or importing a file emits: the artifact's load effect, outside undo history and
-/// never a mutation row. `store::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
+/// never a mutation row. `store::os_store::text_format::empty_document_spr` (never a minted `create_document_envelope`) keeps the guest off the
 /// `terminal shell reached Drop before its app-owned bounded retirement authority detached` trap on this path.
 pub fn reset_generation2d_document_effect(document: &Generation2dSnapshot) -> Effect {
-    let pack = <Generation2dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("generation2d", GENERATION_2D_SCHEMA));
+    let pack = <Generation2dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("generation2d", GENERATION_2D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }

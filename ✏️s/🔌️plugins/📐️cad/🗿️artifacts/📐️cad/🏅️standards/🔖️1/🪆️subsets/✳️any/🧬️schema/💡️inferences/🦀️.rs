@@ -78,7 +78,7 @@ mod derive_transformation {
     #[cfg(test)]
     use crate::standards::v1::subsets::any::schema::geometry::CadPrimitiveSlot;
 
-    use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, Vec3};
+    use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::Vec3};
     #[cfg(test)]
     use std::collections::HashMap;
 
@@ -576,8 +576,8 @@ mod scene_compute {
     #[cfg(test)] use crate::{CadWorkingScene};
     use semio_framework::parse_contributions;
     use semio_framework_plugin::{mesh_from_kind, MeshData, WorldProjectionConfig};
-    use semio_framework_3d::brep::engine::mesh_data_from_mesh_transfer;
-    use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle, MeshTransfer};
+    use semio_framework_3d_brep_engine::mesh_data_from_mesh_transfer;
+    use {semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle}, semio_framework_3d_brep_representation::contract::MeshTransfer};
     use std::sync::{OnceLock};
     #[cfg(test)] use std::sync::{Arc};
 
@@ -684,7 +684,7 @@ mod scene_compute {
             .filter_map(|object| {
                 if let Some(geometry) = geometry.filter(|geometry| object.solid_handle.as_ref().is_some_and(|id| geometry.owned_meshes.contains_key(id))) {
                     let snapshot = geometry.owned_breps.get(object.solid_handle.as_ref()?)?;
-                    let body = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot(snapshot).ok()?;
+                    let body = semio_s_artifact_stdio_semio_brep::schema::snapshot::body::body_from_snapshot(snapshot).ok()?;
                     let local = kernel.merge_representation(body);
                     return Some(local.into_iter().filter_map(|solid| place_object_solid(kernel, solid, object)).collect::<Vec<_>>());
                 }

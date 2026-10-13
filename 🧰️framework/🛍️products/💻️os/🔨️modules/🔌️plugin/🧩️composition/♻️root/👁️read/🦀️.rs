@@ -1,8 +1,10 @@
+use semio_framework_value::retirement::controlled::ControlledRetirement;
+use std::mem::ManuallyDrop;
 /// 👁️ Returns exact child reads to their original registries before releasing final view backing.
 pub struct ChildContentReadRetirement {
  view:ManuallyDrop<ChildContentView>,
  pending:ManuallyDrop<Option<ChildContentEntry>>,
- returned:ManuallyDrop<Option<ControlledRetirement<store::SnapshotReadReturn>>>,
+ returned:ManuallyDrop<Option<ControlledRetirement<store::os_store::snapshot_read::SnapshotReadReturn>>>,
  metadata:ManuallyDrop<Option<ControlledRetirement<ChildContentReadMetadata>>>,
 }
 
@@ -22,7 +24,7 @@ impl ChildContentReadRetirement {
  pub fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
   if let Some(owner)=self.returned.as_ref(){return Self::child_demands(owner,copy)}
   if let Some(owner)=self.metadata.as_ref(){return Self::child_demands(owner,copy)}
-  if self.pending.is_some(){return Ok(store::ErasedSnapshotRead::prepared_return_demands())}
+  if self.pending.is_some(){return Ok(store::os_store::snapshot_read::ErasedSnapshotRead::prepared_return_demands())}
   Ok(RetirementDemand{release_bytes:self.view.next_take_release_bytes(),depth:usize::from(!self.terminal_is_empty()),..Default::default()})
  }
  pub fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{

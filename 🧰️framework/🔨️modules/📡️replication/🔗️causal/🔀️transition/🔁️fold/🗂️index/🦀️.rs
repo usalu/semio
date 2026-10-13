@@ -8,18 +8,19 @@ struct FoldIndexNode<K, V> { entry: Option<(K,V)>, retired_entry:Option<(K,V)>, 
 
 /// 🌳️ Ordered fold facts own every arena slot and displaced key until exact retirement.
 #[derive(Clone, Debug)]
-pub struct HistoryFoldIndex<K, V> { nodes: PagedList<FoldIndexNode<K,V>,{usize::MAX}>, root: Option<usize>, free_head:Option<usize>, displaced_keys: PagedList<K,{usize::MAX}> }
+pub struct HistoryFoldIndex<K, V> { nodes: PagedList<FoldIndexNode<K,V>,{usize::MAX}>, root: Option<usize>, free_head:Option<usize>, displaced_keys: PagedList<K,{usize::MAX}>, mutation_epoch:u64 }
 impl<K:Ord,V:PartialEq> PartialEq for HistoryFoldIndex<K,V>{fn eq(&self,other:&Self)->bool{self.len()==other.len()&&self.iter().eq(other.iter())}}
 impl<K:Ord,V:Eq> Eq for HistoryFoldIndex<K,V>{}
-impl<K,V> Default for HistoryFoldIndex<K,V> { fn default()->Self { Self { nodes: PagedList::empty(), root: None, free_head:None, displaced_keys: PagedList::empty() } } }
+impl<K,V> Default for HistoryFoldIndex<K,V> { fn default()->Self { Self { nodes: PagedList::empty(), root: None, free_head:None, displaced_keys: PagedList::empty(), mutation_epoch:0 } } }
 impl<K:Ord,V> HistoryFoldIndex<K,V> {
     pub fn new()->Self { Self::default() }
     pub fn len(&self)->usize { self.count(self.root) }
     pub fn is_empty(&self)->bool { self.root.is_none() }
     /// 🪹️ Clears the logical root while retaining every original slot for explicit retirement.
-    pub fn clear(&mut self){self.root=None;}
+    pub fn clear(&mut self){self.root=None;self.mark_mutation();}
     /// 🪹️ Physical emptiness includes every retained arena and displaced original key backing.
     pub fn terminal_is_empty(&self)->bool {self.root.is_none()&&self.nodes.capacity()==0&&self.displaced_keys.capacity()==0}
+    fn mark_mutation(&mut self){self.mutation_epoch=self.mutation_epoch.checked_add(1).expect("original index mutation epoch overflow");}
     fn height(&self,root:Option<usize>)->usize { root.map_or(0,|root|self.nodes[root].height) }
     fn count(&self,root:Option<usize>)->usize { root.map_or(0,|root|self.nodes[root].count) }
     fn refresh(&mut self,root:usize) { self.nodes[root].height=1+self.height(self.nodes[root].left).max(self.height(self.nodes[root].right)); self.nodes[root].count=1+self.count(self.nodes[root].left)+self.count(self.nodes[root].right); }
@@ -69,14 +70,14 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
         let(root,previous)=self.insert_at(self.root,key,value);self.root=Some(root);Ok((previous,RetainedCloneProgress{copied_items:1,..Default::default()}))
     }
 
-    fn insert_at(&mut self,root:Option<usize>,key:K,value:V)->(usize,Option<V>) { let Some(root)=root else {let node=FoldIndexNode{entry:Some((key,value)),retired_entry:None,left:None,right:None,height:1,count:1};let index=if let Some(index)=self.free_head{self.free_head=self.nodes[index].left;self.nodes[index]=node;index}else{let index=self.nodes.len();self.nodes.push(node);index};return(index,None)};let order=key.cmp(&self.nodes[root].entry.as_ref().unwrap().0);let previous=match order {Ordering::Less=>{let(child,previous)=self.insert_at(self.nodes[root].left,key,value);self.nodes[root].left=Some(child);previous},Ordering::Greater=>{let(child,previous)=self.insert_at(self.nodes[root].right,key,value);self.nodes[root].right=Some(child);previous},Ordering::Equal=>{self.displaced_keys.push(key);return(root,Some(std::mem::replace(&mut self.nodes[root].entry.as_mut().unwrap().1,value)));}};(self.balance(root),previous) }
+    fn insert_at(&mut self,root:Option<usize>,key:K,value:V)->(usize,Option<V>) { let Some(root)=root else {self.mark_mutation();let node=FoldIndexNode{entry:Some((key,value)),retired_entry:None,left:None,right:None,height:1,count:1};let index=if let Some(index)=self.free_head{self.free_head=self.nodes[index].left;self.nodes[index]=node;index}else{let index=self.nodes.len();self.nodes.push(node);index};return(index,None)};let order=key.cmp(&self.nodes[root].entry.as_ref().unwrap().0);let previous=match order {Ordering::Less=>{let(child,previous)=self.insert_at(self.nodes[root].left,key,value);self.nodes[root].left=Some(child);previous},Ordering::Greater=>{let(child,previous)=self.insert_at(self.nodes[root].right,key,value);self.nodes[root].right=Some(child);previous},Ordering::Equal=>{self.mark_mutation();self.displaced_keys.push(key);return(root,Some(std::mem::replace(&mut self.nodes[root].entry.as_mut().unwrap().1,value)));}};(self.balance(root),previous) }
     pub fn insert(&mut self,key:K,value:V)->Option<V> { let(root,previous)=self.insert_at(self.root,key,value);self.root=Some(root);previous }
     pub fn get_or_insert(&mut self,key:K,value:V)->&mut V { if let Some(index)=self.locate(&key){self.displaced_keys.push(key);return &mut self.nodes[index].entry.as_mut().unwrap().1;}let index=self.free_head.unwrap_or(self.nodes.len());let(root,_)=self.insert_at(self.root,key,value);self.root=Some(root);&mut self.nodes[index].entry.as_mut().unwrap().1 }
     fn detach_first(&mut self,root:usize)->(Option<usize>,usize) {if let Some(left)=self.nodes[root].left {let(next,first)=self.detach_first(left);self.nodes[root].left=next;(Some(self.balance(root)),first)}else{(self.nodes[root].right,root)}}
     fn detach_last(&mut self,root:usize)->(Option<usize>,usize) {if let Some(right)=self.nodes[root].right {let(next,last)=self.detach_last(right);self.nodes[root].right=next;(Some(self.balance(root)),last)}else{(self.nodes[root].left,root)}}
     fn remove_at<Q:Ord+?Sized>(&mut self,root:Option<usize>,key:&Q)->(Option<usize>,Option<(K,V)>) where K:Borrow<Q> { let Some(root)=root else{return(None,None)};let order=key.cmp(self.nodes[root].entry.as_ref().unwrap().0.borrow());match order {Ordering::Less=>{let(next,entry)=self.remove_at(self.nodes[root].left,key);self.nodes[root].left=next;(Some(self.balance(root)),entry)},Ordering::Greater=>{let(next,entry)=self.remove_at(self.nodes[root].right,key);self.nodes[root].right=next;(Some(self.balance(root)),entry)},Ordering::Equal=>self.detach_entry(root)} }
     fn vacate_slot(&mut self,index:usize){self.nodes[index].left=self.free_head;self.nodes[index].right=None;self.nodes[index].count=0;self.nodes[index].height=0;self.free_head=Some(index)}
-    fn detach_entry(&mut self,root:usize)->(Option<usize>,Option<(K,V)>) {let entry=self.nodes[root].entry.take();let next=match(self.nodes[root].left,self.nodes[root].right){(None,right)=>right,(left,None)=>left,(left,Some(right))=>{let(next,successor)=self.detach_first(right);self.nodes[successor].left=left;self.nodes[successor].right=next;Some(self.balance(successor))}};self.vacate_slot(root);(next,entry)}
+    fn detach_entry(&mut self,root:usize)->(Option<usize>,Option<(K,V)>) {self.mark_mutation();let entry=self.nodes[root].entry.take();let next=match(self.nodes[root].left,self.nodes[root].right){(None,right)=>right,(left,None)=>left,(left,Some(right))=>{let(next,successor)=self.detach_first(right);self.nodes[successor].left=left;self.nodes[successor].right=next;Some(self.balance(successor))}};self.vacate_slot(root);(next,entry)}
     fn remove_rank_at(&mut self,root:Option<usize>,rank:usize)->(Option<usize>,Option<(K,V)>) {let Some(root)=root else{return(None,None)};let left=self.count(self.nodes[root].left);match rank.cmp(&left){Ordering::Less=>{let(next,entry)=self.remove_rank_at(self.nodes[root].left,rank);self.nodes[root].left=next;(Some(self.balance(root)),entry)},Ordering::Greater=>{let(next,entry)=self.remove_rank_at(self.nodes[root].right,rank-left-1);self.nodes[root].right=next;(Some(self.balance(root)),entry)},Ordering::Equal=>self.detach_entry(root)}}
     /// 🎟️ Counts original arena slots, including holes, without collecting a key directory.
     pub fn slot_count(&self)->usize {self.nodes.len()}
@@ -91,7 +92,7 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 🍂️ Examines one original slot and transfers its original row without allocation or cloning.
     pub fn extract_slot_if(&mut self,index:usize,keep:impl FnOnce(&K,&V)->bool)->Option<(K,V)> {
         let (key,value)=self.nodes.get(index)?.entry.as_ref()?;if keep(key,value){return None;}
-        if self.locate(key)!=Some(index){let entry=self.nodes[index].entry.take();self.vacate_slot(index);return entry;}
+        if self.locate(key)!=Some(index){self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);return entry;}
         let mut root=self.root;let mut rank=0;
         while let Some(cursor)=root {let left=self.count(self.nodes[cursor].left);match key.cmp(&self.nodes[cursor].entry.as_ref().unwrap().0){Ordering::Less=>root=self.nodes[cursor].left,Ordering::Greater=>{rank+=left+1;root=self.nodes[cursor].right;},Ordering::Equal=>{rank+=left;break;}}}
         let (root,entry)=self.remove_rank_at(self.root,rank);self.root=root;entry
@@ -121,9 +122,9 @@ impl<K:Ord,V> HistoryFoldIndex<K,V> {
     /// 🎟️ Transfers the original key and value while retaining every arena backing allocation.
     pub fn remove_entry<Q:Ord+?Sized>(&mut self,key:&Q)->Option<(K,V)> where K:Borrow<Q> {let(root,entry)=self.remove_at(self.root,key);self.root=root;entry}
     pub fn remove<Q:Ord+?Sized>(&mut self,key:&Q)->Option<V> where K:Borrow<Q> {self.remove_entry(key).map(|(key,value)|{self.displaced_keys.push(key);value})}
-    pub fn pop_first(&mut self)->Option<(K,V)> {let(root,index)=self.detach_first(self.root?);self.root=root;let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
+    pub fn pop_first(&mut self)->Option<(K,V)> {let(root,index)=self.detach_first(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
     /// 🪵️ Transfers the original greatest-key row while retaining its native arena slot.
-    pub fn pop_last(&mut self)->Option<(K,V)> {let(root,index)=self.detach_last(self.root?);self.root=root;let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
+    pub fn pop_last(&mut self)->Option<(K,V)> {let(root,index)=self.detach_last(self.root?);self.root=root;self.mark_mutation();let entry=self.nodes[index].entry.take();self.vacate_slot(index);entry}
     fn ranked(&self,mut rank:usize)->Option<(&K,&V)> {let mut root=self.root;while let Some(index)=root{let left=self.count(self.nodes[index].left);if rank<left{root=self.nodes[index].left;}else if rank==left{let(key,value)=self.nodes[index].entry.as_ref().unwrap();return Some((key,value));}else{rank-=left+1;root=self.nodes[index].right;}}None}
     /// 🔎️ Borrows the next strictly greater key without allocating a range cursor.
     pub fn first_entry_after<Q:Ord+?Sized>(&self,key:&Q)->Option<(&K,&V)> where K:Borrow<Q> {let mut root=self.root;let mut candidate=None;while let Some(index)=root{let(entry,_)=self.nodes[index].entry.as_ref().unwrap();if entry.borrow()>key{candidate=Some(index);root=self.nodes[index].left;}else{root=self.nodes[index].right;}}candidate.map(|index|{let(key,value)=self.nodes[index].entry.as_ref().unwrap();(key,value)})}
@@ -204,7 +205,7 @@ impl<'de,K:Ord+serde::Deserialize<'de>,V:serde::Deserialize<'de>> serde::Deseria
 }
 
 impl<K:RetireOwned,V:RetireOwned> RetireOwned for FoldIndexNode<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.entry),deferred(self.retired_entry),deferred(self.left),deferred(self.right),deferred(self.height),deferred(self.count)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.entry),deferred_birth_bytes_for(&self.retired_entry),deferred_birth_bytes_for(&self.left),deferred_birth_bytes_for(&self.right),deferred_birth_bytes_for(&self.height),deferred_birth_bytes_for(&self.count)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
-impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.nodes),deferred(self.root),deferred(self.free_head),deferred(self.displaced_keys)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.nodes),deferred_birth_bytes_for(&self.root),deferred_birth_bytes_for(&self.free_head),deferred_birth_bytes_for(&self.displaced_keys)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
+impl<K:RetireOwned,V:RetireOwned> RetireOwned for HistoryFoldIndex<K,V>{fn retirement(self)->Box<dyn RetirementCursor>{sequence(vec![deferred(self.nodes),deferred(self.root),deferred(self.free_head),deferred(self.displaced_keys),deferred(self.mutation_epoch)])}fn retirement_birth_bytes(&self)->Option<usize>{sequence_birth_bytes(&[deferred_birth_bytes_for(&self.nodes),deferred_birth_bytes_for(&self.root),deferred_birth_bytes_for(&self.free_head),deferred_birth_bytes_for(&self.displaced_keys),deferred_birth_bytes_for(&self.mutation_epoch)])}fn controlled_retirement_supported()->bool{K::controlled_retirement_supported()&&V::controlled_retirement_supported()}}
 
 /// 🧺️ Owns arbitrary original membership keys in the same retained ordered arena.
 #[derive(Clone,Debug,PartialEq,Eq)]
@@ -242,7 +243,7 @@ impl<K:Ord> HistoryFoldSet<K>{
     pub fn iter(&self)->HistoryFoldSetIter<'_,K>{HistoryFoldSetIter{entries:self.0.iter()}}
     pub fn range<R:std::ops::RangeBounds<K>>(&self,bounds:R)->HistoryFoldSetIter<'_,K>{HistoryFoldSetIter{entries:self.0.range(bounds)}}
     /// 🪹️ Removes live membership while retaining every original key and arena allocation.
-    pub fn clear(&mut self){self.0.root=None;}
+    pub fn clear(&mut self){self.0.clear();}
 }
 /// 👀️ Borrows original live membership keys in either ordered direction.
 pub struct HistoryFoldSetIter<'a,K>{entries:HistoryFoldIndexIter<'a,K,()>}
@@ -275,3 +276,7 @@ impl<K:AsRef<str>+Ord+Sync+'static,V:semio_framework_pack_json::ArtifactCanonica
 #[cfg(test)]
 #[path="🧪️tests/🦀️.rs"]
 mod tests;
+
+#[path="🪴️insert/🦀️.rs"]
+mod original_insertion;
+pub use original_insertion::HistoryFoldIndexInsert;

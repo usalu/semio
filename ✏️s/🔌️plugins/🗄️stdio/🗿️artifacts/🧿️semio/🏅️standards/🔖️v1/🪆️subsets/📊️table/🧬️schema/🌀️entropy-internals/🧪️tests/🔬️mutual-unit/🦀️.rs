@@ -3,7 +3,7 @@ mod tests {
 
     #[test]
     fn mi_of_independent_variables_is_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let n = 5000;
         let x: Vec<u32> = (0..n).map(|_| rng.next_below(4) as u32).collect();
         let y: Vec<u32> = (0..n).map(|_| rng.next_below(4) as u32).collect();
@@ -13,7 +13,7 @@ mod tests {
 
     #[test]
     fn mi_of_identical_variables_equals_entropy() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
         let x: Vec<u32> = (0..2000).map(|_| rng.next_below(5) as u32).collect();
         let mi = mutual_information(&x, &x, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
         let counts = Counts::from_symbols(&x, 5).unwrap();
@@ -28,7 +28,7 @@ mod tests {
 
     #[test]
     fn cmi_zero_when_x_and_y_independent_given_z() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let n = 4000;
         let z: Vec<u32> = (0..n).map(|_| rng.next_below(2) as u32).collect();
         let x: Vec<u32> = (0..n).map(|_| rng.next_below(2) as u32).collect();
@@ -40,7 +40,7 @@ mod tests {
     #[test]
     fn ksg1_matches_gaussian_closed_form() {
         // 🔐️ bivariate Gaussian with correlation rho: I(X;Y) = -0.5*ln(1-rho^2).
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(4);
         let rho = 0.6_f64;
         let n = 2000;
         let mut x = Vec::with_capacity(n);
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn ksg2_matches_gaussian_closed_form() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(5);
         let rho = 0.5_f64;
         let n = 2000;
         let mut x = Vec::with_capacity(n);
@@ -78,7 +78,7 @@ mod tests {
 
     #[test]
     fn ksg_mi_of_independent_gaussians_is_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(6);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(6);
         let n = 1500;
         let x: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
         let y: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
@@ -89,7 +89,7 @@ mod tests {
 
     #[test]
     fn total_correlation_of_independent_variables_is_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(7);
         let n = 3000;
         let a: Vec<u32> = (0..n).map(|_| rng.next_below(3) as u32).collect();
         let b: Vec<u32> = (0..n).map(|_| rng.next_below(3) as u32).collect();
@@ -107,7 +107,7 @@ mod tests {
     #[test]
     fn o_information_of_redundant_copy_is_positive() {
         // 🔐️ X1=X2=X3 (perfect redundancy): O-information should be strongly positive.
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(8);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(8);
         let x: Vec<u32> = (0..2000).map(|_| rng.next_below(4) as u32).collect();
         let est = o_information(&[&x, &x, &x], &[4, 4, 4], LogBase::Nats).unwrap();
         assert!(est.value > 0.5, "got {}", est.value);

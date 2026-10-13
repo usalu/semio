@@ -87,30 +87,30 @@ fn every_fourteen_variant_decodes_through_retained_structural_grants() {
 }
 
 struct OuterPackField {
-    authority: Option<Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>>,
+    authority: Option<Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>>>,
     maximum_close_byte_demand: usize,
     maximum_retained_close_bytes: usize,
 }
 
 impl OuterPackField {
-    fn diagnostic(code: &'static str) -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic(code: &'static str) -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code, offset: 0, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
-impl store::ArtifactEnvelopeFieldDecoder<Generation2dSnapshot, Generation2dMutation> for OuterPackField {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoder<Generation2dSnapshot, Generation2dMutation> for OuterPackField {
     fn accept_field_token(
         &mut self,
         _field_id: u16,
-        _token: store::OwnedSchemaToken,
+        _token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Err(Self::diagnostic("generation2d-retained-pack.outer-field-not-readable"))
     }
 
-    fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn finish_record(&mut self, _cx: &mut semio_framework_job::StepContext<'_>) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Err(Self::diagnostic("generation2d-retained-pack.outer-record-not-readable"))
     }
 
@@ -122,23 +122,23 @@ impl store::ArtifactEnvelopeFieldDecoder<Generation2dSnapshot, Generation2dMutat
         self.maximum_retained_close_bytes
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_copy_byte_demand())
     }
 
-    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_capacity_byte_demand(maximum_copy_bytes))
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_release_byte_demand())
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         self.authority.as_ref().map_or(Ok(0), |authority| authority.next_close_depth_demand().map(|depth| depth + 1))
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         let Some(authority) = self.authority.as_mut() else { return Ok(store::RetainedCloneStep::Complete(Default::default())) };
         if authority.terminal_is_empty() {
             drop(self.authority.take());
@@ -163,11 +163,11 @@ impl Drop for OuterPackField {
     }
 }
 
-fn outer_pack_record(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> store::OwnedSchemaRecordCursor {
-    let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 2 }).expect("outer retained Pack record credits");
-    pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(b"{}").expect("outer retained Pack record page")).unwrap_or_else(|_| panic!("outer retained Pack page admission"));
+fn outer_pack_record(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> store::os_store::owned_schema_decode::OwnedSchemaRecordCursor {
+    let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 2 }).expect("outer retained Pack record credits");
+    pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(b"{}").expect("outer retained Pack record page")).unwrap_or_else(|_| panic!("outer retained Pack page admission"));
     pages.seal().expect("outer retained Pack record seal");
-    store::artifact_envelope_decode_record(operation, generation, pages).unwrap_or_else(|_| panic!("outer retained Pack record cursor"))
+    store::os_store::owned_schema_decode::artifact_envelope_decode_record(operation, generation, pages).unwrap_or_else(|_| panic!("outer retained Pack record cursor"))
 }
 
 #[test]
@@ -187,24 +187,24 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
         session.admit_byte(0).expect("outer retained Pack source byte");
     }
     let admitted_source_bytes = session.progress().expect("outer retained Pack source progress").allocated_bytes;
-    assert!(admitted_source_bytes > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+    assert!(admitted_source_bytes > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
 
-    let mut snapshot = Generation2dPackSnapshotAuthority::new(operation, generation, store::OwnedSchemaPath::field("initialPack").expect("outer retained Pack snapshot path"));
+    let mut snapshot = Generation2dPackSnapshotAuthority::new(operation, generation, store::os_store::owned_schema_decode::OwnedSchemaPath::field("initialPack").expect("outer retained Pack snapshot path"));
     *snapshot.session = Some(session);
     snapshot.state = Generation2dPackSnapshotState::Ingest;
-    let vcs = store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+    let vcs = store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
         Box::new(snapshot),
         std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
         std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
-        store::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
+        store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
     )
     .unwrap_or_else(|_| panic!("outer retained Pack VCS admission"));
-    let vcs: Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>> = Box::new(vcs);
+    let vcs: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<Generation2dSnapshot, Generation2dMutation>> = Box::new(vcs);
     let maximum_close_byte_demand = vcs.maximum_close_byte_demand();
     let maximum_retained_close_bytes = vcs.maximum_retained_close_bytes();
-    let registry = store::ArtifactEnvelopeFieldDecoderRegistry::new();
+    let registry = store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecoderRegistry::new();
     let fields = Box::new(OuterPackField { authority: Some(vcs), maximum_close_byte_demand, maximum_retained_close_bytes });
-    let mut job = store::ArtifactEnvelopeDecodeAuthority::try_new(outer_pack_record(operation, generation), &registry, fields).unwrap_or_else(|_| panic!("outer retained Pack decode admission"));
+    let mut job = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeAuthority::try_new(outer_pack_record(operation, generation), &registry, fields).unwrap_or_else(|_| panic!("outer retained Pack decode admission"));
     InteractiveJob::begin_close(&mut job);
 
     let mut refused_subexact = false;
@@ -218,7 +218,7 @@ fn retained_pack_outer_cancellation_preserves_subexact_source_and_releases_exact
             assert!(store::ErasedSnapshotRetirement::terminal_is_empty(&returned));
         }
         let release = InteractiveJob::next_close_release_byte_demand(&job).expect("outer retained Pack close demand");
-        if release > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && !refused_subexact {
+        if release > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES && !refused_subexact {
             let before = job.released_field_bytes();
             let exact = job_grant(&job);
             let subexact = store::RetainedCloneGrant { maximum_release_bytes: release - 1, ..exact };
@@ -254,28 +254,28 @@ struct RefusedSnapshotOwner {
 }
 
 impl RefusedSnapshotOwner {
-    fn diagnostic() -> store::OwnedSchemaDecodeDiagnostic {
-        store::OwnedSchemaDecodeDiagnostic { code: "generation2d-retained-pack.refused-snapshot-not-readable", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
+    fn diagnostic() -> store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic {
+        store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "generation2d-retained-pack.refused-snapshot-not-readable", offset: 0, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }
     }
 }
 
-impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for RefusedSnapshotOwner {
+impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for RefusedSnapshotOwner {
     fn accept_token(
         &mut self,
-        _token: store::OwnedSchemaToken,
+        _token: store::os_store::owned_schema_decode::OwnedSchemaToken,
         _terminal: bool,
-        _source: &store::OwnedSchemaRecordCursor,
+        _source: &store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Err(Self::diagnostic())
     }
 
     fn publish_reserved(
         &mut self,
-        _target: &mut dyn store::ArtifactEnvelopeSnapshotFieldTarget<Generation2dSnapshot>,
-        _reservation: store::ArtifactEnvelopeFieldReservation,
+        _target: &mut dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldTarget<Generation2dSnapshot>,
+        _reservation: store::os_store::owned_schema_decode::ArtifactEnvelopeFieldReservation,
         _cx: &mut semio_framework_job::StepContext<'_>,
-    ) -> Result<store::ArtifactEnvelopeFieldDecodeStep, store::OwnedSchemaDecodeDiagnostic> {
+    ) -> Result<store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Err(Self::diagnostic())
     }
 
@@ -287,23 +287,23 @@ impl store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot> for Ref
         self.maximum_retained_close_bytes
     }
 
-    fn next_close_copy_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_copy_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_capacity_byte_demand(&self, _maximum_copy_bytes: usize) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_release_byte_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_release_byte_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(0)
     }
 
-    fn next_close_depth_demand(&self) -> Result<usize, store::OwnedSchemaDecodeDiagnostic> {
+    fn next_close_depth_demand(&self) -> Result<usize, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         Ok(usize::from(!self.terminal))
     }
 
-    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::OwnedSchemaDecodeDiagnostic> {
+    fn close_step(&mut self, grant: store::RetainedCloneGrant) -> Result<store::RetainedCloneStep, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
         if self.terminal {
             return Ok(store::RetainedCloneStep::Complete(Default::default()));
         }
@@ -329,22 +329,22 @@ impl Drop for RefusedSnapshotOwner {
 #[test]
 fn retained_pack_outer_oversized_nested_snapshot_is_returned_for_close_before_vcs_admission() {
     let limits = [
-        (store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1, store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1),
-        (0, store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1),
+        (store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1),
+        (0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_CLOSE_ALLOCATION_BYTES + 1),
     ];
     for (maximum_close_byte_demand, maximum_retained_close_bytes) in limits {
         let closed = std::sync::Arc::new(std::sync::atomic::AtomicBool::new(false));
-        let snapshot: Box<dyn store::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>> = Box::new(RefusedSnapshotOwner {
+        let snapshot: Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<Generation2dSnapshot>> = Box::new(RefusedSnapshotOwner {
             maximum_close_byte_demand,
             maximum_retained_close_bytes,
             terminal: false,
             closed: std::sync::Arc::clone(&closed),
         });
-        let mut returned = store::ArtifactEnvelopeFreshVcsAuthority::try_new(
+        let mut returned = store::os_store::owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority::try_new(
             snapshot,
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dSnapshot>::default()),
             std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Generation2dMutation>::default()),
-            store::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
+            store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::edit_history_decoder(&Generation2dEnvelopeOwnedFieldCatalog),
         )
         .err()
         .expect("oversized nested snapshot must be returned before VCS admission");

@@ -11,7 +11,7 @@ pub use transient::{ChangePublicationTransient, PublicationTransient, Publicatio
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::app::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+    use crate::app_views::{NoConfig, NoConfigMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
     use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 
     /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.

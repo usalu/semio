@@ -1,8 +1,8 @@
 use super::super::bspline::de_boor;
 use super::Curve3;
 use super::*;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::Vec3;
+use crate::vector::matrix::Frame3;
+use crate::vector::Vec3;
 
 #[semio_framework_async_macros::async_test]
 async fn arc_length_of_line_equals_euclidean_distance() {

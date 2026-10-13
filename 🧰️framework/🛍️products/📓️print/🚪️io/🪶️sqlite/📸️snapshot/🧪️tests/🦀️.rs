@@ -1,6 +1,6 @@
 //! 📊️ Exact authored Chart domain and genuine public SQLite I/O laws.
 use crate::ChartSnapshot;
-use protocol::ArtifactSqliteSnapshot;
+use protocol::os_store::serialization::ArtifactSqliteSnapshot;
 use semio_framework_value::{DslValue,Number};
 use protocol::sqlite_snapshot::{export_sqlite_database,import_sqlite_database,SnapshotEncoding,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase};
 use std::{io::Write,process::{Command,Stdio}};

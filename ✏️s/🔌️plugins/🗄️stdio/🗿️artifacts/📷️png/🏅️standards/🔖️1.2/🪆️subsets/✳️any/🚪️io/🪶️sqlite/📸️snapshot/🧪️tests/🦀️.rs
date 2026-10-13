@@ -1,7 +1,7 @@
 use crate::standards::v1_2::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteValue},
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 
 fn fixture() -> PngSnapshot {

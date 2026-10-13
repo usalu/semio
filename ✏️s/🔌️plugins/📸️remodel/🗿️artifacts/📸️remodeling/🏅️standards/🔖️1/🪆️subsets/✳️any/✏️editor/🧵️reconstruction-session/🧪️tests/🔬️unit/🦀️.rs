@@ -42,7 +42,7 @@ const ORBIT_SHORT_LONG_EDGE_PX: u32 = 160;
 /// that completes without cameras.
 async fn imported_document(example: &str) -> Arc<RemodelingSnapshot> {
     if example == "synthetic-orbit" || example == "orbit-short" {
-        let mut scene = <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
+        let mut scene = <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("synthetic-orbit document parses");
         let kept = if example == "orbit-short" { ORBIT_SHORT_FRAMES } else { FRAMES.len() };
         for (asset_id, bytes) in FRAMES.iter().take(kept) {
             let image = crate::editor::remodeling::decode_still_image(FRAME_MIME, bytes).expect("frame decodes");

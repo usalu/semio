@@ -14,12 +14,12 @@ use crate::RemodelingSnapshot;
 
 /// 📖️ Parses `.remodeling` DSL text into a `RemodelingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RemodelingSnapshot, semio_framework_diagnostic::TextError> {
-    <RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RemodelingSnapshot` back to `.remodeling` DSL text.
 pub fn print_dsl(scene: &RemodelingSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(scene)
+    store::os_store::serialization::ArtifactDsl::print_dsl(scene)
 }
 
 //#region 🧪️Tests
@@ -43,7 +43,7 @@ use semio_framework_value_derive::{FromValue, ToValue};
 use std::collections::BTreeMap;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for RemodelingSnapshot {
+impl store::os_store::serialization::ArtifactDsl for RemodelingSnapshot {
     const EXTENSION: &'static str = "remodeling";
     fn envelope_id() -> &'static str {
         "remodeling.remodeling"
@@ -58,7 +58,7 @@ impl store::ArtifactDsl for RemodelingSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -115,7 +115,7 @@ use crate::standards::v1::subsets::any::schema::mutations::update_sfm_params::{u
 /// halves — the bytes against the committed artifact, and the projection against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn round_trip_remodeling_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let parsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed remodeling example does not parse: {error:?}"))?;
     let printed = <RemodelingSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RemodelingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted remodeling document does not parse: {error:?}"))?;

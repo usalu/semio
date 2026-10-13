@@ -4,26 +4,8 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-document")]
-    use super::super::export::serializers::artifacts::docx::v_ecma_376::any::SemioDocumentToDocx;
-    #[cfg(feature = "conversion-document")]
-    use super::super::export::serializers::artifacts::md::v_commonmark::any::SemioDocumentToMd;
-    #[cfg(feature = "conversion-document")]
-    use super::super::export::serializers::artifacts::pdf::v1_7::any::SemioDocumentToPdf;
-    #[cfg(feature = "conversion-document")]
-    use super::super::export::serializers::artifacts::txt::v_utf_8::any::SemioDocumentToTxt;
-    #[cfg(feature = "conversion-document")]
-    use super::super::import::deserializers::artifacts::docx::v_ecma_376::any::SemioDocumentFromDocx;
-    #[cfg(feature = "conversion-document")]
-    use super::super::import::deserializers::artifacts::md::v_commonmark::any::SemioDocumentFromMd;
-    #[cfg(feature = "conversion-document")]
-    use super::super::import::deserializers::artifacts::pdf::v1_7::any::SemioDocumentFromPdf;
-    #[cfg(feature = "conversion-document")]
-    use super::super::import::deserializers::artifacts::txt::v_utf_8::any::SemioDocumentFromTxt;
-    use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
-    use crate::standards::v1::subsets::document::io::SemioDocumentAnalyzer;
-    #[cfg(feature = "conversion-document")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of, io::ComposerEntry};
+    use crate::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
+    use crate::io::SemioDocumentAnalyzer;
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") };
@@ -132,8 +114,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_document_referential_integrity(&snapshot),
@@ -150,31 +132,6 @@ pub mod derived_composition {
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
-    /// 🚪️ document<->{docx,md,txt,pdf} bridge rows (W4 G6). Each pair contributes a
-    /// `deserializer_entry_of` (format -> semio, real `ArtifactDeserializer` leaf under
-    /// `🚪️io/📥️import/🧩️deserializers`) + a `serializer_entry_of` (semio -> format, real
-    /// `ArtifactSerializer` leaf under `🚪️io/📤️export/🧵️serializers`) row; `register_composer_entries`
-    /// derives all 4 `IoKey`s per pair (semio-Import/Export-format, format-Import/Export-semio) from
-    /// these 2 rows, per `io_compose_via`'s own doc comment / `register_composer_entries`'s
-    /// reads-derives-both-directions behavior.
-    #[cfg(feature = "conversion-document")]
-    static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-document")]
-    fn io_entries() -> &'static [ComposerEntry] {
-        IO_ENTRIES.get_or_init(|| {
-            vec![
-                deserializer_entry_of::<SemioDocumentFromDocx>(),
-                serializer_entry_of::<SemioDocumentToDocx>(),
-                deserializer_entry_of::<SemioDocumentFromMd>(),
-                serializer_entry_of::<SemioDocumentToMd>(),
-                deserializer_entry_of::<SemioDocumentFromTxt>(),
-                serializer_entry_of::<SemioDocumentToTxt>(),
-                deserializer_entry_of::<SemioDocumentFromPdf>(),
-                serializer_entry_of::<SemioDocumentToPdf>(),
-            ]
-        })
-    }
     //#endregion 🔖️IoEntries
 
     //#region 🔖️Register
@@ -183,14 +140,12 @@ pub mod derived_composition {
     /// `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") }, store::ArtifactCodec::bare::<SemioDocumentSnapshot, crate::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(
-            crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_document_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") }, store::bare_artifact_codec::<SemioDocumentSnapshot, crate::schema::mutations::SemioDocumentMutation>(
+            crate::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-document")]
-        register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -199,15 +154,10 @@ pub mod derived_composition {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::document::schema::semio_document_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioDocumentSnapshot, crate::standards::v1::subsets::document::schema::mutations::SemioDocumentMutation>(crate::standards::v1::subsets::document::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") })
+            .schemas([crate::schema::semio_document_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioDocumentSnapshot, crate::schema::mutations::SemioDocumentMutation>(crate::schema::snapshot::STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("document") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-document")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(io_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_document_artifact_inference_descriptor()]);
         builder
     }
 
@@ -216,12 +166,12 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::document::schema::inferences::semio_document_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_document_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 
     //#region 🔖️Tests
-    #[cfg(all(test, feature = "conversion-document"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🔖️Tests
 }
@@ -238,11 +188,11 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::document::schema::diff::SemioDocumentDiff;
+    use crate::schema::diff::SemioDocumentDiff;
     #[cfg(test)]
-    use crate::standards::v1::subsets::document::schema::mutations::insert_style;
-    use crate::standards::v1::subsets::document::schema::mutations::{SemioDocumentMutation};
-    use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
+    use crate::schema::mutations::insert_style;
+    use crate::schema::mutations::SemioDocumentMutation;
+    use crate::schema::snapshot::{DocBlock, DocImage, DocStyle, SemioDocumentSnapshot};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -282,10 +232,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioDocumentMutation as protocol::Mutation<SemioDocumentSnapshot>>::diff(&mutation, &self.snapshot);
@@ -311,7 +261,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -351,14 +301,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioDocumentSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioDocumentSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

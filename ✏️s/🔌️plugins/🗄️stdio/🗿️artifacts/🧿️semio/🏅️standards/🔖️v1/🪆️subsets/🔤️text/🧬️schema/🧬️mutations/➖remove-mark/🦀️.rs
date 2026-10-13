@@ -1,8 +1,8 @@
 //! ➖️ `remove-mark` — detaches one inline mark from a run, addressed by BASE-state
 //! `{run_index, index}`.
 
-use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use crate::schema::mutations::SemioTextMutation;
+use crate::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

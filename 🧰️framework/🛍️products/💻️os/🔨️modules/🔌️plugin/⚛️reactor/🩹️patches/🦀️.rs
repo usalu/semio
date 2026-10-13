@@ -789,7 +789,7 @@ impl PatchTracker {
     /// admits an output while a DIFFERENT allocation's lower-generation job is still running, which is
     /// exactly the state the global gate refused.
     #[cfg(test)]
-    pub(crate) fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
+    fn in_flight_generations(&self) -> Vec<(NativeCloseKey, u64)> {
         let state = self.state.borrow();
         state.slots.iter().flatten().filter(|slot| slot.producer.is_some() || slot.job.is_some()).map(|slot| (slot.key, slot.generation)).collect()
     }
@@ -1199,7 +1199,7 @@ fn next_ready_index(state: &PatchTrackerState) -> Option<usize> {
 /// against the chosen output — so one slow surface serialized every other surface's publication. That
 /// is the term `📓️ui-turn-patch-batching-2026-09-15.md` §7.1 names: 18 of 25 measured boot turns had
 /// exactly ONE surface ready while the wire could already carry sixteen.
-pub(crate) fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
+fn ready_output_is_admissible(ready_key: NativeCloseKey, ready_generation: u64, in_flight: impl Iterator<Item = (NativeCloseKey, u64)>) -> bool {
     !in_flight.into_iter().any(|(key, generation)| key == ready_key && generation < ready_generation)
 }
 

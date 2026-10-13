@@ -15,14 +15,14 @@
 //! job driven to completion, so there is exactly one implementation of each operation.
 
 use super::*;
-use crate::brep::operations::blend::BlendJob;
-use crate::brep::operations::boolean::{BooleanFoldJob, SectionJob, SplitJob};
-use crate::brep::operations::offset::{DraftJob, OffsetFaceJob, OffsetSolidJob, ShellJob, ThickenJob};
-use crate::brep::operations::primitives::ConvexHullJob;
-use crate::brep::operations::sew::DefeatureJob;
-use crate::brep::operations::staged::{StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::operations::sweep::{ExtrudeJob, ExtrudeWireJob, LoftJob, RevolveJob, SweepJob};
-use crate::brep::representation::topology::{EntityRef, MergeMap};
+use semio_framework_3d_brep_operations::blend::BlendJob;
+use semio_framework_3d_brep_operations::boolean::{BooleanFoldJob, SectionJob, SplitJob};
+use semio_framework_3d_brep_operations::offset::{DraftJob, OffsetFaceJob, OffsetSolidJob, ShellJob, ThickenJob};
+use semio_framework_3d_brep_operations::primitives::ConvexHullJob;
+use semio_framework_3d_brep_operations::sew::DefeatureJob;
+use semio_framework_3d_brep_operations::staged::{StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_operations::sweep::{ExtrudeJob, ExtrudeWireJob, LoftJob, RevolveJob, SweepJob};
+use semio_framework_3d_brep_representation::topology::{EntityRef, MergeMap};
 
 /// 🧭️ The tolerance every plane operation and fold of the engine runs at.
 const KERNEL_TOLERANCE: f64 = 1e-6;

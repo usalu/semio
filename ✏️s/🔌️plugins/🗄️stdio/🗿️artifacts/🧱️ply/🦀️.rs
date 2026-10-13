@@ -38,8 +38,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<PlySnapshot, PlyMutation>(STDIO_PLY_DOCUMENT_SCHEMA);
     codec.extension = "ply";
     codec
 }
@@ -58,7 +58,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::of::<PlySnapshot, PlyMutation>(...))`.
+/// `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<PlySnapshot, PlyMutation>(...))`.
 /// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
 /// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
 /// super::standards::v1_0::engine::*; }`) — deliberately NOT this file's own `io_registry` module

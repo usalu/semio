@@ -1,20 +1,21 @@
 //! 🧪️ Tests for example `🏛️architectural` — real fixture, real D1/D2 decode assertions.
 
-use crate::apply_mutation;
+use semio_s_artifact_stdio_contract::apply_mutation;
 use crate::examples::architectural::{source, DOCUMENT_BYTES};
-use crate::schema::diff::DwgDiff;
-use crate::schema::mutations::{set_version_info, DwgMutation};
-use crate::schema::snapshot::{DwgSnapshot};
-use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{encode_dwg};
-use crate::standards::v_ac1024::subsets::any::io::binary::snapshot::{decode_dwg};
-use crate::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
-use crate::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
-use crate::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::diff::DwgDiff;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::set_version_info;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::mutations::DwgMutation;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::encode_dwg;
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::decode_dwg;
+use semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::serializers::artifacts::binary::v_raw::any as raw_export;
+use semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::deserializers::artifacts::binary::v_raw::any as raw_import;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::DwgAnalyzer;
 use protocol::command::DiffAlgebra;
 use protocol::{Mutation, MutationDiff};
 use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeSource,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_binary::{BinarySnapshot, STDIO_BINARY_DOCUMENT_SCHEMA};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 async fn assert_fixture_bytes(actual: &[u8], label: &str) {
     if actual == DOCUMENT_BYTES {
@@ -43,7 +44,7 @@ async fn source_nonempty() {
 async fn real_decode_projects_logical_state() {
     let snap = decode_dwg(DOCUMENT_BYTES).expect("real fixture must decode");
     assert_eq!(snap.version, "AC1024");
-    assert_eq!(snap.schema, crate::STDIO_DWG_DOCUMENT_SCHEMA);
+    assert_eq!(snap.schema, semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA);
     assert!(snap.codepage > 0);
     assert!(snap.drawing.layers.len() >= 7, "real fixture must project its standard layer table records");
     assert_eq!(snap.drawing.entities().len(), 68, "real fixture must derive LINE, ARC and LWPOLYLINE projections from handle-keyed bodies");
@@ -51,17 +52,17 @@ async fn real_decode_projects_logical_state() {
     assert!(snap.drawing.objects.iter().all(|object| !object.class_name.is_empty()), "every framed object must resolve to a fixed or custom class name");
     let relation_bodies =
         snap.drawing.objects.iter().filter(|object| object.owner_handle.is_some() || !object.reactor_handles.is_empty() || object.extension_dictionary_handle.is_some() || !object.referenced_handles.is_empty() || object.body.is_some()).count();
-    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
-    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::TableRecord(_)))).count();
-    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
-    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(_)))).count();
-    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
+    let named_dictionaries = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::Dictionary(body)) if !body.entries.is_empty())).count();
+    let named_records = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::TableRecord(_)))).count();
+    let table_controls = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::TableControl(body)) if !body.entry_handles().is_empty())).count();
+    let xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::XRecord(_)))).count();
+    let typed_xrecords = snap.drawing.objects.iter().filter(|object| matches!(&object.body, Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) if !body.values.is_empty())).count();
     let xrecord_values = snap
         .drawing
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
+            Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -70,7 +71,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
+            Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.object_id_handles.len()),
             _ => None,
         })
         .sum::<usize>();
@@ -79,7 +80,7 @@ async fn real_decode_projects_logical_state() {
         .objects
         .iter()
         .filter_map(|object| match &object.body {
-            Some(crate::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, crate::schema::snapshot::DwgXRecordValue::ObjectId { .. })).count()),
+            Some(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgLogicalObjectBody::XRecord(body)) => Some(body.values.iter().filter(|value| matches!(value, semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgXRecordValue::ObjectId { .. })).count()),
             _ => None,
         })
         .sum::<usize>();
@@ -160,7 +161,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
     let analyzed = analysis.parts.snapshot.expect("analyzer snapshot");
     assert_fixture_bytes(&encode_dwg(&analyzed).expect("analyzer export"), "analyzer export").await;
     let dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId("*") };
-    let composition = crate::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
+    let composition = semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::io::derived_composition::DwgComposerComposition::compose(&[ComposeSource { dialect, payload: AnalyzeSource::Binary(&pack) }]).expect("composer snapshot");
     assert_fixture_bytes(&encode_dwg(&composition.snapshot).expect("composer export"), "composer export").await;
 
     let empty = DwgDiff::default();
@@ -189,7 +190,7 @@ async fn exact_fixture_roundtrips_through_snapshot_diff_mutation_and_raw_io() {
 
 #[semio_framework_async_macros::async_test]
 async fn persisted_dwg_facets_have_no_parallel_entity_projection() {
-    let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema");
+    let artifact_root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../../../🧬️schema");
     {
         let facet = std::fs::read_to_string(artifact_root.join("🟦️.ts")).unwrap_or_else(|error| panic!("missing schema facet: {error}"));
         assert!(!facet.contains("DwgLogicalEntity"), "a schema facet retains DwgLogicalEntity");

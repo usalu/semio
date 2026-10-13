@@ -1,5 +1,9 @@
 use super::*;
-use crate::app::{AlternativeView,CommandView,HistoryView,InverseAction,MutationView};
+use crate::history_view::AlternativeView;
+use crate::history_view::CommandView;
+use crate::history_view::HistoryView;
+use crate::history_view::InverseAction;
+use crate::history_view::MutationView;
 use semio_framework_value::{retirement::{RetireOwned,controlled::ControlledRetirement},retained_clone::{RetainedCloneGrant,RetainedCloneProgress}};
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 

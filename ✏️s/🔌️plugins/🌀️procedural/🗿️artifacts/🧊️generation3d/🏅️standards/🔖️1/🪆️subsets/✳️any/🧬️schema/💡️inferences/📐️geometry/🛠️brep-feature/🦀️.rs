@@ -5,7 +5,7 @@
 use super::brep_curve::guarded;
 use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::BrepOperation;
+use semio_framework_3d_brep_engine::BrepOperation;
 
 fn feature<P: Send + 'static>(kind: &Kind, inputs: &WidgetInputs, port: &'static str, read: impl FnOnce(&WidgetInputs) -> Result<P, WidgetFault>, plan: impl FnOnce(&mut Work, P) -> Result<BrepOperation, WidgetFault> + Send + 'static) -> Box<dyn WidgetJob> {
     guarded(kind, || {

@@ -1,8 +1,8 @@
 //! 📜️ Equation artifact — textual document grammar surface + laws (constitutional: dsl).
 //!
-//! The DSL-mirror types and the `store::ArtifactDsl` impl for `EquationSnapshot` live here rather than
+//! The DSL-mirror types and the `store::os_store::serialization::ArtifactDsl` impl for `EquationSnapshot` live here rather than
 //! next to `EquationSnapshot` itself in `crate`: Rust's orphan rule only requires
-//! the foreign trait (`store::ArtifactDsl`) or the type (`EquationSnapshot`) to live in this crate — since
+//! the foreign trait (`store::os_store::serialization::ArtifactDsl`) or the type (`EquationSnapshot`) to live in this crate — since
 //! both now do (the old 7-crate split's per-crate orphan-rule boundary no longer exists), the impl is free
 //! to live wherever is clearest, which is next to its own DSL-mirror machinery.
 //!
@@ -24,12 +24,12 @@ use semio_framework_value::DslValue;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use semio_framework_value::ValueError;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 //#region 🔖️Dsl
 /// 🔌️ DSL-only mirror of `EquationEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
 /// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
-/// edges/connections. Converts at the `store::ArtifactDsl`/`protocol::OpText` boundary only
+/// edges/connections. Converts at the `store::os_store::serialization::ArtifactDsl`/`protocol::OpText` boundary only
 /// (`math_edge_to_dsl`/`math_edge_from_dsl`); `EquationEdge` itself (JSON shape, `algorithm_overlay`,
 /// `workflow_json`, the `nodeGraphEdit` action) is completely untouched.
 ///
@@ -176,11 +176,11 @@ use semio_framework_value_derive::{FromValue as FromValueDerive, ToValue as ToVa
 
 /// 🔁️ One JSON report of carrying `dsl_text` through this subset's own codecs, for a
 /// language-neutral test adapter. Same reachability wall as `equation_mutation_report_json`:
-/// `store::ArtifactDsl`/`store::ArtifactPack` and their error types are unnameable outside this
+/// `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` and their error types are unnameable outside this
 /// crate, so the identity law's evidence has to be produced here and handed over as text.
 ///
 /// `canonicalText` is `print_dsl` of the parsed document and `canonicalTextAgain` is `print_dsl` of
-/// re-parsing that — [`store::ArtifactDsl`]'s own documented LAW is that canonical output is a
+/// re-parsing that — [`store::os_store::serialization::ArtifactDsl`]'s own documented LAW is that canonical output is a
 /// `parse_dsl` fixpoint (hand-written text may normalize on the way in), so the two must be
 /// byte-identical while neither is required to equal the committed file. `packDecoded` comes back
 /// through a SEPARATE binary codec, so agreeing on one snapshot cannot be achieved by carrying text
@@ -190,8 +190,8 @@ pub fn equation_identity_report_json(dsl_text: &str) -> Result<String, String> {
     let canonical = <EquationSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <EquationSnapshot as ArtifactDsl>::parse_dsl(&canonical).map_err(|error| error.to_string())?;
     let canonical_again = <EquationSnapshot as ArtifactDsl>::print_dsl(&reparsed);
-    let packed = <EquationSnapshot as store::ArtifactPack>::encode_pack(&reparsed);
-    let unpacked = <EquationSnapshot as store::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
+    let packed = <EquationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&reparsed);
+    let unpacked = <EquationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).map_err(|error| error.to_string())?;
     let report = semio_framework_pack_json::object([
         ("parsed".to_string(), semio_framework_pack_json::from_dsl_value(&parsed.to_value())),
         ("reparsed".to_string(), semio_framework_pack_json::from_dsl_value(&reparsed.to_value())),

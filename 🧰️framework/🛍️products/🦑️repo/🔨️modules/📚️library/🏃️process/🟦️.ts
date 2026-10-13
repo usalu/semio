@@ -3,7 +3,7 @@ import { terminateOwnedProcessTree } from "../../../../../🔨️modules/🏃️
 
 /** 🏃️ Process execution with opt-in wall-clock budgets for repository commands and builds,
  * the `spawnSync` runners built on them, workspace-aware `.bin`
- * resolution and the dev/ship build-mode switch. Split out of `📦️packages/🟦️typescript/🟦️.ts` so a
+ * resolution and prototype/release build policy. Split out of `📦️packages/🟦️typescript/🟦️.ts` so a
  * consumer that only spawns a tool (the plugin package's jco/wasm-opt steps, and through them the
  * extension store and `⚙️vite.config.ts`) never drags the repository library's `🔍️discovery` taxonomy
  * walk into its module graph. */
@@ -19,6 +19,7 @@ import {repositoryCargoPreparationStorageV1, cargoInvocationManifestV1, prepareC
 import { getWorkspaceRoot } from "../🗂️workspaces/🟦️.ts";
 import { cargoDirectories } from "../⚡️caching/🦀️cargo/🟦️.ts";
 import { devToolingEnv } from "./🌿️environment/🟦️.ts";
+import { readBuildMode, buildModeEnvironment, type BuildMode } from "../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🧭️Selects the opt-in build budget for Cargo and command budget for other executables; both default to unlimited. */
 export function defaultBudgetMs(cmd: string): number {
@@ -228,17 +229,17 @@ export function runNodeBin(args: string[], cwd: string = process.cwd(), env: Nod
   if (status !== 0) process.exit(status);
 }
 
-/** 🚦️ Whether child builds should use fast dev artifacts or ship optimization. */
-export type SemioBuildMode = "dev" | "ship";
+/** 🚦️ Compiler intent shared by all repository build families. */
+export type SemioBuildMode = BuildMode;
 
-/** 🚦️ `ship` only when `SEMIO_BUILD_MODE=ship`; default is dev for local/agent loops. */
+/** 🚦️ Reads the explicit intent carried by Nx or the owning compiler invocation. */
 export function semioBuildMode(): SemioBuildMode {
-  return process.env.SEMIO_BUILD_MODE === "ship" ? "ship" : "dev";
+  return readBuildMode(process.env.SEMIO_BUILD_MODE);
 }
 
-/** 🚀️ Env for nx/build orchestrators so spawned crate `wasm` scripts inherit ship mode. */
-export function semioShipEnv(): NodeJS.ProcessEnv {
-  return { ...process.env, SEMIO_BUILD_MODE: "ship" };
+/** 🚀️ Carries release intent to dependent compiler invocations. */
+export function semioReleaseEnv(): NodeJS.ProcessEnv {
+  return buildModeEnvironment("release");
 }
 
 /** 📂 Cargo output directory name for a profile (`dev` → `debug`). */

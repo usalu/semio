@@ -1,7 +1,7 @@
 //! ✒️ Writer native boundary with one controlled producer and literal two-row admission.
 use super::WriterSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl,SqliteSnapshotPhase}};
 fn admit(control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  if WriterSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{return Err(ValueError::new(ValueRefusalKind::OwnershipLimit,"Writer authored schema byte limit exceeded"))}
  control.check_rows(2)
@@ -19,10 +19,10 @@ fn admit_values(snapshot:&WriterSnapshot,control:&mut SqliteSnapshotControl<'_>,
 pub(super) fn decode(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<WriterSnapshot,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::DecodeNative,0,2)?;
  admit(control)?;
- let value=store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {WriterSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
+ let value=store::decode_sqlite_snapshot_record_native(payload,<WriterSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {WriterSnapshot::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)?;admit_values(&value,control,SqliteSnapshotPhase::DecodeNative)?;Ok(value)
 }
 pub(super) fn encode(snapshot:&WriterSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{
  control.checkpoint(SqliteSnapshotPhase::EncodeNative,0,2)?;
  admit(control)?;admit_values(snapshot,control,SqliteSnapshotPhase::EncodeNative)?;
- store::encode_sqlite_snapshot_record_native(encoding,<WriterSnapshot as store::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner)
+ store::encode_sqlite_snapshot_record_native(encoding,<WriterSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),WriterSnapshot::__dsl_spec_producer(),|native|snapshot.__dsl_to_record_controlled(native),control,native_owner)
 }

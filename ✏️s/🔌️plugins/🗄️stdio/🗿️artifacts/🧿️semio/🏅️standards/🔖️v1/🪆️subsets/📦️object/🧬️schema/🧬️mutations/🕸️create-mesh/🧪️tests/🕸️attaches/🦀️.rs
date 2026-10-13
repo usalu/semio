@@ -8,10 +8,10 @@
 //! A child handle is exactly two strings: `childId` plus the target `ArtifactRef`; the child's
 //! own content never appears in the parent.
 
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🕸️create-mesh/🕸️attaches/📸️snapshot/➡️after/🔣️.json");
@@ -50,7 +50,7 @@ async fn the_undo_delete_mesh_detaches_the_handle_again() {
     let mutation = mutation();
     protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&mutation, &base).await;
     let undo = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
-    assert_eq!(undo, vec![SemioObjectMutation::DeleteMesh(crate::standards::v1::subsets::object::schema::mutations::delete_mesh::DeleteMesh {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
+    assert_eq!(undo, vec![SemioObjectMutation::DeleteMesh(crate::schema::mutations::delete_mesh::DeleteMesh {})], "creating a child into an EMPTY slot must undo as the matching delete, not as another create");
     let mut current = protocol::apply_diff(mutation.diff(&base).diff(), &base).expect("forward 🕸️create-mesh applies");
     for step in undo.iter().rev() {
         current = protocol::apply_diff(step.diff(&current).diff(), &current).expect("the undo DeleteMesh applies to the object that now has a child");

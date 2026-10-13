@@ -3,7 +3,7 @@ mod tests {
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     fn random_points(n: usize, dim: usize, seed: u64) -> Vec<f64> {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(seed);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(seed);
         (0..n * dim).map(|_| rng.next_f64() * 10.0 - 5.0).collect()
     }
 

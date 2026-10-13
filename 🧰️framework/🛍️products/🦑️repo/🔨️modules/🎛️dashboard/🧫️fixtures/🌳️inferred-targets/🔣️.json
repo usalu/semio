@@ -7,10 +7,10 @@
         "data": {
           "root": "owner/📦️packages/🦀️rust",
           "targets": {
-            "materialize-dev": {
+            "materialize": {
               "executor": "nx:run-commands"
             },
-            "component-dev": {
+            "component": {
               "executor": "nx:run-commands"
             }
           }
@@ -32,8 +32,8 @@
     "dependencies": {}
   },
   "expected": [
-    "@semio-tech/owner:component-dev",
-    "@semio-tech/owner:materialize-dev",
+    "@semio-tech/owner:component",
+    "@semio-tech/owner:materialize",
     "workspace:build"
   ]
 }

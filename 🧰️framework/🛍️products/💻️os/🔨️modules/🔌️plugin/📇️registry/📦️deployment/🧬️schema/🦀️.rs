@@ -66,6 +66,7 @@ pub struct TrustedPluginModuleIndexEntryV1 {
     pub version: String,
     pub component_sha256: String,
     pub descriptor_byte_sha256: String,
+    pub receipt_sha256: String,
     pub dependencies: Vec<String>,
     /// 🎭️ Every app dialect artifact kind the package's surfaces open, in ascending byte order: how a shell that never
     /// built the plugin finds the package that opens a kind.

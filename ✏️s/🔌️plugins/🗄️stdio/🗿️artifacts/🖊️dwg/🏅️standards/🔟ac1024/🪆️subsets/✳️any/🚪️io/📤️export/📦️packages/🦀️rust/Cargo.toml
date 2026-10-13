@@ -1,0 +1,33 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-dwg-write"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio dwg writer: the R2004 container writer and every entity encoder"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework-os-kernel = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-stdio-binary = { workspace = true }
+semio-s-artifact-stdio-dwg-model = { workspace = true }
+
+[dev-dependencies]
+# 🔮️ Test-only DWG oracle: `acadrust` (MPL-2.0, pure Rust) reads and writes DWG independently of this codec.
+acadrust = { version = "0.5.5", default-features = false }
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+semio-framework-mesh-engine = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+serde_json = { workspace = true }

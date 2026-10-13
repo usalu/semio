@@ -163,7 +163,7 @@
         },
         "files": {
           "type": "array",
-          "minItems": 3,
+          "minItems": 4,
           "maxItems": 256,
           "items": {
             "$ref": "#/$defs/TrustedPluginModuleFileV1"
@@ -185,6 +185,7 @@
         "version",
         "componentSha256",
         "descriptorByteSha256",
+        "receiptSha256",
         "dependencies",
         "dialectArtifactKinds",
         "extendsPluginId",
@@ -206,6 +207,10 @@
           "$ref": "#/$defs/PluginModuleDigestV1"
         },
         "descriptorByteSha256": {
+          "$ref": "#/$defs/PluginModuleDigestV1"
+        },
+        "receiptSha256": {
+          "description": "SHA-256 of the canonical `ComponentReceiptV1` the module carries as `🧾️receipt.json`: the package's own receipt binding its component to its semantic descriptor.",
           "$ref": "#/$defs/PluginModuleDigestV1"
         },
         "dependencies": {

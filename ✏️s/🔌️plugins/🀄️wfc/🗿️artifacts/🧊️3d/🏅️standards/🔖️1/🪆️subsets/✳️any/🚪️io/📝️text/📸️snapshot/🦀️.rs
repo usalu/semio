@@ -2,7 +2,7 @@
 //!
 //! The `*Dsl` types below are LOCAL structural twins of the schema tree's own records, not derives
 //! on those records directly, for one measured reason: `Tile::media` is a `TileMedia3d` whose
-//! `MeshChild` variant carries a `store::ArtifactChild<SemioMeshSnapshot>` — a foreign type this
+//! `MeshChild` variant carries a `store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>` — a foreign type this
 //! crate can implement neither `dsl::DslField` nor `dsl::DslRecord` for. The twin carries the field
 //! as `dsl::DslValue`, the engine's own schema-less literal, and bridges at the boundary through
 //! `semio_framework_value::ToValue::to_value`/`semio_framework_value::FromValue::from_value`, which are defined for every `ToValue`/`FromValue`
@@ -133,7 +133,7 @@ impl Default for Wfc3dSnapshotDsl {
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ Handcrafted `ArtifactDsl`/`ArtifactPack` — the derive no longer emits these traits, so every
 /// artifact states its own envelope discipline.
-impl store::ArtifactDsl for Wfc3dSnapshotDsl {
+impl store::os_store::serialization::ArtifactDsl for Wfc3dSnapshotDsl {
     const EXTENSION: &'static str = "wfc3d";
     fn envelope_id() -> &'static str {
         "wfc.wfc3d"
@@ -151,7 +151,7 @@ impl store::ArtifactDsl for Wfc3dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -180,18 +180,18 @@ pub(crate) fn wfc3d_document_from_dsl(parsed: Wfc3dSnapshotDsl) -> Result<Wfc3dS
     })
 }
 
-impl store::ArtifactDsl for Wfc3dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Wfc3dSnapshot {
     const EXTENSION: &'static str = "wfc3d";
     fn envelope_id() -> &'static str {
         "wfc.wfc3d"
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        wfc3d_document_from_dsl(<Wfc3dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?)
+        wfc3d_document_from_dsl(<Wfc3dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
     }
 
     fn print_dsl(&self) -> String {
-        <Wfc3dSnapshotDsl as store::ArtifactDsl>::print_dsl(&wfc3d_document_to_dsl(self))
+        <Wfc3dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&wfc3d_document_to_dsl(self))
     }
 }
 
@@ -200,12 +200,12 @@ impl store::ArtifactDsl for Wfc3dSnapshot {
 
 /// 📖️ Parses `.wfc3d` DSL text into a `Wfc3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Wfc3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Wfc3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Wfc3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Wfc3dSnapshot` back to `.wfc3d` DSL text.
 pub fn print_dsl(document: &Wfc3dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests

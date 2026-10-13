@@ -6,23 +6,23 @@
 //!
 //! ## Identity convention
 //! Every entity id `to_snapshot` emits is literally `label.0.to_string()` (a bare decimal `u64`)
-//! — the entity's own [`semio_framework_3d::brep::representation::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
+//! — the entity's own [`semio_framework_3d_brep_representation::topology::history::PersistentLabel`]. `from_snapshot` exploits this:
 //! an id that parses as `u64` is trusted as literally that label (so a document that has been
 //! through `to_snapshot` round-trips its exact labels — required so two independent mutation
 //! constructions against the same document never mint colliding labels, `SemioBrepSnapshot::next_label`'s own doc comment); a
 //! non-numeric id (STEP import's `"v12"`/`"e7"`, hand-authored fixtures' `"🐼️v1"`) mints a fresh
 //! label instead, since such a document has no persistent-label history to preserve. Loops and
-//! coedges carry no `PersistentLabel` in the native model (see [`semio_framework_3d::brep::representation::topology::BrepArenaSeed`]'s own doc
+//! coedges carry no `PersistentLabel` in the native model (see [`semio_framework_3d_brep_representation::topology::BrepArenaSeed`]'s own doc
 //! comment) — `to_snapshot` mints ordinal ids (`"lp0"`, `"co0"`, …) for them, stable only within
 //! one `to_snapshot` call, never round-tripped as identity (matching `BrepArenaSeed.loops`' own
 //! index-addressed convention, generalized to also carry p-curve + ring position).
 //!
 //! ## Known, deliberate lossy corners (documented, not silently dropped)
 //! - **In-plane rotation of analytic curves/surfaces.** Native `Circle`/`Ellipse`/`Cylinder`/
-//!   `Cone`/`Sphere`/`Torus` carry a full [`semio_framework_3d::brep::representation::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
-//!   [`crate::standards::v1::subsets::brep::schema::snapshot::BrepCurve`]/[`crate::standards::v1::subsets::brep::schema::snapshot::BrepSurface`] only carry origin + the z-axis (matching STEP AP214's own
+//!   `Cone`/`Sphere`/`Torus` carry a full [`semio_framework_3d_brep_representation::vector::matrix::Frame3`] (origin + orthonormal x/y/z);
+//!   [`crate::schema::snapshot::BrepCurve`]/[`crate::schema::snapshot::BrepSurface`] only carry origin + the z-axis (matching STEP AP214's own
 //!   `ref_direction`-unset gap, audit §10.2/§10.4). `from_snapshot` reconstructs the missing x/y
-//!   via [`semio_framework_3d::brep::representation::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
+//!   via [`semio_framework_3d_brep_representation::vector::matrix::Frame3::from_normal`]'s deterministic canonical choice — round-trips EXACTLY for
 //!   any body built through the ordinary primitive constructors (`🔺️diff/🧱️primitives`, which
 //!   themselves call `from_normal`/use world axes), lossy only for a hand-crafted body with a
 //!   deliberately non-canonical in-plane rotation. Fixing this needs widening `BrepCurve`/
@@ -43,18 +43,18 @@
 
 use std::collections::HashMap;
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use semio_framework_3d::brep::representation::arena::{Curve2Id, EdgeId, FaceId, LoopId};
-use semio_framework_3d::brep::representation::curve::bspline::KnotVector;
-use semio_framework_3d::brep::representation::curve::{curve_ops, Curve2, Curve3};
-use semio_framework_3d::brep::representation::error::KernelError;
-use semio_framework_3d::brep::representation::surface::Surface;
-use semio_framework_3d::brep::representation::tolerance::Tol;
-use semio_framework_3d::brep::representation::topology::history::PersistentLabel;
-use semio_framework_3d::brep::representation::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
-use semio_framework_3d::brep::representation::vector::matrix::Frame3;
-use semio_framework_3d::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_framework_3d_brep_representation::arena::{Curve2Id, EdgeId, FaceId, LoopId};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::{curve_ops, Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
+use semio_framework_3d_brep_representation::topology::{Body, BrepArenaSeed, SeedEdge, SeedFace, SeedShell, SeedSolid, SeedVertex};
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use crate::schema::snapshot::{BrepCoedge, BrepCurve, BrepCurve2, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot};
 
 //#region 🔖️PointVectorBridge
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

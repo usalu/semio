@@ -2,7 +2,7 @@ use super::*;
 
 #[semio_framework_async_macros::async_test]
 async fn process3d_config_dsl_and_pack_round_trip() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let config = Process3dConfig { sun_enabled: true, ..Process3dConfig::default() };
     store::os_store::test_support::assert_dsl_round_trip(&config);
     let bytes = config.encode_pack();
@@ -47,7 +47,7 @@ async fn process3d_config_op_text_round_trips_every_variant() {
 /// its setter inverts to the base value — never a document mutation.
 #[semio_framework_async_macros::async_test]
 async fn the_replay_cursor_is_view_state_in_the_config() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let base = Process3dConfig::default();
     assert_eq!(base.resolved_up_to, None);
     let next = protocol::apply_diff(&Process3dConfigMutation::SetCursor(Process3dConfigSetCursor{ value: Some(2) }).diff(&base).into_parts().0, &base).expect("the config diff applies");

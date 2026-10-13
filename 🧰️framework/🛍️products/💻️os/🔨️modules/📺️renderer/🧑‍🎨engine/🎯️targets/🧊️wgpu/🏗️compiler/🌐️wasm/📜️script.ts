@@ -22,7 +22,7 @@ export interface TrunkRendererObservationV1 {
   readonly compiler:{readonly path:string;readonly sha256:string}; readonly raw:{readonly path:string;readonly sha256:string}; readonly outputs:readonly {readonly path:string;readonly sha256:string}[];
 }
 
-export type TrunkRendererBuild = { readonly rustPackageRoot: string; readonly workspace: string; readonly profile: string; readonly toolWorkspace?: string; readonly stateRoot?: string; readonly signal?: AbortSignal; readonly environment?:Readonly<Record<string,string|undefined>> };
+export type TrunkRendererBuild = { readonly rustPackageRoot: string; readonly componentRoot: string; readonly workspace: string; readonly profile: string; readonly toolWorkspace?: string; readonly stateRoot?: string; readonly signal?: AbortSignal; readonly environment?:Readonly<Record<string,string|undefined>> };
 
 /** 🎯️ Gives finite compiler results one owner per optimization profile. */
 export function wasmRendererDirectory(root: string, profile: string): string {
@@ -33,7 +33,7 @@ export function wasmRendererDirectory(root: string, profile: string): string {
 /** 🏗️ Compiles only Rust renderer bytes; browser composition consumes its completed artifacts separately. */
 export async function buildTrunkRenderer(options: TrunkRendererBuild): Promise<void> {
   const builtAtMs=Date.now(),hash=(path:string):string=>createHash("sha256").update(readFileSync(path)).digest("hex");
-  const { rustPackageRoot: root, workspace, profile } = options, output = wasmRendererDirectory(root, profile), toolWorkspace = options.toolWorkspace ?? workspace;
+  const { rustPackageRoot: owner, componentRoot: root, workspace, profile } = options, output = wasmRendererDirectory(owner, profile), toolWorkspace = options.toolWorkspace ?? workspace;
   const budget = buildBudgetMs(), signal = AbortSignal.any([options.signal ?? new AbortController().signal, ...(budget > 0 ? [AbortSignal.timeout(budget)] : [])]);
   const manifest = Bun.TOML.parse(readFileSync(join(root, "Cargo.toml"), "utf8")) as { package: { name: string } };
   const lock = Bun.TOML.parse(readFileSync(join(toolWorkspace, "Cargo.lock"), "utf8")) as { package: { name: string; version: string }[] };
@@ -90,7 +90,7 @@ class BuildScript extends BundleScript {
     if (args.length) throw new Error("Renderer compilation accepts only its Nx profile");
     const controller = new AbortController(), stop = (): void => controller.abort();
     process.once("SIGINT", stop); process.once("SIGTERM", stop);
-    try { await buildTrunkRenderer({ rustPackageRoot: this.root, workspace: this.repoRoot, profile, signal: controller.signal }); }
+    try { await buildTrunkRenderer({ rustPackageRoot: this.root, componentRoot: resolve(this.root, "../../🧩️component/📦️packages/🦀️rust"), workspace: this.repoRoot, profile, signal: controller.signal }); }
     finally { process.removeListener("SIGINT", stop); process.removeListener("SIGTERM", stop); }
   }
 }

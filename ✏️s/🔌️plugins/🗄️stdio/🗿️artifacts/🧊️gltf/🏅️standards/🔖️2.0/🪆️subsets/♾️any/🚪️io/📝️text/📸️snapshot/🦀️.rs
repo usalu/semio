@@ -15,7 +15,7 @@ use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_dsl_record::DslField;
 use crate::standards::v2_0::subsets::any::io::binary::snapshot::owned_pack::*;
-impl store::ArtifactDsl for GltfSnapshot{
+impl store::os_store::serialization::ArtifactDsl for GltfSnapshot{
  const EXTENSION:&'static str="gltf";
  fn envelope_id()->&'static str{"stdio.gltf"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{let body=match store::semio_format::split_text_preamble(text){Ok((envelope,body))=>{if !envelope.matches_identity("stdio.gltf",store::semio_format::Component::Dsl,1){return Err(semio_framework_diagnostic::TextError::new(semio_framework_value::ValueRefusalKind::InvalidValue,("GLTF logical text identity differs").to_string(),semio_framework_diagnostic::TextSpan::at(1,1)))}body},Err(_)=>text};let record=semio_framework_dsl_record::parse_exact(body,&Snapshot::__dsl_spec(),&semio_framework_dsl_record::ParseOptions{limits:semio_framework_diagnostic::Limits::default(),mode:semio_framework_dsl_record::SourceMode::Document})?;Snapshot::__dsl_from_record(&record).map(Into::into)}
@@ -23,7 +23,7 @@ impl store::ArtifactDsl for GltfSnapshot{
 }
 }
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 mod serde_oracle {
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use serde::de::{MapAccess,SeqAccess,Visitor};
@@ -147,15 +147,15 @@ pub(crate) mod ordered_attr_map {
     }
 }
 }
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 pub(crate) use serde_oracle::ordered_attr_map;
 
-#[cfg(test)]
+#[cfg(any(test, feature = "testing"))]
 mod semantic_cache_codec {
 use crate::standards::v2_0::subsets::any::schema::snapshot::*;
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
 use crate::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
-use crate::STDIO_GLTF_DOCUMENT_SCHEMA;
+use crate::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use serde::{Deserialize, Deserializer, Serialize, Serializer};
 impl Serialize for GltfCameraProjection {
@@ -175,8 +175,8 @@ impl Serialize for GltfCameraProjection {
 impl<'de> Deserialize<'de> for GltfCameraProjection {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive()]
-#[cfg_attr(test, derive(Deserialize))]
-        #[cfg_attr(test, serde(tag = "type", rename_all = "lowercase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(Deserialize))]
+        #[cfg_attr(any(test, feature = "testing"), serde(tag = "type", rename_all = "lowercase"))]
         enum Wire {
             Perspective { perspective: GltfPerspective },
             Orthographic { orthographic: GltfOrthographic },
@@ -193,20 +193,20 @@ impl<'de> Deserialize<'de> for GltfCameraProjection {
 impl Serialize for GltfCamera {
     fn serialize<S: Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
         #[derive()]
-#[cfg_attr(test, derive(Serialize))]
-        #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(Serialize))]
+        #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
         struct Wire<'a> {
-            #[cfg_attr(test, serde(rename = "type"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(rename = "type"))]
             kind: &'static str,
-            #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
             perspective: Option<&'a GltfPerspective>,
-            #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
             orthographic: Option<&'a GltfOrthographic>,
-            #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
             name: Option<&'a String>,
-            #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
             extensions: Option<&'a GltfJson>,
-            #[cfg_attr(test, serde(skip_serializing_if = "Option::is_none"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(skip_serializing_if = "Option::is_none"))]
             extras: Option<&'a GltfJson>,
         }
         let (kind, perspective, orthographic) = match &self.projection {
@@ -219,20 +219,20 @@ impl Serialize for GltfCamera {
 impl<'de> Deserialize<'de> for GltfCamera {
     fn deserialize<D: Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
         #[derive()]
-#[cfg_attr(test, derive(Deserialize))]
-        #[cfg_attr(test, serde(rename_all = "camelCase"))]
+#[cfg_attr(any(test, feature = "testing"), derive(Deserialize))]
+        #[cfg_attr(any(test, feature = "testing"), serde(rename_all = "camelCase"))]
         struct Wire {
-            #[cfg_attr(test, serde(rename = "type"))]
+            #[cfg_attr(any(test, feature = "testing"), serde(rename = "type"))]
             kind: String,
-            #[cfg_attr(test, serde(default))]
+            #[cfg_attr(any(test, feature = "testing"), serde(default))]
             perspective: Option<GltfPerspective>,
-            #[cfg_attr(test, serde(default))]
+            #[cfg_attr(any(test, feature = "testing"), serde(default))]
             orthographic: Option<GltfOrthographic>,
-            #[cfg_attr(test, serde(default))]
+            #[cfg_attr(any(test, feature = "testing"), serde(default))]
             name: Option<String>,
-            #[cfg_attr(test, serde(default))]
+            #[cfg_attr(any(test, feature = "testing"), serde(default))]
             extensions: Option<GltfJson>,
-            #[cfg_attr(test, serde(default))]
+            #[cfg_attr(any(test, feature = "testing"), serde(default))]
             extras: Option<GltfJson>,
         }
         let wire = Wire::deserialize(deserializer)?;

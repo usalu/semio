@@ -1,8 +1,8 @@
 //! 🧱 Analytic solid primitives: box/sphere/cylinder/cone/torus + wires/planar faces/convex hull.
 //!
-//! Builds closed [`Body`](crate::brep::representation::topology::Body) solids exclusively through
-//! [`crate::brep::operations::euler`] editors, attaching shared [`Curve3`](crate::brep::representation::curve::Curve3) /
-//! [`Surface`](crate::brep::representation::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
+//! Builds closed [`Body`](semio_framework_3d_brep_representation::topology::Body) solids exclusively through
+//! [`crate::euler`] editors, attaching shared [`Curve3`](semio_framework_3d_brep_representation::curve::Curve3) /
+//! [`Surface`](semio_framework_3d_brep_representation::surface::Surface) geometry from the body's pools, with a stored [`Curve2`] p-curve on
 //! every coedge. Topology: box (V=8 E=12 F=6), sphere/cylinder/cone/torus as exact analytic
 //! surfaces with seam/degenerate edges (no faceting, no `segments`), convex hull as
 //! coplanar-merged polygon faces (Quickhull + boundary-walk merge).
@@ -16,36 +16,22 @@
 use std::collections::HashMap;
 use std::f64::consts::{FRAC_PI_2, TAU};
 
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::representation::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
+use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_representation::arena::{ArenaId, Curve2Id, EdgeId, FaceId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::{Body, Wire};
 #[cfg(test)]
-use crate::brep::representation::topology::Edge;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
+use semio_framework_3d_brep_representation::topology::Edge;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2, Vec3};
 
 /// 🔺 Coplanar triangles grouped by quantized plane coordinates.
 pub type PlaneClusters = HashMap<(i64, i64, i64, i64), (Vec3, Vec<[usize; 3]>)>;
-
-// #region 🔖️Wire
-
-/// 🧱 An ordered chain of oriented edges produced by a wire constructor (not yet bound to a face).
-#[derive(Clone, Debug, PartialEq)]
-pub struct Wire {
-    pub members: Vec<(EdgeId, bool)>,
-    pub vertices: Vec<VertexId>,
-    pub closed: bool,
-}
-
-semio_framework_value::artifact_retire_struct!(Wire {members,vertices,closed});
-
-// #endregion 🔖️Wire
 
 // #region 🔖️Helpers
 
@@ -64,7 +50,7 @@ fn require_positive(name: &str, value: f64) -> Result<(), KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn attach_face(body: &mut Body, surface_id: crate::brep::representation::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
+pub(crate) fn attach_face(body: &mut Body, surface_id: semio_framework_3d_brep_representation::arena::SurfaceId, members: &[(EdgeId, bool)], flipped: bool, tol: Tol, rec: &mut OpRecorder) -> FaceId {
     let outer = make_loop(body, placeholder_face(), members);
     let face = add_face(body, surface_id, Some(outer), vec![], flipped, tol, rec);
     body.loops.get_mut(outer).unwrap().face = face;
@@ -72,7 +58,7 @@ pub(crate) fn attach_face(body: &mut Body, surface_id: crate::brep::representati
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+pub fn line_edge(body: &mut Body, a: Pnt3, b: Pnt3, va: VertexId, vb: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
     let curve = body.curves3.insert(Curve3::Line { origin: a, dir: b - a });
     make_edge(body, curve, (0.0, 1.0), va, vb, tol, rec)
 }
@@ -147,7 +133,7 @@ fn attach_planar_face_pcurves(body: &mut Body, face: FaceId, frame: Frame3, memb
 /// 🧱 Stamps `pcurves` (one `(curve2, prange)` pair per coedge, in `attach_face`'s own `members`
 /// order) onto `face`'s outer loop. `prange` always shares its interpolating parameter `s` with
 /// the coedge's underlying [`Edge::range`] — i.e. it is *never* reversed to account for
-/// `Coedge::forward` (see [`crate::brep::queries::validation::check_same_parameter`], which samples both ranges with
+/// `Coedge::forward` (see [`semio_framework_3d_brep_queries::validation::check_same_parameter`], which samples both ranges with
 /// the same `s`) — only reparametrized (phase/sign/offset) when the p-curve targets a different
 /// surface frame than the edge's own curve.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -178,7 +164,7 @@ pub(crate) fn is_degenerate_edge(edge: &Edge, curve: &Curve3) -> bool {
 // #region 🔖️Solids
 
 /// 🧱 Axis-aligned box from the origin to `(w, d, h)` with six planar faces (V=8, E=12, F=6).
-/// Threads the caller-owned `rec` through every euler call so the whole box's [`crate::brep::representation::topology::history::OpDelta`]
+/// Threads the caller-owned `rec` through every euler call so the whole box's [`semio_framework_3d_brep_representation::topology::history::OpDelta`]
 /// is observable after this call returns, instead of being discarded at the function boundary.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn make_box(body: &mut Body, w: f64, d: f64, h: f64, rec: &mut OpRecorder) -> Result<SolidId, KernelError> {
@@ -888,4 +874,13 @@ fn merge_coplanar_triangles(hull: &ConvexHull) -> Vec<FaceGroup> {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️topology-seed/🦀️.rs"]
+mod topology_seed_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️topology-reachability/🦀️.rs"]
+mod topology_reachability_tests;
+#[cfg(test)]
+#[path = "🧪️tests/🔬️topology-compaction/🦀️.rs"]
+mod topology_compaction_tests;
 // #endregion 🔖️Tests

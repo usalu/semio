@@ -20,16 +20,16 @@ mod loft;
 #[path = "🌀️revolve/🦀️.rs"]
 mod revolve;
 
-use crate::brep::operations::primitives::{make_planar_face_from_wire, Wire};
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::operations::transform::transform_face;
-use crate::brep::representation::arena::FaceId;
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use {crate::primitives::make_planar_face_from_wire, semio_framework_3d_brep_representation::topology::Wire};
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use crate::transform::transform_face;
+use semio_framework_3d_brep_representation::arena::FaceId;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 pub use loft::{loft_profiles, LoftJob};
 pub use revolve::{revolve_face, RevolveJob};
@@ -86,7 +86,7 @@ impl StagedOperation for ExtrudeJob {
 /// other (recorded generated), matching the ticket's "profile as modified" history convention.
 /// This is [`ExtrudeJob`] driven to completion.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::brep::representation::arena::SolidId, KernelError> {
+pub fn extrude_face(body: &mut Body, face: FaceId, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<semio_framework_3d_brep_representation::arena::SolidId, KernelError> {
     drive_solid(&mut ExtrudeJob::new(body, face, direction, distance)?, body, rec)
 }
 
@@ -154,7 +154,7 @@ impl StagedOperation for ExtrudeWireJob {
 /// then [`extrude_face`]). An open wire's shell-only (no-cap) extrusion is not yet implemented in
 /// this pass (documented gap, see `📓️w2c-sweeps.md`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<crate::brep::representation::arena::SolidId, KernelError> {
+pub fn extrude_wire(body: &mut Body, wire: &Wire, direction: Vec3, distance: f64, rec: &mut OpRecorder) -> Result<semio_framework_3d_brep_representation::arena::SolidId, KernelError> {
     drive_solid(&mut ExtrudeWireJob::new(body, wire, direction, distance)?, body, rec)
 }
 
@@ -190,7 +190,7 @@ pub struct StationSweepJob {
     stations: Vec<frame::Station>,
     previous: Option<Pnt3>,
     rmf: Vec<frame::RmfFrame>,
-    frames: Vec<crate::brep::representation::vector::matrix::Frame3>,
+    frames: Vec<semio_framework_3d_brep_representation::vector::matrix::Frame3>,
     aligned: Option<FaceId>,
     bottom: Option<FaceId>,
     prism: Option<core::PrismBuilder>,
@@ -200,7 +200,7 @@ pub struct StationSweepJob {
 
 impl StationSweepJob {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn planar_profile_frame(body: &Body, profile: FaceId, label: &str) -> Result<crate::brep::representation::vector::matrix::Frame3, KernelError> {
+    fn planar_profile_frame(body: &Body, profile: FaceId, label: &str) -> Result<semio_framework_3d_brep_representation::vector::matrix::Frame3, KernelError> {
         let f = body.faces.get(profile).ok_or_else(|| KernelError::MissingEntity("profile".into()))?;
         match body.surfaces.get(f.surface) {
             Some(Surface::Plane { frame }) => Ok(*frame),
@@ -409,20 +409,20 @@ impl StagedOperation for SweepJob {
 /// ➡️ Sweeps `profile` along `path`, honouring `guide` if present — [`SweepJob::pipe`] driven to
 /// completion.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<crate::brep::representation::arena::SolidId, KernelError> {
+pub fn pipe(body: &mut Body, profile: FaceId, path: &Wire, guide: Option<&Wire>, rec: &mut OpRecorder) -> Result<semio_framework_3d_brep_representation::arena::SolidId, KernelError> {
     drive_solid(&mut SweepJob::pipe(body, profile, path, guide)?, body, rec)
 }
 
 /// ➡️ Sweeps `profile` along `path` with no guide — [`pipe`] with `guide = None`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<crate::brep::representation::arena::SolidId, KernelError> {
+pub fn sweep_along_path(body: &mut Body, profile: FaceId, path: &Wire, rec: &mut OpRecorder) -> Result<semio_framework_3d_brep_representation::arena::SolidId, KernelError> {
     pipe(body, profile, path, None, rec)
 }
 
 /// ➡️ Helical sweep of `profile` about `(axis_origin, axis_dir)` — [`SweepJob::helical`] driven to
 /// completion.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn helical_sweep(body: &mut Body, profile: FaceId, axis: (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<crate::brep::representation::arena::SolidId, KernelError> {
+pub fn helical_sweep(body: &mut Body, profile: FaceId, axis: (Pnt3, Vec3), radius: f64, pitch: f64, turns: f64, rec: &mut OpRecorder) -> Result<semio_framework_3d_brep_representation::arena::SolidId, KernelError> {
     drive_solid(&mut SweepJob::helical(body, profile, axis, radius, pitch, turns)?, body, rec)
 }
 

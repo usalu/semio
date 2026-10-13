@@ -3,8 +3,8 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::JackSnapshot;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_label::ChangeNodeLabel, SemioGraphMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
 
 /// 🩹️ Renames the named nodes — or, when `node_ids` is empty, the nodes selected in the `ast` domain, which is what a
 /// rail press means — as ONE edit of the composed `content` child: one `change-node-label` leaf per node (design

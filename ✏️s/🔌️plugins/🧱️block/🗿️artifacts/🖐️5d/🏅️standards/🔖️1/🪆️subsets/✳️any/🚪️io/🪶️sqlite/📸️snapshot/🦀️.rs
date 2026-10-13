@@ -2,7 +2,7 @@
 use crate::*;
 use std::collections::{BTreeMap, BTreeSet};
 use store::{
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
     sqlite_snapshot::{
         SnapshotEncoding, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue,
         artifact::{Cell, Projection, Reconstruction},
@@ -384,7 +384,7 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
         let maximum = c.limits().max_rows;
         store::decode_sqlite_snapshot_record_native(
             payload,
-            <Self as store::ArtifactDsl>::envelope_id(),
+            <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),
             Self::__dsl_spec_producer(),
             |record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
                 admit_native_rows(record, maximum, native)?;
@@ -395,7 +395,7 @@ impl ArtifactSqliteSnapshot for Block5dSnapshot {
     }
     fn encode_sqlite_snapshot_native(&self, encoding: SnapshotEncoding, c: &mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>) -> Result<store::io_schema::IoPayload, ValueError> {
         forecast(self, c, SqliteSnapshotPhase::EncodeNative)?;
-        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding, <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), Self::__dsl_spec_producer(), |native| self.__dsl_to_record_controlled(native), c,native_owner)
     }
     fn to_sqlite_database(&self, c: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase, ValueError> {
         let total = forecast(self, c, SqliteSnapshotPhase::ProjectSnapshot)?;

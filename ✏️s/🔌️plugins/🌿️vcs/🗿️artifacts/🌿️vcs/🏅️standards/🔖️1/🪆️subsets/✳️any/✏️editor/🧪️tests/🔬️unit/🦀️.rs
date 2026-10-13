@@ -3,7 +3,7 @@ pub(crate) mod context {
     use semio_framework_plugin::artifact_app_laws::{meta, new_app_with_registry};
     use semio_framework_plugin::ActionMeta;
     use semio_framework_plugin::{EditorApp, InvocationResult, PluginApp, VcsArtifactApp, ViewModel};
-    use store::ArtifactEnvelope;
+    use store::os_store::store_schema::ArtifactEnvelope;
     
     /// ✏️ `VcsPlayApp` implements the AUTHORING trait `ArtifactEditor`, not the runtime `ArtifactApp`
     /// — `EditorApp<VcsPlayApp>` (SDK adapter, contract §2.1) is the real `ArtifactApp` implementor
@@ -150,8 +150,8 @@ pub(crate) mod context {
             // `ArtifactHistoryLedger`, whose own `Drop` asserts `artifact history ledger reached Drop
             // before every exact entry owner was retired`. The envelope leaves through the store's own
             // bounded retirement ladder, exactly like `🔌️wires`' `retire_envelope`.
-            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::retire_document_envelope_birth_bytes::<VcsSnapshot, VcsDemoMutation>(), maximum_depth: 4, ..Default::default() };
-            let (mut retirement, _) = store::retire_document_envelope(
+            let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: store::os_store::snapshot_read::retire_document_envelope_birth_bytes::<VcsSnapshot, VcsDemoMutation>(), maximum_depth: 4, ..Default::default() };
+            let (mut retirement, _) = store::os_store::snapshot_read::retire_document_envelope(
                 envelope,
                 std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsSnapshot>::default()),
                 std::sync::Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<VcsDemoMutation>::default()),
@@ -169,7 +169,7 @@ pub(crate) mod context {
     /// edit in the log is still applied.
     pub async fn seeded_envelope(instance: &VcsApp) -> SeededEnvelope {
         let files = instance.document_pack().await.expect("document pack");
-        SeededEnvelope(Some(store::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope))
+        SeededEnvelope(Some(store::os_store::text_format::parse_document_pack::<VcsSnapshot, VcsDemoMutation>(&files.pack, &files.spr).await.expect("parse document pack").envelope))
     }
     
     /// 🌱️ Seeds a rich, forked checkpoint/alternative history through `VcsApp`'s own public dispatch
@@ -466,14 +466,14 @@ fn retained_factories_publish_only_their_exact_declared_lanes() {
 
 #[test]
 fn one_item_store_preparation_rejects_non_document_lanes() {
-    use store::ArtifactStoreOneItemPreparationFactory;
-    let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
-    let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::HistoryLane::Document);
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Document).is_ok());
-    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::HistoryLane::Interaction).is_err());
+    use store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory;
+    let artifact = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::os_store::store_schema::HistoryLane::Document);
+    let config = VcsOneItemPreparationFactory::<VcsDemoConfig, VcsDemoConfigMutation>::new(store::os_store::store_schema::HistoryLane::Document);
+    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(artifact.preflight(&crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err());
     let mutation = VcsDemoConfigMutation::Noop;
-    assert!(config.preflight(&mutation, store::HistoryLane::Document).is_ok());
-    assert!(config.preflight(&mutation, store::HistoryLane::Interaction).is_err());
+    assert!(config.preflight(&mutation, store::os_store::store_schema::HistoryLane::Document).is_ok());
+    assert!(config.preflight(&mutation, store::os_store::store_schema::HistoryLane::Interaction).is_err());
 }
 
 #[test]
@@ -792,13 +792,13 @@ async fn create_and_switch_alternative_round_trip_through_the_wrapper() {
 /// (ticket 26/09/18, slice F1).
 #[semio_framework_async_macros::async_test]
 async fn the_one_item_preflight_declares_room_for_a_point_inverse() {
-    let factory = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::HistoryLane::Document);
-    let footprint = store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::HistoryLane::Document)
+    let factory = VcsOneItemPreparationFactory::<VcsSnapshot, VcsDemoMutation>::new(store::os_store::store_schema::HistoryLane::Document);
+    let footprint = store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Document)
         .expect("the document lane admits its own counter mutation");
-    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    assert_eq!(footprint.work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(footprint.is_admissible());
     assert!(
-        store::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::HistoryLane::Interaction).is_err(),
+        store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory::preflight(&factory, &crate::mutations::change_counter(1), store::os_store::store_schema::HistoryLane::Interaction).is_err(),
         "the declared lane is part of the envelope the factory admits"
     );
 }

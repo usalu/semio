@@ -7,7 +7,7 @@ mod tests {
         let est = entropy_discrete(&counts, DiscreteMethod::Plugin, LogBase::Nats).unwrap();
         let total: f64 = counts.iter().sum::<u64>() as f64;
         let p: Vec<f64> = counts.iter().map(|&c| c as f64 / total).collect();
-        let expected = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats).unwrap();
+        let expected = crate::schema::entropy_internals::discrete::entropy(&p, LogBase::Nats).unwrap();
         assert!((est.value - expected).abs() < 1e-9);
     }
 
@@ -33,7 +33,7 @@ mod tests {
     #[test]
     fn bias_corrected_methods_closer_to_truth_than_plugin_on_undersampled_uniform() {
         // 🔐️ K=64 uniform, N=100: plug-in should underestimate ln(64) more than Miller-Madow.
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(7);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(7);
         let k = 64;
         let mut counts = vec![0u64; k];
         for _ in 0..100 {
@@ -125,7 +125,7 @@ mod tests {
         fn all_methods_consistency_as_n_grows() {
             let k = 16usize;
             let truth = (k as f64).ln();
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(55);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(55);
             let mut prev_error = f64::INFINITY;
             for &n in &[200usize, 2_000, 20_000] {
                 let mut counts = vec![0u64; k];

@@ -4,7 +4,7 @@
 use crate::editor::wires::{wires_select_effect, WIRES_GRANULARITY_EDGE, WIRES_INTERACTION_GRAPH};
 use crate::schema::{board_edge, board_node, entity_id, wires_identities};
 use crate::{GraphEdgeId, GraphNodeId, SemioGraphMutation, SemioValue, SemioValueEntry, WiresComposed, WiresMutation, WiresSnapshot, WIRES_RELATIONSHIP_PROPERTY};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_edge::CreateEdge;
+use semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_plugin::{NoConfig, NoConfigMutation};

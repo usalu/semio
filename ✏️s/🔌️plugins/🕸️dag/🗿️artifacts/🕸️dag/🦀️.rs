@@ -38,15 +38,13 @@ pub use semio_framework_artifact_infinite_dag::{DagEdgePatch, DagExpandedPaths, 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/graph` document — the dag's nodes and edges live in this
 /// child's store; the parent document owns no content and no leaf that could read it (design §20.15).
-pub type DagContentChild = store::ArtifactChild<SemioGraphSnapshot>;
+pub type DagContentChild = store::os_store::artifact_child::ArtifactChild<SemioGraphSnapshot>;
 
 use semio_framework_value::{DslValue, Number};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{
-    GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA,
-};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId as SemioGraphEdgeId, GraphNodeId as SemioGraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
 
 /// 🔗️ The graph edge kind every DAG connection carries.
 const DAG_EDGE_KIND: &str = "dag-edge";
@@ -163,11 +161,11 @@ pub fn dag_scene_of_content(content: &SemioGraphSnapshot) -> DagScene {
 
 /// 🕸️ The deterministic content-addressed CHILD handle of a scene — same `(child_id, target)` for identical content.
 pub fn dag_content_child_handle(scene: &DagScene) -> DagContentChild {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let child_id = store::content_id("dag-content", &<SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(scene)));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "graph".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️ContentBridge
 
@@ -217,7 +215,7 @@ pub fn dag_derivable_scene(snapshot: &DagSnapshot) -> Option<DagScene> {
 
 /// 🌱️ Packs the derivable `content` member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_dag_child_pack(snapshot: &DagSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     (slot == "content" && child_id == snapshot.content.child_id).then(|| dag_derivable_scene(snapshot)).flatten().map(|scene| <SemioGraphSnapshot as ArtifactPack>::encode_pack(&dag_content_snapshot(&scene)))
 }
 //#endregion 🔖️Scene
@@ -225,33 +223,33 @@ pub fn genesis_dag_child_pack(snapshot: &DagSnapshot, slot: &str, child_id: &str
 //#region 🔖️ChildLeaves
 /// 🌱 The graph child leaf that creates one DAG node (appended).
 pub fn create_node_leaf(node: &DagNodeSpec) -> SemioGraphMutation {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_node::CreateNode;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode;
     let SemioGraphNode { id, kind, label, position, width, height, ports, properties } = dag_graph_node(node);
     SemioGraphMutation::CreateNode(CreateNode { id, kind, label, position, width, height, ports, properties, at: None })
 }
 
 /// 🤝️ The graph child leaf that creates one DAG edge (appended).
 pub fn create_edge_leaf(edge: &DagHostSnapshotEdge) -> SemioGraphMutation {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::create_edge::CreateEdge;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge;
     let SemioGraphEdge { id, source, target, kind, label, source_port, target_port, properties } = dag_graph_edge(edge);
     SemioGraphMutation::CreateEdge(CreateEdge { id, source, target, kind, label, source_port, target_port, properties, at: None })
 }
 
 /// ✂️ The graph child leaf that deletes one DAG edge.
 pub fn delete_edge_leaf(edge_id: &str) -> SemioGraphMutation {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::delete_edge::DeleteEdge;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge;
     SemioGraphMutation::DeleteEdge(DeleteEdge { id: SemioGraphEdgeId::new(edge_id) })
 }
 
 /// ✋️ The relative graph child leaf that drags DAG nodes by one offset.
 pub fn drag_nodes_leaf(node_ids: Vec<String>, dx: f64, dy: f64) -> SemioGraphMutation {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::drag_nodes::DragNodes;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::drag_nodes::DragNodes;
     SemioGraphMutation::DragNodes(DragNodes { targets: node_ids.into_iter().map(SemioGraphNodeId::new).collect(), dx, dy })
 }
 
 /// 🏷️ The graph child leaf that changes a DAG node's identity key (its edges follow).
 pub fn rename_node_leaf(id: &str, new_id: &str) -> SemioGraphMutation {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::rename_node::RenameNode;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::rename_node::RenameNode;
     SemioGraphMutation::RenameNode(RenameNode { id: SemioGraphNodeId::new(id), new_id: SemioGraphNodeId::new(new_id) })
 }
 //#endregion 🔖️ChildLeaves

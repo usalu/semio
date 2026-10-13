@@ -269,7 +269,8 @@ function walkDirectories(root: string, onDir: (absDir: string, relDir: string) =
   }
 }
 
-/** 🏷️ Deterministic Nx project name for one case — stable across platforms and safe for the CLI. */
+/** 🏷️ Deterministic identity of one case — its owner's Nx project name (`test-<slug>-<hash>`, see `./🟨️.mjs`) followed by the case slug; stable across
+ * platforms, safe for the CLI, and the key of the case's work, result and host directories. */
 export function testProjectName(ownerRel: string, caseSlug: string): string {
   const slug = ownerRel
     .split("/")
@@ -637,6 +638,9 @@ export type OracleHostPackage = Readonly<{ implementation: Implementation; packa
 /** 🧩️ Features a generated SUBJECT host enables on the owner's own package — a subject whose surface is feature-gated. */
 export type SubjectFeatures = Readonly<{ implementation: Implementation; features: readonly string[]; rationale: string }>;
 
+/** 🧱️ A local package the generated SUBJECT host links beside the owner's own package — a subject spanning several packages. */
+export type SubjectHostPackage = Readonly<{ implementation: Implementation; package: string; path: string; features?: readonly string[]; rationale: string }>;
+
 /** 🧩️ The name a host imports a contributed package by — the declared module, else the package name. */
 export function oracleHostModule(entry: OracleHostPackage): string {
   return entry.module ?? entry.package.replace(/-/g, "_");
@@ -657,6 +661,8 @@ export type TestContribution = Readonly<{
   oracleHostPackages: readonly OracleHostPackage[];
   /** 🧩️ Features the subject host enables on this owner's package; never the oracle's. */
   subjectFeatures: readonly SubjectFeatures[];
+  /** 🧱️ Packages the subject host links beside this owner's package; never the oracle's. */
+  subjectHostPackages: readonly SubjectHostPackage[];
   /** 🦠️ The mutation vocabularies this owner claims exhaustive coverage of. */
   mutationCatalogs: readonly MutationCatalog[];
   /** 🧬️ The authoritative subset-scoped mutation manifests this owner declares. */
@@ -700,6 +706,7 @@ const CONTRIBUTION_RECORD_DEFINITIONS: Readonly<Record<string, string>> = {
   toleranceProfiles: "ToleranceProfile",
   oracleHostPackages: "OracleHostPackage",
   subjectFeatures: "SubjectFeatures",
+  subjectHostPackages: "SubjectHostPackage",
   mutationManifests: "MutationManifest",
   testEvidence: "TestEvidence",
 };
@@ -744,6 +751,7 @@ function readContribution(repoRoot: string, owner: string, manifestPath: string)
     toleranceProfiles: (parsed.toleranceProfiles as ToleranceProfile[] | undefined) ?? [],
     oracleHostPackages: (parsed.oracleHostPackages as OracleHostPackage[] | undefined) ?? [],
     subjectFeatures: (parsed.subjectFeatures as SubjectFeatures[] | undefined) ?? [],
+    subjectHostPackages: (parsed.subjectHostPackages as SubjectHostPackage[] | undefined) ?? [],
     mutationCatalogs,
     mutationManifests: (parsed.mutationManifests as MutationManifest[] | undefined) ?? [],
     testEvidence: ((parsed.testEvidence as TestEvidence[] | undefined) ?? []).map((fixture) => ({ ...fixture, manifestDir: fixture.manifestDir ?? manifestDir })),
@@ -842,6 +850,23 @@ export function subjectFeaturesFor(registry: OracleRegistry, owner: string, impl
   const segments = owner.split("/");
   const ancestors = new Set(segments.map((_, index) => segments.slice(0, index + 1).join("/")));
   return [...new Set(registry.contributions.filter((entry) => ancestors.has(entry.owner) || entry.owner === ".").flatMap((entry) => entry.subjectFeatures).filter((entry) => entry.implementation === implementation).flatMap((entry) => entry.features))].sort();
+}
+
+/**
+ * 🧱️ The packages the generated SUBJECT host links beside the owner's own package: what the owner and each ancestor
+ * contribution declares for `implementation`, one row per package (identical rows from two ancestors merge their
+ * features; a package declared from two paths is refused).
+ */
+export function subjectHostPackagesFor(registry: OracleRegistry, owner: string, implementation: Implementation): SubjectHostPackage[] {
+  const segments = owner.split("/");
+  const ancestors = new Set(segments.map((_, index) => segments.slice(0, index + 1).join("/")));
+  const merged = new Map<string, SubjectHostPackage>();
+  for (const entry of registry.contributions.filter((contribution) => ancestors.has(contribution.owner) || contribution.owner === ".").flatMap((contribution) => contribution.subjectHostPackages).filter((candidate) => candidate.implementation === implementation)) {
+    const previous = merged.get(entry.package);
+    if (previous !== undefined && previous.path !== entry.path) throw new Error(`subject host package ${entry.package} is contributed from two paths (${previous.path} and ${entry.path})`);
+    merged.set(entry.package, previous === undefined ? entry : { ...previous, features: [...new Set([...(previous.features ?? []), ...(entry.features ?? [])])].sort() });
+  }
+  return [...merged.values()].sort((left, right) => left.package.localeCompare(right.package));
 }
 //#endregion 📇️Registry
 
@@ -6824,7 +6849,7 @@ export function stubDeserializerBreaches(repoRoot: string): BreachRecord[] {
       if (!/fn\s+deserialize(_bytes|_text)?\s*[(<]/.test(text)) continue;
       const format = rel.match(/🗿️artifacts\/[^/]*?([a-z0-9]+)\/🔖️/)?.[1] ?? "";
       const formatType = format.replace(/^./, (c) => c.toUpperCase());
-      const parsesDsl = parsesItsInputAsDsl(text.split("\n").filter((line) => !(formatType && new RegExp(`<\\s*${formatType}Snapshot\\s+as\\s+store::ArtifactDsl\\s*>::parse_dsl`).test(line))).join("\n"));
+      const parsesDsl = parsesItsInputAsDsl(text.split("\n").filter((line) => !(formatType && new RegExp(`<\\s*${formatType}Snapshot\\s+as\\s+store::os_store::serialization::ArtifactDsl\\s*>::parse_dsl`).test(line))).join("\n"));
       const coerces = (/to_value\s*\(\s*&?[A-Za-z_][A-Za-z0-9_]*\s*\)/.test(text) || /\b[a-z_][a-z0-9_]*\s*\.\s*to_value\s*\(\s*\)/.test(text)) && /from_value\s*[:(<]/.test(text);
       const inert = ignoresItsInput(text, "deserialize");
       if (!parsesDsl && !coerces && !inert) continue;

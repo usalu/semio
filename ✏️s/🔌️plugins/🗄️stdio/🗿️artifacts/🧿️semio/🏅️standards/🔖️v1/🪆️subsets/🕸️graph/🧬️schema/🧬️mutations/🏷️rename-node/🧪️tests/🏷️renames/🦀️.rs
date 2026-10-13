@@ -3,10 +3,10 @@
 //! Transcribed from `../../🔺️diff/🦀️.rs`, whose guards run in this order: an empty new id ⇒ FATAL `mutation.invariant`; no
 //! such node ⇒ Error `mutation.target-missing`; the node's own id ⇒ Warning `mutation.no-op`; an id another node carries ⇒
 //! FATAL `mutation.duplicate-id`.
-use crate::standards::v1::subsets::graph::schema::diff::SemioGraphDiff;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🏷️renames/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️rename-node/🏷️renames/📸️snapshot/➡️after/🔣️.json");
@@ -18,7 +18,7 @@ fn decode<T: semio_framework_value::FromValue>(text: &str) -> T {
     semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("rename-node fixture decodes")
 }
 fn snapshot(text: &str) -> SemioGraphSnapshot {
-    crate::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
+    crate::io::text::snapshot::decode_semio_graph_snapshot_json(text).expect("snapshot fixture decodes")
 }
 fn json(text: &str) -> serde_json::Value {
     serde_json::from_str(text).expect("rename-node fixture parses")
@@ -52,7 +52,7 @@ async fn the_undo_renames_back() {
 #[semio_framework_async_macros::async_test]
 async fn committed_json_is_canonical() {
     for text in [BEFORE, AFTER] {
-        assert_eq!(json(&crate::standards::v1::subsets::graph::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "rename-node/renames: a committed snapshot is not canonical");
+        assert_eq!(json(&crate::io::text::snapshot::encode_semio_graph_snapshot_json(&snapshot(text)).expect("snapshot encodes")), json(text), "rename-node/renames: a committed snapshot is not canonical");
     }
     assert_eq!(json(&semio_framework_pack_json::to_json_string(&decode::<SemioGraphMutation>(MUTATION))), json(MUTATION), "rename-node/renames: the committed mutation is not canonical");
 }
@@ -71,8 +71,8 @@ async fn declared_outcome_and_diff_hold() {
 /// 🚧️ The guard branches report their frozen codes.
 #[semio_framework_async_macros::async_test]
 async fn guard_branches_report_their_frozen_codes() {
-    use crate::standards::v1::subsets::graph::schema::mutations::rename_node::RenameNode;
-    use crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+    use crate::schema::mutations::rename_node::RenameNode;
+    use crate::schema::snapshot::GraphNodeId;
     let base = snapshot(BEFORE);
     let codes = |id: &str, new_id: &str| -> Vec<String> {
         SemioGraphMutation::RenameNode(RenameNode { id: GraphNodeId::new(id), new_id: GraphNodeId::new(new_id) }).diff(&base).messages().iter().map(|message| message.code.0.to_string()).collect()

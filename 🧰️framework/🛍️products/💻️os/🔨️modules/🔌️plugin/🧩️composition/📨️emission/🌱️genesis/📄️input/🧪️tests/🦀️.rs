@@ -9,7 +9,7 @@ async fn child_emission_private_genesis_writer_streams_canonical_pages_and_retai
         let expected=reference(&row["expected"]);let owner=crate::store::OwnerRef{parent:reference(&row["owner"]["parent"]),slot:row["owner"]["slot"].as_str().unwrap().into(),child_id:row["owner"]["child_id"].as_str().unwrap().into()};
         let segment=row["initialPackHex"].as_str().unwrap().as_bytes().as_chunks::<2>().0.iter().map(|pair|u8::from_str_radix(std::str::from_utf8(pair).unwrap(),16).unwrap()).collect::<Vec<_>>();let pack=segment.repeat(row["packRepeats"].as_u64().unwrap()as usize);let pointer=pack.as_ptr();
         let source=crate::store::MemberGenesisEnvelopeSource{schema:row["schema"].as_str().unwrap(),expected:&expected,owner:&owner,initial_pack:&pack};
-        let canonical=crate::store::genesis_member_envelope_pack(source.schema,&expected,&owner,&pack).await.unwrap();
+        let canonical=crate::store::os_store::text_format::genesis_member_envelope_pack(source.schema,&expected,&owner,&pack).await.unwrap();
         for stop in [0,1,3,17,65,257]{
             let mut cursor=PrivateChildGenesisInput::default();
             let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source,RetainedCloneGrant{maximum_items:0,..grant}).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));
@@ -20,7 +20,7 @@ async fn child_emission_private_genesis_writer_streams_canonical_pages_and_retai
         }
         let mut cursor=PrivateChildGenesisInput::default();let mut ready=false;
         for _ in 0..100000{let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||cursor.advance(source,grant).unwrap());assert!(step.progress().fits(grant));assert_eq!(heap.released_bytes,0);assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);if matches!(step,RetainedCloneStep::Complete(_)){ready=true;break;}}
-        assert!(ready);let mut pages=cursor.take_ready().unwrap();let mut joined=Vec::new();for index in 0..pages.page_count(){joined.extend_from_slice(pages.admitted_page(index).unwrap().as_slice());}assert_eq!(joined,canonical);let(decoded,_)=crate::store::decode_document_pack_bytes(&joined).await.unwrap();assert_eq!(decoded,pack);assert_eq!(pack.as_ptr(),pointer);
+        assert!(ready);let mut pages=cursor.take_ready().unwrap();let mut joined=Vec::new();for index in 0..pages.page_count(){joined.extend_from_slice(pages.admitted_page(index).unwrap().as_slice());}assert_eq!(joined,canonical);let(decoded,_)=crate::store::os_store::serialization::decode_document_pack_bytes(&joined).await.unwrap();assert_eq!(decoded,pack);assert_eq!(pack.as_ptr(),pointer);
         while pages.close_take_page().is_some(){}let backing=pages.allocation_byte_demand();let(_,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||drop(pages));assert_eq!(heap.released_bytes,backing);cursor.begin_close();while !cursor.terminal_is_empty(){let demand=cursor.next_close_byte_demand();cursor.close_granted(RetainedCloneGrant{maximum_release_bytes:demand,..grant}).unwrap();}
         println!("[DEBUG] private genesis assembled canonical case={} original={} encoded={} fixed-page-backing={} copy64 and six cancellation phases returned every exact allocation",row["id"],pack.len(),joined.len(),backing);
     }

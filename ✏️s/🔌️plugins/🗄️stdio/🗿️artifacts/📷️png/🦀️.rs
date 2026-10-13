@@ -20,7 +20,7 @@ pub use schema::mutations::PngMutation;
 pub use schema::snapshot::PngSnapshot;
 pub use schema::PngArtifact;
 /// 🧾️ The DSL contract `PngSnapshot` implements, re-exported for clients that print or parse it.
-pub use semio_framework_os_kernel::ArtifactDsl;
+pub use semio_framework_os_kernel::os_store::serialization::ArtifactDsl;
 
 /// 🏷️ Document schema / DSL envelope id.
 pub const STDIO_PNG_DOCUMENT_SCHEMA: &str = "stdio.png";
@@ -41,8 +41,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA);
     codec.extension = "png";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️1.2/🪆️subsets/✳️any/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -199,7 +199,7 @@ pub fn register() {
     for lang in pilot_languages() {
         semio_framework_dsl::register_language(*lang);
     }
-    semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") }, store::ArtifactCodec::of::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
+    semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.png", standard: StandardId("1.2"), subset: SubsetId("*") }, store::artifact_codec::<PngSnapshot, PngMutation>(STDIO_PNG_DOCUMENT_SCHEMA)).expect("static Stdio registration must be available and conflict-free");
 }
 //#endregion 🔖️ImperativeRegister
 

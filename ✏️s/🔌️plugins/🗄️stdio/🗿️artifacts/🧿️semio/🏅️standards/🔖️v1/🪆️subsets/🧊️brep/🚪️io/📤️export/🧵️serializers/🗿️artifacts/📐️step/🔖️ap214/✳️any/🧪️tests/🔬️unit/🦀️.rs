@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::brep::io::import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex};
+use semio_s_artifact_stdio_semio_brep_import::deserializers::artifacts::step::v_ap214::any::SemioBrepFromStep;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::{BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepVertex};
 use semio_framework_plugin::ArtifactDeserializer;
 
 /// 🧱️ Exercises every `BrepCurve`/`BrepSurface` variant (Line/Circle/Ellipse/Nurbs curves;

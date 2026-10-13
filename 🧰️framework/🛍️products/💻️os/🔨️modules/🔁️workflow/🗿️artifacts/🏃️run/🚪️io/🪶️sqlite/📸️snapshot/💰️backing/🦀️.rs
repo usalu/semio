@@ -24,7 +24,7 @@ fn construct(database:&SqliteDatabase,rows:&rows::Rows<'_>,native:&mut semio_fra
  value.logs=native.allocate_vec(rows.logs.len())?;for row in&rows.logs{value.logs.push(RunLogLine{node_id:native.copy_text(row.text(3)?)?,level:native.copy_text(row.text(4)?)?,message:native.copy_text(row.text(5)?)?,at:native.copy_text(row.text(6)?)?});native.step()?;}native.checkpoint()?;Ok(owner)
 }
 pub(super) fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<RunArtifact,ValueError>{
- let phase=SqliteSnapshotPhase::ReconstructSnapshot;validate_sqlite_database_schema_controlled(database,<RunArtifact as store::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,phase,control)?;control.check_database(database,phase)?;
+ let phase=SqliteSnapshotPhase::ReconstructSnapshot;validate_sqlite_database_schema_controlled(database,<RunArtifact as store::os_store::serialization::ArtifactSqliteSnapshot>::SQLITE_SCHEMA,phase,control)?;control.check_database(database,phase)?;
  let document=database.table("run_document")?.single_row()?;let trigger=database.table("run_trigger")?.single_row()?;
  if document.rowid!=1||document.values.len()!=11||document.integer(0)?!=1||trigger.rowid<=0||trigger.values.len()!=6||trigger.integer(0)?!=trigger.rowid||trigger.integer(1)?!=1{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Run requires complete aliased document and trigger ownership"))}
  let rows=rows::Rows::new(database,control)?;

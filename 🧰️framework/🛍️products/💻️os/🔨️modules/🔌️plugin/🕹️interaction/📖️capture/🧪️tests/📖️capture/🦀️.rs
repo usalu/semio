@@ -1,6 +1,6 @@
 //! 🧪️ Actual Store read leases, bounded byte output, cancellation, and return-maintenance ownership.
 use super::*;
-use crate::app::InteractionConfigMutation;
+use crate::local_interaction::mutations::InteractionConfigMutation;
 use store::{ArtifactStore, SpaceMember};
 
 type InteractionStore = ArtifactStore<InteractionState, InteractionConfigMutation>;
@@ -11,7 +11,7 @@ async fn fixture() -> (InteractionStore, LocalInteractionCaptureCursor, Vec<u8>,
     let mut state = row["expected"].clone();
     state["hover"] = serde_json::json!({"private": {"channel": "pointer", "ids": ["hover-is-not-captured"]}});
     let state: InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-capture-test", state, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "local-capture-test", state, None);
     let mut store = InteractionStore::new(envelope, protocol::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.unwrap();
     let mut recipient=recipient();crate::local_interaction::query::tests::install_original_interaction_owners(&mut store,&mut recipient);
     let identity = LocalInteractionIdentity { app_instance_id: 7, generation: store.generation_now(), revision: store.content_revision_now(), document_revision: [2; 32], topology_revision: [3; 32] };

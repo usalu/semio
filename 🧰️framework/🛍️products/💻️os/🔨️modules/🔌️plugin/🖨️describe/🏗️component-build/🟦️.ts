@@ -6,21 +6,18 @@ import { cargoTargetDirectory } from "../../../../../🦑️repo/🔨️modules/
 import { buildRepositoryCargoArtifacts } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🏗️native-build/🟦️.ts";
 import { devToolingEnv, resolveWorkspaceBin, runRepositoryCargoTests, runCmd } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
+import { COMPONENT_TARGET, type ComponentProfileV1 } from "../🏷️component-receipt/🟦️.ts";
 export const CRATE_NAME = "semio-framework-plugin-describe";
+/** 🛠️ The Cargo profile the emitter is built under: the workspace's build-time host tool profile (`[profile.host-tool]`). */
+export const DESCRIBE_TOOL_PROFILE = "host-tool";
 export const DESCRIPTOR_PACK_FILENAME = "🛂️.descriptor.semio";
 export const DESCRIPTOR_JSON_FILENAME = "🔣️.json";
-/** 🧱️ Admission bound for the two build artifacts the descriptor emitter reads — the raw
- * `wasm32-wasip2` component and jco's extracted core. {@link buildPluginComponent} builds the
- * UNOPTIMIZED `wasm-dev` profile, so this bounds a build-time input and is deliberately NOT the
- * runtime bound on a shipped component (`DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES`, which
- * applies to the optimized artifact). The GIS plugin's dev component is ~193 MiB; procedural ~80 MiB. */
-export const FRESH_COMPONENT_MAX_BYTES = 256 * 1024 * 1024;
 export const FRESH_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
 export const FRESH_IO_CHUNK_BYTES = 64 * 1024;
 
 export class DescriptorBuildScript extends BundleScript {
   async run(): Promise<void> {
-    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--release", "--bin", CRATE_NAME], this.repoRoot);
+    await buildRepositoryCargoArtifacts(join(import.meta.dir, "..", "📦️packages", "🦀️rust", "Cargo.toml"), ["--profile", DESCRIBE_TOOL_PROFILE, "--bin", CRATE_NAME], this.repoRoot);
   }
 }
 
@@ -50,10 +47,10 @@ export function publishedDescriptorEmitter(repoRoot: string): string {
   return binary;
 }
 
-/** 🎯️ WASI-development artifact path cargo just built for `packageName`, resolved through
- * the same {@link cargoTargetRoot} publishes through its declared build prerequisite. */
-export function pluginWasmArtifactPath(repoRoot: string, packageName: string, profile = "wasm-dev", targetRoot = cargoTargetRoot(repoRoot)): string {
-  return join(targetRoot, "wasm32-wasip2", profile, `${packageName.replace(/-/g, "_")}.wasm`);
+/** 🎯️ The uplifted artifact cargo writes for `packageName` under one component profile, resolved through
+ * the same {@link cargoTargetRoot} every repository build publishes through. */
+export function pluginWasmArtifactPath(repoRoot: string, packageName: string, profile: ComponentProfileV1, targetRoot = cargoTargetRoot(repoRoot)): string {
+  return join(targetRoot, COMPONENT_TARGET, profile, `${packageName.replace(/-/g, "_")}.wasm`);
 }
 
 /** 🧬 Extracts the first core module from the exact component with jco's independent parser. */

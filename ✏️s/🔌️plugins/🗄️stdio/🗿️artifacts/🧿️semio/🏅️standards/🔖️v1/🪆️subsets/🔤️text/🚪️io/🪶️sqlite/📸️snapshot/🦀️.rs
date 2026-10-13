@@ -1,10 +1,10 @@
 //! 🔤️ Ordered Semio text runs and inline marks as their own relational entities.
 
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
 
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use crate::schema::snapshot::{SemioTextMark, SemioTextMarkKind, SemioTextRun, SemioTextSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase}, os_store::serialization::ArtifactSqliteSnapshot};
 use store::sqlite_snapshot::{SqliteDatabaseLimits,artifact::{RowWriter,Cell}};
 #[path="💰️reconstruction/🦀️.rs"]
 mod reconstruction;
@@ -12,7 +12,7 @@ mod reconstruction;
 mod semantic;
 
 /// 🫳️ Visits each complete authored text row using the same owned or borrowed writer.
-pub(crate)fn visit_rows(snapshot:&SemioTextSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioTextSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.insert_key("semio_text_document",1,&[Cell::Text(&snapshot.schema)])?;
  for(ordinal,run)in snapshot.runs.iter().enumerate(){
   let id=out.insert("semio_text_run",&[Cell::Integer(1),Cell::Integer(integer(ordinal)?),Cell::Text(&run.language),Cell::Text(&run.content)])?;
@@ -34,7 +34,7 @@ fn kind(value: SemioTextMarkKind) -> &'static str { match value { SemioTextMarkK
 fn identity(row: &SqliteRow, columns: usize) -> Result<(),ValueError> { if row.values.len() != columns || row.integer(0)? != row.rowid { Err(ValueError::new(ValueRefusalKind::InvalidValue,"Semio text row identity or column count is invalid")) } else { Ok(()) } }
 
 impl ArtifactSqliteSnapshot for SemioTextSnapshot {
-fn retire_sqlite_snapshot(self){drop(crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
+fn retire_sqlite_snapshot(self){drop(semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned::new(self));}
 fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode(self,encoding,control,native_owner)}
 fn decode_sqlite_snapshot_native(payload:&store::io::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{native_decoding::decode(payload,control,native_control.native())}
     fn preflight_sqlite_snapshot_encoding(&self, _encoding: semio_framework_os_kernel::sqlite_snapshot::SnapshotEncoding, control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {let result=(||->Result<(),ValueError>{ admit_values(self,SqliteSnapshotPhase::EncodeNative,control)?;let mut bound = Bound::file_only("", control)?; self.native_fields(&mut bound)?; bound.finish() })();result}
@@ -65,17 +65,14 @@ impl SemioTextSnapshot {
 impl SemioTextSnapshot {
     /// 🪶️ Projects the owned subset into its declared relational writer while preserving refusals.
     pub fn project_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
-        semantic::layout(control.limits())?;crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
+        semantic::layout(control.limits())?;semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::project_rows_owned(Self::SQLITE_SCHEMA,control,|out|visit_rows(self,out))
     }
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;

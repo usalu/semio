@@ -1,6 +1,6 @@
 //! 🌊️ Framework Flow relational and native capability for its actual persisted owner.
 use super::*;
-use crate::os_store::ArtifactSqliteSnapshot;
+use crate::os_store::serialization::ArtifactSqliteSnapshot;
 use crate::store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SnapshotEncoding,ValueError};
 impl ArtifactSqliteSnapshot for FlowHostSnapshot{
  fn validate_sqlite_snapshot_subset_decoding(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>,owner:&mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_,'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{owner.native().checkpoint().map_err(semio_framework_os_kernel::io_schema::IoError::from_value_error)?;self.validate_sqlite_snapshot_subset(dialect,database,control)}

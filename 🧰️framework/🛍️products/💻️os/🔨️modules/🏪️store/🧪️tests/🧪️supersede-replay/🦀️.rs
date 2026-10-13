@@ -1313,7 +1313,7 @@ async fn bounded_history_read_cursors_obey_the_neutral_law() {
     let close_items = law["closeGrant"]["maximumItems"].as_u64().unwrap() as usize;
     let release_bytes = law["closeGrant"]["maximumReleaseBytes"].as_u64().unwrap() as usize;
     assert_eq!(close_items, 1);
-    assert_eq!(release_bytes, 16384);
+    assert_eq!(release_bytes, 4096);
     let mut store = demo_store("bounded-history-read", Some(law["initial"]["n"].as_i64().unwrap() as i32)).await;
     for edit in law["edits"].as_array().unwrap() {
         apply(&mut store, edit.as_array().unwrap().iter().map(|op| DemoMutation::from_value(op.clone().into()).unwrap()).collect()).await;

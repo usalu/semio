@@ -16,7 +16,7 @@ pub fn source() -> ExampleSource {
 /// 🧬️ The document this example IS, decoded from its own asset so the DSL file stays the single
 /// source of truth. `setActiveExample` packs this into the `Effect::LoadDocument` it emits.
 pub fn snapshot() -> crate::VcsSnapshot {
-    <crate::VcsSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).unwrap_or_default()
+    <crate::VcsSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).unwrap_or_default()
 }
 
 //#region 🪢️TaxonomyMounts

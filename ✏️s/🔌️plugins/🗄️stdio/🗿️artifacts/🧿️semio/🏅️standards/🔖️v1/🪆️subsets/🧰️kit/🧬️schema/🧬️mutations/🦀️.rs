@@ -10,8 +10,8 @@
 //! `object` has no LINK slots (`📦️object`'s own doc comment), so this is the FIRST facet in the
 //! ticket to exercise `bind`/`unbind`/`change-link-pin` for real.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Leaves
 use super::add_design;

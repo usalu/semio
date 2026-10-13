@@ -1,7 +1,7 @@
 use super::*;
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use std::collections::BTreeMap;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
@@ -13,12 +13,12 @@ fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
         let after: Block3dWorldWindowTransient = serde_json::from_value(row["after"].clone()).unwrap();
         let mut store = store::TransientStore::<_, Block3dWorldWindowTransientMutation>::new(before);
         let mut publication = store.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, SetBrushPreview { preview: after.brush_preview }.into(), owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
-        assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
+        let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
+        assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
         assert_eq!(publication.progress().completed_items, 0);
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 8 };
         for _ in 0..8 {
-            if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) { break; }
+            if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) { break; }
         }
         assert_eq!(serde_json::to_value(store.current_root().as_ref()).unwrap(), row["after"]);
         assert_eq!(publication.progress().completed_bytes, 0);
@@ -26,7 +26,7 @@ fn preview_replacement_publication_and_retirement_obey_tiny_grants() {
         assert!(matches!(publication.close_step(zero).unwrap(), semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) if progress == Default::default()));
         for _ in 0..4096 {
             let demand = publication.retirement_demands(4096).unwrap();
-            let turn = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            let turn = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             match publication.close_step(turn).unwrap() {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(_) => break,
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(turn.retained_grant())),

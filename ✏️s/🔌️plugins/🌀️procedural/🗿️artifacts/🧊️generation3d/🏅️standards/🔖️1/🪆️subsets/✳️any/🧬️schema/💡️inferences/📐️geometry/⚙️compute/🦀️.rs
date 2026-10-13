@@ -3,7 +3,7 @@
 use super::inputs::WidgetInputs;
 use super::value::{kernel_fault, Outputs, WidgetEvaluation, WidgetFault};
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Quality};
-use semio_framework_3d::brep::engine::{Brep, GeometryHandle, ImportedShape, ShapeValue};
+use semio_framework_3d_brep_engine::{Brep, GeometryHandle, ImportedShape, ShapeValue};
 
 //#region 🔖️Job
 /// 🪜️ One slice of a widget job: it needs more calls (`Working`, with a 0..=1 progress) or it is finished.

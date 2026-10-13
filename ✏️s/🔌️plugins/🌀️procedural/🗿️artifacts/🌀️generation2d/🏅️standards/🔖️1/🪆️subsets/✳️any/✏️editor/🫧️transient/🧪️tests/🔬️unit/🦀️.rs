@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{Mutation, MutationDiff};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn preview_state_matches_language_neutral_json_oracle() {

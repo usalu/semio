@@ -10,9 +10,9 @@ extern crate semio_framework_os_kernel as vcs;
 pub use crate::schema::snapshot::GisMapSnapshot;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
 //#region 🔹Constants
 
@@ -38,16 +38,16 @@ pub use crate::schema::feature::{MapFeature, MapFeaturePatch};
 /// which selects a rendering STYLE of the same vector data, not a second raster document) — the slot
 /// exists as a typed member. A supplied image handle is preserved; image-free proposal planning
 /// rejects such a map without changing or dropping that member.
-pub type GisMapDrawingChild = store::ArtifactChild<SemioDrawingSnapshot>;
-pub type GisMapImageChild = store::ArtifactChild<SemioImageSnapshot>;
-pub type GisMapValueChild = store::ArtifactChild<SemioValueSnapshot>;
+pub type GisMapDrawingChild = store::os_store::artifact_child::ArtifactChild<SemioDrawingSnapshot>;
+pub type GisMapImageChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
+pub type GisMapValueChild = store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>;
 
 /// 🕸️ Stable admitted CHILD handle for the map's composed drawing member.
 pub fn gis_map_drawing_child_handle() -> GisMapDrawingChild {
     let child_id = "gismap-drawing".to_string();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "drawing".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-drawing".into(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🕸️ Stable admitted CHILD handle for the map's composed value member.
@@ -55,7 +55,7 @@ pub fn gis_map_value_child_handle() -> GisMapValueChild {
     let child_id = "gismap-value".to_string();
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "value".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "gismap-value".into(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🌱️ Maps the complete intrinsic tree to the composed value domain.
@@ -135,7 +135,7 @@ pub fn gis_map_snapshot_with_derived_children(mut document: GisMapSnapshot) -> G
 /// functions of the parent snapshot, so a fresh boot or whole-document load materializes the same
 /// composed children inference would derive later.
 pub fn genesis_gis_map_child_pack(document: &GisMapSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot == "drawing" && child_id == document.drawing.child_id {
         let drawing = schema::gis_map_snapshot_to_drawing(document);
         return Some(<SemioDrawingSnapshot as ArtifactPack>::encode_pack(&drawing));
@@ -233,7 +233,7 @@ pub fn infer_gis_map_controlled(
     use crate::standards::v1::subsets::any::schema::inferences::{bounds::controlled_lon_lat_bounds, GisMapInference};
     let allocation = admit_gis_map_inference_request(request)?;
     checkpoint(0)?;
-    let snapshot = <GisMapSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
+    let snapshot = <GisMapSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|_| semio_framework_plugin::ArtifactInferenceExecutionError::new("gis.gismap.inference.snapshot-decode", "invalid canonical map snapshot"))?;
     let mut work = 1u64;
     checkpoint(work)?;
     let bounds = controlled_lon_lat_bounds(&snapshot, &mut |depth| {

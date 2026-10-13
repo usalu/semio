@@ -5,26 +5,26 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::image::io::text::mutations::TEXT_KEYWORDS;
-use crate::standards::v1::subsets::image::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::image::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
-use crate::standards::v1::subsets::image::io::text::snapshot::{dec_metadata_entry};
-use crate::standards::v1::subsets::image::io::text::snapshot::{enc_metadata_entry};
-use crate::standards::v1::subsets::image::io::text::snapshot::{dec_frame};
-use crate::standards::v1::subsets::image::io::text::snapshot::{enc_frame};
-use crate::standards::v1::subsets::image::io::text::snapshot::{dec_colorspace};
-use crate::standards::v1::subsets::image::io::text::snapshot::{enc_colorspace};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::io::text::mutations::TEXT_KEYWORDS;
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{SemioImageDiff, SemioImageFrameDiff, SemioImageFramesDiff, SemioImageMetadataDiff};
+use crate::io::text::snapshot::dec_metadata_entry;
+use crate::io::text::snapshot::enc_metadata_entry;
+use crate::io::text::snapshot::dec_frame;
+use crate::io::text::snapshot::enc_frame;
+use crate::io::text::snapshot::dec_colorspace;
+use crate::io::text::snapshot::enc_colorspace;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use protocol::Mutation;
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioImageMutation` below calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs `OpText` in scope in
 /// production code (was missing entirely, even test-gated) (W2b closer fix).
 use protocol::OpText;
-use crate::standards::v1::subsets::image::io::text::mutations::{print_image_mutation};
+use crate::io::text::mutations::print_image_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioImageMutation) -> u8 {
     match m {

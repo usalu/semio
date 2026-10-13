@@ -1,9 +1,8 @@
 {
   "appChannelVersion": 23,
-  "componentHex": "616263",
-  "componentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-  "componentBlake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
-  "coreHex": "646566",
+  "componentHex": "0061736d0d000100",
+  "componentSha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+  "componentBlake3": "48d3a2e8a9b0cde6293ba7f68824a97d069d096f44335a9e86aee55238dcdcb8",
   "laws": [
     "verified-descriptor-bytes-retained",
     "source-replacement-cannot-change-staging",

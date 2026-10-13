@@ -8,7 +8,7 @@ use crate::standards::v1::subsets::any::io::{binary::mutations as mutation_binar
 
 use crate::standards::v1::subsets::any::io::{binary::snapshot as snapshot_binary, text::snapshot as snapshot_text};
 use protocol::{OpBinary, OpText};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 fn documents() -> [Wfc3dSnapshot; 3] {
     [two_room_corridor::snapshot(), wall_roof_facade_strip::snapshot(), tower_stack::snapshot()]

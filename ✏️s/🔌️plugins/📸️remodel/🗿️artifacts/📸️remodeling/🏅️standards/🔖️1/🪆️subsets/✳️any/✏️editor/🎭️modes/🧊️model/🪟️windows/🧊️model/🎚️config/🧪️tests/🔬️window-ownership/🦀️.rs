@@ -2,7 +2,7 @@ use super::*;
 use crate::editor::remodeling::modes::analyze::windows::report::config::{self as report_config, RemodelingReportWindowConfig, RemodelingReportWindowConfigMutation, RemodelingReportWindowConfigOwner};
 use crate::editor::remodeling::modes::capture::windows::frames::config::{self as frames_config, RemodelingFramesWindowConfig, RemodelingFramesWindowConfigMutation, RemodelingFramesWindowConfigOwner};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn block_on_remodel_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);

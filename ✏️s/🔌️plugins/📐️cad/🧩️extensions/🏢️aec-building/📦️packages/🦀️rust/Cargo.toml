@@ -9,24 +9,10 @@ description = "CAD aec-building extension — contributes building STEP import p
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:cad-extension-aec-building"
-
 [package.metadata.semio]
-deployment-directory = "🏢️cad-extension-aec-building"
-component-kind = "extension"
 role = "extension"
-extends = "cad"
-contributes = ["cad.computer"]
-
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
@@ -35,12 +21,10 @@ semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨
 semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-cad-cad = { workspace = true }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 # 🏢️ Names cad's `CadSnapshot`/`CadMutation`/leaf-mutation dispatch types so this extension can
-# plan a composite mutation through cad's own `Planner` — WASM component entry point stays off (this
-# crate owns its own `extension_exports!` entry point; two `#[no_mangle]` bundle-install symbols in
-# one component is a link error), mirroring `💠️lowpoly`'s `cad_plugin` dependency.
+# plan a composite mutation through cad's own `Planner`, mirroring `💠️lowpoly`'s `cad_plugin` dependency.
 # 🏢️ Supplies the `protocol`/`store` crate-alias targets (`CompositeMutationKind`/`Planner`/
 # `ArtifactPack`) every plugin/extension crate aliases locally in its own glue — see cad's own
 # `🦀️.rs` `extern crate semio_framework_os_kernel as protocol/store` lines.

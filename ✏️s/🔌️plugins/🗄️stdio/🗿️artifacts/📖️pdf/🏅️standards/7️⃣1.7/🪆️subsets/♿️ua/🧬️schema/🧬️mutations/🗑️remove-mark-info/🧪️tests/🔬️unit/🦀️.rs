@@ -1,6 +1,6 @@
 use super::*;
 use crate::standards::v1_7::subsets::base::io::mutation_bridge::applied;
-use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfObject};
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject;
 use protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law;
 
 #[test]

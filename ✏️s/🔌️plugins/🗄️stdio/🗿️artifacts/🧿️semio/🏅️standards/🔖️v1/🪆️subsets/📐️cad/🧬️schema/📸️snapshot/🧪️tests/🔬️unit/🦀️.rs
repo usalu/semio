@@ -20,16 +20,16 @@ fn populated_snapshot() -> SemioCadSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = SemioCadSnapshot::default();
-    let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = SemioCadSnapshot::default();
-    let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 
@@ -38,12 +38,12 @@ async fn dsl_text_round_trips() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = populated_snapshot();
-    let bytes = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let via_pack = <SemioCadSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
+    let bytes = <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let via_pack = <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(via_pack, snap);
 
-    let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let via_dsl = <SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse dsl");
+    let text = <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let via_dsl = <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse dsl");
     assert_eq!(via_dsl, snap);
 }
 
@@ -52,8 +52,8 @@ async fn codec_retention_law() {
 #[semio_framework_async_macros::async_test]
 async fn demo_snapshot_round_trips_pack_and_dsl() {
     let demo = demo_cad_snapshot();
-    let packed = <SemioCadSnapshot as store::ArtifactPack>::encode_pack(&demo);
-    assert_eq!(<SemioCadSnapshot as store::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
-    let text = <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(&demo);
-    assert_eq!(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
+    let packed = <SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo);
+    assert_eq!(<SemioCadSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("decode"), demo);
+    let text = <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&demo);
+    assert_eq!(<SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), demo);
 }

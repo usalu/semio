@@ -1,11 +1,11 @@
 use super::*;
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
@@ -15,9 +15,9 @@ fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
         let Curve3::Line { origin, dir } = *body.curves3.get(edge.curve).unwrap() else { continue };
         let local_o = frame.to_local(origin);
         let local_d = frame.to_local_vector(dir);
-        let pcurve = body.curves2.insert(crate::brep::representation::curve::Curve2::Line {
-            origin: crate::brep::representation::vector::Pnt2::new(local_o.x, local_o.y),
-            dir: crate::brep::representation::vector::Vec2::new(local_d.x, local_d.y),
+        let pcurve = body.curves2.insert(semio_framework_3d_brep_representation::curve::Curve2::Line {
+            origin: semio_framework_3d_brep_representation::vector::Pnt2::new(local_o.x, local_o.y),
+            dir: semio_framework_3d_brep_representation::vector::Vec2::new(local_d.x, local_d.y),
         });
         // 🩺 A p-curve is always parametrized in the EDGE's own curve order — never reversed
         // to match a particular coedge's traversal direction (W1-E's binding convention, see
@@ -35,7 +35,7 @@ fn attach_planar_pcurves(body: &mut Body, face: FaceId, frame: &Frame3) {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn build_tetrahedron_with_windings(body: &mut Body, rec: &mut OpRecorder, face_defs: [[usize; 3]; 4]) -> crate::brep::representation::arena::SolidId {
+fn build_tetrahedron_with_windings(body: &mut Body, rec: &mut OpRecorder, face_defs: [[usize; 3]; 4]) -> semio_framework_3d_brep_representation::arena::SolidId {
     let positions = [Pnt3::new(0.0, 0.0, 0.0), Pnt3::new(1.0, 0.0, 0.0), Pnt3::new(0.0, 1.0, 0.0), Pnt3::new(0.0, 0.0, 1.0)];
     let vertices: Vec<_> = positions.iter().map(|&p| make_vertex(body, p, Tol::DEFAULT, rec)).collect();
     let edge_pairs = [(0, 1), (1, 2), (2, 0), (0, 3), (1, 3), (2, 3)];
@@ -80,12 +80,12 @@ fn build_tetrahedron_with_windings(body: &mut Body, rec: &mut OpRecorder, face_d
 // [2,0,3]]` — the OLD `build_tetrahedron_globally_reversed` — is each of those faces with its
 // last two vertices swapped, i.e. the genuinely OUTWARD-facing tetrahedron. The fixtures were
 // simply mislabeled; the validator's `shell-orientation-inward` check was correct both times.
-fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> crate::brep::representation::arena::SolidId {
+fn build_tetrahedron(body: &mut Body, rec: &mut OpRecorder) -> semio_framework_3d_brep_representation::arena::SolidId {
     build_tetrahedron_with_windings(body, rec, [[0, 2, 1], [0, 1, 3], [1, 2, 3], [2, 0, 3]])
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn build_tetrahedron_globally_reversed(body: &mut Body, rec: &mut OpRecorder) -> crate::brep::representation::arena::SolidId {
+fn build_tetrahedron_globally_reversed(body: &mut Body, rec: &mut OpRecorder) -> semio_framework_3d_brep_representation::arena::SolidId {
     build_tetrahedron_with_windings(body, rec, [[0, 1, 2], [0, 3, 1], [1, 3, 2], [2, 3, 0]])
 }
 
@@ -135,7 +135,7 @@ async fn a_non_manifold_edge_is_flagged() {
     let curve = body.curves3.insert(Curve3::Line { origin: Pnt3::new(0.0, 0.0, 0.0), dir: Vec3::X });
     let edge = make_edge(&mut body, curve, (0.0, 1.0), v0, v1, Tol::DEFAULT, &mut rec);
     for _ in 0..3 {
-        body.coedges.insert(crate::brep::representation::topology::Coedge {
+        body.coedges.insert(semio_framework_3d_brep_representation::topology::Coedge {
             edge,
             forward: true,
             pcurve: None,
@@ -159,9 +159,9 @@ async fn same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curv
     let coedge_id = body.loop_coedges(outer)[0];
     // Attach a pcurve that does NOT correspond to the face's surface at all — a constant,
     // clearly-wrong 2D point far from where the 3D edge actually projects.
-    let bad_pcurve = body.curves2.insert(crate::brep::representation::curve::Curve2::Line {
-        origin: crate::brep::representation::vector::Pnt2::new(500.0, 500.0),
-        dir: crate::brep::representation::vector::Vec2::new(0.0, 0.0),
+    let bad_pcurve = body.curves2.insert(semio_framework_3d_brep_representation::curve::Curve2::Line {
+        origin: semio_framework_3d_brep_representation::vector::Pnt2::new(500.0, 500.0),
+        dir: semio_framework_3d_brep_representation::vector::Vec2::new(0.0, 0.0),
     });
     let coedge = body.coedges.get_mut(coedge_id).unwrap();
     coedge.pcurve = Some(bad_pcurve);
@@ -179,8 +179,8 @@ fn validation_same_parameter_retains_all_original_adaptive_passes_and_verdict() 
     let face = body.solid_faces(solid)[probe["face"].as_u64().unwrap() as usize];
     let coedge = body.face_coedges(face)[probe["coedge"].as_u64().unwrap() as usize];
     let pcurve = body.coedges.get(coedge).unwrap().pcurve.unwrap();
-    let crate::brep::representation::curve::Curve2::Line { dir, .. } = body.curves2.get_mut(pcurve).unwrap() else { panic!("neutral original planar edge"); };
-    *dir = crate::brep::representation::vector::Vec2::new(0.0, 0.0);
+    let semio_framework_3d_brep_representation::curve::Curve2::Line { dir, .. } = body.curves2.get_mut(pcurve).unwrap() else { panic!("neutral original planar edge"); };
+    *dir = semio_framework_3d_brep_representation::vector::Vec2::new(0.0, 0.0);
     let mut job = BodyValidationJob::new(&body);
     let mut samples = 0;
     while !job.is_complete() {
@@ -272,8 +272,8 @@ async fn sliver_face_is_detected_when_tolerance_exceeds_face_area() {
 async fn self_intersection_probe_warns_on_overlapping_non_adjacent_faces() {
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
-    let a = crate::brep::operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
-    let b = crate::brep::operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let a = semio_framework_3d_brep_operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
+    let b = semio_framework_3d_brep_operations::primitives::make_box(&mut body, 1.0, 1.0, 1.0, &mut rec).unwrap();
     let mut faces = body.solid_faces(a);
     faces.extend(body.solid_faces(b));
     let shell = add_shell(&mut body, faces, &mut rec);
@@ -338,7 +338,6 @@ fn validation_loop_probe_spends_only_the_original_granted_coedge_work() {
 
 #[test]
 fn validation_valence_spends_only_the_original_granted_coedge_work() {
-    use crate::brep::representation::topology::EDGE_USE_PROBES;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🧊️cold-planning/🔣️.json")).unwrap();
     let mut body = Body::new();
     let mut recorder = OpRecorder::new();

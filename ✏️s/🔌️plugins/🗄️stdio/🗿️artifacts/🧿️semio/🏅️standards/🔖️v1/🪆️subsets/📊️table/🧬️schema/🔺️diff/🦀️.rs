@@ -5,9 +5,9 @@
 //! `snapshot: Option<SemioTableSnapshot>` full-replace slot anywhere — whole-document replace is `ArtifactStore::reset`,
 //! outside history.
 
-use crate::standards::v1::subsets::base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_base::schema::triples::{absorb_indexed_slot, apply_indexed_rows, inverse_indexed_rows, validate_indexed_triple, IndexedRow, IndexedTripleDiff, Replace};
+use crate::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 
@@ -148,8 +148,8 @@ impl protocol::command::DiffAlgebra<SemioTableSnapshot> for SemioTableDiff {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioTableDiff> {
-    use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified};
-    use crate::standards::v1::subsets::table::schema::snapshot::demo_table_snapshot;
+    use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified};
+    use crate::schema::snapshot::demo_table_snapshot;
     let demo = demo_table_snapshot();
     vec![
         SemioTableDiff::default(),

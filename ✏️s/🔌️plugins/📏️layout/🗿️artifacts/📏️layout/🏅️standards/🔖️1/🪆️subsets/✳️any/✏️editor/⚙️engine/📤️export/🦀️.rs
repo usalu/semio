@@ -10,8 +10,8 @@ use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep, JobOutcomeBor
 use semio_framework_plugin::app::{ArtifactDownloadOutput, ArtifactMediaExportCompletion, ArtifactMediaExportCredit, ArtifactMediaExportResult, ArtifactOutputChunks, ArtifactReservedToolJob, ArtifactSnapshotCloseLease, ArtifactToolCompletion};
 use semio_framework_plugin::{ArtifactReservedJob, ArtifactToolPublicationContract, ArtifactToolPublicationLane, EditorApp, EphemeralEmit, Fault, MediaClass, MediaForm, MediaType};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, PathSegment};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, PathSegment};
 use std::sync::Arc;
 #[path="🧾️dictionary/🦀️.rs"] mod dictionary;
 use dictionary::DictionaryJsonCursor;
@@ -2481,10 +2481,10 @@ impl LayoutExportToolJob {
     fn close_demand(&self) -> semio_framework_value::RetirementDemand {
         let release_bytes = LAYOUT_EXPORT_CLOSE_TURN_BYTES;
         if let Some(retirement) = self.rejected_download.as_ref() {
-            return store::artifact_retirement_box_demands(retirement, 0).unwrap_or_default();
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(retirement, 0).unwrap_or_default();
         }
         if self.pending_download.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.pending_download).unwrap_or_default();
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_download).unwrap_or_default();
         }
         if let Some(inner) = self.inner.as_ref() {
             if !inner.terminal_is_empty() {
@@ -2595,13 +2595,13 @@ impl InteractiveJob for LayoutExportToolJob {
         }
         let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         if self.rejected_download.is_some() {
-            return match store::artifact_retirement_box_close_step(&mut self.rejected_download, child) {
+            return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.rejected_download, child) {
                 Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
                 Err(error) => refused(error),
             };
         }
         if self.pending_download.is_some() {
-            return match store::artifact_retirement_admit_owned(&mut self.pending_download, &mut self.rejected_download, child) {
+            return match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.pending_download, &mut self.rejected_download, child) {
                 Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() },
                 Err(error) => refused(error),
             };

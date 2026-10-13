@@ -18,12 +18,17 @@ import { buildRepositoryCargoArtifacts } from "../🏗️native-build/🟦️.ts
  * `partitionNextestExecutionFilters`), so the warm build and the execution pass agree.
  */
 export async function runArtifactRustTests(cargoName: string, repoRoot: string, segments: string[], control: ScriptControl, testFeatures: readonly string[] = []): Promise<void> {
+  await runArtifactRustPackagesTests([cargoName], repoRoot, segments, control, testFeatures);
+}
+
+/** 🧪️ Runs one artifact's suites across every Cargo package it is cut into (a split artifact family), in one invocation. */
+export async function runArtifactRustPackagesTests(cargoNames: readonly string[], repoRoot: string, segments: string[], control: ScriptControl, testFeatures: readonly string[] = []): Promise<void> {
   const { runRepositoryCargoTests } = await import("../../../🟦️.ts");
   const { rest } = resolveTestLevel(segments);
   validateNativeCargoArguments("test", rest);
   const featureArgs = testFeatures.flatMap((feature) => ["--features", feature]);
-  const stopProgress = startNativeProgress(`artifact-rust:${cargoName}:test`);
-  try { await runRepositoryCargoTests([cargoName], repoRoot, control, [...featureArgs, ...rest]); }
+  const stopProgress = startNativeProgress(`artifact-rust:${cargoNames.join("+")}:test`);
+  try { await runRepositoryCargoTests([...cargoNames], repoRoot, control, [...featureArgs, ...rest]); }
   finally { stopProgress(); }
 }
 
@@ -35,7 +40,7 @@ export async function runArtifactRustTests(cargoName: string, repoRoot: string, 
 export type ArtifactTwinSelfTest = { readonly name: string; readonly run: () => number };
 
 /** 📦️ Runs an independently owned Rust artifact package through the shared Nx-native contract. */
-export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly testFeatures?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestFeatures?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] } = {}): Promise<void> {
+export async function runArtifactRustPackageMain(packageRoot: string, cargoName: string, options: { readonly packages?: readonly string[]; readonly testFeatures?: readonly string[]; readonly twins?: readonly ArtifactTwinSelfTest[]; readonly commands?: Readonly<Record<string, ScriptCommand>>; readonly testCommands?: Readonly<Record<string, ScriptCommand>>; readonly snapshotSqliteTests?: readonly string[]; readonly snapshotSqliteTestFeatures?: readonly string[]; readonly snapshotSqliteTestBudgetMs?: number; readonly snapshotSqliteTestGroups?: readonly (readonly string[])[] } = {}): Promise<void> {
   return receiveScriptProcessInvocation(process.env, async original => {
   if (options.snapshotSqliteTestBudgetMs !== undefined && (!Number.isSafeInteger(options.snapshotSqliteTestBudgetMs) || options.snapshotSqliteTestBudgetMs <= 0)) throw new Error("Owned SQLite snapshot test budget must be a positive safe integer");
   const snapshotSources = options.snapshotSqliteTests?.map(path => resolve(packageRoot, path)) ?? [];
@@ -53,7 +58,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
   class CheckScript extends BundleScript {
     async run(segments: string[]): Promise<void> {
       const { cargoArgs } = artifactRustCargoArguments("check", segments);
-      await runRepositoryCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...cargoArgs], this.repoRoot, `artifact-rust:${cargoName}:check`, scriptInvocationBudget(this.invocation, 0), { signal: this.invocation.control.signal });
+      await runRepositoryCommand(this.invocation,"cargo",["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml"), ...(options.packages ?? []).flatMap((name) => ["-p", name]), ...cargoArgs],this.repoRoot,`artifact-rust:${cargoName}:check`,{version:1,maximumElapsedMilliseconds:0,output:null},{});
     }
   }
   class TestScript extends BundleScript {
@@ -65,7 +70,7 @@ export async function runArtifactRustPackageMain(packageRoot: string, cargoName:
         return;
       }
       for (const twin of options.twins ?? []) console.log(`[TRACE] ${twin.name}-twin checks=${twin.run()}`);
-      await runArtifactRustTests(cargoName, this.repoRoot, segments, this.invocation.control, options.testFeatures);
+      await runArtifactRustPackagesTests(options.packages ?? [cargoName], this.repoRoot, segments, this.invocation.control, options.testFeatures);
     }
   }
   class CanonicalArchitectureScript extends BundleScript {

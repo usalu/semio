@@ -9,7 +9,7 @@ pub type NoteStore = store::ArtifactStore<crate::NoteSnapshot, crate::schema::mu
 /// `build_document_store_owners`; every standalone store goes through here instead.
 pub async fn new_note_store(envelope: NoteEnvelope, actor: protocol::ActorId) -> Result<OwnedNoteStore, store::VcsError> {
     let mut store = NoteStore::new(envelope, actor).await?;
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>().expect("funded bounded document owners")).map_err(|(error, _)| error).expect("document owners install");
     Ok(OwnedNoteStore(store))
 }
 
@@ -47,4 +47,4 @@ impl Drop for OwnedNoteStore {
     }
 }
 
-pub type NoteEnvelope = store::ArtifactEnvelope<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>;
+pub type NoteEnvelope = store::os_store::store_schema::ArtifactEnvelope<crate::NoteSnapshot, crate::schema::mutations::NoteMutation>;

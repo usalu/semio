@@ -10,7 +10,7 @@ use crate::Fem3dSnapshot;
 use crate::{element_id, load_id, FemAnalysisSettings, FemCombination, FemElement, FemLoad, FemMaterial, FemNode, FemSection, FemSolid};
 use protocol::Mutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 📖️SemioGrammar
 /// 📖️ Normative handcrafted text grammar for this facet (`dialect grammar`).

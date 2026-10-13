@@ -485,7 +485,7 @@ async fn query_app() -> VcsArtifactApp<TestApp> {
     let row = fixture["cases"].as_array().unwrap().iter().find(|row| row["id"] == "semantic-unicode-over-page").unwrap();
     let mut state = row["expected"].clone(); state["hover"] = serde_json::json!({});
     let state: InteractionState = serde_json::from_value(state).unwrap();
-    let envelope = store::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<InteractionState, InteractionConfigMutation>("framework.interaction", "query-dispatch", state, None);
     let mut interaction = store::ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into())).await.unwrap();
     store::install_unscheduled_catalog(&mut interaction, crate::local_interaction::retirement::funded_interaction_store_owners()).unwrap();
     let mut app = interaction_app_raw(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;

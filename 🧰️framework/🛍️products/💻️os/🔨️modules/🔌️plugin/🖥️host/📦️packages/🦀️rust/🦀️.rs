@@ -11,22 +11,10 @@ extern crate semio_framework_os_kernel as store;
 
 #[path = "../../🦀️.rs"]
 mod component;
-/// 🧠️ Repository-owned, instruction-fuelled core execution boundary. Native component lifting is
-/// layered above this module; browser builds retain the platform WebAssembly boundary.
-#[path = "../../../🧠️interpreter/🦀️.rs"]
-pub mod interpreter;
 pub use component::*;
 /// 🌿️ Exposes the canonical first-party authority named by host operation signatures.
 pub use semio_framework_os_kernel::os_vcs;
-#[path="../../../🚪️io/🛂️authority/🦀️.rs"]
-pub mod operation_authority;
-
-/// 🎭️ Mounts the plugin reactor's original actor-context vocabulary, the only reactor module the host names.
-#[path="../../../⚛️reactor/🎟️context/🦀️.rs"]
-pub mod original_actor_context;
-pub mod reactor {
-    pub use super::original_actor_context;
-}
+use semio_framework_plugin_interpreter::{operation_authority, original_actor_context};
 
 /// 🧪️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (B1 world-collapse): the one world's contract-parity
 /// test (effect ↔ host-async import parity, plus the collapsed shape itself) — mounted here rather than inside `🦀️.rs` (other packets are live

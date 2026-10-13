@@ -2,7 +2,7 @@
 
 use super::super::testkit::{house_with_sheets, inferred, labels};
 use super::*;
-use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::decode_pdf;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
 
 fn written() -> (Vec<u8>, crate::ModelSnapshot, crate::ModelInference) {
     let model = house_with_sheets();

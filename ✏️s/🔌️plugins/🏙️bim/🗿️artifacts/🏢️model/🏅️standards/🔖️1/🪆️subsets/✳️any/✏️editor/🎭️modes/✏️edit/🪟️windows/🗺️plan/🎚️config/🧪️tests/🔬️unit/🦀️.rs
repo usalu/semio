@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{DiffAlgebra, Mutation, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn pinned() -> BimPlanWindowConfig {
     BimPlanWindowConfig { view: "v-first".into(), framed: true, viewport: store::Viewport2d { x: 3.0, y: -2.0, zoom: 55.0 } }

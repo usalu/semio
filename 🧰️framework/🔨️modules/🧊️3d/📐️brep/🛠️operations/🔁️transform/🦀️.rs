@@ -1,6 +1,6 @@
 //! 🔁 Exact affine transformation of B-Rep topology: `transform_solid`/`transform_face`/
 //! `transform_wire` deep-copy the reachable topology graph into fresh entities (new
-//! [`crate::brep::representation::topology::history::PersistentLabel`]s, recorded generated), transforming every
+//! [`semio_framework_3d_brep_representation::topology::history::PersistentLabel`]s, recorded generated), transforming every
 //! geometric support ([`Curve3`]/[`Surface`]) via [`Affine3`] and leaving every p-curve
 //! ([`Curve2`]) byte-for-byte unchanged (it lives in the face's own parameter space, which the
 //! same map leaves invariant — see `Surface::transformed`'s own docstring). `transform_solid_in_place`
@@ -16,17 +16,17 @@
 
 use std::collections::HashMap;
 
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::operations::primitives::Wire;
-use crate::brep::representation::arena::{ArenaId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
-use crate::brep::representation::error::KernelError;
+use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_representation::topology::Wire;
+use semio_framework_3d_brep_representation::arena::{ArenaId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::error::KernelError;
 #[cfg(test)]
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
 #[cfg(test)]
-use crate::brep::representation::topology::history::PersistentLabel;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::Affine3;
+use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::Affine3;
 
 // #region 🔖️Validate
 
@@ -191,7 +191,7 @@ fn copy_shell(body: &mut Body, ctx: &mut CopyCtx, old_shell: ShellId, map: &Affi
 
 /// 🔁 Produces a NEW solid: every reachable vertex/edge/coedge/p-curve/loop/face/shell is deep
 /// copied into fresh entities (fresh [`PersistentLabel`]s, all recorded generated in `rec`'s
-/// [`crate::brep::representation::topology::history::OpDelta`]), with every geometric support transformed by `map`
+/// [`semio_framework_3d_brep_representation::topology::history::OpDelta`]), with every geometric support transformed by `map`
 /// and every tolerance scaled by `map.max_singular_value()`. Face count and edge count are exactly
 /// preserved; each face's surface stays its own analytic kind under a similarity `map`, else
 /// converts once to the exact equivalent NURBS ([`Surface::transformed`]). The original solid is
@@ -248,7 +248,7 @@ impl FaceCopier {
 
 /// 🔁 Produces a NEW, detached face (not attached to any shell/solid) — the same deep-copy-and-
 /// transform as one face inside [`transform_solid`], usable standalone for a bare
-/// [`crate::brep::representation::topology::Face`] handle.
+/// [`semio_framework_3d_brep_representation::topology::Face`] handle.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn transform_face(body: &mut Body, face: FaceId, map: &Affine3, rec: &mut OpRecorder) -> Result<FaceId, KernelError> {
     require_face(body, face)?;

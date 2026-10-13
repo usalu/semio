@@ -30,7 +30,7 @@ fn bound(source: &Snapshot, encoding: SnapshotEncoding, control: &mut SqliteSnap
     control.check_value_bytes(8)?;
     control.checkpoint(SqliteSnapshotPhase::EncodeNative, 1, 1)
 }
-impl store::ArtifactSqliteSnapshot for Snapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot {
     const SQLITE_SCHEMA: &'static str = SQL;
     fn to_sqlite_database(&self, control: &mut SqliteSnapshotControl<'_>) -> Result<SqliteDatabase,ValueError> {
         control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?; control.check_rows(1)?; control.check_value_bytes(16)?;

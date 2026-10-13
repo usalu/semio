@@ -13,17 +13,17 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::representation::arena::{FaceId, SolidId};
-use crate::brep::representation::curve::bspline::{elevate_degree, KnotVector};
-use crate::brep::representation::curve::curve_ops::{interpolate_curve, ParamMethod};
-use crate::brep::representation::curve::{Curve2, Curve3, NurbsCurve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec2};
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_representation::arena::{FaceId, SolidId};
+use semio_framework_3d_brep_representation::curve::bspline::{elevate_degree, KnotVector};
+use semio_framework_3d_brep_representation::curve::curve_ops::{interpolate_curve, ParamMethod};
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3, NurbsCurve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec2};
 
 use super::core::{build_face, finish_solid, LoopSpec};
 
@@ -61,7 +61,7 @@ fn fit_column(points: &[Pnt3], degree: usize) -> NurbsCurve3 {
 pub struct LoftJob {
     profiles: Vec<FaceId>,
     degree_v: usize,
-    loop_sets: Vec<Vec<crate::brep::representation::arena::LoopId>>,
+    loop_sets: Vec<Vec<semio_framework_3d_brep_representation::arena::LoopId>>,
     items: Vec<(usize, usize)>,
     laterals: Vec<FaceId>,
     plan: Plan,
@@ -166,8 +166,8 @@ impl LoftJob {
         let right_fit = fit_column(&right_positions, degree_v);
         let left_curve = body.curves3.insert(Curve3::Nurbs { knots: left_fit.knots.clone(), controls: left_fit.controls, weights: vec![1.0; n] });
         let right_curve = body.curves3.insert(Curve3::Nurbs { knots: right_fit.knots.clone(), controls: right_fit.controls, weights: vec![1.0; n] });
-        let left_rail = crate::brep::operations::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
-        let right_rail = crate::brep::operations::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
+        let left_rail = crate::euler::make_edge(body, left_curve, left_fit.knots.domain(), start_v0, end_v0, Tol::DEFAULT, rec);
+        let right_rail = crate::euler::make_edge(body, right_curve, right_fit.knots.domain(), start_v1, end_v1, Tol::DEFAULT, rec);
 
         let u0 = harmonized[0].knots.domain().0;
         let u1 = harmonized[0].knots.domain().1;
@@ -204,7 +204,7 @@ impl StagedOperation for LoftJob {
         }
         let bottom = profiles[0];
         let top = profiles[n - 1];
-        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(crate::brep::representation::vector::Vec3::Z);
+        let n0 = super::core::planar_outward_normal(body, bottom).unwrap_or(semio_framework_3d_brep_representation::vector::Vec3::Z);
         let bottom_origin = body
             .faces
             .get(bottom)

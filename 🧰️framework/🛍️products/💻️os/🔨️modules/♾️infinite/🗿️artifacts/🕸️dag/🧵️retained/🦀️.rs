@@ -1,5 +1,5 @@
 //! 🧵️ Original DAG fields retain ownership through independently admitted canonical retirement.
-use crate::os_store::{ArtifactOwnedValueRetirementFactory,ArtifactStoreCursorDisposer,ErasedSnapshotRetirement,MemberStoreOwner,DocumentStoreOwners,SnapshotRetirementFactory};
+use crate::os_store::{ArtifactOwnedValueRetirementFactory,ArtifactStoreCursorDisposer,ErasedSnapshotRetirement,document_store_owners::MemberStoreOwner,document_store_owners::DocumentStoreOwners,SnapshotRetirementFactory};
 use crate::{DagMutation,DagSnapshot};
 use semio_framework_value::{ValueError,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{OwnedValueRetirementFactory,SharedValueRetirementFactory}};
 use std::sync::Arc;
@@ -34,7 +34,7 @@ impl MemberStoreOwner<DagMutation> for DagSnapshot {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: DocumentStoreOwners::<Self, DagMutation>::source_birth_bytes::<DagSnapshotRetirementFactory, DagOwnedSnapshotRetirementFactory, DagMutationRetirementFactory, ArtifactStoreCursorDisposer<Self, DagMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DagMutation>, RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, DagMutation>> {
+    fn member_store_owners(grant: RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DagMutation>, RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, DagMutation>> {
         DocumentStoreOwners::admit_source_constructor(grant, || (DagSnapshotRetirementFactory, DagOwnedSnapshotRetirementFactory, DagMutationRetirementFactory, ArtifactStoreCursorDisposer::<Self, DagMutation>::new()))
     }
 }

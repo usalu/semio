@@ -2,15 +2,15 @@
 //! centroid and normal, the labels of neighbouring faces, and the dihedral angle between faces.
 
 use super::ShapeScope;
-use crate::brep::queries::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, surface_uv};
-use crate::brep::queries::validation::is_point_edge;
-use crate::brep::representation::arena::{ArenaId, EdgeId, FaceId};
-use crate::brep::representation::curve::curve_ops;
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::{surface_ops, Surface};
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use crate::mass_properties::{area_centroid_from_moments, area_from_moments, faces_moments, surface_uv};
+use crate::validation::is_point_edge;
+use semio_framework_3d_brep_representation::arena::{ArenaId, EdgeId, FaceId};
+use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::{surface_ops, Surface};
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 use std::collections::{BTreeSet, HashMap};
 
 /// 🏄️ The geometry of a face's supporting surface.

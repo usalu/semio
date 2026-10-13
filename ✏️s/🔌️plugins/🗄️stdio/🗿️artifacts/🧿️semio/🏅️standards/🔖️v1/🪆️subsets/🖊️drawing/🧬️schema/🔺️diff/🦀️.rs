@@ -10,12 +10,12 @@
 //! both the `layers` collection and every nested `Group.children` collection share one
 //! implementation instead of two near-duplicates.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
 
 
 
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
 
 
 
@@ -570,11 +570,11 @@ impl MutationDiff<SemioDrawingSnapshot> for SemioDrawingDiff {
             next.canvas = apply_canvas_diff(&next.canvas, cd);
         }
         if let Some(sd) = &self.styles {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.styles, sd, |item| item.name.clone(), |item| item.name.clone(), ["styles"])?;
             next.styles = apply_named(&next.styles, sd, |s| &s.name, apply_style_diff);
         }
         if let Some(ld) = &self.layers {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(ld, next.layers.len(), ["layers"])?;
             next.layers = apply_indexed(&next.layers, ld, apply_layer_diff);
         }
         Ok(next)
@@ -690,7 +690,7 @@ pub fn diff_move_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_origin
 /// 🔄️ Builds the sparse diff that sets a `Group` node's `transform.rotation` -- empty (no-op) for
 /// every other node kind (`Path`/`Text`/`Image` carry no rotation field).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
+pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rotation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion) -> SemioDrawingDiff {
     match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: new_rotation, scale: transform.scale };
@@ -703,7 +703,7 @@ pub fn diff_rotate_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_rota
 /// 📏️ Builds the sparse diff that sets a `Group` node's `transform.scale` -- empty (no-op) for
 /// every other node kind.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
+pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3) -> SemioDrawingDiff {
     match node_at(snapshot, np) {
         Some(DrawNode::Group { transform, .. }) => {
             let next = SemioTransform { translation: transform.translation, rotation: transform.rotation, scale: new_scale };
@@ -764,7 +764,7 @@ pub fn diff_scale_node(snapshot: &SemioDrawingSnapshot, np: &NodePath, new_scale
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
-    use crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 100.0, height: 50.0, background: Some(SemioRgba { r: 1.0, g: 1.0, b: 1.0, a: 1.0 }) },
@@ -794,7 +794,7 @@ pub(crate) fn sweep_a() -> SemioDrawingSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
-    use crate::standards::v1::subsets::drawing::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
+    use crate::schema::snapshot::STDIO_SEMIODRAWING_DOCUMENT_SCHEMA;
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 200.0, height: 80.0, background: None },
@@ -823,12 +823,12 @@ pub(crate) fn sweep_b() -> SemioDrawingSnapshot {
 
 /// 🌱 Representative `SemioDrawingDiff` cases built declaratively (empty/no-op, a removed style and a removed layer row) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-drawing"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioDrawingDiff> {
     vec![
         SemioDrawingDiff::default(),
-        SemioDrawingDiff { canvas: Some(Default::default()), styles: Some(crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff { removed: vec!["stroke".to_string()], ..Default::default() }), layers: Some(crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff { removed: vec![0], ..Default::default() }) },
+        SemioDrawingDiff { canvas: Some(Default::default()), styles: Some(NamedTripleDiff { removed: vec!["stroke".to_string()], ..Default::default() }), layers: Some(IndexedTripleDiff { removed: vec![0], ..Default::default() }) },
     ]
 }
 //#endregion 🔖️Demo
@@ -841,8 +841,8 @@ mod tests;
 
 //#region 🔁️Re-exports
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-pub use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-pub use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
+pub use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+pub use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 //#endregion 🔁️Re-exports
 
 /// 🌱 `sweep_a`/`sweep_b`, promoted to module scope so both this facet's own tests AND
@@ -853,8 +853,8 @@ pub use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn transform(tx: f64) -> SemioTransform {
     SemioTransform {
-        translation: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
-        rotation: crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion::default(),
-        scale: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
+        translation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: tx, y: 0.0, z: 0.0 },
+        rotation: semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion::default(),
+        scale: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 },
     }
 }

@@ -70,24 +70,24 @@ fn migrate_image_to_frame(image: &GifImage) -> GifFrame {
 //#endregion Migrate
 
 //#region Registration
-/// 🧳️ Pack-bytes bridge for `store::DialectMigration.migrate_pack`'s `fn(&[u8]) ->
+/// 🧳️ Pack-bytes bridge for `store::os_store::codec_registry::DialectMigration.migrate_pack`'s `fn(&[u8]) ->
 /// Result<Vec<u8>, String>` shape: decodes 87a pack bytes to a snapshot, migrates, re-encodes as
 /// 89a pack bytes. A bare non-capturing `fn`, coercible to the registry's `fn` pointer field.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn migrate_87a_to_89a_pack(pack_bytes: &[u8]) -> Result<Vec<u8>, String> {
-    let snapshot_87a = <Gif87aSnapshot as store::ArtifactPack>::decode_pack(pack_bytes).map_err(|error| error.to_string())?;
+    let snapshot_87a = <Gif87aSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack_bytes).map_err(|error| error.to_string())?;
     let snapshot_89a = migrate_87a_to_89a(&snapshot_87a);
-    Ok(<Gif89aSnapshot as store::ArtifactPack>::encode_pack(&snapshot_89a))
+    Ok(<Gif89aSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot_89a))
 }
 
 /// 📝️ Wires `migrate_87a_to_89a_pack` into `store`'s dialect-migration registry (see
-/// `store::register_dialect_migration`, `26/08/10` D4 evolution slice) — call once at
+/// `store::os_store::codec_registry::register_dialect_migration`, `26/08/10` D4 evolution slice) — call once at
 /// program-init time, mirroring every other `register_*` call in this codebase's init path. Not
 /// yet called from any real init path (no dispatch/hub/WIT wiring exists this pass — see this
 /// module's own doc comment); exercised directly by this module's own test below.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register() {
-    store::register_dialect_migration(store::DialectMigration {
+    store::os_store::codec_registry::register_dialect_migration(store::os_store::codec_registry::DialectMigration {
         from: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "87a".into(), subset: "*".into() },
         to: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gif".into(), standard: "89a".into(), subset: "*".into() },
         lossless: true,

@@ -1,5 +1,6 @@
 //! 🪪️ Native known string roles bind once into retained semantic text and date values.
-use crate::standards::v1_7::subsets::base::{schema::snapshot::*,modules::fonts::decode_text_string};
+use crate::standards::v1_7::subsets::base::io::decode_text_string;
+use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{HashMap,HashSet};
 
 fn role(key:&str)->Option<u8> {

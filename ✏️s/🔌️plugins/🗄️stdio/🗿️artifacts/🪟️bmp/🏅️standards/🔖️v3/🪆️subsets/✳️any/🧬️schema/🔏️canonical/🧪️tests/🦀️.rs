@@ -3,7 +3,7 @@ use super::*;
 use std::sync::Arc;
 use semio_framework_value::{FromValue,ToValue,retirement::{RetireOwned,SharedValueRetirementFactory},retained_clone::{RetainedCloneGrant,RetainedCloneStep}};
 
-fn encoding_grant(items:usize,copy:usize)->store::ArtifactStoreOneItemGrant{store::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
+fn encoding_grant(items:usize,copy:usize)->store::os_store::one_item::ArtifactStoreOneItemGrant{store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:items,maximum_copy_bytes:copy,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn close_policy()->RetainedCloneGrant{RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4_096,maximum_capacity_bytes:65_536,maximum_release_bytes:65_536,maximum_depth:64}}
 fn retire_reader<T:Send+Sync+'static>(reader:&mut store::ArtifactCanonicalJsonReader<T>){for _ in 0..100000{if matches!(reader.close_step(close_policy()).unwrap(),RetainedCloneStep::Complete(_)){return;}}panic!("canonical reader did not retire");}
 
@@ -13,7 +13,7 @@ fn verify<T:store::ArtifactCanonicalJson+ToValue+RetireOwned+Sync>(value:T,expec
     let mut reader=store::ArtifactCanonicalJsonReader::new(owner,Arc::new(SharedValueRetirementFactory::<T>::default()));
     let grant=encoding_grant(1,17);
     let mut bytes=Vec::new();let mut chunk=[0;17];let mut turns=0;
-    for zero in [store::ArtifactStoreOneItemGrant{maximum_items:0,..grant},store::ArtifactStoreOneItemGrant{maximum_copy_bytes:0,..grant}]{assert_eq!(reader.encode_chunk(zero,&mut chunk).unwrap().written_bytes,0);assert_eq!(reader.completed_bytes(),0);}
+    for zero in [store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_items:0,..grant},store::os_store::one_item::ArtifactStoreOneItemGrant{maximum_copy_bytes:0,..grant}]{assert_eq!(reader.encode_chunk(zero,&mut chunk).unwrap().written_bytes,0);assert_eq!(reader.completed_bytes(),0);}
     while !reader.is_complete(){turns+=1;assert!(turns<100000);let step=reader.encode_chunk(grant,&mut chunk).unwrap();assert!(step.ownership.progress().fits(grant.retained_grant()));let count=step.written_bytes;assert!(count<=grant.maximum_copy_bytes);bytes.extend_from_slice(&chunk[..count]);}
     assert_eq!(serde_json::from_slice::<serde_json::Value>(&bytes).unwrap(),expected);
     reader.begin_close();retire_reader(&mut reader);

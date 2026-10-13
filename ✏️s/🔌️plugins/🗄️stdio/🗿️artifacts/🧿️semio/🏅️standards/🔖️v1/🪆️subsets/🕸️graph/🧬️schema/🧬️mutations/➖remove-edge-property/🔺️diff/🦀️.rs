@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `RemoveEdgeProperty`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{SemioGraphDiff, SemioGraphEdgeDiff};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ An edge the graph lacks, or a key it does not carry, is `mutation.target-missing`; otherwise that entry leaves.

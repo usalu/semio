@@ -53,11 +53,11 @@ fn retained_page_selection_publishes_only_the_addressed_config_lane() {
     let interaction = protocol::InteractionState::default();
     let hover = semio_framework_plugin::app::InteractionHoverState::default();
     let operation = AppOperationContext { app_instance_id: 1, parent_document_id: "tiff-page-selection".into(), operation_id: 2, generation: 3, canonical_base_revision: [4; 32], authoring_seed: "tiff-page-selection".into(), retained: semio_s_artifact_stdio_contract::editing::ample_close_grant() };
-    let emit = tiffAnyEditor_retained_reduce(&command, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).expect("retained page selection");
+    let emit = tiff_any_editor_retained_reduce(&command, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).expect("retained page selection");
     assert!(emit.artifact_mutations.is_empty());
     assert!(emit.effects.is_empty());
     assert_eq!(emit.config_mutations, vec![TiffEditorConfigMutation::SetSelectedIfd { selected_ifd: 1 }]);
-    assert!(tiffAnyEditor_retained_reduce(&TiffAnyEditCommand::SelectIfd { ifd_index: 2 }, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).is_err());
+    assert!(tiff_any_editor_retained_reduce(&TiffAnyEditCommand::SelectIfd { ifd_index: 2 }, &snapshot, &TiffEditorConfig::default(), &history, &interaction, &hover, None, &operation).is_err());
 }
 
 fn tiled_editor_snapshot() -> TiffSnapshot {
@@ -81,7 +81,7 @@ fn tiled_editor_snapshot() -> TiffSnapshot {
 }
 
 fn paint_command() -> TiffAnyEditCommand {
-    tiffAnyEditor_command_from_action(
+    tiff_any_editor_command_from_action(
         paint_region::ACTION_ID,
         Some(&semio_framework_value::DslValue::object([
             ("x".into(), number(15)),

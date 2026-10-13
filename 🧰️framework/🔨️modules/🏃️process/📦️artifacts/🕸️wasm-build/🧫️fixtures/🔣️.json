@@ -3,7 +3,7 @@
   "policy": {
     "version": 1,
     "cwd": "/owner",
-    "mode": "dev",
+    "mode": "prototype",
     "artifactDirectory": "/captures",
     "buildDirectory": "/compiler",
     "budgetMs": 0,
@@ -43,10 +43,20 @@
       "threads": true
     },
     {
-      "name": "ship",
+      "name": "release",
       "status": 0,
       "output": true,
-      "mode": "ship"
+      "mode": "release"
+    }
+  ],
+  "modePublications": [
+    {
+      "mode": "prototype",
+      "wasmHex": "0061736d01000000"
+    },
+    {
+      "mode": "release",
+      "wasmHex": "0061736d01000000000100"
     }
   ]
 }

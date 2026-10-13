@@ -1,8 +1,8 @@
 //! 🧭️ The image editor's edit rules: which snapshot pointer raises which ONE concrete image mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{complete, ent, ins, keyed, list_move, named, positions, rem, resolve, spread_snake, Entries, Reshape, INDEX, ITEM};
-use crate::standards::v1::subsets::image::schema::mutations::SemioImageMutation;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete, ent, ins, keyed, list_move, named, positions, rem, resolve, spread_snake, Entries, Reshape, INDEX, ITEM};
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, SnapshotEditEvent};

@@ -1,10 +1,10 @@
 //#region 🧪️TestAppMutationFixtures
 #[path = "../🖥️test-app-mutations-config/🦀️.rs"]
 pub mod config;
-pub(crate) use config::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
+use config::{ChangeTestConfigSelection, TestConfig, TestConfigMutation};
 #[path = "../🖥️test-app-mutations-document/🦀️.rs"]
 pub mod document;
-pub(crate) use document::{SetCount, SetLabel, SetSlotChildren, TestMutation, TestSnapshot};
+use document::{SetCount, SetLabel, SetSlotChildren, TestMutation, TestSnapshot};
 
 /// 🧾️ The committed wire witnesses decode through the aggregate's `FromValue` and re-encode to exactly the committed JSON.
 #[test]

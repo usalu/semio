@@ -180,4 +180,3 @@ mod surface_tests;
 mod action_args_tests;
 //#endregion 🧪️SurfaceTests
 
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, NormApps);

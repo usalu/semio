@@ -2,7 +2,7 @@
 
 use crate::op::CadMutation;
 use crate::CadSnapshot;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 
 /// 🔐️ Opens a CAD store WITH its exact owner catalog installed. `ArtifactStore::new` installs no
@@ -12,7 +12,7 @@ pub type CadStore = ArtifactStore<CadSnapshot, CadMutation>;
 /// the framework's bounded default owners; every standalone store goes through here instead.
 pub async fn new_cad_store(envelope: CadEnvelope, actor: protocol::ActorId) -> Result<OwnedCadStore, store::VcsError> {
     let mut store = CadStore::new(envelope, actor).await?;
-    let owners = store::funded_bounded_artifact_store_owners::<CadSnapshot, CadMutation>().expect("CAD document store owner catalog is fully funded");
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<CadSnapshot, CadMutation>().expect("CAD document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("CAD document store refused its exact owner catalog: {error}");
     }

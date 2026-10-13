@@ -33,7 +33,7 @@ pub struct JackArtifact {
 //#endregion 🔖️Artifact
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `content` is a `store::ArtifactChild<S>` composed-artifact
+/// 🔀️ Hand-written, not derived: `content` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact
 /// handle, which speaks `serde` (framework-internal, unaffected by this ticket) rather than
 /// `ToValue`/`FromValue` directly — bridged through the pre-existing `semio_framework_value::ToValue::to_value`/
 /// `semio_framework_value::FromValue::from_value` seam instead of widening the derive macro to understand child-slot

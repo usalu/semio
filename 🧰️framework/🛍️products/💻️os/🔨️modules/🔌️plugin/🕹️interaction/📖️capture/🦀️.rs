@@ -3,8 +3,8 @@
 use protocol::{DomainSelection, InteractionState, LocalInteractionIdentity, SelectionMode};
 use std::{mem::ManuallyDrop, sync::Arc};
 use store::{
-    ArtifactCanonicalJson, ArtifactCanonicalJsonArray as JsonArray, ArtifactCanonicalJsonNode as JsonNode, ArtifactCanonicalJsonObject as JsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue as JsonValue, ArtifactStoreOneItemGrant,
-    ErasedSnapshotRetirement, SnapshotRead, SnapshotRetirementFactory,
+    ArtifactCanonicalJson, ArtifactCanonicalJsonArray as JsonArray, ArtifactCanonicalJsonNode as JsonNode, ArtifactCanonicalJsonObject as JsonObject, ArtifactCanonicalJsonReader, ArtifactCanonicalJsonValue as JsonValue, os_store::one_item::ArtifactStoreOneItemGrant,
+    ErasedSnapshotRetirement, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory,
 };
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 
@@ -195,32 +195,32 @@ impl LocalInteractionCaptureCursor {
         Self { identity: identity.clone(), reader: ArtifactCanonicalJsonReader::new(Arc::new(CapturedRoot::new(read, identity)), Arc::new(CapturedRootRetirementFactory)) }
     }
 
-    pub(crate) fn identity(&self) -> &LocalInteractionIdentity {
+    fn identity(&self) -> &LocalInteractionIdentity {
         &self.identity
     }
-    pub(crate) fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
+    fn write_chunk(&mut self, grant: ArtifactStoreOneItemGrant, output: &mut [u8]) -> Result<store::ArtifactCanonicalJsonTreeStep, store::ArtifactCanonicalJsonEncodeError> {
         self.reader.encode_chunk(grant, output)
     }
-    pub(crate) fn completed_bytes(&self) -> u64 {
+    fn completed_bytes(&self) -> u64 {
         self.reader.completed_bytes()
     }
-    pub(crate) fn complete(&self) -> bool {
+    fn complete(&self) -> bool {
         self.reader.is_complete()
     }
-    pub(crate) fn cancel(&mut self) {
+    fn cancel(&mut self) {
         self.reader.cancel();
         self.reader.begin_close();
     }
-    pub(crate) fn begin_close(&mut self) {
+    fn begin_close(&mut self) {
         self.reader.begin_close();
     }
-    pub(crate) fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    fn retirement_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         self.reader.retirement_demands(body)
     }
-    pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         self.reader.close_step(grant)
     }
-    pub(crate) fn terminal_is_empty(&self) -> bool {
+    fn terminal_is_empty(&self) -> bool {
         self.reader.terminal_is_empty()
     }
 }

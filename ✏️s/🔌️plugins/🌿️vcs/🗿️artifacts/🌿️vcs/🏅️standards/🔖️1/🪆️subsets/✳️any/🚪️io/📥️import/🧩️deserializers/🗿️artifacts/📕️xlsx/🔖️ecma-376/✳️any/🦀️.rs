@@ -21,7 +21,7 @@ impl Deserializer<VcsSnapshot> for XlsxIntoVcs {
         let IoPayload::Binary(bytes) = payload else {
             return Err(error("expected a binary xlsx payload".into()));
         };
-        let xlsx = <XlsxSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
+        let xlsx = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|e| error(e.to_string()))?;
         let workbook = xlsx.project_workbook().map_err(|e| error(e.to_string()))?;
         let sheet = workbook.sheets.first().ok_or_else(|| error("the workbook has no worksheet".into()))?;
         let text = |value: &XlsxCellValue| match value {

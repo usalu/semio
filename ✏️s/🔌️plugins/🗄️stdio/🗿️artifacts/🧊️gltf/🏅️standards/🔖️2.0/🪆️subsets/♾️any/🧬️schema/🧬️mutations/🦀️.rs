@@ -1,8 +1,8 @@
 //! 🧬️ Transparent glTF mutation aggregate. Every concrete payload, outcome, diff, inverse, and test lives in its direct semantic leaf.
 
-use crate::schema::diff::GltfDiff;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff;
 
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 pub use super::add_required_extension::AddRequiredExtensionMutation;
 pub use super::add_used_extension::AddUsedExtensionMutation;

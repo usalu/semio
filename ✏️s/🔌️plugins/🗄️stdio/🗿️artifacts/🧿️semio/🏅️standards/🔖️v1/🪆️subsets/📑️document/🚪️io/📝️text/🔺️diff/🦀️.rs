@@ -5,14 +5,14 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::document::io::binary::diff::{encode_option, decode_option};
-use crate::standards::v1::subsets::document::schema::diff::*;
+use crate::io::binary::diff::{encode_option, decode_option};
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_added, dec_named_triple, enc_indexed_triple, enc_named_added, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{DocBlock, DocImage, DocListItem, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -174,7 +174,7 @@ pub(crate) fn dec_run(s: &str) -> Result<DocRun, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_block(b: &DocBlock) -> String {
+pub fn enc_block(b: &DocBlock) -> String {
     match b {
         DocBlock::Paragraph { style_id, runs } => format!("P[{},{}]", encode_option(style_id, |v| enc_str(v)), enc_list(runs, enc_run)),
         DocBlock::Heading { level, style_id, runs } => format!("H[{},{},{}]", enc_u8(level), encode_option(style_id, |v| enc_str(v)), enc_list(runs, enc_run)),
@@ -188,7 +188,7 @@ pub(crate) fn enc_block(b: &DocBlock) -> String {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_block(s: &str) -> Result<DocBlock, String> {
+pub fn dec_block(s: &str) -> Result<DocBlock, String> {
     let (tag, rest) = s.split_at(1);
     let inner = strip_brackets(rest)?;
     match tag {

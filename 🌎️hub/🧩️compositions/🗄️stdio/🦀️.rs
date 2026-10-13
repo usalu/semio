@@ -5,17 +5,7 @@
 
 extern crate semio_framework_value_derive as value_derive;
 
-#[cfg(feature = "component-app-assembly")]
 #[path = "🔌️plugin/🦀️.rs"]
 pub mod plugin;
-#[cfg(feature = "component-app-assembly")]
 pub use plugin::plugin;
-#[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, plugin::StdioApps);
 
-#[path = "🔌️plugin/📇️catalog/🦀️.rs"]
-pub mod catalog;
-
-#[cfg(feature = "full-artifact-catalog")]
-#[path = "🛂️manifest/🦀️.rs"]
-pub mod manifest;

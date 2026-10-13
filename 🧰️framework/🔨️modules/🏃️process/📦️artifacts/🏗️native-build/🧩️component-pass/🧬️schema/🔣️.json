@@ -1,0 +1,309 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/ReleasePlanV1",
+  "title": "The Cargo passes and jobs one release build driver owns, and the driver policy",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "version",
+    "passes"
+  ],
+  "properties": {
+    "version": {
+      "const": 1
+    },
+    "passes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/PassV1"
+      }
+    },
+    "jobs": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/JobV1"
+      }
+    },
+    "stageAfter": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "uniqueItems": true,
+        "items": {
+          "$ref": "#/definitions/CompletionName"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "stallMs": 900000,
+        "watchdogMs": 30000,
+        "progressMs": 30000,
+        "logLimitBytes": 134217728,
+        "failureLinesPerUnit": 200,
+        "failureLinesTotal": 2000,
+        "featureUnification": "package",
+        "generationEnvironment": "SEMIO_RELEASE_GENERATION",
+        "generations": [
+          "warm",
+          "fresh"
+        ],
+        "generationPrefix": "f",
+        "warmRoot": "release",
+        "stores": {
+          "target": "t",
+          "build": "b",
+          "report": "r",
+          "logs": "l",
+          "jobserver": "j"
+        },
+        "provenanceDirectory": "provenance",
+        "provenanceLedger": "semio-cargo-provenance",
+        "componentHeader": [
+          0,
+          97,
+          115,
+          109,
+          13,
+          0,
+          1,
+          0
+        ],
+        "provenanceLeavesFile": "leaves.json",
+        "provenanceReadsFile": "reads.json",
+        "unitGraphFile": "unit-graph",
+        "warmRunPrefix": "w",
+        "warmRunRetentionMs": 86400000
+      }
+    },
+    "AbsolutePath": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 2048,
+      "pattern": "^(?:/|[A-Za-z]:[\\\\/])"
+    },
+    "PackageV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "manifest"
+      ],
+      "properties": {
+        "name": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,128}$"
+        },
+        "manifest": {
+          "$ref": "#/definitions/AbsolutePath"
+        }
+      }
+    },
+    "PassV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "manifest",
+        "packages",
+        "target",
+        "profile",
+        "output"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.:-]{1,128}$"
+        },
+        "manifest": {
+          "$ref": "#/definitions/AbsolutePath"
+        },
+        "packages": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/PackageV1"
+          }
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "output": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-][A-Za-z0-9_.-]*(?:/[A-Za-z0-9_-][A-Za-z0-9_.-]*)*$"
+        }
+      }
+    },
+    "CompletionName": {
+      "type": "string",
+      "pattern": "^(?:(?:job|pass|provenance|components):[A-Za-z0-9_.@-]{1,128}|[A-Za-z0-9_-]{1,128}:[a-z][a-z0-9-]{0,47})$"
+    },
+    "JobV1": {
+      "description": "A command the driver runs under its jobserver once every completion it names in `after` happened: a host tool, a wasm-bindgen module or a product stage. Its Cargo children join the driver's jobserver and memory admission as their own pass. A job with a `lane` runs inside that profile's Cargo lane, before the lane's passes and in declaration order, because Cargo processes of one profile share host units and must not overlap on one build directory.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "cwd",
+        "command",
+        "after",
+        "profile",
+        "target"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.@-]{1,128}$"
+        },
+        "cwd": {
+          "$ref": "#/definitions/AbsolutePath"
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "after": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/CompletionName"
+          }
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        },
+        "lane": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "environment": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "string",
+            "maxLength": 65536
+          }
+        }
+      }
+    },
+    "PipelineJobV1": {
+      "description": "One job of a product's release pipeline declaration: a repository-relative working directory and its command, the completions it waits for, an optional profile lane, and the owner policies its environment carries (`process` for every script owner, `cargo` for a Cargo source owner, `wasm` for a wasm-bindgen module owner).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "root",
+        "command",
+        "after",
+        "profile",
+        "target",
+        "policies"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.@-]{1,128}$"
+        },
+        "root": {
+          "type": "string",
+          "pattern": "^(?:\\.|[^/\\\\\\u0000][^\\\\\\u0000]*)$",
+          "maxLength": 512
+        },
+        "command": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4096
+          }
+        },
+        "after": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/definitions/CompletionName"
+          }
+        },
+        "lane": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "profile": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_-]{1,64}$"
+        },
+        "target": {
+          "type": "string",
+          "pattern": "^[A-Za-z0-9_.-]{1,128}$"
+        },
+        "policies": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "process",
+              "cargo",
+              "wasm"
+            ]
+          }
+        }
+      }
+    },
+    "PipelineV1": {
+      "description": "A product's release pipeline declaration, authored in the product's orchestrator target metadata (`metadata.semio.release`): the Nx prerequisites the driver task depends on (generators and toolchains, cached at t = 0) and the jobs the driver runs beside the component passes. The Nx plugin adds the native generator prerequisites of every component crate and of every job root itself.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "prerequisites",
+        "jobs"
+      ],
+      "properties": {
+        "prerequisites": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "pattern": "^[@A-Za-z0-9_./-]+:[A-Za-z0-9_.-]+$"
+          }
+        },
+        "jobs": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/PipelineJobV1"
+          }
+        },
+        "stageAfter": {
+          "description": "Completions every component's stage of a given name additionally waits for, keyed by stage name: the jobs of the same driver that produce what that stage consumes (a descriptor emitter, browser support).",
+          "type": "object",
+          "additionalProperties": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "$ref": "#/definitions/CompletionName"
+            }
+          }
+        }
+      }
+    }
+  }
+}

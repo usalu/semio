@@ -11,5 +11,5 @@ pub fn deserialize(from: &TxtSnapshot) -> Result<StepSnapshot, semio_framework_d
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn deserialize_text(text: &str) -> Result<StepSnapshot, semio_framework_diagnostic::TextError> {
-    deserialize(&<TxtSnapshot as store::ArtifactDsl>::parse_dsl(text)?)
+    deserialize(&<TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?)
 }

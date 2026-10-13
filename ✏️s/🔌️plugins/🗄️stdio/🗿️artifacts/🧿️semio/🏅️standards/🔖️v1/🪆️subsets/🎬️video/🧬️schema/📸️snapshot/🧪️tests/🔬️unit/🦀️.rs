@@ -14,16 +14,16 @@ fn sample_snapshot() -> SemioVideoSnapshot {
 #[semio_framework_async_macros::async_test]
 async fn json_pack_round_trips() {
     let snap = sample_snapshot();
-    let bytes = <SemioVideoSnapshot as store::ArtifactPack>::encode_pack(&snap);
-    let back = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
+    let back = <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(snap, back);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn dsl_text_round_trips() {
     let snap = sample_snapshot();
-    let text = <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(&snap);
-    let back = <SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snap);
+    let back = <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(snap, back);
 }
 

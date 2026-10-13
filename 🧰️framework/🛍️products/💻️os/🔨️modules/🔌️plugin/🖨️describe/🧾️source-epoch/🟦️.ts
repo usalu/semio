@@ -2,22 +2,24 @@ import { createHash } from "node:crypto";
 import { lstatSync } from "node:fs";
 import { isAbsolute, join, relative } from "node:path";
 import { semanticOwnedInputFileSnapshot } from "../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
+import type { ComponentReceiptV1 } from "../🏷️component-receipt/🧬️schema/🟦️.ts";
 export type FreshComponentRequestV1 = Readonly<{
   pluginId: string;
   cargoPackage: string;
   componentPackageId: string;
   outputName: string;
   componentProfile: "wasm-release";
-  rootCdylib: boolean;
 }>;
 
+/** 🧾️ What one fresh production staged: the component, its semantic descriptor and the shipped `ComponentReceiptV1` binding the
+ * two, derived from the cargo provenance of exactly that component build. */
 export type FreshComponentReceiptV1 = Readonly<{
   pluginId: string;
   packageId: string;
   version: string;
   component: { readonly relativePath: "component.wasm"; readonly byteLength: number; readonly sha256: string; readonly blake3: string };
   descriptor: { readonly relativePath: "descriptor.semio"; readonly byteLength: number; readonly sha256: string };
-  coreSha256: string;
+  componentReceipt: ComponentReceiptV1;
   witExports: readonly string[];
 }>;
 

@@ -13,8 +13,7 @@
     "allowImportingTsExtensions": true,
     "skipLibCheck": true,
     "allowJs": false,
-    "incremental": true,
-    "tsBuildInfoFile": "node_modules/.cache/tsconfig.tsbuildinfo",
+    "incremental": false,
     "noEmit": true
   },
   "include": ["**/*.ts", "**/*.tsx", "js/compose/.storybook/**/*.ts", "js/compose/.storybook/**/*.tsx"],

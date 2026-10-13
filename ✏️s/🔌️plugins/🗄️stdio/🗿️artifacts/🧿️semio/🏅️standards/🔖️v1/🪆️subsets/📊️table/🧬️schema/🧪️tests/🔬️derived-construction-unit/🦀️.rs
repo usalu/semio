@@ -1,6 +1,6 @@
 mod tests {
     use super::*;
-    use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 
     #[semio_framework_async_macros::async_test]
     async fn typed_constructors_build_a_populated_snapshot() {

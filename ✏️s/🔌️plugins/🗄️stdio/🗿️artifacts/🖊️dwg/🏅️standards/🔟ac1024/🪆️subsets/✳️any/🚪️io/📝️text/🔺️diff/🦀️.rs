@@ -14,8 +14,8 @@ mod diff_codec {
 use super::*;
 use crate::standards::v_ac1024::subsets::any::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
-use crate::DwgSnapshot;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::{DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate};
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{MutationApplyResult, MutationDiff};

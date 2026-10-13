@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `DeleteEdge`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

@@ -9,7 +9,7 @@ mod tests {
     #[test]
     fn radix2_fft_matches_naive_dft() {
         for n in [2usize, 4, 8, 16, 32, 64] {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(n as u64);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5)).collect();
             let fast = Fft::new(n).forward(&input);
             let naive = naive_dft(&input, false);
@@ -22,7 +22,7 @@ mod tests {
     #[test]
     fn bluestein_fft_matches_naive_dft_for_arbitrary_lengths() {
         for n in [1usize, 3, 5, 6, 7, 11, 13, 17, 100, 101, 257] {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 1);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 1);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, rng.next_f64() - 0.5)).collect();
             let fast = Fft::new(n).forward(&input);
             let naive = naive_dft(&input, false);
@@ -35,7 +35,7 @@ mod tests {
     #[test]
     fn forward_then_inverse_roundtrips() {
         for n in [8usize, 15, 32, 100] {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 99);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(n as u64 + 99);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64(), rng.next_f64())).collect();
             let plan = Fft::new(n);
             let forward = plan.forward(&input);
@@ -49,7 +49,7 @@ mod tests {
     #[test]
     fn parseval_theorem_holds() {
         let n = 32;
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, 0.0)).collect();
         let spectrum = Fft::new(n).forward(&input);
         let time_energy: f64 = input.iter().map(|c| c.norm_sq()).sum();
@@ -92,7 +92,7 @@ mod tests {
         #[test]
         fn bluestein_matches_radix2_on_power_of_two_length() {
             let n = 64;
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(77);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(77);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64(), rng.next_f64())).collect();
             let radix2 = Fft::new(n).forward(&input);
             let bluestein = fft_bluestein(&input, false);
@@ -104,7 +104,7 @@ mod tests {
         #[test]
         fn large_prime_length_dft_matches_naive() {
             let n = 101; // prime, not near a power of two
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4242);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(4242);
             let input: Vec<Complex> = (0..n).map(|_| Complex::new(rng.next_f64() - 0.5, 0.0)).collect();
             let fast = Fft::new(n).forward(&input);
             let naive = naive_dft(&input, false);

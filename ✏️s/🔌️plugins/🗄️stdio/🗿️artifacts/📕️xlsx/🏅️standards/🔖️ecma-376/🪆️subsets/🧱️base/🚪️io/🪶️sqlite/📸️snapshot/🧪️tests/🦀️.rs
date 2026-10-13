@@ -1,7 +1,7 @@
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 #[path = "💰️backing/🦀️.rs"]
 mod owned_requests;
-use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
 fn fixture() -> XlsxSnapshot {
     semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()
 }
@@ -291,12 +291,12 @@ fn sqlite_snapshot_xlsx_owned_native_actual_file_and_entity_ceilings() {
 fn sqlite_snapshot_xlsx_public_snapshot_pack_and_text_match_controlled_literal_owners() {
     let snapshot = fixture();
     let expected = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap();
-    let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
-    let packed = <XlsxSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap();
+    let bytes = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+    let packed = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap();
     assert!(packed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     packed.retire_sqlite_snapshot();
-    let text = <XlsxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
-    let parsed = <XlsxSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap();
+    let text = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
+    let parsed = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap();
     assert!(parsed.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,SqliteDatabaseLimits::default())).unwrap() == expected);
     parsed.retire_sqlite_snapshot();
     snapshot.retire_sqlite_snapshot();
@@ -305,7 +305,7 @@ fn sqlite_snapshot_xlsx_public_snapshot_pack_and_text_match_controlled_literal_o
 #[test]
 fn sqlite_snapshot_xlsx_native_grammar_describes_the_actual_owned_fields() {
     let snapshot = fixture();
-    let text = <XlsxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+    let text = <XlsxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
     let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
     assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
@@ -318,7 +318,7 @@ fn sqlite_snapshot_xlsx_native_grammar_describes_the_actual_owned_fields() {
 #[test]
 fn sqlite_snapshot_xlsx_native_protocol_describes_the_actual_owned_fields() {
     let snapshot = fixture();
-    let bytes = <XlsxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let bytes = <XlsxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
     let (_, body) = store::semio_format::unwrap_binary(&bytes).unwrap();
     let protocol = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).unwrap();
     let trace = semio_framework_dsl::walk_protocol(&protocol, &body).unwrap();

@@ -316,13 +316,13 @@ fn diff_json_contract_matches_third_party_oracle() {
 #[test]
 fn flow_opens_as_an_owned_member_through_its_own_pack_codec() {
     assert_eq!(
-        std::any::type_name::<<FlowHostSnapshot as crate::os_store::MemberStoreOwner<FlowMutation>>::SnapshotOpen>(),
+        std::any::type_name::<<FlowHostSnapshot as crate::os_store::document_store_owners::MemberStoreOwner<FlowMutation>>::SnapshotOpen>(),
         std::any::type_name::<crate::os_store::PackMemberSnapshotOpen<FlowHostSnapshot>>(),
         "a flow member must open through PackMemberSnapshotOpen"
     );
     let snapshot = base();
-    let encoded = crate::os_store::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <FlowHostSnapshot as crate::os_store::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
+    let encoded = crate::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <FlowHostSnapshot as crate::os_store::serialization::ArtifactPack>::decode_pack(&encoded).expect("the member opener's whole-pack decode");
     assert_eq!(decoded, snapshot, "the opener's decode round-trips the exact member snapshot");
     let mut cursor = semio_framework_value::retirement::RetireOwned::retirement(decoded);
     let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 4_096, maximum_capacity_bytes: 0, maximum_release_bytes: 4_096, maximum_depth: 4_096 };

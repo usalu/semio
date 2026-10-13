@@ -40,11 +40,5 @@ mod viewer {
 
 //#region 🛂️Manifest
 #[path = "../../🪪️manifest/🎪️demonstrator/🦀️.rs"]
-mod manifest;
-// 🎪️ Unconditional, unlike the six bundled panes' own `plugin-entry`-gated exports: this crate
-// IS the single terminal wasm component (nothing depends on it as a lib), so it always owns the
-// `plugin_exports!` entry points — no other crate ever needs to disable them. This
-// crate's `Cargo.toml` never declared a `plugin-entry` feature, so the gate this line used to
-// carry was permanently false: the export never compiled in, on any build, ever.
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, manifest::plugin, manifest::DemonstratorApps);
+pub mod manifest;
 //#endregion 🛂️Manifest

@@ -38,8 +38,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<JpgSnapshot, JpgMutation>(STDIO_JPG_DOCUMENT_SCHEMA);
     codec.extension = "jpg";
     codec
 }

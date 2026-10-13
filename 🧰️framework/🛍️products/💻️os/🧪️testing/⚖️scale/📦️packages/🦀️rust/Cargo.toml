@@ -18,12 +18,8 @@ package = "semio:scale-fixture"
 role = "test"
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 path = "🦀️.rs"
-
-[features]
-default = []
-component-guest = []
 
 [dependencies]
 serde = { version = "1.0.228", features = ["derive"] }

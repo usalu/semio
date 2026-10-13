@@ -1448,7 +1448,7 @@ fn contributed_extension_manifest_installs_catalogue_operator() {
 fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
     let mut host = host_with_test_fixture();
     host.set_neuron_kind_infos_json(&test_kind_infos_json());
-    host.replace_host_snapshot(<FlowHostSnapshot as crate::os_store::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
+    host.replace_host_snapshot(<FlowHostSnapshot as crate::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../📚️examples/🗣️.dsl.semio")).expect("fixture"));
     assert!(!host.dag.host_snapshot.edges.is_empty(), "synapses should become dag edges");
     let add = host.dag.host_snapshot.nodes.iter().find(|node| node.id == "add").expect("add node");
     assert_eq!(add.inputs().len(), 2);

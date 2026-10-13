@@ -290,7 +290,7 @@ impl Default for Puzzle5dConfig {
     }
 }
 
-impl store::ArtifactDsl for Puzzle5dConfig {
+impl store::os_store::serialization::ArtifactDsl for Puzzle5dConfig {
     const EXTENSION: &'static str = "puzzle5dcfg";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -302,7 +302,7 @@ impl store::ArtifactDsl for Puzzle5dConfig {
     }
 }
 
-impl store::ArtifactPack for Puzzle5dConfig {
+impl store::os_store::serialization::ArtifactPack for Puzzle5dConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         semio_framework_value::ToValue::to_value(self).encode_pack_with(options)
     }

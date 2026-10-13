@@ -20,7 +20,7 @@ use semio_framework_artifact_flow_flow::FlowHostSnapshot;
 use semio_framework_artifact_playbook_playbook::FormGeneration;
 use semio_framework_artifact_playbook_playbook::GenerationMutation;
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 //#region 🔖️Addressing
 /// 🌡️ Resolves a widget's stable id to its BASE-state index in the fixture's widget list.
 pub fn widget_index(host_snapshot: &FlowHostSnapshot, id: &str) -> Option<usize> {

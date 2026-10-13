@@ -231,10 +231,10 @@ async fn selection_missing_targets_are_errors() {
 #[semio_framework_async_macros::async_test]
 async fn a_board_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::puzzle5d_store(store::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::puzzle5d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle5dSnapshot, Puzzle5dMutation>(crate::PUZZLE_5D_SCHEMA, "selection-time-travel", selection_scene(0.0, [0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection_2d(vec!["p1".into()], 1.0, 0.0), drag_selection_3d(vec!["p1".into()], [0.0, 0.0, 4.0]), drag_selection_2d(vec!["p1".into()], 0.0, 2.0)];
     for mutation in &log {
-        semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");
+        semio_framework_plugin::with_authoring_identity!(|identity| store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut identity).await).expect("a selection gesture applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag_selection_2d(vec!["p1".into()], 7.0, 0.0);
@@ -244,7 +244,7 @@ async fn a_board_drag_edited_in_history_replays_its_downstream() {
     apply_puzzle5d_mutation(&mut preview, &edited).expect("the draft applies to its base");
     assert_eq!((preview.parts[0].part_2d.x, preview.parts[0].part_3d.origin), (7.0, [0.0; 3]), "the preview shows the draft and nothing downstream");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
     let mut fresh = selection_scene(0.0, [0.0; 3]);
@@ -281,13 +281,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
     use crate::Puzzle5dPlaySnapshot;
-    let spec = <Puzzle5dPlaySnapshot as store::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
+    let spec = <Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle5dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
     let play = Puzzle5dPlaySnapshot::from_typed(Puzzle5dSnapshot::default());
-    let bytes = store::ArtifactPack::encode_pack(&play);
-    assert_eq!(bytes, store::ArtifactPack::encode_pack(play.typed()));
-    assert_eq!(<Puzzle5dPlaySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&play);
+    assert_eq!(bytes, store::os_store::serialization::ArtifactPack::encode_pack(play.typed()));
+    assert_eq!(<Puzzle5dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
 }
 
 /// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the

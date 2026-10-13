@@ -4,7 +4,7 @@ use super::{GisTerrainWindowConfig, GisTerrainWindowConfigDiff, GisTerrainWindow
 use protocol::{Mutation, MutationDiff, MutationKind, MutationLeaf, OpBinary, OpText};
 use serde_json::Value;
 use std::fmt::Debug;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 //#region 🧫️NeutralFixture
 fn vectors() -> Value {

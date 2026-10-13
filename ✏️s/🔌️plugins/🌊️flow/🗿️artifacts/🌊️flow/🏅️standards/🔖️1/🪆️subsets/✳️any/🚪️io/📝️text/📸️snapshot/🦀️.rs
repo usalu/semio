@@ -11,12 +11,12 @@ use crate::FlowSnapshot;
 
 /// 📖️ Parses `.flow` DSL text into a `FlowSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<FlowSnapshot, semio_framework_diagnostic::TextError> {
-    <FlowSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <FlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `FlowSnapshot` back to `.flow` DSL text.
 pub fn print_dsl(snapshot: &FlowSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 
 //#region 🧪️Tests
@@ -38,7 +38,7 @@ use crate::{flow_content_child_handle_and_cache, flow_working_scene, FlowContent
 use framework_schema::ArtifactSchema;
 
 /// ✉️ Literal persisted parent and child fields under the owned record grammar.
-impl store::ArtifactDsl for FlowSnapshot {
+impl store::os_store::serialization::ArtifactDsl for FlowSnapshot {
  const EXTENSION:&'static str="flow";
  fn envelope_id()->&'static str{"flow.flow"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{
@@ -47,7 +47,7 @@ impl store::ArtifactDsl for FlowSnapshot {
  }
  fn print_dsl(&self)->String{
   let body=semio_framework_dsl_record::print(&self.__dsl_to_record(),&Self::__dsl_spec(),semio_framework_dsl_record::JoinMode::Document);
-  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).expect("valid envelope identity");store::semio_format::wrap_text(&envelope,&body)
+  let envelope=store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),store::semio_format::Component::Dsl,1).expect("valid envelope identity");store::semio_format::wrap_text(&envelope,&body)
  }
 }
 }

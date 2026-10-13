@@ -1,6 +1,6 @@
 //! 🪶️ Authored semantic SQLite and actual controlled native owner capability.
 use crate::standards::v_rfc1950::subsets::any::schema::snapshot::{DeflateSnapshot,DeflateLevelHint};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,ValueError,ValueRefusalKind,artifact::RowWriter}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,ValueError,ValueRefusalKind,artifact::RowWriter}};
 #[path="💰️backing/🦀️.rs"] mod backing;
 impl ArtifactSqliteSnapshot for DeflateSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");

@@ -1,8 +1,8 @@
 //! 🧰️ Borrowed Kit primitives count relational type identities, exact placements and history pin cells.
 use super::{SemioKitSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Kit native field differs from its authored shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Kit complete cell extent overflow"))}
@@ -31,7 +31,7 @@ fn binary_child(reader:&mut store::ByteReader<'_>,census:&mut Census,control:&mu
  let id=text(reader,control)?;binary_reference(reader,census,control)?;census.row(add(if ordered{32}else{24},id)?)
 }
 /// 📦️ Counts the actual catalog, design, child and pin field order without materializing a Kit.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if byte(&mut reader)?!=1{return Err(invalid())}let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,text(&mut reader,control)?)?)?;
   binary_list(&mut reader,&mut census,control,|reader,census,control|{let mut bytes=24;for _ in 0..3{bytes=add(bytes,text(reader,control)?)?;}census.row(bytes)})?;
@@ -73,7 +73,7 @@ fn document_pin(value:&str,census:&mut Census,control:&mut NativeDecodeControl<'
  }
 }
 /// 📝️ Preserves original field defaults, optional value child and exact pin grammar.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let fields=native::fields(body,["schema","types","designs","objects","models","properties","representations"],control)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(8,native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?)?)?;
   document_list(fields[1].unwrap_or("[]"),&mut census,control,|value,census,control|{let[id,name,category]=native::record(value,control)?;let mut bytes=24;for value in[id,name,category]{bytes=add(bytes,native::hex_text_extent(value,control)?)?;}census.row(bytes)})?;

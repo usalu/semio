@@ -12,7 +12,7 @@ mod art_lowpoly_hexagonal_cut_concrete_forest_left_tests;
 extern crate semio_framework_schema as framework_schema;
 
 use protocol::{Identified, Patchable};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 #[path="🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/🕸️mesh/🦀️.rs"]
 pub mod managed_mesh;
@@ -109,21 +109,21 @@ impl LowpolyPaintLayer {
 /// IS the change signal. Shared by `snapshot_from_mesh_json` and the app's kernel session
 /// (`⚙️engine::LowpolyDocument::sync_meshes_to_snapshot`, `add_primitive`), which both need the
 /// identical rule so the same geometry always resolves to the same handle.
-pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::ArtifactChild<SemioMeshSnapshot> {
+pub fn mesh_child_handle(object_id: &str, mesh_json: &str) -> store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> {
     let child_id = store::content_id("mesh", mesh_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "mesh".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("{object_id}-mesh"), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🕸️ Managed geometry identity hashes the complete typed word and occurrence owner.
-pub fn managed_mesh_child_handle(object_id: &str, state: &LowpolyMeshState) -> store::ArtifactChild<SemioMeshSnapshot> {
+pub fn managed_mesh_child_handle(object_id: &str, state: &LowpolyMeshState) -> store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot> {
     let value=managed_mesh::json::state_value(state);
     let bytes=store::pack_rt::encode_wire_value(&value);
     semio_framework_value::FromValue::retire_decoded(value);
     let child_id=store::content_id("mesh",&bytes);
     let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"mesh".into()};
-    store::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
+    store::os_store::artifact_child::ArtifactChild::new(child_id,semio_framework_artifact_reference::ArtifactRef{artifact_id:format!("{object_id}-mesh"),dialect})
 }
 
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslRecord, value_derive::ToValue, value_derive::FromValue, semio_framework_value::CanonicalJsonTree, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
@@ -135,7 +135,7 @@ pub struct LowpolyObject {
     pub transform: LowpolyTransform,
     pub smooth_shading: bool,
     /// 🕸️ Independently persisted identity of the optional mesh child.
-    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
     #[value(default)]
     pub paint_layers: Vec<LowpolyPaintLayer>,
     /// 🧱️ Persisted mesh source text, preserved independently of the child identity.
@@ -207,8 +207,8 @@ pub struct LowpolyObjectPatch {
     /// convention (`w2c-object-kit-report.md`). Never carries content, only `child_id`/`target`.
     /// Replaces the old `mesh_json: Option<String>` scalar patch field; `dsl::DslRecord` dropped
     /// from this struct (unused in practice — nothing calls its derived DSL machinery, confirmed by
-    /// grep — and `store::ArtifactChild<S>` has no `DslField` impl to derive against anyway).
-    pub mesh: Option<Option<store::ArtifactChild<SemioMeshSnapshot>>>,
+    /// grep — and `store::os_store::artifact_child::ArtifactChild<S>` has no `DslField` impl to derive against anyway).
+    pub mesh: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>>,
     /// 🕸️ New `LowpolyObject::mesh_content`, set together with `mesh`.
     #[value(default)]
     pub mesh_content: Option<String>,
@@ -277,7 +277,7 @@ pub fn artifact_kind() -> semio_framework_plugin::ArtifactKindSpec {
 // 🧱️ `mesh_artifact_kind()` (the shared `3d.mesh` interchange kind) REMOVED — ticket
 // `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`. `3d.mesh` is a duplicate kind id being deleted
 // repo-wide: mesh is now canonically `s.stdio.semio@v1/mesh` (composed via `LowpolyObject.mesh:
-// Option<store::ArtifactChild<SemioMeshSnapshot>>` above, never a standalone `ArtifactKindSpec`).
+// Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>` above, never a standalone `ArtifactKindSpec`).
 // gis's `🏔️gisterrain` declared the identical id independently — that removal belongs to whichever
 // agent owns gis, not this one. Registration call site removed from
 // `✏️editor/🦀️.rs`'s `create_lowpoly_app()` (`.artifact_kind(mesh_artifact_kind())`).

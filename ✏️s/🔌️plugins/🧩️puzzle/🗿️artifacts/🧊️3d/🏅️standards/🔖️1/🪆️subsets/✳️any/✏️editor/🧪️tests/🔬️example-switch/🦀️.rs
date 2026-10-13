@@ -14,7 +14,7 @@ use super::*;
 async fn a_fresh_session_config_names_the_example_its_document_was_seeded_from() {
     assert_eq!(Puzzle3dConfig::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the shared config default must name the example `initial_snapshot` seeds");
     assert_eq!(Puzzle3dRuntime::default().active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "the runtime projection default must agree with the config default");
-    let omitted = <Puzzle3dConfig as store::ArtifactDsl>::parse_dsl("{}").expect("a config record that omits every field decodes");
+    let omitted = <Puzzle3dConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl("{}").expect("a config record that omits every field decodes");
     assert_eq!(omitted.active_example_id, PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "a record that omits the field must decode to the seeded example, never to the blank id");
 
     let mut app = app().await;

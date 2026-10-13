@@ -37,8 +37,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::of::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::artifact_codec::<CsvSnapshot, CsvMutation>(STDIO_CSV_DOCUMENT_SCHEMA);
     codec.extension = "csv";
     codec.pack_schema_hash = pack::record::schema_hash(&CsvSnapshot::__dsl_spec());
     codec

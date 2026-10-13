@@ -220,13 +220,13 @@ impl protocol::Mutation<Puzzle3dWindowTransient> for Puzzle3dWindowTransientMuta
 
 macro_rules! json_store {
     ($state:ty, $extension:literal, $envelope:literal) => {
-        impl store::ArtifactDsl for $state {
+        impl store::os_store::serialization::ArtifactDsl for $state {
             const EXTENSION: &'static str = $extension;
             fn envelope_id() -> &'static str { $envelope }
             fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { semio_framework_pack_json::from_json_str(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| semio_framework_diagnostic::TextError::from_value_error(error, semio_framework_diagnostic::TextSpan::at(1, 1))) }
             fn print_dsl(&self) -> String { semio_framework_pack_json::to_json_string(self) }
         }
-        impl store::ArtifactPack for $state {
+        impl store::os_store::serialization::ArtifactPack for $state {
             fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { semio_framework_value::ToValue::to_value(self).encode_pack_with(options) }
             fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { let value = semio_framework_value::DslValue::decode_pack_with(bytes, options)?; semio_framework_value::FromValue::from_value(value).map_err(|error| store::PackError::from(error)) }
         }
@@ -251,7 +251,7 @@ macro_rules! mutation_wire {
 
 /// 📜️ Record-backed text form — the derived `__dsl_spec` grammar inside this window kind's semio
 /// text envelope, the same shape every sibling window config prints.
-impl store::ArtifactDsl for Puzzle3dWindowConfig {
+impl store::os_store::serialization::ArtifactDsl for Puzzle3dWindowConfig {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str { Self::__DSL_ENVELOPE_ID }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -261,7 +261,7 @@ impl store::ArtifactDsl for Puzzle3dWindowConfig {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Puzzle 3D window envelope");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid Puzzle 3D window envelope");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -269,19 +269,19 @@ impl store::ArtifactDsl for Puzzle3dWindowConfig {
 /// 🎒️ Record-backed pack form. `record_spec` is what the retained window-config loader reads to
 /// decode a mounted pack field-by-field; returning `None` here would fail every retained load of
 /// this window kind with `WindowConfigPackLoadDiagnostic::TypedState`.
-impl store::ArtifactPack for Puzzle3dWindowConfig {
+impl store::os_store::serialization::ArtifactPack for Puzzle3dWindowConfig {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let body = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|error| store::PackError::from(error.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &body))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, body) = store::semio_format::unwrap_binary(bytes).map_err(|error| store::PackError::from(error.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _) = store::pack_rt::decode_document(&body, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> { Some(Self::__dsl_spec()) }
 }
@@ -554,10 +554,10 @@ fn puzzle3d_window_transient_retained_bytes(transient: &Puzzle3dWindowTransient)
     menu.checked_add(transient.engagement_input.capacity())?.checked_add(transient.activation.capacity())
 }
 
-fn puzzle3d_window_transient_preflight(mutation: &Puzzle3dWindowTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn puzzle3d_window_transient_preflight(mutation: &Puzzle3dWindowTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let Puzzle3dWindowTransientMutation::Snapshot { transient } = mutation;
     let retained_bytes = puzzle3d_window_transient_retained_bytes(transient).ok_or_else(|| "Puzzle 3D window transient footprint overflowed".to_string())?;
-    Ok(store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes))
 }
 
 fn puzzle3d_window_transient_transfer(mutation: Puzzle3dWindowTransientMutation) -> Puzzle3dWindowTransient {
@@ -576,8 +576,8 @@ impl semio_framework_plugin::WindowConfigOwner for Puzzle3dWindowConfigOwner {
     type Edit = semio_framework_plugin::WindowConfigApplyEdit<Puzzle3dWindowConfig, Puzzle3dWindowConfigMutation>;
     const MAXIMUM_PREPARATION_DEPTH: usize = 64;
     fn build_retained_edit() -> std::sync::Arc<Self::Edit> { std::sync::Arc::new(semio_framework_plugin::WindowConfigApplyEdit::new()) }
-    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
-    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
+    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> { semio_framework_plugin::bounded_window_config_store_owners::<Self>() }
+    fn build_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> { semio_framework_plugin::bounded_window_config_preparation_factory::<Self>() }
     fn build_store_disposer() -> Box<dyn semio_framework_plugin::ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>> { semio_framework_plugin::bounded_window_config_store_disposer::<Self>() }
 }
 

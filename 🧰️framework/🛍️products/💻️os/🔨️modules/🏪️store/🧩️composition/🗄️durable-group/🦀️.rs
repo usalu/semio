@@ -1,4 +1,5 @@
 //! 🗺️ Closed codec and admission fence for one durable parent+drawing+value Store decision.
+use super::one_item_publication::ArtifactStoreOneItemPreparedParts;
 
 use super::CursorRevisionAccumulator;
 use semio_framework_dsl_record::DslField;
@@ -8,7 +9,8 @@ use semio_framework_value::FromValue as ValueFromValue;
 use semio_framework_dsl_record::Shape;
 use semio_framework_value::ToValue as ValueToValue;
 use crate::os_spr::{Edit, HybridLogicalTimestamp, Mutation as StoreMutation};
-use crate::os_store::{ArtifactDsl, ArtifactPack, ArtifactStore, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError, pack_rt};
+use crate::os_store::{serialization::ArtifactDsl, serialization::ArtifactPack, ArtifactStore, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPrepared, OwnerRef, PackDecodeOptions, PackEncodeOptions, PackError, PackVerificationLevel, TextError};
+use crate::os_pack::pack_rt;
 use semio_framework_value_derive::{FromValue, ToValue};
 use std::sync::Arc;
 use std::mem::size_of;
@@ -668,26 +670,26 @@ where
     {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
     }
-    if outcome.prepared.seal.authority.validate_prepared(&outcome.prepared).is_err()
+    if outcome.prepared.authority().validate_prepared(&outcome.prepared).is_err()
         || store.generation != outcome.expected_generation
         || store.content_revision != outcome.expected_revision
         || outcome.expected_generation.checked_add(1) != Some(outcome.post_generation)
-        || outcome.prepared.seal.authority.generation.0 != outcome.expected_generation
-        || outcome.prepared.seal.authority.base_revision != outcome.expected_revision
-        || outcome.prepared.seal.authority.base_applied_edit_count != store.applied_edit_ids.len()
-        || !outcome.prepared.applied_edit_id.eq_str(&outcome.prepared.edit.id)
-        || !outcome.prepared.tail_edit_id.eq_str(&outcome.prepared.edit.id)
-        || outcome.prepared.edit.sequence_number != outcome.prepared.seal.authority.next_sequence_number
-        || outcome.prepared.next_clock != outcome.prepared.seal.authority.next_clock
+        || outcome.prepared.authority().generation().0 != outcome.expected_generation
+        || outcome.prepared.authority().base_revision() != outcome.expected_revision
+        || outcome.prepared.authority().base_applied_edit_count() != store.applied_edit_ids.len()
+        || !outcome.prepared.applied_edit_id.eq_str(&outcome.prepared.edit().id)
+        || !outcome.prepared.tail_edit_id.eq_str(&outcome.prepared.edit().id)
+        || outcome.prepared.edit().sequence_number != outcome.prepared.authority().next_sequence_number()
+        || outcome.prepared.next_clock() != outcome.prepared.authority().next_clock()
         || !store.applied_edit_ids.admits_one()
     {
         return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome);
     }
-    let group_id = outcome.prepared.seal.authority.group_id.as_deref().unwrap_or_default();
-    if !valid_hash(group_id) || outcome.prepared.edit.mutation_meta.first().and_then(|meta| meta.group_id.as_deref()) != Some(group_id) {
+    let group_id = outcome.prepared.authority().group_id().unwrap_or_default();
+    if !valid_hash(group_id) || outcome.prepared.edit().mutation_meta.first().and_then(|meta| meta.group_id.as_deref()) != Some(group_id) {
         return reject(DurableOwnedGroupDecisionError::InvalidHash, outcome);
     }
-    let applied_edit_ids = match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit.id)) {
+    let applied_edit_ids = match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
         Ok(values) => values,
         Err(error) => return reject(error, outcome),
     };
@@ -696,7 +698,7 @@ where
         Err(error) => return reject(error, outcome),
     };
     let cursor_owners = super::ArtifactCursorOwners {
-        applied_edit_ids: match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit.id)) {
+        applied_edit_ids: match retained_string_stack(store.applied_edit_ids.iter().cloned(), Some(&outcome.prepared.edit().id)) {
             Ok(values) => values,
             Err(error) => return reject(error, outcome),
         },
@@ -721,18 +723,18 @@ where
         indexed_edits: store.revision_accumulator.indexed_edits.clone(),
         unit_flags: store.revision_accumulator.unit_flags.clone(),
     };
-    revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit);
-    let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]);
-    for (index, operation) in outcome.prepared.edit.forwards.iter().enumerate().filter(|(_, op)| op.may_emit_foreign_steps()) {
+    revision_accumulator.index_applied_edit::<P, Mutation>(applied_edit_ids.len() - 1, &outcome.prepared.edit());
+    let edit_digest = CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]);
+    for (index, operation) in outcome.prepared.edit().forwards.iter().enumerate().filter(|(_, op)| op.may_emit_foreign_steps()) {
         let presence = match operation.foreign_step_source(&store.current, 0) { Ok(source) => source.is_some(), Err(_) => return reject(DurableOwnedGroupDecisionError::InvalidOutcome, outcome) };
         revision_accumulator.unit_flags.insert((edit_digest, index), presence);
     }
     let previous = revision_accumulator.applied.last().map_or(revision_accumulator.identity_digest, |record| record.prefix_digest);
     revision_accumulator.applied.push(super::CursorRevisionRecord {
         ledger_key: None,
-        id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit.id.as_bytes()]),
-        edit_digest: outcome.prepared.edit_digest,
-        prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest]),
+        id_digest: CursorRevisionAccumulator::hash_record(b"edit-id", &[outcome.prepared.edit().id.as_bytes()]),
+        edit_digest: outcome.prepared.edit_digest(),
+        prefix_digest: CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &outcome.prepared.edit_digest()]),
     });
     if revision_accumulator.revision(store.current_checkpoint_id.as_deref()) != outcome.post_revision {
         return reject(DurableOwnedGroupDecisionError::InvalidFrontier, outcome);
@@ -752,7 +754,7 @@ where
     let mut retirement = Box::new(StagedRootRetirement::new(Arc::clone(store.snapshot_retirement_factory.as_ref().expect("validated staged snapshot factory"))));
     let post_revision = outcome.post_revision;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = outcome;
-    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal, .. } = prepared;
+    let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
     retirement.external_strings = [local_actor, Some(applied_edit_id.into())];
     let ledger_key = store.envelope.vcs.edits.stage_group_reserved(history_reservation, *edit, visibility).unwrap_or_else(|_| panic!("durable group history stage remains exact after its exclusive reservation"));
     let mut tail = revision_accumulator.applied.pop().expect("staged revision retains its exact tail");
@@ -766,11 +768,11 @@ where
         applied_edit_ids,
         redo_edit_ids,
         last_projection_cause: Some(super::ArtifactProjectionCause::Apply),
-        edit_sequence: seal.authority.next_sequence_number,
+        edit_sequence: authority.next_sequence_number(),
         clock: next_clock,
         revision_accumulator: Some(revision_accumulator),
         tail_undo_cache: Some((tail_edit_id.to_string_owner(), Arc::clone(&store.current))),
-        authority: Some(seal.authority),
+        authority: Some(authority),
         displaced_reservation: Some(displaced_reservation),
         retirement: Some(retirement),
         adopted: false,
@@ -811,7 +813,7 @@ where P: ArtifactPack + Clone + ValueToValue + ValueFromValue + Send + Sync + 's
     *store.durable_group_root = Some(ArtifactStoreDurableGroupRootV1 {
         visibility, current: post, generation: store.generation + 1, content_revision,
         applied_edit_ids: applied, redo_edit_ids: crate::os_vcs::HistoryPageStack::empty(),
-        last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number,
+        last_projection_cause: Some(super::ArtifactProjectionCause::Apply), edit_sequence: authority.next_sequence_number(),
         clock: next_clock, revision_accumulator: Some(revision), tail_undo_cache: Some((tail_edit_id, Arc::clone(&store.current))),
         authority: Some(authority), displaced_reservation: Some(displaced), retirement: Some(retirement), adopted: false,
     });
@@ -956,13 +958,13 @@ where
     let snapshot_factory = (*store.snapshot_retirement_factory).clone().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let mut reservation = store.displaced_retirements.reserve_owner_slots(1).map_err(|_| DurableOwnedGroupDecisionError::InvalidFrontier)?;
     let DurableStoreBoundOutcomeV1 { prepared, .. } = slot.take().expect("validated unstaged outcome");
-    let ArtifactStoreOneItemPrepared { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, seal, .. } = prepared;
+    let ArtifactStoreOneItemPreparedParts { edit, post_snapshot, next_clock: _, edit_digest: _, local_actor, applied_edit_id, tail_edit_id, authority, .. } = prepared.into_parts();
     let mut retirement = Box::new(StagedRootRetirement::new(snapshot_factory));
     retirement.edit = Some(super::ArtifactStoreDecodedEditRetirement::new(*edit, mutation_factory));
     retirement.snapshots[0] = Some(post_snapshot);
     retirement.external_strings = [local_actor, Some(applied_edit_id)];
     retirement.tail_id = Some(super::ArtifactStoreStringRetirement::new(tail_edit_id.to_string_owner()));
-    retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(seal.authority));
+    retirement.authority = Some(super::canonical_edit::ArtifactStoreOneItemAuthorityRetirement::new(authority));
     retain_displaced_owner(&mut store.displaced_retirements, &mut reservation, retirement);
     store.displaced_retirements.release_owner_slots(reservation).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)
 }
@@ -2463,26 +2465,26 @@ impl DurableStorePreparedOutcomeV1 {
         P: ArtifactPack,
         Mutation: ValueToValue + ValueFromValue,
     {
-        let authority = &prepared.seal.authority;
-        if !valid_identity(recovery_schema) || authority.group_id.is_some() || !valid_edit_identities(prepared.edit.as_ref()) {
+        let authority = &prepared.authority();
+        if !valid_identity(recovery_schema) || authority.group_id().is_some() || !valid_edit_identities(prepared.edit()) {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
         authority.validate_prepared(prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let post_snapshot_pack = prepared.post_snapshot.encode_pack();
+        let post_snapshot_pack = prepared.post_snapshot().encode_pack();
         if post_snapshot_pack.len() > DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES {
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
         }
         let outcome = DurableUnboundOneItemOutcomeV1 {
             schema: DURABLE_OWNED_GROUP_UNBOUND_OUTCOME_SCHEMA_V1.into(),
             recovery_schema: recovery_schema.into(),
-            operation: authority.operation.0,
-            base_generation: authority.generation.0,
-            base_revision: authority.base_revision,
-            base_applied_edit_count: authority.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            next_sequence_number: authority.next_sequence_number,
-            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock).into_bytes(),
-            actor: authority.actor.clone(),
-            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(prepared.edit.as_ref()).into_bytes(),
+            operation: authority.operation().0,
+            base_generation: authority.generation().0,
+            base_revision: authority.base_revision(),
+            base_applied_edit_count: authority.base_applied_edit_count().try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            next_sequence_number: authority.next_sequence_number(),
+            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock()).into_bytes(),
+            actor: authority.actor_utf8().clone(),
+            edit_without_group_canonical_json: semio_framework_pack_json::to_json_string(prepared.edit()).into_bytes(),
             post_snapshot_pack,
         };
         let pack = outcome.encode_pack_with(&PackEncodeOptions::default()).map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string()))?;
@@ -2491,15 +2493,15 @@ impl DurableStorePreparedOutcomeV1 {
         }
         let owned = Self { recovery_schema: recovery_schema.into(), sha256: semio_framework_hash::sha256_hex(&pack), pack };
         let verified = owned.verify_inverse::<P, Mutation>()?;
-        if verified.authority.operation != authority.operation
-            || verified.authority.generation != authority.generation
-            || verified.authority.base_revision != authority.base_revision
-            || verified.authority.base_applied_edit_count != authority.base_applied_edit_count
-            || verified.authority.next_sequence_number != authority.next_sequence_number
-            || verified.authority.next_clock != authority.next_clock
-            || verified.authority.actor != authority.actor
-            || semio_framework_value::ToValue::to_value(verified.edit.as_ref()) != semio_framework_value::ToValue::to_value(prepared.edit.as_ref())
-            || verified.post_snapshot.encode_pack() != prepared.post_snapshot.encode_pack()
+        if verified.authority.operation() != authority.operation()
+            || verified.authority.generation() != authority.generation()
+            || verified.authority.base_revision() != authority.base_revision()
+            || verified.authority.base_applied_edit_count() != authority.base_applied_edit_count()
+            || verified.authority.next_sequence_number() != authority.next_sequence_number()
+            || verified.authority.next_clock() != authority.next_clock()
+            || verified.authority.actor() != authority.actor()
+            || semio_framework_value::ToValue::to_value(verified.edit.as_ref()) != semio_framework_value::ToValue::to_value(prepared.edit())
+            || verified.post_snapshot.encode_pack() != prepared.post_snapshot().encode_pack()
         {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
@@ -2540,35 +2542,32 @@ impl DurableStorePreparedOutcomeV1 {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
         let base_applied_edit_count = outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-            operation: semio_framework_job::OperationId(outcome.operation),
-            generation: semio_framework_job::Generation(outcome.base_generation),
-            base_revision: outcome.base_revision,
+        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+            semio_framework_job::OperationId(outcome.operation),
+            semio_framework_job::Generation(outcome.base_generation),
+            outcome.base_revision,
             base_applied_edit_count,
-            next_sequence_number: outcome.next_sequence_number,
+            outcome.next_sequence_number,
             next_clock,
-            actor: outcome.actor,
-            line: edit.line.clone(),
-            group_id: None,
-            stamped_edit_id: None,
-        });
+            outcome.actor,
+            edit.line.clone(),
+            None,
+            None,
+        ));
         authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         Ok(DurableStoreVerifiedOutcomeV1 { authority, edit: Box::new(edit), post_snapshot: Arc::new(post_snapshot) })
     }
 }
 
-impl<P, Mutation> ArtifactStoreOneItemPrepared<P, Mutation>
+impl<P, Mutation> DurableStorePreparedOwnerV1<P, Mutation>
 where
     P: ArtifactPack,
     Mutation: ValueToValue + ValueFromValue,
 {
-    pub(super) fn durable_unbound_outcome(&self, recovery_schema: &str) -> Result<DurableStorePreparedOutcomeV1, DurableOwnedGroupDecisionError> {
-        DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, self)
-    }
-
-    fn into_durable_unbound(self, recovery_schema: &str) -> Result<DurableStorePreparedOwnerV1<P, Mutation>, DurableOwnedGroupDecisionError> {
-        let unbound = self.durable_unbound_outcome(recovery_schema)?;
-        Ok(DurableStorePreparedOwnerV1 { prepared: self, unbound })
+    /// 🧷️ Seals one Store-prepared owner with its verified unbound outcome under the member's recovery schema.
+    fn unbound(prepared: ArtifactStoreOneItemPrepared<P, Mutation>, recovery_schema: &str) -> Result<Self, DurableOwnedGroupDecisionError> {
+        let unbound = DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)?;
+        Ok(Self { prepared, unbound })
     }
 }
 
@@ -2665,18 +2664,18 @@ where
     if !valid_edit_identities(&edit) || CursorRevisionAccumulator::edit_digest(&edit) != outcome.edit_digest {
         return Err(DurableOwnedGroupDecisionError::InvalidHash);
     }
-    let authority = ArtifactStoreOneItemLiveAuthority {
-        operation: semio_framework_job::OperationId(outcome.operation),
-        generation: semio_framework_job::Generation(outcome.base_generation),
-        base_revision: outcome.base_revision,
-        base_applied_edit_count: outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-        next_sequence_number: outcome.next_sequence_number,
+    let authority = ArtifactStoreOneItemLiveAuthority::mint(
+        semio_framework_job::OperationId(outcome.operation),
+        semio_framework_job::Generation(outcome.base_generation),
+        outcome.base_revision,
+        outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
+        outcome.next_sequence_number,
         next_clock,
-        actor: outcome.actor,
-        line: edit.line.clone(),
-        group_id: Some(decision_sha256.into()),
-        stamped_edit_id: None,
-    };
+        outcome.actor,
+        edit.line.clone(),
+        Some(decision_sha256.into()),
+        None,
+    );
     authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
     let snapshot = P::decode_pack_with(
         &outcome.post_snapshot_pack,
@@ -2705,16 +2704,16 @@ where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
-    if store.generation != authority.generation.0
-        || store.content_revision != authority.base_revision
-        || store.applied_edit_ids.len() != authority.base_applied_edit_count
-        || store.revision_accumulator.applied.len() != authority.base_applied_edit_count
+    if store.generation != authority.generation().0
+        || store.content_revision != authority.base_revision()
+        || store.applied_edit_ids.len() != authority.base_applied_edit_count()
+        || store.revision_accumulator.applied.len() != authority.base_applied_edit_count()
     {
         return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
     }
     let previous = store.revision_accumulator.applied.last().map_or(store.revision_accumulator.identity_digest, |record| record.prefix_digest);
     let applied = CursorRevisionAccumulator::hash_record(b"applied", &[&previous, &edit_digest]);
-    let applied_len = authority.base_applied_edit_count.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? as u64;
+    let applied_len = authority.base_applied_edit_count().checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? as u64;
     let empty_len = 0_u64;
     Ok(CursorRevisionAccumulator::hash_record(b"cursor", &[&applied, &applied_len.to_be_bytes(), &store.revision_accumulator.identity_digest, &empty_len.to_be_bytes(), store.current_checkpoint_id.as_deref().unwrap_or_default().as_bytes()]))
 }
@@ -2728,15 +2727,15 @@ where
         if !valid_hash(group_id) {
             return Err(DurableOwnedGroupDecisionError::InvalidHash);
         }
-        let base_authority = Arc::clone(&self.prepared.seal.authority);
+        let base_authority = Arc::clone(self.prepared.authority());
         base_authority.validate_prepared(&self.prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if base_authority.group_id.is_some() {
+        if base_authority.group_id().is_some() {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
-        let expected_generation = base_authority.generation.0;
-        let expected_revision = base_authority.base_revision;
+        let expected_generation = base_authority.generation().0;
+        let expected_revision = base_authority.base_revision();
         let post_generation = expected_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?;
-        let ArtifactStoreOneItemPrepared { mut edit, post_snapshot, local_actor, applied_edit_id, tail_edit_id, .. } = self.prepared;
+        let ArtifactStoreOneItemPreparedParts { mut edit, post_snapshot, local_actor, applied_edit_id, tail_edit_id, .. } = self.prepared.into_parts();
         if edit.mutation_meta.len() != 1 {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
@@ -2748,30 +2747,19 @@ where
         if !valid_edit_identities(edit.as_ref()) {
             return Err(DurableOwnedGroupDecisionError::InvalidIdentity);
         }
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-            operation: base_authority.operation,
-            generation: base_authority.generation,
-            base_revision: base_authority.base_revision,
-            base_applied_edit_count: base_authority.base_applied_edit_count,
-            next_sequence_number: base_authority.next_sequence_number,
-            next_clock: base_authority.next_clock,
-            actor: base_authority.actor.clone(),
-            line: base_authority.line.clone(),
-            group_id: Some(group_id.into()),
-            stamped_edit_id: base_authority.stamped_edit_id.clone(),
-        });
+        let authority = Arc::new(base_authority.rebind_group(group_id.into()));
         let edit_digest = authority.prepared_edit_digest(edit.as_ref()).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         let post_revision = store_post_revision(store, &authority, edit_digest)?;
         let outcome = DurableBoundOneItemOutcomeV1 {
             schema: DURABLE_OWNED_GROUP_BOUND_OUTCOME_SCHEMA_V1.into(),
             recovery_schema: self.unbound.recovery_schema.clone(),
-            operation: authority.operation.0,
+            operation: authority.operation().0,
             base_generation: expected_generation,
             base_revision: expected_revision,
-            base_applied_edit_count: authority.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            next_sequence_number: authority.next_sequence_number,
-            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock).into_bytes(),
-            actor: authority.actor.clone(),
+            base_applied_edit_count: authority.base_applied_edit_count().try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            next_sequence_number: authority.next_sequence_number(),
+            next_clock_canonical_json: semio_framework_pack_json::to_json_string(&authority.next_clock()).into_bytes(),
+            actor: authority.actor_utf8().clone(),
             group_id: group_id.into(),
             edit_canonical_json: semio_framework_pack_json::to_json_string(edit.as_ref()).into_bytes(),
             post_snapshot_pack: post_snapshot.encode_pack(),
@@ -2784,7 +2772,7 @@ where
             return Err(DurableOwnedGroupDecisionError::RecoveryPackTooLarge);
         }
         let actor = local_actor.ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-        if !actor.eq_str(&authority.actor) || !applied_edit_id.eq_str(&edit.id) || !tail_edit_id.eq_str(&edit.id) {
+        if !actor.eq_str(&authority.actor()) || !applied_edit_id.eq_str(&edit.id) || !tail_edit_id.eq_str(&edit.id) {
             return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
         }
         let prepared = authority.seal_prepared_owned(edit, post_snapshot, edit_digest, [actor, applied_edit_id, tail_edit_id]);
@@ -2921,25 +2909,25 @@ where
         if post_snapshot.encode_pack() != outcome.post_snapshot_pack {
             return Err(DurableOwnedGroupDecisionError::NonCanonical);
         }
-        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-            operation: semio_framework_job::OperationId(outcome.operation),
-            generation: semio_framework_job::Generation(outcome.base_generation),
-            base_revision: outcome.base_revision,
-            base_applied_edit_count: outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
-            next_sequence_number: outcome.next_sequence_number,
+        let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+            semio_framework_job::OperationId(outcome.operation),
+            semio_framework_job::Generation(outcome.base_generation),
+            outcome.base_revision,
+            outcome.base_applied_edit_count.try_into().map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?,
+            outcome.next_sequence_number,
             next_clock,
-            actor: outcome.actor,
-            line: edit.line.clone(),
-            group_id: Some(group_id.into()),
-            stamped_edit_id: None,
-        });
+            outcome.actor,
+            edit.line.clone(),
+            Some(group_id.into()),
+            None,
+        ));
         authority.validate_semantic_edit(&edit).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
         if store_post_revision(store, &authority, outcome.edit_digest)? != outcome.post_revision || outcome.post_generation != outcome.base_generation.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)? {
             return Err(DurableOwnedGroupDecisionError::InvalidFrontier);
         }
         let mut admitted = |_| true;
         let mut control = semio_framework_value::NativeDecodeControl::new(DURABLE_OWNED_GROUP_RECOVERY_PACK_MAX_BYTES, &mut admitted);
-        let identities = [authority.actor.as_str(), edit.id.as_str(), edit.id.as_str()].map(|identity| semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str_controlled(identity, &mut control));
+        let identities = [authority.actor(), edit.id.as_str(), edit.id.as_str()].map(|identity| semio_framework_value::paged::PagedUtf8::<{usize::MAX}>::try_from_str_controlled(identity, &mut control));
         let [actor, applied_edit_id, tail_edit_id] = identities;
         let identities = [actor, applied_edit_id, tail_edit_id].map(|identity| identity.map_err(|error| DurableOwnedGroupDecisionError::Codec(error.to_string())));
         let [actor, applied_edit_id, tail_edit_id] = identities;
@@ -2972,7 +2960,7 @@ where
         drawing: ArtifactStoreOneItemPrepared<DrawingP, DrawingMutation>,
         value: ArtifactStoreOneItemPrepared<ValueP, ValueMutation>,
     ) -> Result<Self, DurableOwnedGroupDecisionError> {
-        Ok(Self { parent: parent.into_durable_unbound(PARENT_RECOVERY_SCHEMA)?, drawing: drawing.into_durable_unbound(DRAWING_RECOVERY_SCHEMA)?, value: value.into_durable_unbound(VALUE_RECOVERY_SCHEMA)? })
+        Ok(Self { parent: DurableStorePreparedOwnerV1::unbound(parent, PARENT_RECOVERY_SCHEMA)?, drawing: DurableStorePreparedOwnerV1::unbound(drawing, DRAWING_RECOVERY_SCHEMA)?, value: DurableStorePreparedOwnerV1::unbound(value, VALUE_RECOVERY_SCHEMA)? })
     }
 }
 
@@ -3059,22 +3047,22 @@ where
 }
 
 fn prepared_member<P, Mutation>(role: &str, reference: semio_framework_artifact_reference::ArtifactRef, owner: Option<OwnerRef>, prepared: &DurableStorePreparedOwnerV1<P, Mutation>) -> Result<DurableOwnedGroupMemberV1, DurableOwnedGroupDecisionError> {
-    let authority = &prepared.prepared.seal.authority;
+    let authority = &prepared.prepared.authority();
     authority.validate_prepared(&prepared.prepared).map_err(|_| DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    if authority.group_id.is_some() {
+    if authority.group_id().is_some() {
         return Err(DurableOwnedGroupDecisionError::InvalidOutcome);
     }
     Ok(DurableOwnedGroupMemberV1 {
         role: role.into(),
         reference,
         owner,
-        expected_generation: authority.generation.0,
-        expected_revision: authority.base_revision,
+        expected_generation: authority.generation().0,
+        expected_revision: authority.base_revision(),
         recovery_schema: prepared.unbound.recovery_schema.clone(),
         recovery_pack: Vec::new(),
         recovery_pack_sha256: String::new(),
         unbound_outcome_sha256: prepared.unbound.sha256.clone(),
-        post_generation: authority.generation.0.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?,
+        post_generation: authority.generation().0.checked_add(1).ok_or(DurableOwnedGroupDecisionError::InvalidFrontier)?,
         post_revision: [0; 32],
     })
 }
@@ -3100,7 +3088,7 @@ where
     P: Clone + ValueToValue + ValueFromValue,
     Mutation: Clone + ValueToValue + ValueFromValue + StoreMutation<P>,
 {
-    store.generation == member.expected_generation && store.content_revision == member.expected_revision && store.applied_edit_ids.len() == prepared.seal.authority.base_applied_edit_count
+    store.generation == member.expected_generation && store.content_revision == member.expected_revision && store.applied_edit_ids.len() == prepared.authority().base_applied_edit_count()
 }
 
 impl<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation> DurableOwnedThreeStorePreparedV1<ParentP, ParentMutation, DrawingP, DrawingMutation, ValueP, ValueMutation>
@@ -3186,7 +3174,7 @@ impl ArtifactPack for DurableUnboundOneItemOutcomeV1 {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "unbound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -3227,7 +3215,7 @@ impl ArtifactPack for DurableBoundOneItemOutcomeV1 {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "bound outcome pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
     }
 
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
@@ -3508,7 +3496,7 @@ impl ArtifactPack for DurableOwnedThreeMemberDecisionV1 {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, "durable group pack envelope mismatch")));
         }
         let (record, _) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -3572,18 +3560,18 @@ where
 {
     let actor = edit.actor.clone().ok_or(DurableOwnedGroupDecisionError::InvalidIdentity)?;
     let meta = edit.mutation_meta.first().ok_or(DurableOwnedGroupDecisionError::InvalidOutcome)?;
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-        operation: semio_framework_job::OperationId(10_000 + ordinal),
-        generation: semio_framework_job::Generation(ordinal),
-        base_revision: durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()),
-        base_applied_edit_count: 0,
-        next_sequence_number: edit.sequence_number,
-        next_clock: meta.timestamp,
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        semio_framework_job::OperationId(10_000 + ordinal),
+        semio_framework_job::Generation(ordinal),
+        durable_group_test_revision(format!("durable-group-test-base-{ordinal}").as_bytes()),
+        0,
+        edit.sequence_number,
+        meta.timestamp,
         actor,
-        line: edit.line.clone(),
-        group_id: meta.group_id.clone(),
-        stamped_edit_id: None,
-    });
+        edit.line.clone(),
+        meta.group_id.clone(),
+        None,
+    ));
     let prepared = authority.prepare_one_item(edit, Arc::new(post_snapshot)).map_err(DurableOwnedGroupDecisionError::Codec)?;
     DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared)
 }

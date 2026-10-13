@@ -1,6 +1,6 @@
 //! 🧪️ Original public mutation frames retain every shared value-path key and index.
 use semio_framework_os_kernel::OpBinary;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::{mutations::{SemioValueMutation,SemioValuePathSegment,set_value::SetValue},snapshot::SemioValue};
+use {semio_s_artifact_stdio_semio_value::schema::mutations::{SemioValueMutation, SemioValuePathSegment}, semio_s_artifact_stdio_semio_value::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue};
 
 #[test]
 fn original_semio_mutation_frames_match_shared_value_paths(){

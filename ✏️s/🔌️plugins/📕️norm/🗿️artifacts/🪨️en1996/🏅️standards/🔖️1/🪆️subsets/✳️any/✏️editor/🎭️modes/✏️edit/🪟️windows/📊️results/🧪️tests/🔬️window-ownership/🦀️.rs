@@ -1,7 +1,7 @@
 use super::*;
 use crate::results_window_config::{addressed, ChangeSelectedCheckIndex, NormResultsWindowConfig, NormResultsWindowConfigMutation};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn block_on_norm_results_windows<F: std::future::Future>(future: F) -> F::Output {
     let mut future = std::pin::pin!(future);

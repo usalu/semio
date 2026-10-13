@@ -4,7 +4,7 @@
 //! 🔖 `IoFidelity::Lossy`: a page drawing, not the document — there is no dxf import.
 use crate::standards::v1::subsets::any::io::puzzle2d_board_drawing;
 use crate::Puzzle2dSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::{encode_drawing, SemioDrawingFormat};
+use {semio_s_artifact_stdio_semio_drawing_export::encode_drawing, semio_s_artifact_stdio_semio_drawing::io::SemioDrawingFormat};
 
 pub fn register() {}
 

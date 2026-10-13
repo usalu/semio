@@ -39,7 +39,7 @@ pub(crate) mod context {
                 if self.0.close_terminal_is_empty() {
                     return;
                 }
-                let demand = match PluginApp::close_retirement_demands(&self.0, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+                let demand = match PluginApp::close_retirement_demands(&self.0, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
                     Ok(demand) => demand,
                     Err(error) => {
                         assert!(std::thread::panicking(), "Process3d fixture close demand faulted: {error:?}");
@@ -369,12 +369,12 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
         "conflicts": []
     }))
     .expect("schema-first Process3d production fixture envelope");
-    let envelope = store::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
-    let owners = store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::PROCESS_3D_SCHEMA, "process3d-production-mounted-law", snapshot, None);
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog");
     let funded = crate::host::owned::process3d_demand_grant(owners.uninstalled_envelope_retirement_demands(&envelope));
     let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, funded).map_err(|(error, _, _)| error).expect("Process3d fixture envelope retirement admission");
     for _ in 0..100_000 {
-        let demand = retirement.next_demand(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
+        let demand = retirement.next_demand(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture envelope retirement demand");
         let step = retirement.close_step(crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture envelope retirement");
         if matches!(step, semio_framework_value::retained_clone::RetainedCloneStep::Complete(_)) && retirement.terminal_is_empty() {
             drop(retirement);
@@ -385,7 +385,7 @@ fn production_envelope_wire(label: &str) -> (Vec<u8>, Process3dSnapshot, [u8; 32
 }
 
 fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Process3d production ingress credits");
     crate::host::owned::process3d_admit_publication_authority(
         handle.operation,
@@ -396,10 +396,10 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
         crate::host::owned::Process3dPublicationLimits { maximum_items: 8_192, maximum_output_pages: crate::host::owned::PROCESS3D_MOUNTED_OUTPUT_CHANNELS, maximum_controls: crate::host::owned::PROCESS3D_MOUNTED_CONTROL_CREDITS },
     )
     .expect("Process3d production publication authority");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Process3d production envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Process3d production envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Process3d production envelope page admission failed: {fault:?}"));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("Process3d production envelope seal"));
@@ -409,7 +409,7 @@ fn admit_production_envelope(app: &mut crate::editor::process3d::unit_tests::con
 fn drive_production_envelope(app: &mut crate::editor::process3d::unit_tests::context::Process3dRawApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..200_000 {
         crate::host::owned::process3d_refresh_publication_authority(handle.operation, handle.generation, app.artifact_generation_now().0).expect("Process3d authority refresh immediately before production maintenance");
-        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
+        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Process3d production maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Process3d production load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
@@ -603,8 +603,8 @@ fn document_preparation_uses_the_mutations_own_semantics_and_a_fixed_per_turn_gr
     let missing = prepare_process3d_document(&base, &Process3dMutation::DeleteStep(DeleteStep { id: "ghost".into() })).expect_err("a missing target is refused");
     assert!(missing.contains("refused by its own vocabulary"), "{missing}");
     let delete = Process3dMutation::DeleteStep(DeleteStep { id: "step-1".into() });
-    let footprint = store::ArtifactStoreOneItemFootprint::for_leaf(&delete, process3d_mutation_retained_bytes(&delete).expect("retained bytes"));
-    assert_eq!(footprint.work_items, store::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
+    let footprint = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(&delete, process3d_mutation_retained_bytes(&delete).expect("retained bytes"));
+    assert_eq!(footprint.work_items, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_INVERTIBLE_WORK_ITEMS);
     assert!(footprint.is_admissible());
     let oversized = process3d_mutation_retained_bytes(&Process3dMutation::DeleteStep(DeleteStep { id: "x".repeat(PROCESS3D_DOCUMENT_TEXT_BYTES + 1) }));
     assert!(oversized.is_err(), "an id past the text envelope is rejected, never truncated");

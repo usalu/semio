@@ -7,10 +7,10 @@
 //! `Option<Option<..>>` — and because this case takes the SET arm, its inner value is a real
 //! object and the committed diff survives a JSON round trip intact.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🏷️create-properties/🏷️attaches/📸️snapshot/➡️after/🔣️.json");

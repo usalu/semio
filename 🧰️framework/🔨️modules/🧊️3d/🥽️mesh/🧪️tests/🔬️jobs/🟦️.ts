@@ -68,3 +68,13 @@ test("original translation agrees with independent in-place geometry transformat
 test("original cold translation preserves independent source until the transform starts",()=>{
   expect(new Ajv({strict:true}).validate(schema,law)).toBe(true);const geometry=new BufferGeometry();geometry.setAttribute("position",new Float32BufferAttribute(law.snapshotPreparation.positions.flat(),3));const original=geometry.getAttribute("position").array;expect(Array.from(original)).toEqual(law.snapshotPreparation.positions.flat());expect(geometry.getAttribute("position").array).toBe(original);geometry.translate(...law.translation.offset as [number,number,number]);expect(Array.from(original)).toEqual(law.translation.positions.flat());expect(geometry.getAttribute("position").array).toBe(original);geometry.dispose();
 });
+
+
+test("original orientation incidence preserves every independently patched edge owner and source direction",()=>{
+  const validate=new Ajv({strict:true}).compile(schema),policy=law.orientationIncidence;expect(validate(law)).toBe(true);expect(validate({...law,orientationIncidence:{...policy,parentFrames:0}})).toBe(false);
+  for(const name of policy.sources){const source=law[name as "snapshotPreparation"|"snapshotClosedPreparation"],rows=new Map<string,[number,boolean][]>(),keys:number[][]=[];
+    source.faces.forEach((face,index)=>face.forEach((a,corner)=>{const b=face[(corner+1)%face.length],key=[Math.min(a,b),Math.max(a,b)],text=JSON.stringify(key);if(!rows.has(text)){rows.set(text,[]);keys.push(key);}const values={owners:rows.get(text)!};applyPatch(values,[{op:"add",path:"/owners/-",value:[index,a<b]}]);}));
+    const output=policy.outputs[name as keyof typeof policy.outputs];expect(keys).toEqual(output.keys);expect([...rows].map(([key,owners])=>[JSON.parse(key),owners]).sort((a,b)=>a[0][0]-b[0][0]||a[0][1]-b[0][1])).toEqual(output.owners);expect(new Uint32Array(2).byteLength).toBe(policy.keyCopyBytes);expect(new BigUint64Array(2).byteLength).toBe(policy.ownerCopyBytes);
+    if(name==="snapshotClosedPreparation"){for(const owners of rows.values()){expect(owners.length).toBe(2);expect(owners[0][1]).not.toBe(owners[1][1]);}}
+  }
+});

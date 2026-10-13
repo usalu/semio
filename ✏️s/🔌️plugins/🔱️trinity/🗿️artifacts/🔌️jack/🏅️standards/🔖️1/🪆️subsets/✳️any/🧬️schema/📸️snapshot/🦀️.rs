@@ -39,7 +39,7 @@ pub struct JackSnapshot {
 //#endregion 🔖️Snapshot
 
 //#region 🔖️ValueCodec
-/// 🔀️ Hand-written, not derived: `content` is a `store::ArtifactChild<S>` composed-artifact
+/// 🔀️ Hand-written, not derived: `content` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact
 /// handle — see `JackArtifact`'s identical trap in the sibling `🦀️.rs` (this struct's
 /// non-child fields carried `#[serde(default, skip_serializing_if = "Option::is_none")]`
 /// before this wave; `manifest_id`/`root_node_id` are `Option<String>`, and the blanket

@@ -383,8 +383,8 @@ fn identical_natural_run_text_is_a_no_op_without_restructuring_xml() {
 #[semio_framework_async_macros::async_test]
 async fn snapshot_pack_retains_complete_xml_authority() {
     let snapshot = fixture();
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <DocxSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snapshot);
     assert_eq!(project(&decoded), project(&snapshot));
 }

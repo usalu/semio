@@ -1,5 +1,5 @@
 use super::*;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 #[semio_framework_async_macros::async_test]
 async fn lowpoly_config_dsl_round_trips_default() {

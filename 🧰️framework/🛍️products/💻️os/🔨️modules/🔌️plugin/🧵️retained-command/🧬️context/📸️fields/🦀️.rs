@@ -1,6 +1,12 @@
 //! 📸️ Original captured metadata/read leaves and unresolved source graphs retain separate custody.
 use semio_framework::ViewModel;
-use crate::app::{ArtifactApp,ArtifactContextRoot,ArtifactOwnedToolJobContext,ChildContentView,GestureCapture,WindowConfigSnapshot,WindowTransientSnapshot};
+use crate::app_contract::ArtifactApp;
+use store::SnapshotReadProjection as ArtifactContextRoot;
+use crate::gesture_contract::GestureCapture;
+use crate::tool_contract::ArtifactOwnedToolJobContext;
+use crate::child_view::ChildContentView;
+use crate::window_config::WindowConfigSnapshot;
+use crate::window_transient::WindowTransientSnapshot;
 use semio_framework_os_kernel as store;
 use semio_framework_value::{DslValue,RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::{RetirementCursor,RetirementStep,RetireOwned,controlled::ControlledRetirement,shared::SharedControlledRetirement}};
 use std::{mem::ManuallyDrop,sync::Arc};
@@ -10,16 +16,16 @@ pub(crate) struct ContextToolRunMetadata{pub tool_id:String,pub identity:semio_f
 pub(crate) struct ContextToolRunSources{pub entities:Arc<std::collections::BTreeSet<u64>>,pub payload:Option<Arc<Vec<u8>>>}
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct ContextOwnedFields<D:Send+Sync+'static,T:Send+Sync+'static,M:Send+'static>{
- pub gesture:GestureCapture<M>,pub view_state:Option<ViewModel>,pub tool_run:Option<ContextToolRunMetadata>,pub draft:ArtifactContextRoot<D>,pub transient:ArtifactContextRoot<T>,pub presence:Option<store::ErasedSnapshotRead>,pub window_config:Option<WindowConfigSnapshot>,pub window_transient:Option<WindowTransientSnapshot>,pub provisional:Vec<DslValue>,pub refused_reads:[Option<store::ErasedSnapshotRead>;2],pub transient_source_fault:Option<String>,pub draft_source_fault:Option<String>,
+ pub gesture:GestureCapture<M>,pub view_state:Option<ViewModel>,pub tool_run:Option<ContextToolRunMetadata>,pub draft:ArtifactContextRoot<D>,pub transient:ArtifactContextRoot<T>,pub presence:Option<store::os_store::snapshot_read::ErasedSnapshotRead>,pub window_config:Option<WindowConfigSnapshot>,pub window_transient:Option<WindowTransientSnapshot>,pub provisional:Vec<DslValue>,pub refused_reads:[Option<store::os_store::snapshot_read::ErasedSnapshotRead>;2],pub transient_source_fault:Option<String>,pub draft_source_fault:Option<String>,
 }
-pub(crate) struct ContextOriginalResidual<A:ArtifactApp>{pub children:Arc<ChildContentView>,pub peers:Option<Arc<store::PresencePeersRoot<A::Presence>>>,pub peer_factory:Option<Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,pub tool_run:Option<ContextToolRunSources>}
+pub(crate) struct ContextOriginalResidual<A:ArtifactApp>{pub children:Arc<ChildContentView>,pub peers:Option<Arc<store::os_store::presence::PresencePeersRoot<A::Presence>>>,pub peer_factory:Option<Arc<dyn store::SnapshotRetirementFactory<A::Presence>>>,pub tool_run:Option<ContextToolRunSources>}
 pub(crate) struct ContextRetirementParts<A:ArtifactApp>{pub metadata:ContextOwnedFields<A::Draft,A::Transient,A::Mutation>,pub residual:ContextOriginalResidual<A>}
 
 /// 🔗️ The aliases a captured context borrows from roots its issuers still own: each retires as a lease, and only a last owner pays the deep release.
 #[derive(semio_framework_value::RetireOwned)]
 struct ContextResidualLeases{children:SharedControlledRetirement<ChildContentView>,entities:Option<SharedControlledRetirement<std::collections::BTreeSet<u64>>>,payload:Option<SharedControlledRetirement<Vec<u8>>>}
 
-struct Cursor<A:ArtifactApp>{metadata:ControlledRetirement<ContextOwnedFields<A::Draft,A::Transient,A::Mutation>>,residual:ManuallyDrop<Option<ContextOriginalResidual<A>>>,leases:Option<ControlledRetirement<ContextResidualLeases>>,peers:Option<store::PresencePeersRetirement<A::Presence>>}
+struct Cursor<A:ArtifactApp>{metadata:ControlledRetirement<ContextOwnedFields<A::Draft,A::Transient,A::Mutation>>,residual:ManuallyDrop<Option<ContextOriginalResidual<A>>>,leases:Option<ControlledRetirement<ContextResidualLeases>>,peers:Option<store::os_store::presence::PresencePeersRetirement<A::Presence>>}
 fn nested(mut demand:RetirementDemand)->Result<RetirementDemand,ValueError>{demand.depth=demand.depth.checked_add(1).ok_or_else(||ValueError::literal(ValueRefusalKind::DepthLimit,"original context lease depth overflow"))?;Ok(demand)}
 impl<A:ArtifactApp> Cursor<A>{
  fn demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
@@ -44,7 +50,7 @@ impl<A:ArtifactApp> RetirementCursor for Cursor<A>{
   if let Some(residual)=self.residual.take(){
    let ContextOriginalResidual{children,peers,peer_factory,tool_run}=residual;
    let(entities,payload)=match tool_run{Some(ContextToolRunSources{entities,payload})=>(Some(SharedControlledRetirement::lease(entities)),payload.map(SharedControlledRetirement::lease)),None=>(None,None)};
-   self.peers=peers.map(|root|store::PresencePeersRetirement::of_alias(root,peer_factory));
+   self.peers=peers.map(|root|store::os_store::presence::PresencePeersRetirement::of_alias(root,peer_factory));
    return match ControlledRetirement::new(ContextResidualLeases{children:SharedControlledRetirement::lease(children),entities,payload}){Ok(owner)=>{self.leases=Some(owner);RetirementStep::Progress(RetainedCloneProgress{copied_items:1,..Default::default()})}Err((error,_))=>RetirementStep::Failure(error)};
   }
   if let Some(leases)=self.leases.as_mut(){

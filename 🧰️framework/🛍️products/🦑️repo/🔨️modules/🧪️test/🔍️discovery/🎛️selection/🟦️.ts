@@ -1,7 +1,8 @@
 import { type TestEvidence, type Implementation } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
 import { type CoverageRow, type DiscoveredCase, type MutationManifest, discoverTestCases } from "../../📦️packages/🟦️typescript/🟦️.ts";
 
-/** 🎛️ Narrows discovery to the cases a command was pointed at (`--case`, `--owner`, `--project`). */
+/** 🎛️ Narrows discovery to the cases a command was pointed at (`--case`, `--owner`, `--owner-root`, `--project`). `--owner-root` selects exactly the cases of
+ * one owner directory, the selector an owner's Nx test project runs with. */
 export function selectCases(repoRoot: string, segments: readonly string[]): DiscoveredCase[] {
   const all = discoverTestCases(repoRoot);
   const value = (flag: string): string | null => {
@@ -14,7 +15,8 @@ export function selectCases(repoRoot: string, segments: readonly string[]): Disc
   // 🎛️`--owner` matches the exact owner path, a trailing segment of it, OR any ancestor segment, so
   // `--owner 🗄️stdio` selects every artifact owned beneath that plugin rather than nothing.
   const matchesOwner = (entry: DiscoveredCase): boolean => owner === null || entry.owner === owner || entry.owner.endsWith(`/${owner}`) || entry.owner.split("/").includes(owner) || entry.owner.includes(`${owner}/`);
-  return all.filter((entry) => matchesOwner(entry) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
+  const ownerRoot = value("--owner-root");
+  return all.filter((entry) => matchesOwner(entry) && (ownerRoot === null || entry.owner === ownerRoot) && (caseSlug === null || entry.case === caseSlug) && (project === null || entry.projectName === project));
 }
 
 /** 🎛️ Implementations a command should exercise: every claimed adapter unless `--implementation` narrows it. */

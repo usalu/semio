@@ -3,10 +3,7 @@
   "artifact": "xlsx",
   "package": "semio-s-artifact-stdio-xlsx",
   "order": 26,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio-office",
@@ -79,7 +76,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio-office",

@@ -27,20 +27,20 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         align: "left".into(),
     });
 
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    let from_text = <NoteSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    let from_text = <NoteSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
     assert_eq!(from_text, snapshot);
 
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    let from_binary = <NoteSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let from_binary = <NoteSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
     assert_eq!(from_binary, snapshot);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn absent_linked_artifact_round_trips_as_none() {
     let snapshot = NoteSnapshot::default();
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    assert_eq!(<NoteSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    assert_eq!(<NoteSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    assert_eq!(<NoteSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    assert_eq!(<NoteSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
 }

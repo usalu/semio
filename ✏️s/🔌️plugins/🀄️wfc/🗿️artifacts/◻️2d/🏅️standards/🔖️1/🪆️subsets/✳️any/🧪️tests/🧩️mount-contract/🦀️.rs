@@ -6,7 +6,7 @@
 use crate::examples::{hex_ring, terrain_ring, two_room_corridor, wall_roof_facade_strip};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Wfc2dSnapshot, WFC_2D_DIALECT};
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 #[test]
 fn editor_and_viewer_share_the_wfc2d_dialect() {

@@ -1,7 +1,7 @@
 //! ↩️ Restores the deleted texture at its original position without disturbing referenced siblings.
 
-use crate::standards::v1::subsets::mesh::schema::mutations::{create_texture, SemioMeshMutation};
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::mutations::{create_texture, SemioMeshMutation};
+use crate::schema::snapshot::SemioMeshSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

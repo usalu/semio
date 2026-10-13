@@ -44,7 +44,7 @@ impl FamilyReport {
     }
 }
 
-fn decode_dsl<D: store::ArtifactDsl>(label: &str, text: &str, report: &mut FamilyReport) -> Option<D> {
+fn decode_dsl<D: store::os_store::serialization::ArtifactDsl>(label: &str, text: &str, report: &mut FamilyReport) -> Option<D> {
     match D::parse_dsl(text) {
         Ok(doc) => Some(doc),
         Err(error) => {
@@ -293,7 +293,7 @@ fn has_field_epsilon_fold(line: &str) -> bool {
 }
 
 /// 🖨️ Leak a printed DSL document for gate example registration.
-fn leaked_print_dsl<D: store::ArtifactDsl>(doc: &D) -> &'static str {
+fn leaked_print_dsl<D: store::os_store::serialization::ArtifactDsl>(doc: &D) -> &'static str {
     Box::leak(doc.print_dsl().into_boxed_str())
 }
 
@@ -373,7 +373,7 @@ where
 fn gate_family<F>(id: &'static str, examples: &[(&str, &str)]) -> FamilyReport
 where
     F: NormFamily,
-    F::Document: Clone + Default + store::ArtifactDsl + dsl::ToValue + dsl::FromValue,
+    F::Document: Clone + Default + store::os_store::serialization::ArtifactDsl + dsl::ToValue + dsl::FromValue,
 {
     let mut report = FamilyReport::new(id);
     let default_doc = F::Document::default();

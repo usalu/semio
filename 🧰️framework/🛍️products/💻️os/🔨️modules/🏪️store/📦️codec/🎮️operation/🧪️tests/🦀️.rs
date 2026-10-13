@@ -1,5 +1,5 @@
 use super::*;
-use crate::os_store::bounded_artifact_store_owners;
+use crate::os_store::document_store_owners::bounded_artifact_store_owners;
 use super::super::{tests::DemoSnapshot, fixture_mutations::demo::DemoMutation};
 
 #[test]
@@ -19,7 +19,7 @@ fn original_retained_codec_catalog_preserves_input_receipt_and_cancellation_heap
         let mut releases = 0usize;
         for _ in 0..prepared_turns {
             if owner.is_prepared() { break; }
-            let source = || crate::os_store::bounded_artifact_store_owners_source_demands::<DemoSnapshot, DemoMutation>();
+            let source = || crate::os_store::document_store_owners::bounded_artifact_store_owners_source_demands::<DemoSnapshot, DemoMutation>();
             let demand = owner.demands(grant.maximum_copy_bytes, source).unwrap();
             let pointers = owner.original.as_ref().map(|catalog| [std::sync::Arc::as_ptr(catalog.snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.initial_snapshot_retirement.0.as_ref().unwrap()) as *const () as usize, std::sync::Arc::as_ptr(catalog.mutation_retirement.0.as_ref().unwrap()) as *const () as usize]);
             for axis in 0..5 {

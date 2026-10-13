@@ -25,7 +25,7 @@ fn retire_all(retirement: &mut Box<dyn store::ErasedSnapshotRetirement>) -> usiz
 }
 
 fn examples() -> Vec<Grid2dSnapshot> {
-    crate::examples::grid2d::sources().iter().map(|source| <Grid2dSnapshot as store::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses")).collect()
+    crate::examples::grid2d::sources().iter().map(|source| <Grid2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&source.document()).expect("example parses")).collect()
 }
 
 #[test]

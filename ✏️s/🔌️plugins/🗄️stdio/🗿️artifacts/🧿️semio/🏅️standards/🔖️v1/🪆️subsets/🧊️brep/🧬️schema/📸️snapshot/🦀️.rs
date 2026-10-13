@@ -7,7 +7,7 @@
 //! own curve (not just a straight-line control polygon) and every face its own surface (not just
 //! `PLANE`), matching AP214's real vocabulary of surface/curve kinds.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
 
 
 use framework_schema::ArtifactSchema;
@@ -64,7 +64,7 @@ impl Default for BrepCurve {
 
 /// 🗺️➰️ A p-curve: a coedge's edge, reparametrized into its owning face's `(u, v)` domain — the
 /// 2D twin of [`BrepCurve`], same variant vocabulary, matching the native kernel's `Curve2`
-/// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot`]
+/// (`📸️snapshot/➰️curve/🦀️.rs`) field-for-field so [`Body::to_snapshot`]/[`crate::schema::snapshot::body::body_from_snapshot`]
 /// (`📸️snapshot/🔁️body/🦀️.rs`) round-trip it exactly, never approximated.
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, value_derive::RetireOwned, value_derive::RetainedClone, semio_framework_value::CanonicalJsonTree)]
 #[canonical_json(owner = semio_framework_pack_json)]
@@ -295,7 +295,7 @@ pub struct SemioBrepSnapshot {
     pub solids: Vec<BrepSolid>,
     /// 🧱️ First-class coedges — see [`BrepCoedge`]'s own doc comment for why this is a separate
     /// collection rather than a widened `BrepLoopEdge`. Empty for every snapshot produced before
-    /// this field existed (STEP import, hand-authored fixtures): [`crate::standards::v1::subsets::brep::schema::snapshot::body::crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot`]
+    /// this field existed (STEP import, hand-authored fixtures): [`crate::schema::snapshot::body::crate::schema::snapshot::body::body_from_snapshot`]
     /// falls back to reconstructing coedges from `BrepLoop.edges` (no pcurve) when this is empty.
     #[state(artifact)]
     #[value(default)]
@@ -496,7 +496,7 @@ pub(crate) fn demo_brep_snapshot() -> SemioBrepSnapshot {
     s.loops = vec![BrepLoop { id: "l1".into(), edges: vec![BrepLoopEdge { edge: "e1".into(), orientation: true }, BrepLoopEdge { edge: "e2".into(), orientation: true }, BrepLoopEdge { edge: "e3".into(), orientation: true }] }];
     // 🧱️ Coedges mirror `loops[0].edges` one-for-one, in ring order, with a p-curve stored on the
     // first coedge only — exercising both the `Some(pcurve)` and `None` (fallback-to-projection)
-    // arms of `crate::standards::v1::subsets::brep::schema::snapshot::body::body_from_snapshot` in one fixture.
+    // arms of `crate::schema::snapshot::body::body_from_snapshot` in one fixture.
     s.coedges = vec![
         BrepCoedge {
             id: "co1".into(),

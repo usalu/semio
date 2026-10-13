@@ -1,8 +1,8 @@
 use super::*;
-use crate::brep::representation::arena::ArenaId;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-use crate::brep::representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::arena::ArenaId;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
 use std::f64::consts::PI;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -17,13 +17,13 @@ fn insert_vertex(body: &mut Body, position: Pnt3) -> VertexId {
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn insert_edge(body: &mut Body, curve: crate::brep::representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
+fn insert_edge(body: &mut Body, curve: semio_framework_3d_brep_representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId) -> EdgeId {
     let label = body.new_label();
     body.edges.insert(Edge { curve, range, v0, v1, tol: Tol::DEFAULT, label })
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn make_quad_loop(body: &mut Body, face: FaceId, corners: [Pnt3; 4]) -> crate::brep::representation::arena::LoopId {
+fn make_quad_loop(body: &mut Body, face: FaceId, corners: [Pnt3; 4]) -> semio_framework_3d_brep_representation::arena::LoopId {
     let verts: Vec<_> = corners.iter().map(|&p| insert_vertex(body, p)).collect();
     let curves: Vec<_> = (0..4)
         .map(|i| {
@@ -168,8 +168,8 @@ async fn distance_and_closest_point_between_boxes() {
 
 #[semio_framework_async_macros::async_test]
 async fn box_classifies_via_the_one_authoritative_classifier() {
-    use crate::brep::engine::PointClassification;
-    use crate::brep::queries::classification::point_in_solid;
+    use semio_framework_3d_brep_representation::contract::PointClassification;
+    use crate::classification::point_in_solid;
     let mut body = Body::new();
     let solid = make_box_solid(&mut body, Pnt3::new(0.0, 0.0, 0.0), 1.0, 1.0, 1.0);
     assert_eq!(point_in_solid(&body, solid, Pnt3::new(0.5, 0.5, 0.5), 1e-9).unwrap(), PointClassification::Inside);
@@ -213,8 +213,8 @@ async fn solid_mass_properties_sphere_matches_closed_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn solid_mass_properties_cylinder_general_path_matches_closed_form_within_error_estimate() {
-    use crate::brep::operations::primitives::make_cylinder;
-    use crate::brep::representation::topology::history::OpRecorder;
+    use semio_framework_3d_brep_operations::primitives::make_cylinder;
+    use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let radius = 1.0;
@@ -240,8 +240,8 @@ async fn distance_solid_solid_overlap_returns_zero_via_real_classifier() {
 /// real area to within the inscribed-octagon bound, instead of the zero a two-point "circle" gave.
 #[semio_framework_async_macros::async_test]
 async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
-    use crate::brep::operations::primitives::make_cylinder;
-    use crate::brep::representation::topology::history::OpRecorder;
+    use semio_framework_3d_brep_operations::primitives::make_cylinder;
+    use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let bore = make_cylinder(&mut body, 0.008, 0.16, &mut rec).unwrap();
@@ -255,8 +255,8 @@ async fn coarse_chord_tolerance_keeps_small_circular_faces_measurable() {
 /// surface of revolution is constant in `u`, so it converged immediately while `cos^3 u` did not).
 #[semio_framework_async_macros::async_test]
 async fn curved_solids_converge_in_centroid_and_inertia_not_only_in_volume() {
-    use crate::brep::operations::primitives::{make_cylinder, make_torus};
-    use crate::brep::representation::topology::history::OpRecorder;
+    use semio_framework_3d_brep_operations::primitives::{make_cylinder, make_torus};
+    use semio_framework_3d_brep_representation::topology::history::OpRecorder;
     let mut body = Body::new();
     let mut rec = OpRecorder::new();
     let cylinder = make_cylinder(&mut body, 1.0, 3.0, &mut rec).unwrap();

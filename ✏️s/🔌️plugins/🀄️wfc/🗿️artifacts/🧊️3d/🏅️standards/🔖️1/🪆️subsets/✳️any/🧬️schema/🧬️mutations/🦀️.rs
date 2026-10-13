@@ -84,7 +84,7 @@ pub use super::set_slot_positions::{set_slot_positions, Wfc3dSlotPosition};
 pub use super::unpin_slot::unpin_slot;
 //#endregion 🔖️Builders
 
-pub type Wfc3dEnvelope = store::ArtifactEnvelope<Wfc3dSnapshot, Wfc3dMutation>;
+pub type Wfc3dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Wfc3dSnapshot, Wfc3dMutation>;
 pub type Wfc3dStore = store::ArtifactStore<Wfc3dSnapshot, Wfc3dMutation>;
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.

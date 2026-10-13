@@ -6,24 +6,24 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::audio::schema::mutations::*;
-use crate::standards::v1::subsets::audio::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
-use crate::standards::v1::subsets::audio::io::text::diff::{hex_decode_string};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_tag};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_tag};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_channel};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_channel};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_f32_list};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_f32_list};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_format};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_format};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{parse_u32};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{dec_snapshot};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{enc_snapshot};
-use crate::standards::v1::subsets::document::io::text::mutations::{parse_usize};
-use crate::standards::v1::subsets::audio::io::text::snapshot::{hex_encode};
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::mutations::*;
+use crate::schema::diff::{self, SemioAudioChannelDiff, SemioAudioDiff};
+use crate::io::text::diff::hex_decode_string;
+use crate::io::text::snapshot::dec_tag;
+use crate::io::text::snapshot::enc_tag;
+use crate::io::text::snapshot::dec_channel;
+use crate::io::text::snapshot::enc_channel;
+use crate::io::text::snapshot::dec_f32_list;
+use crate::io::text::snapshot::enc_f32_list;
+use crate::io::text::snapshot::dec_format;
+use crate::io::text::snapshot::enc_format;
+use crate::io::text::snapshot::parse_u32;
+use crate::io::text::snapshot::dec_snapshot;
+use crate::io::text::snapshot::enc_snapshot;
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_usize;
+use crate::io::text::snapshot::hex_encode;
+use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
 /// 🔧️ Unconditional — `impl protocol::OpBinary for SemioAudioMutation` below's `encode_op`/
 /// `decode_op` are now real production code (binary upgrade, this wave), not test-only.
 use protocol::{Mutation, OpBinary, OpText};

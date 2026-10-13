@@ -3580,7 +3580,7 @@
   },
   "registeredTestProposal": {
     "status": "source-oracle-contract",
-    "nxTarget": "@semio-tech/framework-renderer-react:test-long",
+    "nxTarget": "@semio-tech/framework-renderer-react:test",
     "router": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📜️script.ts",
     "project": "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🎯️targets/⚛️react/📦️packages/🟦️typescript/📋️project.json",
     "testHost": "UiDocumentStore/🟦️.tsx / TypedWire",
@@ -3589,7 +3589,7 @@
       "OwnedResidentScalarReceiptModel",
       "OwnedResidentScalarCloseModel"
     ],
-    "budget": "Existing test-long budget; loops bounded by frozen vector/transition/prefix arrays, no arbitrary stutter multiplier.",
+    "budget": "Existing long-level budget (test -- long); loops bounded by frozen vector/transition/prefix arrays, no arbitrary stutter multiplier.",
     "controller": "Test-only pure validateScalarDeclarationCold + runScalarReceiptModelCold + runScalarCloseModelCold; strict Ajv then semantic ID/profile/value invariants, literal closed trace states and Immer parity.",
     "taxonomy": "Before canonical leaf creation, coordinate retained/💾️resident/🔢️scalar schema/fixture domain and its generated launch seed with taxonomy owner. No ticket-path imports in permanent tests.",
     "launch": "Canonical source-oracle release requires the existing Nx target with -t OwnedResidentScalar, started as a dashboard command; no output-only command or separate task. Executed registration evidence belongs in the ticket, not this normative declaration."

@@ -1,9 +1,10 @@
 //! 🧬️ PdfArtifact schema — full artifact state.
 
-// 🔀️ S-6 twin: `crate::schema` now shims to 1.7 (canonical) -- 1.4's own schema
-// uses its own standard-local snapshot type directly rather than the shared root re-export.
 use crate::standards::v1_4::subsets::base::schema::snapshot::{PageDoc, PdfSnapshot};
 use framework_schema::ArtifactSchema;
+
+/// 🏷️ Document schema / DSL envelope id of the PDF 1.4 standard.
+pub const STDIO_PDF_DOCUMENT_SCHEMA: &str = "stdio.pdf";
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
 #[value(rename_all = "camelCase")]

@@ -1,8 +1,8 @@
 //! 🧪️ `unbind-representation` inverse law: unbinding ANY representation (first, middle, last) is undone by one `bind-representation` at its original
 //! index, and the inverse rows' diffs sum to the negative of the forward diff.
 
-use crate::standards::v1::subsets::kit::schema::mutations::{unbind_representation, SemioKitMutation};
-use crate::standards::v1::subsets::kit::schema::snapshot::demo_kit_snapshot;
+use crate::schema::mutations::{unbind_representation, SemioKitMutation};
+use crate::schema::snapshot::demo_kit_snapshot;
 
 #[semio_framework_async_macros::async_test]
 async fn unbinding_any_representation_inverts_at_its_index() {

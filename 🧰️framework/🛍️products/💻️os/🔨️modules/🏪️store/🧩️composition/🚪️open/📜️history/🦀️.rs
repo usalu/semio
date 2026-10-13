@@ -193,7 +193,7 @@ fn diagnostic(error: RetainedSprDiagnostic) -> MemberOpenDiagnostic {
 }
 
 fn close_request(request: &mut ManuallyDrop<Option<MemberOpenRequest>>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
-    crate::os_store::artifact_retirement_owner_close(request, grant)
+    crate::os_store::snapshot_read::artifact_retirement_owner_close(request, grant)
 }
 
 impl ErasedSnapshotRetirement for MemberHistoryVerification {
@@ -220,7 +220,7 @@ impl ErasedSnapshotRetirement for MemberHistoryVerification {
 impl MemberHistoryVerification {
     fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.scanner.is_some() || self.span.is_some() || self.pending.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        crate::os_store::artifact_retirement_owner_demands(&self.request, body)
+        crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, body)
     }
 }
 
@@ -243,7 +243,7 @@ impl ErasedSnapshotRetirement for VerifiedMemberHistoryInput {
 impl VerifiedMemberHistoryInput {
     fn demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.span.is_some() { return Ok(RetirementDemand { depth: 1, ..Default::default() }); }
-        crate::os_store::artifact_retirement_owner_demands(&self.request, body)
+        crate::os_store::snapshot_read::artifact_retirement_owner_demands(&self.request, body)
     }
 }
 

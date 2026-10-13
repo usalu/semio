@@ -1,6 +1,6 @@
 //! 🔤️ Native fixture hex is decoded independently; logical records refuse native hex bodies.
 use crate::BmpSnapshot;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 #[test]
 fn independent_hex_fixture_admission_and_logical_record_separation() {
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔤️native-source-hex/🔣️.json")).unwrap();let expected:Vec<u8>=serde_json::from_value(fixture["bytes"].clone()).unwrap();let pixels:Vec<u8>=serde_json::from_value(fixture["pixels"].clone()).unwrap();

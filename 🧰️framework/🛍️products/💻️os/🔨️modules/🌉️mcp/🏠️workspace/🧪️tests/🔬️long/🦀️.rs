@@ -84,10 +84,10 @@ async fn a_headless_commit_propagates_to_a_second_host_on_the_same_folder() {
         })
         .await;
     let mut shell_events = shell_host.subscribe("shared-doc").await;
-    let shell_envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
+    let shell_envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, "shared-doc", ProbeSnapshot::default(), None);
     let mut shell_store = ProbeStore::new(shell_envelope).await.expect("shell store");
     shell_store.install_document_store_owners_exact(probe_store_owners());
-    shell_store.attach_backbone(store::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
+    shell_store.attach_backbone(store::os_store::backbone::Backbones::Channel(shell_channels.channel_backbone)).await.expect("attach");
 
     agent.ensure_probe_artifact("shared-doc", serde_json::json!({ "from": "agent" }).into()).await.expect("agent commits headlessly");
 
@@ -189,7 +189,7 @@ fn plugin_artifact_channel_mutation_verbs_are_real_round_trips_never_not_wired()
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        eprintln!("skipped: note has no shipped component under its crate's dist/components");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -265,7 +265,7 @@ fn a_real_app_command_is_answered_over_the_shell_message_lane_not_the_respond_la
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        eprintln!("skipped: note has no shipped component under its crate's dist/components");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -310,7 +310,7 @@ fn attempt_plugin_activation_against_a_real_note_wasm_when_available() {
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        eprintln!("skipped: note has no shipped component under its crate's dist/components");
         return;
     }
     let dir = store::test_support::tempdir().expect("tempdir");
@@ -417,7 +417,7 @@ fn a_prepared_action_applies_nothing_and_its_commit_applies_exactly_once() {
         return;
     };
     if resolve_plugin_wasm_path(&repo_root, entry).is_err() {
-        eprintln!("skipped: note.wasm not built at target/wasm32-wasip2/{{wasm-dev,wasm-release}}");
+        eprintln!("skipped: note has no shipped component under its crate's dist/components");
         return;
     }
     let Some(capability_id) = note_mutation_capability_id() else {

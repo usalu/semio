@@ -1,0 +1,75 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/os/plugin/describe/component-receipt/component.json",
+  "title": "Semio OS Plugin Component Receipt",
+  "description": "The generated, never committed binding of one plugin or extension component's semantic descriptor to the exact bytes one build profile produced. The describe stage writes it beside the shipped bytes; descriptor verification, module materialization and the trusted catalog read it.",
+  "$ref": "#/$defs/ComponentReceiptV1",
+  "$defs": {
+    "ComponentSha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$(?![\\s\\S])"
+    },
+    "ComponentPluginId": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
+      "maxLength": 128
+    },
+    "ComponentPackageId": {
+      "type": "string",
+      "pattern": "^semio:[a-z0-9]+(?:-[a-z0-9]+)*$(?![\\s\\S])",
+      "maxLength": 134
+    },
+    "ComponentProfile": {
+      "description": "`wasm-release` is the one shipped profile; `wasm-prototype` is the local-only single-plugin loop whose bytes are never shipped.",
+      "enum": ["wasm-release", "wasm-prototype"]
+    },
+    "ComponentProfilePolicyV1": {
+      "description": "The fixed directory, byte cap and shipping admission of every component profile, keyed by profile.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["directory", "maximumBytes", "shipped"],
+      "properties": {
+        "directory": { "enum": ["dist/components/release", "dist/components/prototype"] },
+        "maximumBytes": { "type": "integer", "minimum": 1 },
+        "shipped": { "type": "boolean" }
+      }
+    },
+    "ComponentProfilePolicies": {
+      "description": "The profile policy table. `wasm-release` keeps the 256 MiB shipped bound; `wasm-prototype` carries its own 512 MiB local-only cap.",
+      "const": {
+        "wasm-release": { "directory": "dist/components/release", "maximumBytes": 268435456, "shipped": true },
+        "wasm-prototype": { "directory": "dist/components/prototype", "maximumBytes": 536870912, "shipped": false }
+      }
+    },
+    "ComponentReceiptV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["schema", "pluginId", "packageId", "profile", "target", "wasmSha256", "wasmBytes", "semanticDescriptorSha256", "toolchain", "sourceTreeDigest", "provenanceSha256"],
+      "properties": {
+        "schema": { "const": "semio.plugin.component-receipt/v1" },
+        "pluginId": { "$ref": "#/$defs/ComponentPluginId" },
+        "packageId": { "$ref": "#/$defs/ComponentPackageId" },
+        "profile": { "$ref": "#/$defs/ComponentProfile" },
+        "target": { "const": "wasm32-wasip2" },
+        "wasmSha256": { "$ref": "#/$defs/ComponentSha256" },
+        "wasmBytes": { "type": "integer", "minimum": 8, "maximum": 536870912 },
+        "semanticDescriptorSha256": { "$ref": "#/$defs/ComponentSha256" },
+        "toolchain": {
+          "description": "`rustc -vV`'s release and commit-hash, the compiler that produced the bytes.",
+          "type": "string",
+          "pattern": "^rustc [0-9]+\\.[0-9]+\\.[0-9]+(?:-[a-z]+)? \\([0-9a-f]{40}\\)$(?![\\s\\S])"
+        },
+        "sourceTreeDigest": {
+          "description": "SHA-256 of the sorted repository-relative `[path, sha256]` rows of every in-repository file the units of the component's build read, as the cargo provenance observation records them.",
+          "$ref": "#/$defs/ComponentSha256"
+        },
+        "provenanceSha256": {
+          "description": "RFC 6962 Merkle root over one leaf per unit of the component's build (the SHA-256 of its path-normalized, time-free input and artifact rows) and one per build-script run (its capture and resource rows). A release driver observes every unit once and derives each component's root from the leaves of its unit-graph closure.",
+          "$ref": "#/$defs/ComponentSha256"
+        }
+      },
+      "if": { "type": "object", "properties": { "profile": { "const": "wasm-release" } } },
+      "then": { "type": "object", "properties": { "wasmBytes": { "type": "integer", "maximum": 268435456 } } }
+    }
+  }
+}

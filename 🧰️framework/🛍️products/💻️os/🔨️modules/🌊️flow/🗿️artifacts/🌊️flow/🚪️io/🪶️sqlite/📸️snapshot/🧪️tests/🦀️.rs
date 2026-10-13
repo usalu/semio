@@ -1,7 +1,7 @@
 //! 🌊️ Framework Flow persisted-owner capability and complete state baselines.
 use crate::*;
 use semio_framework_value::{DslValue, FromValue, Number, ToValue};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 fn laws() -> serde_json::Value {
     serde_json::from_str(include_str!("../../../../🧫️fixtures/🪶️sqlite/🔣️.json")).unwrap()
 }
@@ -310,7 +310,7 @@ fn sqlite_snapshot_framework_flow_controlled_value_keeps_actual_owned_state() {
 #[test]
 fn sqlite_snapshot_framework_flow_erased_both_formats_expose_persisted_entities() {
     use store::sqlite_snapshot::*;
-    let capability = store::ArtifactCodec::bare::<FlowHostSnapshot, FlowMutation>("flow.host_snapshot").snapshot_sqlite.expect("framework Flow relational owner");
+    let capability = store::bare_artifact_codec::<FlowHostSnapshot, FlowMutation>("flow.host_snapshot").snapshot_sqlite.expect("framework Flow relational owner");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(words()[6]));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -376,7 +376,7 @@ async fn sqlite_snapshot_framework_flow_public_io_reaches_actual_persisted_owner
     use {semio_framework_artifact_reference::ArtifactDialect,store::io::io_mechanism::io_route,store::io::io_mechanism::io_run_with_snapshot_control};
     use {semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,store::io_schema::IoPayload,store::io_schema::IoFidelity,store::io_schema::SQLITE_SNAPSHOT};
     use store::sqlite_snapshot::{SnapshotEncoding, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase};
-    let codec = store::ArtifactCodec::bare::<FlowHostSnapshot, FlowMutation>(FLOW_DOCUMENT_SCHEMA);
+    let codec = store::bare_artifact_codec::<FlowHostSnapshot, FlowMutation>(FLOW_DOCUMENT_SCHEMA);
     store::io::register_native_document_codec(Dialect { artifact_kind: "flow.host_snapshot", standard: StandardId("1"), subset: SubsetId("*") }, codec).unwrap();
     let dialect = ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
     let sqlite = ArtifactDialect::from(SQLITE_SNAPSHOT);

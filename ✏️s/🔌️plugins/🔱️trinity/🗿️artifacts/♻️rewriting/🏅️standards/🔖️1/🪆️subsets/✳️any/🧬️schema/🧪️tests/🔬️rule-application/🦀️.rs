@@ -6,7 +6,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::resolve_parameter_va
 use crate::standards::v1::subsets::any::io::text::snapshot::pattern_to_match_clause;
 use crate::standards::v1::subsets::any::io::text::snapshot::parse_bindings_json;
 use super::*;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 fn nakagin_graph() -> Graph {
     Graph::from_snapshot(crate::editor::rewriting::fixture_rule_state().working_graph).unwrap()

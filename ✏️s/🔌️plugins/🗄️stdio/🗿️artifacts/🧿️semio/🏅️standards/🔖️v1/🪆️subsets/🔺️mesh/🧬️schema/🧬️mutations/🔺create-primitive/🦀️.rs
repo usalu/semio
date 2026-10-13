@@ -1,7 +1,7 @@
 //! 🔺 `create-primitive` — inserts a new id-keyed primitive into mesh `mesh_id`. A duplicate `primitive_id` already present, or an absent `mesh_id`, is a no-op.
 
-use crate::standards::v1::subsets::mesh::schema::mutations::SemioMeshMutation;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioPrimitive};
+use crate::schema::mutations::SemioMeshMutation;
+use crate::schema::snapshot::{SemioMeshSnapshot, SemioPrimitive};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

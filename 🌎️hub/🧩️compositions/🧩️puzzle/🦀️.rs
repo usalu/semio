@@ -111,5 +111,3 @@ pub fn plugin() -> Result<Plugin<PuzzleApps>, PluginAssemblyError> {
 mod surface_tests;
 //#endregion 🔖️SurfaceTests
 
-#[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, PuzzleApps);

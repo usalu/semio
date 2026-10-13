@@ -100,7 +100,7 @@ fn tile_geometry(tile: &Tile) -> Option<TileGeometry> {
             })
         }
         TileMedia3d::MeshChild { child } => {
-            let owner = child.local_owner::<semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot>()?;
+            let owner = child.local_owner::<semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot>()?;
             let mut positions = Vec::new();
             let mut indices = Vec::new();
             for mesh in &owner.meshes {

@@ -2,7 +2,7 @@
 //! id-keyed asset collection. NOT one of the coordinator's ten mandated derivations; added so
 //! `image:in` media import (`crate::editor::raster::wasm`/the app's `import_media`) can stay a real,
 //! undoable operation now that whole-document replace is gone — `assets: BTreeMap<String,
-//! store::ArtifactChild<SemioImageSnapshot>>` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
+//! store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>>` (ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`:
 //! the persisted document field holds only a composed-child HANDLE; this mutation's own payload still
 //! carries the real bytes, minted into a handle + working-scene cache entry at apply time via
 //! `crate::mint_raster_asset_child`) is itself an id-keyed root collection per

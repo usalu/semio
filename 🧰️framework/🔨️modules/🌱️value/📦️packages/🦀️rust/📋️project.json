@@ -29,17 +29,25 @@
     "test-native-recipient-source": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native-recipient-source"}
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native-recipient-source"
+      }
     },
     "test-native-recipient": {
       "executor": "nx:run-commands",
       "cache": false,
-      "options": {"cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust", "command": "bun ./📜️script.ts test-native-recipient"}
+      "options": {
+        "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts test-native-recipient"
+      }
     },
     "test-ordered-retirement-source": {
       "executor": "nx:run-commands",
       "cache": false,
-      "inputs": ["default"],
+      "inputs": [
+        "default"
+      ],
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-ordered-retirement-source"
@@ -152,6 +160,14 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test-graphql-int64-source"
+      }
+    },
+    "test-shared-factory-retirement": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test-shared-factory-retirement"
       }
     }
   }

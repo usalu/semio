@@ -25,8 +25,8 @@ pub const BASE_GLB_BYTES: &[u8] = include_bytes!("../../🖼️assets/🌱️met
 /// canonical real snapshot every other consumer of this example (and the fixture tests) works
 /// against, never a hand-authored stand-in.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decoded_snapshot() -> crate::GltfSnapshot {
-    crate::engine::decode_glb(BASE_GLB_BYTES).unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
+pub fn decoded_snapshot() -> semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot {
+    semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb(BASE_GLB_BYTES).unwrap_or_else(|error| panic!("{ID} example base.glb decodes: {error}"))
 }
 
 /// 📄️ Full-fidelity JSON serialization of the real decoded snapshot (document + resolved buffer

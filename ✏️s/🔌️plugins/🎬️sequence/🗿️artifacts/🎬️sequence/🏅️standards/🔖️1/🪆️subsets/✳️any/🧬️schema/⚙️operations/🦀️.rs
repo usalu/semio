@@ -4,7 +4,7 @@ use crate::schema::mutations::SequenceMutation;
 use crate::SequenceSnapshot;
 
 //#region 🔖️Store
-pub type SequenceEnvelope = store::ArtifactEnvelope<SequenceSnapshot, SequenceMutation>;
+pub type SequenceEnvelope = store::os_store::store_schema::ArtifactEnvelope<SequenceSnapshot, SequenceMutation>;
 pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation>;
 
 /// 🔐️ Opens a standalone sequence store WITH its exact owner catalog installed. `ArtifactStore::new`
@@ -14,7 +14,7 @@ pub type SequenceStore = store::ArtifactStore<SequenceSnapshot, SequenceMutation
 /// the SAME catalog for the app-hosted store; every standalone store goes through here instead.
 pub async fn new_sequence_store(envelope: SequenceEnvelope, actor: protocol::ActorId) -> Result<OwnedSequenceStore, store::VcsError> {
     let mut store = SequenceStore::new(envelope, actor).await?;
-    let owners = store::funded_bounded_artifact_store_owners::<SequenceSnapshot, SequenceMutation>().expect("sequence document store owner catalog is fully funded");
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<SequenceSnapshot, SequenceMutation>().expect("sequence document store owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("sequence document store refused its exact owner catalog: {error}");
     }

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { resolveTestLevel } from "../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🧰️ `@semio-tech/framework` router: `bun ./📜️script.ts test`. */
@@ -383,7 +384,7 @@ class TestScript extends BundleScript {
 /** 🔎️ Type-checks every `🧰️framework/🔨️modules/**` and `🧰️framework/📦️packages/**` source file against `tsconfig.json`. */
 class TypecheckScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    await runOwnedCommand(process.execPath, [Bun.resolveSync("typescript/bin/tsc", this.root), "--noEmit", "-p", "tsconfig.json", ...segments], this.root, "framework:typescript", cmdBudgetMs(process.env));
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "framework:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 

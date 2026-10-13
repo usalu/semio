@@ -1,6 +1,7 @@
 //! 🎚️ Exact-window persisted-local configuration with independent event-stream authority.
 
-use super::app::{ArtifactOwnedDisposer, PluginLifecycleStep};
+use crate::store_lifecycle::ArtifactOwnedDisposer;
+use crate::bounded_ownership::PluginLifecycleStep;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultFrom, FaultOrigin, ViewModel};
 use std::any::Any;
@@ -12,7 +13,7 @@ use std::sync::Arc;
 use semio_framework_value::{RetirementDemand,ValueError,ValueRefusalKind,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 
 #[path="🧬️preparation/♻️custody/🦀️.rs"]
-pub(crate) mod preparation_custody;
+mod preparation_custody;
 #[path="🧬️preparation/🔁️replace/🦀️.rs"]
 mod replace_edit;
 pub use replace_edit::{WindowConfigReplaceCursor,WindowConfigReplaceEdit,WindowConfigReplaceMutation};
@@ -30,7 +31,7 @@ mod replace_edit_tests;
 mod retained;
 #[path = "🗂️registry/🦀️.rs"]
 pub(crate) mod registry;
-pub(crate) use registry::WindowRegistry;
+use registry::WindowRegistry;
 pub use retained::{WindowConfigPackLoad, WindowConfigPackLoadDiagnostic, WindowConfigPackLoadPhase, WindowConfigPackLoadProgress, WindowConfigPackLoadStep};
 
 /// 🪟️ Declares one concrete window kind's persisted-local configuration owner.
@@ -38,7 +39,7 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
     const WINDOW_KIND_ID: &'static str;
     const SCHEMA: &'static str;
     const MAXIMUM_PUBLICATION_BYTES: usize;
-    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + store::ArtifactPack + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
+    type State: semio_framework_value::retained_clone::RetainedClone + Clone + Default + PartialEq + semio_framework_value::ToValue + semio_framework_value::FromValue + Send + Sync + store::ConfigRecord + store::os_store::serialization::ArtifactPack + semio_framework_dsl_record::DslField + semio_framework_value::retirement::RetireOwned + 'static;
     type Mutation: protocol::Mutation<Self::State> + store::ArtifactCanonicalJsonTree + PartialEq + Send + Sync + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + 'static;
 
     type Edit: store::snapshot_clone_preparation::RetainedCloneEdit<Self::State,Self::Mutation>;
@@ -47,23 +48,23 @@ pub trait WindowConfigOwner: Send + Sync + 'static {
 
     fn build_mutation_retirement_factory()->Arc<dyn store::ArtifactOwnedValueRetirementFactory<Self::Mutation>>{Arc::new(semio_framework_value::retirement::OwnedValueRetirementFactory::<Self::Mutation>::default())}
     fn build_snapshot_retirement_factory()->Arc<dyn store::SnapshotRetirementFactory<Self::State>>{Arc::new(semio_framework_value::retirement::SharedValueRetirementFactory::<Self::State>::default())}
-    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, ValueError>;
-    fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
+    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, ValueError>;
+    fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>>;
     fn build_store_disposer() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<Self::State, Self::Mutation>>>;
 }
 
-pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> Result<store::DocumentStoreOwners<O::State, O::Mutation>, ValueError> {
-    store::funded_bounded_artifact_store_owners_with_one_item_preparation::<O::State, O::Mutation>(O::build_one_item_preparation_factory())
+pub fn bounded_window_config_store_owners<O: WindowConfigOwner>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<O::State, O::Mutation>, ValueError> {
+    store::os_store::document_store_owners::funded_bounded_artifact_store_owners_with_one_item_preparation::<O::State, O::Mutation>(O::build_one_item_preparation_factory())
 }
 
 /// 🧬️ Uses the original domain edit issuer and Store's admitted clone, metadata and canonical-seal owners.
-pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<O::State, O::Mutation>> {
-    assert!(O::MAXIMUM_PUBLICATION_BYTES>0&&O::MAXIMUM_PUBLICATION_BYTES<=store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,"original window owner declares its admissible publication bound");
+pub fn bounded_window_config_preparation_factory<O: WindowConfigOwner>() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<O::State, O::Mutation>> {
+    assert!(O::MAXIMUM_PUBLICATION_BYTES>0&&O::MAXIMUM_PUBLICATION_BYTES<=store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES,"original window owner declares its admissible publication bound");
     Arc::new(store::snapshot_clone_preparation::RetainedClonePreparationFactory::new(O::build_retained_edit(),O::build_mutation_retirement_factory(),O::build_snapshot_retirement_factory(),O::MAXIMUM_PREPARATION_DEPTH).expect("original window owner declares nonzero preparation depth"))
 }
 
 pub fn bounded_window_config_store_disposer<O: WindowConfigOwner>() -> Box<dyn ArtifactOwnedDisposer<store::ConfigStore<O::State, O::Mutation>>> {
-    super::app::bounded_config_store_disposer::<O::State, O::Mutation>()
+    crate::store_lifecycle::bounded_config_store_disposer::<O::State, O::Mutation>()
 }
 
 #[cfg(test)]
@@ -124,7 +125,7 @@ impl WindowConfigMutation {
         Self::from_issued(window_id,O::WINDOW_KIND_ID,mutation,O::build_mutation_retirement_factory())
     }
 
-    pub(crate) fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
+    fn from_issued<T:Clone+Send+'static>(window_id:impl Into<String>,window_kind_id:&'static str,mutation:T,factory:Arc<dyn store::ArtifactOwnedValueRetirementFactory<T>>)->Self{Self{window_id:window_id.into(),window_kind_id,mutation:Box::new(FactoryBoxedValue{original:Box::new(mutation),factory})}}
 
     pub fn window_id(&self) -> &str {
         &self.window_id
@@ -144,7 +145,7 @@ pub struct WindowConfigSnapshot {
     window_kind_id: &'static str,
     generation: u64,
     revision: [u8; 32],
-    snapshot: store::ErasedSnapshotRead,
+    snapshot: store::os_store::snapshot_read::ErasedSnapshotRead,
 }
 
 impl WindowConfigSnapshot {
@@ -173,7 +174,7 @@ impl WindowConfigSnapshot {
 pub struct WindowConfigPack {
     pub window_id: String,
     pub window_kind_id: String,
-    pub files: store::ArtifactPackFiles,
+    pub files: store::os_store::serialization::ArtifactPackFiles,
 }
 
 #[derive(semio_framework_value::RetireOwned)]
@@ -190,7 +191,7 @@ pub(crate) struct WindowConfigAuthority {
 pub(crate) trait ErasedWindowConfigPublication: Send {
     fn as_any_mut(&mut self) -> &mut dyn Any;
     fn window_kind_id(&self) -> &str;
-    fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase;
+    fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase;
     fn fault(&self) -> Option<&str>;
     fn preparation_refusal(&self) -> Option<&ValueError>;
     fn acknowledge(&mut self) -> bool;
@@ -210,7 +211,7 @@ struct TypedWindowConfigPublication<O: WindowConfigOwner> {
     actor: Option<ControlledRetirement<semio_framework_value::SharedUtf8>>,
     pending: std::mem::ManuallyDrop<Vec<O::Mutation>>,
     transaction: Option<protocol::TransactionRef>,
-    publication: std::mem::ManuallyDrop<Option<store::ArtifactStoreBatchPublication<O::State, O::Mutation>>>,
+    publication: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<O::State, O::Mutation>>>,
     ingress: ControlledRetirement<FactoryBoxedPublication<O::Mutation>>,
     cancelled: Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>,
     closing: bool,
@@ -227,7 +228,7 @@ impl<O: WindowConfigOwner> TypedWindowConfigPublication<O> {
         if let Some(actor)=self.actor.as_ref(){return if actor.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<semio_framework_value::SharedUtf8>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(actor,body)};}
         if !self.ingress.terminal_is_empty(){return Self::controlled_demand(&self.ingress,body);}
         if let Some(cancelled)=self.cancelled.as_ref(){return if cancelled.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<ControlledRetirement<Box<FactoryBoxedValue<O::Mutation>>>>>(),depth:1,..Default::default()})}else{Self::controlled_demand(cancelled,body)};}
-        if let Some(publication)=self.publication.as_ref(){return if publication.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::ArtifactStoreBatchPublication<O::State,O::Mutation>>>(),depth:1,..Default::default()})}else{publication.retirement_demands(body)};}
+        if let Some(publication)=self.publication.as_ref(){return if publication.terminal_is_empty(){Ok(RetirementDemand{copy_bytes:size_of::<Option<store::os_store::one_item_publication::ArtifactStoreBatchPublication<O::State,O::Mutation>>>(),depth:1,..Default::default()})}else{publication.retirement_demands(body)};}
         Self::controlled_demand(&self.window_id,body)
     }
 }
@@ -248,8 +249,8 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
         O::WINDOW_KIND_ID
     }
 
-    fn phase(&self) -> store::ArtifactStoreOneItemPublicationPhase {
-        self.publication.as_ref().map_or(if self.closing{store::ArtifactStoreOneItemPublicationPhase::Closing}else{store::ArtifactStoreOneItemPublicationPhase::Preparing},|publication|publication.phase())
+    fn phase(&self) -> store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase {
+        self.publication.as_ref().map_or(if self.closing{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing}else{store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Preparing},|publication|publication.phase())
     }
 
     fn fault(&self) -> Option<&str> {
@@ -297,24 +298,24 @@ impl<O: WindowConfigOwner> ErasedWindowConfigPublication for TypedWindowConfigPu
 
 type WindowConfigStore<O> = store::ConfigStore<<O as WindowConfigOwner>::State, <O as WindowConfigOwner>::Mutation>;
 
-type WindowPreviewOwners = (Option<WindowConfigSnapshot>, Option<Vec<store::ErasedSnapshotRead>>, Option<store::ErasedSnapshotRead>);
+type WindowPreviewOwners = (Option<WindowConfigSnapshot>, Option<Vec<store::os_store::snapshot_read::ErasedSnapshotRead>>, Option<store::os_store::snapshot_read::ErasedSnapshotRead>);
 
 struct WindowConfigPartition<O: WindowConfigOwner> {
     store: WindowConfigStore<O>,
     disposer: Option<Box<dyn ArtifactOwnedDisposer<WindowConfigStore<O>>>>,
     pending_preview: Option<WindowConfigSnapshot>,
-    pending_preview_reads: Option<Vec<store::ErasedSnapshotRead>>,
-    pending_preview_projection: Option<store::ArtifactDerivedSnapshot<O::State>>,
-    pending_preview_projection_read: Option<store::ErasedSnapshotRead>,
+    pending_preview_reads: Option<Vec<store::os_store::snapshot_read::ErasedSnapshotRead>>,
+    pending_preview_projection: Option<store::os_store::snapshot_read::ArtifactDerivedSnapshot<O::State>>,
+    pending_preview_projection_read: Option<store::os_store::snapshot_read::ErasedSnapshotRead>,
     preview_retirement: Option<ControlledRetirement<WindowPreviewOwners>>,
     returned_read_retirement: Option<Box<dyn store::ErasedSnapshotRetirement>>,
 }
 
 impl<O:WindowConfigOwner> WindowConfigPartition<O>{
     fn returned_read_pending(&self)->bool {self.returned_read_retirement.is_some()||self.store.returned_snapshot_read_retirement_demand().map_or(true,|demand|demand!=RetirementDemand::default())}
-    fn returned_read_demands(&self,body:usize)->Result<RetirementDemand,ValueError> {match self.returned_read_retirement.as_ref(){Some(owner)=>store::artifact_retirement_box_demands(owner,body),None=>self.store.returned_snapshot_read_retirement_demand()}}
+    fn returned_read_demands(&self,body:usize)->Result<RetirementDemand,ValueError> {match self.returned_read_retirement.as_ref(){Some(owner)=>store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body),None=>self.store.returned_snapshot_read_retirement_demand()}}
     fn returned_read_step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError> {
-        if self.returned_read_retirement.is_some(){return store::artifact_retirement_box_close_step(&mut self.returned_read_retirement,grant);}
+        if self.returned_read_retirement.is_some(){return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.returned_read_retirement,grant);}
         let(owner,progress)=self.store.take_returned_snapshot_read_retirement(grant)?;
         self.returned_read_retirement=owner;
         Ok(RetainedCloneStep::Progress(progress))
@@ -354,7 +355,7 @@ trait ErasedWindowConfigStoreOwner: Send {
     fn capture<'a>(&'a mut self, window_id: &'a str) -> Pin<Box<dyn Future<Output = Result<WindowConfigAuthority, Fault>> + 'a>>;
     fn dispatch<'a, 'b>(&'a mut self, actor: &'a str, mutation: WindowConfigMutation, identity: &'a mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'b>) -> Pin<Box<dyn Future<Output = Result<(), Fault>> + 'a>>;
     fn admit_begin(&mut self, operation: semio_framework_job::OperationId, actor: &mut Option<ControlledRetirement<semio_framework_value::SharedUtf8>>, mutations: &mut Vec<WindowConfigMutation>, authority: &WindowConfigAuthority, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn ErasedWindowConfigPublication>,RetainedCloneProgress)>,ValueError>;
-    fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault>;
+    fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault>;
     fn refresh_demands(&self,authority:&WindowConfigAuthority,body:usize)->Result<RetirementDemand,ValueError>;
     fn refresh(&mut self,authority:&mut WindowConfigAuthority,grant:RetainedCloneGrant)->Result<super::window_mutation::WindowAuthorityRefreshStep,Fault>;
     fn packs<'a>(&'a self) -> Pin<Box<dyn Future<Output = Result<Vec<WindowConfigPack>, Fault>> + 'a>>;
@@ -434,7 +435,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
             if !mutation.mutation.as_any().is::<O::Mutation>(){self.direct_ingress.original_mut().expect("live direct ingress remains original").mutations.push(mutation);return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.address"),"window config mutation owner differs from its registered window"));}
             if self.actor.as_ref().is_none_or(|opened|opened.0.as_str()!=actor){self.direct_ingress.original_mut().expect("live direct ingress remains original").mutations.push(mutation);return Err(Fault::new(FaultOrigin::Framework,FaultCode::new("window-config.actor"),"window config mutation actor differs from its opened session"));}
             if let Err(error)=self.partition(&mutation.window_id).await{self.direct_ingress.original_mut().expect("live direct ingress remains original").mutations.push(mutation);return Err(error);}
-            let window_id=mutation.window_id;let typed=mutation.mutation.into_any().downcast::<FactoryBoxedValue<O::Mutation>>().expect("registered mutation retains its original typed carrier");let(value,ingress)=typed.take_for_publication();self.direct_ingress.original_mut().expect("live direct ingress remains original").allocations.push(ingress);let command=store::ArtifactCommand::Apply{mutations:vec![value],transaction:None};self.partitions.get_mut(&window_id).expect("original window partition was admitted").store.dispatch(command,identity).await.map_err(|error|error.into_fault())?;Ok(())
+            let window_id=mutation.window_id;let typed=mutation.mutation.into_any().downcast::<FactoryBoxedValue<O::Mutation>>().expect("registered mutation retains its original typed carrier");let(value,ingress)=typed.take_for_publication();self.direct_ingress.original_mut().expect("live direct ingress remains original").allocations.push(ingress);let command=store::os_store::store_schema::ArtifactCommand::Apply{mutations:vec![value],transaction:None};self.partitions.get_mut(&window_id).expect("original window partition was admitted").store.dispatch(command,identity).await.map_err(|error|error.into_fault())?;Ok(())
         })
     }
     /// 🎟️ Admits one original typed frame and stops before the separately paid Store constructor.
@@ -461,22 +462,22 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         Ok(Some((Box::new(publication),RetainedCloneProgress{copied_items:1,copied_bytes,retained_capacity_bytes,released_bytes:0})))
     }
 
-    fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
         let publication = publication
             .as_any_mut()
             .downcast_mut::<TypedWindowConfigPublication<O>>()
             .ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.publication-type"), "window config publication did not match its registered window owner"))?;
-        if publication.closing{return Ok(store::ArtifactStoreOneItemAdvance::Blocked);}
+        if publication.closing{return Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked);}
         let address=publication.window_id.original().ok_or_else(||Fault::from("original window publication lost its captured address"))?;
         let partition=self.partitions.get_mut(address).ok_or_else(||Fault::from("original window publication lost its exact partition"))?;
         if publication.publication.is_none(){
             return match partition.store.admit_member_apply_batch(publication.operation,publication.generation,publication.revision,&mut publication.actor,&mut publication.pending,&mut publication.transaction,grant.retained_grant()).map_err(|error|error.into_fault())?{
-                Some((owner,progress))=>{*publication.publication=Some(owner);Ok(store::ArtifactStoreOneItemAdvance::PreparationProgress(Default::default(),progress))},
-                None=>Ok(store::ArtifactStoreOneItemAdvance::Blocked),
+                Some((owner,progress))=>{*publication.publication=Some(owner);Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::PreparationProgress(Default::default(),progress))},
+                None=>Ok(store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked),
             };
         }
         let result=partition.store.advance_apply_batch(publication.publication.as_mut().expect("admitted original Store publication remains"),grant).map_err(|error|error.into_fault());
-        if publication.publication.as_ref().is_some_and(|owner|owner.phase()==store::ArtifactStoreOneItemPublicationPhase::Closing){publication.closing=true;}
+        if publication.publication.as_ref().is_some_and(|owner|owner.phase()==store::os_store::one_item_publication::ArtifactStoreOneItemPublicationPhase::Closing){publication.closing=true;}
         result
     }
 
@@ -499,7 +500,7 @@ impl<O: WindowConfigOwner> ErasedWindowConfigStoreOwner for TypedWindowConfigSto
         Box::pin(async move {
             let mut packs = Vec::with_capacity(self.partitions.len());
             for (window_id, partition) in self.partitions.iter() {
-                let files = store::print_document_pack(partition.store.envelope()).await.map_err(|error| error.into_fault())?;
+                let files = store::os_store::text_format::print_document_pack(partition.store.envelope()).await.map_err(|error| error.into_fault())?;
                 packs.push(WindowConfigPack { window_id: window_id.clone(), window_kind_id: O::WINDOW_KIND_ID.to_string(), files });
             }
             Ok(packs)
@@ -760,7 +761,7 @@ impl WindowConfigOwnerRegistry {
         owner.admit_begin(operation,actor,mutations,authority,grant)
     }
 
-    pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemAdvance, Fault> {
+    pub(crate) fn advance(&mut self, publication: &mut dyn ErasedWindowConfigPublication, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item_publication::ArtifactStoreOneItemAdvance, Fault> {
         self.owners.get_mut(publication.window_kind_id()).ok_or_else(|| Fault::new(FaultOrigin::Framework, FaultCode::new("window-config.owner"), "window config publication lost its registered concrete window owner"))?.advance(publication, grant)
     }
 
@@ -781,7 +782,7 @@ impl WindowConfigOwnerRegistry {
     /// ⏳️ Drives one cold load under its explicit copy, capacity, release and depth ceilings for at most `turns` turns. Exhausting the bound
     /// is a typed `window-config.load-bound` fault, never `Ok`; a load that cannot retire within the bound is
     /// parked on the registry, whose bounded close retires it, so no load reaches `Drop` unretired.
-    pub(crate) async fn load_within(&mut self, pack: WindowConfigPack, turns: usize) -> Result<(), Fault> {
+    async fn load_within(&mut self, pack: WindowConfigPack, turns: usize) -> Result<(), Fault> {
         let mut load = self.begin_retained_load(pack)?;
         let mut rejected = None;
         let mut settled = false;

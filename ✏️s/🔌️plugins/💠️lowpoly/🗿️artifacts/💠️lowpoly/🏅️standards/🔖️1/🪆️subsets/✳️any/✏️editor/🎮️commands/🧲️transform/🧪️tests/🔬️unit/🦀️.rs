@@ -57,12 +57,12 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     let base = crate::standards::v1::subsets::any::io::text::snapshot::default_snapshot();
     let object_id = base.objects[0].id.clone();
-    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new(store::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = store::ArtifactStore::<LowpolySnapshot, LowpolyMutation>::new(store::os_store::document_materialize::create_document_envelope::<LowpolySnapshot, LowpolyMutation>(LOWPOLY_DOCUMENT_SCHEMA, "gumball-time-travel", base.clone(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     store.install_document_store_owners_exact(semio_framework_plugin::bounded_document_store_owners::<LowpolySnapshot, LowpolyMutation>());
     let moved = |offset: [f32; 3]| LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), offset });
     let log = [moved([1.0, 0.0, 0.0]), LowpolyMutation::ScaleSelection(ScaleSelection { object_id: object_id.clone(), vertex_ids: Vec::new(), pivot: [0.0; 3], factor: [2.0, 1.0, 1.0] }), LowpolyMutation::MoveSelection(MoveSelection { object_id: object_id.clone(), vertex_ids: vec![0], offset: [0.0, 0.5, 0.0] })];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = moved([0.0, 0.0, -2.0]);
@@ -70,7 +70,7 @@ async fn a_gumball_move_edited_in_history_replays_its_downstream() {
     let preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
     assert_eq!(preview, base, "the preview base is the state right before the edited move");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited move");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a re-offset move never blocks finalizing");
     let fresh = [edited, log[1].clone(), log[2].clone()].iter().fold(base.clone(), |state, mutation| protocol::apply_mutation(&state, mutation).expect("the edited log folds").0);

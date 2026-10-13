@@ -3,7 +3,7 @@
 use crate::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Snapshot
 /// 📸️ Persisted block3d document snapshot (persistent fields of the artifact).
@@ -23,7 +23,7 @@ pub struct Block3dSnapshot {
     pub representations: Vec<BlockRepresentation>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    pub catalog: store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>,
     #[value(default)]
     #[dsl(table)]
     #[state(artifact)]

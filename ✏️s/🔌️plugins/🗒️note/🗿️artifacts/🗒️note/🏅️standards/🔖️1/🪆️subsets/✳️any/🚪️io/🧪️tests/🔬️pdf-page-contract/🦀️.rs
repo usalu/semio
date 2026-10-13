@@ -10,7 +10,7 @@ use semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::{
 async fn note_pdf14_page_contract_matches_the_json_oracle() {
     let fixture: Value = serde_json::from_str(include_str!("../../🧫️fixtures/📖️pdf14-pages.json")).expect("neutral PDF vectors");
     for row in fixture["cases"].as_array().expect("cases") {
-        let pdf: PdfSnapshot = semio_framework_pack_json::from_json_str(&serde_json::json!({"schema": semio_s_artifact_stdio_pdf::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned PDF snapshot");
+        let pdf: PdfSnapshot = semio_framework_pack_json::from_json_str(&serde_json::json!({"schema": semio_s_artifact_stdio_pdf::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA, "pages": row["pages"]}).to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("owned PDF snapshot");
         let bytes = encode_pdf(&pdf).expect("PDF 1.4 writer");
         assert!(bytes.starts_with(b"%PDF-1.4"));
         let note = crate::standards::v1::subsets::any::io::import::deserializers::artifacts::pdf::v1_4::base::PdfIntoNote::deserialize(&ForeignPayload::Binary(bytes)).await.expect("PDF import").value;

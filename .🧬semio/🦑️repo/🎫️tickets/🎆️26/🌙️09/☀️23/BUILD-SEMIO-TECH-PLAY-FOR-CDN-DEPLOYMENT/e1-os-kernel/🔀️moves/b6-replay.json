@@ -1,0 +1,18 @@
+{
+  "target": "🔁️replay/🦀️.rs",
+  "module": "replay",
+  "anchor": "//#region 🔖️PairMerge\n",
+  "doc": [
+    "//! 🔁️ Replay of the edit history: effective forwards and supersessions, the bounded edit replay with its prefix snapshot",
+    "//! ring, and pair merges. The engine, history reads and time travel replay through it; it never names the engine.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️PairMerge",
+    "🔖️EffectiveForwards",
+    "🔖️EditReplay"
+  ],
+  "items": [],
+  "movableTraits": []
+}

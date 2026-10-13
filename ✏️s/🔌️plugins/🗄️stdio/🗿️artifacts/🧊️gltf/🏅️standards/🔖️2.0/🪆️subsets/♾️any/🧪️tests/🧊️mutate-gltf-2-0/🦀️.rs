@@ -114,8 +114,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::mutable_input;
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{decode_glb, encode_glb};
-    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::text::mutations::{gltf_inverse_restored_document,gltf_mutated_document};
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::export::encode_glb;
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::gltf_inverse_restored_document;
+    use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::gltf_mutated_document;
     use semio_s_artifact_stdio_gltf_test_oracle::standards::v2_0::subsets::any::project_gltf;
 
     //#region 🔖️Handlers

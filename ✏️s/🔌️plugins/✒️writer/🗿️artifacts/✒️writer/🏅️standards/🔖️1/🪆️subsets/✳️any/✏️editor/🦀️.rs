@@ -85,7 +85,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::HashMap;
 use std::sync::Arc;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -210,7 +210,7 @@ pub fn writer_chapter_payload(document: &WriterSnapshot) -> WriterChapterPayload
 /// for `scene`'s own `schema`/`id` — a genesis envelope with no history to encode.
 fn reset_document_effect_now(scene: &WriterSnapshot) -> Effect {
     let pack = <WriterSnapshot as ArtifactPack>::encode_pack(scene);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(&scene.id, &scene.schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(&scene.id, &scene.schema));
     Effect::LoadDocument { pack, spr }
 }
 
@@ -687,16 +687,16 @@ fn admit_writer_artifact_mutation(mutation: &WriterMutation) -> Result<(), Strin
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
 struct WriterArtifactPreparationFactory {
     #[factory_child]
-    inner: Arc<dyn store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>>,
+    inner: Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>>,
 }
 
 impl WriterArtifactPreparationFactory {
-    fn shared() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>> {
+    fn shared() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation>> {
         Arc::new(Self { inner: store::mutation_apply_preparation_factory::<WriterSnapshot, WriterMutation>() })
     }
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation> for WriterArtifactPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutation> for WriterArtifactPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<WriterMutation>>>, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<WriterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress)>, semio_framework_value::ValueError> {
         self.inner.begin_batch_digest(edit, grant)
     }
@@ -709,23 +709,23 @@ impl store::ArtifactStoreOneItemPreparationFactory<WriterSnapshot, WriterMutatio
         self.inner.operation_schema_parts(mutation)
     }
 
-    fn preflight(&self, mutation: &WriterMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &WriterMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Writer Artifact preparation rejected its lane".into());
         }
         admit_writer_artifact_mutation(mutation)?;
         self.inner.preflight(mutation, lane)
     }
 
-    fn begin_demand(&self, mutation: &WriterMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, mutation: &WriterMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         self.inner.begin_demand(mutation, lane)
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation, WriterMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation, WriterMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation, WriterMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<WriterSnapshot, WriterMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<WriterSnapshot, WriterMutation, WriterMutation>)> {
         if writer_snapshot_retained_bytes(request.base.get()) > WRITER_ARTIFACT_STORE_MAXIMUM_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Writer Artifact base exceeds its fixed retained preparation envelope"), request));
         }
@@ -798,7 +798,7 @@ impl ArtifactEditor for WriterPlayApp {
 })())
 }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(WriterArtifactPreparationFactory::shared())
     }
 
@@ -866,7 +866,7 @@ impl ArtifactEditor for WriterPlayApp {
                     ]
     }
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::writer_envelope_decode_owner_bundle())
     }
 

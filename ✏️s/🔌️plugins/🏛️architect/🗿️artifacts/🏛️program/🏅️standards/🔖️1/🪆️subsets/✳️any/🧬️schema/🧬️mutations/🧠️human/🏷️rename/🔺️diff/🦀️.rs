@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧠human-factors` per Wave C.
 
 use super::RenameHumanFactorRequirement;
-use crate::diff::{ProgramHumanFactorsDelta, ProgramHumanFactorsPatchEntry};
-use crate::registers::HumanFactorRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramHumanFactorsDelta, ProgramHumanFactorsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::HumanFactorRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameHumanFactorRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -4,7 +4,7 @@
 //! vocabulary that cannot author through its real store fails here instead of at the first undo, genesis or interaction in the browser.
 use super::ArtifactApp;
 use semio_framework_value::retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
-use store::{ArtifactCommand, ArtifactStore, SpaceMember};
+use store::{os_store::store_schema::ArtifactCommand, ArtifactStore, SpaceMember};
 
 /// ⚖️ What one mutation published through a real store: its authored operation rows and the snapshot after apply, undo and redo.
 pub struct StoreAuthoringLaw<P> {
@@ -18,7 +18,7 @@ pub struct StoreAuthoringLaw<P> {
 /// 🧹️ Drives one store's owned close to its terminal-empty witness under independently quoted per-axis grants.
 fn close_store<P, M>(store: &mut ArtifactStore<P, M>)
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
     if store.close_owned_terminal_is_empty() { return; }
@@ -44,9 +44,9 @@ where
     A::Snapshot: Clone,
 {
     let demand = A::document_store_owners_source_demands().expect("the app quotes its document catalog");
-    let owners = store::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, |grant| A::build_document_store_owners(grant).expect("the app supplies a document catalog"));
-    let envelope = store::create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, "authoring-law-document", A::initial_snapshot().await, None);
-    let mut document = Box::pin(ArtifactStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("the law document store");
+    let owners = store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, |grant| A::build_document_store_owners(grant).expect("the app supplies a document catalog"));
+    let envelope = store::os_store::document_materialize::create_document_envelope::<A::Snapshot, A::Mutation>(A::DOCUMENT_SCHEMA, "authoring-law-document", A::initial_snapshot().await, None);
+    let mut document = Box::pin(ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the law document store");
     document.install_operation_wire(store::ArtifactOperationWire::semantic::<A::Snapshot>());
     store::install_unscheduled_catalog(&mut document, owners).expect("the app's real document catalog installs");
     let law = crate::with_authoring_identity!(|identity| {
@@ -70,9 +70,9 @@ where
     A::Config: Clone,
 {
     let demand = A::config_store_owners_source_demands().expect("the app quotes its config catalog");
-    let owners = store::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, |grant| A::build_config_store_owners(grant).expect("the app supplies a config catalog"));
+    let owners = store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes: demand.capacity_bytes, depth: demand.depth.max(1) }, |grant| A::build_config_store_owners(grant).expect("the app supplies a config catalog"));
     let envelope = store::create_config_envelope::<A::Config, A::ConfigMutation>(A::config_schema().await, "authoring-law-config", A::initial_config().await, None).await;
-    let mut config = Box::pin(store::ConfigStore::new(envelope, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("the law config store");
+    let mut config = Box::pin(store::ConfigStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the law config store");
     store::install_unscheduled_catalog(&mut config, owners).expect("the app's real config catalog installs");
     let law = crate::with_authoring_identity!(|identity| {
         Box::pin(config.dispatch(ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }, &mut identity)).await.expect("the mutation authors through the real config store");

@@ -122,10 +122,10 @@ mod artifact_fixed_registry_tests {
     }
 
     fn ingress_with_page(byte: u8) -> ActiveArtifactEnvelopeIngress {
-        let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }).expect("one exact ingress page credit");
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+        let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES }).expect("one exact ingress page credit");
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[0] = byte;
-        store::ArtifactEnvelopeDecodePage::try_from_array(bytes, 1).expect("one-byte exact page").admit_into(&mut pages).unwrap_or_else(|_| panic!("pre-admitted ingress page"));
+        store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, 1).expect("one-byte exact page").admit_into(&mut pages).unwrap_or_else(|_| panic!("pre-admitted ingress page"));
         ActiveArtifactEnvelopeIngress::new(pages)
     }
 

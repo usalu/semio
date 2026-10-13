@@ -10,7 +10,7 @@ impl OriginalToyEmission{
  fn metadata(cx:&mut StepContext<'_>)->Result<bool,ValueError>{let grant=cx.retained_grant();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(false)}cx.consume_retained(RetainedCloneProgress{copied_items:1,..Default::default()})?;Ok(true)}
  pub(super) fn advance_preview<'a>(&'a mut self,writer:&ToolRunTickWriter,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{
   if self.cursor.is_none(){if let Some((cursor,receipt))=ToolRunTickWireCursor::admit(writer,cx.retained_grant()){cx.consume_retained(receipt)?;self.cursor=Some(cursor);}return Ok(None)}
-  if self.preview.published().is_none(){crate::app::tool_run::advance_original_tick_payload(writer,self.cursor.as_mut().unwrap(),&mut self.preview,&mut self.position,cx)?;return Ok(None)}
+  if self.preview.published().is_none(){crate::tool_jobs::tool_run::advance_original_tick_payload(writer,self.cursor.as_mut().unwrap(),&mut self.preview,&mut self.position,cx)?;return Ok(None)}
   JobOutcomeBorrow::admit_preview(cx,self.preview.published().unwrap())
  }
  pub(super) fn advance_checkpoint<'a>(&'a mut self,value:u32,cx:&mut StepContext<'_>)->Result<Option<JobOutcomeBorrow<'a>>,ValueError>{

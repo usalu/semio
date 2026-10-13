@@ -1,7 +1,7 @@
 //! 📄 PDF page window — the visual document surface shared by every subset editor.
 
 use crate::editor::page;
-use crate::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use semio_framework_ui_locale::Locale;
 use semio_framework_plugin::TreeWindows;
 use semio_framework_plugin::WindowKindDefinition;

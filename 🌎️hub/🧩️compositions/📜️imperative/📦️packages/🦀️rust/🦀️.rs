@@ -10,11 +10,6 @@
 //! `TaxonomyLibShape` policy lint both fail on it (see master ticket
 //! `26/08/05/CRATE-CONSOLIDATION-AND-PLUGIN-TAXONOMY-RESTRUCTURE`, Single-File-Repo hazard ruling).
 
-// 🧩️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — the five `🧩️extensions/*/🦀️.rs`
-// files mounted below each carry a `#[cfg(feature = "extension-entry")]` guard on their own
-// `extension_exports!` call (this crate's `Cargo.toml` declares no such feature, so it always
-// evaluates false here — see any extension's own `Cargo.toml` for the full rationale).
-#![allow(unexpected_cfgs)]
 
 // 🧯️ `clippy::result_large_err` — every `🎮️commands/*` handler returns
 // `Result<Emit<ProcedureMutation, ImperativeConfigMutation>, Fault>`, the exact signature
@@ -48,7 +43,6 @@ mod viewer {
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
-mod plugin;
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin::plugin, plugin::ImperativeApps);
+pub mod plugin;
 
 //#endregion 🔖️Plugin

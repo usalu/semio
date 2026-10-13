@@ -951,69 +951,6 @@ pub fn mutation_fixture_ops<M: crate::FromValue>(root: &std::path::Path) -> (Vec
     (ops, files.len())
 }
 
-/// 🐘️ The declared-rows law of an aggregate (design §20.5, audit CLOSURE-4): every editable operation answers exactly the inverse
-/// rows its leaf payload schema's `x-semio-inverse-rows` declares for its own payload — so a hand-written aggregate that forwards
-/// leaf schemas but answers the default single row fails — and every `perTarget` leaf, grown along its first target field, is
-/// admitted by `ArtifactStoreOneItemFootprint::for_gesture` at the one-item ceiling and refused one target past it as
-/// `mutation.too-large` (a framework notice). One line per breach.
-pub fn mutation_inverse_rows_declaration_failures<P, M: Mutation<P>>(ops: &[M]) -> Vec<String> {
-    let ceiling = crate::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_WORK_ITEMS;
-    let mut failures = Vec::new();
-    let mut grown = std::collections::BTreeSet::new();
-    for (index, op) in ops.iter().enumerate() {
-        let Some(schema) = op.input_schema() else { continue };
-        let kind = op.descriptor().semantic_kind;
-        let rows = match semio_framework_pack_json::parse(schema, semio_framework_pack_json::JsonMemberPolicy::Reject) {
-            Ok(json) => semio_framework_pack_json::to_dsl_value(&json).get("x-semio-inverse-rows").cloned(),
-            Err(_) => {
-                failures.push(format!("op {index} ({kind}): its payload schema is no JSON"));
-                continue;
-            }
-        };
-        let count = |key: &str| rows.as_ref().and_then(|rows| rows.get(key)).and_then(semio_framework_value::DslValue::as_u64).map(|count| count as usize);
-        let fixed = if rows.is_none() { 1 } else { count("bounded").or_else(|| count("fixed")).unwrap_or(0) };
-        let per_target: Vec<(String, usize)> = rows.as_ref().and_then(|rows| rows.get("perTarget")).and_then(semio_framework_value::DslValue::as_object).map(|fields| fields.iter().map(|(field, rows)| (field.clone(), rows.as_u64().unwrap_or(0) as usize)).collect()).unwrap_or_default();
-        let payload = op.payload_value();
-        let length = |field: &str| payload.get(field).and_then(semio_framework_value::DslValue::as_array).map_or(0, <[semio_framework_value::DslValue]>::len);
-        let declared = fixed + per_target.iter().map(|(field, rows)| rows * length(field)).sum::<usize>();
-        if op.inverse_rows() != declared {
-            failures.push(format!("op {index} ({kind}): answers {} inverse row(s) where its leaf schema declares {declared}", op.inverse_rows()));
-            continue;
-        }
-        let Some((field, per)) = per_target.first().cloned() else { continue };
-        let items = payload.get(&field).and_then(semio_framework_value::DslValue::as_array).map(<[semio_framework_value::DslValue]>::to_vec).unwrap_or_default();
-        let base = declared - per * items.len();
-        if items.is_empty() || per == 0 || base + 1 > ceiling || grown.contains(kind) {
-            continue;
-        }
-        grown.insert(kind);
-        let admitted = (ceiling - 1 - base) / per;
-        let with_targets = |targets: usize| {
-            let entries = payload.as_object().unwrap_or_default().iter().map(|(key, value)| (key.clone(), if *key == field { semio_framework_value::DslValue::Array(items.iter().cycle().take(targets).cloned().collect()) } else { value.clone() }));
-            op.with_payload_value(semio_framework_value::DslValue::object(entries))
-        };
-        match (with_targets(admitted), with_targets(admitted + 1)) {
-            (Ok(at), Ok(past)) => {
-                if at.inverse_rows() != base + per * admitted || crate::ArtifactStoreOneItemFootprint::for_gesture::<P, M>(std::slice::from_ref(&at)).is_err() {
-                    failures.push(format!("op {index} ({kind}): {admitted} {field} at the {ceiling}-row ceiling are refused"));
-                }
-                match crate::ArtifactStoreOneItemFootprint::for_gesture::<P, M>(std::slice::from_ref(&past)) {
-                    Err(error) if semio_framework_diagnostic::FaultFrom::fault_code(&error).0 == "mutation.too-large" => {}
-                    _ => failures.push(format!("op {index} ({kind}): {} {field} past the {ceiling}-row ceiling are not refused as mutation.too-large", admitted + 1)),
-                }
-                Mutation::<P>::retire_cold(at);
-                Mutation::<P>::retire_cold(past);
-            }
-            (at, past) => {
-                failures.push(format!("op {index} ({kind}): a {field} array grown to the ceiling does not rebuild from its payload"));
-                for op in [at, past].into_iter().flatten() {
-                    Mutation::<P>::retire_cold(op);
-                }
-            }
-        }
-    }
-    failures
-}
 //#endregion 🔖️PayloadLaw
 
 //#region 🧪️Tests

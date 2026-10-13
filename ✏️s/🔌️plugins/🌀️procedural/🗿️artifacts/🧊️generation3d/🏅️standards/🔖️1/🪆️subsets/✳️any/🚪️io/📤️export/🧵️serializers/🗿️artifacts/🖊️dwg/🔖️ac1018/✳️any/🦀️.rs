@@ -13,9 +13,9 @@
 //! where the shared logical drawing model was rehomed — one `DwgSnapshot` type serves both.
 use crate::standards::v1::subsets::any::io::mesh_bridge::io_error;
 use semio_framework_plugin::ArtifactSerializer;
-use semio_s_artifact_stdio_dwg::DwgSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::export::serializers::artifacts::dwg::v_ac1024::any::SemioMeshToDwg;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
+use semio_s_artifact_stdio_semio_mesh_export::serializers::artifacts::dwg::v_ac1024::any::SemioMeshToDwg;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<DwgSnapshot, semio_framework_diagnostic::TextError> {
     ::semio_framework_async::poll::resolve_ready(SemioMeshToDwg::serialize(mesh)).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
@@ -36,5 +36,5 @@ pub fn serialize_mesh(mesh: &SemioMeshSnapshot) -> Result<DwgSnapshot, semio_fra
 /// unaffected.
 pub fn serialize_mesh_bytes(mesh: &SemioMeshSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
     let drawing = serialize_mesh(mesh)?.drawing.to_native().map_err(|error| io_error(format!("generation3d→dwg: {error}")))?;
-    semio_s_artifact_stdio_dwg::engine::dwg_to_bytes(&drawing).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
+    semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&drawing).map_err(|error| io_error(format!("generation3d→dwg: {error}")))
 }

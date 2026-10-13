@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::audio::io::wav_deserializer::SemioAudioFromWav;
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_audio_import::deserializers::artifacts::wav::v_riff_pcm::any::SemioAudioFromWav;
+use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioTag, STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA};
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

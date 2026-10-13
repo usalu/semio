@@ -1,15 +1,15 @@
-use crate::standards::v1::subsets::text::io::text::diff::dec_mark_kind;
+use crate::io::text::diff::dec_mark_kind;
 use super::*;
-use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::snapshot::{SemioTextMarkKind, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use protocol::{DiffBinary,DiffText};
 
 fn one_run(content: &str) -> SemioTextSnapshot {
     SemioTextSnapshot { schema: STDIO_SEMIOTEXT_DOCUMENT_SCHEMA.into(), runs: vec![SemioTextRun { language: "en".into(), content: content.into(), marks: vec![] }] }
 }
 
 fn modify_run(index: usize, diff: SemioTextRunDiff) -> SemioTextDiff {
-    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     SemioTextDiff { runs: Some(IndexedTripleDiff { modified: vec![IndexModified { index, diff }], ..Default::default() }) }
 }
 

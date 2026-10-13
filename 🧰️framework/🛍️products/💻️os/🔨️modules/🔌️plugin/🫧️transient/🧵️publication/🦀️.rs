@@ -1,6 +1,7 @@
 //! 🧵️ Bounded transient publication plus lease-aware exact-store disposal.
 
-use crate::app::{ArtifactOwnedDisposer, PluginLifecycleStep};
+use crate::store_lifecycle::ArtifactOwnedDisposer;
+use crate::bounded_ownership::PluginLifecycleStep;
 use crate::{protocol, store};
 use semio_framework::{Fault, FaultCode, FaultOrigin};
 use semio_framework_value::{RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
@@ -23,7 +24,7 @@ fn yields(grant: RetainedCloneGrant, demand: RetirementDemand) -> bool {
 struct BoundedTransientPreparation<P, M> {
     request: Option<store::ArtifactEphemeralOneItemPreparationRequest<P, M>>,
     prepared: Option<store::ArtifactEphemeralOneItemPrepared<P>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
     closing: bool,
@@ -53,15 +54,15 @@ where
     P: Clone + Send + Sync + 'static,
     M: protocol::Mutation<P> + protocol::OpBinary + Send + 'static,
 {
-    fn preflight(&self, mutation: &M) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &M) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         let retained_bytes = protocol::OpBinary::encode_op(mutation).map_err(|error| error.to_string())?.len();
-        let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
+        let footprint = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
         footprint.is_admissible().then_some(footprint).ok_or_else(|| "transient mutation exceeds the one-item publication bound".into())
     }
 
     fn begin(&self, request: store::ArtifactEphemeralOneItemPreparationRequest<P, M>) -> Result<Box<dyn store::ArtifactEphemeralOneItemPreparation<P, M>>, store::ArtifactEphemeralOneItemPreparationRequest<P, M>> {
-        let retained_bytes = protocol::OpBinary::encode_op(&request.mutation).map_or(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, |bytes| bytes.len());
-        Ok(Box::new(BoundedTransientPreparation { request: Some(request), prepared: None, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, closing: false }))
+        let retained_bytes = protocol::OpBinary::encode_op(&request.mutation).map_or(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, |bytes| bytes.len());
+        Ok(Box::new(BoundedTransientPreparation { request: Some(request), prepared: None, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false, closing: false }))
     }
 }
 
@@ -77,9 +78,9 @@ where
     /// `Blocked` forever, with no fault and no progress, so the typed operation never retired —
     /// measured on lowpoly, whose transient carries the live mesh workspace (ticket
     /// 26/08/29/LOWPOLY-END-TO-END-COMMANDS-IO-AND-MUTATIONS, 2026-09-17).
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
         if self.cancelled || !grant.permits_one() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let mut progress = RetainedCloneProgress::default();
         if self.prepared.is_none() {
@@ -91,12 +92,12 @@ where
             }
             let next_root = protocol::apply_diff(outcome.diff(), request.base.as_ref()).map_err(|error| ValueError::new(ValueRefusalKind::InvalidValue, error.to_string()))?;
             self.prepared = Some(store::ArtifactEphemeralOneItemPrepared { next_root: Arc::new(next_root) });
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: [0; 32] };
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: [0; 32] };
         }
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, progress))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, progress))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
@@ -118,7 +119,7 @@ where
 
     /// 🎒️ Pages its byte accounting on the copy axis instead of demanding the whole root in one grant — the closing
     /// half of the same deadlock `advance` documents above.
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
         let grant = grant.retained_grant();
         if self.terminal_is_empty() {
             return Ok(RetainedCloneStep::Complete(Default::default()));
@@ -223,7 +224,7 @@ impl<P> Default for BoundedTransientRootRetirementFactory<P> {
 
 impl<P> store::SnapshotRetirementFactory<P> for BoundedTransientRootRetirementFactory<P>
 where
-    P: store::ArtifactDsl + Send + Sync + 'static,
+    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
 {
     fn retirement_birth_bytes(&self, _snapshot: &Arc<P>) -> usize { size_of::<BoundedTransientRootRetirement<P>>() }
 
@@ -232,7 +233,7 @@ where
             Ok(progress) => progress,
             Err(error) => return Err((error, snapshot)),
         };
-        let retained_bytes = store::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
+        let retained_bytes = store::os_store::serialization::ArtifactDsl::print_dsl(snapshot.as_ref()).len();
         Ok((Box::new(BoundedTransientRootRetirement { root: Some(snapshot), retained_bytes }), progress))
     }
 }
@@ -262,7 +263,7 @@ where
 
 impl<P, M> ArtifactOwnedDisposer<store::TransientStore<P, M>> for BoundedTransientStoreDisposer<P, M>
 where
-    P: Clone + Default + store::ArtifactDsl + Send + Sync + 'static,
+    P: Clone + Default + store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     /// 🎒️ Same paging as the root retirement above.
@@ -278,7 +279,7 @@ where
             return Ok(PluginLifecycleStep::Progress(Default::default()));
         }
         if self.terminal_root.is_none() {
-            self.retained_bytes = store::ArtifactDsl::print_dsl(owner.current_root().as_ref()).len();
+            self.retained_bytes = store::os_store::serialization::ArtifactDsl::print_dsl(owner.current_root().as_ref()).len();
             self.retired = Some(std::mem::replace(owner, store::TransientStore::new(P::default())));
             self.terminal_root = Some(Arc::downgrade(&owner.current_root()));
             self.terminal_generation = owner.generation_now();
@@ -329,14 +330,14 @@ where
 
 pub fn bounded_transient_root_retirement_factory<P>() -> Arc<dyn store::SnapshotRetirementFactory<P>>
 where
-    P: store::ArtifactDsl + Send + Sync + 'static,
+    P: store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
 {
     Arc::new(BoundedTransientRootRetirementFactory::<P>::default())
 }
 
 pub fn bounded_transient_store_disposer<P, M>() -> Box<dyn ArtifactOwnedDisposer<store::TransientStore<P, M>>>
 where
-    P: Clone + Default + store::ArtifactDsl + Send + Sync + 'static,
+    P: Clone + Default + store::os_store::serialization::ArtifactDsl + Send + Sync + 'static,
     M: protocol::Mutation<P> + Send + 'static,
 {
     Box::new(BoundedTransientStoreDisposer::<P, M>::default())

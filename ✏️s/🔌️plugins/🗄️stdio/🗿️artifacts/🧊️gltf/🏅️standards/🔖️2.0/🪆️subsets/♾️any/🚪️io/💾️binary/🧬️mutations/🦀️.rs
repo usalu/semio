@@ -3,7 +3,7 @@
 pub const COMPONENT_PROTOCOL_SEMIO: &str = include_str!("📡️.protocol.semio");
 pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.protocol.semio");
 
-use crate::schema::mutations::GltfMutation;
+use crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
 
 const BINARY_MARKER: u8 = 0x47;
 const GLTF_MUTATION_MAX_PAYLOAD_BYTES: usize = 64 * 1024;

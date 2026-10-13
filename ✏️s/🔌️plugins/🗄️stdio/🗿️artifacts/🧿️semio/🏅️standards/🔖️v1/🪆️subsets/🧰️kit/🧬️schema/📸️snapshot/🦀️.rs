@@ -13,10 +13,10 @@
 //! join key between the flat link pool and the type that displays it; a type may have zero, one,
 //! or many representations sharing its id as `role`).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 #[cfg(test)]
 use serde::{Deserialize, Serialize};
@@ -96,13 +96,13 @@ pub struct SemioKitSnapshot {
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
+    pub objects: Vec<store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
+    pub models: Vec<store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
+    pub properties: Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
     pub representations: Vec<store::ArtifactLink>,
@@ -287,9 +287,9 @@ pub(crate) fn demo_kit_snapshot() -> SemioKitSnapshot {
             pieces: vec![SemioKitPiece { id: "piece-1".into(), type_id: "chair".into(), transform: SemioTransform::identity() }, SemioKitPiece { id: "piece-2".into(), type_id: "chair".into(), transform: SemioTransform::identity() }],
             connections: vec![SemioKitConnection { id: "conn-1".into(), connecting_piece_id: "piece-1".into(), connecting_port: "left".into(), connected_piece_id: "piece-2".into(), connected_port: "right".into() }],
         }],
-        objects: vec![store::ArtifactChild::new("obj-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "obj-01".into(), dialect: dialect("object") })],
-        models: vec![store::ArtifactChild::new("model-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-01".into(), dialect: dialect("model") })],
-        properties: Some(store::ArtifactChild::new("props-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "props-01".into(), dialect: dialect("value") })),
+        objects: vec![store::os_store::artifact_child::ArtifactChild::new("obj-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "obj-01".into(), dialect: dialect("object") })],
+        models: vec![store::os_store::artifact_child::ArtifactChild::new("model-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "model-01".into(), dialect: dialect("model") })],
+        properties: Some(store::os_store::artifact_child::ArtifactChild::new("props-01".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "props-01".into(), dialect: dialect("value") })),
         representations: vec![store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "chair-repr".into(), dialect: dialect("mesh") }, pin: store::LinkPin::Head, role: "chair".into() }],
     }
 }

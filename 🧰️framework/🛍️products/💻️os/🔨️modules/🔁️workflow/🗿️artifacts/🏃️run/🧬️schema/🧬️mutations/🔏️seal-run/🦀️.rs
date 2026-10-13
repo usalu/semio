@@ -16,7 +16,7 @@ pub struct SealRun {
 impl protocol::MutationKind<RunArtifact, RunMutation> for SealRun {
     const SEMANTICS: protocol::SemanticDescriptor = protocol::SemanticDescriptor { verb: "seal", entity: "run", kind: "seal-run", record: "SealedRun" };
     fn diff(&self, _base: &RunArtifact) -> protocol::MutationOutcome<RunDiff> {
-        protocol::MutationOutcome::new(RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: self.status, finished_at: Some(store::now_iso()) })))
+        protocol::MutationOutcome::new(RunDiff::step(RunStep::Seal(RunSealEdit { sealed: true, status: self.status, finished_at: Some(store::os_store::document_materialize::now_iso()) })))
     }
     fn inverse(&self, base: &RunArtifact) -> Result<Vec<RunMutation>, semio_framework_value::ValueError> {
         Ok(vec![RunMutation::SetRunSeal(SetRunSeal { sealed: base.sealed, status: base.status, finished_at: base.finished_at.clone() })])

@@ -77,7 +77,7 @@ fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
     use crate::PUZZLE_2D_SCHEMA;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = ::semio_framework_async::poll::resolve_ready(puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };

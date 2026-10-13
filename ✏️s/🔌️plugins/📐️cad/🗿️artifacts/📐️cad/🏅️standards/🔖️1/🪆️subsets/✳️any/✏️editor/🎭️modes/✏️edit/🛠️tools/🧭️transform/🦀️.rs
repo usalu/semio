@@ -15,8 +15,8 @@ use semio_framework_plugin::app::ChildEmitPreparation;
 use semio_framework_plugin::{ArtifactView, ChildContentView, Emit};
 use std::collections::VecDeque;
 use semio_framework_tool_machine::{ToolMachineRunner, ToolStep, ToolYield};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::mutations::{drag_elements::DragElements, insert_element::InsertElement, rotate_elements::RotateElements, scale_elements::ScaleElements, SemioModelMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::{SemioModelElement, SemioModelSnapshot};
+use {semio_s_artifact_stdio_semio_model::schema::mutations::drag_elements::DragElements, semio_s_artifact_stdio_semio_model::schema::mutations::insert_element::InsertElement, semio_s_artifact_stdio_semio_model::schema::mutations::rotate_elements::RotateElements, semio_s_artifact_stdio_semio_model::schema::mutations::scale_elements::ScaleElements, semio_s_artifact_stdio_semio_model::schema::mutations::SemioModelMutation};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::{SemioModelElement, SemioModelSnapshot};
 use std::sync::Arc;
 
 /// 🪪️ The editor app id every transform-tool transaction's `tool` is scoped by: `<appId>#<verb>`.
@@ -272,8 +272,8 @@ pub fn cad_transform_tool_emit(doc: &ArtifactView<'_, CadSnapshot>, verb: &str, 
 
 /// 🧊️ Publishes actual topology and its model reference in the same exact tool transaction.
 pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPaneId, verb: &str, mut imported: crate::standards::v1::subsets::any::io::CadImportedObject) -> Result<Emit<CadMutation, CadConfigMutation>, Fault> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::{schema::{snapshot::SemioBrepSnapshot, mutations::SemioBrepMutation}};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::model::schema::snapshot::GeometryRef;
+    use {semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot, semio_s_artifact_stdio_semio_brep::schema::mutations::SemioBrepMutation};
+    use semio_s_artifact_stdio_semio_model::schema::snapshot::GeometryRef;
     let refused = |message| Fault::new(semio_framework_diagnostic::FaultOrigin::App, semio_framework_diagnostic::FaultCode::new("cad.import-object-refused"), message);
     let operation = doc.operation_optional().filter(|operation| !operation.authoring_seed.is_empty()).ok_or_else(|| refused("geometry import requires exact operation authoring authority"))?;
     let id = semio_framework_os_kernel::content_id("cad-geometry", format!("{}:{pane:?}", operation.authoring_seed).as_bytes());
@@ -287,7 +287,7 @@ pub fn cad_import_object_emit(doc: &ArtifactView<'_, CadSnapshot>, pane: CadPane
         return Err(refused("geometry import requires an available composed model"));
     }
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
-    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::ArtifactPack>::encode_pack(&imported.geometry)};
+    let genesis=semio_framework_plugin::app::ChildEmitGenesis{reference:target.clone(),initial_pack:<SemioBrepSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&imported.geometry)};
     emit.artifact_mutations.push(CadMutation::CreateBrep(crate::mutations::create_brep::CreateBrep { child_id: child_id.clone(), target, index }));
     emit.child_preparations.push_front(ChildEmitPreparation::with_genesis::<SemioBrepSnapshot, SemioBrepMutation>("breps", child_id, genesis, Vec::new()));
     Ok(emit)

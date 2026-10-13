@@ -495,10 +495,10 @@ async fn frame_selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::new_layout_store(store::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::new_layout_store(store::os_store::document_materialize::create_document_envelope::<LayoutSnapshot, LayoutMutation>(crate::LAYOUT_DOCUMENT_SCHEMA, "frame-selection-time-travel", sample_doc(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_frames(&["frame-1"], 10.0, 0.0), rotate_frames(&["frame-1"], (40.0, 30.0), std::f64::consts::FRAC_PI_2), scale_frames(&["frame-1"], (40.0, 30.0), 2.0, 2.0)];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a frame transform applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a frame transform applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     assert_eq!(ids.len(), 3, "one applied op per gesture");
@@ -514,7 +514,7 @@ async fn a_drag_edited_in_history_replays_its_downstream() {
     }
     for attempt in 0..2 {
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
-        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
         let result = replay.finish().expect("a finished replay yields its result");
         assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "replay {attempt} equals the fresh fold of the edited log");

@@ -1,6 +1,6 @@
 //! 🧪️ Original Socket carriers and installed IO preserve the complete raw Unicode corpus.
 use super::{NativeSocketProbeSnapshot,store};
-use store::{os_store::{ArtifactSqliteSnapshot,ArtifactDsl,ArtifactPack},sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits as Limits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SnapshotEncoding,SqliteValue},io_schema::IoPayload};
+use store::{os_store::{serialization::ArtifactSqliteSnapshot,serialization::ArtifactDsl,serialization::ArtifactPack},sqlite_snapshot::{SqliteDatabase,SqliteDatabaseLimits as Limits,SqliteSnapshotControl as Control,SqliteSnapshotPhase as Phase,SnapshotEncoding,SqliteValue},io_schema::IoPayload};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,NativeDecodeProgress,NativeEncodeProgress,ValueError,ValueRefusalKind as Kind};
 use semio_framework_artifact_reference::ArtifactDialect;
 use semio_framework_artifact_reference::io::text::artifact_reference::DialectCoordinateText;
@@ -19,17 +19,17 @@ fn native_socket_sqlite_snapshot_catalog_declarations_and_failed_assembly_are_ow
  let before=artifact_catalog_bindings().unwrap().into_iter().filter(|entry|entry.artifact.schema==row.artifact.schema).collect::<Vec<_>>();assert_eq!(before.len(),2);assert!(before.iter().all(|entry|matches!(entry.capability,Capability::UnlinkedGuest)));assert_eq!(before[0].owner.plugin_id,"owner");assert_eq!(before[0].contributor.plugin_id,"host");
  let mut changed=row.clone();changed.owner=changed.contributor.clone();let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(matches!(preflight_artifact_catalog_bindings_in_assembly(&assembly,&[changed],&[]),Err(CatalogError::Conflict{..})));drop(assembly);
  let mut invalid=row.clone();invalid.artifact.pack_schema_hash="0".repeat(64);
- let mut codec=NativeSocketProbeSnapshot::native_snapshot_registration().unwrap().1;codec.schema.push_str(".catalog-refused");let schema=codec.schema.clone();assert!(block_on(store::os_store::document_codec(&schema)).unwrap().is_none());let binding=ArtifactCodecBinding::schema_only(&codec);
+ let mut codec=NativeSocketProbeSnapshot::native_snapshot_registration().unwrap().1;codec.schema.push_str(".catalog-refused");let schema=codec.schema.clone();assert!(block_on(store::os_store::codec_registry::document_codec(&schema)).unwrap().is_none());let binding=ArtifactCodecBinding::schema_only(&codec);
  let assembly=semio_framework_schema_registry::assembly::begin().unwrap();assert!(matches!(commit_artifact_assembly_registry_plan(&assembly,Plan{catalog_bindings:vec![invalid],document_codecs:vec![codec],document_bindings:vec![binding],..Default::default()}),Err(Error::Catalog(CatalogError::Invalid{..}))));drop(assembly);
- assert!(block_on(store::os_store::document_codec(&schema)).unwrap().is_none());assert_eq!(artifact_catalog_bindings().unwrap().into_iter().filter(|entry|entry.artifact.schema==row.artifact.schema).collect::<Vec<_>>(),before);
+ assert!(block_on(store::os_store::codec_registry::document_codec(&schema)).unwrap().is_none());assert_eq!(artifact_catalog_bindings().unwrap().into_iter().filter(|entry|entry.artifact.schema==row.artifact.schema).collect::<Vec<_>>(),before);
  assert_eq!(serde_json::from_str::<serde_json::Value>(&serde_json::to_string(&fixture).unwrap()).unwrap(),fixture);
  eprintln!("[DEBUG] Original catalog Native neutral rows=2 distinctWindows=true unlinkedRetained=true rejectedAssemblyPublishesNothing=true independentSerde=true");
 }
 #[test]
 fn native_socket_sqlite_snapshot_independent_native_identity_and_provider_admission() {
- use store::os_store::{ArtifactCodec,ArtifactNativeSnapshotIdentity as Identity};
+ use store::os_store::{serialization::ArtifactCodec,serialization::ArtifactNativeSnapshotIdentity as Identity};
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🪪️identity/🔣️.json")).unwrap();
- let codec=ArtifactCodec::bare::<NativeSocketProbeSnapshot,super::NativeSocketProbeMutation>(super::native_socket_sqlite::SCHEMA);
+ let codec=bare_artifact_codec::<NativeSocketProbeSnapshot,super::NativeSocketProbeMutation>(super::native_socket_sqlite::SCHEMA);
  let Identity::Typed{snapshot_type,owner}=codec.native_identity else{panic!("actual linked Socket owner")};
  assert_eq!(snapshot_type,std::any::TypeId::of::<NativeSocketProbeSnapshot>());
  assert_eq!(owner.rsplit("::").next().unwrap(),fixture["typedOwner"].as_str().unwrap());
@@ -41,9 +41,9 @@ fn native_socket_sqlite_snapshot_independent_native_identity_and_provider_admiss
  assert_eq!(absent.native_identity,codec.native_identity);
  let mut wrong=codec.clone();wrong.native_identity=Identity::typed::<String>();
  assert!(!wrong.native_identity.validates_provider(&wrong.schema,wrong.snapshot_sqlite.as_ref()));
- assert!(block_on(store::os_store::preflight_document_codecs(&[wrong])).is_err());
+ assert!(block_on(store::os_store::codec_registry::preflight_document_codecs(&[wrong])).is_err());
  let mut other=absent.clone();other.native_identity=Identity::typed::<String>();
- assert!(block_on(store::os_store::preflight_document_codecs(&[absent,other])).is_err());
+ assert!(block_on(store::os_store::codec_registry::preflight_document_codecs(&[absent,other])).is_err());
  eprintln!("[DEBUG] Socket genuine native identity survives absent SQL; wrong typed provider and same-schema owner collision refuse");
 }
 fn native_grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_value(fixture()["callerGrant"].clone()).expect("original independent Socket caller grant")}
@@ -51,9 +51,9 @@ fn native_grant()->semio_framework_value::RetainedCloneGrant{serde_json::from_va
 #[test]
 fn native_socket_sqlite_snapshot_actual_installed_binding_and_duplicate_preflight(){
  use store::io::{ArtifactCodecBindingChannel as Channel,ArtifactCodecBindingError as Error,artifact_codec_bindings,preflight_artifact_codec_bindings};
- use store::os_store::ArtifactNativeSnapshotIdentity as Identity;
+ use store::os_store::serialization::ArtifactNativeSnapshotIdentity as Identity;
  let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../🚪️io/🪪️bindings/🧫️fixtures/🔣️.json")).unwrap();
- let(owner,codec)=NativeSocketProbeSnapshot::native_snapshot_registration().unwrap();let dialect=ArtifactDialect::from(owner);NativeSocketProbeSnapshot::publish_native_snapshot().unwrap();
+ let(owner,codec)=NativeSocketProbeSnapshot::native_snapshot_registration().unwrap();let dialect=ArtifactDialect::from(owner);store::io::publish_native_snapshot::<NativeSocketProbeSnapshot>().unwrap();
  let rows=artifact_codec_bindings().unwrap();let matches:Vec<_>=rows.iter().filter(|row|row.channel==Channel::DirectNative&&row.dialect.as_ref()==Some(&dialect)).collect();assert_eq!(matches.len(),1);let row=matches[0];
  assert_eq!(row.artifact_kind.as_deref(),Some(owner.artifact_kind));assert_eq!(row.schema,codec.schema);assert_eq!(row.native_identity,codec.native_identity);assert_eq!(row.apps.len(),fixture["appLess"].as_array().unwrap().len());assert!(row.factory.is_none());assert_eq!(row.sqlite_schema,codec.snapshot_sqlite.as_ref().map(|provider|provider.schema.clone()));
  let Identity::Typed{owner:native_owner,..}=&row.native_identity else{panic!("actual Socket typed identity")};assert_eq!(row.contributor,*native_owner);
@@ -113,7 +113,7 @@ fn native_socket_sqlite_snapshot_direct_reconstruction_and_interior_cancellation
 #[test]
 fn native_socket_sqlite_snapshot_original_registered_typed_erased_io_and_independent_file_edit(){
  use store::io::io_mechanism::{io_route,io_export_sqlite_snapshot,io_import_sqlite_snapshot,io_run_with_snapshot_control,IoRunControl};
- let f=fixture();let(owner,declared)=NativeSocketProbeSnapshot::native_snapshot_registration().expect("normal Socket owner registration");let dialect=ArtifactDialect::from(owner);assert_eq!(dialect.to_coordinate(),f["dialect"].as_str().unwrap());assert_eq!(declared.schema,f["artifactSchema"].as_str().unwrap());NativeSocketProbeSnapshot::publish_native_snapshot().unwrap();let installed=block_on(store::os_store::document_codec(&declared.schema)).unwrap().unwrap();let provider=installed.snapshot_sqlite.as_ref().unwrap();assert!(provider.identical_to(declared.snapshot_sqlite.as_ref().unwrap()));assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<NativeSocketProbeSnapshot>()));
+ let f=fixture();let(owner,declared)=NativeSocketProbeSnapshot::native_snapshot_registration().expect("normal Socket owner registration");let dialect=ArtifactDialect::from(owner);assert_eq!(dialect.to_coordinate(),f["dialect"].as_str().unwrap());assert_eq!(declared.schema,f["artifactSchema"].as_str().unwrap());store::io::publish_native_snapshot::<NativeSocketProbeSnapshot>().unwrap();let installed=block_on(store::os_store::codec_registry::document_codec(&declared.schema)).unwrap().unwrap();let provider=installed.snapshot_sqlite.as_ref().unwrap();assert!(provider.identical_to(declared.snapshot_sqlite.as_ref().unwrap()));assert_eq!(provider.snapshot_type,Some(std::any::TypeId::of::<NativeSocketProbeSnapshot>()));
  let sqlite=ArtifactDialect::from(store::io_schema::SQLITE_SNAPSHOT);let export=block_on(io_route(&dialect,&sqlite,1)).unwrap().value;let import=block_on(io_route(&sqlite,&dialect,1)).unwrap().value;assert_eq!(export.fidelity,store::io_schema::IoFidelity::Exact);assert_eq!(import.fidelity,store::io_schema::IoFidelity::Exact);
  for(text,_)in samples(&f){let snapshot=NativeSocketProbeSnapshot(text);
   for encoding in[SnapshotEncoding::Text,SnapshotEncoding::Binary]{let input=payload(&snapshot.0,encoding);let mut cb=|_|true;let mut native_cb=|_|true;let mut native=NativeDecodeControl::new(Limits::default().max_allocation_bytes,&mut native_cb);let projected=(provider.export)(&installed.schema,&dialect,&input,&mut Control::new(&mut cb,Limits::default()),&mut store::os_store::NativeSnapshotDecodeOwner::new(&mut native,native_grant())).unwrap().value;let mut native_cb=|_|true;let mut native=NativeEncodeControl::new(Limits::default().max_allocation_bytes,&mut native_cb);assert_eq!((provider.import)(&installed.schema,&dialect,projected,encoding,&mut Control::new(&mut cb,Limits::default()),&mut store::os_store::NativeSnapshotEncodeOwner::new(&mut native,native_grant())).unwrap().value,input);

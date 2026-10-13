@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `CreateEdge`.
 
-use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
-use crate::standards::v1::subsets::brep::schema::diff::SemioBrepDiff;
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepEdge, SemioBrepSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
+use crate::schema::diff::SemioBrepDiff;
+use crate::schema::snapshot::{BrepEdge, SemioBrepSnapshot};
 
 //#region 🔖️Diff
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -14,7 +14,7 @@ pub fn diff(payload: &super::CreateEdge, base: &SemioBrepSnapshot) -> protocol::
         edges: Some(NamedTripleDiff {
             removed: vec![],
             modified: vec![],
-            added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: payload.at.map_or(base.edges.len(), |at| at.min(base.edges.len())), item: BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone(), tol: payload.tol } }],
+            added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: payload.at.map_or(base.edges.len(), |at| at.min(base.edges.len())), item: BrepEdge { id: payload.id.clone(), start_vertex: payload.start_vertex.clone(), end_vertex: payload.end_vertex.clone(), curve: payload.curve.clone(), tol: payload.tol } }],
         }),
         ..Default::default()
     })

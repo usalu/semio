@@ -1,7 +1,7 @@
 //! 📥️ Real Chart producers bind the shared closed owners to authored native assets.
 use super::{corpus,owned,exact,file,independent};
 use crate::ChartSnapshot;
-use protocol::{ArtifactDsl,ArtifactPack,ArtifactSqliteSnapshot};
+use protocol::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactSqliteSnapshot};
 #[test]
 fn chart_logical_owner_fixture_producer(){
  let c=corpus();let cases=c["cases"].as_array().unwrap();assert_eq!(cases.len(),4);

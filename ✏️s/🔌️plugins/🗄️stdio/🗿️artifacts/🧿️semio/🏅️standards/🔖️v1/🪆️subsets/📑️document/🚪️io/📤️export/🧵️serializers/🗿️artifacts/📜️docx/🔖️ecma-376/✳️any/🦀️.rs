@@ -15,7 +15,7 @@
 //!   own default "HeadingN" style ids), not a fabrication.
 //! - `RunStyle::{size,font,color,link}` have no `DocxRun` field and are dropped.
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxDocument, DocxParagraph, DocxRun, DocxStyle, DocxTable, DocxTableCell, DocxTableRow};
 use semio_s_artifact_stdio_docx::standards::v_ecma_376::subsets::base::schema::construction::build_minimal_docx;

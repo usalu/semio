@@ -5,11 +5,11 @@
 //! wire asymmetry this case pins: the DIFF field is `bitDepth` (its struct carries
 //! `rename_all = "camelCase"`) while the MUTATION payload field stays `bit_depth` — the mutation
 //! enum declares `rename_all` (variants) but not `rename_all_fields`.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_bit_depth;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_bit_depth;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️set-bit-depth/🔢️raises/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🔢️set-bit-depth/🔢️raises/📸️snapshot/➡️after/🔣️.json");
@@ -40,7 +40,7 @@ async fn raises_the_recorded_bit_depth_only() {
     assert_eq!(produced.frames, base.frames, "set-bit-depth records provenance only — frame buffers stay normalized RGBA8");
     assert_eq!(produced.colorspace, base.colorspace, "set-bit-depth must not touch the recorded colorspace");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -53,9 +53,9 @@ async fn the_undo_set_bit_depth_restores_the_original_eight() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetBitDepth(set_bit_depth::SetBitDepth { bit_depth: 8 })], "the undo must carry BASE's own bit depth");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-bit-depth/raises-the-source-bit-depth-to-sixteen: the undo did not restore the before-snapshot");
 }

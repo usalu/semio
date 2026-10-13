@@ -146,7 +146,7 @@ describe("owner catalog publication", () => {
 describe("owner descriptor admission", () => {
   for (const vector of fixture.descriptorInputs) it(vector.id, () => {
     const workspace = root(), path = join(workspace, "owner/🔣️.json");
-    const descriptor: Record<string, unknown> = { descriptorVersion: 1, packageId: "semio:alpha", role: "plugin", manifest: { pluginId: "alpha", label: "Alpha", version: "1.0.0", apps: [], examples: [] }, execution: "isolated", executionProtocol: { appChannelVersion: fixture.executionProtocol.appChannelVersion }, quotas: {}, contributions: {}, hashes: { wasmSha256: "1".repeat(64), coreWasmSha256: "2".repeat(64), descriptorSha256: "3".repeat(64) } };
+    const descriptor: Record<string, unknown> = { descriptorVersion: 1, packageId: "semio:alpha", role: "plugin", manifest: { pluginId: "alpha", label: "Alpha", version: "1.0.0", apps: [], examples: [] }, execution: "isolated", executionProtocol: { appChannelVersion: fixture.executionProtocol.appChannelVersion }, quotas: {}, contributions: {} };
     expect(fixture.executionProtocol.appChannelVersion).toBe(APP_CHANNEL_VERSION);
     if (vector.change === "protocol") descriptor.executionProtocol = { appChannelVersion: vector.appChannelVersion };
     if (vector.change === "role-missing") delete descriptor.role;

@@ -267,13 +267,13 @@ pub(crate) fn tile_morph_prompt_effect(deck: &PresentationSnapshot) -> Effect {
 /// `🎮️commands/📥️set-source::set_active_example` uses instead of the banned whole-snapshot mutation. The
 /// spr is a fresh, edit-free op-log — a genesis envelope with no history to encode.
 pub fn reset_presentation_document_effect(document: &PresentationSnapshot) -> Effect {
-    let pack = <PresentationSnapshot as store::ArtifactPack>::encode_pack(document);
+    let pack = <PresentationSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
     // 🪦️ NOT `create_document_envelope` + `print_document_spr`: an envelope is a terminal store shell
     // whose `Drop` asserts that its app-owned bounded retirement authority detached every nested
     // owner first, and nothing here ever mounts or retires it — so building this effect panicked the
     // guest (`unreachable`) at boot, before any window kind existed. `🗒️note`/`✒️writer`/`📐️cad` all
     // take the `empty_document_spr` route; the log is edit-free by construction either way.
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("presentation", PRESENTATION_DOCUMENT_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
@@ -479,7 +479,7 @@ struct AnimatePresentationConfigPreparationFactory;
 struct AnimatePresentationConfigPreparation {
     owners: store::OneItemOwners<PresentationConfig, PresentationConfigMutation>,
     serialized_bytes: Option<usize>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     cancelled: bool,
 }
 
@@ -511,60 +511,60 @@ fn animate_presentation_config_fault(message: &'static str) -> semio_framework_v
     semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, message)
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparationFactory {
     fn begin_batch_digest(&self, edit: &mut Option<Box<protocol::Edit<PresentationConfigMutation>>>, grant: RetainedCloneGrant) -> Result<Option<(Box<dyn store::ArtifactStoreBatchDigest<PresentationConfigMutation>>, RetainedCloneProgress)>, semio_framework_value::ValueError> {
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &PresentationConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+    fn preflight(&self, mutation: &PresentationConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
         let mutation_bytes = match mutation {
             PresentationConfigMutation::SetEngagementInput(payload) => payload.value.len(),
         };
-        if lane != store::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES {
+        if lane != store::os_store::store_schema::HistoryLane::Document || mutation_bytes > ANIMATE_PRESENTATION_CONFIG_VALUE_BYTES {
             return Err("Animate Presentation config preparation rejected its lane or byte envelope".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, ANIMATE_PRESENTATION_CONFIG_STEP_BYTES))
     }
 
-    fn begin_demand(&self, mutation: &PresentationConfigMutation, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, mutation: &PresentationConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         self.preflight(mutation, lane).map_err(|_| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Animate Presentation config preparation has no admissible lane or byte envelope"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<AnimatePresentationConfigPreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>)> {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation>>, RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<PresentationConfig, PresentationConfigMutation, PresentationConfigMutation>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) { Ok(demand) => demand, Err(error) => return Err((error, request)) };
         let progress = match demand.admit(grant.retained_grant()) { Ok(progress) => progress, Err(error) => return Err((error, request)) };
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
             return Err((animate_presentation_config_fault("Animate Presentation config preparation original request refused"), request));
         }
         Ok((Box::new(AnimatePresentationConfigPreparation {
             owners: store::OneItemOwners::from_request(request),
             serialized_bytes: None,
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             cancelled: false,
         }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConfigMutation> for AnimatePresentationConfigPreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if !grant.permits_one() || grant.maximum_copy_bytes < ANIMATE_PRESENTATION_CONFIG_STEP_BYTES || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() || self.owners.failure.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         if self.owners.candidate.is_none() && self.owners.sealed.is_none() {
             let base = self.owners.base.as_ref().ok_or_else(|| animate_presentation_config_fault("Animate Presentation config preparation lost its exact base root"))?.get();
@@ -581,8 +581,8 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
                 }
             };
             *self.owners.candidate = Some((post, vec![inverse], mutation));
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: base_bytes, ..Default::default() }));
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: base_bytes as u64, digest: [0; 32] };
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: base_bytes, ..Default::default() }));
         }
         if self.owners.sealed.is_none() {
             let (post, inverse, forward) = self.owners.candidate.take().ok_or_else(|| animate_presentation_config_fault("Animate Presentation config preparation lost its candidate"))?;
@@ -599,8 +599,8 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
                 return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "Animate Presentation config publication exceeds the 4096-byte complete envelope"));
             }
             self.serialized_bytes = Some(bytes);
-            self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
+            self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.checkpoint.completed_bytes.saturating_add(bytes as u64), digest: [0; 32] };
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: bytes, ..Default::default() }));
         }
         let (post, edit) = self.owners.sealed.take().ok_or_else(|| animate_presentation_config_fault("Animate Presentation config preparation lost its validated edit"))?;
         let Some(authority) = self.owners.authority.as_ref() else {
@@ -614,18 +614,18 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 3, completed_items: 3, completed_bytes: self.checkpoint.completed_bytes.saturating_add(self.serialized_bytes.unwrap_or(0) as u64), digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
         self.owners.prepared.as_ref()
     }
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<PresentationConfig, PresentationConfigMutation>> {
         self.owners.prepared.take()
     }
     fn cancel(&mut self) {
@@ -634,7 +634,7 @@ impl store::ArtifactStoreOneItemPreparation<PresentationConfig, PresentationConf
     fn begin_close(&mut self) {
         self.owners.begin_close();
     }
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
     fn next_close_copy_byte_demand(&self) -> Result<usize, semio_framework_value::ValueError> { Ok(self.owners.close_demands(0)?.copy_bytes) }
@@ -769,14 +769,14 @@ impl PresentationImportJob {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "presentation import close depth overflow"))?; Ok(demand) };
         if !self.publication.terminal_is_empty() { return self.publication.retirement_demands(); }
-        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
-        if self.pending_completion_rejection.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection)?); }
-        if self.mutations.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.mutations)?); }
-        if self.media.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.media)?); }
-        if self.port.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.port)?); }
-        if self.history.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.history)?); }
-        if self.snapshot.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.snapshot)?); }
-        if self.completion.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.completion)?); }
+        if let Some(active) = self.active.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
+        if self.pending_completion_rejection.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.pending_completion_rejection)?); }
+        if self.mutations.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutations)?); }
+        if self.media.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.media)?); }
+        if self.port.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.port)?); }
+        if self.history.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.history)?); }
+        if self.snapshot.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.snapshot)?); }
+        if self.completion.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.completion)?); }
         Ok(semio_framework_value::RetirementDemand { depth: usize::from(!self.terminal_is_empty()), ..Default::default() })
     }
 }
@@ -839,12 +839,12 @@ impl InteractiveJob for PresentationImportJob {
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth.saturating_sub(1), ..grant };
         macro_rules! owned {
             ($slot:expr) => {
-                if $slot.is_some() { return match store::artifact_retirement_admit_owned(&mut $slot, &mut self.active, child) { Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() }, Err(error) => refused(error) }; }
+                if $slot.is_some() { return match store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut $slot, &mut self.active, child) { Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() }, Err(error) => refused(error) }; }
             };
         }
         if !self.publication.terminal_is_empty() { return match self.publication.close_step(grant) { Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() }, Err(error) => refused(error) }; }
         if self.delivered { self.delivered = false; return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress { copied_items: 1, ..Default::default() } }; }
-        if self.active.is_some() { return match store::artifact_retirement_box_close_step(&mut self.active, child) { Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() }, Err(error) => refused(error) }; }
+        if self.active.is_some() { return match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child) { Ok(step) => InteractiveJobCloseStep::Pending { progress: step.progress() }, Err(error) => refused(error) }; }
         owned!(self.pending_completion_rejection);
         owned!(self.mutations);
         owned!(self.media);
@@ -931,11 +931,11 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
     /// declaring the `artifact` lane is marked `unsupported-publication-contract` at boot and fails
     /// closed with `interactive-job.publication-authority-missing`, which is why this app could own
     /// no retained document verb at all (B1a: "promoting a document verb is a two-part change").
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(AnimatePresentationConfigPreparationFactory))
     }
 
@@ -1065,7 +1065,7 @@ impl ArtifactEditor for AnimatePresentationPlayApp {
         Ok(Some(ArtifactReservedToolJob::new(PresentationImportJob::new(request, port, media))))
     }
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::presentation_envelope_decode_owner_bundle())
     }
 

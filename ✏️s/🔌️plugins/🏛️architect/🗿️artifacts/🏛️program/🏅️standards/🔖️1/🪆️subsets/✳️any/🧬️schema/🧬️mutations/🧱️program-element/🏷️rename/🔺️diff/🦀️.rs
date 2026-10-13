@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧱elements` per Wave C.
 
 use super::RenameProgramElement;
-use crate::diff::{ProgramElementsDelta, ProgramElementsPatchEntry};
-use crate::registers::ProgramElementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramElementsDelta, ProgramElementsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::ProgramElementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameProgramElement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

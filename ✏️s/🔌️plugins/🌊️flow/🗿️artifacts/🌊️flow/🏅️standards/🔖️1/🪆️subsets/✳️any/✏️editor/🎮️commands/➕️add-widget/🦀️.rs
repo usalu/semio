@@ -8,8 +8,8 @@ use semio_framework::kernel::UiDirtyScope;
 use semio_framework_plugin::app::ChildEmitPreparation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault, FaultCode, FaultOrigin};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_node, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_node, SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
 use serde_json::json;
 
 /// ➕️ The add-node gesture record of a flow canvas (design §13.3): the widget kind with the descriptor fields a catalogue

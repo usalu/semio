@@ -2,7 +2,7 @@ use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{Retai
 use std::mem::ManuallyDrop;
 
 #[derive(Clone, Copy)]
-pub(crate) struct MountedChildGroupIdentitySource<'a> { pub(crate) parent: &'a str, pub(crate) actor: &'a str, pub(crate) revision: [u8; 32], pub(crate) instance: u32, pub(crate) operation: u64 }
+pub(crate) struct MountedChildGroupIdentitySource<'a> { parent: &'a str, actor: &'a str, revision: [u8; 32], instance: u32, operation: u64 }
 
 pub(crate) struct MountedChildGroupIdentityIssuer {
     hash: Option<semio_framework_hash::Sha256>,
@@ -17,7 +17,7 @@ pub(crate) struct MountedChildGroupIdentityIssuer {
 
 impl MountedChildGroupIdentityIssuer {
     pub(crate) fn new() -> Self { Self { hash: Some(semio_framework_hash::Sha256::new()), seal: None, field: 0, offset: 0, encoded: [0; 70], output: ManuallyDrop::new(None), finished: false, closing: false } }
-    pub(crate) fn next_capacity_byte_demand(&self) -> usize { if !self.finished && !self.closing && self.field == 8 && self.output.is_none() { 70 } else { 0 } }
+    fn next_capacity_byte_demand(&self) -> usize { if !self.finished && !self.closing && self.field == 8 && self.output.is_none() { 70 } else { 0 } }
     pub(crate) fn ready(&self) -> bool { !self.finished && !self.closing && self.output.as_ref().is_some_and(|output| output.len() == 70) }
     /// 🔏️ Hashes one original source prefix and admits the full fixed output before copying its bytes.
     pub(crate) fn advance(&mut self, source: MountedChildGroupIdentitySource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {

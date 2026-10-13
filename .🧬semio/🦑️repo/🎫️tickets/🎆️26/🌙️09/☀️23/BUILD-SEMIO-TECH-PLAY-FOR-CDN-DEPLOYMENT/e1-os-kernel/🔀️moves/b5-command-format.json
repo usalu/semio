@@ -1,0 +1,17 @@
+{
+  "target": "📬️command/🦀️.rs",
+  "module": "command_format",
+  "anchor": "//#region 🔖️CommandFormat\n",
+  "doc": [
+    "//! 📬️ The command text and binary formats: the `.ops` header grammar, command header lines, supersede input lines and",
+    "//! the command transaction codec shared by the text format, the history fold and the composition coordinator.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️CommandFormat",
+    "🔖️OpsHeaderGrammar"
+  ],
+  "items": [],
+  "movableTraits": []
+}

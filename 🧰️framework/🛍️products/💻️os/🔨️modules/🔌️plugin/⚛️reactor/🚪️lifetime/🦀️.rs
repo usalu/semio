@@ -10,7 +10,7 @@ pub(crate) struct NativeCloseKey {
 }
 
 impl NativeCloseKey {
-    pub(crate) fn capture<PA: crate::app::PluginApp + 'static>(lifetime: ActorInstanceLifetime, lease: &crate::plugin_runtime::PluginInstanceCloseLease<PA>) -> Result<Self, &'static str> {
+    fn capture<PA: crate::plugin_app::PluginApp + 'static>(lifetime: ActorInstanceLifetime, lease: &crate::plugin_runtime::PluginInstanceCloseLease<PA>) -> Result<Self, &'static str> {
         let (instance, allocation) = lease.allocation_identity();
         if !lifetime.is_valid() || lifetime.instance_id != instance {
             return Err("native close allocation does not match guest lifetime");
@@ -29,13 +29,13 @@ impl NativeCloseKey {
     }
 }
 
-pub(crate) struct GuestLifecycleSerial(u64);
+struct GuestLifecycleSerial(u64);
 
 impl GuestLifecycleSerial {
-    pub(crate) fn new(last: u64) -> Self {
+    fn new(last: u64) -> Self {
         Self(last)
     }
-    pub(crate) fn next(&mut self) -> Result<u64, &'static str> {
+    fn next(&mut self) -> Result<u64, &'static str> {
         let next = self.0.checked_add(1).ok_or("guest lifetime serial exhausted")?;
         self.0 = next;
         Ok(next)
@@ -46,7 +46,7 @@ mod terminal_owner {
     pub(crate) trait Sealed {}
 }
 
-pub(crate) enum GuestTerminalRelease {
+enum GuestTerminalRelease {
     Pending,
     Released,
 }
@@ -54,7 +54,7 @@ pub(crate) enum GuestTerminalRelease {
 /// 🧾️ The terminal witness carries the ORIGINATING fault, never a rewritten summary of it: every
 /// participant below a guest lifetime answers with the exact `Fault` its own authority raised, so a
 /// close that dies names the authority that refused instead of the ladder rung that noticed.
-pub(crate) trait GuestLifetimeOwner: terminal_owner::Sealed {
+trait GuestLifetimeOwner: terminal_owner::Sealed {
     fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault>;
     fn release_terminal(owner: &mut Option<Self>, maximum_items: usize, maximum_bytes: usize) -> Result<GuestTerminalRelease, semio_framework::Fault>
     where
@@ -73,7 +73,7 @@ enum Phase {
 }
 
 /// 🪪️ Lives in the runtime registry before callbacks; an unwind never removes its owner.
-pub(crate) struct GuestLifecycleCell<O: GuestLifetimeOwner> {
+struct GuestLifecycleCell<O: GuestLifetimeOwner> {
     open: ActorInstanceOpenRequest,
     lifetime: ActorInstanceLifetime,
     owner: ManuallyDrop<Option<O>>,
@@ -86,7 +86,7 @@ pub(crate) struct GuestLifecycleCell<O: GuestLifetimeOwner> {
 }
 
 impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
-    pub(crate) fn admit(open: ActorInstanceOpenRequest, guest_lifetime: u64) -> Result<Self, &'static str> {
+    fn admit(open: ActorInstanceOpenRequest, guest_lifetime: u64) -> Result<Self, &'static str> {
         if !open.is_valid() || guest_lifetime == 0 {
             return Err("invalid guest open authority");
         }
@@ -115,13 +115,13 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     pub(crate) fn owner_mut(&mut self) -> Option<&mut O> {
         self.owner.as_mut()
     }
-    pub(crate) fn retained_receipt(&self) -> Option<ActorInstanceLifecycleReceipt> {
+    fn retained_receipt(&self) -> Option<ActorInstanceLifecycleReceipt> {
         self.receipt
     }
     pub(crate) fn is_live(&self) -> bool {
         self.phase == Phase::Live
     }
-    pub(crate) fn is_released(&self) -> bool {
+    fn is_released(&self) -> bool {
         self.phase == Phase::Released
     }
     pub(crate) fn install_owner(&mut self, owner: O) -> Result<(), O> {
@@ -161,7 +161,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
         Ok(())
     }
 
-    pub(crate) fn prepare_retired(&mut self) -> Result<bool, semio_framework::Fault> {
+    fn prepare_retired(&mut self) -> Result<bool, semio_framework::Fault> {
         if self.phase == Phase::Retired {
             return Ok(true);
         }
@@ -196,7 +196,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     /// during the release ladder is a WAIT for the next opportunity, never a fault — the release runs
     /// across four separate rungs and a momentarily contended authority in between must not kill a
     /// close that already reached its receipt (ticket 26/09/02 wave B17).
-    pub(crate) fn release_owner_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<(), semio_framework::Fault> {
+    fn release_owner_step(&mut self, maximum_items: usize, maximum_bytes: usize) -> Result<(), semio_framework::Fault> {
         if self.phase != Phase::Retired || self.staged_ack.is_none() || self.owner_released || maximum_items == 0 {
             return Ok(());
         }
@@ -223,7 +223,7 @@ impl<O: GuestLifetimeOwner> GuestLifecycleCell<O> {
     /// `executing_us` is the turn's EXECUTING time — wall time inside the guest's own polls, with
     /// every suspension gap excluded (`⚛️reactor/🔄️turn`'s `guest_turn_executing_us`). `None` means
     /// the host clock was missing or ran backward, which retains the receipt exactly like a deadline.
-    pub(crate) fn finish_turn(&mut self, executing_us: Option<u64>, succeeded: bool) -> Result<Option<ActorInstanceLifecycleReceipt>, &'static str> {
+    fn finish_turn(&mut self, executing_us: Option<u64>, succeeded: bool) -> Result<Option<ActorInstanceLifecycleReceipt>, &'static str> {
         if !succeeded {
             return Err("guest lifecycle turn failed; receipt retained");
         }
@@ -271,7 +271,7 @@ pub(super) const GUEST_LIFECYCLE_TURN_DEADLINE: &str = "guest lifecycle turn exc
 type NativeCell<PA> = GuestLifecycleCell<NativeLifetimeOwner<PA>>;
 
 /// 🧷️ The native allocation and every close participant remain attached until terminal ACK.
-pub(crate) struct NativeLifetimeOwner<PA: crate::app::PluginApp> {
+pub(crate) struct NativeLifetimeOwner<PA: crate::plugin_app::PluginApp> {
     lease: crate::plugin_runtime::PluginInstanceCloseLease<PA>,
     key: NativeCloseKey,
     request: Option<ActorInstanceCloseRequest>,
@@ -280,7 +280,7 @@ pub(crate) struct NativeLifetimeOwner<PA: crate::app::PluginApp> {
     released: [bool; 4],
 }
 
-impl<PA: crate::app::PluginApp> NativeLifetimeOwner<PA> {
+impl<PA: crate::plugin_app::PluginApp> NativeLifetimeOwner<PA> {
     pub(crate) fn from_lease(lifetime: ActorInstanceLifetime, lease: crate::plugin_runtime::PluginInstanceCloseLease<PA>) -> Result<Self, semio_framework::Fault> {
         let key = NativeCloseKey::capture(lifetime, &lease).map_err(super::reactor_close_fault)?;
         Ok(Self { lease, key, request: None, reserved: [false; 4], active: [false; 4], released: [false; 4] })
@@ -346,9 +346,9 @@ impl<PA: crate::app::PluginApp> NativeLifetimeOwner<PA> {
     }
 }
 
-impl<PA: crate::app::PluginApp> terminal_owner::Sealed for NativeLifetimeOwner<PA> {}
+impl<PA: crate::plugin_app::PluginApp> terminal_owner::Sealed for NativeLifetimeOwner<PA> {}
 
-impl<PA: crate::app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
+impl<PA: crate::plugin_app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
     fn terminal_is_empty(&self) -> Result<bool, semio_framework::Fault> {
         if !self.lease.is_retired()? {
             return Ok(false);
@@ -401,20 +401,20 @@ impl<PA: crate::app::PluginApp> GuestLifetimeOwner for NativeLifetimeOwner<PA> {
     }
 }
 
-pub(crate) struct NativeLifetimeSlot<PA: crate::app::PluginApp> {
+struct NativeLifetimeSlot<PA: crate::plugin_app::PluginApp> {
     pub(crate) cell: NativeCell<PA>,
     pub(crate) native_created: bool,
     patch_sequence: u64,
 }
 
 /// 🗃️ Fixed allocation-bound ownership belongs to the typed runtime, never a copied thread-local key.
-pub(crate) struct NativeLifecycleRegistry<PA: crate::app::PluginApp> {
+pub(crate) struct NativeLifecycleRegistry<PA: crate::plugin_app::PluginApp> {
     slots: super::ReactorFixedSlots<NativeLifetimeSlot<PA>>,
     serial: GuestLifecycleSerial,
     cursor: usize,
 }
 
-impl<PA: crate::app::PluginApp> NativeLifecycleRegistry<PA> {
+impl<PA: crate::plugin_app::PluginApp> NativeLifecycleRegistry<PA> {
     pub(crate) fn new() -> Self {
         Self { slots: super::ReactorFixedSlots::new(), serial: GuestLifecycleSerial::new(0), cursor: 0 }
     }
@@ -484,7 +484,7 @@ impl<PA: crate::app::PluginApp> NativeLifecycleRegistry<PA> {
     }
 }
 
-impl<PA: crate::app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
+impl<PA: crate::plugin_app::PluginApp> Drop for NativeLifecycleRegistry<PA> {
     /// 🧹️ The teardown contract: every lifetime this registry handed out reached its terminal exact
     /// ACK before the registry itself went away. It is asserted only on the ORDINARY drop path.
     /// While the thread is already unwinding, a panic raised here is a panic inside a destructor

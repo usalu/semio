@@ -12,10 +12,10 @@ pub fn diff(payload: &super::SetImageBytes, base: &SemioDocumentSnapshot) -> pro
     protocol::MutationOutcome::new(match image_at(base, id) {
         Some(old) if &old.mime != mime || &old.bytes != bytes => SemioDocumentDiff {
             styles: None,
-            images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff {
-                modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified {
+            images: Some(crate::schema::diff::ImagesDiff {
+                modified: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedModified {
                     key: id.clone(),
-                    diff: crate::standards::v1::subsets::document::schema::diff::DocImageDiff { mime: Some(mime.clone()), bytes: Some(bytes.clone()) },
+                    diff: crate::schema::diff::DocImageDiff { mime: Some(mime.clone()), bytes: Some(bytes.clone()) },
                 }],
                 ..Default::default()
             }),

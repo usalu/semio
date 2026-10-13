@@ -13,7 +13,7 @@ fn independent_file(bytes:&[u8],count:i32,encoding:&str){
  let result=std::process::Command::new("bun").args(["-e",oracle]).arg(&path).arg(count.to_string()).arg(encoding).output().expect("independent Bun SQLite");
  assert!(result.status.success(),"{}",String::from_utf8_lossy(&result.stderr));
 }
-async fn export_file(runtime:&OwnedRuntime,compiled:&CompiledHandle,dialect:&str,encoding:&str,payload:&[u8])->sqlite_wire::SnapshotFile{
+async fn export_file(runtime:&OwnedRuntime,compiled:&OwnedCompiledGuest,dialect:&str,encoding:&str,payload:&[u8])->sqlite_wire::SnapshotFile{
  let request=snapshot_request();let grant=request.native.native().unwrap();
  let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=crate::test_native_authority::original(&mut observe,&mut original_recipient);
 
@@ -29,7 +29,7 @@ async fn count_component_full_i32_both_native_encodings_use_real_wasm_and_indepe
  let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=crate::test_native_authority::original(&mut observe,&mut original_recipient);
 
  let component=std::fs::read(fixture_component()).expect("required staged real component");let runtime=OwnedRuntime::new();
- let compiled=runtime.compile(&package_ref("semio:neutral-host-fixture",&component),&component).await.expect("actual component compile");
+ let compiled=runtime.compile_component(&component).expect("actual component compile");
  let fixture=corpus();let dialect=fixture["owner"].as_str().unwrap();
  assert_eq!(runtime.codec_sqlite_schema(&compiled,dialect,codec_budget()).await.expect("guest own SQL declaration").trim(),include_str!("../../../🧪️testing/🧩️component/🧬️schema/📸️snapshot/🪶️sqlite/🗄️.sql").trim());
  let hash=runtime.codec_pack_schema_hash(&compiled,FIXTURE_DOCUMENT_SCHEMA,codec_budget()).await.expect("actual guest record identity");assert_ne!(hash,[0;32]);
@@ -55,7 +55,7 @@ async fn count_component_cancellation_occurs_during_real_export_and_import_inter
  let request=snapshot_request();let grant=request.native.native().unwrap();
  let mut observe=|_:semio_framework_value::native_encoding::NativeEncodeProgress|true;let mut original_recipient=semio_framework_value::native_encoding::NativeEncodeRetirementRecipient::new();let mut identity=crate::test_native_authority::original(&mut observe,&mut original_recipient);
 
- let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new();let compiled=runtime.compile(&package_ref("semio:neutral-host-fixture",&component),&component).await.unwrap();
+ let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new();let compiled=runtime.compile_component(&component).unwrap();
  let fixture=corpus();let dialect=fixture["owner"].as_str().unwrap();let input=b"{\"count\":2147483647}";
  let file=export_file(&runtime,&compiled,dialect,"text",input).await;
  for import in [false,true]{
@@ -77,7 +77,7 @@ async fn count_component_selected_compiled_refusal_owners_preserve_all_eight_cau
 
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
- let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new();let compiled=runtime.compile(&package_ref("semio:neutral-host-fixture",&component),&component).await.unwrap();
+ let component=std::fs::read(fixture_component()).unwrap();let runtime=OwnedRuntime::new();let compiled=runtime.compile_component(&component).unwrap();
  let fixture=corpus();let diagnostic:semio_framework::Diagnostic=semio_framework_pack_json::from_json_str(&fixture["diagnostic"].to_string(),semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
  let kinds=[ValueRefusalKind::InvalidValue,ValueRefusalKind::Canceled,ValueRefusalKind::OwnershipLimit,ValueRefusalKind::AllocationFailed,ValueRefusalKind::WorkLimit,ValueRefusalKind::DepthLimit,ValueRefusalKind::UnsupportedOwner,ValueRefusalKind::InvariantViolated];
  for (row,kind)in fixture["refusals"].as_array().unwrap().iter().zip(kinds){

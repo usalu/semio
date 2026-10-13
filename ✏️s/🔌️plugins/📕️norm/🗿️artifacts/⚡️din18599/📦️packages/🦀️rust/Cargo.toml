@@ -43,6 +43,8 @@ semio-framework-schema = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 pack = { workspace = true }
 semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-table = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
 
 
 [dev-dependencies]

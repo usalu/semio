@@ -1,0 +1,40 @@
+{
+  "repoProject": "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/📋️project.json",
+  "repoTargets": {
+    "test-native-prerequisites": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test native-prerequisites"
+      }
+    },
+    "test-decoder-absence": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "{projectRoot}",
+        "command": "bun ./📜️script.ts test decoder-absence"
+      }
+    }
+  },
+  "launchRows": [
+    {
+      "name": "⚖️test🦑️repo🧩️native-prerequisites",
+      "command": "bun nx run @semio-tech/repo-lib:test-native-prerequisites --skip-nx-cache"
+    },
+    {
+      "name": "⚖️test🦑️repo🛬️decoder-absence",
+      "command": "bun nx run @semio-tech/repo-lib:test-decoder-absence --skip-nx-cache"
+    },
+    {
+      "name": "⚖️test💻️os📇️native-entrypoint-catalog",
+      "command": "bun nx run @semio-tech/framework-renderer-wgpu:test-native-entrypoint-catalog --skip-nx-cache"
+    },
+    {
+      "name": "⚖️test💻️os🏭️returned-read-factory-mount",
+      "command": "bun nx run @semio-tech/framework-os-kernel:test-returned-read-factory-mount --skip-nx-cache"
+    }
+  ],
+  "removeLaunchCommand": "bun nx run @semio-tech/framework-graph:test-manifest-contract -- native-prerequisites"
+}

@@ -32,10 +32,10 @@ impl semio_framework_plugin::WindowTransientOwner for Generation3dViewPreviewWin
 
 /// 🎒️ One evaluation publication's real retained footprint: the state header plus the evaluation
 /// text's own capacity, so a 250 KB eval is admitted as 250 KB and not as one anonymous row.
-fn preflight(mutation: &Generation3dViewTransientMutation) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn preflight(mutation: &Generation3dViewTransientMutation) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let Generation3dViewTransientMutation::SetPreviewEval(SetPreviewEval { eval_text }) = mutation;
     let retained_bytes = size_of::<Generation3dViewTransient>().checked_add(eval_text.as_ref().map_or(0, String::capacity)).ok_or_else(|| "Generation3d viewer preview window transient footprint overflowed".to_string())?;
-    let footprint = store::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
+    let footprint = store::os_store::one_item::ArtifactStoreOneItemFootprint::for_ephemeral_item(retained_bytes);
     footprint.is_admissible().then_some(footprint).ok_or_else(|| "Generation3d viewer preview window transient exceeds its retained publication envelope".into())
 }
 

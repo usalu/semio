@@ -1,16 +1,16 @@
 //! 🧩️ Original document block fields and scalar forest traversal stay in their caller workspace.
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{RowIndexStorage,reconstruct_text_into,reconstruct_blob_into}};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::workspace;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
 
 /// 🪆️ Stores every partial block and all relational scratch in the original outer prefix.
 #[derive(semio_framework_value::RetireOwned)]
-pub(crate)struct BlockReconstructionStorage{
+pub struct BlockReconstructionStorage{
  indices:[RowIndexStorage;15],member_order:Vec<usize>,run_order:Vec<usize>,item_order:Vec<usize>,row_order:Vec<usize>,cell_order:Vec<usize>,
- visited:Vec<u8>,schedule:Vec<i64>,pending:Vec<(i64,bool)>,built:Vec<Option<Vec<DocBlock>>>,blocks:Vec<Option<DocBlock>>,pub(crate)output:Vec<Vec<DocBlock>>
+ visited:Vec<u8>,schedule:Vec<i64>,pending:Vec<(i64,bool)>,built:Vec<Option<Vec<DocBlock>>>,blocks:Vec<Option<DocBlock>>,pub output:Vec<Vec<DocBlock>>
 }
 impl BlockReconstructionStorage{
- pub(crate)fn empty()->Self{Self{indices:std::array::from_fn(|_|RowIndexStorage::empty()),member_order:Vec::new(),run_order:Vec::new(),item_order:Vec::new(),row_order:Vec::new(),cell_order:Vec::new(),visited:Vec::new(),schedule:Vec::new(),pending:Vec::new(),built:Vec::new(),blocks:Vec::new(),output:Vec::new()}}
+ pub fn empty()->Self{Self{indices:std::array::from_fn(|_|RowIndexStorage::empty()),member_order:Vec::new(),run_order:Vec::new(),item_order:Vec::new(),row_order:Vec::new(),cell_order:Vec::new(),visited:Vec::new(),schedule:Vec::new(),pending:Vec::new(),built:Vec::new(),blocks:Vec::new(),output:Vec::new()}}
 }
 /// 🛂️ Binds borrowed source rows to the actual original scalar index storage.
 pub(super)fn details<'a>(storage:&'a mut RowIndexStorage,db:&'a SqliteDatabase,name:&str,columns:usize,control:&mut SqliteSnapshotControl<'_>)->Result<RowIndex<'a>,ValueError>{RowIndex::new(storage,db,name,columns,float_columns(name),control,"invalid document entity identity or columns")}
@@ -31,7 +31,7 @@ fn push(values:&mut Vec<(i64,bool)>,value:(i64,bool))->Result<(),ValueError>{if 
 /// 🫴️ Moves a completed original child collection after its last fallible identity lookup.
 fn take_collection(collections:&RowIndex<'_>,built:&mut[Option<Vec<DocBlock>>],id:i64,control:&mut SqliteSnapshotControl<'_>)->Result<Vec<DocBlock>,ValueError>{let position=collections.position(id,control)?.ok_or_else(||doc_invalid("missing owned document collection"))?;built[position].take().ok_or_else(||doc_invalid("missing owned document collection"))}
 /// 🏗️ Fills the original block forest without creating local owned field or traversal buffers.
-pub(crate)fn reconstruct_block_collections_into(storage:&mut BlockReconstructionStorage,db:&SqliteDatabase,t:DocSqliteTables,roots:&[i64],styles:Option<&RowIndex<'_>>,images:Option<&RowIndex<'_>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
+pub fn reconstruct_block_collections_into(storage:&mut BlockReconstructionStorage,db:&SqliteDatabase,t:DocSqliteTables,roots:&[i64],styles:Option<&RowIndex<'_>>,images:Option<&RowIndex<'_>>,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let BlockReconstructionStorage{indices,member_order,run_order,item_order,row_order,cell_order,visited,schedule,pending,built,blocks:native_blocks,output}=storage;
  let [collection_store,block_store,member_store,paragraph_store,heading_store,run_store,list_store,item_store,table_store,row_store,cell_store,code_store,quote_store,image_store,page_store]=indices;
  let mut collections=details(collection_store,db,t.collection,1,control)?;let mut blocks=details(block_store,db,t.block,2,control)?;let mut members=details(member_store,db,t.member,4,control)?;

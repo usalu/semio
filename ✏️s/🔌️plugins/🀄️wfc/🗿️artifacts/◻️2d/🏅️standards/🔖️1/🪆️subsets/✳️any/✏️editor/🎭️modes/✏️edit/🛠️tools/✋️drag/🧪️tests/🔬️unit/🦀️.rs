@@ -113,7 +113,7 @@ fn settle(app: &mut Wfc2dApp, result: Result<InvocationResult, semio_framework_p
         if !app.has_pending_typed_operations() {
             return result;
         }
-        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
+        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("maintenance");
         block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("publication advances");
     }
     panic!("the wfc2d dispatch did not settle");
@@ -135,8 +135,8 @@ fn close(app: &mut Wfc2dApp) {
         if app.close_terminal_is_empty() {
             return;
         }
-        let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("wfc2d app close quote");
-        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("wfc2d app close quote");
+        let grant = semio_framework_value::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes.max(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         if matches!(PluginApp::close_step(app, grant).expect("wfc2d app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
             break;
         }
@@ -183,11 +183,11 @@ fn a_mounted_release_that_moves_nothing_and_two_drags_keep_their_shape() {
 fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
     block_on(async {
-        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
-        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+        let mut store = store::ArtifactStore::<Wfc2dSnapshot, crate::Wfc2dMutation>::new(store::os_store::document_materialize::create_document_envelope::<Wfc2dSnapshot, crate::Wfc2dMutation>(WFC_2D_DOCUMENT_SCHEMA, "drag-time-travel", base(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+        store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Wfc2dSnapshot, crate::Wfc2dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
         let log = [drag_slots(vec!["room-a".into()], 1.0, 0.0), drag_slots(vec!["room-a".into(), "room-b".into()], 0.0, 2.0), resize_slot("room-a".into(), 3.0, 1.5)];
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the edit applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let edited = drag_slots(vec!["room-a".into()], 3.0, -1.0);
@@ -196,7 +196,7 @@ fn a_drag_edited_in_history_replays_its_downstream() {
         assert_eq!(preview, base(), "the preview base is the state right before the edited drag");
         vcs::apply_mutation(&preview, &edited).map(|(applied_state, _)| { preview = applied_state; }).expect("the draft applies to its base");
         let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
-        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
         let result = replay.finish().expect("a finished replay yields its result");
         let report = store.replay_report(&result).expect("report");
         assert!(!report.blocks_finalize(), "a re-offset drag never blocks finalizing");

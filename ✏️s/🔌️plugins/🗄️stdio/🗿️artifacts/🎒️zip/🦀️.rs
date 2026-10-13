@@ -39,7 +39,7 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec()->store::ArtifactCodec{store::ArtifactCodec::of::<ZipSnapshot,ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)}
+fn native_codec()->store::os_store::serialization::ArtifactCodec{store::artifact_codec::<ZipSnapshot,ZipMutation>(STDIO_ZIP_DOCUMENT_SCHEMA)}
 
 pub fn native_codecs() -> Vec<semio_s_artifact_stdio_contract::NativeCodecFactory> {
     vec![semio_s_artifact_stdio_contract::NativeCodecFactory { id: "stdio.native.zip.v1", artifact: "zip", kind: artifact_kind, codec: native_codec }]
@@ -53,7 +53,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
 /// replaces the old side-effecting `crate::engine::register()`. Mirrors `🔋️energy`'s
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
-/// stands in for the old `store::register_document_codec(store::ArtifactCodec::of::<ZipSnapshot,
+/// stands in for the old `store::os_store::codec_registry::register_document_codec(store::artifact_codec::<ZipSnapshot,
 /// ZipMutation>(...))` call. `.composers(...)` reaches the subset IO module's own `io_registry`
 /// (the former `⚙️engine`'s `io_registry`, dissolved into `standards::v2_0::subsets::any::io` per
 /// ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES), whose `entries()` already

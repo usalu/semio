@@ -109,15 +109,15 @@ pub(crate) mod context {
     /// owner below it (its `ArtifactVcs`, its history ledger, its initial snapshot — which for a
     /// raster document owns a populated asset pool) asserts in `Drop` that the bounded protocol ran
     /// first, and only a store ever runs it. The artifact's own owner catalog retires it instead.
-    pub fn retire_raster_envelope(envelope: store::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
+    pub fn retire_raster_envelope(envelope: store::os_store::store_schema::ArtifactEnvelope<RasterSnapshot, RasterMutation>) {
         crate::host::owned::close_raster_owner_cold(crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope));
     }
 
     pub async fn semio_app() -> RasterAppFixture {
         let mut app = app().await;
         let document = crate::standards::v1::subsets::any::schema::raster_image_test_snapshot();
-        let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
-        let files = store::print_document_pack(&envelope).await.expect("print document pack");
+        let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", document, None);
+        let files = store::os_store::text_format::print_document_pack(&envelope).await.expect("print document pack");
         retire_raster_envelope(envelope);
         semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load semio");
         app
@@ -130,7 +130,7 @@ use crate::editor::raster::panels::{catalogue, document, inspection, masks};
 use crate::standards::v1::subsets::any::schema::{layer_name, layer_visible};
 use crate::standards::v1::subsets::any::io::text::snapshot::{empty_raster_document};
 use semio_framework_plugin::{artifact_app_laws, PluginApp, SET_ACTIVE_UTILITY_ACTION_ID};
-use store::MemoryBackbone;
+use store::os_store::backbone::MemoryBackbone;
 
 //#region 🔖️RetainedEnvelopeIngress
 /// 📨️ One live document-envelope wire, built from the artifact's own empty output shell — the only
@@ -138,7 +138,7 @@ use store::MemoryBackbone;
 /// exclusively through the retained page authority. The envelope the wire describes is retired here
 /// through the same owner bundle the app's decode hook installs, one bounded grant per turn.
 fn raster_envelope_wire() -> Vec<u8> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapshot();
     let snapshot_pack = snapshot.encode_pack();
@@ -160,7 +160,7 @@ fn raster_envelope_wire() -> Vec<u8> {
         ("conflicts".to_string(), semio_framework_pack_json::array([])),
     ]))
     .into_bytes();
-    let envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster-live-load", snapshot, None);
     crate::host::owned::close_raster_owner_cold(crate::host::owned::raster_envelope_decode_owner_bundle().retire_envelope(envelope));
     wire
 }
@@ -168,12 +168,12 @@ fn raster_envelope_wire() -> Vec<u8> {
 /// 🎟️ Reserves page/byte credits first, then feeds the wire as fixed-size pages and seals — the
 /// caller never holds a growable buffer and never sees the store the decode will publish into.
 fn admit_raster_envelope(app: &mut RasterApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Raster live envelope ingress credits");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Raster live envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Raster live envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Raster live envelope page admission failed: {}: {}", fault.code.0, fault.message));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("Raster live envelope seal/submit"));
@@ -184,7 +184,7 @@ fn admit_raster_envelope(app: &mut RasterApp, wire: &[u8]) -> semio_framework_pl
 /// never unbounded.
 fn drive_raster_live_load(app: &mut RasterApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Raster live maintenance turn");
+        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Raster live maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Raster live load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
@@ -211,12 +211,12 @@ async fn raster_live_envelope_cancel_closes_retained_pages_without_publication()
     let mut app = app().await;
     let base_generation = app.artifact_generation_now();
     let wire = raster_envelope_wire();
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Raster ingress credits");
-    let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
-    let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    let first = &wire[..wire.len().min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+    let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
     bytes[..first.len()].copy_from_slice(first);
-    let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Raster first page");
+    let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Raster first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Raster page admission failed: {}: {}", fault.code.0, fault.message));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact Raster ingress");
     assert_eq!(drive_raster_live_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
@@ -515,15 +515,15 @@ async fn two_instances_converge_disjoint_layer_edits_via_backbone() {
         height: Some(512),
         image_key: None,
     }];
-    let base_envelope = store::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
-    let base_files = store::print_document_pack(&base_envelope).await.expect("print document pack");
+    let base_envelope = store::os_store::document_materialize::create_document_envelope::<RasterSnapshot, RasterMutation>(RASTER_DOCUMENT_SCHEMA, "raster", base, None);
+    let base_files = store::os_store::text_format::print_document_pack(&base_envelope).await.expect("print document pack");
     context::retire_raster_envelope(base_envelope);
     semio_framework_plugin::artifact_app_laws::load_document(&mut instance_a, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load a");
     semio_framework_plugin::artifact_app_laws::load_document(&mut instance_b, &base_files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load b");
     let background_id = "bg".to_string();
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://raster-convergence", "mem://raster-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     dispatch(&mut instance_a, RasterCommand::AddLayer(add_layer::AddLayer { kind: "pixel".into() })).await;
     dispatch(&mut instance_b, RasterCommand::PatchLayer(patch_layer::PatchLayer { layer_id: background_id, field: "name".into(), value: "Renamed By B".into() })).await;
@@ -1262,7 +1262,7 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
     let mut app = mounted::mounted_app();
     mounted::dispatch(&mut app, RasterCommand::SetActiveExample(set_active_example::SetActiveExample { example_id: crate::examples::art_raster_demo::ID.into() })).await;
     let archive = PluginApp::document_archive(&*app).await.expect("the demo document reads as one archive");
-    let envelope = store::parse_document_pack::<crate::RasterSnapshot, crate::op::RasterMutation>(&archive.parent_pack, &archive.parent_spr).await.expect("the archive's pack/spr pair parses").into_envelope();
+    let envelope = store::os_store::text_format::parse_document_pack::<crate::RasterSnapshot, crate::op::RasterMutation>(&archive.parent_pack, &archive.parent_spr).await.expect("the archive's pack/spr pair parses").into_envelope();
     let edits = envelope.vcs.edits.len();
     let operation = semio_framework_job::OperationId(4_401);
     let generation = semio_framework_job::Generation(1);
@@ -1291,8 +1291,8 @@ async fn a_demo_edit_archive_loads_back_through_the_document_archive_door() {
         if job.terminal_is_empty() {
             break;
         }
-        let demand = job.retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the initializer quotes its close turn");
-        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+        let demand = job.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("the initializer quotes its close turn");
+        let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES.max(demand.copy_bytes), maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
         let _ = job.close_step(grant);
     }
     assert!(job.terminal_is_empty(), "the completed initializer closes to terminal-empty");

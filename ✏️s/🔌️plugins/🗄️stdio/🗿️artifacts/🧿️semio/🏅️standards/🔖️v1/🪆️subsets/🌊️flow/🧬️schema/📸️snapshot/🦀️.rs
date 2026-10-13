@@ -4,7 +4,7 @@
 //! `serde_json::Value`, no bare tuples (`PortRef`/`SemioPoint2` are named structs), no nested
 //! fixed arrays.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
 
 
 
@@ -150,9 +150,8 @@ impl Default for SemioFlowSnapshot {
 /// a negative coordinate) + 1 edge, exercising every collection/leaf shape at least once. Single
 /// source of truth for `📚️examples/🌊️pipeline/🖼️assets/🗣️.dsl.semio`/`🎒️.pack.semio`
 /// and for the conformance-law tests in `🎹️composer/🦀️.rs`.
-#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn demo_flow_snapshot() -> SemioFlowSnapshot {
+pub fn demo_flow_snapshot() -> SemioFlowSnapshot {
     SemioFlowSnapshot {
         schema: STDIO_SEMIOFLOW_DOCUMENT_SCHEMA.into(),
         nodes: vec![

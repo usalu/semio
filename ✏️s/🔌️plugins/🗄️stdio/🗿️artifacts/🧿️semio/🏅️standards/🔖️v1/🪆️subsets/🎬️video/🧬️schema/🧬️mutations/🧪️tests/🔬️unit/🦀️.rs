@@ -1,14 +1,14 @@
 use super::*;
-use crate::standards::v1::subsets::video::io::binary::mutations::wire_tag;
-use crate::standards::v1::subsets::video::io::text::mutations::print_semio_video_mutation;
-use crate::standards::v1::subsets::video::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
+use crate::io::binary::mutations::wire_tag;
+use crate::io::text::mutations::print_semio_video_mutation;
+use crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
@@ -33,7 +33,7 @@ fn fixture() -> SemioVideoSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Video,
@@ -52,7 +52,7 @@ fn sweep_a() -> SemioVideoSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioVideoSnapshot {
     SemioVideoSnapshot {
-        schema: crate::standards::v1::subsets::video::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOVIDEO_DOCUMENT_SCHEMA.into(),
         streams: vec![
             SemioVideoStream {
                 kind: SemioVideoStreamKind::Audio,
@@ -122,7 +122,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
-        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        let (__next, diff_from_apply) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
         via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
@@ -138,9 +138,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
         for inverse_mutation in <SemioVideoMutation as Mutation<SemioVideoSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
+            round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -164,7 +164,7 @@ fn assert_absorb_matches_sequential(base: &SemioVideoSnapshot, d1: &SemioVideoDi
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn streams_diff(diff: &SemioVideoDiff) -> &crate::standards::v1::subsets::video::schema::diff::SemioVideoStreamsDiff {
+fn streams_diff(diff: &SemioVideoDiff) -> &crate::schema::diff::SemioVideoStreamsDiff {
     diff.streams.as_ref().expect("streams diff present")
 }
 
@@ -258,8 +258,8 @@ async fn absorb_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = fixture();
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioVideoSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioVideoSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️FieldSweep

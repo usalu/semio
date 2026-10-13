@@ -3,10 +3,7 @@
   "artifact": "binary",
   "package": "semio-s-artifact-stdio-binary",
   "order": 0,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio-binary",
@@ -33,7 +30,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio-binary",

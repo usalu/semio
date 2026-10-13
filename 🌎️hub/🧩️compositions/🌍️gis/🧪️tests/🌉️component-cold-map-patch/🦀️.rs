@@ -77,16 +77,16 @@ async fn open_live(bytes: &[u8]) -> (WasmtimeRuntime, GuestInstance, ActorInstan
 }
 
 async fn canonical_pair(value: &serde_json::Value) -> (Vec<u8>, Vec<u8>) {
-    use semio_framework_os_kernel::ArtifactPack;
+    use semio_framework_os_kernel::os_store::serialization::ArtifactPack;
 
     let snapshot = gis_map_snapshot_with_derived_children(GisMapSnapshot { positions: vec![MapFeature { id: value["id"].as_str().expect("position id").into(), data: semio_framework_os_kernel::DslValue::from(value) }], ..Default::default() });
-    let envelope = semio_framework_os_kernel::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
-    let files = semio_framework_os_kernel::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
+    let envelope = semio_framework_os_kernel::os_store::document_materialize::create_document_envelope::<GisMapSnapshot, GisMapMutation>(GIS_MAP_SCHEMA, "shared-map", snapshot, None);
+    let files = semio_framework_os_kernel::os_store::text_format::print_document_pack(&envelope).await.expect("canonical GIS pack pair");
     assert_eq!(files.pack.as_slice(), envelope.vcs.genesis.pack());
     let mut retirement = semio_s_artifact_gis_gismap::standards::v1::subsets::any::io::binary::mutations::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     let mut retired = false;
     for _ in 0..100_000 {
-        match retirement.close_step(1, semio_framework_os_kernel::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement") {
+        match retirement.close_step(1, semio_framework_os_kernel::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS envelope retirement") {
             semio_framework_os_kernel::SnapshotRetirementStep::Complete => {
                 assert!(retirement.terminal_is_empty());
                 retired = true;

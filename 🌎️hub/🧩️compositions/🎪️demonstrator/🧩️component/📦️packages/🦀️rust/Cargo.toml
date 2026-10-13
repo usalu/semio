@@ -1,0 +1,144 @@
+[package]
+workspace = "../../../../.."
+name = "semio-hub-demonstrator-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `demonstrator` plugin component: the one cdylib of `semio-hub-demonstrator`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:demonstrator"
+
+[package.metadata.semio]
+role = "hub"
+deployment-directory = "🎪️demonstrator"
+component-kind = "plugin"
+consumes = ["forms.questionKind", "process.machines", "cad.computer", "sourcing.module", "flow.extension"]
+depends-on = [
+  "cad",
+  "gis",
+  "procedural",
+  "process",
+  "puzzle",
+  "sourcing",
+  "flow-extension-bim",
+  "flow-extension-brep",
+  "flow-extension-dictionary",
+  "flow-extension-list",
+  "flow-extension-logic",
+  "flow-extension-math",
+  "flow-extension-primitive",
+  "flow-extension-text",
+]
+
+[[package.metadata.semio.playground]]
+variant = "demonstrator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.demonstrator.playground@1/*#editor"
+ports = { react = 6107, wgpu = 6207 }
+
+[[package.metadata.semio.playground]]
+variant = "generator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.procedural.generation3d@1/*#editor"
+brand = "entwerfen-mit-bestand-generator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-generator"]
+ports = { react = 6027, wgpu = 6127 }
+
+[[package.metadata.semio.playground]]
+variant = "koordinator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.cad.cad@1/*#editor"
+brand = "entwerfen-mit-bestand-koordinator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-koordinator"]
+ports = { react = 6028, wgpu = 6128 }
+
+[[package.metadata.semio.playground]]
+variant = "aggregator"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.puzzle.puzzle3d@1/*#editor"
+brand = "entwerfen-mit-bestand-aggregator"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["mit-bestand", "entwerfen-mit-bestand"]
+ports = { react = 6023, wgpu = 6123 }
+
+[[package.metadata.semio.playground]]
+variant = "aussuchen"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.sourcing.curation@1/*#editor"
+brand = "entwerfen-mit-bestand-aussuchen"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-aussuchen"]
+ports = { react = 6030, wgpu = 6130 }
+
+[[package.metadata.semio.playground]]
+variant = "bearbeiten"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.process.process3d@1/*#editor"
+brand = "entwerfen-mit-bestand-bearbeiten"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-bearbeiten"]
+ports = { react = 6031, wgpu = 6131 }
+
+[[package.metadata.semio.playground]]
+variant = "verfolgen"
+compositionConfigPath = "✏️s/🧑‍💻dev/🧩️catalog/🧊️wgpu/🟦️.ts"
+app = "s.gis.gismap@1/*#editor"
+brand = "entwerfen-mit-bestand-verfolgen"
+devContribution = "♻️mit-bestand/🧺️demonstrator/🐚️shell/🧬️schema/🔣️.json"
+aliases = ["entwerfen-mit-bestand-verfolgen"]
+ports = { react = 6032, wgpu = 6132 }
+engines = ["./🧰️framework/🔨️modules/🗺️surface/📦️packages/🦀️rust"]
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/cad-assets"
+app = "s.cad.cad@1/*#editor"
+root = "✏️s/🔌️plugins/📐️cad/🗿️artifacts/📐️cad/🏅️standards/🔖️1/🪆️subsets/✳️any/📚️examples/🖼️assets"
+
+[[package.metadata.semio.assets]]
+kind = "mesh-collection"
+route = "/mesh"
+app = "s.puzzle.puzzle3d@1/*#editor"
+catalog = "🧰️framework/🔨️modules/🖼️assets/🥽️mesh/📇️catalog.json"
+
+[[package.metadata.semio.assets]]
+kind = "static-dir"
+route = "/infinite-assets"
+app = "s.puzzle.puzzle3d@1/*#editor"
+root = "🧰️framework/🛍️products/💻️os/🔨️modules/♾️infinite/🖼️assets"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/osm"
+app = "s.gis.gismap@1/*#editor"
+upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
+cache = ".🧬semio/🗺️map/osm-tiles"
+userAgent = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)"
+
+[[package.metadata.semio.assets]]
+kind = "tile-proxy"
+route = "/vt"
+app = "s.gis.gismap@1/*#editor"
+upstream = "https://tiles.openfreemap.org/planet"
+cache = ".🧬semio/🗺️map/openfreemap-vt"
+userAgent = "ComposeGisMapPlay/0.1 (+https://github.com/usalu/semio; dev playground)"
+
+[package.metadata.semio.sources]
+artifacts = ["../../../../../../✏️s/🔌️plugins/🌀️procedural/🗿️artifacts", "../../../../../../✏️s/🔌️plugins/📐️cad/🗿️artifacts", "../../../../../../✏️s/🔌️plugins/🧩️puzzle/🗿️artifacts", "../../../../../../✏️s/🔌️plugins/🪵️sourcing/🗿️artifacts", "../../../../../../✏️s/🔌️plugins/🏭️process/🗿️artifacts", "../../../../../../✏️s/🔌️plugins/🌍️gis/🗿️artifacts"]
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-hub-demonstrator = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { workspace = true }
+
+[dev-dependencies]
+semio-framework-async = { workspace = true }

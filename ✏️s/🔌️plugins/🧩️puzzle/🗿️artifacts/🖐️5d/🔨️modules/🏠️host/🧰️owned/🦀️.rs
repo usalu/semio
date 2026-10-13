@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
 use crate::Puzzle5dSnapshot;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 pub type Puzzle5dStore = ArtifactStore<Puzzle5dSnapshot, Puzzle5dMutation>;
 
 /// 🏪️ THE constructor for a puzzle5d document store, app-side or standalone. A bare
@@ -12,7 +12,7 @@ pub type Puzzle5dStore = ArtifactStore<Puzzle5dSnapshot, Puzzle5dMutation>;
 /// `Puzzle5dPlayApp::build_document_store_owners` hands the host.
 pub async fn puzzle5d_store(envelope: Puzzle5dEnvelope, actor: protocol::ActorId) -> Result<Puzzle5dStore, String> {
     let mut store = Puzzle5dStore::new(envelope, actor).await.map_err(|error| format!("puzzle5d store construction refused: {error:?}"))?;
-    let owners = store::funded_bounded_artifact_store_owners::<Puzzle5dSnapshot, Puzzle5dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Puzzle5dSnapshot, Puzzle5dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
     store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)
 }

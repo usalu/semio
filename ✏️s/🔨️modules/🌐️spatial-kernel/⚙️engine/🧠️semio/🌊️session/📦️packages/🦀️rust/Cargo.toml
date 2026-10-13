@@ -13,7 +13,6 @@ role = "s-module"
 workspace = true
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [features]
@@ -26,7 +25,9 @@ semio-framework-value = { path = "../../../../../../../../🧰️framework/🔨�
 semio-framework-job.workspace = true
 semio-framework-os-flow = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🌊️flow/📦️packages/🦀️rust" }
 semio-framework = { path = "../../../../../../../../🧰️framework/📦️packages/🦀️rust" }
-semio-framework-3d = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📦️packages/🦀️rust" }
+semio-framework-3d-brep-engine = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/⚙️engine/📦️packages/🦀️rust" }
+semio-framework-3d-brep-queries = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/💡️queries/📦️packages/🦀️rust" }
+semio-framework-3d-brep-representation = { path = "../../../../../../../../🧰️framework/🔨️modules/🧊️3d/📐️brep/📸️representation/📦️packages/🦀️rust" }
 neural_engine = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧠️neural/⚙️engine/📦️packages/🦀️rust", package = "semio-framework-os-kernel-neural-engine" }
 
 [target.'cfg(all(target_arch = "wasm32", not(target_env = "p2")))'.dependencies]

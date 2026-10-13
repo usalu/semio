@@ -3,16 +3,16 @@
 use super::capture::LocalInteractionCaptureCursor;
 use protocol::LocalInteractionIdentity;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use store::ArtifactStoreOneItemGrant;
+use store::os_store::one_item::ArtifactStoreOneItemGrant;
 
 //#region 📃️PageAuthority
 pub(crate) const LOCAL_INTERACTION_QUERY_PAGE_BYTES: usize = 256;
 
 /// 🔐️ Fixed-width acknowledgement authority; no historical tutorial identity authorizes a new query.
-pub(crate) use protocol::LocalInteractionQueryToken as LocalInteractionPageToken;
+use protocol::LocalInteractionQueryToken as LocalInteractionPageToken;
 
 /// 👁️ A borrowed page cannot outlive or mutate its exact query owner.
-pub(crate) struct LocalInteractionPageView<'a> {
+struct LocalInteractionPageView<'a> {
     pub token: &'a LocalInteractionPageToken,
     pub terminal: bool,
     pub bytes: &'a [u8],
@@ -26,7 +26,7 @@ pub(crate) enum LocalInteractionQueryStep {
     Closing,
 }
 impl LocalInteractionQueryStep {
-    pub(crate) fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,_=>Default::default()}}
+    fn progress(self)->RetainedCloneProgress{match self{Self::Advanced{ownership,..}=>ownership,_=>Default::default()}}
 }
 //#endregion 📃️PageAuthority
 
@@ -243,4 +243,4 @@ impl<C: LocalInteractionQueryCapture> LocalInteractionQuery<C> {
 
 #[cfg(test)]
 #[path = "🧪️tests/📃️query/🦀️.rs"]
-pub(crate) mod tests;
+mod tests;

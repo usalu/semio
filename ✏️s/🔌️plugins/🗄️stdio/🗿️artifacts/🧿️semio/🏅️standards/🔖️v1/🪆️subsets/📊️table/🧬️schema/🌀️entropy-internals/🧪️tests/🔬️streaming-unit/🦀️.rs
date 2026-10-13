@@ -8,8 +8,8 @@ mod tests {
             sc.update(x);
         }
         let est = sc.estimate().unwrap();
-        let counts = crate::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 2, 3], 4).unwrap();
-        let expected = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Bits).unwrap();
+        let counts = crate::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 2, 3], 4).unwrap();
+        let expected = crate::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Bits).unwrap();
         assert!((est.value - expected).abs() < 1e-9);
     }
 
@@ -41,8 +41,8 @@ mod tests {
         }
         a.merge(&b).unwrap();
         let est = a.estimate().unwrap();
-        let counts = crate::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 0], 3).unwrap();
-        let expected = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
+        let counts = crate::schema::entropy_internals::counts::Counts::from_symbols(&[0, 1, 1, 2, 2, 0], 3).unwrap();
+        let expected = crate::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
         assert!((est.value - expected).abs() < 1e-9);
     }
 
@@ -59,7 +59,7 @@ mod tests {
 
     #[test]
     fn sliding_window_matches_batch_recomputed_at_every_step() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let capacity = 20;
         let mut sw = SlidingWindowEntropy::new(4, capacity, LogBase::Nats).unwrap();
         let mut history: Vec<u32> = Vec::new();
@@ -69,8 +69,8 @@ mod tests {
             history.push(x);
             let window_start = history.len().saturating_sub(capacity);
             let window = &history[window_start..];
-            let counts = crate::standards::v1::subsets::table::schema::entropy_internals::counts::Counts::from_symbols(window, 4).unwrap();
-            let expected = crate::standards::v1::subsets::table::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
+            let counts = crate::schema::entropy_internals::counts::Counts::from_symbols(window, 4).unwrap();
+            let expected = crate::schema::entropy_internals::discrete::entropy(&counts.probabilities(), LogBase::Nats).unwrap();
             let got = sw.estimate().unwrap().value;
             assert!((got - expected).abs() < 1e-9, "mismatch at len {}", history.len());
         }

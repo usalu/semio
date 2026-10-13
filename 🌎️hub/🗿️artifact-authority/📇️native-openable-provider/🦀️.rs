@@ -2,14 +2,14 @@
 
 use super::trusted_catalog::{NativeCodecBinding, NativeCodecProviderPackageV1, NativeCodecProviderSourceV1};
 use super::{AuthorityError, OperationContext};
-use semio_hub_stdio::catalog::NativeCodecFactoryReceipt;
+use semio_hub_stdio_catalog::NativeCodecFactoryReceipt;
 use std::collections::BTreeSet;
 
 /// 🚪 Exact identity of the statically linked provider admitted by this boundary.
 pub const NATIVE_OPENABLE_PROVIDER_SET_V1_ID: &str = "stdio+gis+vcs/native-codecs/v1";
 /// 🧮 Counts the current complete schema-qualified stdio, GIS and VCS factory closure.
 pub fn native_openable_provider_receipt_count() -> Result<usize, AuthorityError> {
-    Ok(semio_hub_stdio::catalog::live_native_codec_factory_receipts().map_err(provider_error)?.len()
+    Ok(semio_hub_stdio_catalog::live_native_codec_factory_receipts().map_err(provider_error)?.len()
         + semio_hub_gis::native_codecs::native_codec_factory_receipts().map_err(provider_error)?.len()
         + semio_hub_vcs::native_codecs::native_codec_factory_receipts().map_err(provider_error)?.len())
 }
@@ -64,11 +64,11 @@ impl NativeCodecProviderSourceV1 for NativeCodecProviderSetV1 {
             return Err(provider_error("decoded descriptor has a different native package identity"));
         }
         if package.plugin_id == "stdio" {
-            semio_hub_stdio::catalog::validate_native_codec_artifact_kinds(&descriptor.manifest.artifact_kinds).map_err(provider_error)?;
-            semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
+            semio_hub_stdio_catalog::validate_native_codec_artifact_kinds(&descriptor.manifest.artifact_kinds).map_err(provider_error)?;
+            semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
         } else if matches!(package.plugin_id, "gis" | "vcs") {
-            semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(provider_error)?;
-            semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
+            semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(provider_error)?;
+            semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(provider_error)?;
         }
         self.preview(package.plugin_id, package.package_id, package.version, context)
     }
@@ -146,7 +146,7 @@ pub struct NativeOpenableCatalogProviderV1 {
 impl NativeOpenableCatalogProviderV1 {
     /// 🧬 Revalidates and consumes the complete static receipt closure atomically.
     pub fn linked(version: &str) -> Result<Self, AuthorityError> {
-        Self::from_receipts(version, semio_hub_stdio::catalog::native_codec_factory_receipts().map_err(provider_error)?)
+        Self::from_receipts(version, semio_hub_stdio_catalog::native_codec_factory_receipts().map_err(provider_error)?)
     }
 
     /// 🪢 Releases the complete vector only to the trusted catalog loader.
@@ -155,7 +155,7 @@ impl NativeOpenableCatalogProviderV1 {
     }
 
     fn from_receipts(version: &str, receipts: Vec<NativeCodecFactoryReceipt>) -> Result<Self, AuthorityError> {
-        let expected = semio_hub_stdio::catalog::live_native_codec_factory_receipts().map_err(provider_error)?;
+        let expected = semio_hub_stdio_catalog::live_native_codec_factory_receipts().map_err(provider_error)?;
         let expected_factories = expected.iter().map(|receipt| receipt.factory_id.clone()).collect::<BTreeSet<_>>();
         let expected_descriptors = expected.iter().map(|receipt| receipt.descriptor_codec_id.clone()).collect::<BTreeSet<_>>();
         let expected_pairs = expected.iter().map(|receipt| (receipt.artifact_kind.clone(), receipt.schema.clone())).collect::<BTreeSet<_>>();

@@ -10,7 +10,7 @@ pub fn diff(payload: &super::InsertImage, base: &SemioDocumentSnapshot) -> proto
     }
     let super::InsertImage { image, at } = payload;
     protocol::MutationOutcome::new({
-        SemioDocumentDiff { styles: None, images: Some(crate::standards::v1::subsets::document::schema::diff::ImagesDiff { added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(base.images.len(), |at| at.min(base.images.len())), item: image.clone() }], ..Default::default() }), blocks: None }
+        SemioDocumentDiff { styles: None, images: Some(crate::schema::diff::ImagesDiff { added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(base.images.len(), |at| at.min(base.images.len())), item: image.clone() }], ..Default::default() }), blocks: None }
     })
 }
 //#endregion 🔖️Diff

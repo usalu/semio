@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioQuaternion;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::object::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioQuaternion;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::snapshot::STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn dialect(subset: &str) -> semio_framework_artifact_reference::ArtifactDialect {
@@ -15,9 +15,9 @@ fn populated() -> SemioObjectSnapshot {
     SemioObjectSnapshot {
         schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
         transform: SemioTransform { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, rotation: SemioQuaternion::default(), scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
-        brep: Some(store::ArtifactChild::new("crate-brep".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
-        mesh: Some(store::ArtifactChild::new("crate-mesh".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
-        properties: Some(store::ArtifactChild::new("crate-props".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
+        brep: Some(store::os_store::artifact_child::ArtifactChild::new("crate-brep".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
+        mesh: Some(store::os_store::artifact_child::ArtifactChild::new("crate-mesh".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
+        properties: Some(store::os_store::artifact_child::ArtifactChild::new("crate-props".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
     }
 }
 

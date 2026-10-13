@@ -108,7 +108,7 @@ pub fn active_request_bytes() -> usize {
 
 use semio_framework_os_kernel::{
     sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind},
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 enum Owned<T: ArtifactSqliteSnapshot> {
     Database(SqliteDatabase),

@@ -13,7 +13,8 @@
 //! @see ../../../../🏭️generator/🔁️codec/🦀️.rs
 
 use super::*;
-use crate::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+use crate::standards::v1_7::subsets::base::io::import::decode_pdf;
+use crate::standards::v1_7::subsets::base::io::export::encode_pdf;
 use crate::standards::v1_7::subsets::base::schema::diff::PdfPageBox;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use protocol::Mutation;

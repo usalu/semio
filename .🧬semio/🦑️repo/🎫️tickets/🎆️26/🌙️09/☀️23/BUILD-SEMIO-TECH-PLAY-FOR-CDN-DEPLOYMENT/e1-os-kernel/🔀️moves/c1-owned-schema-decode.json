@@ -1,0 +1,16 @@
+{
+  "target": "📦️codec/🧬️owned-schema/🦀️.rs",
+  "module": "owned_schema_decode",
+  "anchor": "//#region 🧬️OwnedSchemaDecode\n",
+  "doc": [
+    "//! 🧬️ Owned schema decoding: paged, credit-bounded decoding of artifact envelopes and records into retained owners,",
+    "//! with field decoder registries, reservations and completed-record tickets.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🧬️OwnedSchemaDecode"
+  ],
+  "items": [],
+  "movableTraits": []
+}

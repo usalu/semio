@@ -1,12 +1,12 @@
 //#region 🧬️JobTestMutations
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 #[derive(Clone, Debug, PartialEq, serde::Serialize, ToValue, serde::Deserialize, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct JobTestSnapshot {
-    pub(crate) value: i32,
+struct JobTestSnapshot {
+    value: i32,
 }
 
 impl ArtifactPack for JobTestSnapshot {
@@ -22,8 +22,8 @@ impl ArtifactPack for JobTestSnapshot {
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, ToValue, FromValue)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct JobTestDiff {
-    pub(crate) deltas: Vec<i32>,
+struct JobTestDiff {
+    deltas: Vec<i32>,
 }
 
 impl protocol::DiffAlgebra<JobTestSnapshot> for JobTestDiff {
@@ -47,7 +47,7 @@ impl protocol::MutationDiff<JobTestSnapshot> for JobTestDiff {
 
 #[path = "../../🧪️testing/🧬️job-test-mutations/🧬️mutations/🦀️.rs"]
 mod mutations;
-pub(crate) use mutations::{AddValue, JobTestOp};
+use mutations::{AddValue, JobTestOp};
 
 #[path = "../🧬️job-test-mutations-unit/🦀️.rs"]
 mod tests;

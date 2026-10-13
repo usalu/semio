@@ -113,7 +113,7 @@ impl ArtifactEditor for Vdi3805PlayApp {
     const DIALECT: Dialect = crate::VDI3805_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.vdi3805/v1";
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 

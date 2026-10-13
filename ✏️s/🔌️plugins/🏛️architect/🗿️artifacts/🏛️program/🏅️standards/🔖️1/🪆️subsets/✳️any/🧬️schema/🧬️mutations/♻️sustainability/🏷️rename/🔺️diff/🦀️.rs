@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `♻️sustainability` per Wave C.
 
 use super::RenameSustainabilityRequirement;
-use crate::diff::{ProgramSustainabilityDelta, ProgramSustainabilityPatchEntry};
-use crate::registers::SustainabilityRequirementPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramSustainabilityDelta, ProgramSustainabilityPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::SustainabilityRequirementPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameSustainabilityRequirement, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

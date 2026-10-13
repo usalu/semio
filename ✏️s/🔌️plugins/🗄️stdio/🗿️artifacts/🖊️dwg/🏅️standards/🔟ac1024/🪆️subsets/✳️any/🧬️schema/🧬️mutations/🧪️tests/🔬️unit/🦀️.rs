@@ -1,4 +1,4 @@
-use crate::apply_mutation;
+use semio_s_artifact_stdio_contract::apply_mutation;
 use super::*;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -49,7 +49,7 @@ async fn operation_codecs_retain_logical_mutations() {
 /// preamble-only drawing (any AC10xx stamp), plus a no-op, all satisfy the inverse-sum law.
 #[semio_framework_async_macros::async_test]
 async fn dwg_mutation_inverse_sum_law_holds_for_every_leaf() {
-    let contentful = crate::standards::v_ac1024::engine::demo_dwg_snapshot();
+    let contentful = crate::standards::v_ac1024::subsets::any::schema::demo_dwg_snapshot();
     let preamble_only = DwgSnapshot { version: "AC1018".into(), maintenance_version: 2, codepage: 30, ..Default::default() };
     let leaf = |version: &str, maintenance_version: u8, codepage: u16| DwgMutation::SetVersionInfo(set_version_info::SetVersionInfo { version: version.into(), maintenance_version, codepage });
     for (mutation, base) in [

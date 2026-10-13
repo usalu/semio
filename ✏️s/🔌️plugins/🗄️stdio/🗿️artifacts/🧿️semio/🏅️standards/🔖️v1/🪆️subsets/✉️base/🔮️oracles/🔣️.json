@@ -1526,5 +1526,13 @@
       ]
     }
   ],
-  "oracleHostPackages": []
+  "oracleHostPackages": [],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-semio",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧿️semio/📦️packages/🦀️rust",
+      "rationale": "🧱️ The base case judges the envelope union, which the aggregator crate owns over every subset crate; the base crate alone is this owner's package."
+    }
+  ]
 }

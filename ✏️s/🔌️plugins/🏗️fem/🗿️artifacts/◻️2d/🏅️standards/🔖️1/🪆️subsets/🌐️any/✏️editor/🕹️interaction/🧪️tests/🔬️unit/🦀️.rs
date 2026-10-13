@@ -1,5 +1,5 @@
 use super::*;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 const CANVAS_WIDTH: f64 = 800.0;
 const CANVAS_HEIGHT: f64 = 600.0;

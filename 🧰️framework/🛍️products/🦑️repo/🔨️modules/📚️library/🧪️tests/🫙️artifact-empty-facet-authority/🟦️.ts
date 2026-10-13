@@ -21,7 +21,7 @@ const oracle = JSON.parse(oracleBytes);
 const validateOwner = new Ajv({ strict: true, allErrors: true }).compile(oracle);
 const forms = oracle.oneOf.map((branch: { properties: { ownerForm: { const: string } } }) => branch.properties.ownerForm.const) as string[];
 const taxonomy = loadCatalogTaxonomy();
-const functionNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
+const declarationNames = ["canonicalFilenamesForKind", "canonicalFilenameForKind", "canonicalSemanticDirectoryName", "semanticDirectoryKindIds", "semanticDirectoryKindId", "resolveSemanticDirectoryKindId", "semanticArtifactEmptyFacetProjectionAuthority"] as const;
 
 /** 🔬️ Compiles the exact pure authority closure without granting it filesystem access. */
 function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEmptyFacetProjectionAuthority)[] {
@@ -32,8 +32,8 @@ function independentlyCompiledAuthorities(): readonly (typeof semanticArtifactEm
   const identities = identitySyntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === "leadingEmojiIdentity");
   expect(identities).toHaveLength(1);
   expect(segmenters).toHaveLength(1);
-  const code = segmenters[0]!.getText(identitySyntax) + "\n" + identities[0]!.getText(identitySyntax).replace(/^export\s+/u, "") + "\n" + functionNames.map((name) => {
-    const matches = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) && node.name?.text === name);
+  const code = segmenters[0]!.getText(identitySyntax) + "\n" + identities[0]!.getText(identitySyntax).replace(/^export\s+/u, "") + "\n" + declarationNames.map((name) => {
+    const matches = syntax.statements.filter((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((entry) => ts.isIdentifier(entry.name) && entry.name.text === name));
     expect(matches.length, name).toBe(1);
     return matches[0]!.getText(syntax).replace(/^export\s+/u, "");
   }).join("\n");

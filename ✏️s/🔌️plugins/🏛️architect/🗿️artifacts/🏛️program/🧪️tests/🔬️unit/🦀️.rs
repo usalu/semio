@@ -46,7 +46,7 @@ fn program_document_contract_json_text_pack_and_projection() {
     foreign_parent.as_object_mut().expect("Program fixture object").insert("foreign".into(), serde_json::Value::Bool(true));
     let foreign_parent_json = serde_json::to_string(&foreign_parent).expect("foreign parent JSON");
     assert!(semio_framework_pack_json::from_json_str::<ProgramSnapshot>(&foreign_parent_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program snapshot decoder must reject a foreign parent field");
-    assert!(semio_framework_pack_json::from_json_str::<crate::schema::ProgramArtifact>(&foreign_parent_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program artifact decoder must reject a foreign parent field");
+    assert!(semio_framework_pack_json::from_json_str::<crate::standards::v1::subsets::any::schema::ProgramArtifact>(&foreign_parent_json, semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "native Program artifact decoder must reject a foreign parent field");
 
     let mut foreign_row: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&sample_plugin())).expect("sample Program JSON");
     foreign_row["stakeholders"].as_array_mut().expect("stakeholder register")[0]
@@ -62,7 +62,7 @@ fn program_document_contract_json_text_pack_and_projection() {
         assert_eq!(child.target.dialect.subset, "table");
     }
 
-    let artifact = crate::schema::ProgramArtifact::from_snapshot(snapshot.clone());
+    let artifact = crate::standards::v1::subsets::any::schema::ProgramArtifact::from_snapshot(snapshot.clone());
     assert_eq!(artifact.to_snapshot(), snapshot, "artifact/snapshot projection must preserve every document field");
     semio_framework_os_kernel::os_store::test_support::assert_dsl_round_trip(&snapshot);
     semio_framework_os_kernel::os_store::test_support::assert_pack_round_trip(&snapshot);

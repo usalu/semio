@@ -226,8 +226,8 @@ export function assertBudgetCalibrationContract(calibration: ExampleBudgetCalibr
 /**
  * ⏱️ The hard bound the two USER-FACING phases sit under: evaluating the op chain and tessellating at
  * the LOD the live preview asks for are what the playground waits on, and neither may be allowed
- * more than two seconds of the Rust lane's native `test`-profile wall time. The wasm guest runs the
- * identical code at `opt-level = 2` (root `Cargo.toml`'s `[profile.wasm-dev.package]` overrides)
+ * more than two seconds of the Rust lane's native `test`-profile wall time. The shipped wasm guest runs the
+ * identical code at the `wasm-release` profile (`opt-level = "s"`, thin LTO)
  * inside a budgeted resumable job, so a phase over this bound cannot converge in the playground
  * within the user-facing target the ticket set.
  */

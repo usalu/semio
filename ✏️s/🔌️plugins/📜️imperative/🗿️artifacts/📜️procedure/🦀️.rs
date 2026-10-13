@@ -10,11 +10,6 @@
 //! node (`🔺️diff`, `🔧️op`, `🗣️dsl`, `📸️snapshot`, `📡️spr`, `⚙️engine`) names one artifact-owned symbol
 //! instead of reaching into either kernel path directly.
 
-// 🧩️ 26/08/17/MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME D3 — the five `🧩️extensions/*/🦀️.rs`
-// files mounted below each carry a `#[cfg(feature = "extension-entry")]` guard on their own
-// `extension_exports!` call (this crate's `Cargo.toml` declares no such feature, so it always
-// evaluates false here — see any extension's own `Cargo.toml` for the full rationale).
-#![allow(unexpected_cfgs)]
 
 extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
@@ -87,13 +82,13 @@ pub struct PathRef {
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handles of the two composed stdio subsets (design §20.15): the program lives in the `flow` member store
 /// (`s.stdio.semio@v1/flow`), the initial variable dictionary in the `text` member store; the parent owns no content.
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-pub use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+pub use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextRun, SemioTextSnapshot, STDIO_SEMIOTEXT_DOCUMENT_SCHEMA};
 
-pub type ProcedureFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
-pub type ProcedureTextChild = store::ArtifactChild<SemioTextSnapshot>;
+pub type ProcedureFlowChild = store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>;
+pub type ProcedureTextChild = store::os_store::artifact_child::ArtifactChild<SemioTextSnapshot>;
 
 /// 🔗️ The flow edge kind that chains consecutive steps of one scope.
 pub const PROCEDURE_SEQUENCE_EDGE: &str = "sequence";
@@ -179,18 +174,18 @@ pub fn seed_from_text_content_snapshot(snapshot: &SemioTextSnapshot) -> BTreeMap
 
 /// 🕸️ The content-addressed `flow` CHILD handle of a program.
 pub fn procedure_flow_child_handle(path: &Path) -> ProcedureFlowChild {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let child_id = store::content_id("imperative-flow", &flow_content_snapshot_from_path(path).encode_pack());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🕸️ The content-addressed `text` CHILD handle of a seed.
 pub fn procedure_text_child_handle(seed: &BTreeMap<String, Value>) -> ProcedureTextChild {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let child_id = store::content_id("imperative-text", &text_content_snapshot_from_seed(seed).encode_pack());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "text".into() };
-    store::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id, dialect })
 }
 
 /// 🏗️ The parent document naming the content-addressed children of a program and seed (their content lives in the member
@@ -247,7 +242,7 @@ pub fn procedure_derivable_scene(snapshot: &ProcedureSnapshot) -> Option<Procedu
 
 /// 🌱️ Packs either derivable member (the react shell's `loadDocumentPair` sends `members: []`).
 pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let scene = procedure_derivable_scene(snapshot)?;
     match slot {
         "flow" if child_id == snapshot.flow.child_id => Some(flow_content_snapshot_from_path(&scene.path).encode_pack()),
@@ -260,7 +255,7 @@ pub fn genesis_procedure_child_pack(snapshot: &ProcedureSnapshot, slot: &str, ch
 /// removed steps, inserted steps, each kept step's kind/param changes, then re-pointed and inserted edges — every row
 /// point-invertible, so undo and history edits replay exactly.
 pub fn procedure_flow_leaves(base: &Path, next: &Path) -> Vec<SemioFlowMutation> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations as flow;
+    use semio_s_artifact_stdio_semio_flow::schema::mutations as flow;
     let (before, after) = (flow_content_snapshot_from_path(base), flow_content_snapshot_from_path(next));
     let mut leaves = Vec::new();
     for edge in &before.edges {

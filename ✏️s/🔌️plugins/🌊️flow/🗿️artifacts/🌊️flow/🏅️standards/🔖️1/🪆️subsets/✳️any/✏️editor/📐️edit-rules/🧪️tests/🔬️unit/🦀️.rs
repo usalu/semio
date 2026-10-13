@@ -1,6 +1,6 @@
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowParam;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{diff_semio_flow_mutation, inverse_semio_flow_mutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowParam;
 
 fn node(id: &str, kind: &str, params: &[(&str, &str)], x: f64) -> FlowNode {
     FlowNode { id: id.into(), kind: kind.into(), label: id.into(), params: params.iter().map(|(key, value)| FlowParam { key: (*key).into(), value: (*value).into() }).collect(), position: SemioPoint2 { x, y: 0.0 } }
@@ -21,7 +21,7 @@ fn base() -> SemioFlowSnapshot {
 fn forward(state: &SemioFlowSnapshot, leaf: &SemioFlowMutation) -> SemioFlowSnapshot {
     let outcome = diff_semio_flow_mutation(leaf, state);
     assert!(outcome.worst_level().is_none_or(|level| level < semio_framework_diagnostic::Severity::Error), "{leaf:?} refused: {:?}", outcome.messages());
-    semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
+    semio_framework_os_kernel::apply_diff(outcome.diff(), state).expect("a leaf diff applies to the state it was computed from")
 }
 
 fn by_id(mut snapshot: SemioFlowSnapshot) -> SemioFlowSnapshot {

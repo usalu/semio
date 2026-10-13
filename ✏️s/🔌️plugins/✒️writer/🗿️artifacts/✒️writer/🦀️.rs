@@ -11,7 +11,7 @@ pub mod central_apply;
 extern crate semio_framework_schema as framework_schema;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use std::sync::Arc;
 
 //#region 🔖️Constants
@@ -35,7 +35,7 @@ pub fn default_uri() -> String {
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio`/`document` document — writer's
 /// authored text now lives in this composed child's block tree rather than inline on
 /// `WriterSnapshot` (ticket 26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, `writer→C:document`).
-pub type WriterDocumentChild = store::ArtifactChild<SemioDocumentSnapshot>;
+pub type WriterDocumentChild = store::os_store::artifact_child::ArtifactChild<SemioDocumentSnapshot>;
 
 /// 🌉 REAL bidirectional converter between writer's plain-text/language-id working representation
 /// and the composed child's own `SemioDocumentSnapshot` block tree (the "ModelBridge" pattern from
@@ -73,7 +73,7 @@ pub fn document_child_handle(_id: &str, text: &str, language_id: &str) -> Writer
     let child_id = store::content_id("document", content_json.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "document".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️DocumentBridge
 
@@ -132,7 +132,7 @@ pub fn writer_snapshot_with_text(schema: &str, id: &str, language_id: &str, uri:
 /// `Effect::LoadDocument`) derives the slot here; without it the archive closure completes
 /// `Incomplete` and the load is refused (`document-archive-replacement.closure-rejected`).
 pub fn genesis_writer_child_pack(snapshot: &WriterSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     (slot == "document" && child_id == snapshot.document.child_id).then(|| <SemioDocumentSnapshot as ArtifactPack>::encode_pack(&document_snapshot_from_text(&snapshot.text, &snapshot.language_id)))
 }
 //#endregion 🔖️WorkingScene

@@ -5,25 +5,25 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::object::schema::diff::*;
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::object::io::text::snapshot::{dec_child_opt};
-use crate::standards::v1::subsets::object::io::text::snapshot::{enc_child_opt};
-use crate::standards::v1::subsets::model::io::text::diff::{dec_transform};
-use crate::standards::v1::subsets::model::io::text::diff::{enc_transform};
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_transform;
 
 impl protocol::DiffBinary for SemioObjectDiff {
 /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=transform, bit1=brep,
 /// bit2=mesh, bit3=properties), then each present field's own real encoding in bit order.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::object::io::binary::snapshot::{write_child_opt, write_transform};
+    use {semio_s_artifact_stdio_semio_base::io::binary::codec::write_child_opt, crate::io::binary::snapshot::write_transform};
     const DIFF_BINARY_FORMAT: u8 = 1;
     let mut presence: u8 = 0;
     if self.transform.is_some() {
@@ -54,7 +54,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     Ok(out)
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::object::io::binary::snapshot::{read_child_opt, read_transform};
+    use {semio_s_artifact_stdio_semio_base::io::binary::codec::read_child_opt, crate::io::binary::snapshot::read_transform};
     const DIFF_BINARY_FORMAT: u8 = 1;
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated".to_string() });

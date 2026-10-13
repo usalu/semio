@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteVertex`.
 
-use crate::standards::v1::subsets::brep::schema::mutations::{create_edge, create_vertex, SemioBrepMutation};
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::mutations::{create_edge, create_vertex, SemioBrepMutation};
+use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

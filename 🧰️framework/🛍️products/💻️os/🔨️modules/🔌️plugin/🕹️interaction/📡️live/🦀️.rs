@@ -8,7 +8,7 @@ use super::{
 use protocol::{LocalInteractionIdentity, LocalInteractionPage, LocalInteractionQueryRejection, LocalInteractionQueryReply, LocalInteractionQueryToken};
 use std::mem::ManuallyDrop;
 use semio_framework_value::{RetirementDemand, ValueError, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
-use store::{ArtifactStoreOneItemGrant, SnapshotRead};
+use store::{os_store::one_item::ArtifactStoreOneItemGrant, os_store::snapshot_read::SnapshotRead};
 
 //#region 🔢️RuntimeGeneration
 /// 🔢️ This allocator belongs to the runtime, never to a reusable app instance slot.
@@ -144,8 +144,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             demand.depth = demand.depth.checked_add(1).ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "live local interaction depth overflow"))?;
             Ok(demand)
         };
-        if let Some(owner)=self.owned.error_close.as_ref(){return nested(store::artifact_retirement_box_demands(owner,body)?)}
-        if self.owned.error.is_some(){return nested(store::artifact_retirement_owned_birth_demands(&self.owned.error)?)}
+        if let Some(owner)=self.owned.error_close.as_ref(){return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body)?)}
+        if self.owned.error.is_some(){return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.owned.error)?)}
         if let Some(query) = self.owned.query.as_ref().filter(|query| !query.terminal_is_empty()) {
             return nested(query.retirement_demands(body)?);
         }
@@ -169,8 +169,8 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
             return Ok(RetainedCloneStep::Progress(idle));
         }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        let step = if self.owned.error_close.is_some(){store::artifact_retirement_box_close_step(&mut self.owned.error_close,child)?}
-        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child)?}
+        let step = if self.owned.error_close.is_some(){store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.owned.error_close,child)?}
+        else if self.owned.error.is_some(){let owned=&mut *self.owned;store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut owned.error,&mut owned.error_close,child)?}
         else if let Some(query) = self.owned.query.as_mut().filter(|query| !query.terminal_is_empty()) {
             semio_framework_value::retained_clone::admit_retained_clone_close(child, query.close_step(child)?, query.terminal_is_empty(), "live local interaction query")?
         } else {
@@ -237,7 +237,7 @@ impl<D, C, Q: LocalInteractionQueryCapture> LocalInteractionLiveQuery<D, C, Q> {
         !self.terminal_sent && (self.closing || !self.started || !self.page_sent || self.owned.query.as_ref().is_some_and(LocalInteractionQuery::has_pending_work))
     }
 
-    pub(crate) fn owners_are_empty(&self) -> bool {
+    fn owners_are_empty(&self) -> bool {
         self.closing && self.owned.error.is_none() && self.owned.error_close.is_none() && self.owned.query.as_ref().is_none_or(LocalInteractionQuery::terminal_is_empty) && self.owned.inputs.terminal_is_empty()
     }
 

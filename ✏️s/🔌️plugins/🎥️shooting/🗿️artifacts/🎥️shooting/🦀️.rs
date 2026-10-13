@@ -456,19 +456,19 @@ pub fn shooting_resolve_shot_camera(snapshot: &ShootingSnapshot, shot: &Shooting
 /// reason to decline, per the recipe's own allowance ("unless you find a concrete technical reason
 /// they can't — document precisely if so, don't generalize from one blocked field to the whole
 /// plugin").
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot, STDIO_SEMIOIMAGE_DOCUMENT_SCHEMA};
 
-pub type ShootingEmblemChild = store::ArtifactChild<SemioImageSnapshot>;
+pub type ShootingEmblemChild = store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>;
 
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.image` CHILD HANDLE from `content` —
-/// same `store::ArtifactChild::new`/`ArtifactDialect` shape as every other wave-4 exemplar
+/// same `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape as every other wave-4 exemplar
 /// (`process3d::brep_child_handle`, `gismap::gis_map_drawing_child_handle`). Two callers with
 /// byte-identical content mint the same handle.
 pub fn shooting_emblem_child_handle(content: &SemioImageSnapshot) -> ShootingEmblemChild {
     let child_id = store::content_id("shooting-emblem", semio_framework_pack_json::to_json_string(content).as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "shooting-emblem".into(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🌉️ WRITE direction, real (not a stub): wraps raw emblem bytes verbatim as a single opaque

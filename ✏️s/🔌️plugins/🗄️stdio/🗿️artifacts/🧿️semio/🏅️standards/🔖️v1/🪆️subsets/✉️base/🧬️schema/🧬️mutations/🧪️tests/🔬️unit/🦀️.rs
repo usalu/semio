@@ -1,9 +1,8 @@
 use super::*;
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
+use semio_s_artifact_stdio_semio_audio::schema::snapshot::{SemioAudioFormat, SemioAudioSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
 use protocol::command::DiffAlgebra;
-use protocol::MutationDiff;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn audio_base() -> SemioSnapshot {
@@ -24,14 +23,14 @@ async fn mutation_diff_law_covers_a_wrapped_variant() {
     let d2 = <SemioMutation as Mutation<SemioSnapshot>>::diff(&wrapped, &base);
     assert!(matches!(d2.diff(), SemioDiff::Audio(_)));
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &wrapped);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &wrapped);
     applied = __next;
     assert_eq!(protocol::apply_diff(d2.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, d2);
     let inv2 = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv2.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv2[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv2[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -42,9 +41,9 @@ async fn mutation_diff_law_covers_a_wrapped_variant() {
 async fn mutation_diff_law_flow_insert_node() {
     let base = flow_base();
     let node = FlowNode { id: "n1".into(), kind: "task".into(), label: "N1".into(), params: vec![], position: SemioPoint2 { x: 1.0, y: 2.0 } };
-    let wrapped = SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(crate::standards::v1::subsets::flow::schema::mutations::insert_node::InsertNode { node: node.clone(), at: None }) });
+    let wrapped = SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::InsertNode(semio_s_artifact_stdio_semio_flow::schema::mutations::insert_node::InsertNode { node: node.clone(), at: None }) });
     let mut applied = base.clone();
-    let (__next, diff) = crate::applied(&applied, &wrapped);
+    let (__next, diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &wrapped);
     applied = __next;
     assert!(matches!(diff.diff(), SemioDiff::Flow(_)));
     match &applied.subset {
@@ -53,7 +52,7 @@ async fn mutation_diff_law_flow_insert_node() {
     }
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&wrapped, &base).expect("valid retained mutation inverse fixture");
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -103,18 +102,18 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
             SemioSubsetSnapshot::Graph(_) => unreachable!("excluded from `bases` above"),
             SemioSubsetSnapshot::Object(_) => unreachable!("excluded from `bases` above"),
             SemioSubsetSnapshot::Kit(_) => unreachable!("excluded from `bases` above"),
-            SemioSubsetSnapshot::Model(_) => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::RemoveElement(crate::standards::v1::subsets::model::schema::mutations::remove_element::RemoveElement { id: "absent".into() }) }),
-            SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::RemoveNode(crate::standards::v1::subsets::value::schema::mutations::remove_node::RemoveNode { id: crate::standards::v1::subsets::value::schema::snapshot::ValueId::new("absent") }) }),
-            SemioSubsetSnapshot::Document(_) => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::RemoveStyle(crate::standards::v1::subsets::document::schema::mutations::remove_style::RemoveStyle { id: "absent".into() }) }),
-            SemioSubsetSnapshot::Cad(_) => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::RemoveEntity(crate::standards::v1::subsets::cad::schema::mutations::remove_entity::RemoveEntity { handle: "absent".into() }) }),
-            SemioSubsetSnapshot::Image(_) => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetBitDepth(crate::standards::v1::subsets::image::schema::mutations::set_bit_depth::SetBitDepth { bit_depth: 0 }) }),
-            SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::RemoveStream(crate::standards::v1::subsets::video::schema::mutations::remove_stream::RemoveStream { index: 0 }) }),
-            SemioSubsetSnapshot::Audio(_) => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(crate::standards::v1::subsets::audio::schema::mutations::set_sample_rate::SetSampleRate { sample_rate: Default::default() }) }),
-            SemioSubsetSnapshot::Animation(_) => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(crate::standards::v1::subsets::animation::schema::mutations::remove_timeline::RemoveTimeline { index: 0 }) }),
-            SemioSubsetSnapshot::Presentation(_) => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(crate::standards::v1::subsets::presentation::schema::mutations::remove_slide::RemoveSlide { index: 0 }) }),
-            SemioSubsetSnapshot::Flow(_) => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::RemoveNode(crate::standards::v1::subsets::flow::schema::mutations::remove_node::RemoveNode { id: "absent".into() }) }),
+            SemioSubsetSnapshot::Model(_) => SemioMutation::ApplyModel(apply_model::ApplyModel { mutation: SemioModelMutation::RemoveElement(semio_s_artifact_stdio_semio_model::schema::mutations::remove_element::RemoveElement { id: "absent".into() }) }),
+            SemioSubsetSnapshot::Value(_) => SemioMutation::ApplyValue(apply_value::ApplyValue { mutation: SemioValueMutation::RemoveNode(semio_s_artifact_stdio_semio_value::schema::mutations::remove_node::RemoveNode { id: semio_s_artifact_stdio_semio_value::schema::snapshot::ValueId::new("absent") }) }),
+            SemioSubsetSnapshot::Document(_) => SemioMutation::ApplyDocument(apply_document::ApplyDocument { mutation: SemioDocumentMutation::RemoveStyle(semio_s_artifact_stdio_semio_document::schema::mutations::remove_style::RemoveStyle { id: "absent".into() }) }),
+            SemioSubsetSnapshot::Cad(_) => SemioMutation::ApplyCad(apply_cad::ApplyCad { mutation: SemioCadMutation::RemoveEntity(semio_s_artifact_stdio_semio_cad::schema::mutations::remove_entity::RemoveEntity { handle: "absent".into() }) }),
+            SemioSubsetSnapshot::Image(_) => SemioMutation::ApplyImage(apply_image::ApplyImage { mutation: SemioImageMutation::SetBitDepth(semio_s_artifact_stdio_semio_image::schema::mutations::set_bit_depth::SetBitDepth { bit_depth: 0 }) }),
+            SemioSubsetSnapshot::Video(_) => SemioMutation::ApplyVideo(apply_video::ApplyVideo { mutation: SemioVideoMutation::RemoveStream(semio_s_artifact_stdio_semio_video::schema::mutations::remove_stream::RemoveStream { index: 0 }) }),
+            SemioSubsetSnapshot::Audio(_) => SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: Default::default() }) }),
+            SemioSubsetSnapshot::Animation(_) => SemioMutation::ApplyAnimation(apply_animation::ApplyAnimation { mutation: SemioAnimationMutation::RemoveTimeline(semio_s_artifact_stdio_semio_animation::schema::mutations::remove_timeline::RemoveTimeline { index: 0 }) }),
+            SemioSubsetSnapshot::Presentation(_) => SemioMutation::ApplyPresentation(apply_presentation::ApplyPresentation { mutation: SemioPresentationMutation::RemoveSlide(semio_s_artifact_stdio_semio_presentation::schema::mutations::remove_slide::RemoveSlide { index: 0 }) }),
+            SemioSubsetSnapshot::Flow(_) => SemioMutation::ApplyFlow(apply_flow::ApplyFlow { mutation: SemioFlowMutation::RemoveNode(semio_s_artifact_stdio_semio_flow::schema::mutations::remove_node::RemoveNode { id: "absent".into() }) }),
             SemioSubsetSnapshot::Drawing(_) => SemioMutation::ApplyDrawing(apply_drawing::ApplyDrawing {
-                mutation: SemioDrawingMutation::DragNodes(crate::standards::v1::subsets::drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: SemioPoint2::default() }),
+                mutation: SemioDrawingMutation::DragNodes(semio_s_artifact_stdio_semio_drawing::schema::mutations::drag_nodes::DragNodes { ats: Vec::new(), offset: SemioPoint2::default() }),
             }),
         }
     };
@@ -132,8 +131,8 @@ async fn all_wrapped_kinds_with_a_harmless_no_op_diff_and_inverse_route_correctl
 /// dispatch, produces a nested `SemioDiff::Text`, and its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::text::schema::mutations::insert_run;
-    use crate::standards::v1::subsets::text::schema::snapshot::SemioTextRun;
+    use semio_s_artifact_stdio_semio_text::schema::mutations::insert_run;
+    use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextRun;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Text(Default::default()) };
     let m = SemioMutation::ApplyText(apply_text::ApplyText { mutation: SemioTextMutation::InsertRun(insert_run::InsertRun { index: 0, run: SemioTextRun { language: "en".into(), content: "hi".into(), marks: vec![] } }) });
@@ -141,14 +140,14 @@ async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Text(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -158,24 +157,24 @@ async fn wrapped_text_kind_diff_and_inverse_route_correctly() {
 /// and its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::brep::schema::mutations::create_vertex;
+    use semio_s_artifact_stdio_semio_brep::schema::mutations::create_vertex;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Brep(Default::default()) };
     let m = SemioMutation::ApplyBrep(apply_brep::ApplyBrep {
-        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7, at: None }),
+        mutation: SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v1".into(), point: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, tol: 1e-7, at: None }),
     });
     let diff = <SemioMutation as Mutation<SemioSnapshot>>::diff(&m, &base);
     assert!(matches!(diff.diff(), SemioDiff::Brep(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -185,8 +184,8 @@ async fn wrapped_brep_kind_diff_and_inverse_route_correctly() {
 /// its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::mesh::schema::mutations::create_mesh;
-    use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMesh;
+    use semio_s_artifact_stdio_semio_mesh::schema::mutations::create_mesh;
+    use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMesh;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Mesh(Default::default()) };
     let m = SemioMutation::ApplyMesh(apply_mesh::ApplyMesh { mutation: SemioMeshMutation::CreateMesh(create_mesh::CreateMesh { mesh: SemioMesh { id: "m1".into(), primitives: vec![] }, at: None }) });
@@ -194,14 +193,14 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Mesh(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -211,8 +210,8 @@ async fn wrapped_mesh_kind_diff_and_inverse_route_correctly() {
 /// its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::table::schema::mutations::insert_row;
-    use crate::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_table::schema::mutations::insert_row;
+    use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableRow;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Table(Default::default()) };
     let m = SemioMutation::ApplyTable(apply_table::ApplyTable { mutation: SemioTableMutation::InsertRow(insert_row::InsertRow { index: 0, row: SemioTableRow { cells: vec![] } }) });
@@ -220,14 +219,14 @@ async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Table(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -237,9 +236,9 @@ async fn wrapped_table_kind_diff_and_inverse_route_correctly() {
 /// and its inverse restores `base` exactly.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-    use crate::standards::v1::subsets::graph::schema::mutations::create_node;
-    use crate::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_graph::schema::mutations::create_node;
+    use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Graph(Default::default()) };
     let m = SemioMutation::ApplyGraph(apply_graph::ApplyGraph {
@@ -249,14 +248,14 @@ async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Graph(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -267,7 +266,7 @@ async fn wrapped_graph_kind_diff_and_inverse_route_correctly() {
 /// here — the mutation touches a CHILD slot (`brep`), not a scalar/collection field.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::object::schema::mutations::create_brep;
+    use semio_s_artifact_stdio_semio_object::schema::mutations::create_brep;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Object(Default::default()) };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: "brep-x".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() } };
@@ -276,14 +275,14 @@ async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Object(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -294,7 +293,7 @@ async fn wrapped_object_kind_diff_and_inverse_route_correctly() {
 /// a LINK slot, though this particular case exercises a plain value-collection mutation.
 #[semio_framework_async_macros::async_test]
 async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
-    use crate::standards::v1::subsets::kit::schema::mutations::add_type;
+    use semio_s_artifact_stdio_semio_kit::schema::mutations::add_type;
 
     let base = SemioSnapshot { schema: "stdio.semio".into(), subset: SemioSubsetSnapshot::Kit(Default::default()) };
     let m = SemioMutation::ApplyKit(apply_kit::ApplyKit { mutation: SemioKitMutation::AddType(add_type::AddType { id: "chair".into(), name: "Chair".into(), category: "furniture".into(), at: None }) });
@@ -302,14 +301,14 @@ async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
     assert!(matches!(diff.diff(), SemioDiff::Kit(_)));
     assert!(!diff.diff().is_empty());
     let mut applied = base.clone();
-    let (__next, returned_diff) = crate::applied(&applied, &m);
+    let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
     applied = __next;
     assert_eq!(protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture"), applied);
     assert_eq!(returned_diff, diff);
     let inv = <SemioMutation as Mutation<SemioSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(inv.len(), 1);
     let mut restored = applied;
-    let (__next, _) = crate::applied(&restored, &inv[0]);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, &inv[0]);
     restored = __next;
     assert_eq!(restored, base);
 }
@@ -317,7 +316,7 @@ async fn wrapped_kit_kind_diff_and_inverse_route_correctly() {
 /// 🧪️ op_text_binary_roundtrip_law across a wrapped variant.
 #[semio_framework_async_macros::async_test]
 async fn op_text_binary_roundtrip_law() {
-    let base = audio_base();
+    let _base = audio_base();
     let cases = [
         SemioMutation::ApplyAudio(apply_audio::ApplyAudio { mutation: SemioAudioMutation::SetSampleRate(set_sample_rate::SetSampleRate { sample_rate: 22_050 }) }),
     ];
@@ -360,7 +359,7 @@ fn kind_of(mutation: &SemioMutation) -> &'static str {
 }
 
 fn enveloped(subset: SemioSubsetSnapshot) -> SemioSnapshot {
-    SemioSnapshot { schema: crate::standards::v1::subsets::base::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
+    SemioSnapshot { schema: crate::schema::snapshot::STDIO_SEMIO_DOCUMENT_SCHEMA.into(), subset }
 }
 
 /// 🏷️ `KINDS` must name every declared variant, in declaration order and in the exact spelling

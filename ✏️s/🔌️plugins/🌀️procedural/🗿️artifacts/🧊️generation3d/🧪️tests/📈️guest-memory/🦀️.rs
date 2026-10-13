@@ -9,8 +9,8 @@
 // own `BudgetLimiter` high-water witness, i.e. `memory.size`) after each one.
 //
 // Points at a built component through `SEMIO_POLL_TURN_LEAK_COMPONENT` (same shape as
-// `SEMIO_OWNED_DIFFERENTIAL_FIXTURES` in `🖨️describe`), because a `wasm32-wasip2 --profile
-// wasm-dev` artifact is not a `cargo test` prerequisite. `SEMIO_POLL_TURN_LEAK_TURNS` overrides
+// `SEMIO_OWNED_DIFFERENTIAL_FIXTURES` in `🖨️describe`), because a shipped `wasm32-wasip2 --profile
+// wasm-release` artifact is not a `cargo test` prerequisite. `SEMIO_POLL_TURN_LEAK_TURNS` overrides
 // the turn count. See `📓️poll-task-leak-2026-09-10.md`.
 use semio_framework_actor::ActorId as RuntimeActorId;
 use semio_framework::kernel::{Budget, Event, TurnStatus};
@@ -108,7 +108,7 @@ fn staged_actor_component() -> Option<std::path::PathBuf> {
     if let Some(component) = std::env::var_os("SEMIO_POLL_TURN_LEAK_COMPONENT") {
         return Some(std::path::PathBuf::from(component));
     }
-    let staged = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path| path.join("nx.json").is_file())?.join("✏️s/🔌️plugins/🌀️procedural/📦️packages/🦀️rust/dist/component-dev/semio_s_plugin_procedural.wasm");
+    let staged = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path| path.join("nx.json").is_file())?.join("🌎️hub/🧩️compositions/🌀️procedural/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_procedural_component.wasm");
     staged.exists().then_some(staged)
 }
 

@@ -5,8 +5,8 @@
 use super::brep_curve::{guarded, refusal};
 use super::phased_job::{cancelled_fault, Flow, Pipeline, Work};
 use super::super::prelude::*;
-use semio_framework_3d::brep::engine::{BrepError, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind};
-use semio_framework_3d::brep::operations::boolean::BooleanOp;
+use semio_framework_3d_brep_engine::{BrepError, BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind};
+use semio_framework_3d_brep_operations::boolean::BooleanOp;
 use std::collections::VecDeque;
 use std::sync::Arc;
 

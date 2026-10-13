@@ -6,7 +6,7 @@
 //! what IS owned outright: `types`/`designs` (including every design's nested `pieces`/
 //! `connections`) plus a plain count/presence read of the four handle slots.
 
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Entries
 /// 🗃️ Semio kit catalog census.

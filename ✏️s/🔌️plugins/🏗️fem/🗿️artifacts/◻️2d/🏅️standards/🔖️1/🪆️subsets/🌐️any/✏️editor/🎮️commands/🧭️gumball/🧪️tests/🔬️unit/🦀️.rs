@@ -4,7 +4,7 @@ use crate::editor::fem2d::Fem2dCommand;
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework::kernel::HistoryEntry;
 use semio_framework_plugin::{ArtifactView, ConfigView, HistoryView, NoConfig};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 

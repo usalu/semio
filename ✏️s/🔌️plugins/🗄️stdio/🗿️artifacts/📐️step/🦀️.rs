@@ -40,8 +40,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<StepSnapshot, StepMutation>(STDIO_STEP_DOCUMENT_SCHEMA);
     codec.extension = "step";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ap214/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -61,7 +61,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
 /// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
 /// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::bare::<StepSnapshot, StepMutation>(...))`.
+/// `store::os_store::codec_registry::register_document_codec(store::bare_artifact_codec::<StepSnapshot, StepMutation>(...))`.
 /// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
 /// owned rows, already the full `any` + `cc1`..`cc6` union) by its full path through the `engine`
 /// shim (`🦀️.rs`'s `pub mod engine { pub use super::standards::v_ap214::engine::*; }`) —

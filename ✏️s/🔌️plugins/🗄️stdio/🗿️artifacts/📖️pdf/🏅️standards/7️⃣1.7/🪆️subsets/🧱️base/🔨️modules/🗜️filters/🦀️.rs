@@ -4,7 +4,8 @@
 //! dictionary + raw bytes into logical data + the typed filter pipeline; `encode_stream` is its
 //! inverse and yields the bytes and `/Filter`/`/DecodeParms` entries to write.
 
-use super::lexer::{dict_get, is_ws, hex_val, malformed, PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, is_ws, hex_val};
+use crate::standards::v1_7::subsets::base::io::{malformed, PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCcittParameters, PdfDictEntry, PdfObject, PdfPredictor, PdfStreamFilter};
 
 //#region 🔖️Ascii

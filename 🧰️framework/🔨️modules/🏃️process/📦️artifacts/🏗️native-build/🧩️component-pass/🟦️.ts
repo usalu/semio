@@ -1,0 +1,486 @@
+import { execFile, spawn, type ChildProcess } from "node:child_process";
+import { createHash } from "node:crypto";
+import { closeSync, mkdirSync, mkdtempSync, openSync, readdirSync, readSync, rmSync, statSync, writeFileSync, writeSync } from "node:fs";
+import { availableParallelism, homedir, totalmem } from "node:os";
+import { basename, dirname, join, relative, resolve, sep } from "node:path";
+import { createInterface } from "node:readline";
+import { fileURLToPath } from "node:url";
+import { promisify } from "node:util";
+import { validateJsonSchemaSubset } from "../../../../🧬️schema/✅️validator/🟦️.ts";
+import { terminateOwnedChildTree } from "../../../🪓️termination/🟦️.ts";
+import { stageArtifacts } from "../../📤️publication/🟦️.ts";
+import { acquireNativeCapacityLeaseV1, acquireCargoBuildLeaseV1 } from "../🔒️lease/🟦️.ts";
+import { CargoProvenanceSessionV1, cargoProvenancePhysicalControlV1, cargoProvenanceProgressSinkV1, sharedProvenanceCustodyV1, type CargoProvenanceStagedV1 } from "../🟦️.ts";
+import { cargoBuildRunLeafV1, cargoProvenanceMerkleRootV1, cargoProvenanceRowsDigestV1, cargoProvenanceSourceV1, cargoUnitIdentityV1, cargoUnitLeafV1, type CargoProvenanceRootsV1, type CargoUnitObservationV1 } from "../🧾️receipt/🟦️.ts";
+import { ADMISSION_POLICY_V1, buildSchedulerV1, readUnitHistoryV1, recordUnitHistoryV1, startAdmissionBrokerV1, unitHistoryPathV1, unitObservationsV1 } from "../🎟️admission/🟦️.ts";
+import { createJobserverV1, defaultJobserverStyleV1, type JobSlotV1 } from "../🎰️jobserver/🟦️.ts";
+import { criticalPathV1, startTimelineV1, TELEMETRY_POLICY_V1, writeBuildReportV1, type BuildScriptRunV1, type StageRecordV1 } from "../📈️telemetry/🟦️.ts";
+import { STAGE_CACHE_POLICY_V1, stageCacheV1, type StageCacheV1 } from "../🗃️stage-cache/🟦️.ts";
+import schema from "./🧬️schema/🔣️.json" with { type: "json" };
+
+/** 🧩️ Driver policy: stall watchdog, output bounds, feature unification, generation layout and report file names. */
+export const RELEASE_DRIVER_POLICY_V1 = schema.definitions.Policy.const;
+
+/** 📦️ One planned component package and its manifest. */
+export type ReleasePackageV1 = Readonly<{ name: string; manifest: string }>;
+
+/** 🛣️ One Cargo pass: a workspace's planned component packages under one profile and target, staged into `<package dir>/<output>`. */
+export type ReleasePassV1 = Readonly<{ id: string; manifest: string; packages: readonly ReleasePackageV1[]; target: string; profile: string; output: string }>;
+
+/** 🏃️ A command the driver runs under its jobserver once every completion it names happened (`JobV1`); a job with a `lane` runs inside that profile's Cargo lane before its passes. */
+export type ReleaseJobV1 = Readonly<{ id: string; cwd: string; command: readonly string[]; after: readonly string[]; profile: string; target: string; lane?: string; environment?: Readonly<Record<string, string>> }>;
+
+/** 🧾️ One job of a product's release pipeline declaration (`PipelineJobV1`). */
+export type ReleasePipelineJobV1 = Readonly<{ id: string; root: string; command: readonly string[]; after: readonly string[]; lane?: string; profile: string; target: string; policies: readonly ("process" | "cargo" | "wasm")[] }>;
+
+/** 🗂️ A product's release pipeline declaration (`PipelineV1`): Nx prerequisites and the jobs the driver runs beside the component passes. */
+export type ReleasePipelineV1 = Readonly<{ prerequisites: readonly string[]; jobs: readonly ReleasePipelineJobV1[]; stageAfter?: Readonly<Record<string, readonly string[]>> }>;
+
+/** 🛂️ Admits a release pipeline declaration against the first-party schema, with unique job ids and lane jobs named only once. */
+export function admitReleasePipelineV1(value: unknown): ReleasePipelineV1 {
+  const errors = validateJsonSchemaSubset(schema.definitions.PipelineV1, value, schema);
+  if (errors.length) throw Error(`Invalid release pipeline: ${errors.join("; ")}`);
+  const pipeline = value as ReleasePipelineV1;
+  if (new Set(pipeline.jobs.map((job) => job.id)).size !== pipeline.jobs.length) throw Error("Invalid release pipeline: duplicate job id");
+  return pipeline;
+}
+
+/** 🗺️ Every Cargo pass and job one release build driver owns (`ReleasePlanV1`). */
+export type ReleasePlanV1 = Readonly<{ version: 1; passes: readonly ReleasePassV1[]; jobs?: readonly ReleaseJobV1[]; stageAfter?: Readonly<Record<string, readonly string[]>> }>;
+
+/** 🌡️ A warm generation reuses the shared compiler store and stage cache; a fresh one compiles cold into a new generation directory with its own stage cache. */
+export type ReleaseGenerationKindV1 = "warm" | "fresh";
+
+/** 🗂️ Where one driver run compiles, logs, caches stages and reports. */
+export type ReleaseGenerationV1 = Readonly<{ kind: ReleaseGenerationKindV1; root: string; target: string; build: string; report: string; logs: string; jobserver: string; stages: string }>;
+
+/** 🌳️ One linked component's provenance: the Merkle root over the leaves of exactly the units its unit graph closure holds, and the digest of the repository sources those units read. */
+export type ComponentProvenanceV1 = Readonly<{ root: string; leaves: readonly string[]; sourceTreeDigest: string; units: number }>;
+
+/** 🔗️ A component Cargo linked, as its post-link stages see it. */
+export type LinkedComponentV1 = Readonly<{ pass: ReleasePassV1; package: ReleasePackageV1; wasm: string; staged: string }>;
+
+/** 🧰️ What a post-link stage may use: cancellation, the generation, its stage cache, the log, its component's provenance once its pass was observed, and
+ * `widen(maximum)`, which takes up to `maximum − 1` further job slots without waiting (only while no one else waits for one) and answers how many slots the
+ * stage now holds, so a multi-threaded tool runs wide when the machine is idle and on one core when it is busy. Every slot is returned when the stage ends. */
+export type ReleaseStageContextV1 = Readonly<{ signal: AbortSignal; generation: ReleaseGenerationV1; cache: StageCacheV1; log: (line: string) => void; provenance: () => Promise<ComponentProvenanceV1>; widen: (maximum: number) => number }>;
+
+/** 🪜️ One post-link stage of one component: it runs, holding one jobserver token, once the stages it names in `after` (local names, or global completions such
+ * as `job:<id>`) completed. A `finalizer` instead runs once they all settled, whatever their outcome and even after cancellation, without a token: it releases
+ * what earlier stages left behind and must be cheap. */
+export type ReleaseStageV1 = Readonly<{ name: string; after: readonly string[]; finalizer?: boolean; run: (context: ReleaseStageContextV1) => Promise<void> }>;
+
+/** 🛂️ Admits only a plan that satisfies the first-party schema and names every pass, package and job once. */
+export function admitReleasePlanV1(value: unknown): ReleasePlanV1 {
+  const errors = validateJsonSchemaSubset(schema, value);
+  if (errors.length) throw Error(`Invalid release plan: ${errors.join("; ")}`);
+  const plan = value as ReleasePlanV1;
+  if (new Set(plan.passes.map((pass) => pass.id)).size !== plan.passes.length) throw Error("Invalid release plan: duplicate pass id");
+  for (const pass of plan.passes) if (new Set(pass.packages.map((row) => row.name)).size !== pass.packages.length) throw Error(`Invalid release plan: duplicate package in ${pass.id}`);
+  if (new Set((plan.jobs ?? []).map((job) => job.id)).size !== (plan.jobs ?? []).length) throw Error("Invalid release plan: duplicate job id");
+  return plan;
+}
+
+/** 🌡️ The generation a caller's environment selects (`SEMIO_RELEASE_GENERATION`), warm by default. */
+export function releaseGenerationKindV1(environment: Readonly<Record<string, string | undefined>>): ReleaseGenerationKindV1 {
+  const value = environment[RELEASE_DRIVER_POLICY_V1.generationEnvironment] ?? "warm";
+  if (!(RELEASE_DRIVER_POLICY_V1.generations as readonly string[]).includes(value)) throw Error(`Invalid ${RELEASE_DRIVER_POLICY_V1.generationEnvironment}: ${value}`);
+  return value as ReleaseGenerationKindV1;
+}
+
+/** 🗂️ Lays out one generation: fresh is a new `<cache>/f…` directory with one-letter stores (keeping rustc output paths inside the 256-unit path budget) and its own
+ * stage cache; warm compiles into the shared stores and caches stages under `<cache>/stages`, while its report, logs, jobserver and stage work live in a new
+ * `<cache>/release/w…` run directory, so concurrent warm drivers (two dev launches) never share one. Warm runs older than the retention are removed. */
+export function releaseGenerationV1(kind: ReleaseGenerationKindV1, cacheRoot: string, shared: Readonly<{ target: string; build: string }>): ReleaseGenerationV1 {
+  const stores = RELEASE_DRIVER_POLICY_V1.stores, runs = join(cacheRoot, RELEASE_DRIVER_POLICY_V1.warmRoot);
+  mkdirSync(kind === "fresh" ? cacheRoot : runs, { recursive: true });
+  if (kind === "warm") for (const entry of readdirSync(runs, { withFileTypes: true })) if (entry.isDirectory() && entry.name.startsWith(RELEASE_DRIVER_POLICY_V1.warmRunPrefix) && Date.now() - statSync(join(runs, entry.name)).mtimeMs > RELEASE_DRIVER_POLICY_V1.warmRunRetentionMs) rmSync(join(runs, entry.name), { recursive: true, force: true });
+  const root = kind === "fresh" ? mkdtempSync(join(cacheRoot, RELEASE_DRIVER_POLICY_V1.generationPrefix)) : mkdtempSync(join(runs, RELEASE_DRIVER_POLICY_V1.warmRunPrefix));
+  const generation = { kind, root, target: kind === "fresh" ? join(root, stores.target) : shared.target, build: kind === "fresh" ? join(root, stores.build) : shared.build, report: join(root, stores.report), logs: join(root, stores.logs), jobserver: join(root, stores.jobserver), stages: kind === "fresh" ? join(root, STAGE_CACHE_POLICY_V1.freshStore) : join(cacheRoot, STAGE_CACHE_POLICY_V1.warmRoot) };
+  for (const directory of [generation.report, generation.logs, generation.jobserver]) { rmSync(directory, { recursive: true, force: true }); mkdirSync(directory, { recursive: true }); }
+  return generation;
+}
+
+/** 🏁️ The planned component whose linked `.wasm` a Cargo JSON message announces, with that file. */
+export function componentArtifactV1(message: { reason?: string; package_id?: string; manifest_path?: string; target?: { kind?: string[] }; filenames?: string[] }, pass: ReleasePassV1, targetDirectory: string): Readonly<{ package: ReleasePackageV1; wasm: string }> | null {
+  if (message.reason !== "compiler-artifact" || !message.target?.kind?.includes("cdylib")) return null;
+  const wasm = message.filenames?.filter((file) => file.endsWith(".wasm")).sort((left, right) => Number(right.startsWith(targetDirectory)) - Number(left.startsWith(targetDirectory)))[0];
+  const manifest = message.manifest_path ? resolve(message.manifest_path) : undefined, row = pass.packages.find((candidate) => resolve(candidate.manifest) === manifest);
+  return wasm && row ? { package: row, wasm } : null;
+}
+
+/** 🧾️ The arguments of one pass: every planned package's library, one target, one profile, all failures reported. */
+export function releasePassArgsV1(pass: ReleasePassV1): string[] {
+  return ["build", "--locked", "--manifest-path", pass.manifest, ...pass.packages.flatMap((row) => ["-p", row.name]), "--lib", "--target", pass.target, "--profile", pass.profile, "--keep-going", "--message-format=json-render-diagnostics"];
+}
+
+/** 🕸️ The arguments that print one pass's unit graph without compiling anything. */
+export function releaseUnitGraphArgsV1(pass: ReleasePassV1): string[] {
+  return ["build", "--locked", "--manifest-path", pass.manifest, ...pass.packages.flatMap((row) => ["-p", row.name]), "--lib", "--target", pass.target, "--profile", pass.profile, "-Z", "unstable-options", "--unit-graph"];
+}
+
+/** 🕸️ Cargo's unit graph (`--unit-graph`, version 1) as the driver reads it. */
+export type CargoUnitGraphV1 = Readonly<{ version: 1; units: readonly Readonly<{ pkg_id: string; target: Readonly<{ name: string; kind: readonly string[]; src_path: string }>; platform: string | null; mode: string; features: readonly string[]; dependencies: readonly Readonly<{ index: number }>[] }>[]; roots: readonly number[] }>;
+
+/** 🔑️ The identity of one unit-graph node, joinable with {@link announcedUnitIdentityV1}. */
+export function unitGraphIdentityV1(unit: CargoUnitGraphV1["units"][number]): string {
+  return unit.mode === "run-custom-build" ? JSON.stringify([unit.pkg_id, "run-custom-build", unit.platform]) : cargoUnitIdentityV1({ packageId: unit.pkg_id, target: unit.target.name, kinds: unit.target.kind, platform: unit.platform, features: unit.features });
+}
+
+/** 🔑️ The identity of a unit Cargo announced in a pass for `target`: the platform is the target when its outputs live under the target's directory. */
+export function announcedUnitIdentityV1(message: Readonly<{ package_id?: unknown; target?: Readonly<{ name?: unknown; kind?: unknown }>; features?: unknown; filenames?: unknown }>, target: string): string {
+  const files = Array.isArray(message.filenames) ? message.filenames.map(String) : [];
+  return cargoUnitIdentityV1({ packageId: String(message.package_id), target: String(message.target?.name), kinds: Array.isArray(message.target?.kind) ? message.target.kind.map(String) : [], platform: files.some((file) => file.split(sep).includes(target)) ? target : null, features: Array.isArray(message.features) ? message.features.map(String) : [] });
+}
+
+/** 🔑️ The identity of a build-script run Cargo announced in a pass for `target`. */
+export function announcedRunIdentityV1(packageId: string, outDir: string, target: string): string {
+  return JSON.stringify([packageId, "run-custom-build", outDir.split(sep).includes(target) ? target : null]);
+}
+
+/** 📂️ The package directory a local Cargo package id (`path+file://<dir>#…`) names, or `null` for a registry or git package. */
+export function cargoPackageDirectoryV1(packageId: string): string | null {
+  return packageId.startsWith("path+file://") ? resolve(fileURLToPath(packageId.slice("path+".length).split("#")[0]!)) : null;
+}
+
+/** 🌲️ Every planned package's unit closure: the identities reachable from its root unit, the root being the unit whose package directory is the planned
+ * manifest's directory (a taxonomy crate's sources live outside it, so the source path never decides ownership). */
+export function unitGraphClosuresV1(graph: CargoUnitGraphV1, pass: ReleasePassV1): ReadonlyMap<string, ReadonlySet<string>> {
+  const closures = new Map<string, Set<string>>(), owners = new Map(pass.packages.map((row) => [dirname(resolve(row.manifest)), row]));
+  for (const index of graph.roots) {
+    const directory = cargoPackageDirectoryV1(graph.units[index]!.pkg_id), owner = directory === null ? undefined : owners.get(directory);
+    if (!owner) continue;
+    const seen = new Set<number>(), identities = closures.get(owner.name) ?? new Set<string>(), stack = [index];
+    while (stack.length) {
+      const next = stack.pop()!;
+      if (seen.has(next)) continue;
+      seen.add(next);
+      const unit = graph.units[next]!;
+      identities.add(unitGraphIdentityV1(unit));
+      for (const dependency of unit.dependencies) stack.push(dependency.index);
+    }
+    closures.set(owner.name, identities);
+  }
+  return closures;
+}
+
+/** 🍃️ Every observed unit's and build-script run's leaf in one invocation for `target`, keyed by identity, with the repository sources each unit read. */
+export function invocationProvenanceLeavesV1(observed: Readonly<{ units: readonly CargoUnitObservationV1[]; buildResources: readonly Readonly<{ package_id: string; out_dir: string; path: string; sha256: string; resources: readonly any[] }>[] }>, target: string, roots: CargoProvenanceRootsV1): Readonly<{ leaves: ReadonlyMap<string, string>; sources: ReadonlyMap<string, readonly (readonly [string, string])[]> }> {
+  const leaves = new Map<string, string>(), sources = new Map<string, (readonly [string, string])[]>();
+  for (const unit of observed.units) {
+    const identity = announcedUnitIdentityV1(unit.message as never, target);
+    leaves.set(identity, cargoUnitLeafV1(unit, roots));
+    sources.set(identity, unit.inputs.flatMap((input) => { const path = input.kind === "file" && input.sha256 ? cargoProvenanceSourceV1(input.path, roots) : null; return path ? [[path, input.sha256!] as const] : []; }));
+  }
+  for (const row of observed.buildResources) leaves.set(announcedRunIdentityV1(row.package_id, row.out_dir, target), cargoBuildRunLeafV1(row, roots));
+  return Object.freeze({ leaves, sources });
+}
+
+/** 🌳️ One component's provenance from the leaves of the observed units its closure holds. */
+export function componentProvenanceFromClosureV1(closure: ReadonlySet<string>, leaves: ReadonlyMap<string, string>, sources: ReadonlyMap<string, readonly (readonly [string, string])[]>): ComponentProvenanceV1 {
+  const selected = [...closure].filter((identity) => leaves.has(identity));
+  const rows = new Map<string, string>();
+  for (const identity of selected) for (const [path, sha256] of sources.get(identity) ?? []) rows.set(path, sha256);
+  if (!rows.size) throw Error("Component closure names no in-repository source");
+  return Object.freeze({ root: cargoProvenanceMerkleRootV1(selected.map((identity) => leaves.get(identity)!)), leaves: Object.freeze(selected.map((identity) => leaves.get(identity)!).sort()), sourceTreeDigest: cargoProvenanceRowsDigestV1([...rows]), units: selected.length });
+}
+
+/** 🚦️ Driver outcome. */
+export type ReleaseOutcomeV1 = Readonly<{ generation: ReleaseGenerationV1; report: string; staged: readonly string[]; failed: readonly Readonly<{ pass: string; package: string }>[]; units: number }>;
+
+/** 🎛️ What one driver run needs from its caller. */
+export type ReleaseDriverOptionsV1 = Readonly<{
+  plan: ReleasePlanV1;
+  cwd: string;
+  cacheRoot: string;
+  shared: Readonly<{ target: string; build: string }>;
+  generation: ReleaseGenerationKindV1;
+  leaseDirectory: string;
+  environment: Readonly<Record<string, string | undefined>>;
+  signal: AbortSignal;
+  stages?: (component: LinkedComponentV1) => readonly ReleaseStageV1[];
+  jobEnvironment?: (job: ReleaseJobV1, generation: ReleaseGenerationV1) => Readonly<Record<string, string>>;
+  tokens?: number;
+  physicalBytes?: number;
+  scheduler?: string;
+  cargo?: Readonly<{ command: string; args: readonly string[] }>;
+  stallMs?: number;
+  progressMs?: number;
+  log?: (line: string) => void;
+}>;
+
+/** 🪵️ An append-only log file that stops growing at its byte cap. */
+function boundedLog(path: string, limit: number): { write: (line: string) => void; close: () => void } {
+  const descriptor = openSync(path, "w");
+  let written = 0;
+  return { write: (line) => { if (written < limit) written += writeSync(descriptor, `${line}\n`); }, close: () => closeSync(descriptor) };
+}
+
+const exec = promisify(execFile);
+
+/** 🧮️ Resident bytes of the driver and its non-rustc children, the `nonRustc` term of the admission budget. */
+async function nonRustcBytes(children: readonly ChildProcess[]): Promise<number> {
+  const pids = children.map((child) => child.pid).filter((pid): pid is number => pid !== undefined);
+  if (!pids.length || process.platform === "win32") return process.memoryUsage().rss;
+  const listed = await exec("ps", ["-o", "rss=", "-p", pids.join(",")]).catch(() => ({ stdout: "" }));
+  return process.memoryUsage().rss + listed.stdout.split(/\s+/u).filter(Boolean).reduce((sum, value) => sum + Number(value) * 1024, 0);
+}
+
+/** 🔬️ One pass's observed provenance: its staged receipt, every component's unit closure, every unit's leaf and the repository sources each unit read. */
+type ObservedPassV1 = Readonly<{ staged: CargoProvenanceStagedV1; closures: ReadonlyMap<string, ReadonlySet<string>>; leaves: ReadonlyMap<string, string>; sources: ReadonlyMap<string, readonly (readonly [string, string])[]> }>;
+
+/** ⏳️ A named completion any job or stage may wait for. */
+type Completion = { promise: Promise<void>; resolve: () => void; reject: (error: unknown) => void; settled: boolean };
+
+/** 🚀️ Runs one release: a GNU make jobserver of every core shared by all Cargo passes, jobs and post-link stages, a rustc wrapper admitting units by predicted
+ * peak memory, one Cargo pass per planned workspace, profile and target (profiles in parallel lanes, workspaces of one profile in sequence so no two Cargo processes
+ * contend for one unit), jobs started at t = 0 as soon as the completions they name happened (host tools, wasm-bindgen modules, product stages), each component
+ * staged the moment Cargo links it and streamed through its post-link stages (each cached by content under the generation's stage cache), one provenance session
+ * that hashes every file once and rechecks it once (a Merkle root per component closure), a CPU and memory timeline, a per-unit table, the critical path and a
+ * report. No wall-clock deadline: a stall watchdog stops the run only when no unit started or finished for `stallMs` while no rustc runs, after sampling every
+ * Cargo. Cancellation through `signal` stops every Cargo tree, job, wrapper and stage.
+ * @see ../../📓️2026-10-13-scalable-build-architecture.md §6.1–6.5, §7.1, §7.3 (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT) */
+export async function runReleaseDriverV1(options: ReleaseDriverOptionsV1): Promise<ReleaseOutcomeV1> {
+  const plan = admitReleasePlanV1(options.plan), policy = RELEASE_DRIVER_POLICY_V1, log = options.log ?? ((line: string) => console.log(line)), jobs = plan.jobs ?? [];
+  const generation = releaseGenerationV1(options.generation, options.cacheRoot, options.shared), startedMs = Date.now(), cache = stageCacheV1(generation.stages);
+  const controller = new AbortController(), abort = (): void => controller.abort(options.signal.reason);
+  options.signal.addEventListener("abort", abort, { once: true });
+  if (options.signal.aborted) abort();
+  const signal = controller.signal, children = new Set<ChildProcess>(), stages: StageRecordV1[] = [], runs: BuildScriptRunV1[] = [], staged: string[] = [], failures: { pass: string; package: string }[] = [];
+  const passRecords: { id: string; manifest: string; profile: string; target: string; startMs: number; endMs: number; exit: number; failed: string[] }[] = [];
+  const failureLines: string[] = [], components = plan.passes.flatMap((pass) => pass.packages.map((row) => row.name));
+  let stagesRunning = 0, stagesWaiting = 0, lastMessageMs = Date.now(), stallReason: string | null = null;
+  log(`[release] ${generation.kind} generation ${generation.root}: ${plan.passes.length} pass(es), ${components.length} component build(s), ${jobs.length} job(s)`);
+  const capacity = await acquireNativeCapacityLeaseV1({ directory: options.leaseDirectory, signal, environment: options.environment, onWait: ({ elapsedMs }) => log(`[release] Waiting for native host capacity: ${elapsedMs}ms`) });
+  try {
+  options = { ...options, environment: { ...options.environment, SEMIO_NATIVE_CAPACITY_HELD: "true" } };
+  const scheduler = options.scheduler ?? (await buildSchedulerV1({ cwd: options.cwd, targetDirectory: generation.target, buildDirectory: generation.build, environment: options.environment, signal })).get("semio-build-scheduler")!;
+  const historyPath = unitHistoryPathV1(options.cacheRoot), history = await readUnitHistoryV1(historyPath);
+  const jobserver = await createJobserverV1({ version: 1, tokens: options.tokens ?? availableParallelism(), style: defaultJobserverStyleV1() }, generation.jobserver);
+  const broker = await startAdmissionBrokerV1({ physicalBytes: options.physicalBytes ?? totalmem(), history });
+  const cargoHome = resolve(options.environment.CARGO_HOME ?? join(homedir(), ".cargo")), roots: CargoProvenanceRootsV1 = { repository: options.cwd, build: generation.build, cargoHome };
+  const physicalControl = () => cargoProvenancePhysicalControlV1({ cancelled: () => signal.aborted, scale: Math.max(1, components.length), onProgress: cargoProvenanceProgressSinkV1(() => undefined) });
+  const custody = sharedProvenanceCustodyV1(options.cwd, physicalControl), session = new CargoProvenanceSessionV1(custody);
+  const timeline = startTimelineV1({
+    path: join(generation.report, TELEMETRY_POLICY_V1.timelineFile),
+    counters: () => { const stats = broker.stats(); return { rustcRunning: stats.running, admissionWaiting: stats.waiting, rustcRssBytes: stats.actualRunningBytes, frozen: stats.frozen, tokensHeld: jobserver.held(), stagesRunning, stagesWaiting }; },
+    onRow: (row) => { void nonRustcBytes([...children]).then((bytes) => broker.observe({ nonRustcBytes: bytes, swapOutBytesPerSecond: row.swapOutBytesPerSecond })); },
+  });
+  const completions = new Map<string, Completion>();
+  const completion = (name: string): Completion => {
+    let row = completions.get(name);
+    if (!row) {
+      let accept!: () => void, refuse!: (error: unknown) => void;
+      const promise = new Promise<void>((resolveCompletion, rejectCompletion) => { accept = resolveCompletion; refuse = rejectCompletion; });
+      promise.catch(() => undefined);
+      row = { promise, resolve: () => { if (!row!.settled) { row!.settled = true; accept(); } }, reject: (error) => { if (!row!.settled) { row!.settled = true; refuse(error); } }, settled: false };
+      completions.set(name, row);
+      const group = /^components:(.+)$/u.exec(name), owner = unlinked.get(name.slice(0, name.lastIndexOf(":")));
+      if (group) Promise.all(components.map((component) => completion(`${component}:${group[1]}`).promise)).then(row.resolve, row.reject);
+      else if (owner) row.reject(owner);
+    }
+    return row;
+  };
+  const unlinked = new Map<string, Error>();
+  const failComponent = (component: string, error: Error): void => {
+    unlinked.set(component, error);
+    for (const [name, row] of completions) if (name.startsWith(`${component}:`)) row.reject(error);
+  };
+  const pending = new Set<Promise<void>>();
+  const track = (task: Promise<void>): void => { pending.add(task); void task.finally(() => pending.delete(task)); };
+  const work = (component: string, name: string, after: readonly string[], run: (widen: (maximum: number) => number) => Promise<void>, done?: Completion, finalizer = false): void => {
+    const readyAt = finalizer ? Promise.allSettled(after.map((dependency) => completion(dependency).promise)) : Promise.all(after.map((dependency) => completion(dependency).promise));
+    track(readyAt.then(async () => {
+      const readyMs = Date.now();
+      stagesWaiting++;
+      let slot: Pick<JobSlotV1, "release">;
+      try { slot = finalizer ? { release: () => undefined } : await jobserver.acquire(signal); } finally { stagesWaiting--; }
+      stagesRunning++;
+      const startMs = Date.now(), extra: JobSlotV1[] = [];
+      const widen = (maximum: number): number => { while (extra.length + 1 < maximum) { const next = jobserver.tryAcquire(); if (!next) break; extra.push(next); } return extra.length + 1; };
+      let ok = false;
+      try { await run(widen); ok = true; done?.resolve(); }
+      catch (error) { done?.reject(error); if (finalizer || !signal.aborted) { failureLines.push(`[release] ${component} ${name}: ${error instanceof Error ? error.message : String(error)}`); failures.push({ pass: name, package: component }); } }
+      finally { stagesRunning--; for (const held of extra) held.release(); slot.release(); stages.push({ component, stage: name, readyMs, startMs, endMs: Date.now(), ok }); }
+    }, (error) => { done?.reject(error); }));
+  };
+  const provenanceOf = new Map<string, Promise<ObservedPassV1>>();
+  const leavesReport: Record<string, unknown> = {};
+  const unitGraphs = new Map(plan.passes.map((pass) => [pass.id, (async (): Promise<CargoUnitGraphV1> => {
+    const port = options.cargo ?? { command: "cargo", args: [] };
+    const output = await exec(port.command, [...port.args, ...releaseUnitGraphArgsV1(pass)], { cwd: options.cwd, maxBuffer: 512 * 1024 * 1024, env: { ...options.environment, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" } });
+    writeFileSync(join(generation.logs, `${policy.unitGraphFile}-${pass.id}.json`), output.stdout);
+    return JSON.parse(output.stdout) as CargoUnitGraphV1;
+  })()]));
+  for (const graph of unitGraphs.values()) graph.catch(() => undefined);
+  const componentProvenance = (pass: ReleasePassV1, row: ReleasePackageV1): Promise<ComponentProvenanceV1> => (provenanceOf.get(pass.id) ?? Promise.reject(Error(`Pass ${pass.id} has no provenance`))).then((observed) => {
+    const closure = observed.closures.get(row.name);
+    if (!closure) throw Error(`${row.name}: the unit graph of ${pass.id} has no root for it`);
+    return componentProvenanceFromClosureV1(closure, observed.leaves, observed.sources);
+  });
+  const streamComponent = (pass: ReleasePassV1, row: ReleasePackageV1, wasm: string): void => {
+    const target = join(dirname(row.manifest), pass.output, basename(wasm)), linked: LinkedComponentV1 = { pass, package: row, wasm, staged: target };
+    work(row.name, "stage", [], async () => {
+      const descriptor = openSync(wasm, "r"), header = Buffer.alloc(8);
+      try { readSync(descriptor, header, 0, 8, 0); } finally { closeSync(descriptor); }
+      if (JSON.stringify([...header]) !== JSON.stringify(policy.componentHeader)) throw Error(`Invalid WASI component header in ${wasm}`);
+      await stageArtifacts(join(dirname(row.manifest), pass.output), relative(options.cwd, resolve(row.manifest)).split(sep).join("/"), new Map([[basename(wasm), wasm]]), { signal, leaseDirectory: options.leaseDirectory });
+      staged.push(`${row.name}:${pass.profile}`);
+    }, completion(`${row.name}:stage`));
+    const declared = options.stages?.(linked) ?? [];
+    for (const step of declared) work(row.name, step.name, [`${row.name}:stage`, ...[...step.after, ...plan.stageAfter?.[step.name] ?? []].map((name) => name.includes(":") ? name : `${row.name}:${name}`)], (widen) => step.run({ signal, generation, cache, log, provenance: () => componentProvenance(pass, row), widen }), completion(`${row.name}:${step.name}`), step.finalizer === true);
+  };
+  const prefetchQueue: { filenames?: string[] }[] = [];
+  let prefetching = false;
+  const prefetch = (message: { filenames?: string[] }): void => {
+    prefetchQueue.push(message);
+    if (prefetching) return;
+    prefetching = true;
+    track((async () => {
+      const slot = await jobserver.acquire(signal);
+      try { while (prefetchQueue.length && !signal.aborted) await session.prefetch(prefetchQueue.shift()!).catch((error) => { if (!signal.aborted) log(`[release] provenance prefetch: ${error instanceof Error ? error.message : String(error)}`); }); }
+      finally { prefetching = false; slot.release(); }
+    })());
+  };
+  const runPass = async (pass: ReleasePassV1): Promise<void> => {
+    const args = releasePassArgsV1(pass), startMs = Date.now(), units: { message: any; evidence: unknown }[] = [], buildScripts: unknown[] = [], linked = new Map<string, string>();
+    const lease = await acquireCargoBuildLeaseV1({ directory: options.leaseDirectory, buildDirectory: generation.build, args, signal });
+    let slot: JobSlotV1 | undefined;
+    try {
+      slot = await jobserver.acquire(signal);
+      broker.registerPass({ id: pass.id, profile: pass.profile, target: pass.target });
+      const port = options.cargo ?? { command: "cargo", args: [] };
+      const child = spawn(port.command, [...port.args, ...args], { cwd: options.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: { ...options.environment, SEMIO_BUILD_MODE: pass.profile === "prototype" || pass.profile === "wasm-prototype" ? "prototype" : "release", ...jobserver.environment(), RUSTC_WRAPPER: scheduler, [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: pass.id, CARGO_TARGET_DIR: generation.target, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_COMPILER_RESOURCE_ROOT: join(generation.build, "semio-compiler-resources"), CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: policy.featureUnification, CARGO_TERM_COLOR: "never" } });
+      children.add(child);
+      const stop = (): void => terminateOwnedChildTree(child);
+      signal.addEventListener("abort", stop, { once: true });
+      const messages = boundedLog(join(generation.logs, `cargo-${pass.id}.jsonl`), policy.logLimitBytes), diagnostics = boundedLog(join(generation.logs, `cargo-${pass.id}.log`), policy.logLimitBytes);
+      const perUnit = new Map<string, number>();
+      try {
+        const [exit] = await Promise.all([
+          new Promise<number>((accept) => { child.once("error", (error) => { diagnostics.write(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); }),
+          (async () => {
+            for await (const line of createInterface({ input: child.stdout!, crlfDelay: Infinity })) {
+              messages.write(line);
+              lastMessageMs = Date.now();
+              let message: any;
+              try { message = JSON.parse(line); } catch { continue; }
+              if (message.reason === "compiler-artifact") {
+                units.push({ message, evidence: { version: 1, kind: "discovery", paths: [], producer: null } });
+                prefetch(message);
+                const component = componentArtifactV1(message, pass, generation.target);
+                if (component && !linked.has(component.package.name)) { linked.set(component.package.name, component.wasm); streamComponent(pass, component.package, component.wasm); }
+              } else if (message.reason === "build-script-executed") {
+                buildScripts.push(message);
+                runs.push({ pass: pass.id, package: String(message.package_id).split("#")[1]?.split("@")[0] ?? String(message.package_id), outDir: message.out_dir, endMs: Date.now() });
+              } else if (message.reason === "compiler-message" && message.message?.level === "error") {
+                const unit = `${message.package_id?.split("#")[1] ?? message.package_id} ${message.target?.name ?? ""}`, lines = String(message.message.rendered ?? message.message.message).split("\n"), used = perUnit.get(unit) ?? 0;
+                const room = Math.max(0, Math.min(policy.failureLinesPerUnit - used, policy.failureLinesTotal - failureLines.length));
+                failureLines.push(...lines.slice(0, room).map((text) => `[${pass.id}] ${unit}: ${text}`));
+                perUnit.set(unit, used + Math.min(room, lines.length));
+              }
+            }
+          })(),
+          (async () => { for await (const line of createInterface({ input: child.stderr!, crlfDelay: Infinity })) diagnostics.write(line); })(),
+        ]);
+        const missing = pass.packages.filter((row) => !linked.has(row.name));
+        for (const row of missing) {
+          failures.push({ pass: pass.id, package: row.name });
+          rmSync(join(dirname(row.manifest), pass.output), { recursive: true, force: true });
+          failComponent(row.name, Error(`${row.name} was not linked by ${pass.id}`));
+        }
+        if (exit !== 0 && !missing.length) failures.push({ pass: pass.id, package: `cargo exit ${exit}` });
+        passRecords.push({ id: pass.id, manifest: pass.manifest, profile: pass.profile, target: pass.target, startMs, endMs: Date.now(), exit, failed: missing.map((row) => row.name) });
+        log(`[release] ${pass.id} ${pass.profile} ${basename(dirname(pass.manifest))}: exit ${exit}, ${linked.size}/${pass.packages.length} component(s) linked, ${units.length} unit(s) in ${((Date.now() - startMs) / 1000).toFixed(0)} s`);
+        completion(`pass:${pass.id}`).resolve();
+        if (signal.aborted) return;
+        const key = createHash("sha256").update(JSON.stringify([pass.manifest, args, generation.build])).digest("hex").slice(0, 32), name = `cargo-unit-provenance-release-${key}.json`;
+        let observed: ObservedPassV1 | undefined;
+        const done = completion(`provenance:${pass.id}`);
+        provenanceOf.set(pass.id, done.promise.then(() => observed!));
+        work(pass.id, "provenance", [...linked.keys()].map((packageName) => `${packageName}:stage`), async () => {
+          const stagedPaths = new Map([...linked].map(([packageName, wasm]) => [wasm, join(dirname(pass.packages.find((row) => row.name === packageName)!.manifest), pass.output, basename(wasm))]));
+          const written = await session.write(join(generation.report, policy.provenanceDirectory, name), { manifest: pass.manifest, cwd: options.cwd, command: port.command, args: [...port.args, ...args], buildDirectory: generation.build, builtAtMs: startMs, status: exit, cancelled: false, units, buildScripts }, stagedPaths, cargoHome);
+          const graph = await unitGraphs.get(pass.id)!, { leaves, sources } = invocationProvenanceLeavesV1(written, pass.target, roots);
+          const closures = unitGraphClosuresV1(graph, pass);
+          leavesReport[pass.id] = { receipt: name, units: Object.fromEntries([...leaves].sort()), components: Object.fromEntries([...closures].map(([packageName, closure]) => { try { const provenance = componentProvenanceFromClosureV1(closure, leaves, sources); return [packageName, { root: provenance.root, units: provenance.units, sourceTreeDigest: provenance.sourceTreeDigest }]; } catch (error) { return [packageName, { error: error instanceof Error ? error.message : String(error) }]; } })) };
+          observed = { staged: written, closures, leaves, sources };
+        }, done);
+      } finally {
+        messages.close();
+        diagnostics.close();
+        signal.removeEventListener("abort", stop);
+        children.delete(child);
+      }
+    } finally { slot?.release(); lease.release(); }
+  };
+  const runJob = (job: ReleaseJobV1): void => work(`job:${job.id}`, "job", job.after, async () => {
+    broker.registerPass({ id: job.id, profile: job.profile, target: job.target });
+    const output = boundedLog(join(generation.logs, `job-${job.id.replace(/[^A-Za-z0-9_.-]/gu, "_")}.log`), policy.logLimitBytes);
+    const child = spawn(job.command[0]!, job.command.slice(1), { cwd: job.cwd, detached: process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"], env: { ...options.environment, ...job.environment, ...options.jobEnvironment?.(job, generation), SEMIO_BUILD_MODE: job.profile === "prototype" || job.profile === "wasm-prototype" ? "prototype" : "release", ...jobserver.environment(), RUSTC_WRAPPER: scheduler, [ADMISSION_POLICY_V1.brokerEnvironment]: broker.endpoint, [ADMISSION_POLICY_V1.passEnvironment]: job.id, CARGO_BUILD_BUILD_DIR: generation.build, SEMIO_RELEASE_GENERATION_ROOT: generation.root, CARGO_TERM_COLOR: "never" } });
+    children.add(child);
+    const stop = (): void => terminateOwnedChildTree(child);
+    signal.addEventListener("abort", stop, { once: true });
+    const tail: string[] = [];
+    const collect = async (stream: NodeJS.ReadableStream): Promise<void> => { for await (const line of createInterface({ input: stream, crlfDelay: Infinity })) { output.write(line); lastMessageMs = Date.now(); tail.push(line); if (tail.length > policy.failureLinesPerUnit) tail.shift(); } };
+    try {
+      const [exit] = await Promise.all([new Promise<number>((accept) => { child.once("error", (error) => { tail.push(error.message); accept(1); }); child.once("close", (code) => accept(code ?? 1)); }), collect(child.stdout!), collect(child.stderr!)]);
+      if (exit !== 0) throw Error(`exit ${exit}\n${tail.slice(-Math.min(tail.length, 40)).join("\n")}`);
+    } finally { output.close(); signal.removeEventListener("abort", stop); children.delete(child); }
+  }, completion(`job:${job.id}`));
+  for (const job of jobs) if (job.lane === undefined) runJob(job);
+  const lanes = [...new Set([...plan.passes.map((pass) => pass.profile), ...jobs.flatMap((job) => job.lane === undefined ? [] : [job.lane])])].map((profile) => ({ jobs: jobs.filter((job) => job.lane === profile), passes: plan.passes.filter((pass) => pass.profile === profile) }));
+  const progress = setInterval(() => {
+    const stats = broker.stats(), row = timeline.rows().at(-1), cached = cache.stats();
+    log(`[release] ${broker.units().length} unit(s) done, ${stats.running} running · ${new Set(staged).size}/${components.length} component(s) staged · ${stagesRunning} stage(s) running · stage cache ${cached.hits} hit(s)/${cached.misses} miss(es) · cpu ${row?.cpuPercent ?? 0} % · rustc ${(stats.actualRunningBytes / 1024 ** 3).toFixed(1)}/${(stats.budgetBytes / 1024 ** 3).toFixed(1)} GiB · admitted-wait ${stats.waiting}${stats.frozen ? " · frozen" : ""} · ${((Date.now() - startedMs) / 60000).toFixed(1)} min`);
+  }, options.progressMs ?? policy.progressMs);
+  const watchdog = setInterval(() => {
+    const stats = broker.stats(), idleMs = Date.now() - Math.max(stats.lastActivityMs, lastMessageMs);
+    if (children.size === 0 || stats.running > 0 || stagesRunning > 0 || idleMs < (options.stallMs ?? policy.stallMs)) return;
+    if (stallReason) return;
+    stallReason = `Release build stalled: no unit started or finished for ${Math.round(idleMs / 1000)} s with ${children.size} child process(es) and no rustc running; samples in ${generation.logs}`;
+    void Promise.all([...children].map((child) => process.platform === "darwin" && child.pid ? exec("sample", [String(child.pid), "3", "-file", join(generation.logs, `stall-${child.pid}.txt`)]).catch(() => undefined) : Promise.resolve())).finally(() => controller.abort(Error(stallReason!)));
+  }, Math.min(policy.watchdogMs, options.stallMs ?? policy.stallMs));
+  let outcome: ReleaseOutcomeV1 | undefined, custodyClosed = false;
+  try {
+    await Promise.all(lanes.map(async (lane) => {
+      for (const job of lane.jobs) { signal.throwIfAborted(); runJob(job); await completion(`job:${job.id}`).promise.catch(() => undefined); }
+      for (const pass of lane.passes) { signal.throwIfAborted(); await runPass(pass); }
+    }));
+    while (pending.size) await Promise.all([...pending]);
+    signal.throwIfAborted();
+    if (!failures.length) {
+      const startMs = Date.now();
+      await session.close();
+      custodyClosed = true;
+      stages.push({ component: "release", stage: "provenance-recheck", readyMs: startMs, startMs, endMs: Date.now(), ok: true });
+    }
+  } finally {
+    clearInterval(progress);
+    clearInterval(watchdog);
+    for (const child of children) terminateOwnedChildTree(child);
+    while (pending.size) await Promise.allSettled([...pending]);
+    if (!custodyClosed) await session.discard();
+    const rows = await timeline.stop(), units = broker.units(), endedMs = Date.now(), critical = criticalPathV1(units, runs), cached = cache.stats(), reads = custody.files.observedReads();
+    await broker.close();
+    jobserver.close();
+    const readCounts = [...reads.files.values()].map((row) => row.reads), distinct = [...reads.files.values()].reduce((sum, row) => sum + row.bytes / Math.max(1, row.reads), 0);
+    mkdirSync(join(generation.report, policy.provenanceDirectory), { recursive: true });
+    writeFileSync(join(generation.report, policy.provenanceDirectory, policy.provenanceLeavesFile), `${JSON.stringify(leavesReport, null, 1)}\n`);
+    writeFileSync(join(generation.report, policy.provenanceDirectory, policy.provenanceReadsFile), `${JSON.stringify({ files: reads.files.size, bytes: reads.bytes, distinctBytes: distinct, maximumReads: Math.max(0, ...readCounts), closed: custodyClosed, excess: [...reads.files].filter(([, row]) => row.reads > 2).slice(0, 50).map(([path, row]) => ({ path, reads: row.reads })), histogram: Object.fromEntries([...new Set(readCounts)].sort().map((count) => [count, readCounts.filter((value) => value === count).length])) }, null, 1)}\n`);
+    const report = writeBuildReportV1(generation.report, { title: `Release build ${basename(generation.root)}`, startedMs, endedMs, timeline: rows, units, runs, stages, passes: passRecords, critical, sections: [
+      { title: "Stage cache", rows: [["Root", generation.stages], ["Hits", cached.hits], ["Misses", cached.misses], ["Restored MiB", (cached.restoredBytes / 1024 ** 2).toFixed(1)], ["Stored MiB", (cached.storedBytes / 1024 ** 2).toFixed(1)]] },
+      { title: "Provenance custody", rows: [["Files hashed", reads.files.size], ["Body bytes read", reads.bytes], ["Distinct file bytes", Math.round(distinct)], ["Reads per file (max)", Math.max(0, ...readCounts)], ["Final recheck", custodyClosed ? "passed" : "not reached"]] },
+    ] });
+    if (units.length) await recordUnitHistoryV1(historyPath, unitObservationsV1(units, critical.remainingMs, endedMs), { leaseDirectory: options.leaseDirectory, signal: new AbortController().signal });
+    options.signal.removeEventListener("abort", abort);
+    for (const line of failureLines.slice(0, policy.failureLinesTotal)) log(line);
+    log(`[release] ${units.length} unit(s), ${new Set(staged).size} component(s) staged, ${stages.length} stage run(s), stage cache ${cached.hits} hit(s)/${cached.misses} miss(es), provenance ${reads.files.size} file(s) ${(reads.bytes / 1024 ** 2).toFixed(0)} MiB, ${failures.length} failure(s) in ${((endedMs - startedMs) / 1000).toFixed(0)} s; report ${report}`);
+    outcome = { generation, report, staged: [...new Set(staged)], failed: failures, units: units.length };
+  }
+  if (stallReason) throw Error(stallReason);
+  if (failures.length) throw Error(`Release build failed: ${failures.map((row) => `${row.package} (${row.pass})`).join(", ")}; report ${outcome.report}`);
+  if (generation.kind === "fresh") for (const directory of [generation.target, generation.build]) rmSync(directory, { recursive: true, force: true });
+  return outcome;
+  } finally { capacity.release(); options.signal.removeEventListener("abort", abort); }
+}

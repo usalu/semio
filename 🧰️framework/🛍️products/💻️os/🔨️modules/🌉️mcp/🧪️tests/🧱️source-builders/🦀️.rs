@@ -20,7 +20,7 @@
 use crate::catalog::CatalogSource;
 use crate::conformance::EvalCase;
 use semio_framework::manifest::{
-    self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppRole, ArgSchema, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageHashes, PackageRole, UtilityDefinition, WindowKindDefinition,
+    self, ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, AppDefinition, AppRole, ArgSchema, ContributionSet, ExecutionMode, ModeDefinition, Modes, PackageDescriptor, PackageRole, UtilityDefinition, WindowKindDefinition,
     WindowKinds,
 };
 use {semio_framework_artifact_reference::ArtifactDialect,semio_framework::IconName};
@@ -34,7 +34,7 @@ pub fn catalog_contract_descriptor() -> (PackageDescriptor, Vec<u8>) {
     let json = include_str!("../../../../../../🔨️modules/🛂️manifest/🧫️fixtures/📦️catalog-package/🔣️.json");
     let descriptor: PackageDescriptor = semio_framework_pack_json::from_json_str(json, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("catalog package contract");
     assert_eq!(descriptor, serde_json::from_str::<PackageDescriptor>(json).expect("independent catalog package parser"));
-    let bytes = semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value());
+    let bytes = semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value());
     (descriptor, bytes)
 }
 
@@ -61,10 +61,6 @@ fn number_arg(id: &str, en: &str, de: &str) -> ActionArgDef {
     ActionArgDef::number(id, LocalizedLabel::native(en, de)).default_value(&0.0)
 }
 
-fn empty_hashes() -> PackageHashes {
-    PackageHashes { wasm_sha256: String::new(), core_wasm_sha256: String::new(), descriptor_sha256: String::new() }
-}
-
 fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> PackageDescriptor {
     PackageDescriptor {
         descriptor_version: 1,
@@ -79,7 +75,6 @@ fn wrap_descriptor(package_id: &str, manifest: manifest::PluginManifest) -> Pack
         quotas: Default::default(),
         contributions: ContributionSet::default(),
         assets: Vec::new(),
-        hashes: empty_hashes(),
     }
 }
 //#endregion 🔖️Helpers

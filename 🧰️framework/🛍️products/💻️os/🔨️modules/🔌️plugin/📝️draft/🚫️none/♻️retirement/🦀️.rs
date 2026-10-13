@@ -1,7 +1,8 @@
 //! 📝️ Exact store owners for the zero-payload draft lane, and the zero-payload retirement every
 //! statically empty lane (`NoDraft`, `NoConfig`) shares.
 
-use crate::app::{bounded_document_store_disposer, ArtifactOwnedDisposer, NoDraft, NoDraftMutation};
+use crate::store_lifecycle::{bounded_document_store_disposer, ArtifactOwnedDisposer};
+use crate::app_views::{NoDraft, NoDraftMutation};
 use crate::store;
 use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneBirthDemand, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
@@ -78,18 +79,18 @@ impl<T: Send + Sync + 'static> store::SnapshotRetirementFactory<T> for ZeroPaylo
 }
 
 /// 🫙️ Exact owner catalogue for a store whose snapshot and mutation types are statically empty.
-pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::DocumentStoreOwners<P, M>, ValueError>
+pub(super) fn zero_payload_store_owners<P, M>() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<P, M>, ValueError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
     M: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::Mutation<P> + store::OpBinary + store::OpText + Send + store::ArtifactCanonicalJsonTree + 'static,
 {
-    let capacity_bytes = store::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
-    store::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {
-        store::DocumentStoreOwners::admit_source_constructor(grant, || (ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<M>(std::marker::PhantomData), store::ArtifactStoreCursorDisposer::<P, M>::new()))
+    let capacity_bytes = store::os_store::document_store_owners::DocumentStoreOwners::<P, M>::source_birth_bytes::<ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<P>, ZeroPayloadRetirementFactory<M>, store::ArtifactStoreCursorDisposer<P, M>>()?;
+    store::os_store::document_store_owners::fund_document_store_owners(RetainedCloneBirthDemand { capacity_bytes, depth: 1 }, |grant| {
+        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<P>(std::marker::PhantomData), ZeroPayloadRetirementFactory::<M>(std::marker::PhantomData), store::ArtifactStoreCursorDisposer::<P, M>::new()))
     })
 }
 
-pub fn no_draft_store_owners() -> Result<store::DocumentStoreOwners<NoDraft, NoDraftMutation>, ValueError> {
+pub fn no_draft_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<NoDraft, NoDraftMutation>, ValueError> {
     zero_payload_store_owners::<NoDraft, NoDraftMutation>()
 }
 

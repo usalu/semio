@@ -3,23 +3,22 @@
 //! sparse field-by-field `SemioModelDiff::between(base, next)`.
 //!
 //! `spatial`/`elements`/`relations` (all id-keyed) are diffed via the SHARED
-//! `crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff<K,D,T>` engine
+//! `semio_s_artifact_stdio_semio::schema::triples::NamedTripleDiff<K,D,T>` engine
 //! (w1b-type-ownership.md: "Use `🧰️triples`... instead of reinventing it") — this file does NOT
 //! redefine that container or its wire codec, only the generic apply/between/inverse/absorb glue
 //! functions a specific artifact's collections need (mirrors bcf's own local generic engine,
 //! `f6-final-summary.md` §4.4, minus the container type itself, which now has one shared home).
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioTransform};
-#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+#[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
-#[cfg(test)] use crate::standards::v1::subsets::model::schema::snapshot::{Property, PsetValue};
+use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+#[cfg(test)] use crate::schema::snapshot::{Property, PsetValue};
 use protocol::command::DiffAlgebra;
 use protocol::{MutationDiff};
-#[cfg(test)] use protocol::{DiffCodec};
 
 /// 🧮️ Whether the sparse triple can reproduce `other`'s ORDER. [`apply_named`] keeps every surviving
 /// member where it already stood and pushes `added` onto the tail, so the key sequence it produces is
@@ -199,15 +198,15 @@ impl MutationDiff<SemioModelSnapshot> for SemioModelDiff {
     fn apply(&self, base: &SemioModelSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioModelSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.spatial {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.spatial, d, |item| item.id.clone(), |added| added.item.id.clone(), ["spatial"])?;
             apply_named(&mut next.spatial, d, |n: &SpatialNode| n.id.clone(), apply_spatial);
         }
         if let Some(d) = &self.elements {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |added| added.item.id.clone(), ["elements"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.elements, d, |item| item.id.clone(), |added| added.item.id.clone(), ["elements"])?;
             apply_named(&mut next.elements, d, |e: &SemioModelElement| e.id.clone(), apply_element);
         }
         if let Some(d) = &self.relations {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |added| added.item.id.clone(), ["relations"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.relations, d, |item| item.id.clone(), |added| added.item.id.clone(), ["relations"])?;
             apply_named(&mut next.relations, d, |r: &ModelRelation| r.id.clone(), apply_relation);
         }
         Ok(next)
@@ -374,7 +373,7 @@ fn absorb_relation_diff(mut a: ModelRelationDiff, b: ModelRelationDiff) -> Model
 
 //#region 🔖️HandcraftedDiffCodec
 /// 🎙️ Hand-rolled `protocol::DiffCodec` — same bracket-depth-aware token grammar bcf/gif/svg use
-/// (see `crate::standards::v1::subsets::base::schema::triples` for the shared
+/// (see `semio_s_artifact_stdio_semio::schema::triples` for the shared
 /// `split_top_level`/`strip_brackets` primitives this reuses rather than redefining). This
 /// artifact's own copy of the small hex/option/list primitive set (each artifact writes its own,
 /// per bcf's own module doc rationale -- cross-artifact imports would be architecturally wrong).
@@ -521,7 +520,7 @@ pub(crate) fn sweep_b() -> SemioModelSnapshot {
 
 /// 🌱 Representative `SemioModelDiff` cases built declaratively (empty/no-op, a bare spatial-node insert, a bare element insert, a bare relation insert) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-model"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioModelDiff> {
     vec![

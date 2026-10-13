@@ -12,18 +12,21 @@
 //!   equivalent here and are dropped — mesh-shaped content is the `🔺️mesh` bridge's job.
 //! - Malformed logical geometry is a hard `Err`, not a fabricated empty drawing.
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_dwg::{dwg_geometry_to_path_segments, DwgDrawing, DwgGeometry, DwgSnapshot};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_geometry_to_path_segments;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.dwg", standard: StandardId("ac1024"), subset: SubsetId::ANY };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 
 //#region 🔖️SegmentMap
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dwg_segment_to_path(segment: &semio_s_artifact_stdio_dwg::DwgPathSegment) -> PathSegment {
-    use semio_s_artifact_stdio_dwg::DwgPathSegment;
+fn dwg_segment_to_path(segment: &semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgPathSegment) -> PathSegment {
+    use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgPathSegment;
     match *segment {
         DwgPathSegment::Move { to } => PathSegment::MoveTo { to: SemioPoint2 { x: to[0], y: to[1] } },
         DwgPathSegment::Line { to } => PathSegment::LineTo { to: SemioPoint2 { x: to[0], y: to[1] } },

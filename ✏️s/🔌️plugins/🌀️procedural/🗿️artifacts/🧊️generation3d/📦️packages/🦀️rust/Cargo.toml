@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
+component-app-assembly = ["dep:machine", "dep:semio-framework-tool-machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os-flow", "dep:semio-framework-os-infinite", "dep:semio-framework-ui", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-styling"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -39,6 +39,10 @@ semio-framework-artifact-playbook-playbook = { workspace = true }
 semio-framework = { workspace = true }
 semio-framework-job = { workspace = true }
 semio-framework-3d = { workspace = true }
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-operations = { workspace = true }
+semio-framework-3d-brep-queries = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
 semio-framework-mesh-engine = { workspace = true }
 semio-framework-io-base64 = { path = "../../../../../../../🧰️framework/🔨️modules/🚪️io/🔤️base64/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true }
@@ -47,8 +51,12 @@ semio-framework-schema = { workspace = true }
 semio-framework-tool-run = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-dwg = { workspace = true }
+semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-read = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
 semio-s-artifact-stdio-step = { workspace = true }
 semio-s-artifact-stdio-gltf = { workspace = true }
+semio-s-artifact-stdio-gltf-model = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-las = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
@@ -57,7 +65,10 @@ semio-s-artifact-stdio-png = { workspace = true }
 # 🔺️ `conversion-mesh` mounts `s.stdio.semio@v1/mesh`'s own tested per-format bridges
 # (`SemioMeshTo{Stl,Obj,Ply,Gltf,Las,Dwg}` and their inverses), which every 🚪️io mesh leaf composes
 # instead of re-deriving a file grammar — ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-import = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 semio-s-artifact-stdio-txt = { workspace = true }
 pack = { workspace = true }

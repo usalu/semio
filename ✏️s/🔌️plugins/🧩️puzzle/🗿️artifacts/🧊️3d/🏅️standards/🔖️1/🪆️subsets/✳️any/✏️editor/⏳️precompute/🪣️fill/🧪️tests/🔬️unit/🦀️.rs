@@ -143,7 +143,7 @@ fn constructor_cap_and_plus_one_take_bounded_turns_and_refuse_permanently() {
         let mut preview_sequence = 0;
         let mut context = test_context(&rejected, root_cancel_token(), &mut preview_sequence);
         let JobTurn::Fault(fault) = rejected.advance(&mut context) else { panic!("{expected_branch} cap + 1 faults the planner before it installs anything") };
-        assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:{expected_branch}:{cap}").as_bytes()));
+        assert_eq!(fault.as_slice(), format!("preparation-capacity:{expected_branch}:{cap}").as_bytes());
         assert!(faulted(JobTurn::Fault(fault)));
         assert!(faulted(rejected.advance(&mut context)), "the refusal is permanent: every later step faults again");
         assert_eq!(
@@ -317,7 +317,7 @@ fn stale_generation_faults_without_progress() {
     let mut sequence = 0;
     let mut context = StepContext::new(OperationId(builder.operation.operation.0), Generation(builder.operation.generation.0 + 1), StepBudget::new(100, 10, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), now, &mut sequence, crate::puzzle_job::testing::test_progress());
     let JobTurn::Fault(fault) = builder.advance(&mut context) else { panic!("a stale generation must fault") };
-    assert_eq!(fault.detail.single_page(), Some(b"stale-fill-operation".as_slice()));
+    assert_eq!(fault.as_slice(), b"stale-fill-operation".as_slice());
     assert!(faulted(JobTurn::Fault(fault)));
     assert_eq!(builder.operation.base_revision, RevisionId(1));
 }
@@ -1091,13 +1091,12 @@ fn fill_run_job_delivers_every_trace_record_of_a_long_run() {
 /// 🪞️ The tool run ledger's overlay append of one op (`📋️tool-run-contract.md` §2.7.2): decode, diff against the
 /// running overlay, apply — `None` for an op the overlay no longer admits.
 fn fold_overlay_op(overlay: &Puzzle3dPlaySnapshot, bytes: &[u8]) -> Option<Puzzle3dPlaySnapshot> {
-    use protocol::MutationDiff;
     let op = <Puzzle3dMutation as protocol::OpBinary>::decode_op(bytes).ok()?;
     let outcome = protocol::Mutation::<Puzzle3dPlaySnapshot>::diff(&op, overlay);
     if !outcome.is_applicable(protocol::MergePolicy::default()) {
         return None;
     }
-    outcome.diff().apply(overlay).ok()
+    protocol::apply_diff(outcome.diff(), overlay).ok()
 }
 
 /// ⏱️ LAW (red→green row 1, the successor of the deleted `fillBuildTick` law): on the shipped Nakagin document the fill run
@@ -1120,12 +1119,14 @@ fn fill_run_job_step_and_overlay_append_stay_below_the_interactive_ceiling_for_n
     let (mut worst, mut worst_turn, mut turns, mut worst_append, mut appends) = (0_u64, 0_usize, 0_usize, 0_usize, 0_usize);
     loop {
         let start = precompute_work_done();
-        let outcome = semio_framework_job::drive_step(&mut job, "puzzle3d-fill-run", operation.operation, operation.generation, semio_framework_job::InteractiveStage::InteractiveStep, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, &mut verdict);
+        let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(semio_framework_job::INTERACTIVE_LANE_FUEL, start + budget, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), precompute_work_clock, &mut sequence, crate::puzzle_job::testing::test_progress());
+        let outcome = semio_framework_job::drive_step(&mut job, &mut context, "puzzle3d-fill-run", semio_framework_job::InteractiveStage::InteractiveStep, &mut verdict).expect("a fill run step").map(crate::puzzle_job::testing::owned_turn);
         let work = precompute_work_done() - start;
         turns += 1;
         if work > worst {
             (worst, worst_turn) = (work, turns);
         }
+        let Some(outcome) = outcome else { continue };
         match settle_fill_run_outcome(outcome) {
             FillRunTurn::Complete => break,
             FillRunTurn::Tick(tick) if !tick.append_ops.is_empty() => {
@@ -1347,7 +1348,7 @@ fn fill_run_job_capacity_refusal_publishes_a_danger_step_before_faulting() {
     let operation = job.operation();
     let mut context = StepContext::new(operation.operation, operation.generation, StepBudget::new(u64::MAX, u64::MAX, crate::puzzle_job::testing::unbounded_grant()), root_cancel_token(), never, &mut sequence, crate::puzzle_job::testing::test_progress());
     let JobTurn::Fault(fault) = job.turn(&mut context) else { panic!("the step after the danger step faults the run") };
-    assert_eq!(fault.detail.single_page(), Some(format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes()));
+    assert_eq!(fault.as_slice(), format!("preparation-capacity:scene_snapshot-objects:{DOCUMENT_OBJECT_SLOTS}").as_bytes());
     assert!(faulted(JobTurn::Fault(fault)));
 }
 

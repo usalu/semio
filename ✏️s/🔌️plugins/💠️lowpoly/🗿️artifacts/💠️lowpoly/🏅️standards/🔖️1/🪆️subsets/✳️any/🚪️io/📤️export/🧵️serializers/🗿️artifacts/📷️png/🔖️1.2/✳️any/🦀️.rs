@@ -5,9 +5,9 @@
 //! 🔖 `IoFidelity::Lossy`: a picture, not the model — there is no png import.
 use crate::standards::v1::subsets::any::io::mesh_geometry::world_parts;
 use crate::schema::snapshot::LowpolySnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::{encode_mesh, SemioMeshFormat};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use {semio_s_artifact_stdio_semio_mesh_export::encode_mesh, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat};
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive, SemioTopology};
 
 pub fn register() {}
 

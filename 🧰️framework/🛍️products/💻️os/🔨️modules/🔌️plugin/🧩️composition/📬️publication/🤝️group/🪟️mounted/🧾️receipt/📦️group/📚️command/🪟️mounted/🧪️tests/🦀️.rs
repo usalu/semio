@@ -1,5 +1,5 @@
 /// 🧪️ Exercises the real mounted history consumer through its public application close ladder.
-pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).unwrap();
     let rows = fixture["cases"].as_array().unwrap().last().unwrap()["sequences"].as_array().unwrap();
     assert!(app.command_log.terminal_is_empty());
@@ -22,7 +22,7 @@ pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember 
             retained_empty_backings += usize::from(demand == 8194);
             let quoted = app.close_retirement_demands(4096).unwrap();
             assert_eq!(quoted.release_bytes, demand);
-            let grant = crate::app::plugin_demand_grant(quoted);
+            let grant = crate::bounded_ownership::plugin_demand_grant(quoted);
             let idle = PluginLifecycleStep::Progress(RetainedCloneProgress::default());
             let (denied, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
             assert_eq!(denied, idle);
@@ -37,7 +37,7 @@ pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember 
             assert_eq!((heap.requested_bytes, heap.released_bytes), (0, demand));
             physical_turns += 1;
         } else {
-            let grant = crate::app::retirement_self_grant(|body| app.close_retirement_demands(body), 4096).unwrap();
+            let grant = crate::bounded_ownership::retirement_self_grant(|body| app.close_retirement_demands(body), 4096).unwrap();
             assert!(grant.maximum_release_bytes <= 262_144);
             if matches!(app.close_step(grant).unwrap(), PluginLifecycleStep::Complete(_)) { complete = true; break; }
         }
@@ -50,7 +50,7 @@ pub(crate) fn test_mounted_command_history_pages<A: ArtifactApp, M: SpaceMember 
 }
 
 /// 🧪️ Verifies actual held document IDs, shell retention and funded discarded owners through app maintenance.
-pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
+fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceMember + MemberFactory + Send + 'static>(app: &mut VcsArtifactApp<A, M>) {
     let law: serde_json::Value = serde_json::from_str(include_str!("../../🧹️pruning/🧫️fixtures/🔣️.json")).unwrap();
     let row = &law["cases"][1];
     let held = app.store.envelope().vcs.edits.last().unwrap().id.clone();
@@ -67,7 +67,7 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     for _ in 0..100_000 {
         if !app.command_prune_requested() && app.pending_command_prune.is_none() { complete = true; break; }
         assert_eq!(app.command_log.iter().map(|entry| entry.seq).collect::<Vec<_>>(), before);
-        let grant = crate::app::plugin_demand_grant(app.maintenance_retirement_demands(64).unwrap());
+        let grant = crate::bounded_ownership::plugin_demand_grant(app.maintenance_retirement_demands(64).unwrap());
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_items: 0, ..grant }).unwrap());
         assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -84,7 +84,7 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
         let demand = app.command_log.pruned_retirement_demands().unwrap().release_bytes;
         let quoted = app.maintenance_retirement_demands(64).unwrap();
         assert_eq!(quoted.release_bytes, demand);
-        let grant = crate::app::plugin_demand_grant(quoted);
+        let grant = crate::bounded_ownership::plugin_demand_grant(quoted);
         large_owner_seen |= demand == 65536;
         if demand > 0 {
             let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.maintenance_step(RetainedCloneGrant { maximum_release_bytes: demand - 1, ..grant }).unwrap());
@@ -99,12 +99,12 @@ pub(crate) fn test_mounted_command_history_replacement<A: ArtifactApp, M: SpaceM
     app.command_prune_generation += 1;
     app.advance_command_prune_step(RetainedCloneGrant { maximum_items: 1, maximum_depth: 1, ..Default::default() }, false).unwrap();
     assert!(app.pending_command_prune.is_some());
-    let grant = crate::app::plugin_demand_grant(app.close_retirement_demands(64).unwrap());
+    let grant = crate::bounded_ownership::plugin_demand_grant(app.close_retirement_demands(64).unwrap());
     let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| app.close_step(grant).unwrap());
     assert_eq!(step, PluginLifecycleStep::Progress(RetainedCloneProgress { copied_items: 1, ..Default::default() }));
     assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
     assert!(app.pending_command_prune.is_none() && !app.command_prune_requested());
-    crate::app::artifact_app_laws::close_registered_fixture_app(app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    crate::app_testing::artifact_app_laws::close_registered_fixture_app(app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     assert!(app.close_terminal_is_empty());
     eprintln!("[DEBUG] actual mounted replacement preserves held document and pure shell rows; eachpredecisionturn originalpointers/heap0/0; selected65536 physicalextent exact; underfundretains; pendingvisibilitycancelledbeforeappclose");
 }

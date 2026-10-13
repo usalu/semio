@@ -1,0 +1,50 @@
+[package]
+workspace = "../../.."
+name = "semio-s-artifact-stdio-semio-catalog"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Full stdio semio catalog: the semio artifact declared with every subset conversion"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-plugin = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-semio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+# 🔗️ Conversion Dependencies
+semio-s-artifact-stdio-semio-animation-import = { workspace = true }
+semio-s-artifact-stdio-semio-animation-export = { workspace = true }
+semio-s-artifact-stdio-semio-audio-import = { workspace = true }
+semio-s-artifact-stdio-semio-audio-export = { workspace = true }
+semio-s-artifact-stdio-semio-brep-import = { workspace = true }
+semio-s-artifact-stdio-semio-brep-export = { workspace = true }
+semio-s-artifact-stdio-semio-cad-import = { workspace = true }
+semio-s-artifact-stdio-semio-cad-export = { workspace = true }
+semio-s-artifact-stdio-semio-document-import = { workspace = true }
+semio-s-artifact-stdio-semio-document-export = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-import = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-export = { workspace = true }
+semio-s-artifact-stdio-semio-flow-import = { workspace = true }
+semio-s-artifact-stdio-semio-flow-export = { workspace = true }
+semio-s-artifact-stdio-semio-image-import = { workspace = true }
+semio-s-artifact-stdio-semio-image-export = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-import = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
+semio-s-artifact-stdio-semio-model-import = { workspace = true }
+semio-s-artifact-stdio-semio-model-export = { workspace = true }
+semio-s-artifact-stdio-semio-presentation-import = { workspace = true }
+semio-s-artifact-stdio-semio-presentation-export = { workspace = true }
+semio-s-artifact-stdio-semio-value-import = { workspace = true }
+semio-s-artifact-stdio-semio-value-export = { workspace = true }
+semio-s-artifact-stdio-semio-video-import = { workspace = true }
+semio-s-artifact-stdio-semio-video-export = { workspace = true }
+# /🔗️ Conversion Dependencies

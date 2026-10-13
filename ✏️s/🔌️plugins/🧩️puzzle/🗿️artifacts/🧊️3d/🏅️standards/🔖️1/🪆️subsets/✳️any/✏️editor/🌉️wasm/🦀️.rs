@@ -18,8 +18,8 @@ pub use js_sys::{Promise, Uint8Array};
 
 type Puzzle3dApp = VcsArtifactApp<EditorApp<Puzzle3dPlayApp>>;
 
-const PUZZLE3D_ENVELOPE_MAXIMUM_PAGES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
-const PUZZLE3D_ENVELOPE_MAXIMUM_BYTES: usize = store::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
+const PUZZLE3D_ENVELOPE_MAXIMUM_PAGES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_PAGES;
+const PUZZLE3D_ENVELOPE_MAXIMUM_BYTES: usize = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_MAXIMUM_BYTES;
 
 /// 🪪️ Fixed identity-authoring ceiling the browser handle admits once before it authors its first command.
 const PUZZLE3D_IDENTITY_CEILING_BYTES: usize = 201 * semio_framework_job::JOB_PAYLOAD_PAGE_BYTES;
@@ -88,15 +88,15 @@ impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(js_name = admitEnvelopePage)]
     pub fn admit_envelope_page(&self, handle: &Puzzle3dEnvelopeLoadHandle, source: &Uint8Array) -> Result<(), JsValue> {
         let len = usize::try_from(source.length()).map_err(js_fault)?;
-        if len > store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
+        if len > store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES {
             return Err(js_fault("puzzle3d-envelope.page-too-large"));
         }
         let mut app = self.app.borrow_mut();
         app.preflight_artifact_envelope_ingress_page(handle.runtime_handle(), len).map_err(fault_bridge::fault_to_js)?;
         app.construct_and_admit_artifact_envelope_ingress_page(handle.runtime_handle(), len, || {
-            let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+            let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
             source.copy_to(&mut bytes[..len]);
-            store::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
+            store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::from_preflighted_array(bytes, len)
         })
         .map_err(fault_bridge::fault_to_js)
     }
@@ -109,7 +109,7 @@ impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(js_name = pollEnvelopeLoad)]
     pub fn poll_envelope_load(&self, handle: &Puzzle3dEnvelopeLoadHandle) -> Result<u8, JsValue> {
         let mut app = self.app.borrow_mut();
-        let demand = app.maintenance_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
+        let demand = app.maintenance_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
         app.maintenance_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)?;
         match app.advance_artifact_envelope_load(handle.runtime_handle()).map_err(fault_bridge::fault_to_js)? {
             ArtifactEnvelopeDecodeOperationPoll::Pending => Ok(0),
@@ -139,7 +139,7 @@ impl Puzzle3dArtifactVcs {
     #[wasm_bindgen(js_name = closeStep)]
     pub fn close_step(&self) -> Result<bool, JsValue> {
         let mut app = self.app.borrow_mut();
-        let demand = app.close_retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
+        let demand = app.close_retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| fault_bridge::fault_to_js(semio_framework_plugin::Fault::from(error.into_message())))?;
         match app.close_step(funded_turn(demand)).map_err(fault_bridge::fault_to_js)? {
             semio_framework_plugin::PluginLifecycleStep::Complete(_) => Ok(true),
             semio_framework_plugin::PluginLifecycleStep::Progress(_) | semio_framework_plugin::PluginLifecycleStep::AwaitingInput { .. } | semio_framework_plugin::PluginLifecycleStep::Blocked { .. } => Ok(false),
@@ -152,7 +152,7 @@ impl Puzzle3dArtifactVcs {
 /// non-Rust consumers load the real example fixtures without duplicating the DSL grammar.
 #[wasm_bindgen(js_name = puzzle3dParseDslJson)]
 pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let projection = Puzzle3dSnapshot::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
     Ok(semio_framework_pack_json::to_json_string(&projection))
 }

@@ -18,7 +18,7 @@ use semio_framework_value::ValueError;
     use serde::{Deserialize, Serialize};
     use std::collections::{HashMap, HashSet};
     use std::sync::{Arc, LazyLock, Mutex};
-    use store::{create_document_envelope, document_backbone_ref, materialize_document_snapshot, ArtifactBackboneRef, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::document_backbone_ref, os_store::document_materialize::materialize_document_snapshot, os_store::store_schema::ArtifactBackboneRef, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
     use ui_wgpu::wgpu::{ui_recovery_panel, UiNode};
     use vcs::{ArtifactVcs, VcsError};
 
@@ -350,7 +350,7 @@ use semio_framework_value::ValueError;
     //#region 🔖️BackboneDocument
     /// 🧬️ Generic backbone-document envelope — mirrors the dissolved `OsDocument`'s exact shape
     /// (schema/id/name/vcs/transitions/outcomes/conflicts/backbone), parametrized over any `<P, Op>` pair
-    /// `store::create_document_envelope`/`materialize_document_snapshot`/`print_document_pack`/
+    /// `store::os_store::document_materialize::create_document_envelope`/`materialize_document_snapshot`/`print_document_pack`/
     /// `parse_document_pack` already support generically — nothing OS-specific left to hardcode. See
     /// `## The inversion` in the plan: `OsSnapshot`/`OsMutation`/`OsDocument` dissolve into the three
     /// type aliases below instead of one bespoke studio-only document type.
@@ -444,7 +444,7 @@ use semio_framework_value::ValueError;
         /// 🧮️ The edits the event log leaves applied, in fold order — what a projection replays.
         pub fn applied_edit_ids(&self) -> Result<Vec<String>, VcsError> {
             let head = protocol::ViewerHead::canonical_trunk(&protocol::ArtifactId(self.id.clone()));
-            store::fold_event_log::<P, Op>(&self.id, &self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts, &head).map(|fold| fold.applied)
+            store::os_store::ledger::fold_event_log::<P, Op>(&self.id, &self.vcs.edits.iter().collect::<Vec<_>>(), &self.transitions, &self.conflicts, &head).map(|fold| fold.applied)
         }
     }
 
@@ -488,7 +488,7 @@ use semio_framework_value::ValueError;
         P: Clone,
         Op: Clone,
     {
-        ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
+        ArtifactEnvelope::from_owners(store::os_store::store_schema::ArtifactEnvelopeOwners {
             schema: document.schema.clone(),
             id: document.id.clone(),
             vcs: document.vcs.clone(),
@@ -500,7 +500,7 @@ use semio_framework_value::ValueError;
             owner: None,
             lanes: protocol::causal::HistoryFoldIndex::new(),
             viewer_checkpoint_id: None,
-            edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
+            edit_messages: store::os_store::ledger::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages.clone()),
             conflicts: document.conflicts.clone(),
             transitions: document.transitions.clone(),
             history_shape: protocol::HistoryShape::Document,
@@ -510,7 +510,7 @@ use semio_framework_value::ValueError;
 
     /// 🧺️ Moves every backbone owner into the canonical envelope shell.
     fn take_backbone_envelope<P, Op>(document: BackboneDocument<P, Op>) -> (String, ArtifactEnvelope<P, Op>) {
-        let envelope = ArtifactEnvelope::from_owners(store::ArtifactEnvelopeOwners {
+        let envelope = ArtifactEnvelope::from_owners(store::os_store::store_schema::ArtifactEnvelopeOwners {
             schema: document.schema,
             id: document.id,
             vcs: document.vcs,
@@ -522,7 +522,7 @@ use semio_framework_value::ValueError;
             owner: None,
             lanes: protocol::causal::HistoryFoldIndex::new(),
             viewer_checkpoint_id: None,
-            edit_messages: store::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
+            edit_messages: store::os_store::ledger::ArtifactEditMessageLedger::from_preflighted_entries(document.edit_messages),
             conflicts: document.conflicts,
             transitions: document.transitions,
             history_shape: protocol::HistoryShape::Document,
@@ -534,7 +534,7 @@ use semio_framework_value::ValueError;
     /// 🧺️ Retires a copied backbone envelope through its exact bounded owner catalogue.
     fn close_backbone_envelope<P, Op>(envelope: ArtifactEnvelope<P, Op>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         use store::ErasedSnapshotRetirement as _;
@@ -542,7 +542,7 @@ use semio_framework_value::ValueError;
             semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) }
         }
         let fault = |error: ValueError| VcsError::ValidationFailed(error.to_string());
-        let owners = store::funded_bounded_artifact_store_owners::<P, Op>().map_err(fault)?;
+        let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<P, Op>().map_err(fault)?;
         let birth = grant_of(owners.uninstalled_envelope_retirement_demands(&envelope));
         let (mut retirement, _) = owners.retire_envelope_uninstalled(envelope, birth).map_err(|(error, _, _)| fault(error))?;
         loop {
@@ -560,7 +560,7 @@ use semio_framework_value::ValueError;
     /// 🧺️ Lends a copied authoritative envelope, then retires every exact nested owner.
     fn with_backbone_envelope<P, Op, R>(document: &BackboneDocument<P, Op>, read: impl FnOnce(&ArtifactEnvelope<P, Op>) -> Result<R, VcsError>) -> Result<R, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let envelope = backbone_envelope_of(document);
@@ -571,55 +571,55 @@ use semio_framework_value::ValueError;
 
     pub fn materialize_backbone_snapshot<P, Op>(document: &BackboneDocument<P, Op>, applied_edit_ids: &[String]) -> Result<P, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         with_backbone_envelope(document, |envelope| resolve_kernel_future(materialize_document_snapshot(envelope, applied_edit_ids)))
     }
 
     /// 📤️ Exports an already-loaded backbone document as pack bytes + ops text.
-    pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactPackFiles, VcsError>
+    pub fn export_backbone_pack<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::serialization::ArtifactPackFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
-        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))
+        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))
     }
 
     /// 📤️ DSL-text counterpart of `export_backbone_pack`.
-    pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::ArtifactTextFiles, VcsError>
+    pub fn export_backbone_dsl<P, Op>(document: &BackboneDocument<P, Op>) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + store::ArtifactDsl,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static + store::os_store::serialization::ArtifactDsl,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
-        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_text(envelope)))
+        with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_text(envelope)))
     }
 
     /// 📦️ Binary pack+spr payload for the whole `BackboneDocument` (name + genesis + event log)
-    /// — the persisted/synced form. `name` rides as a `store::encode_document_pack_bytes`-framed blob
+    /// — the persisted/synced form. `name` rides as a `store::os_store::serialization::encode_document_pack_bytes`-framed blob
     /// wrapping a nested `pack`+`spr` pair; `spr` carries the events, whose fold restores the exact
     /// undo/redo/checkpoint position.
     pub fn encode_backbone_payload<P, Op>(document: &BackboneDocument<P, Op>) -> Result<Vec<u8>, VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
-        let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::print_document_pack(envelope)))?;
-        let inner = resolve_kernel_future(store::encode_document_pack_bytes(&files.pack, &files.spr));
-        Ok(resolve_kernel_future(store::encode_document_pack_bytes(document.name.as_bytes(), &inner)))
+        let files = with_backbone_envelope(document, |envelope| resolve_kernel_future(store::os_store::text_format::print_document_pack(envelope)))?;
+        let inner = resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&files.pack, &files.spr));
+        Ok(resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(document.name.as_bytes(), &inner)))
     }
 
     /// 📥️ Inverse of `encode_backbone_payload` — `expected_schema` guards against decoding one
     /// document kind's bytes as another.
     pub fn decode_backbone_payload<P, Op>(bytes: &[u8], expected_schema: &str) -> Result<BackboneDocument<P, Op>, VcsError>
     where
-        P: Clone + store::ArtifactPack + 'static,
+        P: Clone + store::os_store::serialization::ArtifactPack + 'static,
         Op: Clone + protocol::OpText + protocol::OpBinary + Mutation<P> + 'static,
     {
-        let (name_bytes, inner) = resolve_kernel_future(store::decode_document_pack_bytes(bytes))?;
+        let (name_bytes, inner) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(bytes))?;
         let name = String::from_utf8(name_bytes).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-        let (pack, spr) = resolve_kernel_future(store::decode_document_pack_bytes(&inner))?;
-        let parsed: store::ParsedDocumentText<P, Op> = resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let (pack, spr) = resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<P, Op> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let envelope = parsed.into_envelope();
         if envelope.schema != expected_schema {
             envelope.retire_unadopted();
@@ -851,7 +851,7 @@ use semio_framework_value::ValueError;
         pub fn new(document: OsWorkflowArtifactDocument, actor: protocol::ActorId) -> Result<Self, VcsError> {
             let (name, envelope) = take_backbone_envelope(document);
             let mut inner = resolve_kernel_future(ArtifactStore::new(envelope, actor))?;
-            inner.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
+            inner.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners().map_err(|error| VcsError::ValidationFailed(error.to_string()))?).map_err(|(error, owners)| { std::mem::forget(owners); VcsError::ValidationFailed(error.to_string()) })?;
             Ok(Self { inner, name })
         }
 
@@ -943,7 +943,7 @@ use semio_framework_value::ValueError;
         /// 🔗️ Resolves and attaches a backbone by uri. Only available inside the wasm sandbox
         /// (every scheme forwards to the host over the injected `BackboneChannelPort`, a pure queue) —
         /// see {@link attach_backbone} for the native counterpart, which takes an explicit
-        /// `Box<dyn store::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
+        /// `Box<dyn store::os_store::backbone::Backbone>` since native has no URI→IO auto-resolution anymore (`framework/sync`'s
         /// `ArtifactHost` module owns constructing the real endpoint via `ArtifactHost`).
         #[cfg(target_arch = "wasm32")]
         pub fn attach_backbone(&mut self, uri: &str) -> Result<(), VcsError> {
@@ -953,11 +953,11 @@ use semio_framework_value::ValueError;
         /// 🔗️ Attaches an explicit native backbone channel (typically a `channel_backbone` handed
         /// out by `framework/sync`'s `ArtifactHost::open`, per `ArtifactHost`'s canonical sequence).
         #[cfg(not(target_arch = "wasm32"))]
-        pub fn attach_backbone(&mut self, backbone: store::Backbones) -> Result<(), VcsError> {
+        pub fn attach_backbone(&mut self, backbone: store::os_store::backbone::Backbones) -> Result<(), VcsError> {
             resolve_kernel_future(self.inner.attach_backbone(backbone))
         }
 
-        pub fn detach_backbone(&mut self) -> Result<Option<store::Backbones>, VcsError> {
+        pub fn detach_backbone(&mut self) -> Result<Option<store::os_store::backbone::Backbones>, VcsError> {
             self.inner.detach_backbone()
         }
 
@@ -972,20 +972,20 @@ use semio_framework_value::ValueError;
     /// binary pack+spr blob, never JSON. Every implementor today (`MemoryBackbonePort`,
     /// `LocalStorageBackbonePort`, and the `file://`/`folder://` host ports opened by
     /// `open_file_space_backbone`/`open_folder_space_backbone`) is bridged from the underlying
-    /// string-typed `store::BackbonePort` via the blanket impl below — see its doc for why.
+    /// string-typed `store::os_store::backbone::BackbonePort` via the blanket impl below — see its doc for why.
     pub trait OsBackbonePort: Send + Sync {
         fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError>;
         fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError>;
     }
 
-    /// 🌉️ `store::BackbonePort` is the shared string-typed transport for every document kind
+    /// 🌉️ `store::os_store::backbone::BackbonePort` is the shared string-typed transport for every document kind
     /// across the whole kernel (localStorage, in-memory, host file/folder ports) — changing its own
     /// signature to bytes is out of scope here. Base64 is the bridge: an empty payload maps to an
     /// empty string both ways (preserving `delete_os_space`'s tombstone-write semantics), and every
     /// non-empty payload round-trips byte-for-byte through the encoding.
-    impl<T: store::BackbonePort + Send + Sync> OsBackbonePort for T {
+    impl<T: store::os_store::backbone::BackbonePort + Send + Sync> OsBackbonePort for T {
         fn read(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-            let text = resolve_kernel_future(store::BackbonePort::read(self, uri))?;
+            let text = resolve_kernel_future(store::os_store::backbone::BackbonePort::read(self, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
@@ -994,21 +994,21 @@ use semio_framework_value::ValueError;
 
         fn write(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
             if payload.is_empty() {
-                return resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
+                return resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, ""));
             }
-            resolve_kernel_future(store::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
+            resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
         }
     }
 
     /// 🧬️ Enum dispatch over every `OsBackbonePort` implementor (O1 — dyn dispatch dropped in
     /// favor of enum/match dispatch, mirroring `🏪️store`'s `BackbonePorts` shape exactly —
-    /// `📓️terra-store-dedyn-report.md`). `Store` covers every `store::BackbonePort`-shaped transport
+    /// `📓️terra-store-dedyn-report.md`). `Store` covers every `store::os_store::backbone::BackbonePort`-shaped transport
     /// (in-memory, localStorage) via the blanket bridge above; `Space` covers the host-only
     /// file/folder-backed `backbone::SpaceBackbonePort`. These are the only two implementors in the
-    /// tree (verified: one blanket impl over `store::BackbonePort`, one direct impl on
+    /// tree (verified: one blanket impl over `store::os_store::backbone::BackbonePort`, one direct impl on
     /// `backbone::SpaceBackbonePort` — `📓️terra-os-backbone-report.md`).
     pub enum OsBackbonePorts {
-        Store(store::BackbonePorts),
+        Store(store::os_store::backbone::BackbonePorts),
         Space(crate::backbone::SpaceBackbonePort),
     }
 
@@ -1032,7 +1032,7 @@ use semio_framework_value::ValueError;
     /// shared by every catalog write path below (space manifests, collections).
     fn sync_backbone_document<P, Op>(document: &BackboneDocument<P, Op>, backbone_uri: &str, port: &Arc<OsBackbonePorts>) -> Result<(), VcsError>
     where
-        P: Clone + ToValue + FromValue + store::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
+        P: Clone + ToValue + FromValue + store::os_store::serialization::ArtifactPack + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
         Op: Clone + ToValue + FromValue + Mutation<P> + protocol::OpText + protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + store::ArtifactCanonicalJsonTree + 'static,
     {
         let mut synced = document.clone();
@@ -1178,7 +1178,7 @@ use semio_framework_value::ValueError;
     /// backbone under the manifest's own name (the catalog lists a studio by its document name). Does not create a collection — a manifest imported this way is expected to already
     /// reference its own collections (a fresh, collection-less space only comes from `create_os_space`).
     pub fn import_os_space_from_dsl(dsl: &str, port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+        let snapshot = <space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl).map_err(|error| VcsError::Deserialize(error.message))?;
         let name = snapshot.name.trim().to_owned();
         admit_os_space_document(create_backbone_document(space::S_SPACE_SCHEMA, "", &name, snapshot), port)
     }
@@ -1186,7 +1186,7 @@ use semio_framework_value::ValueError;
     /// 📦️ Pack counterpart of `import_os_space_from_dsl`: admits the pair under its own document id and the head
     /// manifest's name (the catalog lists a studio by its document name).
     pub fn import_os_space_from_pack(pack: &[u8], spr: &[u8], port: &Arc<OsBackbonePorts>) -> Result<OsSpaceCatalogEntry, VcsError> {
-        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = resolve_kernel_future(store::os_store::text_format::parse_document_pack(pack, spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
         let name = parsed.snapshot.name.trim().to_owned();
         // 🧺️ See `decode_backbone_payload` above — the shell must be consumed, never dropped.
         let mut owners = parsed.into_envelope().into_owners();
@@ -1207,12 +1207,12 @@ use semio_framework_value::ValueError;
     }
 
     /// 📤️ Exports an already-loaded space manifest as pack bytes + ops text.
-    pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::ArtifactPackFiles, VcsError> {
+    pub fn export_os_space_pack(document: &OsSpaceDocument) -> Result<store::os_store::serialization::ArtifactPackFiles, VcsError> {
         export_backbone_pack(document)
     }
 
     /// 📤️ DSL-text counterpart of `export_os_space_pack`.
-    pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::ArtifactTextFiles, VcsError> {
+    pub fn export_os_space_dsl(document: &OsSpaceDocument) -> Result<store::os_store::text_format::ArtifactTextFiles, VcsError> {
         export_backbone_dsl(document)
     }
 
@@ -1378,7 +1378,7 @@ pub mod backbone {
     use crate::store_sync::{FolderEventLogStorage, FolderTextStorage};
     #[cfg(not(target_arch = "wasm32"))]
     use std::sync::Arc;
-    use store::MemoryBackbonePort;
+    use store::os_store::backbone::MemoryBackbonePort;
     use vcs::VcsError;
 
     /// 🗂️ Conventional single-document id used inside a folder-backed studio backbone — a studio
@@ -1390,9 +1390,9 @@ pub mod backbone {
     enum SpacePortKind {
         /// 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
         /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
-        /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::parse_document_pack`/
+        /// `FolderTextStorage::write_pack`/`read_pack` and the typed `store::os_store::text_format::parse_document_pack`/
         /// `print_document_pack::<OsSnapshot, OsMutation>` (this crate is fully typed, no
-        /// `store::ArtifactCodec` indirection needed).
+        /// `store::os_store::serialization::ArtifactCodec` indirection needed).
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
@@ -1430,7 +1430,7 @@ pub mod backbone {
 
     /// 🌉️ `read`/`write`'s `payload` is the same `encode_os_space_payload` blob every
     /// `OsBackbonePort` implementor carries: a `name` byte blob wrapping a nested `pack`+`spr` pair
-    /// (`store::encode_document_pack_bytes`, twice). The file/folder storage backends below have no
+    /// (`store::os_store::serialization::encode_document_pack_bytes`, twice). The file/folder storage backends below have no
     /// slot for `name` (they only ever persisted `pack`+`spr`, or before this crate's pack/dsl rollout
     /// bare JSON) — that half of the payload is dropped on write and reconstituted empty on read,
     /// same loss the previous JSON-through-`OsEnvelope` bridge already had (`OsEnvelope` itself has no
@@ -1446,7 +1446,7 @@ pub mod backbone {
                         } else {
                             match crate::host::resolve_kernel_future(storage.read(document_id, extension))? {
                                 Some(text_files) => {
-                                    let snapshot = <space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
+                                    let snapshot = <space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text_files.dsl).map_err(|error| VcsError::Deserialize(error.message))?;
                                     let document: crate::host::OsSpaceDocument = crate::host::create_backbone_document(space::S_SPACE_SCHEMA, document_id, "", snapshot);
                                     let pack_files = crate::host::export_backbone_pack(&document)?;
                                     (pack_files.pack, pack_files.spr)
@@ -1454,14 +1454,14 @@ pub mod backbone {
                                 None => return Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
                             }
                         };
-                        let inner = crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&pack, &spr));
-                        return Ok(crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&[], &inner)));
+                        let inner = crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
+                        return Ok(crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::Folder(folder_uri, storage) if uri == folder_uri => {
                         let (pack, spr) = crate::host::resolve_kernel_future(storage.read(SPACE_FOLDER_DOCUMENT_ID))?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")))?;
-                        let inner = crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&pack, &spr));
-                        return Ok(crate::host::resolve_kernel_future(store::encode_document_pack_bytes(&[], &inner)));
+                        let inner = crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&pack, &spr));
+                        return Ok(crate::host::resolve_kernel_future(store::os_store::serialization::encode_document_pack_bytes(&[], &inner)));
                     }
                     _ => {}
                 }
@@ -1475,9 +1475,9 @@ pub mod backbone {
                     #[cfg(not(target_arch = "wasm32"))]
                     SpacePortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
                         let (pack, spr) = decode_os_space_pack_payload(payload)?;
-                        let parsed: store::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
-                        let dsl_mirror = store::ArtifactDsl::print_dsl(&parsed.into_snapshot());
-                        let pack_files = store::ArtifactPackFiles { pack, spr, ops: String::new() };
+                        let parsed: store::os_store::text_format::ParsedDocumentText<space::SpaceSnapshot, space::SpaceMutation> = crate::host::resolve_kernel_future(store::os_store::text_format::parse_document_pack(&pack, &spr)).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+                        let dsl_mirror = store::os_store::serialization::ArtifactDsl::print_dsl(&parsed.into_snapshot());
+                        let pack_files = store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() };
                         return crate::host::resolve_kernel_future(storage.write_pack(document_id, extension, &pack_files, &dsl_mirror));
                     }
                     #[cfg(not(target_arch = "wasm32"))]
@@ -1496,16 +1496,16 @@ pub mod backbone {
     /// pair — the half of the payload `SpaceBackbonePort`'s file/folder storage actually persists.
     #[cfg(not(target_arch = "wasm32"))]
     fn decode_os_space_pack_payload(payload: &[u8]) -> Result<(Vec<u8>, Vec<u8>), VcsError> {
-        let (_name, inner) = crate::host::resolve_kernel_future(store::decode_document_pack_bytes(payload))?;
-        crate::host::resolve_kernel_future(store::decode_document_pack_bytes(&inner))
+        let (_name, inner) = crate::host::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(payload))?;
+        crate::host::resolve_kernel_future(store::os_store::serialization::decode_document_pack_bytes(&inner))
     }
 
     impl SpaceBackbonePort {
-        /// 🌉️ `self.memory` is a plain `store::BackbonePort` (string-typed) fallback for any uri
+        /// 🌉️ `self.memory` is a plain `store::os_store::backbone::BackbonePort` (string-typed) fallback for any uri
         /// that isn't this port's own configured file/folder uri (e.g. the space catalog uri) — bridge
-        /// bytes↔string via base64, same as the blanket `impl<T: store::BackbonePort> OsBackbonePort`.
+        /// bytes↔string via base64, same as the blanket `impl<T: store::os_store::backbone::BackbonePort> OsBackbonePort`.
         fn read_via_memory(&self, uri: &str) -> Result<Vec<u8>, VcsError> {
-            let text = crate::host::resolve_kernel_future(store::BackbonePort::read(&self.memory, uri))?;
+            let text = crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::read(&self.memory, uri))?;
             if text.is_empty() {
                 return Ok(Vec::new());
             }
@@ -1514,9 +1514,9 @@ pub mod backbone {
 
         fn write_via_memory(&self, uri: &str, payload: &[u8]) -> Result<(), VcsError> {
             if payload.is_empty() {
-                return crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, ""));
+                return crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, ""));
             }
-            crate::host::resolve_kernel_future(store::BackbonePort::write(&self.memory, uri, &base64_codec::base64_standard_encode(payload)))
+            crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(&self.memory, uri, &base64_codec::base64_standard_encode(payload)))
         }
     }
 
@@ -4661,6 +4661,6 @@ pub use registry::{
     try_os_artifact_descriptor, workflow_palette, AppPaletteEntry, OsAppRegistration, OsArtifactDescriptor, OsArtifactKindId, PluginRegistry,
 };
 pub use semio_framework::*;
-pub use store::{document_backbone_ref, set_host_backbone_port, ArtifactBackboneRef, ArtifactCommand, LocalStorageBackbonePort, MemoryBackbonePort};
+pub use store::{os_store::store_schema::document_backbone_ref, os_store::backbone::set_host_backbone_port, os_store::store_schema::ArtifactBackboneRef, os_store::store_schema::ArtifactCommand, os_store::backbone::LocalStorageBackbonePort, os_store::backbone::MemoryBackbonePort};
 pub use ui_wgpu::wgpu::*;
 pub use vcs::{Author, Checkpoint, VcsError};

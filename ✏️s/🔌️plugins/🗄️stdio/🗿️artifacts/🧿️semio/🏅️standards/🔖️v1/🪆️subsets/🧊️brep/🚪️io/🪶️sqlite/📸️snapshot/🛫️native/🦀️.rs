@@ -1,10 +1,10 @@
 //! 🧊️ Writes all BRep topology and analytic/spline geometry directly under cumulative native admission.
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2,SemioPoint3};
-use crate::standards::v1::subsets::brep::schema::snapshot::{SemioBrepSnapshot,BrepCurve,BrepCurve2,BrepSurface};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_encoding::{self,Writer};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use crate::schema::snapshot::{SemioBrepSnapshot, BrepCurve, BrepCurve2, BrepSurface};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_encoding::{self, Writer};
 use semio_framework_value::ValueError;
 use store::sqlite_snapshot::{SnapshotEncoding,SqliteSnapshotControl};
-pub(crate) fn encode(value:&SemioBrepSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.brep.dsl v1\n","stdio.semio.brep.pack v1",control,|control|crate::standards::v1::subsets::brep::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}
+pub(crate) fn encode(value:&SemioBrepSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io::IoPayload,ValueError>{native_encoding::encode_admitted(encoding,"semio stdio.semio.brep.dsl v1\n","stdio.semio.brep.pack v1",control,|control|crate::io::sqlite::snapshot::admit_values(value,store::sqlite_snapshot::SqliteSnapshotPhase::EncodeNative,control),|writer,encoding|fields(value,writer,encoding),native_owner)}
 fn comma(w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.delimiter(b",",e)}
 fn boolean(value:bool,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.byte(if e==SnapshotEncoding::Binary{u8::from(value)}else{if value{b'1'}else{b'0'}})}
 fn point2(value:&SemioPoint2,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{w.delimiter(b"[",e)?;w.number(value.x,e)?;comma(w,e)?;w.number(value.y,e)?;w.delimiter(b"]",e)}
@@ -31,7 +31,7 @@ fn surface(value:&BrepSurface,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Resul
  BrepSurface::Torus{center,axis,major_radius,minor_radius}=>{tag(4,b'T',w,e)?;point3(center,w,e)?;comma(w,e)?;point3(axis,w,e)?;comma(w,e)?;w.number(*major_radius,e)?;comma(w,e)?;w.number(*minor_radius,e)?},
  BrepSurface::Nurbs{control_points,weights,u_count,v_count,degree_u,degree_v,knots_u,knots_v}=>{tag(5,b'N',w,e)?;w.list(control_points,e,|w,value|point3(value,w,e))?;comma(w,e)?;numbers(weights,w,e)?;for value in[u_count,v_count,degree_u,degree_v]{comma(w,e)?;w.integer(u64::from(*value),e)?}comma(w,e)?;numbers(knots_u,w,e)?;comma(w,e)?;numbers(knots_v,w,e)?}
  }w.delimiter(b"]",e)}
-pub(crate) fn fields(value:&SemioBrepSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{
+pub fn fields(value:&SemioBrepSnapshot,w:&mut Writer<'_,'_,'_>,e:SnapshotEncoding)->Result<(),ValueError>{
  w.entities(1)?;if e==SnapshotEncoding::Binary{w.byte(1)?}else{w.bytes(b"schema=")?}w.string(&value.schema,e)?;
  w.delimiter(b"\nvertices=",e)?;w.list(&value.vertices,e,|w,value|{w.delimiter(b"[",e)?;w.string(&value.id,e)?;comma(w,e)?;point3(&value.point,w,e)?;comma(w,e)?;w.number(value.tol,e)?;w.delimiter(b"]",e)})?;
  w.delimiter(b"\nedges=",e)?;w.list(&value.edges,e,|w,value|{w.delimiter(b"[",e)?;for(index,value)in[&value.id,&value.start_vertex,&value.end_vertex].into_iter().enumerate(){if index!=0{comma(w,e)?}w.string(value,e)?}comma(w,e)?;curve(&value.curve,w,e)?;comma(w,e)?;w.number(value.tol,e)?;w.delimiter(b"]",e)})?;

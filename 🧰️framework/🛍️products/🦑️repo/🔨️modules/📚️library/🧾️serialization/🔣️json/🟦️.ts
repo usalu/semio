@@ -10,9 +10,10 @@ function canonicalArrayKey(value: unknown): string | null {
 
 function canonicalValue(value: unknown): unknown {
   if (Array.isArray(value)) {
-    const rows = value.map(canonicalValue);
-    if (rows.every((row) => canonicalArrayKey(row) !== null)) return [...rows].sort((a, b) => Buffer.from(canonicalArrayKey(a) as string).compare(Buffer.from(canonicalArrayKey(b) as string)));
-    return rows;
+    const rows = value.map(canonicalValue), keys = rows.map(canonicalArrayKey);
+    if (!keys.every((key) => key !== null)) return rows;
+    const encoded = keys.map((key) => Buffer.from(key as string));
+    return rows.map((row, index) => ({ row, key: encoded[index]! })).sort((a, b) => a.key.compare(b.key)).map((entry) => entry.row);
   }
   if (!value || typeof value !== "object") return value;
   const source = value as JsonRecord;

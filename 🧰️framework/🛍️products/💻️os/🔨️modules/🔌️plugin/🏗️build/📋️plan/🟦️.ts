@@ -7,7 +7,7 @@ import { ACTIVATION_RECEIPT_FILE, PLAYGROUND_SESSION_OUTPUT_ROOT_ENV, developmen
 
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -21,11 +21,8 @@ const registryGeneratedDirectory = join(repoRoot, "🧰️framework/🛍️produ
 
 
 
-/** 🎚️ The staging profile this process produces and serves — `ship` builds the release tree, every
- * other mode the dev tree. Paired with {@link pluginWasmProfile}, which selects the matching cargo profile. */
-function devStagingProfile(): "dev" | "release" { return semioBuildMode() === "ship" ? "release" : "dev"; }
-
-const pluginOutRoot = pluginModulesRoot(devStagingProfile());
+/** 🔌️ The one plugin-modules root this dev loop stages iterated modules into, beside the shipped ones. */
+const pluginOutRoot = pluginModulesRoot();
 
 /** 🧊️ The one wgpu renderer package the dev router delegates `serve`/`wasm`/`native` to — a single
  * constant so the ship, dev and bench call sites can never drift onto different (or extinct) paths. */
@@ -48,21 +45,6 @@ function ensureWasmTarget(): void {
   if (!probe.stdout.includes(PLUGIN_WASM_TARGET)) {
     runCmd("rustup", ["target", "add", PLUGIN_WASM_TARGET]);
   }
-}
-
-/** 🪶️ Uses only WASI link profiles; arbitrary native-profile overrides fail closed. */
-function pluginWasmProfile(mode = semioBuildMode(), override: string | null = process.env.SEMIO_PLUGIN_PROFILE ?? null): "wasm-dev" | "wasm-release" {
-  return selectComponentWasmProfile(mode, override ?? undefined);
-}
-
-/** 🧊️ The guest's shadow stack is NOT passed here: `-zstack-size` lives in `.cargo/config.toml`'s
- * `[target.wasm32-wasip2]` beside the memory maximum it is carved out of, so a plain `cargo build` into
- * the shared target directory produces the same component this plan does. */
-function pluginCargoArgs(packageName: string, profile: string, manifestPath: string): string[] {
-  selectComponentWasmProfile("dev", profile);
-  const args = ["rustc", "--manifest-path", manifestPath, "-p", packageName, "--target", PLUGIN_WASM_TARGET, "--profile", profile];
-  if (process.env.SEMIO_PLUGIN_SYMBOLS === "1") args.push("--", "-C", "strip=none");
-  return args;
 }
 
 /** 🔨️ Every discovered plugin crate with the generated playground declarations: the one catalog builds select from.
@@ -113,4 +95,4 @@ function resolveCatalogFilterPluginId(filterPlugin?: string, catalog: CatalogSel
   return filterPlugin && !projectedHostPluginFilter(catalog, filterPlugin) ? resolvePlaygroundFilter(filterPlugin).pluginId : undefined;
 }
 
-export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, devStagingProfile, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, pluginCargoArgs, pluginOutRoot, pluginWasmProfile, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };
+export { PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_WASM_TARGET, type ResolvedPlaygroundFilter, WGPU_PACKAGE_ROOT, WGPU_SCRIPT_PATH, discoverPluginBuildCatalog, ensureWasmTarget, playgroundCatalog, pluginOutRoot, resolveCatalogFilterPluginId, resolvePlaygroundFilter, resolvePluginBuildTargets };

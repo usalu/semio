@@ -137,30 +137,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🌎️hub/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "test-all-features": {
       "executor": "nx:run-commands",
       "dependsOn": [
@@ -168,7 +144,7 @@
           "projects": [
             "@semio-tech/gis-plugin"
           ],
-          "target": "component-release"
+          "target": "component"
         }
       ],
       "options": {
@@ -644,6 +620,15 @@
       "options": {
         "cwd": "🌎️hub/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts directory-ordered-publication-check"
+      },
+      "outputs": []
+    },
+    "unit-census-check": {
+      "executor": "nx:run-commands",
+      "cache": false,
+      "options": {
+        "cwd": "🌎️hub/📦️packages/🦀️rust",
+        "command": "bun ./📜️script.ts unit-census-check"
       },
       "outputs": []
     },
@@ -1384,7 +1369,7 @@
             "@semio-tech/gis-plugin",
             "@semio-tech/stdio-plugin"
           ],
-          "target": "component-release"
+          "target": "component"
         }
       ]
     },
@@ -1401,7 +1386,7 @@
           "projects": [
             "@semio-tech/gis-plugin"
           ],
-          "target": "component-release"
+          "target": "component"
         }
       ]
     },

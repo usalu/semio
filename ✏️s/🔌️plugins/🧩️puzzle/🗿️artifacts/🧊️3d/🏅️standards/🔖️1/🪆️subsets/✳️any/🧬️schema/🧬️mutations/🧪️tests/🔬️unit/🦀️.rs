@@ -300,20 +300,20 @@ fn selection_leaves_are_editable_through_their_payload_value() {
 #[semio_framework_async_macros::async_test]
 async fn a_drag_edited_in_history_replays_its_downstream() {
     use protocol::OpBinary;
-    let mut store = crate::host::owned::puzzle3d_store(store::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, "selection-time-travel", selection_scene([0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
+    let mut store = crate::host::owned::puzzle3d_store(store::os_store::document_materialize::create_document_envelope::<Puzzle3dSnapshot, Puzzle3dMutation>(crate::PUZZLE_3D_SCHEMA, "selection-time-travel", selection_scene([0.0; 3]), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("the store opens");
     let log = [drag_selection(vec!["o1".into()], [1.0, 0.0, 0.0]), rotate_selection(vec!["o1".into()], [0.0, 0.0, 1.0], std::f64::consts::FRAC_PI_2), drag_selection(vec!["o1".into(), "v1".into()], [0.0, 2.0, 0.0])];
     for mutation in &log {
-        store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection gesture applies");
+        store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a selection gesture applies");
     }
     let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
     let edited = drag_selection(vec!["o1".into()], [5.0, 0.0, 0.0]);
-    let drafts: std::collections::BTreeMap<protocol::MutationId, protocol::InputReplacement> = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
+    let drafts: protocol::HistoryInputDrafts = [(ids[0].clone(), protocol::InputReplacement::Input { schema: crate::PUZZLE_3D_SCHEMA.into(), payload: edited.encode_op().expect("the edited leaf encodes") })].into_iter().collect();
     let mut preview = store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref().clone();
     assert_eq!(preview.objects[0].origin, [0.0; 3], "the preview base is the state right before the edited drag");
     apply_puzzle3d_mutation(&mut preview, &edited).expect("the draft applies to its base");
     assert_eq!((preview.objects[0].origin, preview.objects[0].orientation), ([5.0, 0.0, 0.0], None), "the preview shows the draft and nothing downstream");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited drag");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a clean edit never blocks finalizing");
     let mut fresh = selection_scene([0.0; 3]);
@@ -349,13 +349,13 @@ fn kinds_match_the_enum_and_the_catalog() {
 
 #[test]
 fn play_snapshot_pack_shares_the_typed_record_identity_and_round_trips() {
-    let spec = <Puzzle3dPlaySnapshot as store::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
+    let spec = <crate::Puzzle3dPlaySnapshot as store::os_store::serialization::ArtifactPack>::record_spec().expect("play snapshot declares its record spec");
     assert_eq!(store::os_pack::schema_hash(&spec), store::os_pack::schema_hash(&Puzzle3dSnapshot::__dsl_spec()));
     assert_ne!(store::os_pack::schema_hash(&spec), [0u8; 32]);
-    let play = Puzzle3dPlaySnapshot::from_typed(Puzzle3dSnapshot::default());
-    let bytes = store::ArtifactPack::encode_pack(&play);
-    assert_eq!(bytes, store::ArtifactPack::encode_pack(play.typed()));
-    assert_eq!(<Puzzle3dPlaySnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
+    let play = crate::Puzzle3dPlaySnapshot::from_typed(Puzzle3dSnapshot::default());
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&play);
+    assert_eq!(bytes, store::os_store::serialization::ArtifactPack::encode_pack(play.typed()));
+    assert_eq!(<crate::Puzzle3dPlaySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode play pack"), play);
 }
 
 /// 📍️ LAW (design wave-2 ruling): deleting or disconnecting a MIDDLE row restores it at its original position, and the

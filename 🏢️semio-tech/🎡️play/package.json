@@ -18,7 +18,6 @@
   },
   "scripts": {
     "build": "bun nx run @semio-tech/semio-tech-play:build",
-    "build:fresh": "bun nx run @semio-tech/semio-tech-play:build-fresh",
     "test": "bun nx run @semio-tech/semio-tech-play:test",
     "test:e2e": "bun nx run @semio-tech/semio-tech-play:test-e2e",
     "test:release": "bun nx run @semio-tech/semio-tech-play:test-release",

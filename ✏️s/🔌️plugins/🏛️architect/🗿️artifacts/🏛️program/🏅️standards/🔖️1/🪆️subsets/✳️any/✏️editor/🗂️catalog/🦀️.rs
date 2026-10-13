@@ -8,15 +8,12 @@
 
 use crate::editor::architect::chrome::{element_label, entity_to_json};
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-use crate::registers::{
-    Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind,
-    Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus,
-};
-use crate::schema::mutations as leaves;
+use crate::standards::v1::subsets::any::schema::registers::{Adjacency, AdjacencyKind, AnalysisKind, AnalysisRecord, ConnectionKind, EngagementLevel, Function, FunctionKind, InfluenceLevel, Issue, IssueSeverity, ProgramElement, ProgramElementKind, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, UserCategory, UserProfile, ValidationStatus};
+use crate::standards::v1::subsets::any::schema::mutations as leaves;
 use crate::standards::v1::subsets::any::schema::inferences::AnalysisResult;
 use crate::standards::v1::subsets::any::schema::inferences::ProgramReport;
 use crate::standards::v1::subsets::any::schema::normalize_pair;
-use crate::{EntityHeader, EntityId, ProgramSnapshot, TextField, TraceKind, TraceLink};
+use crate::standards::v1::subsets::any::schema::{kernel::{EntityHeader, EntityId, TextField, TraceKind, TraceLink}, snapshot::ProgramSnapshot};
 use semio_framework_value::DslValue as Value;
 use semio_framework_plugin::ActionArgOption;
 use semio_framework_ui_locale::LocalizedLabel;
@@ -112,10 +109,10 @@ pub fn default_element(name: impl Into<String>) -> ProgramElement {
         kind: ProgramElementKind::Room,
         parent_id: None,
         level: None,
-        area: crate::QuantitySpec::default(),
-        volume: crate::QuantitySpec::default(),
-        height: crate::QuantitySpec::default(),
-        occupancy: crate::QuantitySpec::default(),
+        area: crate::standards::v1::subsets::any::schema::kernel::QuantitySpec::default(),
+        volume: crate::standards::v1::subsets::any::schema::kernel::QuantitySpec::default(),
+        height: crate::standards::v1::subsets::any::schema::kernel::QuantitySpec::default(),
+        occupancy: crate::standards::v1::subsets::any::schema::kernel::QuantitySpec::default(),
         function_ids: Vec::new(),
         activity_ids: Vec::new(),
         user_profile_ids: Vec::new(),
@@ -434,7 +431,7 @@ pub fn default_issue(label: &str) -> Issue {
         summary: TextField::plain(""),
         issue_description: TextField::plain(""),
         severity: IssueSeverity::Minor,
-        issue_priority: crate::Priority::Preferred,
+        issue_priority: crate::standards::v1::subsets::any::schema::kernel::Priority::Preferred,
         reporter_id: None,
         assignee_id: None,
         affected_entity_ids: Vec::new(),
@@ -458,11 +455,11 @@ pub fn default_function(label: &str) -> Function {
         code: String::new(),
         kind: FunctionKind::Primary,
         purpose: TextField::plain(""),
-        criticality: crate::Priority::Preferred,
+        criticality: crate::standards::v1::subsets::any::schema::kernel::Priority::Preferred,
         performance_targets: Vec::new(),
         service_level: None,
         operating_hours: None,
-        staffing: crate::QuantitySpec::default(),
+        staffing: crate::standards::v1::subsets::any::schema::kernel::QuantitySpec::default(),
         equipment_ids: Vec::new(),
         resource_ids: Vec::new(),
         activity_ids: Vec::new(),
@@ -532,7 +529,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
         "stakeholders" => create!(CreateStakeholder, create_stakeholder, stakeholder, default_stakeholder(label)),
         "users" => create!(CreateUserProfile, create_user_profile, user_profile, default_user(label)),
         "activities" => {
-            let item: crate::Activity = default_from_json(
+            let item: crate::standards::v1::subsets::any::schema::registers::Activity = default_from_json(
                 "activities",
                 label,
                 semio_framework_value::DslValue::object([("code".to_string(), semio_framework_value::DslValue::String("ACT".to_string())), ("category".to_string(), semio_framework_value::DslValue::String("general".to_string())), ("activityType".to_string(), semio_framework_value::DslValue::String("general".to_string()))]),
@@ -547,7 +544,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateAssumption,
             create_assumption,
             assumption,
-            default_from_json::<crate::Assumption>(
+            default_from_json::<crate::standards::v1::subsets::any::schema::registers::Assumption>(
                 "assumptions",
                 label,
                 semio_framework_value::DslValue::object([("statement".to_string(), semio_framework_value::DslValue::object([("text".to_string(), semio_framework_value::DslValue::String(String::new()))])), ("validationStatus".to_string(), semio_framework_value::DslValue::String("pending".to_string()))]),
@@ -558,7 +555,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateConstraintRecord,
                 create_constraint_record,
                 constraint_record,
-                default_from_json::<crate::ConstraintRecord>(
+                default_from_json::<crate::standards::v1::subsets::any::schema::registers::ConstraintRecord>(
                     "constraints",
                     label,
                     semio_framework_value::DslValue::object([
@@ -575,7 +572,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateComplianceRecord,
                 create_compliance_record,
                 compliance_record,
-                default_from_json::<crate::ComplianceRecord>(
+                default_from_json::<crate::standards::v1::subsets::any::schema::registers::ComplianceRecord>(
                     "compliance",
                     label,
                     semio_framework_value::DslValue::object([
@@ -591,7 +588,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateApprovalRecord,
             create_approval_record,
             approval_record,
-            default_from_json::<crate::ApprovalRecord>(
+            default_from_json::<crate::standards::v1::subsets::any::schema::registers::ApprovalRecord>(
                 "approvals",
                 label,
                 semio_framework_value::DslValue::object([
@@ -606,7 +603,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
                 CreateMeetingRecord,
                 create_meeting_record,
                 meeting_record,
-                default_from_json::<crate::MeetingRecord>(
+                default_from_json::<crate::standards::v1::subsets::any::schema::registers::MeetingRecord>(
                     "meetings",
                     label,
                     semio_framework_value::DslValue::object([("meetingType".to_string(), semio_framework_value::DslValue::String("workshop".to_string())), ("quorumMet".to_string(), semio_framework_value::DslValue::Bool(false)), ("meetingStatus".to_string(), semio_framework_value::DslValue::String("draft".to_string()))]),
@@ -643,7 +640,7 @@ pub fn add_register_item_operation(program: &ProgramSnapshot, register: &str, la
             CreateTemplateRecord,
             create_template_record,
             template_record,
-            default_from_json::<crate::TemplateRecord>(
+            default_from_json::<crate::standards::v1::subsets::any::schema::registers::TemplateRecord>(
                 "template",
                 label,
                 semio_framework_value::DslValue::object([

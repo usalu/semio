@@ -98,12 +98,12 @@ pub const PROCEDURE_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 
 /// 📖️ Parses `.imperative` DSL text into an `ProcedureSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<ProcedureSnapshot, semio_framework_diagnostic::TextError> {
-    <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints an `ProcedureSnapshot` back to `.imperative` DSL text.
 pub fn print_dsl(document: &ProcedureSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 //#endregion 🔖️Api
 
@@ -137,7 +137,7 @@ pub(crate) fn parse_pack_record_text(body: &str) -> Result<ProcedureSnapshot, se
 }
 
 /// 🎁 `ArtifactDsl` and `ArtifactPack` are the derived text and pack of `ProcedurePackRecord`.
-impl store::ArtifactDsl for ProcedureSnapshot {
+impl store::os_store::serialization::ArtifactDsl for ProcedureSnapshot {
     const EXTENSION: &'static str = "imperative";
     fn envelope_id() -> &'static str {
         "imperative.imperative"
@@ -151,7 +151,7 @@ impl store::ArtifactDsl for ProcedureSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = print_pack_record_text(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -168,14 +168,14 @@ pub fn decode_procedure_snapshot_json(text: &str) -> Result<ProcedureSnapshot, S
 }
 
 /// 📝️ Parses `.imperative.dsl.semio` text into a [`ProcedureSnapshot`] — a named pass-through of this type's own
-/// `store::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
+/// `store::os_store::serialization::ArtifactDsl` impl, whose trait and error type are both unnameable outside this crate.
 pub fn parse_procedure_dsl(text: &str) -> Result<ProcedureSnapshot, String> {
-    <ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 📝️ Renders a [`ProcedureSnapshot`] back as `.imperative.dsl.semio` text — the inverse of [`parse_procedure_dsl`].
 pub fn print_procedure_dsl(snapshot: &ProcedureSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

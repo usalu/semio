@@ -23,7 +23,7 @@ use framework_schema::ArtifactSchema;
 use protocol::Inference;
 use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
-use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
+use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
 use std::collections::hash_map::DefaultHasher;
 use std::collections::HashMap;
 use std::hash::{Hash, Hasher};

@@ -118,13 +118,13 @@ async fn exact_native_direct_pack_and_dsl_roundtrips() {
     assert_exact("direct export", &direct).await;
     assert_eq!(crate::standards::v2x3::engine::encode_ifc2x3(&imported).expect("repeat export"), direct);
 
-    let packed = store::ArtifactPack::encode_pack(&imported);
-    let unpacked = <Ifc2x3Snapshot as store::ArtifactPack>::decode_pack(&packed).expect("pack decode");
+    let packed = store::os_store::serialization::ArtifactPack::encode_pack(&imported);
+    let unpacked = <Ifc2x3Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("pack decode");
     assert!(unpacked == imported, "pack must retain the complete logical IFC model");
     assert_exact("pack export", &crate::standards::v2x3::engine::encode_ifc2x3(&unpacked).expect("pack export")).await;
 
-    let printed = store::ArtifactDsl::print_dsl(&imported);
-    let parsed = <Ifc2x3Snapshot as store::ArtifactDsl>::parse_dsl(&printed).expect("DSL parse");
+    let printed = store::os_store::serialization::ArtifactDsl::print_dsl(&imported);
+    let parsed = <Ifc2x3Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("DSL parse");
     assert!(parsed == imported, "DSL must retain the complete logical IFC model");
     assert_exact("DSL export", &crate::standards::v2x3::engine::encode_ifc2x3(&parsed).expect("DSL export")).await;
 }

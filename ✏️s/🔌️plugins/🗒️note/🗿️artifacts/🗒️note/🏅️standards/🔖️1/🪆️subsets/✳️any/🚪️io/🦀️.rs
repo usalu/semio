@@ -24,10 +24,11 @@
 
 use crate::{NoteBlockNode, NoteSnapshot, NoteTextParagraph, NoteTextRun};
 use {semio_framework_plugin::app::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::app::ErasedComposeSource,semio_framework_plugin::app::IoDirection,semio_framework_plugin::app::IoKey,semio_framework_plugin::app::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io as semio_drawing_composer;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::io as semio_drawing_composer;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 use serde_json::Value;
 
@@ -204,7 +205,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
     ensure_semio_drawing_bridge_registered();
     let (width, height) = note_document_bounds(document);
     let drawing = note_document_to_drawing_snapshot(document);
-    let drawing_bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(&drawing);
+    let drawing_bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&drawing);
     let key = IoKey {
         artifact_kind: NOTE_DRAWING_DIALECT.artifact_kind.to_string(),
         standard: NOTE_DRAWING_DIALECT.standard.0.to_string(),
@@ -220,7 +221,7 @@ pub fn note_document_to_svg(document: &NoteSnapshot) -> Result<(String, u32, u32
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(_) => return Err("note→svg via semio/drawing bridge: expected a Binary (ArtifactPack) svg payload".into()),
     };
-    let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
+    let svg_snapshot = <semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&svg_bytes).map_err(|error| format!("note→svg via semio/drawing bridge: decode svg snapshot: {error:?}"))?;
     Ok((write_svg_xml(&svg_snapshot.doc).map_err(|error| format!("note→svg via semio/drawing bridge: write svg: {error}"))?, width, height))
 }
 
@@ -424,7 +425,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: Some(&langs[2]), binary: None },
             mutations: LanguagePair { text: Some(&langs[1]), binary: Some(&langs[4]) },
             inferences: None,
-            codec: store::ArtifactCodec::of::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA.to_string()),
+            codec: store::artifact_codec::<NoteSnapshot, NoteMutation>(NOTE_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

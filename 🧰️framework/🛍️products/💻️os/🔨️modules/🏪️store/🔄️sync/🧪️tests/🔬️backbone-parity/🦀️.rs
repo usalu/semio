@@ -122,7 +122,7 @@ impl ParityHarness {
     fn drain_events(&mut self) {
         while let Ok(event) = self.events.try_recv() {
             if let ArtifactEvent::DocumentBackbone { message } = &event {
-                if let Ok(crate::os_store::BackboneMessage::Retract { mutation_ids }) = crate::os_store::decode_hot_backbone_message_exact(message) {
+                if let Ok(crate::os_store::backbone::BackboneMessage::Retract { mutation_ids }) = crate::os_store::backbone::decode_hot_backbone_message_exact(message) {
                     self.retracted.extend(mutation_ids);
                 }
             }

@@ -1,0 +1,70 @@
+[package]
+workspace = "../../../../../.."
+name = "semio-s-artifact-stdio-semio-brep"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio semio `brep` subset: schema, io codecs, editor and viewer"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-schema-state = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework = { workspace = true }
+semio-framework-2d = { workspace = true }
+semio-framework-3d-brep-queries = { workspace = true }
+semio-framework-3d-brep-representation = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+semio-s-artifact-stdio-contract = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+semio-framework-3d-brep-engine = { workspace = true }
+semio-framework-3d-brep-operations = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
+pack = { workspace = true }
+parry3d = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-framework-dsl = { workspace = true }
+
+[[test]]
+name = "brep_procedural_example_booleans"
+path = "../../🧪️tests/🧲️procedural-example-booleans/🦀️.rs"
+
+[[test]]
+name = "brep_extrude_orientation"
+path = "../../🧪️tests/📦️extrude-orientation/🦀️.rs"
+
+[[test]]
+name = "brep_tessellation_jobs"
+path = "../../🧪️tests/⏱️tessellation-jobs/🦀️.rs"
+
+[[test]]
+name = "brep_analytic_blend"
+path = "../../🧪️tests/🎨️analytic-blend/🦀️.rs"
+
+[[test]]
+name = "brep_shell_orientation"
+path = "../../🧪️tests/🐚️shell-orientation/🦀️.rs"

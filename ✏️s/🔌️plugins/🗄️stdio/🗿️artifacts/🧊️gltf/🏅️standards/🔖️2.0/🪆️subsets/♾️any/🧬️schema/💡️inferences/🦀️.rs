@@ -1,6 +1,6 @@
 //! 💡️ Public glTF inference assembly.
 
-use crate::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::super::modules::measurement_contracts::*;
@@ -300,7 +300,7 @@ impl Default for GltfInference {
     fn default() -> Self {
         let snapshot = &GltfSnapshot::default();
 
-        Self { geometry: compute_gltf_inference(&crate::schema::snapshot::GltfDecodedSnapshot { document:&snapshot.document, accessors:Vec::new(), buffer_fingerprints:Vec::new() }) }
+        Self { geometry: compute_gltf_inference(&semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDecodedSnapshot { document:&snapshot.document, accessors:Vec::new(), buffer_fingerprints:Vec::new() }) }
     }
 }
 

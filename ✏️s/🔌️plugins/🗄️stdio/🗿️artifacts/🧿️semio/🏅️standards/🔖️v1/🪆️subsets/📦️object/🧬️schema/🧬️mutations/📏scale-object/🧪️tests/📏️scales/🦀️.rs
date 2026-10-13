@@ -5,10 +5,10 @@
 //! `mutation.invariant`. `(2, 0.5, 4)` is deliberately non-uniform and all-positive — it exercises
 //! the real path while every component stays exactly representable.
 
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::mutations::SemioObjectMutation;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::mutations::SemioObjectMutation;
+use crate::schema::snapshot::SemioObjectSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/📏scale-object/📏️scales/📸️snapshot/➡️after/🔣️.json");

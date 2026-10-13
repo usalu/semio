@@ -15,19 +15,19 @@ pub const PRESENTATION_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets
 
 /// 📖️ Parses `.presentation` DSL text into a `PresentationSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<PresentationSnapshot, semio_framework_diagnostic::TextError> {
-    <PresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <PresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `PresentationSnapshot` back to `.presentation` DSL text.
 pub fn print_dsl(deck: &PresentationSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(deck)
+    store::os_store::serialization::ArtifactDsl::print_dsl(deck)
 }
 
 //#region 🔖️HandcraftedArtifactDsl
 /// 🚪️ Moved from `../../../🧬️schema/📸️snapshot/🦀️.rs` per design.md's CORRECTION — the
 /// native codec sits directly under `🚪️io/<facet>/<representation>/`, unsplit (one bidirectional
 /// trait impl, not an import/export mirror).
-impl store::ArtifactDsl for PresentationSnapshot {
+impl store::os_store::serialization::ArtifactDsl for PresentationSnapshot {
     const EXTENSION: &'static str = "presentation";
     fn envelope_id() -> &'static str {
         PRESENTATION_DOCUMENT_SCHEMA
@@ -42,7 +42,7 @@ impl store::ArtifactDsl for PresentationSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

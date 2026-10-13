@@ -101,10 +101,18 @@ class RefusalCodecTestScript extends BundleScript {
 class DecodeOwnershipTestScript extends BundleScript {
  async run(args: string[]): Promise<void> {
   if (args.length) throw Error("Expected test-decode-ownership");
-  const tests = [resolve(this.root, "../../🛬️decode/🧪️tests/🧩️ownership/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🚮️absence/🟦️.ts")];
+  const tests = [resolve(this.root, "../../🛬️decode/🧪️tests/🧩️ownership/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts")];
   await runOwnedCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--skipLibCheck", "--allowImportingTsExtensions", "--resolveJsonModule", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--types", "bun", ...tests], this.repoRoot, "value:decode:types", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
-  await runOwnedCommand(process.execPath, ["test", "--timeout", "30000", resolve(this.root, "../../🛬️decode/🧪️tests/🧩️ownership/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🚮️absence/🟦️.ts")], this.repoRoot, "value:decode:ownership", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
+  await runOwnedCommand(process.execPath, ["test", "--timeout", "30000", resolve(this.root, "../../🛬️decode/🧪️tests/🧩️ownership/🟦️.ts"), resolve(this.root, "../../🛬️decode/🧪️tests/🟦️.ts")], this.repoRoot, "value:decode:ownership", scriptInvocationBudget(this.invocation, 30000), { signal: this.invocation.control.signal });
  }
 }
 
-await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-native-literal-refusal-source",NativeLiteralRefusalSourceScript).register("test-native-recipient-source",NativeRecipientSourceTestScript).register("test-native-recipient",NativeRecipientTestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript).register("test-ordered-retirement-source",OrderedRetirementSourceTestScript), { invocation: original, ...({ defaultCommand: "test" }) }));
+/** 🔐️ Checks the complete neutral shared factory copy and cancellation matrix with its independent oracle. */
+class SharedFactoryRetirementTestScript extends BundleScript {
+ async run(args:string[]):Promise<void>{
+  if(args.length)throw Error("Expected test-shared-factory-retirement");
+  await runOwnedCommand(process.execPath,["test",resolve(this.root,"../../♻️retirement/🔗️shared/🏭️factory/🧪️tests/🟦️.ts")],this.repoRoot,"value:shared-factory:source",scriptInvocationBudget(this.invocation,30000),{signal:this.invocation.control.signal});
+ }
+}
+
+await receiveScriptProcessInvocation(process.env, original => runScriptMain(new ScriptRouter(import.meta.dir).register("test", TestScript).register("test-shared-factory-retirement",SharedFactoryRetirementTestScript).register("test-native-literal-refusal-source",NativeLiteralRefusalSourceScript).register("test-native-recipient-source",NativeRecipientSourceTestScript).register("test-native-recipient",NativeRecipientTestScript).register("test-decode-ownership", DecodeOwnershipTestScript).register("test-graphql-int64-source",GraphqlInt64SourceTestScript).register("test-type-ownership", TypeOwnershipTestScript).register("test-controlled-construction", ControlledValueTestScript).register("test-controlled-encoding",ControlledEncodingTestScript).register("test-refusal-portable", RefusalPortableTestScript).register("test-refusal-codec",RefusalCodecTestScript).register("test-ordered-retirement-source",OrderedRetirementSourceTestScript), { invocation: original, ...({ defaultCommand: "test" }) }));

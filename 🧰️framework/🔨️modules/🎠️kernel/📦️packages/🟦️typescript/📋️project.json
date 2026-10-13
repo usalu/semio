@@ -17,33 +17,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "dependsOn": [],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🎠️kernel/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "test-localized-label": {
       "executor": "nx:run-commands",
       "cache": false,

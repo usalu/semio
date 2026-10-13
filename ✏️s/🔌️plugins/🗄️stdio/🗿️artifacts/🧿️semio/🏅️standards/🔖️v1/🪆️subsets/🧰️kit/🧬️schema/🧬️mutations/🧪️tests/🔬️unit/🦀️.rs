@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::kit::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece, SemioKitType};
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use crate::schema::snapshot::{demo_kit_snapshot, SemioKitDesign, SemioKitPiece, SemioKitType};
+use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioKitSnapshot {
@@ -181,7 +181,7 @@ async fn add_remove_edit_design_round_trips() {
     let after = round_trip(&base, &add);
     assert!(after.designs.iter().any(|d| d.id == "office"));
 
-    let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: crate::standards::v1::subsets::base::schema::geometry::SemioTransform::identity() }];
+    let new_pieces = vec![SemioKitPiece { id: "p9".into(), type_id: "chair".into(), transform: semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform::identity() }];
     let edit = SemioKitMutation::EditDesign(edit_design::EditDesign { id: "living-room".into(), pieces: new_pieces.clone(), connections: vec![] });
     let after = round_trip(&base, &edit);
     assert_eq!(after.designs.iter().find(|d| d.id == "living-room").unwrap().pieces, new_pieces);
@@ -232,8 +232,8 @@ fn three_row_fixture() -> SemioKitSnapshot {
     for n in 2..=3 {
         base.types.push(SemioKitType { id: format!("type-{n}"), name: format!("Type {n}"), category: "furniture".into() });
         base.designs.push(SemioKitDesign { id: format!("design-{n}"), name: format!("Design {n}"), pieces: Vec::new(), connections: Vec::new() });
-        base.objects.push(store::ArtifactChild::new(format!("obj-{n}"), ref_of("object", &format!("obj-{n}"))));
-        base.models.push(store::ArtifactChild::new(format!("model-{n}"), ref_of("model", &format!("model-{n}"))));
+        base.objects.push(store::os_store::artifact_child::ArtifactChild::new(format!("obj-{n}"), ref_of("object", &format!("obj-{n}"))));
+        base.models.push(store::os_store::artifact_child::ArtifactChild::new(format!("model-{n}"), ref_of("model", &format!("model-{n}"))));
         base.representations.push(store::ArtifactLink { target: ref_of("mesh", &format!("repr-{n}")), pin: store::LinkPin::Head, role: "chair".into() });
     }
     base

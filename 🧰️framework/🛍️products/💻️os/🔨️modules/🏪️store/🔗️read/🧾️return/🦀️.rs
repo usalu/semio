@@ -33,7 +33,7 @@ impl SnapshotReadReturnRetirement {
  fn new(value:SnapshotReadReturn)->Self {Self{registry:ManuallyDrop::new(Some(value.registry)),last_registry:ManuallyDrop::new(None),index:value.index,generation:value.generation}}
  fn demands(&self)->Result<RetirementDemand,ValueError>{
   if self.registry.is_some(){return Ok(RetirementDemand{release_bytes:snapshot_registry_frame_bytes()?,depth:1,..Default::default()});}
-  if let Some(owner)=self.last_registry.as_ref(){let mut demand=owner.empty_backing_demands()?;demand.depth=demand.depth.max(1);return Ok(demand);}
+  if let Some(owner)=self.last_registry.as_ref(){let mut demand=owner.owned_backing_demands()?;demand.depth=demand.depth.max(1);return Ok(demand);}
   Ok(Default::default())
  }
  fn step(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneStep,ValueError>{
@@ -48,9 +48,9 @@ impl SnapshotReadReturnRetirement {
    let released=if let Some(registry)=last{*self.last_registry=Some(registry);demand.release_bytes}else{0};
    return Ok(RetainedCloneStep::Progress(RetainedCloneProgress{copied_items:1,released_bytes:released,..Default::default()}));
   }
-  let owner=self.last_registry.as_ref().expect("last original registry custody");
+  let owner=self.last_registry.as_mut().expect("last original registry custody");
   if !owner.terminal_is_empty(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"last returned read registry still requires its store-owned typed retirement pump"));}
-  if demand.release_bytes!=0{return owner.close_empty_backing_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
+  if demand.release_bytes!=0{return owner.close_owned_backing_step(grant).map(|step|RetainedCloneStep::Progress(step.progress()));}
   self.last_registry.take();
   Ok(RetainedCloneStep::Complete(RetainedCloneProgress{copied_items:1,..Default::default()}))
  }

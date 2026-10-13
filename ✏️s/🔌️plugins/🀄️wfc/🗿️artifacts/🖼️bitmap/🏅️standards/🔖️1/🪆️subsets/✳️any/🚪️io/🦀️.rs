@@ -43,7 +43,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: Some(&crate::pilot_languages()[1]), binary: Some(&crate::pilot_languages()[3]) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec::<BitmapSnapshot, BitmapMutation>(WFC_BITMAP_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

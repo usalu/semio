@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::object::schema::snapshot::demo_object_snapshot;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use crate::schema::snapshot::demo_object_snapshot;
+use protocol::{Mutation, SemanticMutation};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn fixture() -> SemioObjectSnapshot {

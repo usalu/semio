@@ -14,11 +14,11 @@ impl WindowConfigOwner for IdentityWindowOwner {
     const MAXIMUM_PREPARATION_DEPTH:usize=64;
     fn build_retained_edit()->Arc<Self::Edit>{Arc::new(retained_pack_load_tests::CameraRetainedEdit)}
 
-    fn build_store_owners() -> Result<store::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
+    fn build_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<Self::State, Self::Mutation>, semio_framework_value::ValueError> {
         bounded_window_config_store_owners::<Self>()
     }
 
-    fn build_one_item_preparation_factory() -> Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
+    fn build_one_item_preparation_factory() -> Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::State, Self::Mutation>> {
         bounded_window_config_preparation_factory::<Self>()
     }
 

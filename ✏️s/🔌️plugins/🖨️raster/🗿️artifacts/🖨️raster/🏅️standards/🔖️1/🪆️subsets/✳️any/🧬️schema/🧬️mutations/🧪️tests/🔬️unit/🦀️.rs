@@ -6,7 +6,7 @@ use crate::{RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterOwnedMap, 
 use protocol::Mutation;
 
 use semio_framework_os_kernel as vcs;
-use store::{create_document_envelope, ArtifactCommand};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 fn pixel_layer(id: &str, name: &str) -> RasterLayerNode {
     RasterLayerNode::Pixel { id: id.into(), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: RasterTransform::default(), mask: None, width: Some(512), height: Some(512), image_key: None }

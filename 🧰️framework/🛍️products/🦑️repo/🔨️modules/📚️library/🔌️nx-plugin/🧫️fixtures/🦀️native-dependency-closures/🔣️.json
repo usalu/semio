@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "oracleRevision": "c73888a85bb",
+  "manifests": {
+    "Cargo.toml": "[workspace]\nmembers = [\"crates/*\"]\n[workspace.dependencies]\nshared = { path = \"crates/shared\" }\n",
+    "crates/a/Cargo.toml": "[package]\nname = \"a\"\n[dependencies]\nb = { path = \"../b\" }\nc = { path = \"../c\" }\nshared = { workspace = true }\n[dev-dependencies]\nt = { path = \"../t\" }\n",
+    "crates/b/Cargo.toml": "[package]\nname = \"b\"\n[dependencies]\nd = { path = \"../d\" }\n",
+    "crates/c/Cargo.toml": "[package]\nname = \"c\"\n[target.'cfg(unix)'.dependencies]\nd = { path = \"../d\" }\n[build-dependencies]\ne = { path = \"../e\" }\n",
+    "crates/d/Cargo.toml": "[package]\nname = \"d\"\n",
+    "crates/e/Cargo.toml": "[package]\nname = \"e\"\n[dev-dependencies]\na = { path = \"../a\" }\n",
+    "crates/shared/Cargo.toml": "[package]\nname = \"shared\"\n",
+    "crates/t/Cargo.toml": "[package]\nname = \"t\"\n[dependencies]\nghost = { path = \"../ghost\" }\n",
+    "crates/cycle-x/Cargo.toml": "[package]\nname = \"cycle-x\"\n[dependencies]\ncycle-y = { path = \"../cycle-y\" }\n",
+    "crates/cycle-y/Cargo.toml": "[package]\nname = \"cycle-y\"\n[dependencies]\ncycle-x = { path = \"../cycle-x\" }\n",
+    "crates/escape/Cargo.toml": "[package]\nname = \"escape\"\n[dependencies]\noutside = { path = \"../../../outside\" }\n"
+  },
+  "roots": [
+    "crates/a",
+    "crates/b",
+    "crates/c",
+    "crates/d",
+    "crates/e",
+    "crates/t",
+    "crates/cycle-x",
+    "crates/escape",
+    "crates/missing",
+    "crates/a",
+    "crates/e"
+  ]
+}

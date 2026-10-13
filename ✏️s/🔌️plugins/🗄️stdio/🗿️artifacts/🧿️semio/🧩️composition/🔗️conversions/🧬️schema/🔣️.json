@@ -1,0 +1,114 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://json.schemas.assets.semio-tech.com/s/stdio/semio/conversions/schema.json",
+  "description": "🔗️ The semio conversion authority: the catalog crate, the format owners the definition depends on (each with the crates it is cut into), and one crate per subset and direction with the format crates its leaves name.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema",
+    "catalog",
+    "owners",
+    "conversions"
+  ],
+  "properties": {
+    "schema": {
+      "const": "semio.stdio.semio.conversions/v1"
+    },
+    "catalog": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "package",
+        "manifest",
+        "source"
+      ],
+      "properties": {
+        "package": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9-]*$"
+        },
+        "manifest": {
+          "type": "string",
+          "pattern": "^[^/\\\\][^\\\\]*$"
+        },
+        "source": {
+          "type": "string",
+          "pattern": "^[^/\\\\][^\\\\]*$"
+        }
+      }
+    },
+    "owners": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "package",
+          "owner",
+          "symbolPackages"
+        ],
+        "properties": {
+          "package": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "owner": {
+            "type": "string",
+            "pattern": "^[^/\\\\][^\\\\]*$"
+          },
+          "symbolPackages": {
+            "description": "🔤️ The crates a format owner is cut into besides its package; a conversion may name any of them as a target, and the definition still depends on the owner's one identity.",
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            }
+          }
+        }
+      }
+    },
+    "conversions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "subset",
+          "direction",
+          "package",
+          "manifest",
+          "targets"
+        ],
+        "properties": {
+          "subset": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "direction": {
+            "enum": [
+              "import",
+              "export"
+            ]
+          },
+          "package": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]*$"
+          },
+          "manifest": {
+            "type": "string",
+            "pattern": "^[^/\\\\][^\\\\]*$"
+          },
+          "targets": {
+            "type": "array",
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9-]*$"
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -27,7 +27,10 @@ fn sampled_function_neutral_words_preserve_native_twelve_bit_extent() {
 
 #[test]
 fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
-    use crate::standards::v1_7::subsets::base::{io, schema::{mutations::{PdfMutation,set_shading::SetShading}, snapshot::*}};
+    use crate::standards::v1_7::subsets::base::io;
+    use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+    use crate::standards::v1_7::subsets::base::schema::mutations::set_shading::SetShading;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::*;
     use protocol::{DiffCodec,Mutation};
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🚪️io/🪶️sqlite/📸️snapshot/🌈️color/🧫️fixtures/🔣️.json")).unwrap();
     let case = &fixture["sampled12"];
@@ -45,11 +48,11 @@ fn sampled_function_typed_diff_inverse_and_native_document_preserve_words() {
     let mut restored=target.clone();
     for inverse in intent.inverse(&base).unwrap(){restored=protocol::apply_diff(inverse.diff(&restored).diff(),&restored).unwrap();}
     assert_eq!(restored,base);
-    let native = io::encode_pdf(&target).unwrap();
+    let native = io::export::encode_pdf(&target).unwrap();
     let streams=semio_s_artifact_stdio_pdf_test_oracle::standards::v1_7::subsets::base::reference_sampled_function_streams(&native).unwrap();
     let samples=streams.into_iter().find(|(bits,_)|*bits==12).unwrap().1;
     assert_eq!(samples,serde_json::from_value::<Vec<u8>>(case["nativeBytes"].clone()).unwrap());
-    let admitted=io::decode_pdf(&native).unwrap();
+    let admitted=io::import::decode_pdf(&native).unwrap();
     let PdfShadingKind::Axial { function:PdfFunction::Sampled { samples,.. },.. }=&admitted.shadings[0].kind else {panic!("sampled shading role must remain typed")};
     assert_eq!(samples,&words);
     eprintln!("[DEBUG] PDF typed sampled shading diff/inverse and independent lopdf native admission words=513,4095");

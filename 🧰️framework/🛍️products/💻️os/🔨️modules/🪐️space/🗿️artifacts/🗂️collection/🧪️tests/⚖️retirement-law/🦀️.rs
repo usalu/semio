@@ -36,17 +36,17 @@ fn collection_mutations_and_tree_retire_through_the_typed_command_lane() {
 #[semio_framework_async_macros::async_test]
 async fn a_collection_edit_applies_undoes_and_redoes_through_its_real_catalog() {
     for (label, mutation) in mutations() {
-        let owners = store::funded_bounded_artifact_store_owners::<CollectionSnapshot, CollectionMutation>().unwrap_or_else(|error| panic!("{label}: the bounded catalog is funded: {error}"));
+        let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<CollectionSnapshot, CollectionMutation>().unwrap_or_else(|error| panic!("{label}: the bounded catalog is funded: {error}"));
         let initial = demo_collection();
-        let envelope = store::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "collection-retirement-law", initial.clone(), None);
+        let envelope = store::os_store::document_materialize::create_document_envelope::<CollectionSnapshot, CollectionMutation>(S_COLLECTION_SCHEMA, "collection-retirement-law", initial.clone(), None);
         let mut collection = store::ArtifactStore::new(envelope, store::os_spr::ActorId(store::os_spr::LOCAL_ACTOR_ID.into())).await.expect("the law collection store");
         store::install_unscheduled_catalog(&mut collection, Ok(owners)).unwrap_or_else(|_| panic!("{label}: the bounded catalog installs"));
-        dispatch_test_command(&mut collection, store::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.unwrap_or_else(|error| panic!("{label}: apply: {error}"));
+        dispatch_test_command(&mut collection, store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation], transaction: None }).await.unwrap_or_else(|error| panic!("{label}: apply: {error}"));
         let applied = collection.snapshot().expect("applied snapshot");
         assert_ne!(applied, initial, "{label}: the mutation changes the collection");
-        dispatch_test_command(&mut collection, store::ArtifactCommand::Undo).await.unwrap_or_else(|error| panic!("{label}: undo: {error}"));
+        dispatch_test_command(&mut collection, store::os_store::store_schema::ArtifactCommand::Undo).await.unwrap_or_else(|error| panic!("{label}: undo: {error}"));
         assert_eq!(collection.snapshot().expect("undone snapshot"), initial, "{label}: undo restores the collection");
-        dispatch_test_command(&mut collection, store::ArtifactCommand::Redo).await.unwrap_or_else(|error| panic!("{label}: redo: {error}"));
+        dispatch_test_command(&mut collection, store::os_store::store_schema::ArtifactCommand::Redo).await.unwrap_or_else(|error| panic!("{label}: redo: {error}"));
         assert_eq!(collection.snapshot().expect("redone snapshot"), applied, "{label}: redo restores the post collection");
         close_plain_test_store(&mut collection);
     }

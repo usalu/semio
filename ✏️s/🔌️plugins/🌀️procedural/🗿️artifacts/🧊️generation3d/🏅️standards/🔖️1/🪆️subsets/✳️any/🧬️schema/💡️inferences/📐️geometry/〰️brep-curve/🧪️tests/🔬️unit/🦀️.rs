@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d::brep::engine::Brep;
+use semio_framework_3d_brep_engine::Brep;
 
 #[path = "../../../🧪️tests/🧰️construction-support/🦀️.rs"]
 mod support;

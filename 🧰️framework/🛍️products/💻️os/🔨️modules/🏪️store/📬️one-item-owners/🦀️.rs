@@ -1,6 +1,6 @@
 //! 📬️ The original owners of one one-item Store preparation and the grant-based ladder that closes them.
 
-use crate::{artifact_retirement_admit_owned, artifact_retirement_box_close_step, artifact_retirement_box_demands, artifact_retirement_owned_birth_demands, ArtifactOwnedValueRetirementFactory, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPrepared, ArtifactStoreOneItemPreparationRequest, Edit, ErasedSnapshotRetirement, SnapshotRead, SnapshotRetirementFactory};
+use crate::{os_store::snapshot_read::artifact_retirement_admit_owned, os_store::snapshot_read::artifact_retirement_box_close_step, os_store::snapshot_read::artifact_retirement_box_demands, os_store::snapshot_read::artifact_retirement_owned_birth_demands, ArtifactOwnedValueRetirementFactory, os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, os_store::one_item_publication::ArtifactStoreOneItemPrepared, os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest, Edit, ErasedSnapshotRetirement, os_store::snapshot_read::SnapshotRead, SnapshotRetirementFactory};
 use semio_framework_value::retained_clone::{admit_retained_clone_close, admit_retained_clone_progress, RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::retirement::RetireOwned;
 use semio_framework_value::{FactoryAuthority, FactoryRetirement, RetirementDemand, ValueError, ValueRefusalKind};

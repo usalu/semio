@@ -8,42 +8,116 @@
     "PlayRuntimeCatalog": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["schemaVersion", "host", "hostVariant", "excludedBrandPrefix", "groups"],
+      "required": [
+        "schemaVersion",
+        "host",
+        "hostVariant",
+        "excludedBrandPrefix",
+        "groups"
+      ],
       "properties": {
-        "schemaVersion": { "const": 1 },
-        "host": { "type": "string", "minLength": 1 },
-        "hostVariant": { "$ref": "#/$defs/PlayVariant" },
-        "excludedBrandPrefix": { "type": "string", "minLength": 1 },
-        "groups": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/PlayGroup" } }
+        "schemaVersion": {
+          "const": 1
+        },
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "hostVariant": {
+          "$ref": "#/$defs/PlayVariant"
+        },
+        "excludedBrandPrefix": {
+          "type": "string",
+          "minLength": 1
+        },
+        "groups": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PlayGroup"
+          }
+        }
       }
     },
     "PlayGroup": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "label", "panes"],
+      "required": [
+        "id",
+        "label",
+        "panes"
+      ],
       "properties": {
-        "id": { "$ref": "#/$defs/PlayVariant" },
-        "label": { "type": "string", "minLength": 1 },
-        "panes": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/PlayPane" } }
+        "id": {
+          "$ref": "#/$defs/PlayVariant"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "panes": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/PlayPane"
+          }
+        }
       }
     },
     "PlayPane": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["variant", "label", "tagline", "description", "icon"],
-      "dependencies": { "example": ["exampleLabel"], "exampleLabel": ["example"] },
+      "required": [
+        "variant",
+        "label",
+        "tagline",
+        "description",
+        "icon"
+      ],
+      "dependencies": {
+        "example": [
+          "exampleLabel"
+        ],
+        "exampleLabel": [
+          "example"
+        ]
+      },
       "properties": {
-        "variant": { "$ref": "#/$defs/PlayVariant" },
-        "label": { "type": "string", "minLength": 1 },
-        "shortLabel": { "type": "string", "minLength": 1 },
-        "tagline": { "type": "string", "minLength": 1 },
-        "description": { "type": "string", "minLength": 1 },
-        "icon": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
-        "example": { "$ref": "#/$defs/PlayExampleId" },
-        "exampleLabel": { "$ref": "#/$defs/PlayExampleLabel" }
+        "variant": {
+          "$ref": "#/$defs/PlayVariant"
+        },
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "shortLabel": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tagline": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string",
+          "minLength": 1
+        },
+        "icon": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        },
+        "example": {
+          "$ref": "#/$defs/PlayExampleId"
+        },
+        "exampleLabel": {
+          "$ref": "#/$defs/PlayExampleLabel"
+        }
       }
     },
-    "PlayVariant": { "type": "string", "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$" },
+    "PlayVariant": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
     "PlayExampleLabel": {
       "description": "The exact text the pane's navbar example picker renders for its curated example: the example's `label.native.en`, because every play shell is locked to terminology `native` and locale `en`. Authored prose, never the id spelled out (`tower-stack` renders \"Tower With A Cantilever\"), so an acceptance check can compare label to label instead of guessing one from the other.",
       "type": "string",
@@ -53,6 +127,118 @@
       "description": "The curated example this pane boots on, as the owning app's plugin manifest declares it; absent when the app declares no example for its dialect.",
       "type": "string",
       "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "PlayModuleCatalogV1": {
+      "description": "The runtime module catalog play's pages assembly binds into the modules page (`🔌️plugin-modules/🧾️catalog.json`): every runtime component module with the receipt that binds its semantic descriptor to the shipped bytes and the digest of every published file. The application bundle never embeds compiled bytes or their hashes; it is built before any component links, and this catalog is the one place a deployment binds both.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "schemaVersion",
+        "modules"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "const": 1
+        },
+        "modules": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/PlayModuleBindingV1"
+          }
+        }
+      }
+    },
+    "PlayModuleBindingV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "pluginId",
+        "route",
+        "directory",
+        "receipt",
+        "files"
+      ],
+      "properties": {
+        "pluginId": {
+          "$ref": "#/$defs/PlayVariant"
+        },
+        "route": {
+          "enum": [
+            "🔌️plugin-modules",
+            "🧩️extension-modules"
+          ]
+        },
+        "directory": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "receipt": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "profile",
+            "wasmSha256",
+            "wasmBytes",
+            "semanticDescriptorSha256",
+            "sourceTreeDigest",
+            "provenanceSha256"
+          ],
+          "properties": {
+            "profile": {
+              "enum": ["wasm-prototype", "wasm-release"]
+            },
+            "wasmSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "wasmBytes": {
+              "type": "integer",
+              "minimum": 8
+            },
+            "semanticDescriptorSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "sourceTreeDigest": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            },
+            "provenanceSha256": {
+              "type": "string",
+              "pattern": "^[0-9a-f]{64}$"
+            }
+          }
+        },
+        "files": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "path",
+              "sha256",
+              "bytes"
+            ],
+            "properties": {
+              "path": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 160
+              },
+              "sha256": {
+                "type": "string",
+                "pattern": "^[0-9a-f]{64}$"
+              },
+              "bytes": {
+                "type": "integer",
+                "minimum": 0
+              }
+            }
+          }
+        }
+      }
     }
   }
 }

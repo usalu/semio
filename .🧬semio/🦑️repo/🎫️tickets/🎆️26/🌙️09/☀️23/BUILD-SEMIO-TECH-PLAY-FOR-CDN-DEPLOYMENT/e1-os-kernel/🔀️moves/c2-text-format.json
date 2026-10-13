@@ -1,0 +1,16 @@
+{
+  "target": "🚪️io/📝️text/🦀️.rs",
+  "module": "text_format",
+  "anchor": "//#region 🔖️TextFormat\n//#region 🔖️TextFormat\n",
+  "doc": [
+    "//! 📝️ The document text format: parsing and printing `.dsl`/`.ops` text and `.spr` history into envelopes, edit lines and",
+    "//! the mirror files the codecs and the folder backbones write.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️TextFormat"
+  ],
+  "items": [],
+  "movableTraits": []
+}

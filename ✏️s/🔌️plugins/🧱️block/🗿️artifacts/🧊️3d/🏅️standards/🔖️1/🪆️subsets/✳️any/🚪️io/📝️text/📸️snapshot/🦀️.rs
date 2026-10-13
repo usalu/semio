@@ -16,12 +16,12 @@ pub const BLOCK3D_CONCRETE_FOREST_LEFT_EXAMPLE_TEXT: &str = include_str!("../../
 
 /// 📖️ Parses `.block3d` DSL text into a `Block3dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Block3dSnapshot, semio_framework_diagnostic::TextError> {
-    <Block3dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Block3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Block3dSnapshot` back to `.block3d` DSL text.
 pub fn print_dsl(document: &Block3dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 /// 🚀️ The document every `block3d` surface boots with — `hexagonal-cut-concrete-forest-left`, the only
@@ -51,10 +51,10 @@ use crate::standards::v1::subsets::any::schema::snapshot::*;
 use crate::{Block3dVortexKindExtra, Block3dVortexTemplate, BLOCK_3D_SCHEMA};
 use crate::{BlockAttribute, BlockAuthor, BlockCamera3d, BlockCompatibilityRule, BlockKindIdentity, BlockMeta, BlockRepresentation};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Block3dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Block3dSnapshot {
     const EXTENSION: &'static str = "block3d";
     fn envelope_id() -> &'static str {
         "block.block3d"
@@ -69,7 +69,7 @@ impl store::ArtifactDsl for Block3dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

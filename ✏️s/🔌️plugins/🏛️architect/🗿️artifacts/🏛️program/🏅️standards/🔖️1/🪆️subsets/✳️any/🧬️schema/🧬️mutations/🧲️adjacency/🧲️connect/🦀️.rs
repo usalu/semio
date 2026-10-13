@@ -3,8 +3,8 @@
 //! restructuring (`.🧬semio/🦑️repo/🎫️tickets/🎆️26/🌙️08/☀️12/SEMANTIC-MUTATIONS-OVERHAUL/📓️fanout-brief.md`
 //! Phase 2). Behavior unchanged from the wave-2 pass — pure directory/module restructuring.
 
-use crate::registers::Adjacency;
-use crate::{ProgramDiff, ProgramMutation, ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::Adjacency;
+use crate::standards::v1::subsets::any::schema::{diff::ProgramDiff, mutations::ProgramMutation, snapshot::ProgramSnapshot};
 use protocol::{MutationKind, SemanticDescriptor};
 
 /// 🔌️ Upserts an adjacency edge between two elements: normalizes the endpoint pair, replaces the

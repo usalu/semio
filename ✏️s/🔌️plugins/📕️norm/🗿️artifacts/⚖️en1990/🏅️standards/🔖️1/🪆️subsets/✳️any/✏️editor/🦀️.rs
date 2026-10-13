@@ -90,7 +90,7 @@ impl ArtifactEditor for En1990PlayApp {
     const DIALECT: Dialect = crate::EN1990_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = "semio.norm.en1990/v1";
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         crate::app_surface::norm_artifact_store_preparation::<Self>()
     }
 

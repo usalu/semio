@@ -5,7 +5,7 @@
 //! only the DECLARED shape, never a re-derived cell-level census (that would silently paper over
 //! the lenient real-world tabular format this subset honestly models).
 
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
+use crate::schema::snapshot::{SemioTableCellKind, SemioTableSnapshot};
 
 //#region 🔖️Shape
 /// 📐️ Semio table dimensions + declared column-kind census.

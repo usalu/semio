@@ -295,20 +295,25 @@ pub mod testing {
         (0..payload.page_count()).flat_map(|index| payload.page(index).unwrap_or_default().to_vec()).collect()
     }
 
+    /// 📖️ Reads one lent outcome as owned bytes, the shape [`drive`] answers and per-step laws inspect after `drive_step`.
+    pub fn owned_turn(outcome: JobOutcomeBorrow<'_>) -> JobTurn {
+        match outcome {
+            JobOutcomeBorrow::Yield { .. } => JobTurn::Yield,
+            JobOutcomeBorrow::Cancelled { .. } => JobTurn::Cancelled,
+            JobOutcomeBorrow::Complete { .. } => JobTurn::Complete,
+            JobOutcomeBorrow::PreviewReady { payload, .. } => JobTurn::Preview(payload_bytes(payload)),
+            JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. } => JobTurn::Checkpoint { applied_progress, state: payload_bytes(state) },
+            JobOutcomeBorrow::Fault { detail, .. } => JobTurn::Fault(payload_bytes(detail)),
+        }
+    }
+
     /// ▶️ Steps `job` through its production `step` — paying turns included — until it lends one outcome, and reads that outcome as owned bytes.
     pub fn drive<J: InteractiveJob + ?Sized>(job: &mut J, budget: semio_framework_job::StepBudget, clock: fn() -> Option<u64>, sequence: &mut u64) -> JobTurn {
         for _ in 0..1_000_000 {
             let mut cx = StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), budget, semio_framework_job::root_cancel_token(), clock, sequence, test_progress());
-            let turn = match job.step(&mut cx).expect("a job step") {
-                None => continue,
-                Some(JobOutcomeBorrow::Yield { .. }) => JobTurn::Yield,
-                Some(JobOutcomeBorrow::Cancelled { .. }) => JobTurn::Cancelled,
-                Some(JobOutcomeBorrow::Complete { .. }) => JobTurn::Complete,
-                Some(JobOutcomeBorrow::PreviewReady { payload, .. }) => JobTurn::Preview(payload_bytes(payload)),
-                Some(JobOutcomeBorrow::CheckpointReady { state, applied_progress, .. }) => JobTurn::Checkpoint { applied_progress, state: payload_bytes(state) },
-                Some(JobOutcomeBorrow::Fault { detail, .. }) => JobTurn::Fault(payload_bytes(detail)),
-            };
-            return turn;
+            if let Some(outcome) = job.step(&mut cx).expect("a job step") {
+                return owned_turn(outcome);
+            }
         }
         panic!("a job lends an outcome within a bounded number of paying turns");
     }

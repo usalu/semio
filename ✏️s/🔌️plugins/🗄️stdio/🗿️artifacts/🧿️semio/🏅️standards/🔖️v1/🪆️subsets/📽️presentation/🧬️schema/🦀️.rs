@@ -1,7 +1,7 @@
 //! 🧬️ SemioPresentationArtifact schema — full artifact state, mirrors `SemioPresentationSnapshot`
 //! field for field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideLayout, SlideMaster};
+use crate::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideLayout, SlideMaster};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

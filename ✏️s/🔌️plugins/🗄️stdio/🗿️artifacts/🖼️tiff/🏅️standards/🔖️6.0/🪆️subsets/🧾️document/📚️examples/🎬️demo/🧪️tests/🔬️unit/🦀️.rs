@@ -3,12 +3,12 @@ use super::*;
 async fn demo_source_nonempty() {
     assert!(!PRIMARY_TEXT.is_empty());
     let _ = source();
-    let literal = <crate::TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
+    let literal = <crate::TiffSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("current handcrafted TIFF literal fixture");
     let native = crate::standards::v6_0::subsets::document::io::decode_tiff(NATIVE_BYTES).expect("genuine authored TIFF native fixture");
     assert_eq!(literal, native, "handcrafted demo text retains the complete genuine native owner");
     let demo=crate::schema::demo_tiff_snapshot();assert_eq!(literal,demo);
-    let packed=include_bytes!("../../🖼️assets/🎒️.pack.semio");assert_eq!(store::ArtifactPack::encode_pack(&demo),packed,"shipped TIFF Pack must represent the authored demo owner");
-    assert_eq!(<crate::TiffSnapshot as store::ArtifactPack>::decode_pack(packed).expect("current authored TIFF Pack fixture"),demo);
+    let packed=include_bytes!("../../🖼️assets/🎒️.pack.semio");assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo),packed,"shipped TIFF Pack must represent the authored demo owner");
+    assert_eq!(<crate::TiffSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(packed).expect("current authored TIFF Pack fixture"),demo);
     eprintln!("[DEBUG] TIFF current literal demo matches complete genuine native owner ifds={}", literal.ifds.len());
 }
 
@@ -20,7 +20,7 @@ async fn inference_determinism_law() {
     use crate::standards::v6_0::subsets::document::schema::inferences::TiffInference;
     use crate::TiffSnapshot;
     use protocol::Inference;
-    let snapshot = <TiffSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+    let snapshot = <TiffSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(TiffInference::infer(&snapshot).expect("valid materialized inference fixture"), TiffInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 

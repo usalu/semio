@@ -5,7 +5,7 @@ use semio_framework_value::ValueRefusalKind;
 pub(super)fn check(value:&Block3dSnapshot,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  forecast(value,control,SqliteSnapshotPhase::EncodeNative)?;let limits=control.limits();
  let component=match encoding{SnapshotEncoding::Binary=>store::semio_format::Component::Pack,SnapshotEncoding::Text=>store::semio_format::Component::Dsl};
- let prefix=store::semio_format::declared_envelope_prefix_len(<Block3dSnapshot as store::ArtifactDsl>::envelope_id(),component,1)?;
+ let prefix=store::semio_format::declared_envelope_prefix_len(<Block3dSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),component,1)?;
  let maximum=limits.max_file_bytes.checked_sub(prefix).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"native preflight ceiling cannot contain declared envelope"))?;
  control.allocation_stage(SqliteSnapshotPhase::EncodeNative,|remaining,checkpoint,allocation|{
   let mut progress=|event:semio_framework_value::native_encoding::NativeEncodeProgress|checkpoint(event.completed,event.total);

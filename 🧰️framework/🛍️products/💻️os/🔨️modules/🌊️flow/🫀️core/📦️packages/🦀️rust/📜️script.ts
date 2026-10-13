@@ -3,7 +3,7 @@ import { receiveScriptProcessInvocation } from "../../../../../../../🔨️modu
 import { resolveTestLevel, TEST_LEVEL_BUDGET_MS } from "../../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 /** 🦀️ `@semio-tech/flow-core` router: `bun ./📜️script.ts <wasm|test>` — wasm-bindgen package for the flow engine session. */
 import { readFileSync } from "node:fs";
-import { join } from "node:path";
+import { join, resolve } from "node:path";
 import { runCargo, runRepositoryTestCommand, runRepositoryCargoTests, buildRepositoryWasmWebV1 } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
@@ -31,6 +31,7 @@ class WasmScript extends BundleScript {
   async run(): Promise<void> {
     await buildRepositoryWasmWebV1({
       rsDir: FAMILY_RS_DIR,
+      componentDir: resolve(FAMILY_RS_DIR, "../../🧩️component/📦️packages/🦀️rust"),
       logPrefix: "os/flow/core",
       wasmBaseName: "flow_core",
       outputDirectory: "🕸️bindings",

@@ -7,7 +7,7 @@ import { advanceScriptInvocation } from "../../../../../../🔨️modules/🏃�
 import { runOwnedCommand } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
-import { MaterializeScript, SupportScript } from "../../🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
+import { SupportScript } from "../../🌐️browser-bundle/🏗️materialization/🚀️commands/🟦️.ts";
 /** 📨️ Checks the complete payload source owner with decreasing original invocation authority. */
 class TickPayloadSourceScript extends BundleScript {
   async run(args:string[]):Promise<void> {
@@ -21,7 +21,7 @@ class TickPayloadSourceScript extends BundleScript {
     await advanceScriptInvocation(this.invocation,"test-tick-payload","complete");
   }
 }
-const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("support", SupportScript).register("materialize", MaterializeScript).register("test-tick-payload",TickPayloadSourceScript);
+const router = new ScriptRouter(dirname(fileURLToPath(import.meta.url))).register("support", SupportScript).register("test-tick-payload",TickPayloadSourceScript);
 if (import.meta.main && process.argv[2] === "test") {
   const selected = process.argv[3];
   const root = resolve(import.meta.dir, "../../../../../../.."), { runOwnedCommand } = await import("../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts");

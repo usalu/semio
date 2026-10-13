@@ -199,18 +199,18 @@ impl<S: IncrementalMediaExportSpec> InteractiveJob for IncrementalMediaExportJob
 impl<S:IncrementalMediaExportSpec> IncrementalMediaExportJob<S>{
     fn close_demands(&self,body:usize)->Result<RetirementDemand,ValueError>{
         let item=RetirementDemand{depth:1,..Default::default()};
-        if let Some(owner)=self.output_retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::artifact_retirement_box_demands(owner,body);}
+        if let Some(owner)=self.output_retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
         if !self.fault_publication.terminal_is_empty(){return self.fault_publication.retirement_demands();}
-        if self.fault.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::artifact_retirement_owned_birth_demands(&self.fault);}
+        if self.fault.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.fault);}
         if self.cursor.is_some(){return Ok(item);}
         if self.page.capacity()!=0{return Ok(RetirementDemand{release_bytes:self.page.capacity(),depth:1,..Default::default()});}
-        if self.chunks.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::artifact_retirement_owned_birth_demands(&self.chunks);}
+        if self.chunks.is_some(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.chunks);}
         if self.completion.is_some()||self.credit.is_some()||self.snapshot.is_some()||self.snapshot_close.is_some(){return Ok(item);}
         Ok(Default::default())
     }
 
     fn close_turn(&mut self,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
-        use semio_framework_plugin::plugin_app_close_prelude::store::{artifact_retirement_admit_owned,artifact_retirement_box_close_step};
+        use semio_framework_plugin::plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step};
         let demand=self.close_demands(grant.maximum_copy_bytes)?;
         if demand==RetirementDemand::default(){return Ok(Default::default());}
         if grant.maximum_depth<demand.depth{return Err(ValueError::literal(ValueRefusalKind::DepthLimit,"media export close exceeds its admitted depth"));}
@@ -247,14 +247,14 @@ impl<T: RetireOwned + Sync> Default for RetireOwnedSnapshotDisposer<T> {
 
 impl<T:RetireOwned+Sync> ArtifactSnapshotDisposer<T> for RetireOwnedSnapshotDisposer<T>{
     fn retirement_demands(&self,snapshot:&Option<Arc<T>>,body:usize)->Result<RetirementDemand,ValueError>{
-        if let Some(owner)=self.retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::artifact_retirement_box_demands(owner,body);}
+        if let Some(owner)=self.retirement.as_ref(){return semio_framework_plugin::plugin_app_close_prelude::store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
         let Some(owner)=snapshot.as_ref()else{return Ok(Default::default())};
         if Arc::strong_count(owner)!=1{return Ok(RetirementDemand{depth:1,..Default::default()});}
         if !T::controlled_retirement_supported(){return Err(ValueError::literal(ValueRefusalKind::UnsupportedOwner,"raw media snapshot has no controlled owner authority"));}
         Ok(RetirementDemand{capacity_bytes:semio_framework_value::retirement::owned_retirement_birth_bytes::<T>(),depth:2,..Default::default()})
     }
     fn close_step(&mut self,snapshot:&mut Option<Arc<T>>,grant:RetainedCloneGrant)->Result<semio_framework_plugin::PluginLifecycleStep,Fault>{
-        use semio_framework_plugin::{plugin_app_close_prelude::store::{artifact_retirement_admit_owned,artifact_retirement_box_close_step},PluginLifecycleStep};
+        use semio_framework_plugin::{plugin_app_close_prelude::store::{os_store::snapshot_read::artifact_retirement_admit_owned,os_store::snapshot_read::artifact_retirement_box_close_step},PluginLifecycleStep};
         let fault=|error:ValueError|Fault::from(error.into_message());
         let demand=self.retirement_demands(snapshot,grant.maximum_copy_bytes).map_err(fault)?;
         if demand==RetirementDemand::default(){return Ok(PluginLifecycleStep::Complete(Default::default()));}

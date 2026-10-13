@@ -1,7 +1,7 @@
 {
   "name": "@semio-tech/s-spatial-kernel-semio-session-rs",
-  "root": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
-  "sourceRoot": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession",
+  "root": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
+  "sourceRoot": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session",
   "projectType": "library",
   "tags": [
     "lang:rust",
@@ -13,8 +13,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts check",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts check",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     },
@@ -22,8 +22,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts test",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts test",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     },
@@ -31,8 +31,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts wasm",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts wasm",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     },
@@ -40,8 +40,8 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts source-check",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts source-check",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     },
@@ -52,8 +52,8 @@
         "wasm"
       ],
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts browser-test",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts browser-test",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": true
       }
     },
@@ -61,10 +61,15 @@
       "executor": "nx:run-commands",
       "cache": false,
       "options": {
-        "command": "bun ./\ud83d\udcdc\ufe0fscript.ts canonical-architecture",
-        "cwd": "\u270f\ufe0fs/\ud83d\udd28\ufe0fmodules/\ud83c\udf10\ufe0fspatial-kernel/\u2699\ufe0fengine/\ud83e\udde0\ufe0fsemio/\ud83c\udf0a\ufe0fsession/\ud83d\udce6\ufe0fpackages/\ud83e\udd80\ufe0frust",
+        "command": "bun ./📜️script.ts canonical-architecture",
+        "cwd": "✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/📦️packages/🦀️rust",
         "forwardAllArgs": false
       }
     }
+  },
+  "namedInputs": {
+    "nativeSources": [
+      "{workspaceRoot}/✏️s/🔨️modules/🌐️spatial-kernel/⚙️engine/🧠️semio/🌊️session/🧩️component/**/*"
+    ]
   }
 }

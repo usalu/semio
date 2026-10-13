@@ -2,7 +2,7 @@
 #[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🧪️test/🛬️original-snapshot-owners/🦀️.rs"]
 mod original_owners;
 use super::*;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use semio_framework_value::{DslValue,FromValue,ToValue};
 
 
@@ -34,9 +34,9 @@ fn sqlite_snapshot_lowpoly_managed_mesh_complete_owner_and_independent_sql_edits
  let mut input=fixture().to_value();let DslValue::Object(document)=&mut input else{panic!("document owner")};let DslValue::Array(objects)=&mut document.iter_mut().find(|(name,_)|name=="objects").unwrap().1 else{panic!("ordered objects")};let DslValue::Object(object)=&mut objects[0]else{panic!("object owner")};object.iter_mut().find(|(name,_)|name=="meshState").expect("single authored managed mesh field").1=neutral["mesh"].clone();
  let expected=crate::standards::v1::subsets::any::io::text::lowpoly_json_bind::<LowpolySnapshot>(input).expect("declared full managed mesh owner");
  assert_eq!(expected.to_value()["objects"][0]["meshState"],neutral["mesh"].clone(),"actual owning construction must preserve all seven managed mesh fields");
- let limits=SqliteDatabaseLimits::default();let codec=<LowpolySnapshot as store::ArtifactPack>::sqlite_snapshot_codec().expect("real Lowpoly codec");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.lowpoly.lowpoly".into(),standard:"1".into(),subset:"*".into()};
+ let limits=SqliteDatabaseLimits::default();let codec=<LowpolySnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().expect("real Lowpoly codec");let dialect=semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.lowpoly.lowpoly".into(),standard:"1".into(),subset:"*".into()};
  for encoding in[SnapshotEncoding::Binary,SnapshotEncoding::Text]{
-  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&expected)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&expected))};
+  let payload=match encoding{SnapshotEncoding::Binary=>store::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&expected)),SnapshotEncoding::Text=>store::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&expected))};
   let database=original_owners::with_decoding(|native_owner|(codec.export)("s.lowpoly.lowpoly",&dialect,&payload,&mut SqliteSnapshotControl::new(&mut |_|true,limits), native_owner)).unwrap().value;
   let bytes=export_sqlite_database(&database,limits,&mut |_|true).unwrap();
   use std::{io::Write,process::{Command,Stdio}};

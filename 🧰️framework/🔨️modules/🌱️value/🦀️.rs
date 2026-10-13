@@ -440,6 +440,17 @@ macro_rules! dsl_value {
 }
 //#endregion 🔖️Literal
 
+//#region 🔖️SchemaExports
+const VALUE_SCHEMA_EXPORTS: [semio_framework_schema_registry::SchemaExport; 1] = [semio_framework_schema_registry::SchemaExport { id: "schema", leaves: semio_framework_schema_registry::FacetLeaves { rust: "", typescript: include_str!("🧬️schema/🟦️.ts"), graphql: include_str!("🧬️schema/🔗️.graphql"), json_schema: include_str!("🧬️schema/🔣️.json"), proto: include_str!("🧬️schema/🛰️.proto") } }];
+
+/// 📌️ Registers the framework value schema (`framework/value/schema.json`: `DslValue`, `Binary64`, `Binary64Transport`, the
+/// integer carriers) as the `schema` export of the `framework.value` scope, so every contract that `$ref`s it resolves it.
+// 🚫️async: E1 pure registration helper (no I/O) — see R9
+pub fn register_value_schema_exports() -> Result<(), semio_framework_schema_registry::SchemaExportRegistryError> {
+    semio_framework_schema_registry::register_scope_schema_exports(semio_framework_schema_registry::ScopeSchemaExports { scope: "framework.value", exports: &VALUE_SCHEMA_EXPORTS })
+}
+//#endregion 🔖️SchemaExports
+
 
 
 #[cfg(test)]

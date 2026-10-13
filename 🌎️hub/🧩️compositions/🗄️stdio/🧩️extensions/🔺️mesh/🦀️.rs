@@ -11,8 +11,8 @@ use semio_framework_plugin::{ExecutionMode, Plugin, PluginApp, PluginAssemblyErr
 semio_framework_dispatch_macros::dyn_enum_close! {
     /// 🗃️ The present owner-authored runtime app contributions.
     pub enum StdioMeshApps: PluginApp {
-        GltfAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor>>),
-        GltfAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer>>),
+        GltfAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_gltf_editor::editor::gltf::GltfAnyEditor>>),
+        GltfAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_gltf_editor::viewer::gltf::GltfAnyViewer>>),
         ObjAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_obj::editor::obj::ObjAnyEditor>>),
         ObjAnyViewer(VcsArtifactApp<ViewerApp<semio_s_artifact_stdio_obj::viewer::obj::ObjAnyViewer>>),
         StlAnyEditor(VcsArtifactApp<EditorApp<semio_s_artifact_stdio_stl::editor::stl::StlAnyEditor>>),
@@ -32,8 +32,8 @@ pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
     builder = builder.host_artifact(semio_s_artifact_stdio_stl::declaration(semio_s_artifact_stdio_stl::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_ply::declaration(semio_s_artifact_stdio_ply::definition()?).map_err(PluginAssemblyError::definition)?);
     builder = builder.host_artifact(semio_s_artifact_stdio_las::declaration(semio_s_artifact_stdio_las::definition()?).map_err(PluginAssemblyError::definition)?);
-    builder = builder.editor::<semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor>(semio_s_artifact_stdio_gltf::editor::gltf::create_gltf_any_editor());
-    builder = builder.viewer::<semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer>(semio_s_artifact_stdio_gltf::viewer::gltf::create_gltf_any_viewer());
+    builder = builder.editor::<semio_s_artifact_stdio_gltf_editor::editor::gltf::GltfAnyEditor>(semio_s_artifact_stdio_gltf_editor::editor::gltf::create_gltf_any_editor());
+    builder = builder.viewer::<semio_s_artifact_stdio_gltf_editor::viewer::gltf::GltfAnyViewer>(semio_s_artifact_stdio_gltf_editor::viewer::gltf::create_gltf_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_obj::editor::obj::ObjAnyEditor>(semio_s_artifact_stdio_obj::editor::obj::create_obj_any_editor());
     builder = builder.viewer::<semio_s_artifact_stdio_obj::viewer::obj::ObjAnyViewer>(semio_s_artifact_stdio_obj::viewer::obj::create_obj_any_viewer());
     builder = builder.editor::<semio_s_artifact_stdio_stl::editor::stl::StlAnyEditor>(semio_s_artifact_stdio_stl::editor::stl::create_stl_any_editor());
@@ -50,6 +50,3 @@ pub fn plugin() -> Result<Plugin<StdioMeshApps>, PluginAssemblyError> {
     builder = builder.execution(ExecutionMode::Isolated).requests(CapabilityRequest { id: CapabilityId("artifacts.write".into()), scope: "plugin".into(), reason: "persist contributed editor operations to the open document".into(), optional: false });
     builder.try_build()
 }
-
-#[cfg(feature = "plugin-root")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, StdioMeshApps);

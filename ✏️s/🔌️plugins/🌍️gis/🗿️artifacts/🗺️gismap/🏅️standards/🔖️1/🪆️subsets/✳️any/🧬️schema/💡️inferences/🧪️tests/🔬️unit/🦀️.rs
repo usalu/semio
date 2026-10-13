@@ -19,15 +19,15 @@ async fn map_create_region_group_work_stabilizes_parent_drawing_value_without_im
     use crate::standards::v1::subsets::any::io::text::mutations::apply_gis_map_mutation;
     use crate::schema::gis_map_snapshot_to_drawing;
 use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_json;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::{mutations::{diff_semio_drawing_mutation, SemioDrawingMutation as AppliedDrawingMutation}, snapshot::SemioDrawingSnapshot as AppliedDrawingSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::{mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, snapshot::SemioValueSnapshot as AppliedValueSnapshot};
+    use {semio_s_artifact_stdio_semio_drawing::schema::mutations::{diff_semio_drawing_mutation, SemioDrawingMutation as AppliedDrawingMutation}, semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot as AppliedDrawingSnapshot};
+    use {semio_s_artifact_stdio_semio_value::schema::mutations::{diff_semio_value_mutation, SemioValueMutation as AppliedValueMutation}, semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot as AppliedValueSnapshot};
         let apply_semio_drawing_mutation = |content: &mut AppliedDrawingSnapshot, mutation: &AppliedDrawingMutation| {
             let outcome = diff_semio_drawing_mutation(mutation, content);
-            *content = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");
+            *content = semio_framework_os_kernel::apply_diff(outcome.diff(), content).expect("a drawing diff applies to the snapshot it was computed from");
         };
         let apply_semio_value_mutation = |content: &mut AppliedValueSnapshot, mutation: &AppliedValueMutation| {
             let outcome = diff_semio_value_mutation(mutation, content);
-            *content = semio_s_artifact_stdio_semio::apply_diff(outcome.diff(), content).expect("a value diff applies to the snapshot it was computed from");
+            *content = semio_framework_os_kernel::apply_diff(outcome.diff(), content).expect("a value diff applies to the snapshot it was computed from");
         };
 
     let feature = |id: &str, data: serde_json::Value| MapFeature { id: id.into(), data: semio_framework_value::DslValue::from(data) };
@@ -76,7 +76,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::gis_map_descriptor_j
         candidate.drawing.child_id = row["drawingChildId"].as_str().unwrap().into();
         candidate.value.child_id = row["valueChildId"].as_str().unwrap().into();
         candidate.image = row["imageChildId"].as_str().map(|id| {
-            store::ArtifactChild::new(id.to_owned(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } })
+            store::os_store::artifact_child::ArtifactChild::new(id.to_owned(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id.to_owned(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } })
         });
         let supplied_image = candidate.image.clone();
         if row["deriveChildren"].as_bool().unwrap() {

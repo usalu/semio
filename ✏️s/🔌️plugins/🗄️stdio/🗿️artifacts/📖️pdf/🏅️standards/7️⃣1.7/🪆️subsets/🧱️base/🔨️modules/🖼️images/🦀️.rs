@@ -2,9 +2,9 @@
 //! or a retained image codec — and lowering it back, masks and soft masks included.
 
 use super::colour::{extra_entries, lift_colour_space, lower_colour_space, numbers_of, push_opt, raw_stream};
-use super::lexer::{dict_get, dict_i64, dict_name};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_get, dict_i64, dict_name};
 use super::xref::ObjectSink;
-use super::lexer::{PResult,PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{PdfArtifactResourcePort,NativePdfArtifactResources};
 use crate::standards::v1_7::subsets::base::schema::graph_source::ObjectSource;
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfDictEntry, PdfImage, PdfImageBody, PdfImageMask, PdfObject, PdfStreamFilter};

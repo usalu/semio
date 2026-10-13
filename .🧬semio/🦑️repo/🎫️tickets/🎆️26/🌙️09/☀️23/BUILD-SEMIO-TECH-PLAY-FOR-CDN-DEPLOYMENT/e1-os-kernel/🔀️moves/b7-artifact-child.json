@@ -1,0 +1,22 @@
+{
+  "target": "🪆️child/🦀️.rs",
+  "module": "artifact_child",
+  "anchor": "//#region 🔖️CompositionDsl\n",
+  "doc": [
+    "//! 🪆️ Artifact children and their records: `ArtifactChild`, child references and retained parts, local text owners,",
+    "//! and the DSL records of children, owner references and links that composition, codecs and the engine share.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️CompositionDsl"
+  ],
+  "items": [
+    "ArtifactChild",
+    "ArtifactChildRetainedParts",
+    "ArtifactChildLocalText",
+    "ArtifactChildMaterializationError",
+    "ChildRef"
+  ],
+  "movableTraits": []
+}

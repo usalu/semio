@@ -4,7 +4,7 @@ use std::io::Read;
 
 #[semio_framework_async_macros::async_test]
 async fn exports_every_program_table_to_a_real_archive() {
-    let program = crate::sample_plugin();
+    let program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
     let archive = serialize(&program).expect("serialize program archive");
     assert_eq!(archive.entries.len(), 70);
     let elements = archive.entries.iter().find(|entry| entry.name == "elements.json").expect("elements entry");

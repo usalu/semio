@@ -4,7 +4,7 @@
 //! other `Host` method is a two-arm match over `HostBackend`:
 //!
 //! - `HostBackend::Poll` (`world actor`, today's only LIVE backend): builds a
-//!   `semio_framework::kernel::Effect`, hands it to a `⚛️reactor/📮️requests::RequestRegistry`, and
+//!   `semio_framework::kernel::Effect`, hands it to a `🌐host/📮️requests::RequestRegistry`, and
 //!   awaits the matching `Event::Completed`/`Event::HttpChunk`/`Event::JobCompleted` on a LATER
 //!   `reactor::poll` call — this arm is BYTE-FOR-BYTE what every method did before this packet.
 //! - `HostBackend::Direct` (only constructible with `component-guest-async` on): calls the matching
@@ -25,7 +25,7 @@
 //! the things a pooled multi-instance actor cannot keep). Cloning is cheap either way (`Poll`
 //! wraps an `Rc`; `Direct` carries no state at all).
 
-use crate::reactor::requests::RequestRegistry;
+use requests::RequestRegistry;
 use semio_framework_value::DslValue;
 use semio_framework::kernel::{CapabilityId, ClipboardFragment, Effect, IconRenderExportItem, JobPlacement, RequestId, RequestOutcome, WindowHandle, WindowKindId};
 use semio_framework::{Fault, FaultCode, FaultOrigin, MediaType};
@@ -33,16 +33,18 @@ use semio_framework_value_derive::{FromValue, ToValue};
 
 #[path = "📖️body/🦀️.rs"]
 pub mod body;
+#[path = "📮️requests/🦀️.rs"]
+pub mod requests;
 pub use body::BodyReader;
 
 /// 📦️ Encodes a fault as the ABI `pack` `completion-result.fault` and every `host-async` Err arm carry.
 /// Schema: `🔌️plugin/🧬️schema/📜️.wit` `type pack = list<u8>` — no JSON string on this data path.
-pub(crate) fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
+fn encode_fault_pack(fault: &Fault) -> Vec<u8> {
     store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(fault))
 }
 
 /// 📦️ Inverse of [`encode_fault_pack`] — the guest decode of a host-written fault pack.
-pub(crate) fn decode_fault_pack(bytes: &[u8]) -> Fault {
+fn decode_fault_pack(bytes: &[u8]) -> Fault {
     match store::pack_rt::decode_wire_value(bytes) {
         Ok(value) => semio_framework_value::FromValue::from_value(value).unwrap_or_else(|_| Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned())),
         Err(_) => Fault::new(FaultOrigin::Os, FaultCode::new("os.fault.decode"), String::from_utf8_lossy(bytes).into_owned()),
@@ -167,7 +169,7 @@ pub struct Host {
 
 /// 🌊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): the envelope `http_fetch` resolves to —
 /// `body` streams so a Direct-world caller can start consuming before the response finishes; a
-/// Poll-world caller gets the SAME type back, already fully reassembled by `⚛️reactor/📮️requests::
+/// Poll-world caller gets the SAME type back, already fully reassembled by `🌐host/📮️requests::
 /// RequestRegistry::append_chunk` (see `Host::http_fetch`'s own doc).
 pub struct HttpFetchResponse {
     pub status: u16,
@@ -334,7 +336,7 @@ impl Host {
     /// 🌊️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (sdk-async): the STREAMING counterpart to
     /// `http_request` — `host-async`'s `http-fetch` renames the poll world's `http-request` and
     /// resolves to a `stream<u8>` body (design-abi.md §4's fix for `Event::HttpChunk`'s discarded-
-    /// chunk bug, see `⚛️reactor/📮️requests::RequestRegistry::append_chunk`). Poll arm reuses the
+    /// chunk bug, see `🌐host/📮️requests::RequestRegistry::append_chunk`). Poll arm reuses the
     /// SAME `Effect::HttpRequest` round-trip `http_request` uses (`append_chunk` has already fully
     /// reassembled the body by the time this resolves — a poll-world completion is one shot, there
     /// is nothing left to stream), decodes the JSON `HttpResponseWire` envelope
@@ -1049,34 +1051,34 @@ fn kernel_outcome_to_direct_wit_respond(result: RequestOutcome) -> direct::effec
     }
 }
 
-/// 📝️ Synchronous — wraps the `pure` WIT import `log`. Native/test builds (no `component-guest`
-/// wasm32-wasip2 target) fall back to `eprintln!`, mirroring `host_port::host_now_ms`'s own
+/// 📝️ Synchronous — wraps the `pure` WIT import `log`. Native/test builds (no wasm32-wasip2
+/// target) fall back to `eprintln!`, mirroring `host_port::host_now_ms`'s own
 /// fallback shape.
 pub async fn log(level: &str, message: &str) {
-    #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
         crate::component::wasip2::semio::framework::pure::log(level, message);
     }
-    #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     eprintln!("[{level}] {message}");
 }
 
 /// ⏱️ Synchronous — wraps the `pure` WIT import `now-ms`.
 pub async fn now_ms() -> i64 {
-    #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
         crate::component::wasip2::semio::framework::pure::now_ms()
     }
-    #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map_or(0, |elapsed| elapsed.as_millis() as i64)
 }
 
 /// 📏️ Synchronous — wraps the `pure` WIT import `trace-span`.
 pub async fn trace_span(name: &str) {
-    #[cfg(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2"))]
+    #[cfg(all(target_arch = "wasm32", target_env = "p2"))]
     {
         crate::component::wasip2::semio::framework::pure::trace_span(name);
     }
-    #[cfg(not(all(feature = "component-guest", target_arch = "wasm32", target_env = "p2")))]
+    #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
     let _ = name;
 }

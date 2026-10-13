@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::representation::topology::{ReachabilityJob,ReachabilityStep,BodyCompactionJob};
+use semio_framework_3d_brep_representation::topology::{ReachabilityJob, ReachabilityStep, BodyCompactionJob};
 use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},RetirementDemand,ValueError,ValueRefusalKind};
 
 /// 🧹️ Retains original live registry rows and their borrowed topology roots before the original bounded arena sweep.

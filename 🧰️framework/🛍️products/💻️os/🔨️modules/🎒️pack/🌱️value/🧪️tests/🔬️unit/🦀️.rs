@@ -102,9 +102,9 @@ fn full_record() -> RecordValue {
     let mut bar_fields = RecordValue::default().fields;
     bar_fields.insert(1, FieldValue::Text("statement text".to_string()));
     fields.insert(12, FieldValue::Statements(vec![("foo".to_string(), RecordValue { fields: foo_fields }), ("bar".to_string(), RecordValue { fields: bar_fields })]));
-    // `Map`/`DslValue::Object` are `Vec`-backed so `PartialEq` is order-sensitive; since
-    // canonical encoding always sorts entries by key bytes, these fixtures are pre-sorted
-    // ("aaa" < "zzz", "arr" < "k") so the round-trip equality check below holds exactly.
+    // `Map`/`DslValue::Object` are `Vec`-backed so `PartialEq` is order-sensitive; a closed-schema
+    // `Map` is encoded sorted by key bytes while an intrinsic `DslValue::Object` keeps its occurrence
+    // order, so both fixtures are authored pre-sorted ("aaa" < "zzz", "arr" < "k") and round-trip exactly.
     fields.insert(13, FieldValue::Map(vec![("aaa".to_string(), FieldValue::Int(2)), ("zzz".to_string(), FieldValue::Int(1))]));
     fields.insert(14, FieldValue::Value(DslValue::Object(vec![("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])), ("k".to_string(), DslValue::float(1.0))])));
     let table_rows: Vec<FieldValue> = (0..3)

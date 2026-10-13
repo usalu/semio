@@ -23,9 +23,9 @@ use semio_framework_artifact_playbook_playbook as playbook;
 
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_plugin::{ChildContentView, Fault, FaultCode, FaultOrigin};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, remove_node_param, set_node_param, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::{insert_edge, insert_node, remove_edge, remove_node, remove_node_param, set_node_param, SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use std::collections::{BTreeMap, BTreeSet};
 
 //#region 🔖️Types
@@ -54,7 +54,7 @@ pub fn empty_playbook_snapshot() -> PlaybookSnapshot {
 
 //#region 🔖️ContentBridge
 /// 🕸️ Owned CHILD handle type of the composed `s.stdio.semio@v1/flow` document that holds playbook's steps.
-pub type PlaybookFlowChild = store::ArtifactChild<SemioFlowSnapshot>;
+pub type PlaybookFlowChild = store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>;
 
 /// 🎫️ The `flow` child a new playbook composes (see [`playbook_genesis_flow`]).
 pub const PLAYBOOK_GENESIS_FLOW_ID: &str = "playbook-flow";
@@ -73,7 +73,7 @@ const PLAYBOOK_STEP_SPACING: f64 = 220.0;
 /// child-lane leaf in that child's own store (`child_id` is also the child's artifact id, as `ChildRestoreProjection` requires).
 pub fn playbook_flow_child(child_id: &str) -> PlaybookFlowChild {
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
-    store::ArtifactChild::new(child_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.to_string(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect })
 }
 
 /// 🗝️ The param key of block `block_id`: one param per block, so a block is inserted, removed and moved as one concrete param row.
@@ -191,7 +191,7 @@ pub fn playbook_child_restore_projection(snapshot: &PlaybookSnapshot) -> Result<
 
 /// 🌊️ The `flow` child content `snapshot` names, read through `children` (design §20.15: readers compose on read, never through
 /// the handle). A child that is not composed, or composed as anything but `s.stdio.semio@v1/flow`, is a named fault.
-pub fn playbook_flow_content<'a>(snapshot: &PlaybookSnapshot, children: &'a ChildContentView) -> Result<store::SnapshotReadRef<'a, SemioFlowSnapshot>, Fault> {
+pub fn playbook_flow_content<'a>(snapshot: &PlaybookSnapshot, children: &'a ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioFlowSnapshot>, Fault> {
     let child_id = snapshot.flow.child_id.as_str();
     match children.dialect(PLAYBOOK_FLOW_SLOT, child_id) {
         Some(dialect) if dialect.artifact_kind == "s.stdio.semio" && dialect.standard == "v1" && dialect.subset == "flow" => children.typed_read::<SemioFlowSnapshot>(PLAYBOOK_FLOW_SLOT, child_id),
@@ -220,7 +220,7 @@ pub fn playbook_genesis_flow(child_id: &str) -> Option<SemioFlowSnapshot> {
 /// 🧩️ The genesis pack of `snapshot`'s `flow` child ([`playbook_genesis_flow`]) for a whole-document load whose archive carries
 /// no such member.
 pub fn genesis_playbook_child_pack(snapshot: &PlaybookSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot != PLAYBOOK_FLOW_SLOT || child_id != snapshot.flow.child_id {
         return None;
     }

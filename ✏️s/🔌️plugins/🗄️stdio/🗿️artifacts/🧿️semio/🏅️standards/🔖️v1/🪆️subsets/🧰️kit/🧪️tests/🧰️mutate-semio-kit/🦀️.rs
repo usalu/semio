@@ -61,17 +61,17 @@ fn plan_mutations(ctx: &Context) -> Result<(Vec<Json>, Json), String> {
 #[cfg(feature = "sut")]
 mod subject {
     use semio_repo_test_host::{parse_json, Context, Json, Outcome};
-    use semio_s_artifact_stdio_semio::apply_diff;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::mutations::semio_mutation_refusals;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::mutations::{diff_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::mutations::{decode_kit_mutation_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::binary::snapshot::{decode_semio_kit_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::binary::snapshot::{encode_semio_kit_pack};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{print_semio_kit_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{parse_semio_kit_dsl};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{encode_kit_snapshot_json};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::io::text::snapshot::{decode_kit_snapshot_json};
+    use semio_framework_os_kernel::apply_diff;
+    use semio_s_artifact_stdio_semio_base::schema::mutations::outcome::semio_mutation_refusals;
+    use semio_s_artifact_stdio_semio_kit::schema::mutations::{diff_semio_kit_mutation, inverse_semio_kit_mutation, SemioKitMutation};
+    use semio_s_artifact_stdio_semio_kit::io::text::mutations::decode_kit_mutation_json;
+    use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+    use semio_s_artifact_stdio_semio_kit::io::binary::snapshot::decode_semio_kit_pack;
+    use semio_s_artifact_stdio_semio_kit::io::binary::snapshot::encode_semio_kit_pack;
+    use semio_s_artifact_stdio_semio_kit::io::text::snapshot::print_semio_kit_dsl;
+    use semio_s_artifact_stdio_semio_kit::io::text::snapshot::parse_semio_kit_dsl;
+    use semio_s_artifact_stdio_semio_kit::io::text::snapshot::encode_kit_snapshot_json;
+    use semio_s_artifact_stdio_semio_kit::io::text::snapshot::decode_kit_snapshot_json;
     use semio_repo_test_host::law::carrier_is_exact;
 
     //#region 🔖️Bridges

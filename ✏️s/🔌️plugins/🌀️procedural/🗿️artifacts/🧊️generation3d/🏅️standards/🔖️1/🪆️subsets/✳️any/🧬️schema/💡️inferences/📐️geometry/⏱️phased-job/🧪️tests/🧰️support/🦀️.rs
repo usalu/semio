@@ -9,8 +9,8 @@ pub mod base;
 
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{GeometryHandle, GeometryKind, MeshTransfer, ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::queries::analysis::{edge_table, face_table, ShapeScope};
+use {semio_framework_3d_brep_engine::{GeometryHandle, GeometryKind, ShapeRoot, ShapeValue}, semio_framework_3d_brep_representation::contract::MeshTransfer};
+use semio_framework_3d_brep_queries::analysis::{edge_table, face_table, ShapeScope};
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 

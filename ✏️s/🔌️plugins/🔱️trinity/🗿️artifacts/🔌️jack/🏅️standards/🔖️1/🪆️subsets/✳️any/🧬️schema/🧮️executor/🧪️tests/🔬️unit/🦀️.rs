@@ -9,7 +9,7 @@ use crate::{Camera, JackSnapshot, Manifest};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
 /// 🧸️ The retained content child of a standalone snapshot — what the run-query job reads from its child view.
-fn content_of(snapshot: &JackSnapshot) -> semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot {
+fn content_of(snapshot: &JackSnapshot) -> semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot {
     crate::jack_content_for_handle(&snapshot.content).expect("retained content child").snapshot().clone()
 }
 

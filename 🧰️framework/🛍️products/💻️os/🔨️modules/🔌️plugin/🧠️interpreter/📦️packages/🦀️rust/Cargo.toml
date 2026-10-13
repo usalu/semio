@@ -1,0 +1,39 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-framework-plugin-interpreter"
+version = "0.1.0"
+edition = "2021"
+rust-version.workspace = true
+description = "Repository-owned WebAssembly interpreter and the guest runtime it backs: instruction-fuelled actor turns, jobs, checkpoints and pure codec exports, with no JIT"
+
+[package.metadata.semio]
+role = "framework"
+id = "plugin-interpreter"
+
+[lints]
+workspace = true
+
+[lib]
+path = "🦀️.rs"
+
+[dependencies]
+semio-framework = { workspace = true }
+semio-framework-actor = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-diagnostic = { path = "../../../../../../../🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
+semio-framework-hash = { workspace = true }
+semio-framework-job = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { path = "../../../../../../../🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
+semio-framework-value = { workspace = true }
+semio-framework-value-derive = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+[dev-dependencies]
+# 🐎️ The independent execution oracle of the interpreter's laws (`🧪️tests/🔬️unit`): the same Wasmtime the plugin host links, never a
+# dependency of the crate itself.
+wasmtime = { version = "47.0.3", features = ["cranelift", "component-model", "component-model-async"] }
+semio-framework-async-macros = { path = "../../../../../../../🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }
+semio-framework-trace = { workspace = true }

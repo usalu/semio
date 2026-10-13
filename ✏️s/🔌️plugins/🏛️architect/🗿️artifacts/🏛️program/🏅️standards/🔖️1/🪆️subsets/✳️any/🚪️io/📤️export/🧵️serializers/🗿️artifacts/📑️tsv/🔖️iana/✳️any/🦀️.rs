@@ -1,5 +1,5 @@
 //! 📑️ Native IANA TSV register exchange.
-use crate::{ProgramSnapshot,kernel::PluginError};
+use crate::standards::v1::subsets::any::schema::{snapshot::ProgramSnapshot, kernel::PluginError};
 use crate::standards::v1::subsets::any::io::tables::{collect_rows,RegisterCsvRow,REGISTER_ROW_COLUMNS};
 use semio_s_artifact_stdio_tsv as stdio_tsv;
 use semio_s_artifact_stdio_tsv::standards::iana::subsets::any::schema::snapshot as stdio_tsv_line_ending;

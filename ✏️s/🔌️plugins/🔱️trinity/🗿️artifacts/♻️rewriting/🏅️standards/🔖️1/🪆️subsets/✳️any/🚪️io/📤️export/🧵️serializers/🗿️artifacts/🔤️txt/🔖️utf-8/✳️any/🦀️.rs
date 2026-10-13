@@ -5,7 +5,7 @@ use semio_s_artifact_stdio_txt::TxtSnapshot;
 pub fn register() {}
 
 pub fn serialize(snapshot: &RewritingSnapshot) -> Result<TxtSnapshot, semio_framework_diagnostic::TextError> {
-    Ok(TxtSnapshot::from_body(&<RewritingSnapshot as store::ArtifactDsl>::print_dsl(snapshot)))
+    Ok(TxtSnapshot::from_body(&<RewritingSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)))
 }
 
 pub fn serialize_bytes(snapshot: &RewritingSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {

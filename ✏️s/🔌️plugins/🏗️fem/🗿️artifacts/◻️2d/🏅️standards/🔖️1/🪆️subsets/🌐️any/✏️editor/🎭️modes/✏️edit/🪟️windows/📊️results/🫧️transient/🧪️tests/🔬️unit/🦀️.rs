@@ -2,7 +2,7 @@ use super::*;
 use crate::app_surface::{FemLoopMode, FemResultsAnimation, FemWaveform, ANIMATION_TICK_SECONDS};
 use protocol::{Mutation, MutationDiff, OpBinary, OpText};
 use std::collections::BTreeMap;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn settings(loop_mode: FemLoopMode) -> FemResultsAnimation {
     FemResultsAnimation { phase: 0.0, playing: true, speed: 0.5, loop_mode, waveform: FemWaveform::Ramp, reverse: false }
@@ -82,11 +82,11 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
         let after: FemResultsWindowTransient = serde_json::from_value(row["after"].clone()).unwrap();
         let mut store = store::TransientStore::<_, FemResultsWindowTransientMutation>::new(before);
         let mut publication = store.begin_publish_one_leased(semio_framework_job::OperationId(1), 0, SetPlaybackClock { clock: after.clock }.into(), owners.preparation.as_ref(), owners.state_retirement.clone()).unwrap();
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
-        assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::ArtifactStoreOneItemAdvance::Blocked));
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+        let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
+        assert!(matches!(store.advance_publish_one(&mut publication, zero).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked));
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: 4096, maximum_release_bytes: 4096, maximum_depth: 64 };
         for _ in 0..8 {
-            if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::ArtifactStoreOneItemAdvance::Published(_)) {
+            if matches!(store.advance_publish_one(&mut publication, grant).unwrap(), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)) {
                 break;
             }
         }
@@ -95,7 +95,7 @@ fn clock_publication_and_retirement_obey_tiny_grants() {
         for _ in 0..4096 {
             if publication.terminal_is_empty() { break; }
             let demand = publication.retirement_demands(4096).expect("quoted clock publication close");
-            let close = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
+            let close = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             match publication.close_step(close).expect("an unaliased clock publication must close") {
                 semio_framework_value::retained_clone::RetainedCloneStep::Complete(progress) => { assert!(progress.fits(close.retained_grant())); break; }
                 semio_framework_value::retained_clone::RetainedCloneStep::Progress(progress) => assert!(progress.fits(close.retained_grant()) && progress.copied_items <= 1),
@@ -115,7 +115,7 @@ fn clock_partition_matches_language_neutral_json_oracle() {
         let clock = serde_json::from_value::<Option<FemPlaybackClock>>(step["clock"].clone()).expect("clock");
         let mutation = FemResultsWindowTransientMutation::from(SetPlaybackClock { clock });
         let state = typed.entry(window_id.clone()).or_default();
-        let (next, _) = store::apply_outcome(state, Mutation::diff(&mutation, state));
+        let (next, _) = store::os_store::replay::apply_outcome(state, Mutation::diff(&mutation, state));
         *state = next;
         oracle.insert(window_id, step["clock"].clone());
         store::os_store::test_support::assert_op_text_binary_equivalence(&mutation);

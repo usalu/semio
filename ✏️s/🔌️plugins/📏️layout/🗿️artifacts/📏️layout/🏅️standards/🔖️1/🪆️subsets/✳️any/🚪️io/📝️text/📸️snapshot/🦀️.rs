@@ -13,12 +13,12 @@ pub const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬�
 
 /// 📖️ Parses `.layout` DSL text into a `LayoutSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<LayoutSnapshot, semio_framework_diagnostic::TextError> {
-    <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `LayoutSnapshot` back to `.layout` DSL text.
 pub fn print_dsl(document: &LayoutSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -43,7 +43,7 @@ use schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
 
 /// ✉️ `ArtifactDsl` and `ArtifactPack` over the one derived record spec.
-impl store::ArtifactDsl for LayoutSnapshot {
+impl store::os_store::serialization::ArtifactDsl for LayoutSnapshot {
     const EXTENSION: &'static str = "layout";
     fn envelope_id() -> &'static str {
         LAYOUT_DOCUMENT_SCHEMA
@@ -58,7 +58,7 @@ impl store::ArtifactDsl for LayoutSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -79,7 +79,7 @@ use crate::standards::v1::subsets::any::schema::mutations::{change_data_fields,c
 /// halves — the bytes against the committed artifact, and the projection against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn round_trip_layout_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let parsed = <LayoutSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed layout example does not parse: {error:?}"))?;
     let printed = <LayoutSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <LayoutSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted layout document does not parse: {error:?}"))?;

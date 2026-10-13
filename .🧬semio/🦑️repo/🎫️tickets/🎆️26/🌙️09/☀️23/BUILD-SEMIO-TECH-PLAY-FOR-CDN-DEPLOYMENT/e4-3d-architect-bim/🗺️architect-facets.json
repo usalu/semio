@@ -1,0 +1,90 @@
+{
+ "root": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🦀️.rs",
+ "base": "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program",
+ "order": [
+  "model",
+  "mutations",
+  "inferences",
+  "io",
+  "editor",
+  "viewer",
+  "examples",
+  "root"
+ ],
+ "allow": {
+  "model": [],
+  "mutations": [
+   "model"
+  ],
+  "inferences": [
+   "model"
+  ],
+  "io": [
+   "model",
+   "mutations",
+   "inferences"
+  ],
+  "editor": [
+   "model",
+   "mutations",
+   "inferences",
+   "io"
+  ],
+  "viewer": [
+   "model",
+   "mutations",
+   "inferences",
+   "io",
+   "editor"
+  ],
+  "examples": [
+   "model",
+   "mutations",
+   "inferences",
+   "io"
+  ],
+  "root": [
+   "model",
+   "mutations",
+   "inferences",
+   "io",
+   "editor",
+   "viewer",
+   "examples"
+  ]
+ },
+ "files": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "viewer"
+  ],
+  [
+   "/📚️examples/",
+   "examples"
+  ],
+  [
+   "/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/",
+   "io"
+  ]
+ ]
+}

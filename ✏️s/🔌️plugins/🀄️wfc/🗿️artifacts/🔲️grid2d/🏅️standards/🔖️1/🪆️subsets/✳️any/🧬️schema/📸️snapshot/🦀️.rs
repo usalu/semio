@@ -7,7 +7,7 @@
 
 use ::semio_framework_schema::ArtifactSchema;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 
 //#region 🔖️Ids
 pub const WFC_GRID2D_DOCUMENT_SCHEMA: &str = "s.wfc.grid2d";
@@ -75,7 +75,7 @@ pub struct WfcVectorPath {
 pub enum WfcTileMedia2d {
     Bitmap { width: u32, height: u32, palette: Vec<WfcColor>, pixels: String },
     Vector { paths: Vec<WfcVectorPath> },
-    Image { child: store::ArtifactChild<SemioImageSnapshot> },
+    Image { child: store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot> },
 }
 
 impl Default for WfcTileMedia2d {

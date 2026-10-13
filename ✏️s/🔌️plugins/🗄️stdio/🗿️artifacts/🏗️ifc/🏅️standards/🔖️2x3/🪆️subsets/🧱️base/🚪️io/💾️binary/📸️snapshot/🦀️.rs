@@ -16,8 +16,8 @@ use crate::standards::v2x3::subsets::base::schema::snapshot::*;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::Part21Document;
 
-impl store::ArtifactPack for Ifc2x3Snapshot {
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> { Some(<Self as semio_framework_os_kernel::ArtifactSqliteSnapshot>::sqlite_codec()) }
+impl store::os_store::serialization::ArtifactPack for Ifc2x3Snapshot {
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> { Some(<Self as semio_framework_os_kernel::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec()) }
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> { native::encode_pack(self, options) }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> { native::decode_pack(bytes, options) }
 }

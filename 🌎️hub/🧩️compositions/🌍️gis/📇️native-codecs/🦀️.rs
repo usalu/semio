@@ -57,10 +57,10 @@ impl NativeGisCodecReceiptV1 {
         }
     }
 
-    fn codec(&self) -> store::ArtifactCodec {
+    fn codec(&self) -> store::os_store::serialization::ArtifactCodec {
         match self.artifact {
-            GisCodecV1::Map => store::ArtifactCodec::bare::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>("gis.map"),
-            GisCodecV1::Terrain => store::ArtifactCodec::bare::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>("gis.terrain"),
+            GisCodecV1::Map => store::bare_artifact_codec::<semio_s_artifact_gis_gismap::GisMapSnapshot, semio_s_artifact_gis_gismap::GisMapMutation>("gis.map"),
+            GisCodecV1::Terrain => store::bare_artifact_codec::<semio_s_artifact_gis_gisterrain::GisTerrainSnapshot, semio_s_artifact_gis_gisterrain::GisTerrainMutation>("gis.terrain"),
         }
     }
 
@@ -92,7 +92,7 @@ impl NativeGisCodecReceiptV1 {
     }
 
     /// 🧬 Consumes the inert receipt into the exact typed codec after declaration revalidation.
-    pub fn into_codec(self) -> Result<store::ArtifactCodec, PluginAssemblyError> {
+    pub fn into_codec(self) -> Result<store::os_store::serialization::ArtifactCodec, PluginAssemblyError> {
         self.validate()?;
         let identity = self.identity();
         let codec = self.codec();

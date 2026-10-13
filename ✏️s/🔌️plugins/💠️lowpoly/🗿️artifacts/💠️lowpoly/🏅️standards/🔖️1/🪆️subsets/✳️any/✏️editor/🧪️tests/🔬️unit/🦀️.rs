@@ -563,10 +563,10 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 /// replayed twice onto a fresh receiver.
 #[semio_framework_async_macros::async_test]
 async fn ingest_operations_is_idempotent() {
-    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     let mut sender = app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://lowpoly-idempotent", "mem://lowpoly-idempotent").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     dispatch(&mut sender, LowpolyCommand::PatchObject(patch_object::PatchObject { object_id: "obj-1".into(), field: "name".into(), value_json: Some(serde_json::to_string("Hero").unwrap()) })).await;
     assert_eq!(sender.snapshot().expect("projection").objects[0].name, "Hero");
     let mut envelopes = Vec::new();

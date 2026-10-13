@@ -5,12 +5,13 @@ import { createWgpuBrowserConfig } from "../🟦️.ts";
 import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, pluginModulesRoot } from "../../../../../../🧑‍💻dev/♻️activation/🟦️.ts";
 import { semioAssetsVitePlugin, semioServeCloseVitePlugin } from "../../../../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🟦️.ts";
 import { semioBackboneVitePlugin, semioSourceFreshnessVitePlugins } from "../../../../../../🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
+import { readBuildMode } from "../../../../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const workspace = resolve(root, "../../../../../../../../..");
 /** 🎚️ Selects the server's actual completed build profile. */
 export function wgpuCompletedProfileV1(): "dev" | "release" {
-  return process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
+  return readBuildMode(process.env.SEMIO_BUILD_MODE) === "release" ? "release" : "dev";
 }
 /** 📂️ Owns the completed native/browser roots shared by server mounts and runtime graph verification. */
 export function wgpuCompletedFrameworkRootsV1(profile: "dev" | "release") {
@@ -24,7 +25,7 @@ export function wgpuCompletedFrameworkRootsV1(profile: "dev" | "release") {
 export function createCompletedWgpuConfigurationV1(options: { readonly variant: string | undefined; readonly catalog: import("../../../../../../🔌️plugin/📇️registry/🟦️.ts").PluginCatalogRowsV1; readonly assets: readonly import("../../../../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts").AssetDeliveryDeclarationV1[] }) {
   const variant = options.variant;
   const profile = wgpuCompletedProfileV1();
-  const moduleRoot = pluginModulesRoot(profile);
+  const moduleRoot = pluginModulesRoot();
   const runtime = developmentRuntimeRoot(resolve(root, "../../../../../🧑‍💻dev/📦️packages/🟦️typescript"), variant!, profile, "wgpu");
   const config = createWgpuBrowserConfig({
     workspace, root, profile, variant,

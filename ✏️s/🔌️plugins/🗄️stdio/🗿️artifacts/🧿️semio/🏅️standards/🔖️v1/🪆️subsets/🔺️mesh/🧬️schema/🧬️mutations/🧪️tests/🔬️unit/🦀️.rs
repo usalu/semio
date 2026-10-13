@@ -1,6 +1,6 @@
 use super::*;
 use protocol::command::DiffAlgebra;
-use protocol::{Mutation, MutationDiff, SemanticMutation};
+use protocol::{Mutation, SemanticMutation};
 
 /// 🔧️ All 4 collections are id-keyed SETS with no user-meaningful display order (this facet's
 /// own `🔺️diff` module doc comment): `create-*`'s diff always APPENDS to `added`, so an

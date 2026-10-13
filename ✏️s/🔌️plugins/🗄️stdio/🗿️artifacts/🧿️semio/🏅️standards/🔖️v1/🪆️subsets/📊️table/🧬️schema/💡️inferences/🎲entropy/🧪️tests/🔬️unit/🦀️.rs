@@ -1,5 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use crate::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
 use store::{InferenceCache, InferenceCacheConfig};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -115,7 +115,7 @@ fn owned_dependency_matches_neutral_fixture_and_serde_oracle() {
     let symbols=fixture["symbols"].as_array().unwrap(); let snapshot=SemioTableSnapshot {columns:vec![SemioTableColumn{name:"coin".into(),kind:SemioTableCellKind::Str}],rows:symbols.iter().map(|value|SemioTableRow{cells:vec![SemioValue::Str{value:value.as_str().unwrap().into()}]}).collect(),..Default::default()};
     let dependency=ColumnEntropy::dep_input(&snapshot,&"coin".into(),&[]);
     let actual:serde_json::Value=serde_json::from_str(&semio_framework_pack_json::to_json_string(&dependency)).expect("owned dependency output");
-    let mut counts=std::collections::BTreeMap::new(); for value in symbols { *counts.entry(value.as_str().unwrap()).or_insert(0u64)+=1; } let oracle=serde_json::to_value(counts.values().copied().collect::<Vec<_>>()).unwrap();
+    let mut counts=BTreeMap::new(); for value in symbols { *counts.entry(value.as_str().unwrap()).or_insert(0u64)+=1; } let oracle=serde_json::to_value(counts.values().copied().collect::<Vec<_>>()).unwrap();
     assert_eq!(actual,oracle);
     assert_eq!(actual,fixture["expected"]);
     eprintln!("[DEBUG] Typed inference dependency matches authored values and independent serde_json output");

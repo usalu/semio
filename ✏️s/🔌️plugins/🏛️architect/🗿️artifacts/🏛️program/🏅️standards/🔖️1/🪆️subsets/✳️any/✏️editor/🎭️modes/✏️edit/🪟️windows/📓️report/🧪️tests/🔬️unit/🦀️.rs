@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::architect::catalog::report_record_from;
-use crate::registers::ReportKind;
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::registers::ReportKind;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 use crate::standards::v1::subsets::any::schema::inferences::build_report;
 use semio_framework_plugin::ViewModel;
 
@@ -41,7 +41,7 @@ async fn architect_window_ownership_report_empty_selection_renders_a_localized_p
 
 #[semio_framework_async_macros::async_test]
 async fn architect_window_ownership_report_deleted_selection_renders_a_localized_missing_state() {
-    let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(crate::EntityId("missing-report".into())) };
+    let cfg = config::ArchitectReportWindowConfig { selected_report_id: Some(crate::standards::v1::subsets::any::schema::kernel::EntityId("missing-report".into())) };
     let de = ViewModel { locale: semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), ..ViewModel::new(semio_framework_ui_locale::Locale::from_language_tag("de").expect("declared fixture locale"), semio_framework_ui_locale::Terminology::Native) };
     let json = crate::editor::architect::unit_tests::context::project_render(render(&sample_plugin(), &cfg, &de, &semio_framework_plugin::TreeWindows::unhosted()));
     assert!(json.contains("ist nicht verfügbar"));

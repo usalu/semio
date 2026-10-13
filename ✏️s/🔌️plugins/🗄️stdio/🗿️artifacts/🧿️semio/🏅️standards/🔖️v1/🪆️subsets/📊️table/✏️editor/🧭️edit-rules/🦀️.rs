@@ -1,8 +1,8 @@
 //! 🧭️ The table editor's edit rules: which snapshot pointer raises which ONE concrete table mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{build, ent, event_path, field, ins, item, keyed, list_move, named, positions, rem, resolve, spread_snake, take, uint, unsupported, Entries, Reshape, ITEM};
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{build, ent, event_path, field, ins, item, keyed, list_move, named, positions, rem, resolve, spread_snake, take, uint, unsupported, Entries, Reshape, ITEM};
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::{DslValue, ToValue};
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};

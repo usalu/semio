@@ -6,7 +6,7 @@ async fn writer_into_json_round_trips_through_json_into_writer() {
     let original = crate::writer_snapshot_with_text("writer.document", "id", "plain", "writer://id", "hello");
     let outcome = WriterIntoJson::serialize(&original, &semio_framework_os_kernel::io::io_mechanism::ArchiveChildren::empty()).await.expect("serialize");
     let IoPayload::Text(text) = &outcome.value else { panic!("JSON native Text carrier") };
-    let json = <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).expect("actual JSON native owner");
+    let json = <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).expect("actual JSON native owner");
     let expected: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&original)).unwrap();
     let observed: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_string(&json.to_pack_value())).unwrap();
     assert_eq!(observed, expected, "independent full Writer JSON fields");

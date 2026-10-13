@@ -11,8 +11,8 @@ pub fn diff(payload: &super::SetStyleName, base: &SemioDocumentSnapshot) -> prot
     let super::SetStyleName { id, name } = payload;
     protocol::MutationOutcome::new(match style_at(base, id) {
         Some(old) if &old.name != name => SemioDocumentDiff {
-            styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff {
-                modified: vec![crate::standards::v1::subsets::base::schema::triples::NamedModified { key: id.clone(), diff: crate::standards::v1::subsets::document::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None } }],
+            styles: Some(crate::schema::diff::StylesDiff {
+                modified: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedModified { key: id.clone(), diff: crate::schema::diff::DocStyleDiff { name: Some(name.clone()), based_on: None } }],
                 ..Default::default()
             }),
             images: None,

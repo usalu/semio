@@ -72,7 +72,7 @@ fn a_moved_vertex_sits_where_the_offset_puts_it() {
     let value = Arc::new(session.export(&vertex).expect("export"));
     let (_, evaluation) = run("brep.transform.translate", vec![("shape", GeometryValue::Shape(value)), ("offset", GeometryValue::Vector([1.0, 2.0, 3.0]))], usize::MAX);
     let GeometryValue::Shape(moved) = &evaluation.outputs["shape"] else { panic!("shape") };
-    let semio_framework_3d::brep::engine::ShapeRoot::Vertex(id) = moved.root else { panic!("vertex") };
+    let semio_framework_3d_brep_engine::ShapeRoot::Vertex(id) = moved.root else { panic!("vertex") };
     let position = moved.body.vertices.get(id).expect("vertex").position;
     assert_eq!([position.x, position.y, position.z], [2.0, 3.0, 4.0]);
 }

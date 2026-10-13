@@ -1,8 +1,8 @@
 //! ✅️ Semio document referential-integrity inference over canonical collection dependencies.
-//! Pure computational geometry validation belongs to `semio_framework_3d::brep::queries::validation`.
+//! Pure computational geometry validation belongs to `semio_framework_3d_brep_queries::validation`.
 
-use crate::standards::v1::subsets::brep::schema::check_brep_referential_integrity;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use crate::schema::check_brep_referential_integrity;
+use crate::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️Value
 /// 🩺 One referential-integrity finding — a small, owned, `ToValue`/`FromValue` projection of
@@ -51,12 +51,12 @@ impl store::InferredField<SemioBrepSnapshot> for BrepValidationReport {
     fn dep_input(snapshot: &SemioBrepSnapshot, _key: &Self::Key, _parents: &[Self::Key]) -> Self::Dependency {
         #[derive(value_derive::ToValue)]
         struct DepInput {
-            vertices: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepVertex>,
-            edges: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepEdge>,
-            loops: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepLoop>,
-            faces: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepFace>,
-            shells: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepShell>,
-            solids: Vec<crate::standards::v1::subsets::brep::schema::snapshot::BrepSolid>,
+            vertices: Vec<crate::schema::snapshot::BrepVertex>,
+            edges: Vec<crate::schema::snapshot::BrepEdge>,
+            loops: Vec<crate::schema::snapshot::BrepLoop>,
+            faces: Vec<crate::schema::snapshot::BrepFace>,
+            shells: Vec<crate::schema::snapshot::BrepShell>,
+            solids: Vec<crate::schema::snapshot::BrepSolid>,
         }
         semio_framework_value::ToValue::to_value(&DepInput { vertices: snapshot.vertices.clone(), edges: snapshot.edges.clone(), loops: snapshot.loops.clone(), faces: snapshot.faces.clone(), shells: snapshot.shells.clone(), solids: snapshot.solids.clone() })
     }

@@ -25,7 +25,7 @@ enum Terminal {
 }
 
 fn empty_raster_initializer(operation: OperationId, generation: semio_framework_job::Generation) -> RasterStoreInitializationAuthority {
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-retained-load", empty_raster_document(), None);
     RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -205,7 +205,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
             .assets
             .insert(
                 format!("mounted-{index}"),
-                store::ArtifactChild::new(
+                store::os_store::artifact_child::ArtifactChild::new(
                     format!("child-{index}"),
                     semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("artifact-{index}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
                 ),
@@ -213,7 +213,7 @@ fn raster_empty_bounds_and_mounted_sixty_four_fuel_progress_across_second_map_pa
             .expect("mounted-shaped source admits its second fixed map page");
     }
     retire_raster_value_cold(empty);
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-mounted-64-fuel", source, None);
     let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     let cancel = semio_framework_job::root_cancel_token();
     let mut preview_sequence = 0;
@@ -294,7 +294,7 @@ fn raster_small_mutation_against_deep_snapshot_is_cursorized_and_atomic() {
 fn raster_cancel_after_complete_retires_the_unclaimed_candidate_before_terminal() {
     let operation = OperationId(707);
     let generation = semio_framework_job::Generation(39);
-    let envelope = store::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(RASTER_DOCUMENT_SCHEMA, "raster-cancel-complete", deeply_nested_raster_snapshot(RASTER_MAXIMUM_NESTED_DEPTH - 8), None);
     let mut authority = RasterStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));
     assert_eq!(drive_raster_initializer(&mut authority, operation, generation, 4_096), Terminal::Complete);
     assert!(authority.candidate.is_some());
@@ -366,7 +366,7 @@ fn raster_populated_owned_map_retires_every_entry_and_page_backing() {
         assets
             .insert(
                 format!("asset-{index:02}"),
-                store::ArtifactChild::new(
+                store::os_store::artifact_child::ArtifactChild::new(
                     format!("child-{index:02}"),
                     semio_framework_artifact_reference::ArtifactRef { artifact_id: format!("artifact-{index:02}"), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "image".into() } },
                 ),

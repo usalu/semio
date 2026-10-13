@@ -39,8 +39,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<PptxSnapshot, PptxMutation>(STDIO_PPTX_DOCUMENT_SCHEMA);
     codec.extension = "pptx";
     codec.pack_schema_hash = semio_framework_hash::Sha256::digest(include_bytes!("🏅️standards/🔖️ecma-376/🪆️subsets/🧱️base/🚪️io/💾️binary/📸️snapshot/📡️.protocol.semio"));
     codec
@@ -58,7 +58,7 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 /// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g2) —
 /// replaces the old side-effecting `crate::engine::register()`. Mirrors `🔋️energy`'s
 /// `s.model` exemplar: headless library artifact, zero `ArtifactApp`s, so `.document_codec_bare`
-/// stands in for the old `store::register_document_codec(store::ArtifactCodec::bare::<PptxSnapshot,
+/// stands in for the old `store::os_store::codec_registry::register_document_codec(store::bare_artifact_codec::<PptxSnapshot,
 /// PptxMutation>(...))` call. `.composers(...)` reaches the engine's own `io_registry` (through the
 /// `engine` shim), whose `entries()` already aggregates the `🧱️base`/`🔒️strict`/`🌉️transitional`
 /// `ComposerEntry` rows — NOT this file's own shadowing `io_registry` below, whose `entries()`

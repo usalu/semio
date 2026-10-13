@@ -3,8 +3,8 @@
 //! never `change` — the discriminator is whether the editor ever manipulates the value's interior
 //! piecewise, and it does here.
 
-use crate::standards::v1::subsets::brep::schema::mutations::SemioBrepMutation;
-use crate::standards::v1::subsets::brep::schema::snapshot::{BrepCurve, SemioBrepSnapshot};
+use crate::schema::mutations::SemioBrepMutation;
+use crate::schema::snapshot::{BrepCurve, SemioBrepSnapshot};
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

@@ -3,8 +3,14 @@
 use crate::standards::v_ac1024::subsets::any::schema::snapshot::{
     DwgApplicationHistory, DwgApplicationInfo, DwgAuxiliaryHeader, DwgClass, DwgDependency, DwgHeaderVariables, DwgIndexedPreview, DwgLogicalDrawing, DwgRevisionHistory, DwgSummaryInfo, DwgTemplate,
 };
-use crate::DwgSnapshot;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::DwgSnapshot;
 use framework_schema::ArtifactSchema;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_DWG_DOCUMENT_SCHEMA: &str = "stdio.dwg";
+
+/// 🧬️ Artifact schema descriptor id.
+pub const DWG_ARTIFACT_SCHEMA_ID: &str = "s.stdio.dwg";
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_value::RetireOwned)]
@@ -173,9 +179,9 @@ pub fn dwg_artifact_schema_descriptor() -> semio_framework_schema_registry::Arti
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::standards::v_ac1024::engine::empty_dwg_snapshot` through the `engine`
+/// `crate::standards::v_ac1024::subsets::any::schema::empty_dwg_snapshot` through the `engine`
 /// barrel shim, and (via the root `crate::engine` shim, ac1024-only) as
-/// `crate::engine::empty_dwg_snapshot` too.
+/// `crate::standards::v_ac1024::subsets::any::schema::empty_dwg_snapshot` too.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_dwg_snapshot() -> DwgSnapshot {
     DwgSnapshot::default()
@@ -196,13 +202,13 @@ pub fn demo_dwg_snapshot() -> DwgSnapshot {
 /// scope boundary every other pilot's own `register_schema_specs` observes). Dissolved out of
 /// `⚙️engine` (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — one of the ten
 /// deliberate imperative `engine::register()`-family calls left in place at the stdio plugin
-/// root's own `.setup(crate::engine::register_schema_specs)`, reached through the
+/// root's own `.setup(crate::standards::v_ac1024::subsets::any::schema::register_schema_specs)`, reached through the
 /// root `engine` shim (ac1024-only) and this standard's own `engine` barrel shim.
 #[cfg(not(target_arch = "wasm32"))]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn register_schema_specs() {
     ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg", DwgSnapshot::__dsl_spec));
-    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::schema::diff::DwgDiff::__dsl_spec));
+    ::semio_framework_async::poll::resolve_ready(dsl::registry::register_schema_spec("stdio.dwg#diff", crate::standards::v_ac1024::subsets::any::schema::diff::DwgDiff::__dsl_spec));
 }
 
 #[cfg(target_arch = "wasm32")]

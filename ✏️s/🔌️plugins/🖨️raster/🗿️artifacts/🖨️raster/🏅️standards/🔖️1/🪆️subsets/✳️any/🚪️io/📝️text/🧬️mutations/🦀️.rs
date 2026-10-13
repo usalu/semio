@@ -41,7 +41,7 @@ pub(crate) struct RasterImageDsl {
 
 impl From<&SemioImageSnapshot> for RasterImageDsl {
     fn from(image: &SemioImageSnapshot) -> Self {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::SemioColorspace;
+        use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioColorspace;
         Self {
             schema: image.schema.clone(), width: image.width, height: image.height, bit_depth: image.bit_depth,
             colorspace: match image.colorspace { SemioColorspace::Rgb => RasterImageColorspaceDsl::Rgb, SemioColorspace::Rgba => RasterImageColorspaceDsl::Rgba, SemioColorspace::Grayscale => RasterImageColorspaceDsl::Grayscale, SemioColorspace::GrayscaleAlpha => RasterImageColorspaceDsl::GrayscaleAlpha, SemioColorspace::Indexed => RasterImageColorspaceDsl::Indexed },
@@ -53,7 +53,7 @@ impl From<&SemioImageSnapshot> for RasterImageDsl {
 
 impl From<RasterImageDsl> for SemioImageSnapshot {
     fn from(image: RasterImageDsl) -> Self {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
+        use semio_s_artifact_stdio_semio_image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry};
         Self {
             schema: image.schema, width: image.width, height: image.height, bit_depth: image.bit_depth,
             colorspace: match image.colorspace { RasterImageColorspaceDsl::Rgb => SemioColorspace::Rgb, RasterImageColorspaceDsl::Rgba => SemioColorspace::Rgba, RasterImageColorspaceDsl::Grayscale => SemioColorspace::Grayscale, RasterImageColorspaceDsl::GrayscaleAlpha => SemioColorspace::GrayscaleAlpha, RasterImageColorspaceDsl::Indexed => SemioColorspace::Indexed },

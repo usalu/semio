@@ -16,8 +16,8 @@ extern crate semio_framework_schema as framework_schema;
 use semio_framework_artifact_playbook_playbook as playbook;
 
 use semio_framework_plugin::{ArtifactKindSpec, MediaClass, MediaForm, MediaType, OsMediaCapability};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueSnapshot, STDIO_SEMIOVALUE_DOCUMENT_SCHEMA};
 
 //#region 🔖️Types
 pub use crate::playbook::{
@@ -40,8 +40,8 @@ pub use crate::schema::snapshot::FormsSnapshot;
 //#region 🔖️Composition
 /// 🧩️ Owns the form's complete step and question structure; results are a derived table projection.
 //#region 🔖️ChildTypes
-pub type FormsStructureChild = store::ArtifactChild<SemioValueSnapshot>;
-pub type FormsResultsChild = store::ArtifactChild<SemioTableSnapshot>;
+pub type FormsStructureChild = store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>;
+pub type FormsResultsChild = store::os_store::artifact_child::ArtifactChild<SemioTableSnapshot>;
 //#endregion 🔖️ChildTypes
 
 //#region 🔖️Converters
@@ -327,7 +327,7 @@ pub fn forms_results_child(responses: &[schema::response::FormsResponse]) -> For
     let mut digest = std::collections::hash_map::DefaultHasher::new();
     semio_framework_pack_json::to_json_string(&responses.to_vec()).hash(&mut digest);
     let id = format!("forms-table-{:016x}", digest.finish());
-    store::ArtifactChild::new(id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
+    store::os_store::artifact_child::ArtifactChild::new(id.clone(), semio_framework_artifact_reference::ArtifactRef { artifact_id: id, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } })
 }
 //#endregion 🔖️Converters
 
@@ -350,7 +350,7 @@ pub fn forms_children_from_steps(steps: &[FormStep]) -> (FormsStructureChild, Fo
         dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() },
     };
     let structure = target_for("value");
-    (store::ArtifactChild::new(structure.artifact_id.clone(), structure), forms_results_child(&[]))
+    (store::os_store::artifact_child::ArtifactChild::new(structure.artifact_id.clone(), structure), forms_results_child(&[]))
 }
 
 /// 🔎️ Reads the authoritative durable definition.
@@ -367,7 +367,7 @@ pub fn forms_snapshot_with_state(schema: String, id: String, version: String, ti
 
 /// 🌱️ Materializes the exact derived child requested by the framework's archive loader.
 pub fn forms_genesis_child_pack(snapshot: &FormsSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     if slot == "structure" && child_id == snapshot.structure.child_id { return Some(forms_structure_from_steps(&snapshot.definition.steps).encode_pack()); }
     if slot == "results" && child_id == snapshot.results.child_id { return Some(forms_results_from_responses(&snapshot.responses).encode_pack()); }
     None

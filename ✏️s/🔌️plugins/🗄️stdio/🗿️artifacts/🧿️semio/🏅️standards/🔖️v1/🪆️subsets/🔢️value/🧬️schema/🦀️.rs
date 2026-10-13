@@ -1,7 +1,7 @@
 //! 🧬️ SemioValueArtifact schema — full artifact state, mirrors `SemioValueSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows).
 
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueNode, SemioValueSnapshot};
+use crate::schema::snapshot::{SemioValue, SemioValueNode, SemioValueSnapshot};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

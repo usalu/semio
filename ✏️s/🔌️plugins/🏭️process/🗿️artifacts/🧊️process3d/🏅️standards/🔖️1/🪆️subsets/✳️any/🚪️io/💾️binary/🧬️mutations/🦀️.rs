@@ -218,14 +218,14 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 
     semio_framework_artifact_reference::ArtifactRef::parse_uri(&read_str_lp(reader)?)
 }
-fn write_child<S>(out: &mut Vec<u8>, c: &store::ArtifactChild<S>) {
+fn write_child<S>(out: &mut Vec<u8>, c: &store::os_store::artifact_child::ArtifactChild<S>) {
     write_str_lp(out, &c.child_id);
     write_ref(out, &c.target);
 }
-fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::ArtifactChild<S>, String> {
+fn read_child<S>(reader: &mut store::ByteReader<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, String> {
     let child_id = read_str_lp(reader)?;
     let target = read_ref(reader)?;
-    Ok(store::ArtifactChild::new(child_id, target))
+    Ok(store::os_store::artifact_child::ArtifactChild::new(child_id, target))
 }
 fn write_pose(out: &mut Vec<u8>, pose: &Pose) {
     for value in pose.position.iter().chain(pose.axis.iter()).chain(std::iter::once(&pose.angle)) {

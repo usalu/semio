@@ -103,7 +103,7 @@ impl ArtifactViewer for SequenceViewer {
         if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "flow" {
             return Err(semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", "published Sequence child dialect is not s.stdio.semio@v1/flow"));
         }
-        let content = doc.children.typed_read::<semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot>("content", child_id)
+        let content = doc.children.typed_read::<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot>("content", child_id)
             .map_err(|error| semio_framework_plugin::PluginAssemblyError::new("sequence.child-content", format!("{error:?}")))?;
         let (steps, edges) = crate::working_from_sequence_content_snapshot(&content);
         let scene = neural_engine::ColdOwner::new(crate::SequenceWorkingScene { steps, edges });

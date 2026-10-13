@@ -4,12 +4,11 @@
 //! `mutation.target-missing`; otherwise the diff is a bare `metadata.removed[key]` — name-keyed,
 //! so no index is transported and the surviving entries keep their order. The two-entry
 //! before-snapshot is what makes "keeps the author entry" a real claim rather than a tautology.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::remove_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::set_metadata_entry;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_metadata_entry;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️remove-metadata-entry/💬️removes/📸️snapshot/➡️after/🔣️.json");
@@ -41,7 +40,7 @@ async fn removes_only_the_comment_entry() {
     assert_eq!(produced.metadata, vec![base.metadata[0].clone()], "the sibling Author entry must survive byte-identical");
     assert_eq!(produced.frames, base.frames, "removing a metadata entry must not touch a frame");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -54,9 +53,9 @@ async fn the_undo_set_metadata_entry_restores_the_captured_comment() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetMetadataEntry(set_metadata_entry::SetMetadataEntry { key: "Comment".to_string(), value: "draft".to_string(), at: Some(1) })], "the undo must recapture the removed entry's value from base");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "remove-metadata-entry/removes-the-comment-entry-and-keeps-the-author-entry: the undo did not restore the before-snapshot");
 }

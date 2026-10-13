@@ -6,10 +6,10 @@
 //! otherwise the new `store::ArtifactLink` is pushed onto `representations`. A LINK is not a child:
 //! it carries a `pin`, has an independent lifecycle, and never nests inline.
 
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🪢️bind-representation/🔗️binds/📸️snapshot/➡️after/🔣️.json");

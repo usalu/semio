@@ -139,7 +139,7 @@ pub(crate) mod context {
                 drain_settled(app, &mut result, &mut fault)?;
                 return fault.map_or(Ok(result), Err);
             }
-            crate::puzzle_job::testing::maintain(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
+            crate::puzzle_job::testing::maintain(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)?;
             block_on(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation))?;
             // 📄️ EVERY presented page and EVERY completion per turn, never one: `has_pending_typed_operations`
             // counts the outboxes and the mounted operations but NOT a page already presented and waiting
@@ -223,7 +223,7 @@ pub(crate) mod context {
         let mut loaded = 0;
         for effect in &result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the example loads");
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack: pack.clone(), spr: spr.clone(), ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the example loads");
                 loaded += 1;
             }
         }
@@ -299,7 +299,7 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return;
             }
-            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close quote");
+            let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Puzzle 2D registered app close quote");
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             if matches!(PluginApp::close_step(app, grant).expect("Puzzle 2D registered app close"), semio_framework_plugin::PluginLifecycleStep::Complete(_)) {
                 break;
@@ -362,7 +362,7 @@ pub(crate) mod context {
         let mut loaded = 0;
         for effect in result.requested_effects {
             if let Effect::LoadDocument { pack, spr } = effect {
-                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the import loads");
+                block_on(semio_framework_plugin::app::artifact_app_laws::load_document(app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity())).expect("the import loads");
                 loaded += 1;
             }
         }
@@ -384,7 +384,7 @@ use super::*;
 use crate::Puzzle2dSnapshot;
 use semio_framework::SET_ACTIVE_UTILITY_ACTION_ID;
 use semio_framework_plugin::PluginApp;
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 fn cohort_routes_are_cursorized(source: &str) -> bool {
     [
@@ -495,7 +495,7 @@ fn an_example_switch_emits_one_load_and_no_mutation() {
         let emit = puzzle2d_active_example_emit(&command, base, &Puzzle2dConfig::default()).expect("the switch emits");
         assert!(emit.artifact_mutations.is_empty() && emit.config_mutations.is_empty(), "no mutation row: {:?}", emit.artifact_mutations);
         let [Effect::LoadDocument { pack, .. }] = emit.effects.as_slice() else { panic!("one whole-document load: {:?}", emit.effects) };
-        let loaded = <crate::Puzzle2dSnapshot as store::ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes");
+        let loaded = <crate::Puzzle2dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("the loaded pack decodes");
         assert_eq!(&loaded, set_active_example::target(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID), "the load carries exactly the example");
     }
 }
@@ -595,7 +595,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     use crate::{Puzzle2dNode, PUZZLE_2D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = puzzle2d_store(create_document_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", Puzzle2dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let node = Puzzle2dNode { id: "n1".into(), ..Default::default() };
@@ -934,8 +934,8 @@ async fn two_instances_converge_disjoint_node_edits_via_backbone() {
     let mut instance_a = app();
     let mut instance_b = app();
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle2d-convergence", "mem://puzzle2d-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     dispatch(&mut instance_a, "addNode", Some(&json!({ "kind": "seed" })), None).expect("a adds node");
     dispatch(&mut instance_b, "addNode", Some(&json!({ "kind": "other" })), None).expect("b adds node");
@@ -956,7 +956,7 @@ async fn two_instances_converge_disjoint_node_edits_via_backbone() {
 async fn ingest_operations_is_idempotent() {
     let mut sender = app();
     let (near, mut far) = MemoryBackbone::pair("mem://puzzle2d-doc", "mem://puzzle2d-doc").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach");
     dispatch(&mut sender, "addNode", Some(&json!({ "kind": "seed" })), None).expect("add");
 
     let mut envelopes = Vec::new();

@@ -1,6 +1,6 @@
 use super::*;
-use crate::brep::representation::curve::Curve2;
-use crate::brep::representation::vector::{Pnt2, Vec2};
+use crate::curve::Curve2;
+use crate::vector::{Pnt2, Vec2};
 
 #[semio_framework_async_macros::async_test]
 async fn plane_transformed_matches_mapped_eval_under_non_similarity() {

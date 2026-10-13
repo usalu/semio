@@ -30,7 +30,7 @@ fn child_grant(grant: RetainedCloneGrant) -> RetainedCloneGrant {
 
 impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
     /// 📏️ Quotes the next retained-field turn on every independent axis; nothing is owed once every field is empty.
-    pub(crate) fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
+    fn retained_fields_close_demand(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.history_view.is_some() || self.cache.is_some() {
             return Ok(handoff_demand());
         }
@@ -94,7 +94,7 @@ impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A,
     }
 
     /// ♻️ Releases exactly one retained field owner under the caller's unchanged grant; a grant below the quote yields.
-    pub(crate) fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
+    fn retained_fields_close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, Fault> {
         let value_fault = |error: ValueError| plugin_sdk_fault(error.into_message());
         let idle = RetainedCloneProgress::default();
         if self.retained_fields_own_terminal_is_empty() {
@@ -361,10 +361,10 @@ impl ClosingOwner for PeerPresenceRootRetirement {
     fn closing_terminal_is_empty(&self) -> bool { self.terminal_is_empty() }
 }
 
-impl<P: Send + Sync + 'static> ClosingOwner for store::PresencePeersRetirement<P> {
+impl<P: Send + Sync + 'static> ClosingOwner for store::os_store::presence::PresencePeersRetirement<P> {
     fn closing_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> { envelope_ladder::erased_demand(self, body) }
     fn closing_step(&mut self, grant: RetainedCloneGrant) -> Result<PluginLifecycleStep, Fault> { envelope_ladder::erased_step(self, grant).map(|step| PluginLifecycleStep::Progress(step.progress())) }
-    fn closing_terminal_is_empty(&self) -> bool { store::PresencePeersRetirement::terminal_is_empty(self) }
+    fn closing_terminal_is_empty(&self) -> bool { store::os_store::presence::PresencePeersRetirement::terminal_is_empty(self) }
 }
 
 /// 📏️ Quotes the registry owner at `cursor`, or one hand-off when it only awaits removal.

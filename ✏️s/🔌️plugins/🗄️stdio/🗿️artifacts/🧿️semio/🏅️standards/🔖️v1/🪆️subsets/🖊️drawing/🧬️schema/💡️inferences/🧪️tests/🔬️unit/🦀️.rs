@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use protocol::Inference;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

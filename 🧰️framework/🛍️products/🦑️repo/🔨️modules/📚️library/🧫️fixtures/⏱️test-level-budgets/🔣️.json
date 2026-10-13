@@ -109,10 +109,10 @@
     "semio-s-plugin-cad-aec-building": {
       "quick": 600000
     },
-    "semio-s-plugin-cad-aec-building-energy": {
+    "semio-s-plugin-cad-aec-energy": {
       "quick": 600000
     },
-    "semio-s-plugin-cad-aec-building-structure": {
+    "semio-s-plugin-cad-aec-structure": {
       "quick": 600000
     },
     "semio-s-plugin-cad-spatial-shape": {

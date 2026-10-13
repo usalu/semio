@@ -32,8 +32,8 @@ import bootLifecycleSchema from "../../../🧬️schema/⏳️boot-lifecycle/�
 /** ⏳️ Progress belongs to one pending browser mount and its owned Worker. */
 export type WgpuBootProgress = { readonly stage: string; readonly progress: number; readonly worker: BrowserFrameWorkerStepReport };
 
-const RENDERER_MODULE_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js", import.meta.url).href;
-const RENDERER_WASM_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu_bg.wasm", import.meta.url).href;
+const RENDERER_MODULE_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component.js", import.meta.url).href;
+const RENDERER_WASM_URL = new URL("../renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component_bg.wasm", import.meta.url).href;
 const FRAME_WORKER_URL = new URL("../🎞️frame-worker.js/🟨️.js", import.meta.url);
 function armUiTurnDiagnostics(): void {
     const serverDefault = document.querySelector<HTMLMetaElement>('meta[name="semio-runtime-diagnostics"]')?.content;

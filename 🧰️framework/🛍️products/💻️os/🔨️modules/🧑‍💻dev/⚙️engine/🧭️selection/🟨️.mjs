@@ -1,5 +1,7 @@
-import { readFileSync, realpathSync } from "node:fs";
+import { observedFs } from "../../../../../🦑️repo/🔨️modules/📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
 import { isAbsolute, relative, resolve } from "node:path";
+
+const { readFileSync, realpathSync } = observedFs;
 
 /** 🧬️ Node preparation admits only explicitly selected owner's schema-first factory declarations. */
 export function declaredBrowserSessionEnginesV1(workspace, contributionPath) {

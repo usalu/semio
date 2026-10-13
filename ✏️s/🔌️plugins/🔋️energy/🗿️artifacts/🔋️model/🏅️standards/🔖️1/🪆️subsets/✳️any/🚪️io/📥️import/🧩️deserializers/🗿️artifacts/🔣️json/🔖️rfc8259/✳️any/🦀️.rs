@@ -7,7 +7,7 @@ use semio_s_artifact_stdio_json::{JsonSnapshot, STDIO_JSON_DOCUMENT_SCHEMA};
 /// 🌉 Bridges via json's own RFC8259 text codec (`JsonSnapshot::value` is `JsonValue`, json's
 /// own key-order/lexeme-preserving model) and this crate's `FromValue` impl, through
 /// `pack::json::from_json_str`. `serde` is not reachable here: `EnergyModelSnapshot` carries
-/// `store::ArtifactChild<S>` and `store::ArtifactLink`, and neither derives `Deserialize`
+/// `store::os_store::artifact_child::ArtifactChild<S>` and `store::ArtifactLink`, and neither derives `Deserialize`
 /// (`🏪️store/🦀️.rs:2996` — `ToValue`/`FromValue` only).
 pub async fn register() {}
 

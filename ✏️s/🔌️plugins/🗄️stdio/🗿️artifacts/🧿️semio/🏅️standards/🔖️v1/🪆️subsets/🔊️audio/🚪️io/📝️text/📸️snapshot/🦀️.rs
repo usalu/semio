@@ -11,8 +11,8 @@ pub type SemioAudioSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::audio::schema::snapshot::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
@@ -61,7 +61,7 @@ pub(crate) fn parse_u32(s: &str) -> Result<u32, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_format(f: SemioAudioFormat) -> &'static str {
+pub fn enc_format(f: SemioAudioFormat) -> &'static str {
     match f {
         SemioAudioFormat::Pcm8 => "pcm8",
         SemioAudioFormat::Pcm16 => "pcm16",
@@ -182,7 +182,7 @@ pub(crate) fn parse_audio_snapshot_body(body: &str) -> Result<SemioAudioSnapshot
 
 /// 🎁 Real structured text/binary codecs — replaces the old hex-dump-of-`serde_json` shortcut.
 /// Wrapped in the repo-wide `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioAudioSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioAudioSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOAUDIO_DOCUMENT_SCHEMA
@@ -198,26 +198,26 @@ impl store::ArtifactDsl for SemioAudioSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_audio_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
-/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::ArtifactDsl` text codec. `ArtifactDsl` is
+/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::os_store::serialization::ArtifactDsl` text codec. `ArtifactDsl` is
 /// declared by the os-kernel, which is an INTERNAL dependency of this plugin (aliased `store` in
 /// `🦀️.rs`) and is therefore not nameable by a consumer that links only this crate — a
 /// generated test host being the concrete case. The codec itself is the subset's, so its entry
 /// point belongs here rather than behind a trait the caller cannot import.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_audio_dsl(text: &str) -> Result<SemioAudioSnapshot, String> {
-    <SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
+    <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|e| e.to_string())
 }
 
-/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::ArtifactDsl` printer — see
+/// 📝️ Free-function face of [`SemioAudioSnapshot`]'s own `store::os_store::serialization::ArtifactDsl` printer — see
 /// [`parse_semio_audio_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_audio_dsl(snapshot: &SemioAudioSnapshot) -> String {
-    <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -225,11 +225,11 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level,strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::hex_decode_string;
-use crate::standards::v1::subsets::audio::schema::diff::*;
-use crate::standards::v1::subsets::audio::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
-use crate::standards::v1::subsets::base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::io::text::diff::hex_decode_string;
+use crate::schema::diff::*;
+use crate::schema::snapshot::{SemioAudioChannel, SemioAudioFormat, SemioAudioSnapshot, SemioAudioTag};
+use semio_s_artifact_stdio_semio_base::schema::triples::{self, IndexAdded, IndexModified, IndexedTripleDiff};
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — `impl protocol::DiffCodec for SemioAudioDiff` below's `encode_diff`/
 /// `decode_diff` are now real production code (binary upgrade, this wave), not test-only.

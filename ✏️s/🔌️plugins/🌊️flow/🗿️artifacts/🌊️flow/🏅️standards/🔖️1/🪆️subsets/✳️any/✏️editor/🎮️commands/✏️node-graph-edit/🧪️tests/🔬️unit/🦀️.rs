@@ -3,8 +3,8 @@ use crate::editor::flow::unit_tests::context::{dispatch, flow_app_closing, flow_
 use crate::editor::flow::FlowCommand;
 use semio_framework_plugin::artifact_app_laws::{meta, settle_registered_typed_operation};
 use semio_framework_plugin::{app::TypedOperationResultLane, PluginApp};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use store::{ArtifactPack, SpaceMember};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use store::{os_store::serialization::ArtifactPack, SpaceMember};
 
 /// 🪟️ Reads the actual main window's public geometry after the owning app settles.
 async fn published_host_snapshot(app: &mut FlowApp) -> serde_json::Value {
@@ -388,7 +388,7 @@ async fn finalizing_a_member_edit_as_a_new_alternative_branches_the_member_and_k
 /// replicas hold the complete shared journal while each retains its own viewed alternative (design §22.3).
 #[semio_framework_async_macros::async_test]
 async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
-    use store::MemoryBackbone;
+    use store::os_store::backbone::MemoryBackbone;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/👁️replica-head/🔣️.json")).expect("neutral replica head witness");
     let actors = fixture["actors"].as_array().expect("actors");
     let mut instance_a = crate::editor::flow::unit_tests::context::flow_app_with_actor(semio_framework_os_kernel::ActorId(actors[0].as_str().unwrap().into())).await;
@@ -398,8 +398,8 @@ async fn a_member_finalize_reaches_the_other_replica_on_the_member_lane() {
     instance_a.bind_instance_id(metadata_a.instance_id).await;
     instance_b.bind_instance_id(metadata_b.instance_id).await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://flow-member-history", "mem://flow-member-history").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let store = format!("content/{}", instance_a.snapshot().expect("snapshot").content.child_id);
     let node = fixture["node"].as_str().unwrap();
     let position = |field: &str| (fixture[field][0].as_f64().unwrap(), fixture[field][1].as_f64().unwrap());
@@ -565,20 +565,20 @@ async fn the_guest_reads_exactly_the_shared_node_graph_edit_rows() {
     assert_eq!(flow::dag::DAG_GRAPH_EDIT_CAPACITY, semio_framework_tool_machine::NODE_GRAPH_EDIT_MAX_ROWS, "a host journal never holds more rows than one dispatch admits");
 }
 
-fn flow_node(id: &str, kind: &str, params: &[(&str, &str)], x: f64) -> semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, FlowParam};
+fn flow_node(id: &str, kind: &str, params: &[(&str, &str)], x: f64) -> semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowNode {
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, FlowParam};
     let params = params.iter().map(|(key, value)| FlowParam { key: (*key).into(), value: (*value).into() }).collect();
-    FlowNode { id: id.into(), kind: kind.into(), label: id.into(), params, position: semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x, y: 0.0 } }
+    FlowNode { id: id.into(), kind: kind.into(), label: id.into(), params, position: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2 { x, y: 0.0 } }
 }
 
-fn flow_edge(id: &str, from: &str, to: &str) -> semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowEdge {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, PortRef};
+fn flow_edge(id: &str, from: &str, to: &str) -> semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowEdge {
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, PortRef};
     FlowEdge { id: id.into(), from: PortRef { node: from.into(), port: "out".into() }, to: PortRef { node: to.into(), port: "in".into() }, kind: "data".into() }
 }
 
 /// 🧮️ `leaves` folded over `base` exactly as the content child's store folds them; every leaf lands without a message.
-fn fold_leaves(base: &SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation]) -> SemioFlowSnapshot {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation;
+fn fold_leaves(base: &SemioFlowSnapshot, leaves: &[semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation]) -> SemioFlowSnapshot {
+    use semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation;
     leaves.iter().fold(base.clone(), |state, leaf| {
         let (diff, messages) = <SemioFlowMutation as protocol::Mutation<SemioFlowSnapshot>>::diff(leaf, &state).into_parts();
         assert!(messages.is_empty(), "{leaf:?}: {messages:?}");
@@ -599,7 +599,7 @@ fn by_id(mut snapshot: SemioFlowSnapshot) -> SemioFlowSnapshot {
 fn graph_gestures_land_as_the_concrete_leaves_their_rules_name() {
     use crate::editor::flow::edit_rules::ContentEdit;
     let base = SemioFlowSnapshot { nodes: vec![flow_node("a", "inputSlider", &[("value", "1"), ("min", "0")], 0.0), flow_node("b", "math.add", &[], 100.0), flow_node("c", "outputPreview", &[], 200.0)], edges: vec![flow_edge("e1", "a", "b"), flow_edge("e2", "b", "c")], ..SemioFlowSnapshot::default() };
-    let kinds = |leaves: &[semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::SemioFlowMutation]| -> Vec<String> { leaves.iter().map(|leaf| protocol::OpText::print_op(leaf).split(' ').next().unwrap_or_default().to_string()).collect() };
+    let kinds = |leaves: &[semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation]| -> Vec<String> { leaves.iter().map(|leaf| protocol::OpText::print_op(leaf).split(' ').next().unwrap_or_default().to_string()).collect() };
     let check = |what: &str, edit: ContentEdit, expected: Vec<&str>| {
         assert_eq!(kinds(&edit.leaves), expected, "{what}");
         assert_eq!(by_id(fold_leaves(&base, &edit.leaves)), by_id(edit.content.clone()), "{what}");

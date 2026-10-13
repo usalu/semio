@@ -47,7 +47,7 @@ fn re_setting_the_same_camera_is_a_declared_no_op() {
 
 #[test]
 fn the_window_config_round_trips_through_its_text_and_binary_codecs() {
-    use store::{ArtifactDsl, ArtifactPack};
+    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     let config = GisMapViewerWindowConfig { camera: camera() };
     assert_eq!(GisMapViewerWindowConfig::parse_dsl(&config.print_dsl()).expect("dsl round trip"), config);
     assert_eq!(GisMapViewerWindowConfig::decode_pack(&config.encode_pack()).expect("pack round trip"), config);

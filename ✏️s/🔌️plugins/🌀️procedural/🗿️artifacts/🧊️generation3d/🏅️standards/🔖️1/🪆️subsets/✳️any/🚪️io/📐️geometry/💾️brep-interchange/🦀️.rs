@@ -5,8 +5,8 @@
 use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::brep_curve::guarded;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::registry::phased_job::{cancelled_fault, Flow, Pipeline};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{BrepError, GeometryKind, MeshImportCursor, MeshTransfer};
-use semio_framework_mesh_engine::{MeshData};
+use {semio_framework_3d_brep_engine::{BrepError, GeometryKind, MeshImportCursor}, semio_framework_3d_brep_representation::contract::MeshTransfer};
+use semio_framework_mesh_engine::MeshData;
 use semio_framework_mesh_engine::io::text::{mesh_from_obj, mesh_to_obj};
 use semio_framework_mesh_engine::io::binary::{mesh_from_stl, mesh_to_stl};
 use semio_framework_io_base64::{base64_standard_decode, base64_standard_encode};
@@ -74,7 +74,7 @@ fn export_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 
 fn export_dwg(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     export_mesh(kind, &inputs, "dwg", |data| {
-        let bytes = semio_s_artifact_stdio_dwg::dwg_to_bytes(&semio_s_artifact_stdio_dwg::mesh_to_dwg_drawing(data)).map_err(|reason| WidgetFault::new(PARSE, format!("The DWG data could not be written: {reason}."), format!("Die DWG-Daten konnten nicht geschrieben werden: {reason}.")).at("shape"))?;
+        let bytes = semio_s_artifact_stdio_dwg_write::standards::v_ac1024::subsets::any::io::export::dwg_to_bytes(&semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::mesh_to_dwg_drawing(data)).map_err(|reason| WidgetFault::new(PARSE, format!("The DWG data could not be written: {reason}."), format!("Die DWG-Daten konnten nicht geschrieben werden: {reason}.")).at("shape"))?;
         Ok(base64_standard_encode(bytes))
     })
 }
@@ -137,8 +137,8 @@ fn import_obj(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
 
 fn import_dwg(kind: &Kind, inputs: WidgetInputs) -> Box<dyn WidgetJob> {
     faceted(kind, &inputs, |text| {
-        let drawing = semio_s_artifact_stdio_dwg::dwg_from_bytes(&decode(text)?).map_err(|reason| parse_fault("DWG", reason))?;
-        Ok(semio_s_artifact_stdio_dwg::dwg_drawing_to_mesh(&drawing))
+        let drawing = semio_s_artifact_stdio_dwg_read::standards::v_ac1024::subsets::any::io::import::dwg_from_bytes(&decode(text)?).map_err(|reason| parse_fault("DWG", reason))?;
+        Ok(semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::dwg_drawing_to_mesh(&drawing))
     })
 }
 //#endregion 🔖️Import

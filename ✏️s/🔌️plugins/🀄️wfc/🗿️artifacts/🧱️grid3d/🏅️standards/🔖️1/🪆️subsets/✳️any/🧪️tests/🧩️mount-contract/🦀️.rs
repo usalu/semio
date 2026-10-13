@@ -4,7 +4,7 @@
 use crate::examples::{blocks, pipes_3d};
 use crate::standards::v1::subsets::any::io::text::snapshot::{parse_dsl, print_dsl};
 use crate::{Grid3dSnapshot, WFC_GRID3D_DIALECT};
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 #[test]
 fn editor_and_viewer_share_the_grid3d_dialect() {

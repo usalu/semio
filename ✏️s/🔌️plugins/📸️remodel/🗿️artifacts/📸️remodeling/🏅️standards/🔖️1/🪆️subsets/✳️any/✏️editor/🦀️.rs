@@ -75,7 +75,7 @@ use semio_framework_plugin::UtilityCategory;
 use semio_framework_plugin::UtilityDefinition;
 use semio_framework_plugin::WindowMeasure;
 use std::collections::HashMap;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -147,10 +147,10 @@ pub use semio_framework_plugin::ui_node_list;
 //#region 🔖️ResetDocument
 /// 🌱️ Builds an `Effect::LoadDocument` that swaps the live document to `document` OUTSIDE undo history — the sanctioned
 /// path for an example switch, a JSON load or an import: the whole document is load content, never mutation rows and never
-/// a before/after diff. The spr is a fresh, edit-free op-log for `document` (`store::empty_document_spr`).
+/// a before/after diff. The spr is a fresh, edit-free op-log for `document` (`store::os_store::text_format::empty_document_spr`).
 pub fn reset_document_effect(document: &RemodelingSnapshot) -> semio_framework_plugin::Effect {
     let pack = <RemodelingSnapshot as ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("remodeling", REMODELING_DOCUMENT_SCHEMA));
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("remodeling", REMODELING_DOCUMENT_SCHEMA));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️ResetDocument
@@ -821,7 +821,7 @@ impl ArtifactEditor for RemodelingPlayApp {
     /// every route declaring `ArtifactToolPublicationLane::Artifact` is registered with an unsupported
     /// publication contract and stays dispatch-dead, no matter how it is classified. Item-count
     /// admission (`REMODELING_RETAINED_WORK_ITEMS`) is `remodeling_retained_extent`'s at dispatch.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

@@ -8,8 +8,8 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
     let mut document=raster_image_test_snapshot();document.title=Some(fixture["title"].as_str().unwrap().into());
     let layers=semio_framework_pack_json::from_json_str(&fixture["layers"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();crate::retire_raster_layers(std::mem::replace(&mut document.layers,layers));
-    let mut envelope=store::create_document_envelope::<crate::RasterSnapshot,crate::RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"raster",document,None);envelope.dialect=Some(crate::RASTER_DIALECT.into());
-    let files=store::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
+    let mut envelope=store::os_store::document_materialize::create_document_envelope::<crate::RasterSnapshot,crate::RasterMutation>(crate::RASTER_DOCUMENT_SCHEMA,"raster",document,None);envelope.dialect=Some(crate::RASTER_DIALECT.into());
+    let files=store::os_store::text_format::print_document_pack(&envelope).await.unwrap();context::retire_raster_envelope(envelope);
     let mut source=context::app().await;semio_framework_plugin::artifact_app_laws::load_document(&mut source, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.unwrap();
     let before=source.snapshot().unwrap();
     assert_eq!(serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&before.layers)).unwrap(),fixture["layers"]);
@@ -27,7 +27,7 @@ async fn editable_archive_restores_nested_masks_assets_adjustments_and_history()
             protocol::DocumentArchiveLoadState::Cancelled=>panic!("archive unexpectedly cancelled"),
             _=>{}
         }
-        restored.maintenance_step(1,store::OWNED_SCHEMA_DECODE_PAGE_BYTES).unwrap();semio_framework_async::yield_once().await;
+        restored.maintenance_step(1,store::os_store::owned_schema_decode::OWNED_SCHEMA_DECODE_PAGE_BYTES).unwrap();semio_framework_async::yield_once().await;
     }
     assert!(ready,"editable archive did not finish within its fixture turn bound");restored.acknowledge_document_archive_load(71).unwrap();
     let loaded=restored.snapshot().unwrap();assert_eq!(loaded,edited);assert_eq!(layer_name(find_layer(&loaded.layers,id).unwrap()),rename["after"].as_str().unwrap());retire_raster_snapshot(loaded);

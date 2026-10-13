@@ -6,7 +6,9 @@
 //! PRODUCER's constants equal to the same fixture, so a bound edited in one hop alone fails closed
 //! instead of turning a correct producer into a runtime fault on the wire.
 
-use crate::app::{ArtifactOutputChunks, ARTIFACT_OUTPUT_CHUNK_BYTES, ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES};
+use crate::media_contract::ArtifactOutputChunks;
+use crate::media_contract::ARTIFACT_OUTPUT_CHUNK_BYTES;
+use crate::media_contract::ARTIFACT_SEGMENTED_DOWNLOAD_TOTAL_BYTES;
 
 const CONTRACT_FIXTURE: &str = include_str!("../../../../../../🔨️modules/🎭️actor/📮️shard-client/📤️segmented-download/🧫️fixtures/🔣️.json");
 
@@ -79,8 +81,8 @@ fn segmented_output_original_full_grant_physical_retirement() {
         }
         chunks.seal().unwrap();
         let alias = chunks.clone();
-        let download = crate::app::ArtifactDownloadOutput::new("original.semio", "text/plain", None, chunks).unwrap();
-        assert!(<crate::app::ArtifactDownloadOutput as RetireOwned>::controlled_retirement_supported());
+        let download = crate::media_contract::ArtifactDownloadOutput::new("original.semio", "text/plain", None, chunks).unwrap();
+        assert!(<crate::media_contract::ArtifactDownloadOutput as RetireOwned>::controlled_retirement_supported());
         let mut owner = match ControlledRetirement::new(download) { Ok(owner) => owner, Err((error, _)) => panic!("original download owner refused: {error}") };
         let birth = owner.next_capacity_byte_demand(copy).unwrap();
         assert_ne!(birth, 0);

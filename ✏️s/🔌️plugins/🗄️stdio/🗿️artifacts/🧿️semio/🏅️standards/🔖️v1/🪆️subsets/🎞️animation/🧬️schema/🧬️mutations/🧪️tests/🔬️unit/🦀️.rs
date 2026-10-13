@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::animation::io::binary::mutations::wire_tag;
+use crate::io::binary::mutations::wire_tag;
 use super::*;
-use crate::standards::v1::subsets::animation::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
+use crate::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO as WIRE_PROTOCOL;
 
 /// 🧪️ `kinds_match_the_enum_and_the_catalog`: `KINDS` names every declared variant, at the
 /// position `wire_tag` assigns it, and every one of those names also appears in the
@@ -32,7 +32,7 @@ async fn mutation_diff_law_covers_every_variant() {
         let via_diff = protocol::apply_diff(diff.diff(), &base).expect("apply must succeed for a well-formed fixture");
 
         let mut applied = base.clone();
-        let (__next, returned_diff) = crate::applied(&applied, &m);
+        let (__next, returned_diff) = semio_s_artifact_stdio_semio_base::applied(&applied, &m);
         applied = __next;
 
         assert_eq!(via_diff, applied, "diff().apply(base) must match apply_semio_animation_mutation's result for {m:?}");
@@ -46,12 +46,12 @@ async fn inverse_law_covers_every_variant() {
     let base = fixture();
     for m in demo_mutation_cases() {
         let mut mutated = base.clone();
-        let (__next, _) = crate::applied(&mutated, &m);
+        let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&mutated, &m);
         mutated = __next;
         let inv = <SemioAnimationMutation as Mutation<SemioAnimationSnapshot>>::inverse(&m, &base).expect("valid retained mutation inverse fixture");
         let mut restored = mutated.clone();
         for step in inv.iter().rev() {
-            let (__next, _) = crate::applied(&restored, step);
+            let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, step);
             restored = __next;
         }
         assert_eq!(restored, base, "inverse must restore base for {m:?}");

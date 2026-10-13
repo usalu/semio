@@ -1,7 +1,7 @@
 import { testLevelBudgetMs } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🎚️budget/🟦️.ts";
 import { REPO_TEST_DOMAIN_REL, REPO_TEST_RUST_PACKAGE_REL, REPO_TEST_PYTHON_HOST_REL, REPO_TEST_DOTNET_PACKAGE_REL, type MaterializedHost } from "../../🧱️contract/🟦️.ts";
 import { type Implementation, type TestRole } from "../../../../../../🔨️modules/🧪️test/🔌️adapter/🟦️.ts";
-import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectFeaturesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
+import { type DiscoveredCase, type OracleHostPackage, agentCacheRoot, digest, loadOracleRegistry, markOutputDir, markRunComplete, oracleHostModule, oracleHostPackagesFor, subjectFeaturesFor, subjectHostPackagesFor, testCacheDir, testTaxonomy } from "../../📦️packages/🟦️typescript/🟦️.ts";
 import { repoToolCacheEnv, runProbe } from "../../../📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { cargoTargetDirectory } from "../../../📚️library/⚡️caching/🦀️cargo/🟦️.ts";
 import { rustSubjectPackage } from "../../🕸️dependencies/🟨️.mjs";
@@ -76,6 +76,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
   const adapterAbs = join(repoRoot, discovered.adapters.rust!);
   const sut = rustSubjectPackage(repoRoot, discovered.owner);
   const subjectFeatures = subjectFeaturesFor(loadOracleRegistry(repoRoot), discovered.owner, "rust");
+  const subjectPackages = sut === null ? [] : subjectHostPackagesFor(loadOracleRegistry(repoRoot), discovered.owner, "rust").filter((entry) => entry.package !== sut.name);
   const declared = contributedOraclePackages(repoRoot, discovered, "rust");
   // 🦀️A Cargo dependency is linked by path or it is not linked at all; a crates.io coordinate would
   // be an unreviewed third-party dependency of the generated host, which is what the local-crate
@@ -91,6 +92,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
     else merged.set(entry.package, { ...previous, features: [...new Set([...(previous.features ?? []), ...(entry.features ?? [])])] });
   }
   const oraclePackages = [...merged.values()];
+  for (const entry of subjectPackages) if (merged.has(entry.package)) problems.push(`${discovered.caseDir}: rust subject host package ${entry.package} is also contributed as an oracle package`);
   mkdirSync(join(dir, "src"), { recursive: true });
   writeFileSync(
     join(dir, "Cargo.toml"),
@@ -112,7 +114,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
       // so the oracle role must not link — or even compile — the subject. An adapter therefore gates
       // its subject half with `#[cfg(feature = "sut")]`, and this crate turns that feature on for
       // the subject role only.
-      ...(sut === null ? [] : ["[features]", `sut = ["dep:${sut.name}"]`, ""]),
+      ...(sut === null ? [] : ["[features]", `sut = [${[sut.name, ...subjectPackages.map((entry) => entry.package)].map((name) => JSON.stringify(`dep:${name}`)).join(", ")}]`, ""]),
       "[dependencies]",
       `semio-repo-test-host = { path = ${JSON.stringify(join(repoRoot, REPO_TEST_RUST_PACKAGE_REL))} }`,
       // 🧩️Whatever the owner contributed, exactly as the owner declared it.
@@ -120,6 +122,7 @@ export function materializeRustHost(repoRoot: string, discovered: DiscoveredCase
         (entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path!))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""} }`,
       ),
       ...(sut === null ? [] : [`${sut.name} = { path = ${JSON.stringify(join(repoRoot, sut.path))}, default-features = false${subjectFeatures.length > 0 ? `, features = [${subjectFeatures.map((feature) => JSON.stringify(feature)).join(", ")}]` : ""}, optional = true }`]),
+      ...subjectPackages.map((entry) => `${entry.package} = { path = ${JSON.stringify(join(repoRoot, entry.path))}${(entry.features ?? []).length > 0 ? `, features = [${(entry.features ?? []).map((feature) => JSON.stringify(feature)).join(", ")}]` : ""}, optional = true }`),
       "",
     ].join("\n"),
   );

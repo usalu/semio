@@ -17,8 +17,8 @@
 //! Every triad leaf is mounted directly as a `mutations`-sibling module in `🦀️.rs` (the stdio
 //! W2 agent owns `🦀️.rs`, so no self-wiring `#[path = "."]` blocks are needed here).
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::snapshot::SemioTableSnapshot;
 
 //#region 🔖️Leaves
 use super::create_column;

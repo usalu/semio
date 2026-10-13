@@ -13,7 +13,7 @@
 
 use crate::Pose;
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
 
 //#region 🔖️BoundingBox
 /// 📦️ Axis-aligned world-space bounding box.

@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../⚡️caching/🟦️typescript/🟦️.ts";
 import { configuredExactCargoLawPolicyV1 } from "../../../../../../🔨️modules/🏃️process/🧪️testing/🦀️cargo/🎯️exact/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import {consumeOwnerArgumentsV1} from "../../🔌️nx-plugin/📤️arguments/🟨️.mjs";
@@ -30,9 +31,9 @@ import { WorkspacePublicationScript } from "../../🗂️workspaces/🏃️execu
  * repository tooling would reject every `env: { … }` literal the tooling passes to `spawnSync`. The
  * coordinator therefore keeps its own `tsconfig.json` next to its `next.config.ts`, and both are checked. */
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runBunx(["tsc", "--noEmit", "-p", "../../../../tsconfig.json", ...segments], this.root);
-    runBunx(["tsc", "--noEmit", "-p", "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", ...segments], this.root);
+  async run(segments: string[]): Promise<void> {
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "../../../../tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "../../../🖥️server/🎛️coordinator/📦️packages/🟦️typescript/tsconfig.json", owner: "repo:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 
@@ -115,6 +116,14 @@ class SchemaReadInventoryScript extends BundleScript {
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
+    if (segments.length === 1 && segments[0] === "native-prerequisites") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🧪️tests/🧩️native-prerequisites/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "native-prerequisites"), budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
+      return;
+    }
+    if (segments.length === 1 && segments[0] === "decoder-absence") {
+      await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🕸️runtime/🧪️tests/🛬️decoder-absence/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "decoder-absence"), budgetMs: scriptInvocationBudget(this.invocation, 120_000), signal: this.invocation.control.signal });
+      return;
+    }
     if (segments.length === 1 && segments[0] === "schema-reads") {
       await runRepositoryTestCommand(process.execPath, ["test", join(this.repoRoot, "🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔍️discovery/🔗️schema-reads/🧪️tests/🟦️.ts")], { cwd: this.repoRoot, env: repoTestArtifactEnvironment(this.repoRoot, "schema-reads"), budgetMs: TEST_LEVEL_BUDGET_MS.quick });
       return;
@@ -951,6 +960,7 @@ class GeneralExecutionOwnershipScript extends BundleScript {
 }
 
 const router = new ScriptRouter(import.meta.dir)
+  .registerLazy("test-tool-run-policy-source",async()=> (await import("../../🔍️discovery/📋️policy/⏯️tool-run/📜️script.ts")).ToolRunPolicySourceScript)
   .register("test-fixture-ownership",FixtureOwnershipTestScript).register("test-general-execution-ownership",GeneralExecutionOwnershipScript)
   .register("owner-command", OwnerCommandScript)
   .register("typecheck", TypecheckScript)

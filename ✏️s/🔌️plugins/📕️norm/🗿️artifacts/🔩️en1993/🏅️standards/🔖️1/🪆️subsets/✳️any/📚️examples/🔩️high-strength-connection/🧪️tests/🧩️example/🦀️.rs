@@ -2,7 +2,7 @@
 async fn primary_asset_decodes_and_fails_compliance() {
     use crate::standards::v1::subsets::any::schema::check_full_steel_structure;
     use crate::En1993Snapshot;
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let text = include_str!("../../../../🖼️assets/🔩️high-strength-connection/🔩️high-strength-connection/🗣️.dsl.semio");
     let snapshot = En1993Snapshot::parse_dsl(text).expect("decode non-compliant DSL");
     let report = check_full_steel_structure(&snapshot);

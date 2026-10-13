@@ -1,6 +1,8 @@
-import { existsSync, readFileSync } from "node:fs";
+import { observedFs } from "../../📚️library/🔌️nx-plugin/👁️observation/🟨️.mjs";
 import { join, resolve, relative, isAbsolute } from "node:path";
 import { createRequire } from "node:module";
+
+const { existsSync, readFileSync } = observedFs;
 
 /** 🦀️ Reads Cargo package identity through the tooling parser boundary. */
 export function cargoPackage(workspaceRoot, path) {

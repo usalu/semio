@@ -3,13 +3,13 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::{SpaceSnapshot,SpaceKind,SpaceVisibility,SpaceRole,SpaceUser,CollectionRef,InstalledExtension,S_SPACE_SCHEMA};
 use semio_framework_os_kernel as store;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,artifact::{RowWriter,Cell}};
 #[path="../../../../../🪶️sqlite/🦀️.rs"]mod fields;
 /// 🚪️ The explicitly authored native envelope-version coordinate for this builtin owner.
 pub const SQLITE_SNAPSHOT_DIALECT:semio_framework_artifact_reference::Dialect=semio_framework_artifact_reference::Dialect{artifact_kind:S_SPACE_SCHEMA,standard:semio_framework_artifact_reference::StandardId("1"),subset:semio_framework_artifact_reference::SubsetId("*")};
 /// 📣️ Registers the real bare native factory and its owned SQLite capability atomically.
-pub fn register_sqlite_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::ArtifactCodec::bare::<SpaceSnapshot,crate::SpaceMutation>(S_SPACE_SCHEMA))}
+pub fn register_sqlite_snapshot()->Result<(),store::io::ArtifactAssemblyRegistryError>{store::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT,store::bare_artifact_codec::<SpaceSnapshot,crate::SpaceMutation>(S_SPACE_SCHEMA))}
 fn rows(value:&SpaceSnapshot)->Result<usize,ValueError>{let mut count=1;for length in[value.users.len(),value.collections.len(),value.programs.len(),value.extensions.len()]{count=fields::add(count,length)?;}Ok(count)}
 fn schema(control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{if SpaceSnapshot::SQLITE_SCHEMA.len()>control.limits().max_schema_bytes{Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space authored schema byte limit exceeded"))}else{Ok(())}}
 #[path="./🛂️admission/🦀️.rs"]pub(crate)mod admission;

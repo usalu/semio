@@ -18,6 +18,6 @@ pub fn serialize(from: &Ifc2x3Snapshot) -> Result<BinarySnapshot, store::PackErr
 /// Encode as binary pack bytes.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn serialize_bytes(from: &Ifc2x3Snapshot) -> Result<Vec<u8>, store::PackError> {
-    store::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
+    store::os_store::serialization::ArtifactPack::encode_pack_with(&serialize(from)?, &store::PackEncodeOptions::default())
 }
 //#endregion Codec

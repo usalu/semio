@@ -1,5 +1,6 @@
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use super::*;
+use crate::os_store::serialization::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot};
 use crate::sqlite_snapshot::{SqliteDatabase, SqliteDatabaseLimits, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase, SnapshotEncoding, artifact::NativeEncodingBound};
 
 struct RetainedSnapshot { value: i64, retired: bool }

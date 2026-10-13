@@ -20,7 +20,7 @@ impl<C:Check> Cells<'_,C>{
   WorkingSolid::ImportedSolid{solid_handle}=>self.texts(["importedSolid",solid_handle])?,
   WorkingSolid::Reference{reference_id}=>self.texts(["reference",reference_id])?,
  }Ok(())}
- fn child<S>(&mut self,v:&store::ArtifactChild<S>,ordered:bool)->Result<(),ValueError>{self.add(if ordered{24}else{16})?;let t=&v.target;self.texts([v.child_id.as_str(),t.artifact_id.as_str(),t.dialect.artifact_kind.as_str(),t.dialect.standard.as_str(),t.dialect.subset.as_str()])}
+ fn child<S>(&mut self,v:&store::os_store::artifact_child::ArtifactChild<S>,ordered:bool)->Result<(),ValueError>{self.add(if ordered{24}else{16})?;let t=&v.target;self.texts([v.child_id.as_str(),t.artifact_id.as_str(),t.dialect.artifact_kind.as_str(),t.dialect.standard.as_str(),t.dialect.subset.as_str()])}
 }
 pub(super) fn owned(v:&Process3dSnapshot,c:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
  let maximum=c.limits().max_value_bytes;let mut encode=Encode(c);let mut s=Cells{control:&mut encode,bytes:0,maximum};

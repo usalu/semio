@@ -3,8 +3,8 @@
 //! `import_registers_csv` with `MergeStrategy::Replace`; a table with any other header is refused.
 //!
 //! 🔖 `IoFidelity::Lossy`: the inverse of the sibling export — register rows only.
-use crate::editor::architect::behavior::{import_registers_csv, MergeStrategy};
-use crate::schema::snapshot::ProgramSnapshot;
+use crate::standards::v1::subsets::any::io::tables::{import_registers_csv, MergeStrategy};
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 pub fn register() {}
 

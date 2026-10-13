@@ -38,8 +38,8 @@ impl LineEnding {
 /// spec: line content, whether the last line is newline-terminated, and which newline style
 /// the document uses (spec covers exactly `Lf`/`CrLf`, never a mixed per-line style).
 ///
-/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::ArtifactDsl`/
-/// `store::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
+/// 🧪️ F6: `dsl::DslRecord` added alongside the existing hand-rolled `store::os_store::serialization::ArtifactDsl`/
+/// `store::os_store::serialization::ArtifactPack` below — NOT a replacement. `DslRecord` only gives this type `DslField`
 /// (so it can be carried by direct mutation payloads and storage surfaces), it
 /// does not touch the artifact's own honest line-joined-by-line-ending envelope format.
 #[derive(Clone, Debug, PartialEq, semio_framework_value::RetireOwned, value_derive::ToValue, value_derive::FromValue, ArtifactSchema, semio_framework_dsl_record_derive::DslRecord, semio_framework_value::RetainedClone)]

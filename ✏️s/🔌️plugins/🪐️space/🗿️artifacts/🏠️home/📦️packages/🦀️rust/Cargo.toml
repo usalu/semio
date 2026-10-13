@@ -23,7 +23,7 @@ required-features = ["mutation-inventory"]
 [features]
 default = []
 mutation-inventory = ["dep:semio-framework-test-mutation-inventory"]
-component-app-assembly = ["semio-s-space-core/component-app-assembly", "semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["semio-s-space-core/component-app-assembly", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-dispatch-macros", "dep:semio-framework-os", "dep:semio-framework-os-infinite", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
 semio-framework-test-mutation-inventory = { path = "../../../../../../../🧰️framework/🔨️modules/🧪️test/🎮️mutation/🏭️inventory/📦️packages/🦀️rust", optional = true, features = ["replication"] }

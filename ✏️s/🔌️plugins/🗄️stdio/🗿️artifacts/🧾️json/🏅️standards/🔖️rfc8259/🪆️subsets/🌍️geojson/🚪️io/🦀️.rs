@@ -50,8 +50,8 @@ use semio_framework_diagnostic::TextSpan;
 
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}")),
-                IoPayload::Text(text) => <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()),
+                IoPayload::Binary(bytes) => <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}")),
+                IoPayload::Text(text) => <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()),
             };
             match decoded {
                 Ok(snapshot) => check_geojson_conformance(&snapshot),
@@ -107,11 +107,11 @@ pub mod derived_construction {
         }
 
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactDsl>::parse_dsl(text)? })
+            Ok(Self { snapshot: <JsonSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)? })
         }
 
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self { snapshot: <JsonSnapshot as store::ArtifactPack>::decode_pack(bytes)? })
+            Ok(Self { snapshot: <JsonSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)? })
         }
 
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {

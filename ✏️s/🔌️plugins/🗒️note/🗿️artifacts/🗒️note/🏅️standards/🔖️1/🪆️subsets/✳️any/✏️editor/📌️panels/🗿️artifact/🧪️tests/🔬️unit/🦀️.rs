@@ -21,10 +21,10 @@ async fn renders_document_tree() {
     // `artifact envelope terminal shell reached Drop before its app-owned bounded retirement
     // authority detached every nested owner`, which is what this law used to die of.
     let files = {
-        let seed = crate::host::owned::new_note_store(store::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
+        let seed = crate::host::owned::new_note_store(store::os_store::document_materialize::create_document_envelope::<crate::NoteSnapshot, crate::NoteMutation>(&document.schema.clone(), &document.id.clone(), document, None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
             .await
             .expect("seed store for the semio example");
-        store::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
+        store::os_store::text_format::print_document_pack(seed.envelope()).await.expect("print semio example document pack")
     };
     semio_framework_plugin::artifact_app_laws::load_document(&mut app, &files, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("load semio example");
     let json = render_body(&mut app, BODY_ARTIFACT).await;

@@ -3,10 +3,7 @@
   "artifact": "txt",
   "package": "semio-s-artifact-stdio-txt",
   "order": 1,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio",
@@ -33,7 +30,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio",

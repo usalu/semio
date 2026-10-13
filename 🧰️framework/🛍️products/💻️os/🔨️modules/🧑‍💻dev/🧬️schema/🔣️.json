@@ -9,8 +9,8 @@
     },
     "WasiProfileDirectory": {
       "enum": [
-        "wasm-dev",
-        "wasm-release"
+        "wasm-release",
+        "wasm-prototype"
       ]
     },
     "CanonicalBootstrapFolderMirrorFrontier": {
@@ -435,7 +435,7 @@
       ],
       "properties": {
         "schemaVersion": {
-          "const": 3
+          "const": 4
         },
         "profiles": {
           "type": "array",
@@ -457,6 +457,7 @@
               "executionProtocol",
               "browserActor",
               "pluginModule",
+              "receipt",
               "nativeCodecs",
               "openTargets"
             ],
@@ -493,6 +494,9 @@
                 "type": "object"
               },
               "pluginModule": {
+                "type": "object"
+              },
+              "receipt": {
                 "type": "object"
               },
               "nativeCodecs": {

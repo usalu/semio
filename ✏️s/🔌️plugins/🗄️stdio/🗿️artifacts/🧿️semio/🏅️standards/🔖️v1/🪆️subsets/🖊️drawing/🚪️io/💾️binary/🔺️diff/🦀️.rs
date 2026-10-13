@@ -8,35 +8,35 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::drawing::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, NamedModified};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_style};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_style};
-use crate::standards::v1::subsets::mesh::io::text::diff::{dec_rgba};
-use crate::standards::v1::subsets::mesh::io::text::diff::{enc_rgba};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_layer};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_layer};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_node};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_node};
-use crate::standards::v1::subsets::cad::io::text::diff::{dec_point2};
-use crate::standards::v1::subsets::cad::io::text::diff::{enc_point2};
-use crate::standards::v1::subsets::model::io::text::diff::{dec_transform};
-use crate::standards::v1::subsets::model::io::text::diff::{enc_transform};
-use crate::standards::v1::subsets::model::io::text::diff::{dec_list};
-use crate::standards::v1::subsets::model::io::text::diff::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_path_segment};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_path_segment};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, NamedModified};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot};
+use crate::io::text::snapshot::dec_style;
+use crate::io::text::snapshot::enc_style;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_rgba;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_rgba;
+use crate::io::text::snapshot::dec_layer;
+use crate::io::text::snapshot::enc_layer;
+use crate::io::text::snapshot::dec_node;
+use crate::io::text::snapshot::enc_node;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_point2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::plain::enc_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use crate::io::text::snapshot::dec_path_segment;
+use crate::io::text::snapshot::enc_path_segment;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
-use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-use crate::standards::v1::subsets::base::schema::triples::NamedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedTripleDiff;
 
 
 
@@ -160,5 +160,5 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::standards::v1::subsets::drawing::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_node_diff, dec_node_diff, enc_canvas, dec_canvas, enc_style_diff, dec_style_diff, enc_layer_diff, dec_layer_diff};
+use crate::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_node_diff, dec_node_diff, enc_canvas, dec_canvas, enc_style_diff, dec_style_diff, enc_layer_diff, dec_layer_diff};
 }

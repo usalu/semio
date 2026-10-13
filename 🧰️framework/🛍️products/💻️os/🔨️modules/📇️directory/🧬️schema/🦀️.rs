@@ -1123,7 +1123,8 @@ pub struct DocumentExecutionProtocolV1 {
     pub app_channel_version: u32,
 }
 
-/// 📦️ Exact verified package projection required by one open plan.
+/// 📦️ Exact verified package projection required by one open plan: its identity, the byte identity of its component and
+/// semantic descriptor, and the shipped `ComponentReceiptV1` binding the two (ticket 26/09/23 trusted-catalog receipts).
 #[derive(Clone, Debug, PartialEq, Eq, ToValue, FromValue)]
 #[value(rename_all = "camelCase", deny_unknown_fields)]
 pub struct DocumentOpenPackageV1 {
@@ -1134,6 +1135,15 @@ pub struct DocumentOpenPackageV1 {
     pub component_blake3: String,
     pub descriptor_byte_sha256: String,
     pub execution_protocol: DocumentExecutionProtocolV1,
+    pub component_receipt: crate::os_component_receipt::ComponentReceiptV1,
+}
+
+impl DocumentOpenPackageV1 {
+    /// 🔗️ Whether the package's receipt is a valid shipped receipt naming exactly this package, its component digest and
+    /// its semantic descriptor digest — the one law every plan, lease and catalog binding holds its package to.
+    pub fn receipt_binds(&self) -> bool {
+        self.component_receipt.binds(&self.plugin_id, &self.package_id, &self.component_sha256, &self.descriptor_byte_sha256).is_ok()
+    }
 }
 
 /// 🗂️ Immutable verified-catalog generation selected for one plan.
@@ -1334,6 +1344,7 @@ impl DocumentOpenPlanV1 {
             || !valid_document_open_hash(&self.package.component_sha256)
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || !self.package.receipt_binds()
             || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !self.grant.read
@@ -1383,8 +1394,9 @@ impl DocumentPlanSocketGrantIntentV1 {
 }
 
 //#region 🪪️ExecutionTargetLease
-/// 🧯️ Exact maximum accepted bytes for one verified execution-target component.
-pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = 64 * 1024 * 1024;
+/// 🧯️ Exact maximum accepted bytes for one verified execution-target component: the shipped `wasm-release` cap, because only
+/// shipped bytes execute and every shipped component's receipt is held to it.
+pub const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES: u64 = crate::os_component_receipt::SHIPPED_COMPONENT_MAX_BYTES;
 /// 🧯️ Exact maximum accepted bytes for one verified raw package descriptor.
 pub const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES: u64 = 4 * 1024 * 1024;
 
@@ -1458,6 +1470,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || !valid_document_open_hash(&self.package.component_sha256)
             || !valid_document_open_hash(&self.package.component_blake3)
             || !valid_document_open_hash(&self.package.descriptor_byte_sha256)
+            || !self.package.receipt_binds()
             || self.package.execution_protocol.app_channel_version != crate::os_spr::CHANNEL_VERSION
             || !valid_document_open_hash(&self.artifact.pack_schema_hash)
             || !valid_document_open_hash(&self.component.sha256)
@@ -1468,6 +1481,7 @@ impl DocumentExecutionTargetLeaseFieldsV1 {
             || self.descriptor.sha256 != self.package.descriptor_byte_sha256
             || self.component.byte_length == 0
             || self.component.byte_length > DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES
+            || self.component.byte_length != self.package.component_receipt.wasm_bytes
             || self.descriptor.byte_length == 0
             || self.descriptor.byte_length > DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES
             || !self.grant.read

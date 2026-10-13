@@ -397,7 +397,7 @@ async fn push_document_plan(transport: &FakeTransport, space_id: &str, document_
 }
 
 /// 🪪️ The exact receipt-free lease projection of the same neutral plan {@link push_document_plan}
-/// serves, at pinned byte lengths. It is built through the one shared relation, so a test can only
+/// serves, at the component length its receipt names and a pinned descriptor length. It is built through the one shared relation, so a test can only
 /// make admission fail by changing a real field.
 fn document_lease_fields(space_id: &str, document_id: &str, schema: &str, surface_id: &str) -> DocumentExecutionTargetLeaseFieldsV1 {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../../🧫️fixtures/📇️directory/🧭️document-open-plan-v1.json")).expect("neutral plan fixture");
@@ -408,7 +408,7 @@ fn document_lease_fields(space_id: &str, document_id: &str, schema: &str, surfac
     plan["surface"]["surfaceId"] = serde_json::json!(surface_id);
     plan["checkpoint"]["baselineFrontier"]["documentId"] = serde_json::json!(document_id);
     let decoded: DocumentOpenPlanV1 = semio_framework_pack_json::from_json_str(&serde_json::to_string(&plan).expect("plan json"), semio_framework_pack_json::JsonMemberPolicy::Reject).expect("neutral plan");
-    lease_fields_from_plan_v1(&decoded, 1_024, 512, None).expect("non-actor fixture projection")
+    lease_fields_from_plan_v1(&decoded, decoded.package.component_receipt.wasm_bytes, 512, None).expect("non-actor fixture projection")
 }
 
 fn document_expectation(schema: &str, surface_id: Option<&str>) -> DocumentSocketExpectationV1 {
@@ -518,8 +518,8 @@ async fn native_document_admission_issues_validates_and_exchanges_exactly_once()
     assert_eq!(admission.authority.artifact.schema, "demo/v1");
     assert_eq!(admission.authority.surface.surface_id, surface_id);
     assert_eq!(admission.authority.pack_schema_hash, [0x11; 32]);
-    assert_eq!(admission.authority.package.plugin_id, "s.gis:地図");
-    assert_eq!(admission.authority.package.package_id, "s.gis.gismap:codec");
+    assert_eq!(admission.authority.package.plugin_id, "gis");
+    assert_eq!(admission.authority.package.package_id, "semio:gis");
     assert_eq!(admission.authority.package.version, "1.0.0:β");
     assert_eq!(admission.authority.parent_dialect, DocumentOpenParentDialectV1 { artifact_kind: "s.gis:gismap".into(), standard: "1".into(), subset: "*".into() });
     assert_eq!(admission.authority.surface.app_id, "app.gis");

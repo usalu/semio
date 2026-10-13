@@ -12,10 +12,8 @@ use crate::{DrawingSnapshot, FillStyle, PathSegment};
 /// 🌉️ Relocated verbatim from the `⚙️engine` directory (ticket
 /// 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES, rule 5: sniff/codec dispatch and
 /// cross-format bridge functions live in `🚪️io/`).
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{
-    DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA,
-};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3, SemioQuaternion, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas as SemioDrawCanvas, DrawLayer as SemioDrawLayer, DrawNode as SemioDrawNode, DrawStyle as SemioDrawStyle, PathSegment as SemioPathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 fn resolve_drawing_document_artboard(doc: &DrawingSnapshot) -> (u32, u32) {
     if let Some(artboard) = &doc.artboard {
         return (artboard.width.max(1.0).round() as u32, artboard.height.max(1.0).round() as u32);
@@ -174,7 +172,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: None, binary: None },
             mutations: LanguagePair { text: None, binary: None },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec::<DrawingSnapshot, DrawingMutation>(DRAWING_DOCUMENT_SCHEMA.to_string()),
         },
         entries: entries(),
     }

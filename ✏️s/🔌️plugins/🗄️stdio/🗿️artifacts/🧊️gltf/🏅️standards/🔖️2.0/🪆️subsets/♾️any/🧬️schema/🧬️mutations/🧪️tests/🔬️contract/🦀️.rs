@@ -1,8 +1,8 @@
 //! 🧪️ Direct mutation laws against language-neutral input and state vectors.
 
-use crate::schema::diff::GltfDiff;
-use crate::schema::mutations::GltfMutation;
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::diff::GltfDiff;
+use crate::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use protocol::{Mutation, MutationKind};
 use semio_framework_value::{FromValue, ToValue};
 use serde_json::Value;

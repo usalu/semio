@@ -32,8 +32,8 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 
 /// 🔌️ Composes map and terrain editors, viewers and native media capabilities.
 pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
-    let dependency = semio_hub_stdio::catalog::native_artifact_catalog_dependency()?;
-    let catalog = semio_hub_stdio::catalog::native_artifact_catalog_contribution()?;
+    let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency()?;
+    let catalog = semio_hub_stdio_catalog::native_artifact_catalog_contribution()?;
     Plugin::<GisApps>::builder("gis")
         .label("GIS")
         .version("0.1.0")
@@ -74,5 +74,3 @@ pub fn plugin() -> Result<Plugin<GisApps>, PluginAssemblyError> {
 mod surface_tests;
 //#endregion 🧪️SurfaceTests
 
-#[cfg(feature = "plugin-entry")]
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin, GisApps);

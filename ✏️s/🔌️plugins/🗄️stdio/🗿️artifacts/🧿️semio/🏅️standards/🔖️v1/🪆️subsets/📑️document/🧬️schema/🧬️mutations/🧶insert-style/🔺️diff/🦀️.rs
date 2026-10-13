@@ -10,7 +10,7 @@ pub fn diff(payload: &super::InsertStyle, base: &SemioDocumentSnapshot) -> proto
     }
     let super::InsertStyle { style, at } = payload;
     protocol::MutationOutcome::new({
-        SemioDocumentDiff { styles: Some(crate::standards::v1::subsets::document::schema::diff::StylesDiff { added: vec![crate::standards::v1::subsets::base::schema::triples::NamedAdded { index: at.map_or(base.styles.len(), |at| at.min(base.styles.len())), item: style.clone() }], ..Default::default() }), images: None, blocks: None }
+        SemioDocumentDiff { styles: Some(crate::schema::diff::StylesDiff { added: vec![semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded { index: at.map_or(base.styles.len(), |at| at.min(base.styles.len())), item: style.clone() }], ..Default::default() }), images: None, blocks: None }
     })
 }
 //#endregion 🔖️Diff

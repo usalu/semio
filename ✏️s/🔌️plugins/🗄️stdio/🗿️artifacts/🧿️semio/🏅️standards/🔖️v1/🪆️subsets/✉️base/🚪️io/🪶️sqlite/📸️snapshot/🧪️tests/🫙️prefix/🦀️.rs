@@ -1,8 +1,8 @@
 //! 🫙️ Actual original Flow SQLite native prefixes preserve source identity and physical retirement receipts.
 use semio_framework_os_kernel as store;
-use semio_framework_value::{ErasedSnapshotRetirement,ValueError,ValueRefusalKind,RetirementDemand,native_decoding::NativeDecodeRetirementRecipient,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::RetireOwned};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{SemioFlowSnapshot,FlowNode,FlowParam,FlowEdge,PortRef};
-use store::{ArtifactSqliteSnapshot,ArtifactPack,ArtifactDsl,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
+use semio_framework_value::{ErasedSnapshotRetirement,ValueRefusalKind,RetirementDemand,native_decoding::NativeDecodeRetirementRecipient,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::RetireOwned};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{SemioFlowSnapshot, FlowNode, FlowParam, FlowEdge, PortRef};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,os_store::serialization::ArtifactPack,os_store::serialization::ArtifactDsl,sqlite_snapshot::{SqliteSnapshotControl,SqliteDatabaseLimits}};
 #[global_allocator]
 static PREFIX_HEAP:semio_framework_trace::HeapWitness=semio_framework_trace::HeapWitness;
 fn corpus()->serde_json::Value{serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🔣️.json")).unwrap()}
@@ -19,7 +19,7 @@ let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||
 if matches!(step,RetainedCloneStep::Complete(_)){assert!(owner.terminal_is_empty());return(born,freed)}
 }panic!("original prefix close did not converge")
 }
-fn close_value<T:RetireOwned>(original:T,grant:RetainedCloneGrant)->(usize,usize){let mut original=Some(original);let mut owner=None;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::artifact_retirement_admit_owned(&mut original,&mut owner,grant).unwrap());assert!(original.is_none());assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=close(owner.as_mut().unwrap().as_mut(),grant);born+=heap.requested_bytes;freed+=heap.released_bytes;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::artifact_retirement_box_close_step(&mut owner,grant).unwrap());assert!(owner.is_none());assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);(born+heap.requested_bytes,freed+heap.released_bytes)}
+fn close_value<T:RetireOwned>(original:T,grant:RetainedCloneGrant)->(usize,usize){let mut original=Some(original);let mut owner=None;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut original,&mut owner,grant).unwrap());assert!(original.is_none());assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);let(mut born,mut freed)=close(owner.as_mut().unwrap().as_mut(),grant);born+=heap.requested_bytes;freed+=heap.released_bytes;let(step,heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut owner,grant).unwrap());assert!(owner.is_none());assert_eq!(heap.requested_bytes,step.progress().retained_capacity_bytes);assert_eq!(heap.released_bytes,step.progress().released_bytes);(born+heap.requested_bytes,freed+heap.released_bytes)}
 /// 🗃️ Creates a test input through its original recipient and authored caller close policy.
 fn fixture_database<T:ArtifactSqliteSnapshot>(snapshot:&T)->store::sqlite_snapshot::SqliteDatabase{
 let grant=policy(&corpus());let mut recipient=NativeDecodeRetirementRecipient::new();let database={let mut accept=|_:store::sqlite_snapshot::SqliteSnapshotProgress|true;let mut control=SqliteSnapshotControl::new(&mut accept,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();snapshot.to_sqlite_database(&mut control).unwrap()};close(&mut recipient,grant);database
@@ -53,7 +53,7 @@ assert!(store::LinkPin::controlled_retirement_supported());let(born,released)=cl
 
 #[test]
 fn native_prefix_original_envelope_selected_child_same_ledger_and_cancelled_fields(){
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::snapshot::{SemioSnapshot,SemioSubsetSnapshot};
+use semio_s_artifact_stdio_semio::schema::snapshot::{SemioSnapshot, SemioSubsetSnapshot};
 let f=corpus();let envelope:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/✉️envelope.json")).unwrap();let expected=SemioSnapshot{schema:envelope["schema"].as_str().unwrap().into(),subset:SemioSubsetSnapshot::Flow(fixture(&f))};let grant=policy(&f);let database=fixture_database(&expected);let pointer=database.tables.as_ptr();let SemioSubsetSnapshot::Flow(flow)=&expected.subset else{unreachable!()};let label_bytes=flow.nodes[0].label.len();let mut cancelled_children=0;
 for stop in [0,1,7,31,89,usize::MAX-1,usize::MAX]{let mut recipient=NativeDecodeRetirementRecipient::new();let mut events=0;let mut interior=false;let mut callback=|event:store::sqlite_snapshot::SqliteSnapshotProgress|{let current=events;events+=1;let canceled=stop==usize::MAX-1&&event.total==label_bytes&&event.completed>=65536&&event.completed<label_bytes;interior|=canceled;current!=stop&&!canceled};let((result,admitted),heap)=semio_framework_trace::observe_heap_allocations_on_this_thread(||{let mut control=SqliteSnapshotControl::new(&mut callback,SqliteDatabaseLimits::default());control.install_native_retirement_recipient(&mut recipient).unwrap();let result=SemioSnapshot::from_sqlite_database(&database,&mut control);(result,SqliteDatabaseLimits::default().max_allocation_bytes-control.allocation_remaining_bytes())});assert_eq!(database.tables.as_ptr(),pointer);assert_eq!(heap.released_bytes,0,"envelope released original child or validation fields during production");let(mut born,mut released)=(heap.requested_bytes,0);
 match result{Ok(actual)=>{assert_eq!(stop,usize::MAX);assert_eq!(actual,expected);assert_eq!(admitted,heap.requested_bytes);let(b,r)=close_value(actual,grant);born+=b;released+=r;},Err(error)=>{assert_eq!(error.kind,ValueRefusalKind::Canceled);if stop==usize::MAX-1{assert!(interior);assert!(heap.requested_bytes>=label_bytes);cancelled_children+=1;}let(b,r)=close_value(error,grant);born+=b;released+=r;}}
@@ -72,7 +72,7 @@ if recipient.has_owner(){actual_prefixes+=1;}let(b,r)=close(&mut recipient,grant
 
 #[test]
 fn native_prefix_original_document_relational_blocks_and_cancelled_fields(){
-use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{SemioDocumentSnapshot,DocBlock,DocStyle,DocImage,DocRun,RunStyle,DocListItem,DocTableRow,DocTableCell};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{SemioDocumentSnapshot, DocBlock, DocStyle, DocImage, DocRun, RunStyle, DocListItem, DocTableRow, DocTableCell};
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../📑️document/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
 let text=neutral["text"].as_str().unwrap().repeat(f["labelRepetitions"].as_u64().unwrap()as usize);let text_bytes=text.len();let image_id=neutral["imageId"].as_str().unwrap();
 let expected=SemioDocumentSnapshot{schema:neutral["schema"].as_str().unwrap().into(),styles:vec![DocStyle{id:"".into(),name:"root".into(),based_on:None},DocStyle{id:"child".into(),name:"child".into(),based_on:Some("".into())}],images:vec![DocImage{id:image_id.into(),mime:neutral["mime"].as_str().unwrap().into(),bytes:vec![0,255,127]}],blocks:vec![
@@ -95,7 +95,7 @@ assert!(retained>=6);println!("[DEBUG] Original document complete eight block va
 
 #[test]
 fn native_prefix_original_presentation_relational_shapes_and_cancelled_fields(){
-use semio_s_artifact_stdio_semio::standards::v1::subsets::{presentation::schema::snapshot::{SemioPresentationSnapshot,SlideMaster,SlideLayout,Slide,SlideShape,SlideFrame,SlidePictureImage,SlideTableRow,SlideTableCell,PlaceholderKind},document::schema::snapshot::{DocBlock,DocRun},base::schema::geometry::SemioPoint2};
+use {semio_s_artifact_stdio_semio_presentation::schema::snapshot::{SemioPresentationSnapshot, SlideMaster, SlideLayout, Slide, SlideShape, SlideFrame, SlidePictureImage, SlideTableRow, SlideTableCell, PlaceholderKind}, semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun}, semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2};
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../../../../../../📽️presentation/🚪️io/🪶️sqlite/📸️snapshot/🧫️fixtures/🔣️.json")).unwrap();
 let text=neutral["text"].as_str().unwrap().repeat(f["labelRepetitions"].as_u64().unwrap()as usize);let text_bytes=text.len();let frame=SlideFrame{origin:SemioPoint2{x:-1.0,y:2.0},width:3.5,height:4.25};
 let expected=SemioPresentationSnapshot{schema:neutral["schema"].as_str().unwrap().into(),masters:vec![SlideMaster{id:neutral["masterId"].as_str().unwrap().into(),shapes:vec![SlideShape::Placeholder{frame,kind:PlaceholderKind::Title}]}],layouts:vec![SlideLayout{id:neutral["layoutId"].as_str().unwrap().into(),master_id:neutral["masterId"].as_str().unwrap().into(),shapes:vec![]}],slides:vec![Slide{id:neutral["slideId"].as_str().unwrap().into(),layout_id:Some(neutral["layoutId"].as_str().unwrap().into()),shapes:vec![
@@ -117,7 +117,7 @@ assert!(retained>=6);println!("[DEBUG] Original presentation four shape variants
 
 #[test]
 fn native_prefix_original_value_relational_forest_and_cancelled_variants(){
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValueSnapshot,SemioValue,SemioValueEntry,SemioValueNode,ValueId};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValueSnapshot, SemioValue, SemioValueEntry, SemioValueNode, ValueId};
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🌳️forest.json")).unwrap();
 let repetitions=f["labelRepetitions"].as_u64().unwrap()as usize;let text=neutral["text"].as_str().unwrap().repeat(repetitions);let text_bytes=text.len();let octets=neutral["octets"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as u8).collect::<Vec<_>>().repeat(repetitions*2);let octet_bytes=octets.len();let node=neutral["nodeId"].as_str().unwrap();let key=neutral["key"].as_str().unwrap();
 let expected=SemioValueSnapshot{schema:neutral["schema"].as_str().unwrap().into(),root:SemioValue::Map{entries:vec![
@@ -137,7 +137,7 @@ assert!(retained>=7);println!("[DEBUG] Original value forest preserves nine vari
 }
 #[test]
 fn native_prefix_original_projection_text_rows_and_cancelled_fields(){
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextSnapshot,SemioTextRun,SemioTextMark,SemioTextMarkKind};
+use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextSnapshot, SemioTextRun, SemioTextMark, SemioTextMarkKind};
 let f=corpus();let grant=policy(&f);let neutral:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🫙️prefix/🧮️projection.json")).unwrap();let content=neutral["content"].as_str().unwrap().repeat(f["labelRepetitions"].as_u64().unwrap()as usize);let length=content.len();
 let expected=SemioTextSnapshot{schema:neutral["schema"].as_str().unwrap().into(),runs:vec![SemioTextRun{language:neutral["language"].as_str().unwrap().into(),content,marks:vec![SemioTextMark{kind:SemioTextMarkKind::Link,href:neutral["href"].as_str().unwrap().into()}]}]};let original=expected.runs[0].content.as_ptr();
 for stop in [0,1,7,31,89,233,usize::MAX-1,usize::MAX]{

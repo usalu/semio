@@ -91,9 +91,9 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
     let fixture: Value = serde_json::from_str(include_str!("../../⚛️reactor/🪟️surfaces/🧫️fixtures/🪟️surface-view-state-routing/🔣️.json")).expect("surface view-state routing fixture");
     let node_key = fixture["pickedNodeKey"].as_str().expect("picked node");
     let domain = fixture["domainId"].as_str().expect("domain");
-    let mut identity = crate::app::artifact_app_laws::fixture_identity();
-    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut identity).await;
-    crate::app::artifact_app_laws::settle_store_constructor(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    let mut identity = crate::app_testing::artifact_app_laws::fixture_identity();
+    let mut app = VcsArtifactApp::with_registry(TestApp::<false>::default(), surface_routing_registry().await, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut identity).await;
+    crate::app_testing::artifact_app_laws::settle_store_constructor(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
     reserved_action(&mut app, INTERACTION_SELECT_ACTION_ID, Some(&interaction_target_args(json!({ "domainId": domain, "merge": "replace", "method": "pick" }), node_key)), &mut identity).await;
     assert_eq!(app.interaction_state().await.selection.get(domain).map(|selection| selection.ids.clone()), Some(vec![node_key.to_string()]), "the browser-shaped pick must be persisted before any surface renders");
     drop(PluginApp::take_pending_presence(&mut app).await);
@@ -101,11 +101,11 @@ async fn every_mounted_surface_renders_against_its_own_view_state_while_one_pick
         if !semio_framework_job::worker_job_retirements_are_parked() {
             break;
         }
-        let demand=PluginApp::maintenance_retirement_demands(&app,TYPED_OPERATION_RESULT_PAGE_BYTES).expect("original maintenance quote");let grant=crate::app::plugin_demand_grant(demand);let step=PluginApp::maintenance_step(&mut app,grant).expect("bounded maintenance");if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=step{assert!(progress.fits(grant));}
-        crate::app::plugin_job_yield_once().await;
+        let demand=PluginApp::maintenance_retirement_demands(&app,TYPED_OPERATION_RESULT_PAGE_BYTES).expect("original maintenance quote");let grant=crate::bounded_ownership::plugin_demand_grant(demand);let step=PluginApp::maintenance_step(&mut app,grant).expect("bounded maintenance");if let PluginLifecycleStep::Progress(progress)|PluginLifecycleStep::Complete(progress)=step{assert!(progress.fits(grant));}
+        crate::reserved_jobs::plugin_job_yield_once().await;
     }
 
-    let runtime = super::PluginRuntime::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = super::PluginRuntime::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     runtime.instances.borrow_mut().insert_admitted(1, std::sync::Arc::new(super::RuntimeAppCell::new(AppInstance { id: 1, app, surface_contexts: Default::default() }, runtime.mounted_policy)));
     let surfaces = fixture["surfaces"].as_array().expect("surfaces");
     let mut expected: BTreeMap<String, ViewModel> = BTreeMap::new();

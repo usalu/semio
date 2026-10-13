@@ -17,7 +17,7 @@
 //!   guessed `Heading` (guessing heading level from a style NAME string would be fabrication, not
 //!   honest extraction).
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, DocStyle, DocTableCell, DocTableRow, RunStyle, SemioDocumentSnapshot, STDIO_SEMIODOCUMENT_DOCUMENT_SCHEMA};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_docx::schema::snapshot::{DocxBlock, DocxParagraph, DocxRun, DocxTable};
 use semio_s_artifact_stdio_docx::DocxSnapshot;

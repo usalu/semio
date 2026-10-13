@@ -9,8 +9,8 @@
 //! empty; `reads()` only advertises this subset's own native dialect.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-    use crate::standards::v1::subsets::kit::io::SemioKitAnalyzer;
+    use crate::schema::snapshot::SemioKitSnapshot;
+    use crate::io::SemioKitAnalyzer;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::ComposerEntry,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") };
@@ -53,8 +53,8 @@ pub mod derived_composition {
     pub struct SemioKitValidator;
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn wrong_child<S>(field: &str, expected_subset: &str, child: &store::ArtifactChild<S>) -> Option<semio_framework_diagnostic::Diagnostic> {
-        if let Err(message) = crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity(&child.child_id, &child.target, expected_subset) {
+    fn wrong_child<S>(field: &str, expected_subset: &str, child: &store::os_store::artifact_child::ArtifactChild<S>) -> Option<semio_framework_diagnostic::Diagnostic> {
+        if let Err(message) = semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity(&child.child_id, &child.target, expected_subset) {
             Some(semio_framework_diagnostic::Diagnostic::error(
                 "stdio.semio_kit.validate-child-identity-mismatch",
                 semio_framework_diagnostic::TextSpan::at(1, 1),
@@ -69,8 +69,8 @@ pub mod derived_composition {
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<semio_framework_diagnostic::Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             let Some(snapshot) = decoded else {
                 return vec![semio_framework_diagnostic::Diagnostic::error("stdio.semio_kit.validate-decode-failed", semio_framework_diagnostic::TextSpan::at(1, 1), "SemioKitValidator: payload did not decode as a SemioKitSnapshot".to_string())];
@@ -106,8 +106,8 @@ pub mod derived_composition {
     //#region 🔖️Register
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") }, store::ArtifactCodec::of::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA))
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_kit_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_snapshot_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") }, store::artifact_codec::<SemioKitSnapshot, crate::schema::mutations::SemioKitMutation>(crate::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA))
             .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
         register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
@@ -120,11 +120,11 @@ pub mod derived_composition {
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
         builder
-            .schemas([crate::standards::v1::subsets::kit::schema::semio_kit_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioKitSnapshot, crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation>(crate::standards::v1::subsets::kit::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") })
+            .schemas([crate::schema::semio_kit_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioKitSnapshot, crate::schema::mutations::SemioKitMutation>(crate::schema::snapshot::STDIO_SEMIOKIT_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("kit") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::kit::schema::inferences::semio_kit_artifact_inference_descriptor()])
-            .composers(crate::semio_written(io_entries(), &COMPOSERS))
+            .inferences([crate::schema::inferences::semio_kit_artifact_inference_descriptor()])
+            .composers(semio_s_artifact_stdio_semio_base::semio_written(io_entries(), &COMPOSERS))
     }
 
     /// 💡️ Registers `s.stdio.semio.kit.inference`'s facet leaves into the OS-wide inference
@@ -132,7 +132,7 @@ pub mod derived_composition {
     /// ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::kit::schema::inferences::semio_kit_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_kit_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 
@@ -154,9 +154,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-    use crate::standards::v1::subsets::kit::schema::mutations::{SemioKitMutation};
-    use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, SemioKitType};
+    use crate::schema::diff::SemioKitDiff;
+    use crate::schema::mutations::SemioKitMutation;
+    use crate::schema::snapshot::{SemioKitSnapshot, SemioKitType};
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -191,10 +191,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioKitMutation as protocol::Mutation<SemioKitSnapshot>>::diff(&mutation, &self.snapshot);
@@ -220,7 +220,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitSnapshot, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioKitSnapshot, STDIO_SEMIOKIT_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -260,14 +260,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.kit.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioKitSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

@@ -53,10 +53,10 @@ mod artifact_contribution_tests {
         assert_eq!(first, sorted);
         assert!(first.iter().any(|entry| entry.mutation_id == "roster-determinism-test.document#add-widget"));
         let add = first.iter().find(|entry| entry.mutation_id == "roster-determinism-test.document#add-widget").expect("add row");
-        let crate::app::WireMutationInputs::Declared { inputs } = &add.inputs else { panic!("add-widget declares its inputs: {:?}", add.inputs) };
+        let crate::artifact_registration::WireMutationInputs::Declared { inputs } = &add.inputs else { panic!("add-widget declares its inputs: {:?}", add.inputs) };
         assert_eq!(inputs.iter().map(|input| input.id.as_str()).collect::<Vec<_>>(), ["/id", "/x"]);
         assert!(matches!(inputs[1].control(), semio_framework::ActionArgControl::Slider { min, max, .. } if min == 0.0 && max == 10.0));
         let remove = first.iter().find(|entry| entry.mutation_id == "roster-determinism-test.document#remove-widget").expect("remove row");
-        assert_eq!(remove.inputs, crate::app::WireMutationInputs::Opaque);
+        assert_eq!(remove.inputs, crate::artifact_registration::WireMutationInputs::Opaque);
     }
 }

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteMesh`.
 
-use crate::standards::v1::subsets::object::schema::mutations::{create_mesh, SemioObjectMutation};
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::mutations::{create_mesh, SemioObjectMutation};
+use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

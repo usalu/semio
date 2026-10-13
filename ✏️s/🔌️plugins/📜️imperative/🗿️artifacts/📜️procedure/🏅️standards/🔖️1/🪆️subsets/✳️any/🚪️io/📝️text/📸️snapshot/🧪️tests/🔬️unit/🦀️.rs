@@ -58,19 +58,19 @@ async fn text_content_round_trips_dictionary_and_atom_variants() {
 /// 🚫️ A malformed body is refused.
 #[semio_framework_async_macros::async_test]
 async fn dsl_rejects_malformed_hex_value() {
-    assert!(<ProcedureSnapshot as store::ArtifactDsl>::parse_dsl("schema=zzz").is_err());
+    assert!(<ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("schema=zzz").is_err());
 }
 
 /// 🚫️ An unrecognized body line is refused.
 #[semio_framework_async_macros::async_test]
 async fn dsl_rejects_unrecognized_body_line() {
-    assert!(<ProcedureSnapshot as store::ArtifactDsl>::parse_dsl(r#"notimperative schema="x""#).is_err());
+    assert!(<ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(r#"notimperative schema="x""#).is_err());
 }
 
 /// 🚫️ A body missing a required line is refused.
 #[semio_framework_async_macros::async_test]
 async fn dsl_rejects_incomplete_body_missing_required_line() {
-    assert!(<ProcedureSnapshot as store::ArtifactDsl>::parse_dsl("schema=696d70657261746976652e646f63756d656e74").is_err());
+    assert!(<ProcedureSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl("schema=696d70657261746976652e646f63756d656e74").is_err());
 }
 //#endregion DSL text round trips and error paths
 
@@ -96,6 +96,6 @@ async fn the_demo_asset_names_the_default_program() {
 /// 🧬️ The derived pack declares its schema identity and carries the exact child handles.
 fn assert_pack_keeps_the_handles(document: &ProcedureSnapshot) {
     store::os_store::test_support::assert_pack_schema_identity(document);
-    let decoded: ProcedureSnapshot = store::ArtifactPack::decode_pack(&store::ArtifactPack::encode_pack(document)).expect("decode");
+    let decoded: ProcedureSnapshot = store::os_store::serialization::ArtifactPack::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(document)).expect("decode");
     assert_eq!((decoded.flow.child_id.as_str(), decoded.text.child_id.as_str()), (document.flow.child_id.as_str(), document.text.child_id.as_str()));
 }

@@ -1,3 +1,6 @@
+import { builtPluginModulesRootIn } from "../../♻️activation/🟦️.ts";
+import { buildModePolicy, readBuildMode } from "../../../../../../🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { viteCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 import type { AssetDeliveryProviderV1 } from "../../../../../../🔨️modules/🖼️assets/🔍️resolver/🧭️dispatch/🟦️.ts";
 import type { DeployedRegistryEntryV1 } from "../../../🔌️plugin/📇️registry/🔎️discovery/🟦️.ts";
 import type { PlaygroundEntry } from "../../../🔌️plugin/📇️registry/🎮️playground/🔎️discovery/🟦️.ts";
@@ -12,7 +15,7 @@ import {readFileSync, existsSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import { defineOwnedBuildConfigFactory, uiReactBuildPlugin, uiTailwindBuildPlugins, type OwnedBuildConfig } from "../../../../../../🔨️modules/🖱️ui/🎯️targets/⚛️react/🛠️build-tooling/🟦️.ts";
-import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, MODULE_VENDOR_DIRECTORY, MODULE_SHARD_DIRECTORY, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { isHostPlaygroundFilter } from "../../../🔌️plugin/📇️registry/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { devStreamMuxServer, semioAgentBridgeRendezvousVitePlugin, semioAgentCredentialInstallVitePlugin, semioLocalHubSessionVitePlugin, semioBackboneVitePlugin, semioBlobVitePlugin, semioDescriptorRouteGuardVitePlugin, semioActivationVitePlugin, semioPlaygroundReactRefreshCoherenceVitePlugin, semioProductionTestBoundaryVitePlugin, semioServiceWorkerScopeVitePlugin, semioSourceFreshnessVitePlugins } from "../../🔌️vite-plugins/🟦️.ts";
@@ -33,7 +36,7 @@ const { plugins, extensions, playgrounds, moduleDirectories, assetProviders } = 
 
 /** 📦️ Config-shaped graph: heavy owners load through opaque dynamic imports so Vite's native
  * config parse/watch set stays inside the declared module bound (see fixtures config-graph). */
-const { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteProductionBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
+const { playgroundFlowWasmDevStubPlugin, playgroundSceneHostOptimizeDeps, playgroundSceneHostResolveAliases, semioBrandHtmlVitePlugins, semioEmojiIndexHtmlVitePlugin, semioHostHtmlVitePlugin, semioViteBuild, staticDirMountVitePlugins, staticDirVitePlugin, semioAssetsVitePlugin, semioServeCloseVitePlugin } = await import(['../../../../../../🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite', '🟦️.ts'].join("/"));
 const { semioExtensionStoreVitePlugin } = await import(['../../../🔌️plugin/🏪️store/📥️installation', '🟦️.ts'].join("/"));
 const { repoCacheDirectory } = await import(['../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching', '🟦️.ts'].join("/"));
 void _semioPlaygroundGraphAnchor;
@@ -41,13 +44,13 @@ void _semioProcessGraphAnchor;
 
 const renderer = process.env.SEMIO_RENDERER ?? "react";
 const plugin = requirePlaygroundVariant(process.env.SEMIO_PLUGIN ?? process.env.PLAYGROUND_APP_KIND ?? options.inventory.defaultVariant ?? "framework-empty");
-const profile = command === "build" || process.env.SEMIO_BUILD_MODE === "ship" ? "release" : "dev";
-const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", `wasm-${profile}`);
+const buildMode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = buildMode === "prototype" ? "dev" : "release";
+const rendererModulesDir = path.resolve(playDir, "../📺️renderer/🧑‍🎨engine/🎯️targets/🧊️wgpu/📦️packages/🦀️rust/dist", buildModePolicy(buildMode).wasmProfile);
 const runtimeRoot = developmentRuntimeRoot(configDir, plugin, profile, "react");
 const testBrowserHost = command === "serve" ? resolveTestBrowserHostRootsV1(process.env) : undefined;
 const receiptDirectory = testBrowserHost?.activationRoot ?? path.join(runtimeRoot, "activation");
 const activated = command === "serve" ? readActivationReceipt(receiptDirectory) : undefined;
-const pluginModulesDir = testBrowserHost?.moduleRoot ?? pluginModulesRoot(profile);
+const pluginModulesDir = command === "build" ? builtPluginModulesRootIn(repoRoot, buildMode) : testBrowserHost?.moduleRoot ?? pluginModulesRoot();
 const installedExtensionsDir = command === "build" ? pluginModulesDir : testBrowserHost ? path.join(testBrowserHost.browserHostRoot, "extensions") : path.join(runtimeRoot, "extensions");
 const fontsDir = path.resolve(configDir, "../../../♾️infinite/📦️packages/🦀️rust/dist/fonts");
 const sessionRoot = path.resolve(configDir, "../../../🔌️plugin/📇️registry/dist/sessions");
@@ -87,7 +90,7 @@ const registryEngineOptimizeDepsExclude = [...new Set(playgrounds.filter((target
  * `node_modules`. The profile belongs in the key: a `dev` and a `release` serve of the same variant run
  * side by side, and sharing one `deps/` directory means whichever re-optimizes last rewrites the modules
  * the other has already handed to a browser. */
-const playgroundCacheDir = repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}-${profile}`);
+const playgroundCacheDir = viteCacheDirectory(repoCacheDirectory(repoRoot, "vite", "os-dev", `${plugin}-${renderer}`), process.env, import.meta.url);
 
 /** 🚫️ Keeps Node-only browser automation packages outside Vite's browser dependency optimizer. */
 const nodeOnlyOptimizeDepsExclude = ["playwright", "playwright-core", "chromium-bidi", "fsevents"];
@@ -114,13 +117,13 @@ const productionComponents = command === "build" ? selectProductionBrowserCompon
 const pluginModuleDirNames = [PREVIEW2_VENDOR_RELATIVE, MODULE_SHARD_DIRECTORY, ...(activated?.plugins ?? []).filter((row) => !extensionIds.has(row.pluginId)).map((row) => moduleDirectoryName(row.pluginId, moduleDirectories))];
 
 /** 🔎️ The components the activation-receipt watcher checks for staleness — every declared build
- * target, with the owner tree whose newest source mtime decides whether the staged module is behind
- * (`<cratePath>/../..`, the same owner root `stagePluginDescriptor` publishes descriptors from). */
+ * target, with the owner tree whose newest source mtime decides whether the staged module is behind (the component crate's owner:
+ * its library, its `🧩️component` root and its committed descriptor pair). */
 const activationComponents = [...plugins, ...extensions].map((target) => ({
   pluginId: target.pluginId,
   directoryName: moduleDirectoryName(target.pluginId, [target]),
   role: target.role === "extension" ? ("extension" as const) : ("plugin" as const),
-  sourceRoot: path.resolve(repoRoot, target.cratePath, "..", ".."),
+  sourceRoot: path.resolve(repoRoot, componentOwnerRootV1(target.cratePath)),
   cratePath: target.cratePath,
 }));
 //#endregion 🔖️RegistryDrivenAssetsAndEngines
@@ -134,12 +137,12 @@ return {
   // 🏷️ A brand's own `distDir` (e.g. the Aggregator's `♻️/aggregator/dist`) keeps its build output
   // self-contained alongside its brand config/assets instead of the shared playground `dist/`.
   build: {
-    ...semioViteProductionBuild(),
-    outDir: path.join(playDir, DISTRIBUTION_LAYOUT.directory),
+    ...semioViteBuild(),
+    outDir: path.join(playDir, DISTRIBUTION_LAYOUT.directory, buildMode),
     assetsDir: DISTRIBUTION_LAYOUT.bundles,
     emptyOutDir: false,
     rollupOptions: { output: distributionRollupOutput },
-    ...(brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir) } : playgroundDistDir ? { outDir: path.join(repoRoot, playgroundDistDir) } : {}),
+    ...(brand?.distDir ? { outDir: path.join(repoRoot, brand.distDir, buildMode) } : playgroundDistDir ? { outDir: path.join(repoRoot, playgroundDistDir, buildMode) } : {}),
   },
   resolve: {
     alias: [

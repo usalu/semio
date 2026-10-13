@@ -60,7 +60,7 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
             media_type: Box::leak(row.media_type.clone().into_boxed_str()),
             binary: row.binary,
         };
-        let actions = crate::app::natural_file_action_definitions(codec);
+        let actions = crate::app_contract::natural_file_action_definitions(codec);
         assert_eq!(actions[0].id, crate::SAVE_ARTIFACT_FILE_ACTION_ID, "{} save action", row.app_id);
         assert_eq!(actions[1].id, crate::OPEN_ARTIFACT_FILE_ACTION_ID, "{} open action", row.app_id);
         for action in actions {
@@ -72,7 +72,7 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
             assert_eq!(defaults["binary"].as_bool(), Some(row.binary));
         }
     }
-    let descriptor = crate::app::MediaArtifactDescriptor {
+    let descriptor = crate::app_contract::MediaArtifactDescriptor {
         edge_id: None,
         port_id: Some(crate::NATURAL_FILE_PORT.to_string()),
         kind_id: Some("s.stdio.csv@rfc4180".into()),
@@ -85,7 +85,7 @@ fn natural_file_actions_publish_exact_paired_codec_metadata() {
     assert_eq!(descriptor["kindId"], "s.stdio.csv@rfc4180");
     assert_eq!(descriptor["wire"]["kind"], "binary");
     assert_eq!(descriptor["wire"]["format_kind"], "s.stdio.csv@rfc4180");
-    let media = crate::app::natural_file_input_media(
+    let media = crate::app_contract::natural_file_input_media(
         crate::NaturalFileCodec { format_kind: Box::leak(fixture.transport.schema.clone().into_boxed_str()), extension: ".bin", media_type: "application/octet-stream", binary: true },
         crate::MediaType { class: crate::MediaClass::Data, form: crate::MediaForm::Value },
         fixture.transport.octets.clone(),

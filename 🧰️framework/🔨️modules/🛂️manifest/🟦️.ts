@@ -1480,7 +1480,7 @@ export type TutorialUiSample = { readonly kind: "snapshot"; readonly state: Tuto
 
 export type TutorialUiKeyframe = Omit<GeneratedTutorialUiKeyframe, "at" | "sample"> & { readonly at: number; readonly sample: TutorialUiSample };
 
-/** 🖋️ Mirrors `store::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
+/** 🖋️ Mirrors `store::os_store::store_schema::ArtifactCommand` with `Mutation = unknown` (opaque per-app mutation JSON) — the
  * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
 export type TutorialDocumentEventKind = GeneratedTutorialDocumentEventKind;
 

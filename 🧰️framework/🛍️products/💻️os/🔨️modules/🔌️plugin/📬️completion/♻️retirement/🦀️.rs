@@ -1,14 +1,16 @@
-//! 📬️ Returns actual completion aliases before retiring the original last cell and payload.
-use crate::app::{ArtifactApp,ArtifactCompletionFault,ArtifactToolCompletion,ArtifactToolCompletionValue};
+use crate::app_contract::ArtifactApp;
+use crate::completion_fault::ArtifactCompletionFault;
+use crate::tool_contract::ArtifactToolCompletion;
+use crate::tool_contract::ArtifactToolCompletionValue;
 use semio_framework_value::{ValueError,ValueRefusalKind,ErasedSnapshotRetirement,retirement::{RetireOwned,RetirementCursor,RetirementStep},retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep}};
 use std::{mem::ManuallyDrop,sync::{Arc,Mutex,MutexGuard,TryLockResult}};
-struct Cell<A:ArtifactApp>{value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::app::OriginalAuthoringEffect>>}
+struct Cell<A:ArtifactApp>{value:Mutex<Option<ArtifactToolCompletionValue<A>>>,authoring:Mutex<Option<crate::tool_contract::OriginalAuthoringEffect>>}
 pub(crate) struct CompletionCell<A:ArtifactApp>{inner:ManuallyDrop<Arc<Cell<A>>>,returned:bool}
 impl<A:ArtifactApp> CompletionCell<A>{
     pub(crate) fn new()->Self{Self{inner:ManuallyDrop::new(Arc::new(Cell{value:Mutex::new(None),authoring:Mutex::new(None)})),returned:false}}
     pub(crate) fn try_lock(&self)->TryLockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.try_lock()}
-    pub(crate) fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
-    pub(crate) fn try_lock_authoring(&self)->TryLockResult<MutexGuard<'_,Option<crate::app::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
+    fn lock(&self)->std::sync::LockResult<MutexGuard<'_,Option<ArtifactToolCompletionValue<A>>>>{self.inner.value.lock()}
+    pub(crate) fn try_lock_authoring(&self)->TryLockResult<MutexGuard<'_,Option<crate::tool_contract::OriginalAuthoringEffect>>>{self.inner.authoring.try_lock()}
     pub(crate) fn strong_count(&self)->usize{Arc::strong_count(&self.inner)}
     pub(crate) fn same_cell(&self,other:&Self)->bool{Arc::ptr_eq(&self.inner,&other.inner)}
     fn return_alias(mut self)->Option<Cell<A>>{let inner=unsafe{ManuallyDrop::take(&mut self.inner)};self.returned=true;Arc::into_inner(inner)}
@@ -58,15 +60,15 @@ impl<A:ArtifactApp> RetireOwned for ArtifactToolCompletion<A>{
 /// 📦️ The typed shape of a completion payload: the retirement of every lane derives from its members, so an app can never forget the facet.
 #[derive(semio_framework_value::RetireOwned)]
 enum CompletionPayload<M,C,D,P,T>{
-    Emit(Result<crate::app::Emit<M,C,D>,ArtifactCompletionFault>,EphemeralParts<P,T>),
-    Download(Result<crate::app::ArtifactDownloadOutput,ArtifactCompletionFault>,EphemeralParts<P,T>),
+    Emit(Result<crate::app_emission::Emit<M,C,D>,ArtifactCompletionFault>,EphemeralParts<P,T>),
+    Download(Result<crate::media_contract::ArtifactDownloadOutput,ArtifactCompletionFault>,EphemeralParts<P,T>),
 }
 #[derive(semio_framework_value::RetireOwned)]
-struct EphemeralParts<P,T>{presence:Vec<P>,transient:Vec<T>,window_transient:Vec<crate::app::WindowTransientMutation>}
+struct EphemeralParts<P,T>{presence:Vec<P>,transient:Vec<T>,window_transient:Vec<crate::window_transient::WindowTransientMutation>}
 type PayloadOf<A>=CompletionPayload<<A as ArtifactApp>::Mutation,<A as ArtifactApp>::ConfigMutation,<A as ArtifactApp>::DraftMutation,<A as ArtifactApp>::PresenceMutation,<A as ArtifactApp>::TransientMutation>;
 impl<A:ArtifactApp> From<ArtifactToolCompletionValue<A>> for PayloadOf<A>{
     fn from(value:ArtifactToolCompletionValue<A>)->Self{
-        let parts=|ephemeral:crate::app::EphemeralEmit<A>|EphemeralParts{presence:ephemeral.presence,transient:ephemeral.transient,window_transient:ephemeral.window_transient};
+        let parts=|ephemeral:crate::app_emission::EphemeralEmit<A>|EphemeralParts{presence:ephemeral.presence,transient:ephemeral.transient,window_transient:ephemeral.window_transient};
         match value{ArtifactToolCompletionValue::Emit(outcome,ephemeral)=>Self::Emit(outcome,parts(ephemeral)),ArtifactToolCompletionValue::Download(outcome,ephemeral)=>Self::Download(outcome,parts(ephemeral))}
     }
 }

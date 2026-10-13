@@ -143,7 +143,7 @@ const router = new ScriptRouter(import.meta.dir)
     async run(segments: string[]): Promise<void> {
       if (segments[0] === "watch") return new (await import("../../../🔌️plugin/🏗️build/👁️watch/🟦️.ts")).PluginWatchScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       if (segments[0] === "lint") return new (await import("../../🧪️tests/🧹️capability-policy/🟦️.ts")).PluginCapabilityLintScript(this.root, this.repoRoot, this.invocation).run();
-      if (segments[0] === "registry") return (await import("../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts")).ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
+      if (segments[0] === "registry") return (await import("../../../🔌️plugin/📇️registry/🔄️refresh/🟦️.ts")).ensurePluginRegistry();
       if (segments[0] === "size") return new (await import("../../../🔌️plugin/📊️size/🟦️.ts")).PluginSizeScript(this.root, this.repoRoot, this.invocation).run(segments.slice(1));
       return new (await import("../../../🔌️plugin/🏗️build/🏃️execution/🟦️.ts")).PluginBuildScript(this.root, this.repoRoot, this.invocation).run(segments);
     }

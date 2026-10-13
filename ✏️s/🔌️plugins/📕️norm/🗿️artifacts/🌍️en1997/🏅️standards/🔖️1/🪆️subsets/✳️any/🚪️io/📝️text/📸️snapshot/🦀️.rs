@@ -15,12 +15,12 @@ pub const EN1997_DEFAULT_EXAMPLE_TEXT: &str = include_str!("../../../🖼️asse
 
 /// 📖️ Parses `.en1997` DSL text into a `En1997Snapshot`.
 pub fn parse_dsl(text: &str) -> Result<En1997Snapshot, semio_framework_diagnostic::TextError> {
-    <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text)
+    <En1997Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `En1997Snapshot` back to `.en1997` DSL text.
 pub fn print_dsl(document: &En1997Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -51,11 +51,11 @@ pub fn decode_en1997_snapshot_json(text: &str) -> Result<En1997Snapshot, String>
 }
 
 pub fn decode_en1997_dsl(text: &str) -> Result<En1997Snapshot, String> {
-    <En1997Snapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <En1997Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 pub fn encode_en1997_dsl(snapshot: &En1997Snapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

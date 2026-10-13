@@ -139,7 +139,7 @@ fn pose(out: &mut Projection<'_, '_>, table: usize, owner: i64, value: &Pose) ->
     put(out, table, &[Cell::Integer(owner), Cell::Real(value.position[0]), Cell::Real(value.position[1]), Cell::Real(value.position[2]), Cell::Real(value.axis[0]), Cell::Real(value.axis[1]), Cell::Real(value.axis[2]), Cell::Real(value.angle)])?;
     Ok(())
 }
-fn child<S>(out: &mut Projection<'_, '_>, table: usize, owner: i64, value: &store::ArtifactChild<S>, order: Option<usize>) -> Result<(), ValueError> {
+fn child<S>(out: &mut Projection<'_, '_>, table: usize, owner: i64, value: &store::os_store::artifact_child::ArtifactChild<S>, order: Option<usize>) -> Result<(), ValueError> {
     let target = &value.target;
     let fields = [Cell::Text(&value.child_id), Cell::Text(&target.artifact_id), Cell::Text(&target.dialect.artifact_kind), Cell::Text(&target.dialect.standard), Cell::Text(&target.dialect.subset)];
     match order {
@@ -339,12 +339,12 @@ fn read_quantity(value: &str) -> Result<StockQuantity, ValueError> {
         _ => Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d unknown stock quantity")),
     }
 }
-fn read_child<S>(row: &SqliteRow, ordered: bool, subset: &str, c: &mut SqliteSnapshotControl<'_>) -> Result<store::ArtifactChild<S>, ValueError> {
+fn read_child<S>(row: &SqliteRow, ordered: bool, subset: &str, c: &mut SqliteSnapshotControl<'_>) -> Result<store::os_store::artifact_child::ArtifactChild<S>, ValueError> {
     let offset = usize::from(ordered);
     if row.text(4 + offset)? != "s.stdio.semio" || row.text(5 + offset)? != "v1" || row.text(6 + offset)? != subset {
         return Err(ValueError::new(ValueRefusalKind::InvalidValue,"Process3d child dialect"));
     }
-    Ok(store::ArtifactChild::new(
+    Ok(store::os_store::artifact_child::ArtifactChild::new(
         text(row, 2 + offset, c)?,
         semio_framework_artifact_reference::ArtifactRef { artifact_id: text(row, 3 + offset, c)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: text(row, 4 + offset, c)?, standard: text(row, 5 + offset, c)?, subset: text(row, 6 + offset, c)? } },
     ))
@@ -432,7 +432,7 @@ pub(super) fn reconstruct(database: &SqliteDatabase, c: &mut SqliteSnapshotContr
     let stock_solid = ownership::field(read_child(rows.one(29, document.rowid, c)?, false, "brep", c)?);
     let steps = ownership::field(read_child(rows.one(30, document.rowid, c)?, false, "flow", c)?);
     let tool_solids_rows = rows.children(31, document.rowid, true, c)?;
-    let mut tool_solids = ownership::guarded_collection::<store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot>>(tool_solids_rows.len(), c)?;
+    let mut tool_solids = ownership::guarded_collection::<store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot>>(tool_solids_rows.len(), c)?;
     for row in tool_solids_rows {
         tool_solids.as_mut().push(read_child(row, true, "brep", c)?);
     }

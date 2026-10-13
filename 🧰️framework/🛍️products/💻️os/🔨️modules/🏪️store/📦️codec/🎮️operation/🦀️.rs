@@ -1,5 +1,5 @@
 //! 🎟️ Original codec inputs and catalog sources remain retained across real supplied-grant turns.
-use crate::os_store::{DocumentStoreOwners, DocumentStoreOwnersAdmissionError, ErasedSnapshotRetirement};
+use crate::os_store::{document_store_owners::DocumentStoreOwners, document_store_owners::DocumentStoreOwnersAdmissionError, ErasedSnapshotRetirement};
 use crate::Mutation;
 use semio_framework_value::{FromValue, ToValue, RetirementDemand, ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
 use std::mem::ManuallyDrop;
@@ -75,8 +75,8 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<
     /// 📏️ Borrows exact original error, ticket and catalog closure demands before any transfer.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if self.receipt.is_some() || self.done { return Ok(Default::default()); }
-        let demand = if let Some(owner) = self.failure_close.as_ref() { crate::os_store::artifact_retirement_box_demands(owner, body)? }
-        else if self.failure.is_some() { crate::os_store::artifact_retirement_owned_birth_demands(&self.failure)? }
+        let demand = if let Some(owner) = self.failure_close.as_ref() { crate::os_store::snapshot_read::artifact_retirement_box_demands(owner, body)? }
+        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.failure)? }
         else if let Some(owners) = self.original.as_ref() { if owners.uninstalled_owners_terminal_is_empty() { RetirementDemand { depth: 1, ..Default::default() } } else { owners.uninstalled_owners_demands(body)? } }
         else { RetirementDemand { depth: 1, ..Default::default() } };
         parent(demand)
@@ -89,8 +89,8 @@ where P: Clone + ToValue + FromValue, M: Clone + ToValue + FromValue + Mutation<
         if !covers(grant, demand) { return Ok(ArtifactCodecCatalogStep::Blocked); }
         self.closing = true;
         let child = RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant };
-        let progress = if self.failure_close.is_some() { crate::os_store::artifact_retirement_box_close_step(&mut self.failure_close, child)?.progress() }
-        else if self.failure.is_some() { crate::os_store::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, child)?.progress() }
+        let progress = if self.failure_close.is_some() { crate::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.failure_close, child)?.progress() }
+        else if self.failure.is_some() { crate::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.failure, &mut self.failure_close, child)?.progress() }
         else if let Some(owners) = self.original.as_mut() { if owners.uninstalled_owners_terminal_is_empty() { drop(self.original.take()); item() } else { close_catalog(owners, child)?.progress() } }
         else { self.done = true; item() };
         if progress == Default::default() { return Ok(ArtifactCodecCatalogStep::Blocked); }

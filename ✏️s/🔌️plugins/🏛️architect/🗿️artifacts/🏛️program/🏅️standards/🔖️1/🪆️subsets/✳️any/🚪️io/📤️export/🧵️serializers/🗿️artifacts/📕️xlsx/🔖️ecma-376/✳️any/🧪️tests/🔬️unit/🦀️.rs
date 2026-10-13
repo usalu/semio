@@ -4,7 +4,7 @@ use semio_s_artifact_stdio_xlsx::standards::v_ecma_376::subsets::base::io::impor
 
 #[semio_framework_async_macros::async_test]
 async fn exports_every_program_table_to_a_real_workbook() {
-    let program = crate::sample_plugin();
+    let program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
     let snapshot = serialize(&program).expect("serialize program workbook");
     let workbook = snapshot.project_workbook().expect("project the program workbook");
     assert_eq!(workbook.sheets.len(), 70);

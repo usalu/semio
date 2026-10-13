@@ -9,12 +9,13 @@ import { serveVite } from "../../../../🧰️framework/🛍️products/🦑️r
 import { readDemonstratorActivation } from "./♻️activation/🟦️.ts";
 import { closeServiceSession, openServiceSession, publishServiceReady, readServiceSession } from "../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🧾️session/🟦️.ts";
 import { DEMONSTRATOR_E2E_OWNER, demonstratorE2eInvocationPid, demonstratorE2eSessionRoot } from "./🧪️e2e/🟦️.ts";
+import { readBuildMode } from "../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
 
 /** 🎪️ Verifies the runtime union completed by the outer Nx preparation graph. */
 class PreparationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    const profile = args[0];
-    if (args.length !== 1 || !["dev", "release"].includes(profile)) throw new Error("prepare <dev|release>");
+    if (args.length) throw new Error("Preparation mode belongs to the Nx prototype or release configuration");
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE), profile = mode === "prototype" ? "dev" : "release";
     const plugin = join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin");
     const moduleRoot = join(plugin, "📦️packages/🟦️typescript/dist", profile, "🔌️plugin-modules");
     const { pluginModuleDirNames, extensionModuleDirNames } = demonstratorRuntimeModuleLayout(DEMONSTRATOR_RUNTIME_TARGETS.map(row => row.pluginId));
@@ -27,7 +28,7 @@ class PreparationScript extends BundleScript {
       const session = (await import(pathToFileURL(file).href)).PLAYGROUND_SESSION;
       if (session.variant !== target.variant || session.registryPluginId !== target.pluginId) throw new Error(`Mismatched Demonstrator session: ${target.variant}`);
     }
-    console.log(`Prepared Demonstrator ${profile}: ${DEMONSTRATOR_RUNTIME_TARGETS.length} runtime variants`);
+    console.log(`Prepared Demonstrator ${mode}: ${DEMONSTRATOR_RUNTIME_TARGETS.length} runtime variants`);
   }
 }
 

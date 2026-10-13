@@ -1,6 +1,6 @@
 use super::*;
 use protocol::{OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn pinned() -> BimWorldWindowConfig {
     BimWorldWindowConfig {

@@ -7,7 +7,8 @@
 //! form, optional content, viewer settings, metadata, identity and encryption, catalog extras —
 //! with the retained COS lanes' object/dict/trailer edits kept as they were.
 
-use crate::standards::v1_7::subsets::base::schema::{diff::PdfDiff, snapshot::{ObjRef, PdfPage, PdfSnapshot}};
+use crate::standards::v1_7::subsets::base::schema::diff::PdfDiff;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfPage, PdfSnapshot};
 use semio_framework_value::{DslValue, FromValue, ToValue};
 use semio_framework_plugin::{Fault, FaultCode, FaultOrigin};
 use semio_s_artifact_stdio_contract::editing::{EditRules, EntityRule, InsertRule, RemoveRule, Selector, SnapshotEditEvent};

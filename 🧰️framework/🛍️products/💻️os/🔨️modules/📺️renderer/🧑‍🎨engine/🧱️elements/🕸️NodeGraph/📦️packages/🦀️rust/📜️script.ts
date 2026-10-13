@@ -12,7 +12,7 @@ import { runScriptMain } from "../../../../../../../../../🔨️modules/🏃️
 
 /** 🕸️ Builds and verifies the actual OS DAG session composition. */
 class WasmScript extends BundleScript{
- async run():Promise<void>{await buildWasmWebV1({rsDir:this.root,logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",outputDirectory:"🕸️bindings",shipProfile:"wasm-release",devOptimizedCrates:BROWSER_CANVAS_HOT_CRATES,pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}},readWasmBuildPolicyV1(process.env,this.root));}
+ async run():Promise<void>{await buildWasmWebV1({rsDir:this.root,componentDir:resolve(this.root,"../../🧩️component/📦️packages/🦀️rust"),logPrefix:"os/node-graph",wasmBaseName:"framework_os_node_graph",outputDirectory:"🕸️bindings",shipProfile:"wasm-release",devOptimizedCrates:BROWSER_CANVAS_HOT_CRATES,pkg:{name:"@semio-tech/framework-os-node-graph-rs",files:["framework_os_node_graph_bg.wasm","framework_os_node_graph.js","framework_os_node_graph.d.ts","framework_os_node_graph_bg.wasm.d.ts"],main:"framework_os_node_graph.js",module:"framework_os_node_graph.js",types:"framework_os_node_graph.d.ts"}},readWasmBuildPolicyV1(process.env,this.root));}
 }
 class SourceScript extends BundleScript{
  async run():Promise<void>{await runOwnedCommand("bun",["test",join(this.root,"../../🧪️tests/🧩️suite/🟦️.ts")],this.repoRoot,"tool:owner",cmdBudgetMs(),{env:process.env});}

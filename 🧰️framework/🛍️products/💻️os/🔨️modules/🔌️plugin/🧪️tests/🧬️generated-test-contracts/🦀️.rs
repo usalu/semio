@@ -14,12 +14,12 @@ macro_rules! __semio_plugin_descriptor_fresh_test {
             const DESCRIPTOR_MIGRATED_PLUGINS: &[&str] = &["note", "sequence", "vcs", "forms", "sourcing", "dag", "mathematical", "writer", "reasoning", "animate", "draw", "energy", "layout"];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
+                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun nx run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {
-                    assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `describe` and commit 🛂️.descriptor.semio + 🔣️.json");
+                    assert!(!DESCRIPTOR_MIGRATED_PLUGINS.contains(&plugin_id.as_str()), "{expected_path} is missing but {plugin_id:?} is listed in DESCRIPTOR_MIGRATED_PLUGINS — run `bun nx run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
                 }
             }
         }
@@ -41,12 +41,12 @@ macro_rules! __semio_extension_descriptor_fresh_test {
             const DESCRIPTOR_MIGRATED_EXTENSIONS: &[&str] = &[];
             match std::fs::read(expected_path) {
                 Ok(expected) => {
-                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&assembled), $crate::plugin_runtime::descriptor_bytes_with_blank_hashes(&expected)) {
-                        assert_eq!(assembled, expected, "{expected_path} is stale — re-run `describe` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
+                    if let (Some(assembled), Some(expected)) = ($crate::plugin_runtime::canonical_semantic_descriptor_bytes(&assembled), $crate::plugin_runtime::canonical_semantic_descriptor_bytes(&expected)) {
+                        assert_eq!(assembled, expected, "{expected_path} is stale — run `bun nx run workspace:components describe <plugin-id>` (📓️design-abi.md §3) and commit the refreshed 🛂️.descriptor.semio + 🔣️.json");
                     }
                 }
                 Err(_) => {
-                    assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `describe` and commit 🛂️.descriptor.semio + 🔣️.json");
+                    assert!(!DESCRIPTOR_MIGRATED_EXTENSIONS.contains(&extension_id.as_str()), "{expected_path} is missing but {extension_id:?} is listed in DESCRIPTOR_MIGRATED_EXTENSIONS — run `bun nx run workspace:components describe <plugin-id>` and commit 🛂️.descriptor.semio + 🔣️.json");
                 }
             }
         }

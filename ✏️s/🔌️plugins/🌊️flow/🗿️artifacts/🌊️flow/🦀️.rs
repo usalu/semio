@@ -27,7 +27,7 @@ use semio_framework_artifact_playbook_playbook as playbook;
 
 use semio_framework_artifact_flow_flow::{SynapseSpec, Widget, WidgetLayout};
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge as SemioFlowEdge, FlowNode as SemioFlowNode, FlowParam as SemioFlowParam, PortRef as SemioPortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 use std::collections::HashMap;
 use std::io::Write;
 use std::sync::Arc;
@@ -54,7 +54,7 @@ pub const FLOW_DIALECT: Dialect = Dialect { artifact_kind: "s.flow.flow", standa
 /// 🕸️ Owned CHILD handle type for the composed `s.stdio.semio@v1/flow` document — the flow plugin's
 /// widgets/synapses/layout now live in this composed child's `nodes`/`edges` rather than inline on
 /// `FlowSnapshot`.
-pub type FlowContentChild = store::ArtifactChild<SemioFlowSnapshot>;
+pub type FlowContentChild = store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot>;
 
 struct FlowContentHashWriter {
     hasher: semio_framework_hash::Sha256,
@@ -172,7 +172,7 @@ pub fn flow_genesis_content_pack(document: &FlowSnapshot, slot: &str, child_id: 
         return None;
     }
     let scene = document.content.local_owner::<FlowWorkingScene>()?;
-    Some(<SemioFlowSnapshot as store::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
+    Some(<SemioFlowSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&flow_content_snapshot_from_working(&scene.widgets, &scene.synapses, &scene.layout)))
 }
 
 /// 🪆️ The flow document every reader and writer works on: the parent's exact `content` coordinate carrying the scene
@@ -209,7 +209,7 @@ pub fn flow_composed_snapshot(snapshot: &FlowSnapshot, children: &semio_framewor
 pub fn flow_content_node_from_working(widget: &Widget, layout: Option<&WidgetLayout>) -> SemioFlowNode {
     let id = schema::widget_id(widget).to_string();
     let kind = schema::widget_kind_label(widget).to_string();
-    let position = layout.map(|entry| semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
+    let position = layout.map(|entry| semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2 { x: entry.x, y: entry.y }).unwrap_or_default();
     let label = match widget {
         Widget::InputSlider { label, .. } => label.clone(),
         _ => kind.clone(),
@@ -267,7 +267,7 @@ pub(crate) fn flow_content_child_from_digest(digest: [u8; 32], scene: Arc<FlowWo
     let child_id = format!("flow-content-sha256-{}", semio_framework_hash::hex_lower(&digest));
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target).with_local_owner(scene)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target).with_local_owner(scene)
 }
 //#endregion 🔖️ContentBridge
 

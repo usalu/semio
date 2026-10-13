@@ -1,8 +1,8 @@
 use super::*;
 use crate::os_spr::{ArtifactId, Edit, Mutation, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcomeClass, OpBinary, OpText};
 use crate::os_store::{
-    create_document_envelope, pack_rt, parse_document_pack, parse_document_text, print_document_pack, print_document_text, print_edit_lines, register_document_codec, ArtifactCodec, ArtifactCommand, ArtifactDsl, ArtifactPack, BlobStore,
-    PackDecodeOptions, PackEncodeOptions, PackError, ParsedDocumentText,
+    artifact_codec, document_materialize::create_document_envelope, pack_rt, text_format::parse_document_pack, text_format::parse_document_text, text_format::print_document_pack, text_format::print_document_text, text_format::print_edit_lines, codec_registry::register_document_codec, serialization::ArtifactCodec, store_schema::ArtifactCommand, serialization::ArtifactDsl, serialization::ArtifactPack, BlobStore,
+    PackDecodeOptions, PackEncodeOptions, PackError, text_format::ParsedDocumentText,
 };
 use serde::{Deserialize, Serialize};
 use std::sync::Arc;
@@ -147,7 +147,7 @@ fn artifact_mailbox_stale_late_send_hands_back_exact_owner_and_interrupted_close
 
 #[semio_framework_async_macros::async_test]
 async fn artifact_mailbox_nested_identifier_bytes_and_backbone_one_pop_preserve_ownership_order() {
-    use crate::os_store::Backbone;
+    use crate::os_store::backbone::Backbone;
     let nested = sample_presence_peer_with_interaction().await;
     let bare = PresencePeer {
         actor: nested.actor.clone(),
@@ -189,7 +189,7 @@ pub(super) struct DemoSnapshot {
 }
 
 
-impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
+impl crate::os_store::serialization::ArtifactSqliteSnapshot for DemoSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<crate::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use crate::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotPhase};
@@ -232,8 +232,8 @@ impl ArtifactDsl for DemoSnapshot {
 
 impl ArtifactPack for DemoSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -247,7 +247,7 @@ impl ArtifactPack for DemoSnapshot {
             return Err(PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(crate::os_store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(crate::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -388,7 +388,7 @@ impl Mutation<DemoSnapshot> for DemoMutation {
 /// codec-less: ticket 26/09/23 `📓️wp-h6.md`).
 pub(super) async fn ensure_demo_codec_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(|| register_document_codec(ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec"));
+    ONCE.call_once(|| register_document_codec(artifact_codec::<DemoSnapshot, DemoMutation>("demo/v1")).expect("register demo codec"));
 }
 
 fn bootstrap_frontier(document_id: &str, ordinal: u64, edit_id: &str, commit: u64, chain: u8) -> RuntimeFrontierSummary {
@@ -401,7 +401,7 @@ async fn demo_artifact_bootstrap(inline: bool) -> (ArtifactBootstrap, ArtifactBo
     let files = print_document_pack(&envelope).await.expect("print bootstrap pair");
     drop(envelope.into_owners());
     let pair = ArtifactBootstrapPair { pack: files.pack, spr: files.spr };
-    let pack_schema_hash = crate::os_store::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
+    let pack_schema_hash = crate::os_store::codec_registry::document_codec("demo/v1").await.expect("codec lookup").expect("demo codec").pack_schema_hash;
     let bootstrap = ArtifactBootstrap {
         format_version: crate::os_spr::ARTIFACT_BOOTSTRAP_FORMAT_VERSION,
         descriptor_hash: [0x11; 32],
@@ -623,7 +623,7 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
         store.ingest_remote(shared.clone()).await.expect("both replicas ingest the shared edit");
     }
     let target = shared.mutation_id.clone();
-    let supersede = |n: i32| ArtifactCommand::Supersede { scope: None, inputs: vec![crate::os_store::SupersedeInput { target: target.clone(), replacement: Some(DemoMutation::SetN { n }) }] };
+    let supersede = |n: i32| ArtifactCommand::Supersede { scope: None, inputs: vec![crate::os_store::store_schema::SupersedeInput { target: target.clone(), replacement: Some(DemoMutation::SetN { n }) }] };
     left.dispatch(supersede(7), &mut identity).await.expect("left supersedes");
     right.dispatch(supersede(9), &mut identity).await.expect("right supersedes concurrently");
     let authored = |store: &crate::os_store::ArtifactStore<DemoSnapshot, DemoMutation>| store.envelope().transitions.last().cloned().expect("an authored supersession");
@@ -652,7 +652,7 @@ async fn concurrent_supersessions_of_one_operation_converge_through_the_hub_sock
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_without_duplicate() {
-    use crate::os_store::Backbone;
+    use crate::os_store::backbone::Backbone;
     let (bootstrap, pair) = demo_artifact_bootstrap(true).await;
     let required = bootstrap.required_tail_frontier.clone();
     let baseline = bootstrap.baseline_frontier.clone();
@@ -725,7 +725,7 @@ async fn native_bootstrap_commits_pair_before_failed_local_replay_then_restarts_
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_cancelled_restart() {
-    use crate::os_store::Backbone;
+    use crate::os_store::backbone::Backbone;
     async fn actor_pair(uri: &str) -> (native_actor::ArtifactActor, ChannelBackbone) {
         let (channel, remote) = ChannelBackbone::pair(uri).await;
         let (_, receiver) = artifact_mailbox_pair();
@@ -798,7 +798,7 @@ async fn native_inline_and_chunked_bootstrap_install_the_same_typed_pair_after_c
 #[cfg(not(target_arch = "wasm32"))]
 #[semio_framework_async_macros::async_test]
 async fn bootstrap_sequence_refuses_a_command_tail_that_arrives_before_the_snapshot() {
-    use crate::os_store::Backbone;
+    use crate::os_store::backbone::Backbone;
     async fn ordered_actor(uri: &str) -> (native_actor::ArtifactActor, ChannelBackbone, broadcast::Receiver<ArtifactEvent>) {
         let (channel, remote) = ChannelBackbone::pair(uri).await;
         let (_, receiver) = artifact_mailbox_pair();
@@ -914,7 +914,7 @@ async fn receive_under_fixture_identity(session: &mut SyncSession<DemoSnapshot, 
 //#region 🧪️SyncSession
 #[semio_framework_async_macros::async_test]
 async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-    let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     receive_under_fixture_identity(&mut session, sample_operation_envelope("edit-1", 5).await).await.expect("receive");
@@ -925,7 +925,7 @@ async fn receive_materializes_remote_envelope_into_the_edit_timeline() {
 
 #[tokio::test]
 async fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-    let envelope: crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
+    let envelope: crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("demo/v1", "demo", DemoSnapshot { n: 0 }, None);
     let store = crate::os_store::test_support::plain_test_store(envelope).await;
     let mut session = SyncSession::new(store).await;
     let first = sample_operation_envelope("edit-1", 5).await;
@@ -994,13 +994,26 @@ async fn hostile_hub_binding_cannot_receive_a_credential_bound_document_grant() 
                     descriptor_digest_v1: "4".repeat(64),
                     catalog: DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
                     package: DocumentOpenPackageV1 {
-                        plugin_id: "trusted.plugin".into(),
-                        package_id: "trusted.package".into(),
+                        plugin_id: "trusted-plugin".into(),
+                        package_id: "semio:trusted-plugin".into(),
                         version: "1.0.0".into(),
                         component_sha256: "6".repeat(64),
                         component_blake3: "7".repeat(64),
                         descriptor_byte_sha256: "8".repeat(64),
                         execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
+                        component_receipt: crate::os_component_receipt::ComponentReceiptV1 {
+                            schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                            plugin_id: "trusted-plugin".into(),
+                            package_id: "semio:trusted-plugin".into(),
+                            profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                            target: crate::os_component_receipt::COMPONENT_TARGET.into(),
+                            wasm_sha256: "6".repeat(64),
+                            wasm_bytes: 1024,
+                            semantic_descriptor_sha256: "8".repeat(64),
+                            toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+                            source_tree_digest: "3".repeat(64),
+                            provenance_sha256: "4".repeat(64),
+                        },
                     },
                     artifact: DocumentOpenArtifactV1 { kind: "trusted.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
                     parent_dialect: DocumentOpenParentDialectV1 { artifact_kind: "trusted.document".into(), standard: "1".into(), subset: "*".into() },
@@ -1404,7 +1417,7 @@ mod actor_tests {
     use tokio::sync::{broadcast as tokio_broadcast, Mutex};
     use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-    async fn demo_envelope(document_id: &str) -> crate::os_store::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
+    async fn demo_envelope(document_id: &str) -> crate::os_store::store_schema::ArtifactEnvelope<DemoSnapshot, DemoMutation> {
         create_document_envelope("demo/v1", document_id, DemoSnapshot { n: 0 }, None)
     }
 
@@ -1521,7 +1534,7 @@ mod actor_tests {
             inverse: vec![crate::os_spr::OpPayload { text: None, binary: Some(DemoMutation::SetN { n: 1 }.encode_op().expect("encode")) }],
             meta: None, lane: None,
         };
-        archive.parent_spr = crate::os_store::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
+        archive.parent_spr = crate::os_store::text_format::append_history_events_to_spr(&archive.parent_spr, &[external_edit], &[]).await.expect("append external edit");
         let bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode externally changed archive");
         storage.write_archive("doc-a", "demo/v1", &bytes).await.expect("out-of-band archive write");
 
@@ -1603,13 +1616,26 @@ mod actor_tests {
                     descriptor_digest_v1: "4".repeat(64),
                     catalog: crate::os_directory::DocumentOpenCatalogV1 { generation_id: "5".repeat(64) },
                     package: crate::os_directory::DocumentOpenPackageV1 {
-                        plugin_id: "mock.plugin".into(),
-                        package_id: "mock.package".into(),
+                        plugin_id: "mock-plugin".into(),
+                        package_id: "semio:mock-plugin".into(),
                         version: "1.0.0".into(),
                         component_sha256: "6".repeat(64),
                         component_blake3: "7".repeat(64),
                         descriptor_byte_sha256: "8".repeat(64),
                         execution_protocol: crate::os_directory::DocumentExecutionProtocolV1 { app_channel_version: crate::os_spr::CHANNEL_VERSION },
+                        component_receipt: crate::os_component_receipt::ComponentReceiptV1 {
+                            schema: crate::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+                            plugin_id: "mock-plugin".into(),
+                            package_id: "semio:mock-plugin".into(),
+                            profile: crate::os_component_receipt::ComponentProfileV1::WasmRelease,
+                            target: crate::os_component_receipt::COMPONENT_TARGET.into(),
+                            wasm_sha256: "6".repeat(64),
+                            wasm_bytes: 1024,
+                            semantic_descriptor_sha256: "8".repeat(64),
+                            toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+                            source_tree_digest: "3".repeat(64),
+                            provenance_sha256: "4".repeat(64),
+                        },
                     },
                     artifact: crate::os_directory::DocumentOpenArtifactV1 { kind: "mock.document".into(), schema: expectation.artifact_schema.clone(), pack_schema_hash: "1".repeat(64) },
                     parent_dialect: crate::os_directory::DocumentOpenParentDialectV1 { artifact_kind: "mock.document".into(), standard: "1".into(), subset: "*".into() },
@@ -2197,7 +2223,7 @@ mod actor_tests {
     /// (removes any write/poke race). Folder-replayable fixtures pair inbound 1:1 with events.
     async fn replay_fixture(fixture: &ActorFixture) {
         ensure_demo_codec_registered().await;
-        let codec = crate::os_store::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
+        let codec = crate::os_store::codec_registry::document_codec(&fixture.schema).await.expect("codec registry available").unwrap_or_else(|| panic!("no codec registered for fixture schema {:?}", fixture.schema));
         let dir = crate::os_store::test_support::tempdir().expect("tempdir");
         let host = ArtifactHost::new(test_pool());
         let channels =
@@ -2226,7 +2252,7 @@ mod actor_tests {
                         }
                         new_edits.push(crate::os_spr::HistoryEdit { ops, meta: None, ..edit });
                     }
-                    archive.parent_spr = crate::os_store::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
+                    archive.parent_spr = crate::os_store::text_format::append_history_events_to_spr(&archive.parent_spr, &new_edits, &[]).await.expect("append fixture edits");
                     let archive_bytes = crate::os_spr::encode_document_archive_bytes(&archive).expect("encode fixture archive");
                     storage.write_archive(&fixture.document_id, &fixture.schema, &archive_bytes).await.expect("write archive");
                     channels.cmd_tx.send(ArtifactActorMsg::ExternalChanged).expect("poke");
@@ -2660,7 +2686,7 @@ async fn a_rebootstrap_waits_for_the_hosts_reseed_and_says_hello_at_its_baseline
 #[cfg(not(target_arch = "wasm32"))]
 #[tokio::test]
 async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
-    use crate::os_store::Backbone;
+    use crate::os_store::backbone::Backbone;
     let (bootstrap, _) = demo_artifact_bootstrap(true).await;
     let baseline = bootstrap.baseline_frontier.clone();
     let (mut backbone, remote) = ChannelBackbone::pair("native-refused-supersede-test").await;
@@ -2695,7 +2721,7 @@ async fn a_refused_supersession_is_retracted_as_a_typed_refusal() {
     let (mut rolled_back, mut retracted, mut outcome, mut refusal) = (Vec::new(), Vec::new(), None, None);
     while let Ok(event) = event_rx.try_recv() {
         match event {
-            ArtifactEvent::DocumentBackbone { message } => match crate::os_store::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
+            ArtifactEvent::DocumentBackbone { message } => match crate::os_store::backbone::decode_hot_backbone_message_exact(&message).expect("canonical backbone message") {
                 BackboneMessage::Mutations { envelopes } => rolled_back.extend(decode_envelopes(&envelopes).expect("rollback batch").into_iter().map(|envelope| envelope.mutation_id.0)),
                 BackboneMessage::Retract { mutation_ids } => retracted.extend(mutation_ids),
                 other => panic!("unexpected document backbone message {other:?}"),
@@ -2729,7 +2755,7 @@ async fn the_folder_archive_presence_corpus_matches_the_native_actor() {
     let (document, schema) = ("presence-1", "s.test.root/1/*");
     let mut archives: std::collections::HashMap<&str, Vec<u8>> = std::collections::HashMap::new();
     for name in ["a", "b"] {
-        let archive = crate::os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: crate::os_store::empty_document_spr(document, schema).await, members: Vec::new() };
+        let archive = crate::os_spr::DocumentArchivePack { parent_pack: name.as_bytes().to_vec(), parent_spr: crate::os_store::text_format::empty_document_spr(document, schema).await, members: Vec::new() };
         archives.insert(name, crate::os_spr::encode_document_archive_bytes(&archive).expect("encode the archive"));
     }
     let content = |value: &serde_json::Value| value.as_str().filter(|content| *content != "absent").map(|content| archives[content].clone());

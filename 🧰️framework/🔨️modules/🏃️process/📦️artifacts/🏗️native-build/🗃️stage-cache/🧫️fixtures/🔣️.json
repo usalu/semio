@@ -1,0 +1,124 @@
+{
+  "schema": "semio.build.stage-cache.fixture/v1",
+  "oracle": "wave-n1-n2/🧫️stage-cache-oracle.py (Python hashlib, json.dumps sort_keys)",
+  "keys": [
+    {
+      "key": {
+        "stage": "describe",
+        "schemaVersion": 1,
+        "inputs": {
+          "component": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+        },
+        "tools": {
+          "emitter": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"
+        }
+      },
+      "canonical": "{\"inputs\":{\"component\":\"aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\"},\"schemaVersion\":1,\"stage\":\"describe\",\"tools\":{\"emitter\":\"bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb\"}}",
+      "sha256": "017e12e962d03d8b773f30839d156277bbecd65f8446e10a14f008eace0990d2"
+    },
+    {
+      "key": {
+        "stage": "transpile",
+        "schemaVersion": 2,
+        "inputs": {
+          "component": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        },
+        "tools": {
+          "jco": "1.11.2",
+          "materialization": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+          "node": "v24.3.0"
+        }
+      },
+      "canonical": "{\"inputs\":{\"component\":\"cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc\"},\"schemaVersion\":2,\"stage\":\"transpile\",\"tools\":{\"jco\":\"1.11.2\",\"materialization\":\"dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd\",\"node\":\"v24.3.0\"}}",
+      "sha256": "331f02332cdb7e27b1af868d4cc2d690fd0f486d6e87ed0fbe3b1aa2af79899d"
+    },
+    {
+      "key": {
+        "stage": "optimize",
+        "schemaVersion": 1,
+        "inputs": {
+          "core": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+          "core2": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+        },
+        "tools": {
+          "wasm-opt": "version 123",
+          "args": "-Oz --strip-debug"
+        }
+      },
+      "canonical": "{\"inputs\":{\"core\":\"eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee\",\"core2\":\"ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff\"},\"schemaVersion\":1,\"stage\":\"optimize\",\"tools\":{\"args\":\"-Oz --strip-debug\",\"wasm-opt\":\"version 123\"}}",
+      "sha256": "3825de7cbe86eb193fb5433db587411e7167f5d65c7d6aa1b8408714ce6bc3e5"
+    },
+    {
+      "key": {
+        "stage": "probe",
+        "schemaVersion": 1,
+        "inputs": {
+          "🌉️bridge.js": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "tools": {
+          "node": "v24.3.0 ünïcode"
+        }
+      },
+      "canonical": "{\"inputs\":{\"🌉️bridge.js\":\"0000000000000000000000000000000000000000000000000000000000000000\"},\"schemaVersion\":1,\"stage\":\"probe\",\"tools\":{\"node\":\"v24.3.0 ünïcode\"}}",
+      "sha256": "a31820047fb9da2d9053f16f63479c3698a19bb11ffaed92cea40abd2f9ee8b9"
+    }
+  ],
+  "refusals": [
+    {
+      "name": "stage name with a slash",
+      "key": {
+        "stage": "a/b",
+        "schemaVersion": 1,
+        "inputs": {
+          "x": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "tools": {}
+      }
+    },
+    {
+      "name": "input that is not a digest",
+      "key": {
+        "stage": "describe",
+        "schemaVersion": 1,
+        "inputs": {
+          "x": "zz"
+        },
+        "tools": {}
+      }
+    },
+    {
+      "name": "no inputs",
+      "key": {
+        "stage": "describe",
+        "schemaVersion": 1,
+        "inputs": {},
+        "tools": {}
+      }
+    },
+    {
+      "name": "schema version zero",
+      "key": {
+        "stage": "describe",
+        "schemaVersion": 0,
+        "inputs": {
+          "x": "0000000000000000000000000000000000000000000000000000000000000000"
+        },
+        "tools": {}
+      }
+    }
+  ],
+  "files": [
+    {
+      "path": "a.js",
+      "text": "export const a = 1;\n"
+    },
+    {
+      "path": "nested/b.core.wasm",
+      "text": "\u0000asm"
+    },
+    {
+      "path": "🛂️.descriptor.semio",
+      "text": "semio"
+    }
+  ]
+}

@@ -18,9 +18,9 @@
       "content": "export const worker = 1;"
     },
     {
-      "url": "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js",
+      "url": "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component.js",
       "root": "compiler",
-      "file": "semio-framework-os-renderer-wgpu.js",
+      "file": "semio-framework-os-renderer-wgpu-component.js",
       "content": "export const renderer = 1;"
     },
     {

@@ -191,7 +191,7 @@ static NAKAGIN_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new
 static EMPTY_EXAMPLE_SNAPSHOT: LazyLock<Puzzle3dSceneSnapshot> = LazyLock::new(empty_scene_snapshot);
 
 fn parse_example_dsl(dsl_text: &str, label: &str) -> String {
-    let projection = <Puzzle3dSnapshot as store::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example scene_snapshot parses as dsl: {error}"));
+    let projection = <Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl_text).unwrap_or_else(|error| panic!("{label} example scene_snapshot parses as dsl: {error}"));
     to_json_string(&projection)
 }
 
@@ -2784,7 +2784,8 @@ impl Puzzle3dPlayApp {
         let fingerprint = main::scene_geometry_fingerprint(scene_snapshot);
         let mut residency = self.instance_residency.lock().expect("instance residency");
         let residency = residency.get_or_insert_with(Box::<main::Puzzle3dInstanceResidency>::default);
-        let _republished = residency.refresh(scene_snapshot, provisional, referenced);
+        #[cfg_attr(not(test), allow(unused_variables))]
+        let republished = residency.refresh(scene_snapshot, provisional, referenced);
         let mut meshes = self.mesh_cache.lock().expect("mesh cache");
         let mesh_miss = meshes.as_ref().is_none_or(|(cached, _)| *cached != fingerprint);
         if mesh_miss {
@@ -6320,7 +6321,7 @@ const PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES: usize = 32_768;
 
 struct Puzzle3dConfigStorePreparation {
     owners: store::OneItemOwners<Puzzle3dConfig, Puzzle3dConfigMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
     phase: u8,
     cancelled: bool,
@@ -6356,18 +6357,18 @@ fn puzzle3d_config_store_mutation_bytes(mutation: &Puzzle3dConfigMutation) -> Op
     (encoded <= PUZZLE3D_CONFIG_STORE_MAXIMUM_BYTES).then_some(encoded)
 }
 
-impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Config preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
@@ -6383,8 +6384,8 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = completed_bytes;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
                 let Some(authority) = self.owners.authority.as_ref() else {
@@ -6399,23 +6400,23 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
                     }
                 };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
                 *self.owners.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle3dConfig, Puzzle3dConfigMutation>> {
         self.owners.prepared.take()
     }
 
@@ -6427,7 +6428,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -6452,7 +6453,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutati
     }
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfigMutation> for Puzzle3dConfigStorePreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Puzzle3dConfigMutation>>>,
@@ -6461,24 +6462,24 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &Puzzle3dConfigMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Puzzle3dConfigMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Puzzle3d Config preparation rejected its lane".into());
         }
         let retained_bytes = puzzle3d_config_store_mutation_bytes(mutation).ok_or_else(|| "Puzzle3d Config preparation rejected its exact mutation".to_string())?;
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf(mutation, retained_bytes))
     }
 
-    fn begin_demand(&self, _mutation: &Puzzle3dConfigMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Puzzle3dConfigMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle3dConfigStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dConfigMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dConfigMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dConfigMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dConfig, Puzzle3dConfigMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dConfig, Puzzle3dConfigMutation, Puzzle3dConfigMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle3d Config preparation rejected its original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) {
@@ -6489,7 +6490,7 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dConfig, Puzzle3dConfi
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle3dConfigStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
@@ -6508,13 +6509,13 @@ struct Puzzle3dArtifactStorePreparationFactory;
 
 struct Puzzle3dArtifactStorePreparation {
     owners: store::OneItemOwners<Puzzle3dPlaySnapshot, Puzzle3dMutation>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     completed_bytes: usize,
     phase: u8,
     cancelled: bool,
 }
 
-impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparationFactory {
     fn begin_batch_digest(
         &self,
         edit: &mut Option<Box<protocol::Edit<Puzzle3dMutation>>>,
@@ -6526,23 +6527,23 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3
     /// 🧾️ The forward row plus the inverse rows the leaf's payload schema declares (`x-semio-inverse-rows`): a selection
     /// leaf one setter per changed pose field of every record its attraction re-solve carries along, a scaling one per
     /// target, a removal the record and the attractions it severs.
-    fn preflight(&self, mutation: &Puzzle3dMutation, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &Puzzle3dMutation, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("Puzzle3d Artifact preparation rejected its lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle3dPlaySnapshot, _>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<Puzzle3dPlaySnapshot, _>(mutation, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &Puzzle3dMutation, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &Puzzle3dMutation, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<Puzzle3dArtifactStorePreparation>(), depth: 1 })
     }
 
     fn begin(
         &self,
-        request: store::ArtifactStoreOneItemPreparationRequest<Puzzle3dPlaySnapshot, Puzzle3dMutation, Puzzle3dMutation>,
-        grant: store::ArtifactStoreOneItemGrant,
-    ) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<Puzzle3dPlaySnapshot, Puzzle3dMutation, Puzzle3dMutation>)> {
-        if request.lane != store::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
+        request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dPlaySnapshot, Puzzle3dMutation, Puzzle3dMutation>,
+        grant: store::os_store::one_item::ArtifactStoreOneItemGrant,
+    ) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<Puzzle3dPlaySnapshot, Puzzle3dMutation, Puzzle3dMutation>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document || request.operation != request.authority.operation() || request.generation != request.authority.generation() || request.base_revision != request.authority.base_revision() || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "Puzzle3d Artifact preparation rejected its original publication authority"), request));
         }
         let demand = match self.begin_demand(&request.mutation, request.lane) {
@@ -6553,22 +6554,22 @@ impl store::ArtifactStoreOneItemPreparationFactory<Puzzle3dPlaySnapshot, Puzzle3
             Ok(progress) => progress,
             Err(error) => return Err((error, request)),
         };
-        Ok((Box::new(Puzzle3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
+        Ok((Box::new(Puzzle3dArtifactStorePreparation { owners: store::OneItemOwners::from_request(request), checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), completed_bytes: 0, phase: 0, cancelled: false }), progress))
     }
 }
 
-impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+impl store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutation> for Puzzle3dArtifactStorePreparation {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         use protocol::{Mutation as _, MutationDiff as _};
         use semio_framework_value::{retained_clone::RetainedCloneProgress, ValueError, ValueRefusalKind};
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(ValueError::literal(ValueRefusalKind::InvalidValue, "Puzzle3d Artifact preparation retains its original Store refusal"));
         }
         if self.owners.prepared.is_some() || self.phase >= 2 {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()));
         }
         match self.phase {
             0 => {
@@ -6580,8 +6581,8 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
                 *self.owners.candidate = Some((post, inverse, mutation));
                 self.completed_bytes = 1;
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.completed_bytes as u64, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, RetainedCloneProgress::default()))
             }
             1 => {
                 let Some(authority) = self.owners.authority.as_ref() else {
@@ -6596,23 +6597,23 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
                     }
                 };
                 self.phase = 2;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: self.completed_bytes as u64, digest: prepared.edit_digest() };
                 *self.owners.prepared = Some(prepared);
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress::default())),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<Puzzle3dPlaySnapshot, Puzzle3dMutation>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle3dPlaySnapshot, Puzzle3dMutation>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<Puzzle3dPlaySnapshot, Puzzle3dMutation>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<Puzzle3dPlaySnapshot, Puzzle3dMutation>> {
         self.owners.prepared.take()
     }
 
@@ -6624,7 +6625,7 @@ impl store::ArtifactStoreOneItemPreparation<Puzzle3dPlaySnapshot, Puzzle3dMutati
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -6878,11 +6879,11 @@ impl ArtifactEditor for Puzzle3dPlayApp {
 
 
 
-    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Config, Self::ConfigMutation>>> {
         Some(std::sync::Arc::new(Puzzle3dConfigStorePreparationFactory))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Puzzle3dArtifactStorePreparationFactory))
     }
 

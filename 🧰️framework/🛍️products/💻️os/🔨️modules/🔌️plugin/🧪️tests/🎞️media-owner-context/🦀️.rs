@@ -1,5 +1,12 @@
 use super::*;
-use crate::app::{ArtifactApp, ArtifactInstanceOperationOwner, ArtifactInstanceOperationOwnerHandle, HistoryView, MediaError, NoTransient, TransientView, ViewerApp};
+use crate::app_contract::ArtifactApp;
+use crate::tool_contract::ArtifactInstanceOperationOwner;
+use crate::tool_contract::ArtifactInstanceOperationOwnerHandle;
+use crate::history_view::HistoryView;
+use semio_framework::MediaError;
+use crate::app_views::NoTransient;
+use crate::window_transient::TransientView;
+use crate::surface_contract::ViewerApp;
 
 pub(super) struct MediaOwner {
     label: String,
@@ -10,20 +17,20 @@ impl ArtifactInstanceOperationOwner for MediaOwner {
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any {
         self
     }
-    fn retirement_demands(&self, _body: usize) -> Result<crate::app::RetirementDemand, crate::app::ValueError> {
-        Ok(crate::app::RetirementDemand { release_bytes: if self.closed { 0 } else { self.label.capacity() }, depth: usize::from(!self.closed), ..Default::default() })
+    fn retirement_demands(&self, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(semio_framework_value::RetirementDemand { release_bytes: if self.closed { 0 } else { self.label.capacity() }, depth: usize::from(!self.closed), ..Default::default() })
     }
-    fn maintenance_step(&mut self, _grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
-        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
+    fn maintenance_step(&mut self, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
+        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
-    fn close_step(&mut self, grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
         if !self.closed && (grant.maximum_items == 0 || grant.maximum_release_bytes < self.label.capacity()) {
-            return Ok(crate::app::PluginLifecycleStep::Progress(Default::default()));
+            return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()));
         }
         let released_bytes = self.label.capacity();
         self.label = String::new();
         self.closed = true;
-        Ok(crate::app::PluginLifecycleStep::Complete(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
+        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes, ..Default::default() }))
     }
     fn terminal_is_empty(&self) -> bool {
         self.closed && self.label.is_empty()
@@ -34,9 +41,9 @@ pub(super) fn owner(label: &str) -> Box<dyn ArtifactInstanceOperationOwner> {
     Box::new(MediaOwner { label: label.into(), closed: false })
 }
 
-fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize) -> crate::app::PluginLifecycleStep {
-    let grant = crate::app::plugin_demand_grant(owner.retirement_demands(0).expect("owner close quote"));
-    owner.close_step(crate::app::RetainedCloneGrant { maximum_items: items, ..grant }).expect("owner close turn")
+fn close_owner(owner: &ArtifactInstanceOperationOwnerHandle, items: usize) -> crate::bounded_ownership::PluginLifecycleStep {
+    let grant = crate::bounded_ownership::plugin_demand_grant(owner.retirement_demands(0).expect("owner close quote"));
+    owner.close_step(semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: items, ..grant }).expect("owner close turn")
 }
 
 pub(super) fn export(owner: &ArtifactInstanceOperationOwnerHandle, port: &str, doc: &ArtifactView<'_, SurfaceSnapshot>) -> Result<Media, MediaError> {
@@ -72,7 +79,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     let context_port = fixture["contextPort"].as_str().unwrap();
     for case in fixture["cases"].as_array().unwrap() {
         let supplied = ArtifactInstanceOperationOwnerHandle::new(owner(case["owner"].as_str().unwrap()));
-        assert_eq!(close_owner(&supplied, 0), crate::app::PluginLifecycleStep::Progress(Default::default()), "an unfunded close turn yields without releasing the owner");
+        assert_eq!(close_owner(&supplied, 0), crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "an unfunded close turn yields without releasing the owner");
         assert!(!supplied.terminal_is_empty().unwrap());
         let editor = payload(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
         let viewer = payload(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap());
@@ -80,7 +87,7 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
         assert_eq!(viewer, case["expected"]);
         validator.validate_json(&editor.to_string()).unwrap();
         validator.validate_json(&viewer.to_string()).unwrap();
-        assert!(matches!(close_owner(&supplied, 1), crate::app::PluginLifecycleStep::Complete(_)));
+        assert!(matches!(close_owner(&supplied, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
         assert!(supplied.terminal_is_empty().unwrap());
         assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
         assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, context_port, &doc, &transient).await.unwrap_err().to_string().contains("closed"));
@@ -88,15 +95,15 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     for invalid in fixture["invalid"].as_array().unwrap() {
         assert!(validator.validate_json(&invalid.to_string()).is_err());
     }
-    let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::app::EmptyArtifactInstanceOperationOwner));
+    let foreign = ArtifactInstanceOperationOwnerHandle::new(Box::new(crate::tool_contract::EmptyArtifactInstanceOperationOwner));
     assert!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
     assert!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&foreign, context_port, &doc, &transient).await.unwrap_err().to_string().contains("type"));
-    assert!(matches!(close_owner(&foreign, 1), crate::app::PluginLifecycleStep::Complete(_)));
+    assert!(matches!(close_owner(&foreign, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
     let default_port = fixture["defaultPort"].as_str().unwrap();
     let supplied = ArtifactInstanceOperationOwnerHandle::new(owner("defaults"));
     let default_editor = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
     let default_viewer = <ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, default_port, &doc, &transient).await.unwrap();
-    let expected_pack = store::pack_rt::pack_value_to_base64(&store::ArtifactPack::encode_pack(&snapshot));
+    let expected_pack = store::pack_rt::pack_value_to_base64(&store::os_store::serialization::ArtifactPack::encode_pack(&snapshot));
     for media in [default_editor, default_viewer] {
         assert_eq!(media.media_type, MediaType { class: MediaClass::Data, form: MediaForm::Value });
         let MediaPayload::Structured { schema, json } = media.payload else {
@@ -107,9 +114,9 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     }
     assert!(matches!(<EditorApp<SurfaceEditorFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
     assert!(matches!(<ViewerApp<SurfaceViewerFixture> as ArtifactApp>::export_media_with_request_context(&supplied, "unknown:out", &doc, &transient).await, Err(MediaError::NotImplemented)));
-    assert!(matches!(close_owner(&supplied, 1), crate::app::PluginLifecycleStep::Complete(_)));
-    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    assert!(matches!(close_owner(&supplied, 1), crate::bounded_ownership::PluginLifecycleStep::Complete(_)));
+    let mut editor = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let mut viewer = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     editor
         .instance_operation_owner
         .with_mut::<MediaOwner, _>(|owner| {
@@ -132,6 +139,6 @@ async fn media_export_request_context_preserves_exact_supplied_owner() {
     assert!(viewer.export_media(default_port).await.is_ok());
     assert!(matches!(editor.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
     assert!(matches!(viewer.export_media("unknown:out").await, Err(MediaError::NotImplemented)));
-    close_registered_fixture_app(&mut editor, crate::app::artifact_app_laws::fixture_mounted_policy());
-    close_registered_fixture_app(&mut viewer, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut editor, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut viewer, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }

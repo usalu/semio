@@ -3,7 +3,7 @@
 
 //! 🏛️ Architectural programming register entities — typed domain model for all 65 feature areas.
 
-use crate::kernel::*;
+use crate::standards::v1::subsets::any::schema::kernel::*;
 use protocol::list_delta::RowPatch;
 use protocol::Identified;
 

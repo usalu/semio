@@ -11,12 +11,14 @@ import bindingFixture from "../../../../../../../🚪️io/🪪️bindings/🧫�
 import bindingSchema from "../../../../../../../🚪️io/🪪️bindings/🧬️schema/🔣️.json";
 import catalogFixture from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🧫️fixtures/🔣️.json";
 import catalogSchema from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🧬️schema/🔣️.json";
+import componentReceiptSchema from "../../../../../../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🔣️.json";
+import draft07MetaSchema from "ajv/dist/refs/json-schema-draft-07.json";
 import {catalogBindingKey,proposeCatalogBindings,type ArtifactCatalogBinding} from "../../../../../../../🚪️io/🪪️bindings/🏛️catalog/🟦️.ts";
 import {SOCKET_PROBE_NATIVE_DIALECT,socketProbeToSqliteDatabase as project,socketProbeFromSqliteDatabase as restore} from "../🟦️.ts";
 import {exportSqliteDatabase,importSqliteDatabase,type SqliteDatabase,type SqliteValue} from "../../../../../../../../../../🔨️modules/🚪️io/🪶️sqlite-snapshot/🟦️.ts";
 const large=fixture.large.unit.repeat(fixture.large.repetitions);
 test("native_socket_sqlite_snapshot_original_catalog_declarations_preserve_owner_and_capability",()=>{
- const validate=new Ajv({strict:true,allErrors:true}).compile(catalogSchema);
+ const validate=new Ajv({strict:true,allErrors:true}).addMetaSchema(draft07MetaSchema).addSchema(componentReceiptSchema).compile(catalogSchema);
  const rows=catalogFixture.cases.map(entry=>entry.row as ArtifactCatalogBinding);
  for(const row of rows){expect(validate(row)).toBe(true);for(const field of catalogSchema.required){const changed:Record<string,unknown>={...row};delete changed[field];expect(validate(changed)).toBe(false);}expect(validate({...row,extra:1})).toBe(false);}
  const linked=rows[0]!,unlinked=rows[1]!,hosted=rows[2]!,otherWindow=rows[3]!;

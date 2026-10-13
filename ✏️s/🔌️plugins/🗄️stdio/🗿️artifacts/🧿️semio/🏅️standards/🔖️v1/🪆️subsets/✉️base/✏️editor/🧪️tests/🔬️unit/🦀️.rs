@@ -14,14 +14,14 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioAnyEditor, crate::viewer::semio_base::SemioAnyViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioAnyEditor, crate::viewer::SemioAnyViewer>().await;
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio/SemioAnyEditor", SemioAnyEditor, || semio_framework_plugin::App { definition: create_semio_base_editor(), examples: Vec::new() }, "../..");
 
 mod edit_rules_laws {
-    use super::*;
-    use crate::editor::semio_base::edit_plumbing::{complete_in, edited, list_move, spread_item, Entries};
+    
+    use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_in, edited, list_move, spread_item, Entries};
     use semio_framework_value::DslValue;
     use semio_s_artifact_stdio_contract::editing::{EditRules, SnapshotEditEvent};
 
@@ -38,18 +38,18 @@ mod edit_rules_laws {
     }
 
     macro_rules! tables {
-        ($($subset:ident => $editor:ident),* $(,)?) => {
-            vec![$((stringify!($subset), &crate::editor::$editor::edit_rules::EDIT_RULES as &EditRules, crate::standards::v1::subsets::$subset::schema::mutations::KINDS)),*]
+        ($($subset:ident => $krate:ident),* $(,)?) => {
+            vec![$((stringify!($subset), &$krate::editor::edit_rules::EDIT_RULES as &EditRules, $krate::schema::mutations::KINDS)),*]
         };
     }
 
     #[semio_framework_async_macros::async_test]
     async fn every_rule_names_a_kind_of_its_subset_and_one_selector_per_wildcard() {
         let all: Vec<(&str, &EditRules, &[&str])> = tables!(
-            brep => semio_brep, mesh => semio_mesh, model => semio_model, value => semio_value, document => semio_document, cad => semio_cad,
-            drawing => semio_drawing, image => semio_image, video => semio_video, audio => semio_audio, animation => semio_animation,
-            presentation => semio_presentation, flow => semio_flow, text => semio_text, table => semio_table, graph => semio_graph,
-            object => semio_object, kit => semio_kit,
+            brep => semio_s_artifact_stdio_semio_brep, mesh => semio_s_artifact_stdio_semio_mesh, model => semio_s_artifact_stdio_semio_model, value => semio_s_artifact_stdio_semio_value, document => semio_s_artifact_stdio_semio_document, cad => semio_s_artifact_stdio_semio_cad,
+            drawing => semio_s_artifact_stdio_semio_drawing, image => semio_s_artifact_stdio_semio_image, video => semio_s_artifact_stdio_semio_video, audio => semio_s_artifact_stdio_semio_audio, animation => semio_s_artifact_stdio_semio_animation,
+            presentation => semio_s_artifact_stdio_semio_presentation, flow => semio_s_artifact_stdio_semio_flow, text => semio_s_artifact_stdio_semio_text, table => semio_s_artifact_stdio_semio_table, graph => semio_s_artifact_stdio_semio_graph,
+            object => semio_s_artifact_stdio_semio_object, kit => semio_s_artifact_stdio_semio_kit,
         );
         for (subset, rules, kinds) in all {
             for rule in rules.entities {
@@ -68,7 +68,7 @@ mod edit_rules_laws {
     async fn a_run_content_edit_raises_one_edit_run_with_the_run_position() {
         let tree = record(vec![("runs", DslValue::Array(vec![record(vec![("content", text("a")), ("language", text("en")), ("marks", DslValue::Array(Vec::new()))])]))]);
         let event = SnapshotEditEvent::SetValue { path: "/runs/0/content".to_string(), value: text("b") };
-        let plan = crate::editor::semio_text::edit_rules::EDIT_RULES.plan(&tree, &event).expect("plan").expect("a changed run");
+        let plan = semio_s_artifact_stdio_semio_text::editor::edit_rules::EDIT_RULES.plan(&tree, &event).expect("plan").expect("a changed run");
         assert_eq!(plan.kind, "edit-run");
         assert_eq!(plan.entries, vec![("index".to_string(), DslValue::uint(0)), ("new_text".to_string(), text("b"))]);
     }
@@ -77,7 +77,7 @@ mod edit_rules_laws {
     async fn an_edit_no_rule_names_is_refused() {
         let tree = record(vec![("runs", DslValue::Array(Vec::new()))]);
         let event = SnapshotEditEvent::SetValue { path: "/schema".to_string(), value: text("x") };
-        assert!(crate::editor::semio_text::edit_rules::EDIT_RULES.plan(&tree, &event).is_err());
+        assert!(semio_s_artifact_stdio_semio_text::editor::edit_rules::EDIT_RULES.plan(&tree, &event).is_err());
     }
 
     #[semio_framework_async_macros::async_test]

@@ -1,6 +1,6 @@
 {
   "schema": "semio.hub.generation-stage.v1",
-  "componentHex": "616263",
+  "componentHex": "0061736d0d000100",
   "descriptors": {
     "gis": { "packageId": "semio:gis", "manifest": { "pluginId": "gis", "version": "0.1.0", "dependencies": [{ "pluginId": "stdio", "version": "=0.1.0" }] }, "executionProtocol": { "appChannelVersion": 23 } },
     "stdio": { "packageId": "semio:stdio", "manifest": { "pluginId": "stdio", "version": "0.1.0", "dependencies": [] }, "executionProtocol": { "appChannelVersion": 23 } }

@@ -182,7 +182,7 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
         if grant.maximum_depth < demand.depth {return InteractiveJobCloseStep::Refused { kind: ValueRefusalKind::DepthLimit, progress: RetainedCloneProgress::default() };}
         if grant.maximum_items == 0 || grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes {return InteractiveJobCloseStep::Pending { progress: RetainedCloneProgress::default() };}
         let progress = if self.retirement.is_some() {
-            match store::artifact_retirement_box_close_step(&mut self.retirement, grant) { Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => progress, Err(error) => return refuse(error) }
+            match store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant) { Ok(RetainedCloneStep::Progress(progress) | RetainedCloneStep::Complete(progress)) => progress, Err(error) => return refuse(error) }
         } else {
             let Some(reader) = self.reader.take() else {return InteractiveJobCloseStep::Complete { progress: RetainedCloneProgress::default() };};
             let child = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
@@ -204,7 +204,7 @@ impl ArtifactCommandWork<EditorApp<PngEditor>> for PaintNativeRegionWork {
 
 impl PaintNativeRegionWork {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
-        if let Some(owner) = self.retirement.as_ref() { return store::artifact_retirement_box_demands(owner, body); }
+        if let Some(owner) = self.retirement.as_ref() { return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body); }
         if self.reader.is_some() { return Ok(semio_framework_value::RetirementDemand { capacity_bytes: semio_framework_value::retirement::shared::shared_retirement_birth_bytes::<PngSnapshot>(), depth: 2, ..Default::default() }); }
         Ok(Default::default())
     }

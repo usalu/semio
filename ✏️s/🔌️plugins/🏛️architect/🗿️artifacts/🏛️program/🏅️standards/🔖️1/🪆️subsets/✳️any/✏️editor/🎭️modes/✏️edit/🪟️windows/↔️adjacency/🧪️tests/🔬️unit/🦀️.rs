@@ -1,5 +1,5 @@
 use super::*;
-use crate::{empty_plugin, sample_plugin};
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 
 #[semio_framework_async_macros::async_test]
 async fn definition_declares_the_adjacency_surface_and_body_key() {

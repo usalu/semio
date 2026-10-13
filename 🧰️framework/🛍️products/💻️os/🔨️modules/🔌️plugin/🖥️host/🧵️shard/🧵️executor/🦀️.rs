@@ -180,8 +180,8 @@ pub struct ShardExecutor {
     ingress_gate: Mutex<()>,
     ingress_state: AtomicU8,
     terminal_overflow_occupied: AtomicBool,
-    failure: Mutex<FixedOwnerRing<crate::PluginHostError, SHARD_DEFERRED_ITEMS>>,
-    terminal_failure: Mutex<Option<crate::PluginHostError>>,
+    failure: Mutex<FixedOwnerRing<semio_framework_plugin_interpreter::PluginHostError, SHARD_DEFERRED_ITEMS>>,
+    terminal_failure: Mutex<Option<semio_framework_plugin_interpreter::PluginHostError>>,
 }
 
 struct PendingIngressFrame {
@@ -360,7 +360,7 @@ impl ShardExecutor {
     }
 
     /// 🧯️ Transfers the exact last malformed-frame or shard-drive failure to the host.
-    pub fn take_failure(&self) -> Option<crate::PluginHostError> {
+    pub fn take_failure(&self) -> Option<semio_framework_plugin_interpreter::PluginHostError> {
         let failure = self.failure.lock().unwrap_or_else(PoisonError::into_inner).pop_front().map(|(_, failure)| failure);
         failure.or_else(|| self.terminal_failure.lock().unwrap_or_else(PoisonError::into_inner).take())
     }
@@ -610,8 +610,8 @@ impl ShardExecutor {
         }
     }
 
-    fn retain_failure(&self, failure: crate::PluginHostError) {
-        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, size_of::<crate::PluginHostError>());
+    fn retain_failure(&self, failure: semio_framework_plugin_interpreter::PluginHostError) {
+        let result = self.failure.lock().unwrap_or_else(PoisonError::into_inner).try_push(failure, size_of::<semio_framework_plugin_interpreter::PluginHostError>());
         if let Err(rejected) = result {
             self.close_ingress(IngressCloseReason::Closing);
             self.closed.store(true, Ordering::Release);
@@ -624,7 +624,7 @@ impl ShardExecutor {
     fn acknowledge_consumed_epoch(&self, epoch: u64) {
         let previous = epoch.checked_sub(1).expect("ShardExecutor: shard epochs start at one");
         if self.consumed_epoch.compare_exchange(previous, epoch, Ordering::AcqRel, Ordering::Acquire).is_err() {
-            self.retain_failure(crate::PluginHostError::Plugin(format!("ShardExecutor: ingress epoch {epoch} was consumed out of FIFO order")));
+            self.retain_failure(semio_framework_plugin_interpreter::PluginHostError::Plugin(format!("ShardExecutor: ingress epoch {epoch} was consumed out of FIFO order")));
         }
     }
 
@@ -720,8 +720,8 @@ impl ShardExecutor {
             let mut pos = 0usize;
             match poll_drive_once(ShardOutcome::pack_decode(&bytes, &mut pos)) {
                 Some(Ok(outcome)) => self.outcomes.push(outcome),
-                Some(Err(error)) => self.retain_failure(crate::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
-                None => self.retain_failure(crate::PluginHostError::Plugin("ShardExecutor: outcome decoder suspended without a retained cursor".to_string())),
+                Some(Err(error)) => self.retain_failure(semio_framework_plugin_interpreter::PluginHostError::Plugin(format!("ShardExecutor: malformed outcome: {error:?}"))),
+                None => self.retain_failure(semio_framework_plugin_interpreter::PluginHostError::Plugin("ShardExecutor: outcome decoder suspended without a retained cursor".to_string())),
             }
         }
         if let ShardDrive::Fault { error, .. } = drive {

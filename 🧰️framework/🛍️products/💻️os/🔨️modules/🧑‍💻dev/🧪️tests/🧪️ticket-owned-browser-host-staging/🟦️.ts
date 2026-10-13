@@ -55,6 +55,9 @@ import * as Owner46 from "../../📊️benchmarks/🔌️plugins/📏️measured
 import * as Owner47 from "../../📊️benchmarks/🔌️plugins/🏃️execution/🟦️.ts";
 import * as Owner48 from "../../🧬️schema/🛂️validation/🟦️.ts";
 import * as Owner49 from "../📇️canonical-bootstrap-folder-mirror/🟦️.ts";
+import * as Owner50 from "../../../🔌️plugin/🖨️describe/🧩️component-stage/🟦️.ts";
+import * as Owner51 from "../../../🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import * as Owner52 from "../../../🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
 import * as External01 from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import * as External02 from "../../../🔌️plugin/🌐️browser-bundle/🛂️descriptor/🟦️.ts";
 import * as External03 from "../../../🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
@@ -74,7 +77,7 @@ import * as External15 from "../../../../🟦️.ts";
 type TestSource = { readonly directory: string; readonly url: string };
 
 export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, dependencies: typeof testDependencies, source: TestSource): Promise<void> {
-  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginCargoArgs, pluginComponentBridgeSource, pluginOutRoot, pluginWasmProfile, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, shardWorkerSource, stagePluginDescriptor, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
+  const { ACTIVATION_RECEIPT_FILE, ACTOR_COMPONENT_EXPORTS, DISTRIBUTION_LAYOUT, EXTENSION_WATCH_MARKER, EventEmitter, MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, PLAYWRIGHT_MODULE_SPECIFIER, PLUGIN_HOST_SHIM_FILE, TEST_BROWSER_ACTIVATION_ROOT_ENV, TEST_BROWSER_HOST_RECEIPT_ENV, TEST_BROWSER_MODULE_ROOT_ENV, assertActorComponentExports, assertExtensionOutputsFresh, assertNoStalePublicPluginOutputs, assertPluginCatalogComplete, assertPluginOutputChildren, awaitChildExit, awaitHttpOk, awaitTcpReady, backboneDbHandleFor, basename, buildPluginCatalog, cargoProfileDir, componentCargoV1, componentProfileV1, COMPONENT_PROFILE_POLICIES, SHIPPED_COMPONENT_PROFILE, pluginWasmArtifactPath, catalogSmokeExitCode, catalogSmokeMarkdown, checkDistributionBundle, checkScaleFixtureArtifacts, closeTestBrowserHostStagingV1, compareOwnedParityPixels, cpSync, createConcurrencyLimiter, createHash, createReadStream, cropOwnedParityRgba, decodePackValue, decodeParityScreenshot, descriptorRouteDecision, dirname, distributionFileWitness, distributionPathOrder, distributionStaticSourcePaths, encodePackValue, encodeParityDiff, ensureParityPlaywrightBrowsersPath, exactSpaceCreateArtifactArgs, existsSync, fileURLToPath, finalizePluginDescriptor, hostShimSource, isAbsolute, join, linkedSessionEngines, mkdirSync, mkdtempSync, defaultExtensionInstallRoot, patchPreview2ShimGuestLogClassification, patchPreview2ShimGuestLogLineRelease, moduleIdForDirectoryName, moduleRoutePath, packValueToExactJson, parseDistributionManifest, parseDistributionStaticInputs, parseTestBrowserGisMaterializationReceiptV1, parseTestBrowserHostStagingReceiptV1, pathToFileURL, pluginComponentBridgeSource, pluginOutRoot, prepareTestBrowserHostRootsV1, publishDistributionBundle, readActivationReceipt, readFileSync, readdirSync, relative, renderScaleFixtureArtifacts, repoRoot, resolve, resolveTestBrowserHostRootsV1, rewriteJcoAsyncResultLifting, rewriteJcoComponentAssetUrls, rewritePreview2ShimImportSource, rmSync, scaleFixtureGeneratedDir, shardWorkerSource, statSync, stateProbeCandidates, stateProbeChangedPaths, stateProbeSnapshot, summarizeCatalogSmoke, tmpdir, unlinkSync, watch, writeFileSync, writeTestBrowserGisMaterializationReceiptV1 } = dependencies;
   type OwnedParityImage = import("../../⚖️parity/🖼️pixels/🟦️.ts").OwnedParityImage;
   type PackValue = import("../../../../🟦️.ts").PackValue;
   type ParityDump = import("../../⚖️parity/🏗️structure/🟦️.ts").ParityDump;
@@ -163,7 +166,8 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
           ["🧵️shard/🟨️shard-worker.js", "shard"],
           ["🪐️space/semio_s_plugin_space_component.core.wasm", "space-component"],
           ["🪐️space/🛂️.descriptor.semio", "space-descriptor"],
-          ["🪐️space/🔣️.json", JSON.stringify({ hashes: { wasmSha256: hostComponentSha256, coreWasmSha256: hostCoreSha256 } })],
+          ["🪐️space/🔣️.json", JSON.stringify({ packageId: "semio:space", manifest: { pluginId: "space" } })],
+          ["🪐️space/🧾️receipt.json", `${JSON.stringify({ schema: "semio.plugin.component-receipt/v1", pluginId: "space", packageId: "semio:space", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: hostComponentSha256, wasmBytes: hostComponent.byteLength, semanticDescriptorSha256: createHash("sha256").update("space-descriptor").digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) }, null, 2)}\n`],
           ["🪐️space/🌉️bridge.js", "space-bridge"],
           ["🌍️gis/semio_hub_gis_component.core.wasm", specimens["staged-core"].utf8],
           ["🌍️gis/🛂️.descriptor.semio", specimens["selected-descriptor"].utf8],
@@ -178,7 +182,7 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
         expect(validateMaterialization(materialization), JSON.stringify(validateMaterialization.errors)).toBe(true);
         expect(parseTestBrowserGisMaterializationReceiptV1(materialization)).toEqual(materialization);
         const current = { generationId: "a".repeat(64), currentSha256: "b".repeat(64), componentSha256: specimens["selected-component"].sha256, descriptorSha256: specimens["selected-descriptor"].sha256 };
-        expect(() => closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: "c".repeat(64) })).toThrow("descriptor component identity differs");
+        expect(() => closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: "c".repeat(64) })).toThrow("receipt differs from its materialized owner");
         const closed = closeTestBrowserHostStagingV1(artifactRoot, current, { byteLength: hostComponent.byteLength, sha256: hostComponentSha256 });
         expect(validate(closed.receipt), JSON.stringify(validate.errors)).toBe(true);
         expect(closed.receipt.selectedGis).toMatchObject(current);
@@ -542,43 +546,6 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
   });
 
   //#region 🔖️T-P8-tests
-  describe("stagePluginDescriptor", () => {
-    it("stages descriptor siblings for migrated plugins and leaves unmigrated plugins absent", () => {
-      const root = mkdtempSync(join(tmpdir(), "semio-plugin-descriptor-stage-"));
-      try {
-        const target = {
-          pluginId: "demo",
-          packageId: "semio-s-plugin-demo",
-          cratePath: "owner/demo/📦️packages/🦀️rust",
-          packageName: "demo",
-          wasmOut: "demo.wasm",
-          role: "plugin",
-          capabilities: [],
-          contributes: [],
-          consumes: [],
-          dependsOn: [],
-          activationEvents: [],
-          extensionPoints: [],
-        } satisfies DeployedRegistryEntryV1;
-        const ownerRoot = join(root, "owner/demo");
-        const outDir = join(root, "out");
-        mkdirSync(ownerRoot, { recursive: true });
-        mkdirSync(outDir, { recursive: true });
-        writeFileSync(join(ownerRoot, "🔣️.json"), '{"manifest":{"pluginId":"demo"}}\n');
-        writeFileSync(join(ownerRoot, "🛂️.descriptor.semio"), "descriptor-pack");
-        expect(stagePluginDescriptor(target, outDir, root)).toBe(true);
-        expect(readFileSync(join(outDir, "🔣️.json"), "utf8")).toContain('"pluginId":"demo"');
-        expect(readFileSync(join(outDir, "🛂️.descriptor.semio"), "utf8")).toBe("descriptor-pack");
-        rmSync(join(ownerRoot, "🔣️.json"));
-        expect(stagePluginDescriptor(target, outDir, root)).toBe(false);
-        expect(existsSync(join(outDir, "🔣️.json"))).toBe(false);
-        expect(existsSync(join(outDir, "🛂️.descriptor.semio"))).toBe(false);
-      } finally {
-        rmSync(root, { recursive: true, force: true });
-      }
-    });
-  });
-
   describe("pluginComponentBridgeSource", () => {
     itLong("stages canonical command-page bytes unchanged and leaves poll carrying no page", async () => {
       const { execFileSync } = await import("node:child_process");
@@ -746,21 +713,20 @@ export async function registerTests1(vitest: NonNullable<ImportMeta["vitest"]>, 
       }
     });
 
-    itLong("finalizes genuine descriptor bytes identically to the native descriptor oracle", async () => {
+    itLong("admits genuine semantic descriptor bytes exactly and refuses a foreign, failed or byte-bound one", async () => {
       const { clonePackValue, decodePackValue, encodePackValue, packValueToExactJson } = await import("@semio-tech/framework-os");
-      const { createHash } = await import("node:crypto");
-      const bytes = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🎪️demonstrator/🛂️.descriptor.semio"));
+      const bytes = readFileSync(join(repoRoot, "🌎️hub/🧩️compositions/🏙️bim/🧩️component/🛂️.descriptor.semio"));
       const decoded = decodePackValue(bytes);
-      const descriptor = decoded as unknown as { manifest: { pluginId: string }; hashes: { wasmSha256: string; coreWasmSha256: string; descriptorSha256: string } };
-      const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId, descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256);
+      const descriptor = decoded as unknown as { manifest: { pluginId: string } };
+      const finalized = finalizePluginDescriptor(bytes, descriptor.manifest.pluginId);
       expect(Buffer.from(finalized.pack)).toEqual(bytes);
       expect(JSON.parse(finalized.json)).toEqual(packValueToExactJson(decoded));
-      const prehash = clonePackValue(decoded) as unknown as { hashes: { descriptorSha256: string } };
-      prehash.hashes.descriptorSha256 = "";
-      expect(createHash("sha256").update(encodePackValue(prehash as unknown as PackValue)).digest("hex")).toBe(descriptor.hashes.descriptorSha256);
-      expect(() => finalizePluginDescriptor(bytes, "wrong-plugin", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("identity");
+      expect(() => finalizePluginDescriptor(bytes, "wrong-plugin")).toThrow("identity");
+      const bound = clonePackValue(decoded) as unknown as Record<string, unknown>;
+      bound.hashes = { wasmSha256: "a".repeat(64) };
+      expect(() => finalizePluginDescriptor(encodePackValue(bound as unknown as PackValue), descriptor.manifest.pluginId)).toThrow("byte binding");
       descriptor.manifest.pluginId = "assembly-failed";
-      expect(() => finalizePluginDescriptor(encodePackValue(decoded), "assembly-failed", descriptor.hashes.wasmSha256, descriptor.hashes.coreWasmSha256)).toThrow("assembly");
+      expect(() => finalizePluginDescriptor(encodePackValue(decoded), "assembly-failed")).toThrow("assembly");
     });
 
     it("adapts the shard envelope into the canonical jco variant representation", () => {
@@ -1433,45 +1399,38 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     }, 120_000);
   });
 
-  describe("WASI codegen profile policy", () => {
-    itLong("matches the strict neutral routing fixture and an independent selector", async () => {
-      const { default: Ajv } = await import("ajv");
-      const fixtureRoot = join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/🦀️wasm-profile-policy/🧬️v1");
-      const fixture = JSON.parse(readFileSync(join(fixtureRoot, "🔣️.json"), "utf8"));
-      for (const vector of fixture.cases) {
-        const independent = vector.override === null ? vector.mode === "dev" ? "wasm-dev" : "wasm-release" : fixture.runtimeDirectories.includes(vector.override) ? vector.override : null;
-        expect(independent).toBe(vector.expectedProfile);
-        if (vector.expectedProfile === null) {
-          expect(() => pluginWasmProfile(vector.mode, vector.override)).toThrow();
-          expect(() => pluginCargoArgs("semio-hub-vcs", vector.override)).toThrow();
-        }
-        else {
-          const profile = pluginWasmProfile(vector.mode, vector.override);
-          expect(profile).toBe(vector.expectedProfile);
-          expect(cargoProfileDir(profile)).toBe(vector.expectedDirectory);
-          expect(pluginCargoArgs("semio-hub-vcs", profile)).toEqual(["rustc", "-p", "semio-hub-vcs", "--target", "wasm32-wasip2", "--profile", profile]);
-        }
-      }
-    });
-
-    itLong("keeps single-CGU mitigation WASI-only and preserves release publication settings", async () => {
+  describe("WASI component profile policy", () => {
+    itLong("ships one profile and iterates one plugin, as the strict policy fixture and the root manifest state", async () => {
       const { default: toml } = await import("@iarna/toml");
+      const fixture = JSON.parse(readFileSync(join(dirname(fileURLToPath(source.url)), "../../🧫️fixtures/🦀️wasm-profile-policy/🧬️v1/🔣️.json"), "utf8"));
+      expect(SHIPPED_COMPONENT_PROFILE).toBe(fixture.shippedProfile);
+      expect(Object.keys(COMPONENT_PROFILE_POLICIES)).toEqual(fixture.runtimeDirectories);
+      for (const vector of fixture.cases) {
+        if (!vector.valid) {
+          expect(() => componentProfileV1(vector.profile)).toThrow();
+          continue;
+        }
+        const profile = componentProfileV1(vector.profile);
+        expect(COMPONENT_PROFILE_POLICIES[profile].shipped).toBe(vector.shipped);
+        expect(cargoProfileDir(profile)).toBe(profile);
+        expect(componentCargoV1("semio-hub-vcs", profile).args).toEqual(vector.expectedArgs);
+      }
+      for (const row of fixture.artifactPaths) expect(pluginWasmArtifactPath(repoRoot, row.packageName, row.profile, "/target")).toBe(join("/target", row.expectedRelativePath));
       const manifest = toml.parse(readFileSync(join(repoRoot, "Cargo.toml"), "utf8")) as any;
-      expect(manifest.profile.dev["codegen-units"]).toBeUndefined();
-      for (const override of Object.values(manifest.profile.dev.package ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
-      const { package: wasmDevPackageOverrides, ...wasmDevProfile } = manifest.profile["wasm-dev"];
-      expect(wasmDevProfile).toEqual({ inherits: "dev", "codegen-units": 1 });
-      // 🎚️ WASI-only means the single-CGU mitigation belongs to the PROFILE and to no package: a
-      // per-package override may raise `opt-level` or strip symbols, never re-state `codegen-units`.
-      // The exact census of those overrides is `plugin-registry`'s own WASI profile policy law.
-      for (const override of Object.values(wasmDevPackageOverrides ?? {})) expect((override as any)["codegen-units"]).toBeUndefined();
-      expect(manifest.profile["wasm-release"]).toMatchObject({ inherits: "release", "opt-level": "s", lto: "thin", "codegen-units": 1, strip: "symbols", incremental: false, "trim-paths": "object" });
+      expect(manifest.profile["wasm-dev"]).toBeUndefined();
+      expect(manifest.profile["wasm-release"]).toEqual(fixture.release);
+      const { package: hot, ...iterate } = manifest.profile["wasm-prototype"];
+      expect(iterate).toEqual(fixture.iterate);
+      expect(hot).toEqual(fixture.iterateHotPackages);
     });
   });
 
-  describe("pluginCargoArgs", () => {
-    it("links every actor component with bounded headroom for descriptor and app assembly", async () => {
-      expect(pluginCargoArgs("semio-hub-procedural", "wasm-release")).toEqual(["rustc", "-p", "semio-hub-procedural", "--target", "wasm32-wasip2", "--profile", "wasm-release"]);
+  describe("componentCargoV1", () => {
+    it("links every actor component exactly as the release driver's pass does, with the guest stack in the cargo config", async () => {
+      const cargo = componentCargoV1("semio-hub-procedural", "wasm-release");
+      expect(cargo.command).toBe("build");
+      expect(cargo.args).toEqual(["-p", "semio-hub-procedural", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"]);
+      expect(cargo.environment).toEqual({ CARGO_UNSTABLE_FEATURE_UNIFICATION: "true", CARGO_RESOLVER_FEATURE_UNIFICATION: "package" });
       const { default: toml } = await import("@iarna/toml");
       const config = toml.parse(readFileSync(join(repoRoot, ".cargo/config.toml"), "utf8")) as any;
       const rustflags: readonly string[] = config.target["wasm32-wasip2"].rustflags;
@@ -1482,7 +1441,9 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
     it("can retain actor symbols for a reproducible browser trap diagnosis", () => {
       process.env.SEMIO_PLUGIN_SYMBOLS = "1";
       try {
-        expect(pluginCargoArgs("semio-hub-procedural", "wasm-release").slice(-2)).toEqual(["-C", "strip=none"]);
+        const cargo = componentCargoV1("semio-hub-procedural", "wasm-prototype");
+        expect(cargo.command).toBe("rustc");
+        expect(cargo.args.slice(-2)).toEqual(["-C", "strip=none"]);
       } finally {
         delete process.env.SEMIO_PLUGIN_SYMBOLS;
       }
@@ -1540,7 +1501,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
         maxCargoActive = Math.max(maxCargoActive, cargoActive);
         await new Promise((r) => setTimeout(r, 5));
         cargoActive--;
-        return { artifact: `${target.pluginId}.wasm` };
+        return { deliverable: { profile: "wasm-prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
       };
       const materializeFn = async (target: PluginBuildTargetV1) => {
         materializeActive++;
@@ -1566,7 +1527,7 @@ const module1 = fetchCompile(new URL('./plugin_component.core2.wasm', import.met
       const targets = [fakeTarget("ok"), fakeTarget("cargo-fails"), fakeTarget("materialize-fails")];
       const cargoFn = async (target: PluginBuildTargetV1) => {
         if (target.pluginId === "cargo-fails") throw new Error("boom");
-        return { artifact: `${target.pluginId}.wasm` };
+        return { deliverable: { profile: "wasm-prototype" as const, directory: target.pluginId, wasm: `${target.pluginId}.wasm`, receipt: `${target.pluginId}.json` } };
       };
       const materialized: string[] = [];
       const materializeFn = async (target: PluginBuildTargetV1) => {
@@ -1918,5 +1879,5 @@ const testPackageDirectory = Path.resolve(Path.dirname(Url.fileURLToPath(import.
  * `buildPluginCatalog` is pinned for the same reason: `📇️registry/🟦️.ts` exports a zero-argument
  * projection builder under that same name and spreads later, so only the pin reaches the
  * `📇️registry/🔄️refresh` catalog BUILD these cases drive. */
-const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
+const testDependencies = { ...Fs, ...Crypto, ...Events, ...Os, ...Url, ...Path, ...Owner01, ...Owner02, ...Owner03, ...Owner04, ...Owner05, ...Owner06, ...Owner07, ...Owner08, ...Owner09, ...Owner10, ...Owner11, ...Owner12, ...Owner13, ...Owner14, ...Owner15, ...Owner16, ...Owner17, ...Owner18, ...Owner19, ...Owner20, ...Owner22, ...Owner23, ...Owner24, ...Owner25, ...Owner26, ...Owner28, ...Owner29, ...Owner30, ...Owner31, ...Owner32, ...Owner33, ...Owner34, ...Owner35, ...Owner36, ...Owner37, ...Owner38, ...Owner39, ...Owner40, ...Owner41, ...Owner42, ...Owner43, ...Owner44, ...Owner45, ...Owner46, ...Owner47, ...Owner48, ...Owner49, ...Owner50, ...Owner51, ...Owner52, ...External01, ...External02, ...External03, ...External04, ...External05, ...External06, ...External07, ...External08, ...External09, ...External10, ...External11, ...External12, ...External13, ...External14, ...External15, buildPluginCatalog: Owner02.buildPluginCatalog, repoRoot: External01.getWorkspaceRoot() };
 await registerTests1(Vitest as unknown as NonNullable<ImportMeta["vitest"]>, testDependencies, { directory: testPackageDirectory, url: Url.pathToFileURL(Path.resolve(testPackageDirectory, "📜️script.ts")).href });

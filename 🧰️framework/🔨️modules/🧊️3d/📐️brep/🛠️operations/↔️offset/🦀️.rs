@@ -11,23 +11,23 @@
 
 use std::collections::{HashMap, HashSet};
 
-use crate::brep::operations::euler::{add_shell, add_solid, make_loop, make_vertex, retire_solid_scaffold};
-use crate::brep::operations::intersect::{intersect_surface_surface, IntCurve};
-use crate::brep::operations::primitives::{attach_face, finish_solid, line_edge};
-use crate::brep::operations::staged::{drive_face, drive_solid};
-use crate::brep::representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
-use crate::brep::representation::curve::bspline::KnotVector;
-use crate::brep::representation::curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
-use crate::brep::representation::curve::Curve2;
-use crate::brep::representation::curve::{Curve3, NurbsCurve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::{IsoDirection, Surface};
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::{Affine3, Frame3, Mat3};
-use crate::brep::representation::vector::{Pnt2, Vec2};
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use {crate::euler::{add_shell, add_solid, make_vertex, retire_solid_scaffold}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_queries::intersect::{intersect_surface_surface, IntCurve};
+use crate::primitives::{attach_face, finish_solid, line_edge};
+use crate::staged::{drive_face, drive_solid};
+use semio_framework_3d_brep_representation::arena::{CoedgeId, EdgeId, FaceId, LoopId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::curve_ops::{closest_parameter, reverse_nurbs, split_nurbs};
+use semio_framework_3d_brep_representation::curve::Curve2;
+use semio_framework_3d_brep_representation::curve::{Curve3, NurbsCurve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::{IsoDirection, Surface};
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::{Affine3, Frame3, Mat3};
+use semio_framework_3d_brep_representation::vector::{Pnt2, Vec2};
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 /// ↔️ Default working tolerance for offset topology surgery (edge/vertex recomputation and NURBS
 /// offset refinement).
@@ -181,10 +181,10 @@ fn max_offset_deviation(original: &Surface, candidate: &Surface, distance: f64, 
 
 /// ↔️ Inserts one `u`-knot across every `v`-row of a control/weight grid via Boehm's algorithm
 /// applied to the homogeneous (weighted) coordinates — the standard "insert per channel, divide
-/// by the refined weight" technique ([`crate::brep::representation::curve::bspline::insert_knot`]'s own docstring).
+/// by the refined weight" technique ([`semio_framework_3d_brep_representation::curve::bspline::insert_knot`]'s own docstring).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn insert_u_knot_surface(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
-    use crate::brep::representation::curve::bspline::insert_knot;
+    use semio_framework_3d_brep_representation::curve::bspline::insert_knot;
     let rows = controls.len();
     let cols = if rows > 0 { controls[0].len() } else { 0 };
     let mut new_knots = u_knots.clone();
@@ -232,7 +232,7 @@ fn insert_v_knot_surface(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: 
 // #region 🔖️Face
 
 /// ↔️ Offsets `face`'s surface by `distance` along its outward normal (accounting for
-/// [`crate::brep::representation::topology::Face::flipped`]) and rebuilds the SAME loop/p-curve topology on the new
+/// [`semio_framework_3d_brep_representation::topology::Face::flipped`]) and rebuilds the SAME loop/p-curve topology on the new
 /// surface — exact for every analytic kind since the offset surface shares the original's frame
 /// and `(u, v)` domain; for `Nurbs` the trim curves are kept in the same parameter domain
 /// (documented approximation — the boundary no longer lies exactly on the offset surface beyond
@@ -507,7 +507,7 @@ fn coedge_on_face(body: &Body, edge: EdgeId, face: FaceId) -> Option<CoedgeId> {
 /// ↔️ Original surface normal at `face`, evaluated at whichever end of `coedge`'s pcurve names
 /// `vertex` (`prange.0` if `vertex == edge.v0`, else `prange.1` — the p-curve convention never
 /// reverses for `forward`), or at the pcurve's midpoint when `vertex` is `None` (edge-midpoint
-/// anchor use). Accounts for [`crate::brep::representation::topology::Face::flipped`].
+/// anchor use). Accounts for [`semio_framework_3d_brep_representation::topology::Face::flipped`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<VertexId>) -> Result<Vec3, KernelError> {
     let c = body.coedges.get(coedge).ok_or_else(|| KernelError::MissingEntity("coedge".into()))?;
@@ -535,7 +535,7 @@ fn face_normal_at(body: &Body, face: FaceId, coedge: CoedgeId, vertex: Option<Ve
         };
         let curve = body.curves3.get(e.curve).ok_or_else(|| KernelError::MissingEntity("curve".into()))?;
         let point = curve.eval(t_param);
-        let cu = crate::brep::representation::surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
+        let cu = semio_framework_3d_brep_representation::surface::surface_ops::closest_uv(surf, surf.domain(), point, OFFSET_TOL);
         normal_with_pole_fallback(surf, cu.u, cu.v)?
     };
     if face_data.flipped {
@@ -675,8 +675,8 @@ fn face_surface(body: &Body, f: FaceId, new_surface_map: &HashMap<FaceId, Surfac
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn make_edge_entry(body: &mut Body, curve: crate::brep::representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
-    crate::brep::operations::euler::make_edge(body, curve, range, v0, v1, tol, rec)
+fn make_edge_entry(body: &mut Body, curve: semio_framework_3d_brep_representation::arena::Curve3Id, range: (f64, f64), v0: VertexId, v1: VertexId, tol: Tol, rec: &mut OpRecorder) -> EdgeId {
+    crate::euler::make_edge(body, curve, range, v0, v1, tol, rec)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -706,7 +706,7 @@ pub fn offset_solid(body: &mut Body, solid: SolidId, distance: f64, rec: &mut Op
 
 // #region 🔖️Thicken
 
-/// ↔️ [`ruled_surface_from_curves`], `pub(crate)` so [`crate::brep::operations::blend`]'s chamfer can reuse the same
+/// ↔️ [`ruled_surface_from_curves`], `pub(crate)` so [`crate::blend`]'s chamfer can reuse the same
 /// straight-ruling construction between its two tangent-line boundaries.
 /// ↔️ Builds a ruled surface between exact directed curve trims on a common unit parameter domain.
 /// Fits both to NURBS, preserving reversed endpoints, and lofts a degree-1 `v`-direction between
@@ -763,13 +763,13 @@ pub fn thicken_face(body: &mut Body, face: FaceId, distance: f64, rec: &mut OpRe
 
 /// ↔️ Hollow shell of `solid` with wall thickness `thickness` (fully closed — no open faces): the
 /// outer shell reuses the original faces, the inner shell is `offset_solid`'s `-thickness` result
-/// with every face's orientation flipped, and the two nest as `outer`/`inners` on one [`crate::brep::representation::topology::Solid`]
+/// with every face's orientation flipped, and the two nest as `outer`/`inners` on one [`semio_framework_3d_brep_representation::topology::Solid`]
 /// — exact, no boolean cut.
 ///
 /// The `-thickness` offset is only ever a SCAFFOLD here: `offset_solid_with_corner` wraps its
 /// faces in a solid of its own, and those faces are then flipped to face into the cavity. Left in
 /// the body that wrapper is a solid whose outer shell integrates to −V, which
-/// [`crate::brep::queries::validation::validate_body`]
+/// [`semio_framework_3d_brep_queries::validation::validate_body`]
 /// reports as `shell-orientation-inward` forever after — and since `Brep::validate_gate_sync`
 /// validates the whole body, it refused EVERY preview taken from that kernel, not only the shelled
 /// solid (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`, `🐚️box-shell-preview`: the served preview

@@ -9,8 +9,8 @@
 //! — never hand-written. Every triad leaf is mounted directly as a `mutations`-sibling module in
 //! `🦀️.rs`.
 
-use crate::standards::v1::subsets::object::schema::diff::SemioObjectDiff;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::diff::SemioObjectDiff;
+use crate::schema::snapshot::SemioObjectSnapshot;
 
 //#region 🔖️Leaves
 use super::create_brep;

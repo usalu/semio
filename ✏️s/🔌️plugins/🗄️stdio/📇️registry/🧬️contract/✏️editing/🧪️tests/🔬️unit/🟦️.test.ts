@@ -183,7 +183,7 @@ test("original editor preparation preserves canonical refusal receipts and origi
   const {Database}=await import("bun:sqlite");const db=new Database(":memory:");const valid=new Ajv2020({strict:true}).compile(schema);
   try{for(const wire of law.wireCases){expect(valid(wire)).toBe(true);const error=new ValueError(wire.kind,wire.message).withRetainedProgress(wire.retainedProgress);expect(error.under("preparation").retainedProgress).toBe(error.retainedProgress);const oracle=db.query("SELECT json_object('kind',?, 'message',?, 'retainedProgress',json(?)) AS wire").get(error.kind,error.message,JSON.stringify(error.retainedProgress)) as {wire:string};expect(JSON.parse(oracle.wire)).toEqual(wire);expect(valid({...wire,retainedProgress:{...wire.retainedProgress,copiedBytes:-1}})).toBe(false);}}
   finally{db.close();}
-  for(const path of law.producerPaths){const source=await Bun.file(new URL(path,root)).text();const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toContain("self.mutation = Some(mutation)");}
+  for(const path of law.producerPaths){const source=await Bun.file(new URL(path,root)).text();const start=source.indexOf("fn advance(&mut self, grant:");const end=source.indexOf("fn checkpoint(",start);const actual=source.slice(start,end);expect(actual).toContain("Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError>");expect(actual).not.toContain("ValueError::into_message");expect(actual).not.toContain("error.to_string()");expect(actual).toContain("self.mutation = Some(mutation)");}
   console.log("[DEBUG] Editor preparation canonical refusal per-value Ajv/SQLite agrees; original mutation slots and receipt propagation Source verified; native provider conservation remains unrun");
 });
 
@@ -196,7 +196,7 @@ test("original editor preparation closes retained refusal owners under independe
   for(const axis of Object.keys(law.closeGrant))expect(valid({...law.closeGrant,[axis]:-1})).toBe(false);
   for(const path of law.producerPaths){
     const source=await Bun.file(new URL(path,root)).text();
-    const start=source.indexOf("fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant)");
+    const start=source.indexOf("fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant)");
     const end=source.indexOf("fn terminal_is_empty",start);const actual=source.slice(start,end);
     expect(actual).toContain("Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError>");
     expect(actual).toContain("grant.retained_grant()");

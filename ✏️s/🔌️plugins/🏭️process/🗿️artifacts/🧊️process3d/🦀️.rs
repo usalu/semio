@@ -28,11 +28,9 @@ use protocol::{Identified, Patchable};
 use semio_framework_dispatch_macros::dyn_enum;
 use {semio_framework_plugin::ArtifactKindSpec,semio_framework_artifact_reference::Dialect,semio_framework_plugin::MediaClass,semio_framework_plugin::MediaForm,semio_framework_plugin::MediaType,semio_framework_plugin::OsMediaCapability,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_value_derive::{FromValue, ToValue};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::{
-    BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA,
-};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::{BrepCurve, BrepEdge, BrepFace, BrepLoop, BrepLoopEdge, BrepShell, BrepShellFace, BrepSolid, BrepSolidShell, BrepSurface, BrepVertex, SemioBrepSnapshot, STDIO_SEMIOBREP_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot, STDIO_SEMIOFLOW_DOCUMENT_SCHEMA};
 
 pub use crate::schema::mutations::Process3dMutation;
 
@@ -618,16 +616,16 @@ pub struct ReferenceSolid {
 impl ReferenceSolid {
     /// 🧊️ The reference rebuilt in a fresh kernel session — one real solid handle, or `None` when
     /// the shipped STEP does not read (a build-time asset defect, never a user-facing state).
-    pub fn import(&self, kernel: &mut semio_framework_3d::brep::engine::Brep) -> Option<semio_framework_3d::brep::engine::GeometryHandle> {
+    pub fn import(&self, kernel: &mut semio_framework_3d_brep_engine::Brep) -> Option<semio_framework_3d_brep_engine::GeometryHandle> {
         semio_s_artifact_stdio_step::geometry::import_step(kernel,self.step).ok()?.into_iter().next()
     }
 
     /// 🌉️ The reference's real, lossless B-Rep content — the composed `stock_solid` child this
     /// stock mints.
     pub fn brep_snapshot(&self) -> Option<SemioBrepSnapshot> {
-        let mut kernel = semio_framework_3d::brep::engine::Brep::new();
+        let mut kernel = semio_framework_3d_brep_engine::Brep::new();
         self.import(&mut kernel)?;
-        Some(semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::body::snapshot_from_body(kernel.tessellation_body()))
+        Some(semio_s_artifact_stdio_semio_brep::schema::snapshot::body::snapshot_from_body(kernel.tessellation_body()))
     }
 }
 
@@ -652,8 +650,8 @@ fn empty_brep_snapshot() -> SemioBrepSnapshot {
     SemioBrepSnapshot { schema: STDIO_SEMIOBREP_DOCUMENT_SCHEMA.into(), vertices: Vec::new(), edges: Vec::new(), loops: Vec::new(), faces: Vec::new(), shells: Vec::new(), solids: Vec::new(), coedges: Vec::new(), next_label: 0 }
 }
 
-fn point3(p: [f64; 3]) -> semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 {
-    semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
+fn point3(p: [f64; 3]) -> semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 {
+    semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: p[0], y: p[1], z: p[2] }
 }
 
 /// 📦️ Corner-at-local-origin box, spanning `[0,w]×[0,d]×[0,h]` — 8 vertices, 12 straight edges, 6
@@ -756,27 +754,27 @@ pub fn working_solid_from_brep_snapshot(_brep: &SemioBrepSnapshot) -> WorkingSol
 
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.brep` CHILD HANDLE from `content`
 /// (mirrors `📐️cad`'s `cad_model_child_handle`/`💠️lowpoly`'s `mesh_child_handle` — same
-/// `store::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
+/// `store::os_store::artifact_child::ArtifactChild::new`/`ArtifactDialect` shape). Two callers with byte-identical content
 /// mint the same handle.
-pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::ArtifactChild<SemioBrepSnapshot> {
+pub fn brep_child_handle(slug: &str, content: &SemioBrepSnapshot) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
     brep_child_handle_for_text(slug, &serde_json::to_string(&semio_framework_value::ToValue::to_value(content)).unwrap_or_default())
 }
 
 /// 🪪️ The `s.stdio.semio.brep` child handle of a `WorkingSolid`: analytic solids are addressed by
 /// their minted snapshot, a `Reference` by the shipped STEP text it is — the same content-addressing,
 /// without materialising a 57-face snapshot's JSON inside the guest on every step mutation.
-pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::ArtifactChild<SemioBrepSnapshot> {
+pub fn working_solid_child_handle(slug: &str, solid: &WorkingSolid) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
     match solid {
         WorkingSolid::Reference { reference_id } => brep_child_handle_for_text(slug, reference_solid(reference_id).map_or(reference_id.as_str(), |reference| reference.step)),
         _ => brep_child_handle(slug, &brep_snapshot_for_working_solid(solid)),
     }
 }
 
-fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild<SemioBrepSnapshot> {
+fn brep_child_handle_for_text(slug: &str, content: &str) -> store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot> {
     let child_id = store::content_id(&format!("{slug}-brep"), content.as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "brep".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 //#endregion 🔖️BrepConverters
 
@@ -790,7 +788,7 @@ fn brep_child_handle_for_text(slug: &str, content: &str) -> store::ArtifactChild
 /// `genesis_gis_map_child_pack`; without it the archive closure reports `Incomplete` and every example
 /// switch fails.
 pub fn genesis_process3d_child_pack(snapshot: &Process3dSnapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     match slot {
         "stockSolid" if child_id == snapshot.stock_solid.child_id => Some(<SemioBrepSnapshot as ArtifactPack>::encode_pack(&brep_snapshot_for_working_solid(&snapshot.stock_payload.solid))),
         "steps" if child_id == snapshot.steps.child_id => {
@@ -885,11 +883,11 @@ pub fn process_step_from_flow_node(node: &FlowNode) -> ProcessStep {
 }
 
 /// 🪪️ Mint a deterministic, content-addressed `s.stdio.semio.flow` CHILD HANDLE from `content`.
-pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::ArtifactChild<SemioFlowSnapshot> {
+pub fn flow_child_handle(content: &SemioFlowSnapshot) -> store::os_store::artifact_child::ArtifactChild<SemioFlowSnapshot> {
     let child_id = store::content_id("steps-flow", semio_framework_pack_json::to_json_string(content).as_bytes());
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "flow".into() };
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🌉️ WRITE direction, real: the full flow graph for a step timeline — one node per step (see

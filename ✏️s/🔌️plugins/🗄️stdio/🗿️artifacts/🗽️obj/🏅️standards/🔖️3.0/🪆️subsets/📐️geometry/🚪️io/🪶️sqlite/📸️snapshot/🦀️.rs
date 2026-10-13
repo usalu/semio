@@ -2,7 +2,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 
 use semio_framework_os_kernel::sqlite_snapshot::{SnapshotEncoding,artifact::NativeEncodingBound};
 use crate::standards::v3_0::subsets::any::schema::snapshot::*;
-use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{validate_sqlite_database_schema, SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 use std::collections::{BTreeMap, BTreeSet};
 use semio_framework_os_kernel::sqlite_snapshot::artifact::{Cell,RowWriter,FloatColumn,FloatRow};
 #[path="🧮️semantic/🦀️.rs"]

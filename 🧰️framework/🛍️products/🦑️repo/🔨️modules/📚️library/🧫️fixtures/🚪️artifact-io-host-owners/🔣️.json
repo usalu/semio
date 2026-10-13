@@ -1,7 +1,7 @@
 {
   "cases": [
     {
-      "source": "pub fn owners() -> store::DocumentStoreOwners<P,M> { todo!() }",
+      "source": "pub fn owners() -> store::os_store::document_store_owners::DocumentStoreOwners<P,M> { todo!() }",
       "host": [
         "DocumentStoreOwners"
       ]
@@ -25,7 +25,7 @@
       ]
     },
     {
-      "source": "mod hidden { pub fn owners() -> store::DocumentStoreOwners<P,M> { todo!() } }",
+      "source": "mod hidden { pub fn owners() -> store::os_store::document_store_owners::DocumentStoreOwners<P,M> { todo!() } }",
       "host": [
         "DocumentStoreOwners"
       ]
@@ -39,7 +39,7 @@
       "host": []
     },
     {
-      "source": "impl store::ArtifactPack for P { fn encode_pack(&self)->Vec<u8>{vec![]} }",
+      "source": "impl store::os_store::serialization::ArtifactPack for P { fn encode_pack(&self)->Vec<u8>{vec![]} }",
       "host": []
     },
     {
@@ -47,19 +47,19 @@
       "host": []
     },
     {
-      "source": "macro_rules! own { ($name:ident) => { impl store::ArtifactEnvelopeSnapshotFieldAuthority<P> for $name {} }; }",
+      "source": "macro_rules! own { ($name:ident) => { impl store::os_store::owned_schema_decode::ArtifactEnvelopeSnapshotFieldAuthority<P> for $name {} }; }",
       "host": [
         "ArtifactEnvelopeSnapshotFieldAuthority"
       ]
     },
     {
-      "source": "impl store::ArtifactEnvelopeMutationFieldAuthority<P,M> for Decoder {}",
+      "source": "impl store::os_store::owned_schema_decode::ArtifactEnvelopeMutationFieldAuthority<P,M> for Decoder {}",
       "host": [
         "ArtifactEnvelopeMutationFieldAuthority"
       ]
     },
     {
-      "source": "macro_rules! own { () => { pub fn begin() -> Box<dyn store::ArtifactEnvelopeVcsFieldAuthority<P,M>> { todo!() } }; }",
+      "source": "macro_rules! own { () => { pub fn begin() -> Box<dyn store::os_store::owned_schema_decode::ArtifactEnvelopeVcsFieldAuthority<P,M>> { todo!() } }; }",
       "host": [
         "ArtifactEnvelopeVcsFieldAuthority"
       ]

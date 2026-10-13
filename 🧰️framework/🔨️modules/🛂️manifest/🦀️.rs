@@ -4653,7 +4653,7 @@ pub enum TutorialUiChange {
     },
 }
 
-/// 🖋️ One document-track entry — mirrors `store::ArtifactCommand` with `Mutation =
+/// 🖋️ One document-track entry — mirrors `store::os_store::store_schema::ArtifactCommand` with `Mutation =
 /// serde_json::Value` (opaque per-app mutation JSON, already the wire shape of every `KernelMutation`
 /// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
 /// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
@@ -7409,18 +7409,6 @@ pub struct AssetDeclaration {
     pub sha256: String,
 }
 
-/// #️⃣ Content hashes the registry's `check` gate verifies against the built wasm —
-/// `📓️design-abi.md` §3.
-// 🚧️ Needed in serde form too: referenced (directly or transitively) by a `🚧️ BLOCKED` serde-only manifest type above/below — see that type's own docstring.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, semio_framework_value::ToValue, semio_framework_value::FromValue)]
-#[serde(rename_all = "camelCase")]
-#[value(rename_all = "camelCase")]
-pub struct PackageHashes {
-    pub wasm_sha256: String,
-    pub core_wasm_sha256: String,
-    pub descriptor_sha256: String,
-}
-
 /// 🗂️ One free-form descriptor-only contribution row, keyed by `id` with an opaque JSON
 /// `payload` — the residual placeholder shape for the two `ContributionSet` categories (`menus`,
 /// `themes`) that still have no real declared-contribution precedent anywhere in the codebase
@@ -7600,7 +7588,6 @@ pub struct PackageDescriptor {
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     #[value(default, skip_serializing_if = "Vec::is_empty")]
     pub assets: Vec<AssetDeclaration>,
-    pub hashes: PackageHashes,
 }
 
 /// 🔤️ Descriptor value with every object ordered by UTF-8 key bytes at every depth.

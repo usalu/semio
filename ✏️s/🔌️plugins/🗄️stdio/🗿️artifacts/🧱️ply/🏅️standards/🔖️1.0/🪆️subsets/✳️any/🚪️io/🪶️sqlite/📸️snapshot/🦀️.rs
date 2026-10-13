@@ -1,7 +1,7 @@
 //! 🧱️ Independent PLY declarations, row cells and recursive typed value entities.
 use crate::standards::v1_0::subsets::any::schema::snapshot::*;
 use semio_framework_value::ValueError;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 use store::sqlite_snapshot::validate_sqlite_database_schema;
 use store::sqlite_snapshot::SqliteDatabase;
 use store::sqlite_snapshot::SqliteRow;

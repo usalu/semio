@@ -1,10 +1,6 @@
 //! 🌉️ Foreign runtime receiving retains original caller authority outside static host state.
 pub(crate) use crate::os_vcs::io::binary::entity_identity::control::{OriginalOperationReceiver, OriginalOperationReceiving};
 #[cfg(test)] pub(crate) use crate::os_vcs::io::binary::entity_identity::control::{EntityIdentityAuthority};
-#[path="📥️input/🦀️.rs"]
-pub(crate) mod input;
-#[path="📤️checkpoint/🦀️.rs"]
-pub(crate) mod checkpoint;
 #[path="📨️slot/🦀️.rs"]
 pub(crate) mod slot;
 #[path="🐎️wasmtime/🦀️.rs"]

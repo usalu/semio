@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 #[mutation_leaf(contract = ::protocol)]
 #[serde(deny_unknown_fields)]
 #[value(deny_unknown_fields)]
-pub(crate) struct SetValue {
+struct SetValue {
     pub value: i32,
 }
 

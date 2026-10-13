@@ -18,30 +18,6 @@
         "command": "bun ./📜️script.ts test",
         "forwardAllArgs": true
       }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick"
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long"
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "cwd": "🧰️framework/🛍️products/📓️print/🧬️schema/💡️inferences/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive"
-      }
     }
   }
 }

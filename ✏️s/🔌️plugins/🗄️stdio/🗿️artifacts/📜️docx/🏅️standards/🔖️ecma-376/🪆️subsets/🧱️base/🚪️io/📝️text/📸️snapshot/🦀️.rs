@@ -24,7 +24,7 @@ use semio_s_artifact_stdio_xml::schema::snapshot::{retained::RetainedXmlDocument
 use semio_s_artifact_stdio_zip::opc::{resolve_relationship_target, retained::RetainedOpcPackage, OpcPackage, OpcTargetMode, REL_TYPE_OFFICE_DOCUMENT};
 use std::collections::HashSet;
 
-impl store::ArtifactDsl for DocxSnapshot {
+impl store::os_store::serialization::ArtifactDsl for DocxSnapshot {
  const EXTENSION:&'static str="docx";
  fn envelope_id()->&'static str{"stdio.docx"}
  fn parse_dsl(text:&str)->Result<Self,semio_framework_diagnostic::TextError>{native::decode_text(text,&mut semio_framework_os_kernel::sqlite_snapshot::SqliteSnapshotControl::new(&mut |_|true,semio_framework_os_kernel::sqlite_snapshot::SqliteDatabaseLimits::default())).map_err(|error|semio_framework_diagnostic::TextError::from_value_error(error,semio_framework_diagnostic::TextSpan::at(1,1)))}

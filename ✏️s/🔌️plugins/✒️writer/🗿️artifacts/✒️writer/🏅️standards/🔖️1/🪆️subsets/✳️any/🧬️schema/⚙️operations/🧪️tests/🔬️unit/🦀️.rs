@@ -6,21 +6,21 @@ use crate::schema;
 /// `edit history insertion requires its exact mutation retirement factory` — the fixture could be
 /// read but never mutated or undone (fleet-brief stale-test bucket 2).
 async fn seeded_store() -> crate::host::owned::OwnedWriterStore {
-    crate::host::owned::new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture")
+    crate::host::owned::new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture")
 }
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_replays_text_mutations() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "hello");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn writer_document_vcs_undoes_text_mutation() {
     let mut store = seeded_store().await;
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
-    store.dispatch(store::ArtifactCommand::Undo, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![WriterMutation::EditText(EditText { text: "hello".into() })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Undo, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("undo");
     assert_eq!(crate::writer_text(&store.snapshot().expect("snapshot")), "");
 }
 

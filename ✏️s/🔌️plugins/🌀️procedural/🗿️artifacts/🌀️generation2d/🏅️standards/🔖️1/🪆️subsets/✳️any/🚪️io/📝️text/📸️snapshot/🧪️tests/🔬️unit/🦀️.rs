@@ -1,6 +1,6 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use semio_framework_os_kernel::os_store::test_support;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 //#region 🔖️DslTests
 #[test]
@@ -64,7 +64,7 @@ fn dsl_round_trip_covers_every_widget_kind() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Generation2dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::ArtifactCommand;
+    use store::os_store::store_schema::ArtifactCommand;
 
     let document = crate::standards::v1::subsets::any::schema::snapshot::Generation2dSnapshotRead::new(Generation2dSnapshot::default());
     let replaced_id = crate::widget_id(document.host_snapshot.widgets.last().expect("the 2d default document is a non-empty starter graph")).to_string();

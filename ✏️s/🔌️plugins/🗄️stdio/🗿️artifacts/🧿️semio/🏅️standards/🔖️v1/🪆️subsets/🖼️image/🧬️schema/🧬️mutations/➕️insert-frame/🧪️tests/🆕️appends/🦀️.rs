@@ -5,12 +5,11 @@
 //! boundary — `min(1, 1) == 1` — so the clamp does not fire and the diff is a pure
 //! `frames.added[{index, item}]` triple entry, with `removed`/`modified` omitted because
 //! `IndexedTripleDiff` skips empty vectors.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::insert_frame;
-use crate::standards::v1::subsets::image::schema::mutations::remove_frame;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::remove_frame;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➕️insert-frame/🆕️appends/📸️snapshot/➡️after/🔣️.json");
@@ -42,7 +41,7 @@ async fn appends_the_second_frame_with_its_own_delay_and_pixels() {
     assert_eq!(produced.frames[1].delay_ms, 80, "the inserted frame carries its own animation delay");
     assert_eq!(produced.frames[1].rgba8.len(), produced.width as usize * produced.height as usize * 4, "the inserted frame's buffer must match width*height*4");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -55,9 +54,9 @@ async fn the_undo_remove_frame_takes_the_second_frame_back_out() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::RemoveFrame(remove_frame::RemoveFrame { index: 1 })], "insert-frame at #1 must undo as remove-frame at #1");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "insert-frame/appends-a-second-frame-at-the-end: the undo did not restore the before-snapshot");
 }

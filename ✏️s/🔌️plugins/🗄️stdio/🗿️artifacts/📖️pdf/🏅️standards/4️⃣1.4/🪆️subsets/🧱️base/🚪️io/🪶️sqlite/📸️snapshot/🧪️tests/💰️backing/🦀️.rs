@@ -2,7 +2,7 @@
 #[path = "../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
 mod observer;
 use crate::standards::v1_4::subsets::base::io::sqlite::snapshot::*;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 
 pub(super) fn verify(snapshot: &PdfSnapshot) {
     let limits = sqlite_snapshot::SqliteDatabaseLimits::default();

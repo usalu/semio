@@ -1,18 +1,21 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🎲️dummy/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{DummyMutation, SetDummyCount};
-crate::app::mutation_fixture::wire::fixture_operation_text!(DummyMutation);
+use mutations::{DummyMutation, SetDummyCount};
+crate::app_testing::mutation_fixture::wire::fixture_operation_text!(DummyMutation);
 
 // 🧪️ Proves each `artifact_app_laws` primitive against a minimal dummy `ArtifactApp` before any real app
 // adopts them.
-use crate::app::artifact_app_laws::{
-    assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip, close_registered_fixture_app,
-    meta, new_app, new_registered_app,
-};
-use crate::app::{
-    built_text_to_component_tree, ArtifactApp, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry, ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ConfigView,
-    DraftView, Emit, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, UiAssemblyResult,
-};
+use crate::app_testing::artifact_app_laws::{assert_registered_ingest_idempotent, assert_registered_ingest_idempotent_with_members, assert_two_registered_instances_converge, assert_two_registered_instances_converge_with_members, assert_undo_redo_round_trip, close_registered_fixture_app, meta, new_app, new_registered_app};
+use crate::window_surface::{built_text_to_component_tree, UiAssemblyResult};
+use crate::app_contract::ArtifactApp;
+use crate::tool_contract::ArtifactOwnedToolJobFactory;
+use crate::tool_contract::ArtifactOwnedToolJobRequest;
+use crate::tool_contract::ArtifactToolCompletion;
+use crate::tool_contract::ArtifactToolFactoryRegistry;
+use crate::tool_contract::ArtifactToolPublicationContract;
+use crate::tool_contract::ArtifactToolPublicationLane;
+use crate::app_views::{ArtifactView, ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
+use crate::app_emission::Emit;
 use crate::ViewModel;
 use protocol::MutationDiff;
 use semio_framework::{action_bus, ActionKind, Fault, IconName, ToolExecutionContract, ToolFactoryKey, ToolJobFactory, ToolOperationSpec};
@@ -23,11 +26,11 @@ use serde::{Deserialize, Serialize};
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-dummy")]
-pub(crate) struct DummySnapshot {
+struct DummySnapshot {
     count: i32,
 }
 
-impl store::ArtifactSqliteSnapshot for DummySnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for DummySnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
@@ -56,7 +59,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for DummySnap
 }
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack for SDK test double (artifact coincides with snapshot only in tests).
-impl store::ArtifactDsl for DummySnapshot {
+impl store::os_store::serialization::ArtifactDsl for DummySnapshot {
     const EXTENSION: &'static str = "testkit-dummy";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -69,10 +72,10 @@ impl store::ArtifactDsl for DummySnapshot {
     }
 }
 
-impl store::ArtifactPack for DummySnapshot {
+impl store::os_store::serialization::ArtifactPack for DummySnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -87,7 +90,7 @@ impl store::ArtifactPack for DummySnapshot {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-pub(crate) struct DummyDiff {
+struct DummyDiff {
     count: Option<i32>,
 }
 
@@ -162,7 +165,7 @@ const DUMMY_PAYLOAD_SCHEMA: &str = "semio.testkit-dummy.command.v1";
 struct DummyFixtureJob {
     /// 📄️ A factory that does not own the admitted retained wire pages alongside its typed payload is
     /// refused with `interactive-job.dispatch`, so the owners hold them beside the command and completion.
-    owners: crate::app::mutation_fixture::job_close::FixtureJobOwners<DummyApp>,
+    owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners<DummyApp>,
     count: i32,
     page: usize,
 }
@@ -182,12 +185,12 @@ impl semio_framework_job::InteractiveJob for DummyFixtureJob {
         let Some(DummyCommand::Increment) = self.owners.command.as_deref() else {
             return semio_framework_job::JobOutcomeBorrow::admit_cancelled(cx);
         };
-        self.owners.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app::EphemeralEmit::default()).expect("one exact dummy completion");
+        self.owners.completion.as_ref().expect("dummy fixture completion").complete(Ok(Emit::mutations(vec![SetDummyCount { value: self.count + 1 }.into()])), crate::app_emission::EphemeralEmit::default()).expect("one exact dummy completion");
         semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
+        crate::app_testing::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -264,14 +267,14 @@ impl ArtifactOwnedToolJobFactory for DummyFixtureFactory {
     fn latest_wins_target(_command: &DummyCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<DummyCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<DummyCommand>>> {
         None
     }
 }
 
-async fn dummy_manifest() -> crate::app::App {
-    crate::app::App::from_builder(
-        crate::app::App::builder(DummyApp::APP_ID, LocalizedLabel::data("Dummy Fixture"))
+async fn dummy_manifest() -> crate::app_builder::App {
+    crate::app_builder::App::from_builder(
+        crate::app_builder::App::builder(DummyApp::APP_ID, LocalizedLabel::data("Dummy Fixture"))
             .await
             .document(["state"])
             .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -296,10 +299,10 @@ impl ArtifactApp for DummyApp {
     const DOCUMENT_SCHEMA: &'static str = "semio.testkit/v1";
     fn catalogue_example_document(example_id: &str) -> Option<Result<String, semio_framework::Fault>> {
         if example_id.is_empty() {
-            return Some(Ok(<DummySnapshot as store::ArtifactDsl>::print_dsl(&DummySnapshot::default())));
+            return Some(Ok(<DummySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&DummySnapshot::default())));
         }
         if example_id == "four" {
-            return Some(Ok(<DummySnapshot as store::ArtifactDsl>::print_dsl(&DummySnapshot { count: 4 })));
+            return Some(Ok(<DummySnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&DummySnapshot { count: 4 })));
         }
         Some(Err(semio_framework::Fault::new(semio_framework::FaultOrigin::App, semio_framework::FaultCode::new("app.example.unknown"), format!("no registered example '{example_id}'"))))
     }
@@ -311,8 +314,8 @@ impl ArtifactApp for DummyApp {
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = crate::app::NoTransient;
-    type TransientMutation = crate::app::NoTransientMutation;
+    type Transient = crate::app_views::NoTransient;
+    type TransientMutation = crate::app_views::NoTransientMutation;
     type Command = DummyCommand;
 
     crate::bounded_first_step_tool_proofs! {
@@ -326,42 +329,42 @@ impl ArtifactApp for DummyApp {
     }
 
     async fn build_tool_job(request: ArtifactOwnedToolJobRequest<Self>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = DummyFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
+        let job = DummyFixtureJob { owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app_testing::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained"))
     }
 
-    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
-    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", grant))
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app_testing::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app_testing::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-dummy-artifact-retained", grant))
     }
 
-    fn build_document_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
-        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ArtifactStore<Self::Snapshot, Self::Mutation>>>> {
+        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
-        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::ConfigStore<Self::Config, Self::ConfigMutation>>>> {
+        Some(crate::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
-        Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::DraftStore<Self::Draft, Self::DraftMutation>>>> {
+        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
-    fn build_presence_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    fn build_presence_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::PresenceStore<Self::Presence, Self::PresenceMutation>>>> {
+        Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
-        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    fn build_transient_store_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<store::TransientStore<Self::Transient, Self::TransientMutation>>>> {
+        Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_peer_retirement_factory())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_local_root_retirement_factory())
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::transient_local_root_retirement_factory())
     }
 
     /// 🪪️ The tool id this variant dispatches under. Without it the `ArtifactApp` default answers
@@ -381,7 +384,7 @@ impl ArtifactApp for DummyApp {
         command: &DummyCommand,
         doc: &ArtifactView<'_, DummySnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &crate::app::InteractionView<'_>,
+        _interaction: &crate::app_views::InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
@@ -411,14 +414,14 @@ async fn set_active_example_loads_the_registered_catalogue_without_a_declared_ac
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
     let mut app = new_app::<DummyApp>(protocol::ActorId("actor".into()), mounted_policy, &mut identity).await;
     let args = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("four".to_string()))]);
-    let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("catalogue load");
+    let result = app.dispatch_action("setActiveExample", Some(&args), &meta("actor"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("catalogue load");
     let semio_framework::kernel::Effect::LoadDocument { pack, .. } = result.requested_effects.first().expect("load effect") else {
         panic!("expected LoadDocument");
     };
-    let loaded = <DummySnapshot as store::ArtifactPack>::decode_pack(pack).expect("pack");
+    let loaded = <DummySnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(pack).expect("pack");
     assert_eq!(loaded, DummySnapshot { count: 4 });
     let missing = semio_framework_value::DslValue::object([("exampleId".to_string(), semio_framework_value::DslValue::String("missing".to_string()))]);
-    let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("unknown example");
+    let refused = app.dispatch_action("setActiveExample", Some(&missing), &meta("actor"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("unknown example");
     assert_eq!(refused.code.0, "app.example.unknown");
     close_registered_fixture_app(&mut app, mounted_policy);
 }
@@ -435,8 +438,8 @@ async fn new_app_constructs_a_registry_less_wrapper() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
-    let mut app = new_app::<DummyApp>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    let error = app.dispatch_typed(DummyCommand::Increment, &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("registry-less wrapper must fail closed");
+    let mut app = new_app::<DummyApp>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+    let error = app.dispatch_typed(DummyCommand::Increment, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("registry-less wrapper must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains("no exact manifest declaration"), "the registry-less wrapper fails on the missing declaration, not on a missing factory: {}", error.message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
@@ -448,8 +451,8 @@ async fn assert_undo_redo_round_trip_passes_for_a_real_operation() {
     let (mounted_policy, maximum_identity_bytes) = dummy_fixture_caller();
     let mut observer = |_| true;
     let mut identity = semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority::new(maximum_identity_bytes, &mut observer as &mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::Observer<'_>).unwrap();
-    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
-    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy, &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_registered_app::<DummyApp, _>(dummy_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), mounted_policy, &mut identity).await;
+    assert_undo_redo_round_trip(&mut app, DummyCommand::Increment, |app| app.snapshot().unwrap().count, 0, 1, mounted_policy, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     close_registered_fixture_app(&mut app, mounted_policy);
 }
 
@@ -479,18 +482,18 @@ store::space_members! {
     }
 }
 
-impl store::MemberStoreOwner<DummyMutation> for DummySnapshot {
+impl store::os_store::document_store_owners::MemberStoreOwner<DummyMutation> for DummySnapshot {
     /// 🚪️ This roster exists to BE a non-default roster, never to open a member: the law that uses it
     /// drives the registered ladder (construct, attach, dispatch, settle, exchange, close) and admits
     /// no child, so the un-openable operation is the honest declaration.
     type SnapshotOpen = store::UnsupportedMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        store::bounded_artifact_store_owners_birth_demand::<Self, DummyMutation>()
+        store::os_store::document_store_owners::bounded_artifact_store_owners_birth_demand::<Self, DummyMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, DummyMutation>> {
-        crate::app::bounded_document_store_owners::<Self, DummyMutation>(grant)
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, DummyMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, DummyMutation>> {
+        crate::store_lifecycle::bounded_document_store_owners::<Self, DummyMutation>(grant)
     }
 }
 //#endregion 🧬️MembersRoster

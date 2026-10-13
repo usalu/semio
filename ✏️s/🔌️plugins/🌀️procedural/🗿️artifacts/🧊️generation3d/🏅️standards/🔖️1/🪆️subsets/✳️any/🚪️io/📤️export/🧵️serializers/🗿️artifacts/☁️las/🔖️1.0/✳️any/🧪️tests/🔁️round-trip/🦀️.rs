@@ -5,7 +5,7 @@
 
 use crate::{assert_close, project, unit_cube_semio_mesh, TOLERANCE};
 use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::export::serializers::artifacts::las::v1_0::any as export;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::{decode_mesh, SemioMeshFormat};
+use {semio_s_artifact_stdio_semio_mesh_import::decode_mesh, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat};
 
 fn exported() -> Vec<u8> {
     export::serialize_mesh_bytes(&unit_cube_semio_mesh()).expect("the unit cube exports as las")

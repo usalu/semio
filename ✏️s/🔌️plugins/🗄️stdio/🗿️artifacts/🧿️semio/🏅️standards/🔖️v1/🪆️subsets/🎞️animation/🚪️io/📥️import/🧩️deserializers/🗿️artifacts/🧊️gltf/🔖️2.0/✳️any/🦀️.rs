@@ -15,12 +15,12 @@
 //! `AnimInterpolation::CubicSpline` is still recorded (informational -- see the reverse direction's
 //! own doc comment on why it downgrades on export).
 
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot, STDIO_SEMIOANIMATION_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
 use {semio_framework_plugin::ArtifactDeserializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::decode_accessor;
-use semio_s_artifact_stdio_gltf::schema::snapshot::GltfAnimationPath;
-use semio_s_artifact_stdio_gltf::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimationPath;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 const FROM_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId("*") };
 const INTO_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("animation") };
@@ -43,7 +43,7 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
                 let times = decode_accessor(document, &from.buffers, sampler.input).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
                 let values = decode_accessor(document, &from.buffers, sampler.output).map_err(|detail| store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, detail)))?;
                 let keyframe_count = times.count;
-                let is_cubic = matches!(sampler.interpolation, semio_s_artifact_stdio_gltf::schema::snapshot::GltfInterpolation::CubicSpline);
+                let is_cubic = matches!(sampler.interpolation, semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfInterpolation::CubicSpline);
                 let multiplier = if is_cubic { 3 } else { 1 };
                 let property = match ch.target.path {
                     GltfAnimationPath::Translation => AnimTargetProperty::Translation,
@@ -81,9 +81,9 @@ impl ArtifactDeserializer for SemioAnimationFromGltf {
                     None => "unassigned".to_string(),
                 };
                 let interpolation = match sampler.interpolation {
-                    semio_s_artifact_stdio_gltf::schema::snapshot::GltfInterpolation::Linear => AnimInterpolation::Linear,
-                    semio_s_artifact_stdio_gltf::schema::snapshot::GltfInterpolation::Step => AnimInterpolation::Step,
-                    semio_s_artifact_stdio_gltf::schema::snapshot::GltfInterpolation::CubicSpline => AnimInterpolation::CubicSpline,
+                    semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfInterpolation::Linear => AnimInterpolation::Linear,
+                    semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfInterpolation::Step => AnimInterpolation::Step,
+                    semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfInterpolation::CubicSpline => AnimInterpolation::CubicSpline,
                 };
                 channels.push(AnimChannel { target: AnimTarget { node: node_name, property }, interpolation, keyframes });
             }

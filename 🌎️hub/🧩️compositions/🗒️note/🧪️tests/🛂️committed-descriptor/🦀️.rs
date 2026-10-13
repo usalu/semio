@@ -15,7 +15,7 @@ fn test_repo_root() -> PathBuf {
     }
 }
 
-/// 🧪️ Loads the committed note descriptor using the canonical runtime profile order.
+/// 🧪️ Loads the committed note descriptor beside the shipped component deliverable.
 /// Absence skips this optional integration probe and is never publication identity evidence.
 #[semio_framework_async_macros::async_test]
 async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
@@ -24,7 +24,7 @@ async fn note_plugin_manifest_loads_from_its_committed_descriptor() {
     let descriptor_path = repo_root.join(contract["descriptorPath"].as_str().expect("descriptor path"));
     assert!(descriptor_path.is_file(), "committed note descriptor missing at {}", descriptor_path.display());
 
-    let candidate_wasm_paths = contract["profiles"].as_array().expect("component profiles").iter().map(|profile| repo_root.join(contract["componentDirectory"].as_str().expect("component directory")).join(profile.as_str().expect("component profile")).join(contract["componentName"].as_str().expect("component name")));
+    let candidate_wasm_paths = contract["deliverables"].as_array().expect("component deliverables").iter().map(|deliverable| repo_root.join(contract["componentDirectory"].as_str().expect("component directory")).join(deliverable.as_str().expect("component deliverable")).join(contract["componentName"].as_str().expect("component name")));
     let Some(wasm_path) = candidate_wasm_paths.into_iter().find(|path| path.is_file()) else {
         return;
     };

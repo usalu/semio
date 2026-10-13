@@ -1,6 +1,6 @@
 use super::*;
-use crate::brep::operations::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
-use crate::brep::queries::mass_properties::solid_volume;
+use crate::primitives::{make_box, make_cylinder, make_planar_face_from_points, make_sphere};
+use semio_framework_3d_brep_queries::mass_properties::solid_volume;
 use std::f64::consts::PI;
 
 #[semio_framework_async_macros::async_test]
@@ -64,7 +64,7 @@ async fn offset_sphere_matches_closed_form() {
 
 #[semio_framework_async_macros::async_test]
 async fn offset_nurbs_surface_within_bound() {
-    use crate::brep::representation::curve::bspline::KnotVector;
+    use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
     let u_knots = KnotVector::clamped_uniform(3, 2);
     let v_knots = KnotVector::clamped_uniform(3, 2);
     let controls = vec![
@@ -169,7 +169,7 @@ async fn debug_offset_cylinder2() {
     let (r, h, d) = (1.0, 2.0, 0.25);
     let solid = make_cylinder(&mut body, r, h, &mut rec).unwrap();
     let grown = offset_solid_with_corner(&mut body, solid, d, OffsetCorner::Sharp, &mut rec).unwrap();
-    use crate::brep::queries::mass_properties::face_area;
+    use semio_framework_3d_brep_queries::mass_properties::face_area;
     for f in body.solid_faces(grown) {
         let fd = body.faces.get(f).unwrap();
         println!("face {f:?} flipped={} area={:?} surface={:?}", fd.flipped, face_area(&body, f, 1e-4), body.surfaces.get(fd.surface));

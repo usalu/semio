@@ -6,7 +6,7 @@ use crate::diff::GisMapDiff;
 use crate::mutations::{create_position, create_region, create_route, delete_position, delete_region, delete_route, reorder_positions, reorder_regions, reorder_routes, replace_position_data, replace_region_data, replace_route_data, set_position_property, remove_position_property, set_route_property, remove_route_property, set_region_property, remove_region_property};
 use crate::GisMapSnapshot;
 use protocol::Mutation;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔹Operation
 /// 🗺️ Typed, invertible, semantic GIS map mutation vocabulary — every variant wraps exactly one

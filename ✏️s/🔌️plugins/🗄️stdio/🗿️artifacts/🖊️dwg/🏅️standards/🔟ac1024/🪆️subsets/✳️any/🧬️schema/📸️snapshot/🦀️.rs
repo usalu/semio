@@ -4,8 +4,7 @@
 //! D1-D2 wave); this module owns the typed persisted model and glues `decode_dwg`/`encode_dwg`
 //! to it.
 
-use crate::standards::v_ac1024::engine as dwg_engine;
-use crate::STDIO_DWG_DOCUMENT_SCHEMA;
+use crate::standards::v_ac1024::subsets::any::schema::STDIO_DWG_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use std::fmt;
 use semio_framework_value::{ValueError, ValueRefusalKind};
@@ -3757,11 +3756,11 @@ impl DwgLogicalDrawing {
     /// model space. Handles follow [`new_document_handles`]; entities start at its `FIRST_FREE`.
     /// See <https://www.opendesign.com/files/guestdownloads/OpenDesign_Specification_for_.dwg_files.pdf> §20.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_native(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
+    pub fn from_native(drawing: &crate::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<Self, String> {
         use new_document_handles as h;
         let mut layers = drawing.layers.clone();
         if !layers.iter().any(|layer| layer.name == "0") {
-            layers.push(dwg_engine::DwgLayer::default());
+            layers.push(crate::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer::default());
         }
         let mut next = h::FIRST_FREE;
         let mut allocate = || {
@@ -3771,12 +3770,12 @@ impl DwgLogicalDrawing {
         };
         let layer_handles: Vec<u64> = layers.iter().map(|_| allocate()).collect();
         let layer_zero = layers.iter().zip(&layer_handles).find_map(|(layer, handle)| (layer.name == "0").then_some(*handle)).ok_or("layer 0 is missing")?;
-        let common = |layer: usize, color: dwg_engine::DwgColor, mode: DwgEntityMode| DwgEntityCommon {
+        let common = |layer: usize, color: crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor, mode: DwgEntityMode| DwgEntityCommon {
             mode,
             color: match color {
-                dwg_engine::DwgColor::ByLayer => DwgEntityColor { kind: DwgEntityColorKind::ByLayer, index: 256, ..Default::default() },
-                dwg_engine::DwgColor::ByBlock => DwgEntityColor { kind: DwgEntityColorKind::ByBlock, index: 0, ..Default::default() },
-                dwg_engine::DwgColor::Index(index) => DwgEntityColor { kind: DwgEntityColorKind::Index, index: u16::from(index), ..Default::default() },
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer => DwgEntityColor { kind: DwgEntityColorKind::ByLayer, index: 256, ..Default::default() },
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByBlock => DwgEntityColor { kind: DwgEntityColorKind::ByBlock, index: 0, ..Default::default() },
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::Index(index) => DwgEntityColor { kind: DwgEntityColorKind::Index, index: u16::from(index), ..Default::default() },
             },
             linetype_scale: 1.0,
             lineweight: 29,
@@ -3802,24 +3801,24 @@ impl DwgLogicalDrawing {
             model_space_entities.push(handle);
             let z = [0.0, 0.0, 1.0].to_vec();
             match &source.geometry {
-                dwg_engine::DwgGeometry::Line { start, end } => entity_objects.push(entity(handle, 19, "LINE", None, DwgEntityBody::Line(DwgLineEntity { common: top, start: start.to_vec(), end: end.to_vec(), thickness: 0.0, extrusion: z }))),
-                dwg_engine::DwgGeometry::Point { at } => entity_objects.push(entity(handle, 27, "POINT", None, DwgEntityBody::Point(DwgPointEntity { common: top, point: at.to_vec(), thickness: 0.0, extrusion: z, x_axis_angle: 0.0 }))),
-                dwg_engine::DwgGeometry::Circle { center, radius, normal } => entity_objects.push(entity(handle, 18, "CIRCLE", None, DwgEntityBody::Circle(DwgCircleEntity { common: top, center: center.to_vec(), radius: *radius, thickness: 0.0, extrusion: normal.to_vec() }))),
-                dwg_engine::DwgGeometry::Arc { center, radius, start_angle, end_angle, normal } => entity_objects.push(entity(
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Line { start, end } => entity_objects.push(entity(handle, 19, "LINE", None, DwgEntityBody::Line(DwgLineEntity { common: top, start: start.to_vec(), end: end.to_vec(), thickness: 0.0, extrusion: z }))),
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Point { at } => entity_objects.push(entity(handle, 27, "POINT", None, DwgEntityBody::Point(DwgPointEntity { common: top, point: at.to_vec(), thickness: 0.0, extrusion: z, x_axis_angle: 0.0 }))),
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Circle { center, radius, normal } => entity_objects.push(entity(handle, 18, "CIRCLE", None, DwgEntityBody::Circle(DwgCircleEntity { common: top, center: center.to_vec(), radius: *radius, thickness: 0.0, extrusion: normal.to_vec() }))),
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Arc { center, radius, start_angle, end_angle, normal } => entity_objects.push(entity(
                     handle,
                     17,
                     "ARC",
                     None,
                     DwgEntityBody::Arc(DwgArcEntity { common: top, center: center.to_vec(), radius: *radius, thickness: 0.0, extrusion: normal.to_vec(), start_angle: *start_angle, end_angle: *end_angle }),
                 )),
-                dwg_engine::DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal } => entity_objects.push(entity(
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Ellipse { center, major_axis, ratio, start_param, end_param, normal } => entity_objects.push(entity(
                     handle,
                     35,
                     "ELLIPSE",
                     None,
                     DwgEntityBody::Ellipse(DwgEllipseEntity { common: top, center: center.to_vec(), major_axis: major_axis.to_vec(), extrusion: normal.to_vec(), axis_ratio: *ratio, start_parameter: *start_param, end_parameter: *end_param }),
                 )),
-                dwg_engine::DwgGeometry::LwPolyline { closed, elevation, vertices, bulges } => entity_objects.push(entity(
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline { closed, elevation, vertices, bulges } => entity_objects.push(entity(
                     handle,
                     77,
                     "LWPOLYLINE",
@@ -3834,7 +3833,7 @@ impl DwgLogicalDrawing {
                         ..Default::default()
                     }),
                 )),
-                dwg_engine::DwgGeometry::Spline { degree, control_points, knots, weights } => entity_objects.push(entity(
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Spline { degree, control_points, knots, weights } => entity_objects.push(entity(
                     handle,
                     36,
                     "SPLINE",
@@ -3852,7 +3851,7 @@ impl DwgLogicalDrawing {
                         weights: weights.clone(),
                     }),
                 )),
-                dwg_engine::DwgGeometry::Text { at, height, rotation, content } => entity_objects.push(entity(
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Text { at, height, rotation, content } => entity_objects.push(entity(
                     handle,
                     1,
                     "TEXT",
@@ -3875,8 +3874,8 @@ impl DwgLogicalDrawing {
                         style_handle: h::STANDARD_TEXT_STYLE,
                     }),
                 )),
-                dwg_engine::DwgGeometry::Face3d { corners } => entity_objects.push(entity(handle, 28, "3DFACE", None, DwgEntityBody::Face3d(DwgFace3dEntity { common: top, corners: corners.iter().flatten().copied().collect(), invisible_edges: 0 }))),
-                dwg_engine::DwgGeometry::Polyline3d { closed, vertices } => {
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Face3d { corners } => entity_objects.push(entity(handle, 28, "3DFACE", None, DwgEntityBody::Face3d(DwgFace3dEntity { common: top, corners: corners.iter().flatten().copied().collect(), invisible_edges: 0 }))),
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Polyline3d { closed, vertices } => {
                     let vertex_handles: Vec<u64> = vertices.iter().map(|_| allocate()).collect();
                     let sequence_end_handle = allocate();
                     entity_objects.push(entity(handle, 16, "POLYLINE_3D", None, DwgEntityBody::Polyline3d(DwgPolyline3dEntity { common: top, curve_type: 0, flags: u8::from(*closed), vertex_handles: vertex_handles.clone(), sequence_end_handle })));
@@ -3885,7 +3884,7 @@ impl DwgLogicalDrawing {
                     }
                     entity_objects.push(entity(sequence_end_handle, 6, "SEQEND", Some(handle), DwgEntityBody::SequenceEnd(DwgSequenceEndEntity { common: owned })));
                 }
-                dwg_engine::DwgGeometry::PolyfaceMesh { vertices, faces } => {
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::PolyfaceMesh { vertices, faces } => {
                     let vertex_count = u16::try_from(vertices.len()).map_err(|_| format!("DWG polyface mesh {index} exceeds {} vertices", u16::MAX))?;
                     let face_count = u16::try_from(faces.len()).map_err(|_| format!("DWG polyface mesh {index} exceeds {} faces", u16::MAX))?;
                     let vertex_handles: Vec<u64> = vertices.iter().chain(faces.iter().map(|_| &[0.0; 3])).map(|_| allocate()).collect();
@@ -4241,17 +4240,17 @@ impl DwgLogicalDrawing {
             .filter_map(|object| {
                 let Some(DwgLogicalObjectBody::Entity(body)) = object.body.as_ref() else { return None };
                 let (common, geometry) = match body {
-                    DwgEntityBody::Line(line) => (&line.common, dwg_engine::DwgGeometry::Line { start: point(&line.start), end: point(&line.end) }),
-                    DwgEntityBody::Point(value) => (&value.common, dwg_engine::DwgGeometry::Point { at: point(&value.point) }),
-                    DwgEntityBody::Circle(circle) => (&circle.common, dwg_engine::DwgGeometry::Circle { center: point(&circle.center), radius: circle.radius, normal: point(&circle.extrusion) }),
-                    DwgEntityBody::Arc(arc) => (&arc.common, dwg_engine::DwgGeometry::Arc { center: point(&arc.center), radius: arc.radius, start_angle: arc.start_angle, end_angle: arc.end_angle, normal: point(&arc.extrusion) }),
+                    DwgEntityBody::Line(line) => (&line.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Line { start: point(&line.start), end: point(&line.end) }),
+                    DwgEntityBody::Point(value) => (&value.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Point { at: point(&value.point) }),
+                    DwgEntityBody::Circle(circle) => (&circle.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Circle { center: point(&circle.center), radius: circle.radius, normal: point(&circle.extrusion) }),
+                    DwgEntityBody::Arc(arc) => (&arc.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Arc { center: point(&arc.center), radius: arc.radius, start_angle: arc.start_angle, end_angle: arc.end_angle, normal: point(&arc.extrusion) }),
                     DwgEntityBody::Ellipse(ellipse) => (
                         &ellipse.common,
-                        dwg_engine::DwgGeometry::Ellipse { center: point(&ellipse.center), major_axis: point(&ellipse.major_axis), ratio: ellipse.axis_ratio, start_param: ellipse.start_parameter, end_param: ellipse.end_parameter, normal: point(&ellipse.extrusion) },
+                        crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Ellipse { center: point(&ellipse.center), major_axis: point(&ellipse.major_axis), ratio: ellipse.axis_ratio, start_param: ellipse.start_parameter, end_param: ellipse.end_parameter, normal: point(&ellipse.extrusion) },
                     ),
                     DwgEntityBody::LwPolyline(polyline) => (
                         &polyline.common,
-                        dwg_engine::DwgGeometry::LwPolyline {
+                        crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline {
                             closed: polyline.closed,
                             elevation: polyline.elevation,
                             vertices: polyline.vertices.iter().map(|vertex| [vertex.point.first().copied().unwrap_or_default(), vertex.point.get(1).copied().unwrap_or_default()]).collect(),
@@ -4260,20 +4259,20 @@ impl DwgLogicalDrawing {
                     ),
                     DwgEntityBody::Spline(spline) => (
                         &spline.common,
-                        dwg_engine::DwgGeometry::Spline { degree: spline.degree, control_points: spline.control_points.as_chunks::<3>().0.iter().map(|chunk| *chunk).collect(), knots: spline.knots.clone(), weights: spline.weights.clone() },
+                        crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Spline { degree: spline.degree, control_points: spline.control_points.as_chunks::<3>().0.iter().map(|chunk| *chunk).collect(), knots: spline.knots.clone(), weights: spline.weights.clone() },
                     ),
                     DwgEntityBody::Text(text) => (
                         &text.common,
-                        dwg_engine::DwgGeometry::Text { at: [text.insertion.first().copied().unwrap_or_default(), text.insertion.get(1).copied().unwrap_or_default(), text.elevation], height: text.height, rotation: text.rotation, content: text.value.clone() },
+                        crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Text { at: [text.insertion.first().copied().unwrap_or_default(), text.insertion.get(1).copied().unwrap_or_default(), text.elevation], height: text.height, rotation: text.rotation, content: text.value.clone() },
                     ),
                     DwgEntityBody::Face3d(face) => {
                         let corners = face.corners.as_chunks::<3>().0;
-                        (&face.common, dwg_engine::DwgGeometry::Face3d { corners: [0, 1, 2, 3].map(|corner| corners.get(corner).copied().unwrap_or_default()) })
+                        (&face.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Face3d { corners: [0, 1, 2, 3].map(|corner| corners.get(corner).copied().unwrap_or_default()) })
                     }
-                    DwgEntityBody::Polyline3d(polyline) => (&polyline.common, dwg_engine::DwgGeometry::Polyline3d { closed: polyline.flags & 1 != 0, vertices: vertex_points(&polyline.vertex_handles) }),
+                    DwgEntityBody::Polyline3d(polyline) => (&polyline.common, crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Polyline3d { closed: polyline.flags & 1 != 0, vertices: vertex_points(&polyline.vertex_handles) }),
                     DwgEntityBody::PolyfaceMesh(mesh) => (
                         &mesh.common,
-                        dwg_engine::DwgGeometry::PolyfaceMesh {
+                        crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::PolyfaceMesh {
                             vertices: vertex_points(&mesh.vertex_handles),
                             faces: mesh
                                 .vertex_handles
@@ -4300,9 +4299,9 @@ impl DwgLogicalDrawing {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn to_native(&self) -> Result<dwg_engine::DwgDrawing, String> {
-        Ok(dwg_engine::DwgDrawing {
-            layers: self.layers.iter().map(|layer| dwg_engine::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),
+    pub fn to_native(&self) -> Result<crate::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing, String> {
+        Ok(crate::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing {
+            layers: self.layers.iter().map(|layer| crate::standards::v_ac1024::subsets::any::schema::geometry::DwgLayer { name: layer.name.clone(), color: layer.color }).collect(),
             entities: self.entities().iter().map(DwgLogicalEntity::to_native).collect::<Result<_, _>>()?,
             extmin: vec3(&self.extmin)?,
             extmax: vec3(&self.extmax)?,
@@ -4359,7 +4358,7 @@ impl DwgSnapshot {
     /// recomputed from the geometry), the classes of its three class-numbered objects, and empty
     /// file-level sections. Deterministic: the same drawing always yields the same document.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    pub fn from_drawing(drawing: &dwg_engine::DwgDrawing) -> Result<Self, String> {
+    pub fn from_drawing(drawing: &crate::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing) -> Result<Self, String> {
         use new_document_handles as h;
         let mut drawing = drawing.clone();
         drawing.recompute_extents();
@@ -4563,14 +4562,14 @@ impl DwgSnapshot {
 
 impl DwgLogicalEntity {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn to_native(&self) -> Result<dwg_engine::DwgEntity, String> {
+    fn to_native(&self) -> Result<crate::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity, String> {
         let color = match self.color {
-            -1 => dwg_engine::DwgColor::ByLayer,
-            -2 => dwg_engine::DwgColor::ByBlock,
-            value if (0..=255).contains(&value) => dwg_engine::DwgColor::Index(value as u8),
+            -1 => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByLayer,
+            -2 => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::ByBlock,
+            value if (0..=255).contains(&value) => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgColor::Index(value as u8),
             value => return Err(format!("invalid logical DWG color {value}")),
         };
-        Ok(dwg_engine::DwgEntity { layer: self.layer, color, geometry: self.geometry.to_native()? })
+        Ok(crate::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity { layer: self.layer, color, geometry: self.geometry.to_native()? })
     }
 }
 
@@ -4586,8 +4585,8 @@ fn vec3(values: &[f64]) -> Result<[f64; 3], String> {
 
 impl DwgLogicalGeometry {
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn from_native(geometry: &dwg_engine::DwgGeometry) -> Self {
-        use dwg_engine::DwgGeometry::*;
+    fn from_native(geometry: &crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry) -> Self {
+        use crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::*;
         match geometry {
             Point { at } => Self { kind: DwgLogicalGeometryKind::Point, values: at.to_vec(), ..Default::default() },
             Line { start, end } => Self { kind: DwgLogicalGeometryKind::Line, values: start.iter().chain(end).copied().collect(), ..Default::default() },
@@ -4619,18 +4618,18 @@ impl DwgLogicalGeometry {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn to_native(&self) -> Result<dwg_engine::DwgGeometry, String> {
+    fn to_native(&self) -> Result<crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry, String> {
         use DwgLogicalGeometryKind::*;
         Ok(match self.kind {
-            Point => dwg_engine::DwgGeometry::Point { at: vec3(&self.values)? },
-            Line => dwg_engine::DwgGeometry::Line { start: vec3(&self.values[0..3])?, end: vec3(&self.values[3..6])? },
-            Circle => dwg_engine::DwgGeometry::Circle { center: vec3(&self.values[0..3])?, radius: self.values[3], normal: vec3(&self.values[4..7])? },
-            Arc => dwg_engine::DwgGeometry::Arc { center: vec3(&self.values[0..3])?, radius: self.values[3], start_angle: self.values[4], end_angle: self.values[5], normal: vec3(&self.values[6..9])? },
-            Ellipse => dwg_engine::DwgGeometry::Ellipse { center: vec3(&self.values[0..3])?, major_axis: vec3(&self.values[3..6])?, ratio: self.values[6], start_param: self.values[7], end_param: self.values[8], normal: vec3(&self.values[9..12])? },
+            Point => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Point { at: vec3(&self.values)? },
+            Line => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Line { start: vec3(&self.values[0..3])?, end: vec3(&self.values[3..6])? },
+            Circle => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Circle { center: vec3(&self.values[0..3])?, radius: self.values[3], normal: vec3(&self.values[4..7])? },
+            Arc => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Arc { center: vec3(&self.values[0..3])?, radius: self.values[3], start_angle: self.values[4], end_angle: self.values[5], normal: vec3(&self.values[6..9])? },
+            Ellipse => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Ellipse { center: vec3(&self.values[0..3])?, major_axis: vec3(&self.values[3..6])?, ratio: self.values[6], start_param: self.values[7], end_param: self.values[8], normal: vec3(&self.values[9..12])? },
             LwPolyline => {
                 let count = *self.indices.first().ok_or("polyline vertex count missing")? as usize;
                 let vertices = self.values[1..1 + count * 2].as_chunks::<2>().0.iter().map(|chunk| vec2(chunk)).collect::<Result<_, _>>()?;
-                dwg_engine::DwgGeometry::LwPolyline { closed: self.closed, elevation: self.values[0], vertices, bulges: self.values[1 + count * 2..].to_vec() }
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::LwPolyline { closed: self.closed, elevation: self.values[0], vertices, bulges: self.values[1 + count * 2..].to_vec() }
             }
             Spline => {
                 let degree = self.indices[0] as u32;
@@ -4638,16 +4637,16 @@ impl DwgLogicalGeometry {
                 let knot_count = self.indices[2] as usize;
                 let point_end = point_count * 3;
                 let control_points = self.values[..point_end].as_chunks::<3>().0.iter().map(|chunk| vec3(chunk)).collect::<Result<_, _>>()?;
-                dwg_engine::DwgGeometry::Spline { degree, control_points, knots: self.values[point_end..point_end + knot_count].to_vec(), weights: self.values[point_end + knot_count..].to_vec() }
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Spline { degree, control_points, knots: self.values[point_end..point_end + knot_count].to_vec(), weights: self.values[point_end + knot_count..].to_vec() }
             }
-            Text => dwg_engine::DwgGeometry::Text { at: vec3(&self.values[0..3])?, height: self.values[3], rotation: self.values[4], content: self.text.clone() },
-            Face3d => dwg_engine::DwgGeometry::Face3d { corners: [vec3(&self.values[0..3])?, vec3(&self.values[3..6])?, vec3(&self.values[6..9])?, vec3(&self.values[9..12])?] },
-            Polyline3d => dwg_engine::DwgGeometry::Polyline3d { closed: self.closed, vertices: self.values.as_chunks::<3>().0.iter().map(|chunk| vec3(chunk)).collect::<Result<_, _>>()? },
+            Text => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Text { at: vec3(&self.values[0..3])?, height: self.values[3], rotation: self.values[4], content: self.text.clone() },
+            Face3d => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Face3d { corners: [vec3(&self.values[0..3])?, vec3(&self.values[3..6])?, vec3(&self.values[6..9])?, vec3(&self.values[9..12])?] },
+            Polyline3d => crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::Polyline3d { closed: self.closed, vertices: self.values.as_chunks::<3>().0.iter().map(|chunk| vec3(chunk)).collect::<Result<_, _>>()? },
             PolyfaceMesh => {
                 let vertex_count = self.indices[0] as usize;
                 let vertices = self.values.as_chunks::<3>().0.iter().take(vertex_count).map(|chunk| vec3(chunk)).collect::<Result<_, _>>()?;
                 let faces = self.indices[1..].as_chunks::<4>().0.to_vec();
-                dwg_engine::DwgGeometry::PolyfaceMesh { vertices, faces }
+                crate::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry::PolyfaceMesh { vertices, faces }
             }
         })
     }
@@ -5356,7 +5355,7 @@ impl DwgSnapshot {
 /// `0x13`-`0x14`. A document that is EXACTLY this and nothing else is this artifact's canonical
 /// EMPTY DWG, and it is not a hypothetical: `📚️examples/🎬️demo/🖼️assets/🖊️example.dwg` is committed
 /// as those 22 bytes (`AC1024` followed by sixteen zeros).
-pub(crate) const DWG_PREAMBLE_LEN: usize = 0x16;
+pub const DWG_PREAMBLE_LEN: usize = 0x16;
 
 
 
@@ -5416,7 +5415,7 @@ pub const WRITTEN_VERSION: &str = "AC1024";
 /// against a freshly defaulted snapshot wearing the same triple rather than by inspecting fields one
 /// at a time, so a field added to `DwgSnapshot` later cannot quietly fall out of the question.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
+pub fn is_preamble_only_document(snapshot: &DwgSnapshot) -> bool {
     let bare = DwgSnapshot { schema: snapshot.schema.clone(), version: snapshot.version.clone(), maintenance_version: snapshot.maintenance_version, codepage: snapshot.codepage, ..DwgSnapshot::default() };
     *snapshot == bare
 }

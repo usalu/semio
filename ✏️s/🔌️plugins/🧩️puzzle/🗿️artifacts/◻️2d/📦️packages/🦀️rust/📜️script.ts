@@ -11,7 +11,7 @@ class OwnedVerifyScript extends BundleScript {
   async run(segments:string[]):Promise<void>{
     if(segments.length!==1||segments[0]!=="snapshot-sqlite-source")throw new Error("Unknown Puzzle 2D verification "+segments.join(" "));
     const snapshot=resolve(this.root,"../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
-    await runRepositoryCommand(process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(snapshot,"🧪️tests/🪶️sqlite/🟦️.ts")],this.repoRoot,"puzzle2d-snapshot-sqlite-public-types");
+    await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot,"node_modules/typescript/bin/tsc"),"--noEmit","--strict","--target","ESNext","--module","ESNext","--moduleResolution","bundler","--allowImportingTsExtensions","--resolveJsonModule","--skipLibCheck",resolve(snapshot,"🟦️.ts"),resolve(snapshot,"🧪️tests/🪶️sqlite/🟦️.ts")],this.repoRoot,"puzzle2d-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
   }
 }
 await runArtifactRustPackageMain(import.meta.dir, "semio-s-artifact-puzzle-2d", {testFeatures:["component-app-assembly"],snapshotSqliteTestFeatures:["component-app-assembly"],commands:{"graph-generate":GraphGenerateScript,"preview-generated":GraphPreviewScript,"graph-wire-check":OwnerGraphWireCheckScript,verify:OwnedVerifyScript},snapshotSqliteTests:["../../🏅️standards/🔖️1/🪆️subsets/✳️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🟦️.ts"]});

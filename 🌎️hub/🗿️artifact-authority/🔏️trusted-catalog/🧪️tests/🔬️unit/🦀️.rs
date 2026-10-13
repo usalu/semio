@@ -5,7 +5,7 @@ use crate::artifact_authority::adapters::AUTHORITY_MAX_DIAGNOSTIC_BYTES;
 use crate::artifact_authority::native_openable_provider::NativeCodecProviderSetV1;
 use crate::artifact_authority::trusted_catalog::schema::{TrustedBundleBrowserActorV1, TrustedBundleCodecV1, TrustedBundleComponentV1, TrustedBundlePluginModuleV1, TrustedBundleProfileOpenTargetV1};
 use crate::artifact_authority::{AuthorityLimits, AuthorityOperationControl};
-use directory::os_store::{ArtifactPackFiles, ArtifactTextFiles, VcsError, document_codec};
+use directory::os_store::{serialization::ArtifactPackFiles, text_format::ArtifactTextFiles, VcsError, codec_registry::document_codec};
 use std::io::Write;
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -388,14 +388,14 @@ fn guest_codec_calls_run_off_the_async_worker_and_relay_their_fuel() {
         let relayed: Vec<u64> = control.progress.lock().unwrap().iter().filter(|progress| progress.stage == AuthorityProgressStage::GuestCodecExecuting).map(|progress| progress.completed_units).collect();
         assert_eq!(relayed, vec![10, 20, 30]);
         let observed = |observes: Arc<AtomicBool>| {
-            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_host::GuestCallCancellation| -> Result<u32, semio_framework_plugin_host::TurnFault> {
+            move |_handle: &tokio::runtime::Handle, progress: &mut dyn FnMut(u64), cancellation: &semio_framework_plugin_interpreter::GuestCallCancellation| -> Result<u32, semio_framework_plugin_interpreter::TurnFault> {
                 progress(1);
                 let started = std::time::Instant::now();
                 while !cancellation.is_cancelled() && started.elapsed() < std::time::Duration::from_secs(10) {
                     std::thread::sleep(std::time::Duration::from_millis(1));
                 }
                 observes.store(cancellation.is_cancelled(), Ordering::SeqCst);
-                Err(semio_framework_plugin_host::TurnFault::Cancelled)
+                Err(semio_framework_plugin_interpreter::TurnFault::Cancelled)
             }
         };
         let settled = |observes: Arc<AtomicBool>| async move {
@@ -484,26 +484,26 @@ fn trusted_descriptor_wire_materialization_matches_neutral_boundaries() {
         options.limits.max_depth = u16::try_from(limits["maxDepth"].as_u64().unwrap()).unwrap();
         options.limits.max_items = limits["maxItems"].as_u64().unwrap();
         options.limits.max_total_alloc = u64::MAX;
-        let decoded = os_store::pack_rt::decode_wire_value_with_options(&bytes, &options);
+        let decoded = os_pack::pack_rt::decode_wire_value_with_options(&bytes, &options);
         match row["grammar"]["outcome"].as_str().unwrap() {
             "accepted" => assert_eq!(serde_json::to_value(decoded.expect("admitted bounded value")).unwrap(), row["grammar"]["value"], "{}", row["id"]),
             "limit" => assert!(matches!(decoded, Err(os_store::PackError::LimitExceeded(_))), "{}: {decoded:?}", row["id"]),
             "malformed" => {
                 assert!(matches!(decoded, Err(os_store::PackError::Malformed { .. })), "{}: {decoded:?}", row["id"]);
-                assert!(matches!(os_store::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
+                assert!(matches!(os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Malformed { .. })), "default wire facade: {}", row["id"]);
             }
             "truncated" => {
                 let expected = row["grammar"]["offset"].as_u64().unwrap();
                 assert_eq!(expected, bytes.len() as u64);
                 assert!(matches!(decoded, Err(os_store::PackError::Truncated(offset)) if offset == expected), "{}: {decoded:?}", row["id"]);
-                assert!(matches!(os_store::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Truncated(offset)) if offset == expected), "default wire facade: {}", row["id"]);
+                assert!(matches!(os_pack::pack_rt::decode_wire_value(&bytes), Err(os_store::PackError::Truncated(offset)) if offset == expected), "default wire facade: {}", row["id"]);
             }
             outcome => panic!("unknown bounded wire outcome {outcome}"),
         }
     }
     let mut amplified = Vec::new();
-    os_store::pack_rt::write_varint_u64(&mut amplified, 1);
-    os_store::pack_rt::write_varint_u64(&mut amplified, 2 * 1024 * 1024);
+    os_pack::pack_rt::write_varint_u64(&mut amplified, 1);
+    os_pack::pack_rt::write_varint_u64(&mut amplified, 2 * 1024 * 1024);
     amplified.resize(amplified.len() + 2 * 1024 * 1024, b'x');
     amplified.extend_from_slice(&[1, 1, 0x11, 0x0c, 32]);
     for _ in 0..32 {
@@ -582,7 +582,7 @@ impl NativeCodecProviderSourceV1 for FixtureProviderSource<'_> {
             return Err(catalog("selected fixture provider failed"));
         }
         let mut bindings = self.bindings.iter().filter(|binding| binding.plugin_id == package.plugin_id && binding.package_id == package.package_id).cloned().collect::<Vec<_>>();
-        if package.plugin_id == "fixture.editor" {
+        if package.plugin_id == "fixture-editor" {
             match self.hostile {
                 Some("foreign") => bindings[0].package_id = "semio:unselected".into(),
                 Some("missing") => bindings.clear(),
@@ -627,7 +627,7 @@ impl FixtureDirectory {
     }
 
     fn binding(&self) -> NativeCodecBinding {
-        let binding=NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&self.schema, [0x11; 32]));assert_eq!(binding.factory_id(),None);binding
+        let binding=NativeCodecBinding::new("fixture-editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&self.schema, [0x11; 32]));assert_eq!(binding.factory_id(),None);binding
     }
 
     fn rewrite_descriptor(&mut self, index: usize, schema: Option<&str>, dependency: Option<(&str, &str)>) {
@@ -636,7 +636,6 @@ impl FixtureDirectory {
             record["pluginId"].as_str().expect("plugin"),
             record["packageId"].as_str().expect("package"),
             record["version"].as_str().expect("version"),
-            record["component"]["sha256"].as_str().expect("component hash"),
             schema,
             dependency,
         );
@@ -660,7 +659,7 @@ impl FixtureDirectory {
         let schema = format!("{}.base", self.schema);
         self.bundle["packages"][1]["nativeCodecs"] = serde_json::json!([{ "artifactKind": "s.fixture.document", "artifactSchema": schema, "packSchemaHash": "11".repeat(32) }]);
         self.rewrite_descriptor(1, Some(&schema), None);
-        vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32])), self.binding()]
+        vec![NativeCodecBinding::new("fixture-base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32])), self.binding()]
     }
 }
 
@@ -670,9 +669,16 @@ impl Drop for FixtureDirectory {
     }
 }
 
-/// 🧩️ (Re)writes one fixture record's plugin module for its current descriptor bytes.
+/// 🧩️ (Re)writes one fixture record's shipped receipt and plugin module for its current component and descriptor bytes.
 fn attach_fixture_plugin_module(root: &Path, record: &mut serde_json::Value, descriptor: &[u8]) {
-    record["pluginModule"] = write_fixture_plugin_module(root, record["pluginId"].as_str().unwrap(), record["packageId"].as_str().unwrap(), record["version"].as_str().unwrap(), record["component"]["sha256"].as_str().unwrap(), descriptor).expect("fixture plugin module");
+    let receipt = fixture_component_receipt(record["pluginId"].as_str().unwrap(), record["packageId"].as_str().unwrap(), record["component"]["sha256"].as_str().unwrap(), record["component"]["byteLength"].as_u64().unwrap(), descriptor);
+    record["receipt"] = serde_json::to_value(&receipt).expect("fixture receipt json");
+    record["pluginModule"] = write_fixture_plugin_module(root, record["pluginId"].as_str().unwrap(), record["packageId"].as_str().unwrap(), record["version"].as_str().unwrap(), &receipt, descriptor).expect("fixture plugin module");
+}
+
+/// 🧱️ The fixture component: the eight-byte WASI component preamble, the smallest bytes a shipped receipt can name.
+fn fixture_component_bytes(fixture: &serde_json::Value) -> Vec<u8> {
+    fixture["componentHex"].as_str().expect("component hex").as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect()
 }
 
 fn snapshot_json() -> serde_json::Value {
@@ -724,6 +730,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             dependencies: vec![stdio_identity.clone()],
             component: TrustedBundleComponentV1 { path: "packages/gis/component.wasm".into(), byte_length: 1, sha256: "11".repeat(32), blake3: "12".repeat(32) },
             descriptor: TrustedBundleFileV1 { path: "packages/gis/descriptor.semio".into(), byte_length: 1, sha256: "13".repeat(32) },
+            receipt: ComponentReceiptV1 { wasm_sha256: "11".repeat(32), semantic_descriptor_sha256: "13".repeat(32), ..fixture_component_receipt("gis", "semio:gis", &"11".repeat(32), 8, b"") },
             browser_actor: serde_json::from_value(synthetic_browser_actor(&"11".repeat(32), &"13".repeat(32), "packages/gis/browser/closed-actor.mjs")).unwrap(),
             plugin_module: TrustedBundlePluginModuleV1 { path: "packages/gis/plugin-module.json".into(), byte_length: 1, sha256: "14".repeat(32), blake3: "15".repeat(32) },
             native_codecs: vec![
@@ -741,6 +748,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
             dependencies: vec![],
             component: TrustedBundleComponentV1 { path: "packages/stdio/component.wasm".into(), byte_length: 1, sha256: "21".repeat(32), blake3: "22".repeat(32) },
             descriptor: TrustedBundleFileV1 { path: "packages/stdio/descriptor.semio".into(), byte_length: 1, sha256: "23".repeat(32) },
+            receipt: ComponentReceiptV1 { wasm_sha256: "21".repeat(32), semantic_descriptor_sha256: "23".repeat(32), ..fixture_component_receipt("stdio", "semio:stdio", &"21".repeat(32), 8, b"") },
             browser_actor: TrustedBundleBrowserActorV1::None {},
             plugin_module: TrustedBundlePluginModuleV1 { path: "packages/stdio/plugin-module.json".into(), byte_length: 1, sha256: "24".repeat(32), blake3: "25".repeat(32) },
             native_codecs: stdio_codecs,
@@ -749,7 +757,7 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
     ];
     let selected_closure = vec![gis_identity.clone(), stdio_identity];
     let mut bundle = TrustedBundleV1 {
-        schema_version: 3,
+        schema_version: TRUSTED_BUNDLE_SCHEMA_VERSION,
         profiles: vec![TrustedBundleProfileV1 {
             id: "local-stdio-gis-open-v1".into(),
             selected_closure,
@@ -764,23 +772,23 @@ fn local_stdio_gis_profile_bundle() -> TrustedBundleV1 {
     bundle
 }
 
-fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> Vec<u8> {
-    encode_descriptor_json(descriptor_json(plugin_id, package_id, version, component_sha256, schema, dependency))
+fn descriptor_bytes(plugin_id: &str, package_id: &str, version: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> Vec<u8> {
+    encode_descriptor_json(descriptor_json(plugin_id, package_id, version, schema, dependency))
 }
 
 /// 🧾️ Encodes one handcrafted descriptor JSON exactly as the publisher's descriptor bytes are encoded.
 fn encode_descriptor_json(json: serde_json::Value) -> Vec<u8> {
     let descriptor: PackageDescriptor = serde_json::from_value(json).expect("package descriptor");
-    os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))
+    os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))
 }
 
 /// 🏠️ The fixture editor as a HOST of the base package's kind: it declares no kind, hosts `s.fixture.document` from
-/// `fixture.base`, and adds a `strict` subset editor beside its whole-standard `*` editor, both opening the one document schema.
-fn hosting_descriptor_bytes(component_sha256: &str, schema: &str) -> Vec<u8> {
-    let mut json = descriptor_json("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some(schema), Some(("fixture.base", "1.0.0")));
+/// `fixture-base`, and adds a `strict` subset editor beside its whole-standard `*` editor, both opening the one document schema.
+fn hosting_descriptor_bytes(schema: &str) -> Vec<u8> {
+    let mut json = descriptor_json("fixture-editor", "semio:fixture-editor", "1.2.3", Some(schema), Some(("fixture-base", "1.0.0")));
     let manifest = &mut json["manifest"];
     manifest["artifactKinds"] = serde_json::json!([]);
-    manifest["hostedArtifactKinds"] = serde_json::json!([{ "id": "s.fixture.document", "schema": schema, "owner": "fixture.base" }]);
+    manifest["hostedArtifactKinds"] = serde_json::json!([{ "id": "s.fixture.document", "schema": schema, "owner": "fixture-base" }]);
     let mut strict = manifest["apps"][0].clone();
     strict["id"] = "s.fixture.document@1/strict#editor".into();
     strict["controllerId"] = "fixture-editor-strict".into();
@@ -791,7 +799,7 @@ fn hosting_descriptor_bytes(component_sha256: &str, schema: &str) -> Vec<u8> {
 
 /// 🧾️ One handcrafted fixture descriptor as JSON: a plugin declaring `s.fixture.document` with `schema` (editor and viewer of
 /// `@1/*`) or nothing, depending on `dependency`.
-fn descriptor_json(plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> serde_json::Value {
+fn descriptor_json(plugin_id: &str, package_id: &str, version: &str, schema: Option<&str>, dependency: Option<(&str, &str)>) -> serde_json::Value {
     let artifact_kinds = schema.map_or_else(Vec::new, |schema| {
         vec![serde_json::json!({
             "id": "s.fixture.document",
@@ -892,12 +900,7 @@ fn descriptor_json(plugin_id: &str, package_id: &str, version: &str, component_s
             "dependencies": dependencies
         },
         "execution": "isolated",
-        "executionProtocol": { "appChannelVersion": directory::os_spr::CHANNEL_VERSION },
-        "hashes": {
-            "wasmSha256": component_sha256,
-            "coreWasmSha256": "22".repeat(32),
-            "descriptorSha256": "33".repeat(32)
-        }
+        "executionProtocol": { "appChannelVersion": directory::os_spr::CHANNEL_VERSION }
     })
 }
 
@@ -918,13 +921,13 @@ fn prepared_fixture() -> FixtureDirectory {
     for entry in bundle["profiles"][0]["openTargets"].as_array_mut().expect("profile open targets") {
         entry["target"]["artifactSchema"] = schema.clone().into();
     }
-    let component = [b'a', b'b', b'c'];
+    let component = fixture_component_bytes(&fixture);
     for index in 0..2 {
         let component_path = root.join(bundle["packages"][index]["component"]["path"].as_str().expect("component path"));
-        std::fs::write(component_path, component).expect("write component");
+        std::fs::write(component_path, &component).expect("write component");
     }
-    let root_descriptor = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", fixture["componentSha256"].as_str().expect("sha256"), Some(&schema), Some(("fixture.base", "1.0.0")));
-    let base_descriptor = descriptor_bytes("fixture.base", "semio:fixture-base", "1.0.0", fixture["componentSha256"].as_str().expect("sha256"), None, None);
+    let root_descriptor = descriptor_bytes("fixture-editor", "semio:fixture-editor", "1.2.3", Some(&schema), Some(("fixture-base", "1.0.0")));
+    let base_descriptor = descriptor_bytes("fixture-base", "semio:fixture-base", "1.0.0", None, None);
     for (index, bytes) in [(0, root_descriptor), (1, base_descriptor)] {
         bundle["packages"][index]["descriptor"]["byteLength"] = bytes.len().into();
         bundle["packages"][index]["descriptor"]["sha256"] = hex_lower(&Sha256::digest(&bytes)).into();
@@ -977,20 +980,16 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().expect("GIS assembly"));
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
     let mut descriptor = decode_package_descriptor(&emitted).expect("actual native GIS descriptor");
-    semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
-    semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).expect("actual GIS compiled Stdio dependency");
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).expect("actual GIS compiled Stdio catalog");
     let component = b"synthetic-gis-component-for-catalog-binding-test";
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let mut component_blake3 = Hasher::new();
     component_blake3.update(component);
-    descriptor.hashes.wasm_sha256 = component_sha256.clone();
-    descriptor.hashes.core_wasm_sha256 = component_sha256.clone();
-    descriptor.hashes.descriptor_sha256.clear();
     if foreign_service {
         descriptor.contributions.inference_services.iter_mut().find(|service| service.inference_schema == "s.gis.gismap.inference").expect("actual GIS inference declaration").contributor = "foreign".into();
     }
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
-    let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .expect("actual GIS codec receipts")
         .into_iter()
@@ -1025,7 +1024,7 @@ async fn prepared_gis_binding_fixture(viewer: bool, foreign_service: bool) -> Fi
     std::fs::write(root.join("closed-actor.mjs"), b"abc").expect("synthetic actor, never executed");
     let (stdio_identity, stdio_record) = headless_stdio_fixture_package(&root).expect("headless Stdio dependency package");
     let mut bundle = serde_json::json!({
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "profiles": [{ "id": "frozen-gis-test", "selectedClosure": [package.clone(), stdio_identity.clone()], "selectedClosureSha256": "01".repeat(32),
             "openTargets": [{ "package": package.clone(), "target": target.clone() }], "generationId": "02".repeat(32) }],
         "packages": [{ "pluginId": package["pluginId"], "packageId": package["packageId"], "version": package["version"], "role": "plugin", "dependencies": [stdio_identity],
@@ -1072,12 +1071,12 @@ fn fixture_edit<'a>(_envelope: &'a directory::os_spr::MutationEnvelope) -> std::
     Box::pin(async { Ok(String::new()) })
 }
 
-fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> directory::os_store::ArtifactCodecApplyFuture<'a> {
+fn fixture_apply<'a>(pack: &'a [u8], spr: &'a [u8], _operations: &'a [u8]) -> directory::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move { Ok((pack.to_vec(), spr.to_vec(), String::new())) })
 }
 
 fn fixture_codec(schema: &str, pack_schema_hash: [u8; 32]) -> ArtifactCodec {
-    ArtifactCodec { schema: schema.to_string(), extension: "fixture", native_identity: directory::os_store::ArtifactNativeSnapshotIdentity::typed::<Vec<u8>>(), snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
+    ArtifactCodec { schema: schema.to_string(), extension: "fixture", native_identity: directory::os_store::serialization::ArtifactNativeSnapshotIdentity::typed::<Vec<u8>>(), snapshot_sqlite: None, pack_schema_hash, compile_dsl: fixture_compile, print_mirror: fixture_print, edit_text_from_envelope: fixture_edit, apply_ops_binary: fixture_apply, replay_envelopes: fixture_apply }
 }
 
 async fn expect_load_error(fixture: &FixtureDirectory, bindings: &[NativeCodecBinding], control: &TestControl) -> AuthorityError {
@@ -1096,7 +1095,7 @@ async fn selected_native_providers_are_descriptor_verified_dependency_first_and_
     let mut single = prepared_fixture();
     single.bundle["packages"][0]["dependencies"] = serde_json::json!([]);
     single.bundle["profiles"][0]["selectedClosure"] = serde_json::json!([
-        { "pluginId": "fixture.editor", "packageId": "semio:fixture-editor", "version": "1.2.3" }
+        { "pluginId": "fixture-editor", "packageId": "semio:fixture-editor", "version": "1.2.3" }
     ]);
     single.rewrite_descriptor(0, Some(&single.schema.clone()), None);
     let unselected = NativeCodecBinding::new("unselected", "semio:unselected", "fixture.unselected", None, fixture_codec(&format!("{}.unselected", single.schema), [0x11; 32]));
@@ -1181,7 +1180,7 @@ async fn selected_native_provider_failure_substitution_and_conflict_publish_no_p
             source.failure = Some("semio:fixture-editor");
         }
         if hostile == "registry-conflict" {
-            os_store::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).expect("prior immutable owner");
+            os_store::codec_registry::register_document_codec(fixture_codec(&fixture.schema, [0x22; 32])).expect("prior immutable owner");
         }
         if hostile == "missing" {
             let control = TestControl::new();
@@ -1248,7 +1247,7 @@ async fn neutral_fixture_proves_dependency_order_hash_oracles_and_exact_limit_ed
     let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle shape");
     assert_eq!(validate_bundle(&bundle, "fixture").expect("valid closure").package_indices, vec![1, 0]);
-    let bytes = fixture["componentHex"].as_str().expect("component hex").as_bytes().chunks_exact(2).map(|pair| u8::from_str_radix(std::str::from_utf8(pair).expect("hex pair"), 16).expect("hex byte")).collect::<Vec<_>>();
+    let bytes = fixture_component_bytes(&fixture);
     let control = TestControl::new();
     let (sha, internal_blake3) = dual_hash(&bytes, &control.context()).await.expect("dual hash");
     assert_eq!(hex_lower(&sha), fixture["componentSha256"]);
@@ -1275,13 +1274,15 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
     let binding = fixture.binding();
     let control = TestControl::new();
     let catalog = load_fixture(&fixture, &[binding], &control.context()).await.expect("verified catalog");
-    assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["fixture.base", "fixture.editor"]);
+    assert_eq!(catalog.packages().iter().map(VerifiedTrustedPackage::plugin_id).collect::<Vec<_>>(), vec!["fixture-base", "fixture-editor"]);
     let editor = &catalog.packages()[1];
     assert_eq!(editor.package_ref().package.0, "semio:fixture-editor");
     assert_eq!(hex_lower(&editor.package_ref().hash.0), snapshot_json()["componentBlake3"]);
     assert_ne!(editor.plugin_id(), editor.package_ref().package.0);
-    assert_eq!(editor.component().byte_length(), 3);
-    assert_eq!(&*editor.component().read(&control.context()).await.expect("retained component rereads"), b"abc");
+    assert_eq!(editor.component().byte_length(), 8);
+    assert_eq!(&*editor.component().read(&control.context()).await.expect("retained component rereads"), fixture_component_bytes(&snapshot_json()).as_slice());
+    assert_eq!(editor.receipt().wasm_sha256, hex_lower(editor.component_sha256()));
+    assert_eq!(editor.receipt().semantic_descriptor_sha256, hex_lower(editor.descriptor_sha256()));
     assert_eq!(hex_lower(editor.component_sha256()), snapshot_json()["componentSha256"]);
     assert_eq!(editor.descriptor().manifest.plugin_id, editor.plugin_id());
     assert_eq!(editor.descriptor().manifest.version, editor.version());
@@ -1295,7 +1296,7 @@ async fn loader_retains_exact_bytes_and_independent_identities_before_atomic_cod
         artifact_kind: "s.fixture.document".into(),
         artifact_schema: fixture.schema.clone(),
         owner: directory::os_directory::DocumentOwner {
-            plugin_id: "fixture.editor".into(),
+            plugin_id: "fixture-editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
             package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
@@ -1336,7 +1337,7 @@ async fn selected_execution_target_assets_are_generation_and_digest_bound() {
         artifact_kind: "s.fixture.document".into(),
         artifact_schema: fixture.schema.clone(),
         owner: directory::os_directory::DocumentOwner {
-            plugin_id: "fixture.editor".into(),
+            plugin_id: "fixture-editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
             package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
@@ -1391,7 +1392,7 @@ async fn verified_trusted_catalog_document_open_generation_and_resolution_are_ex
         artifact_kind: "s.fixture.document".into(),
         artifact_schema: fixture.schema.clone(),
         owner: directory::os_directory::DocumentOwner {
-            plugin_id: "fixture.editor".into(),
+            plugin_id: "fixture-editor".into(),
             package_id: "semio:fixture-editor".into(),
             version: "1.2.3".into(),
             package_hash: snapshot_json()["componentSha256"].as_str().expect("component sha256").into(),
@@ -1484,7 +1485,7 @@ async fn trusted_browser_actor_loader_verifies_retains_and_cancels_before_public
         let calls = provider.calls.lock().unwrap();
         assert_eq!(calls.iter().any(|package| package == "semio:fixture-editor"), accepted, "{} provider preview", law["id"]);
         if let Ok(catalog) = result {
-            let package = catalog.packages.iter().find(|package| package.plugin_id == "fixture.editor").unwrap();
+            let package = catalog.packages.iter().find(|package| package.plugin_id == "fixture-editor").unwrap();
             let asset = package.browser_actor_asset.as_ref().unwrap();
             let bytes = asset.read(&context).await.expect("verified actor rereads");
             assert_eq!(bytes.as_ref(), b"abc");
@@ -1628,11 +1629,10 @@ fn trusted_catalog_relative_paths_match_the_neutral_no_link_corpus() {
 fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_fields() {
     let fixture = snapshot_json();
     let bundle: TrustedBundleV1 = serde_json::from_value(fixture["bundle"].clone()).expect("bundle");
-    let component_sha256 = fixture["componentSha256"].as_str().expect("sha256");
-    let canonical = descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")));
+    let canonical = descriptor_bytes("fixture-editor", "semio:fixture-editor", "1.2.3", Some("fixture.document@1"), Some(("fixture-base", "1.0.0")));
     decode_package_descriptor(&canonical).unwrap_or_else(|error| panic!("canonical descriptor must decode: {error}"));
 
-    let conflicting = decode_package_descriptor(&descriptor_bytes("fixture.editor", "semio:other-package", "1.2.3", component_sha256, Some("fixture.document@1"), Some(("fixture.base", "1.0.0")))).expect("structurally valid conflicting descriptor");
+    let conflicting = decode_package_descriptor(&descriptor_bytes("fixture-editor", "semio:other-package", "1.2.3", Some("fixture.document@1"), Some(("fixture-base", "1.0.0")))).expect("structurally valid conflicting descriptor");
     let refusal = validate_descriptor(&bundle.packages[0], &conflicting, &bundle.packages).expect_err("package mismatch").to_string();
     assert!(refusal.contains("identity") && refusal.contains("semio:fixture-editor") && refusal.ends_with("packageId"), "{refusal}");
 
@@ -1643,16 +1643,16 @@ fn descriptor_projection_rejects_package_conflicts_unknown_fields_and_duplicate_
     let refusal = validate_descriptor(&stale_record, &stale, &bundle.packages).expect_err("a catalog of another app channel").to_string();
     assert!(refusal.contains("semio:fixture-editor") && refusal.contains(&format!("app channel {}", directory::os_spr::CHANNEL_VERSION - 1)) && refusal.contains(&format!("speaks app channel {}", directory::os_spr::CHANNEL_VERSION)), "{refusal}");
 
-    let mut unknown = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+    let mut unknown = os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
     let DslValue::Object(fields) = &mut unknown else { panic!("descriptor object") };
     fields.push(("unexpected".to_owned(), DslValue::Null));
-    let error = decode_package_descriptor(&os_store::pack_rt::encode_wire_value(&unknown)).expect_err("unknown descriptor field");
+    let error = decode_package_descriptor(&os_pack::pack_rt::encode_wire_value(&unknown)).expect_err("unknown descriptor field");
     assert!(error.to_string().contains("unknown field") || error.to_string().contains("canonical schema projection"));
 
-    let mut duplicate = os_store::pack_rt::decode_wire_value(&canonical).expect("canonical value");
+    let mut duplicate = os_pack::pack_rt::decode_wire_value(&canonical).expect("canonical value");
     let DslValue::Object(fields) = &mut duplicate else { panic!("descriptor object") };
     fields.push(("packageId".to_owned(), DslValue::String("semio:fixture-editor".to_owned())));
-    assert!(decode_package_descriptor(&os_store::pack_rt::encode_wire_value(&duplicate)).expect_err("duplicate descriptor field").to_string().contains("duplicate object field"));
+    assert!(decode_package_descriptor(&os_pack::pack_rt::encode_wire_value(&duplicate)).expect_err("duplicate descriptor field").to_string().contains("duplicate object field"));
     assert!(valid_package_id("semio:fixture-editor"));
     assert!(!valid_package_id("fixture.editor.native"));
     assert!(!valid_package_id("semio:Fixture"));
@@ -1692,7 +1692,7 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(document_codec(&missing.schema).await.expect("codec registry").is_none());
 
     let wrong_package = prepared_fixture();
-    let lossy = NativeCodecBinding::new("fixture.editor", "semio:fixture-wrong", "s.fixture.document", None, fixture_codec(&wrong_package.schema, [0x11; 32]));
+    let lossy = NativeCodecBinding::new("fixture-editor", "semio:fixture-wrong", "s.fixture.document", None, fixture_codec(&wrong_package.schema, [0x11; 32]));
     let error = expect_load_error(&wrong_package, &[lossy], &control).await;
     assert!(error.to_string().contains("no explicit native codec"));
     assert!(document_codec(&wrong_package.schema).await.expect("codec registry").is_none());
@@ -1712,7 +1712,7 @@ async fn all_trust_failures_precede_activation_and_have_bounded_diagnostics() {
     assert!(document_codec(&detached_open_target.schema).await.expect("codec registry").is_none());
 
     let mismatch = prepared_fixture();
-    let binding = NativeCodecBinding::new("fixture.editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&mismatch.schema, [0x12; 32]));
+    let binding = NativeCodecBinding::new("fixture-editor", "semio:fixture-editor", "s.fixture.document", None, fixture_codec(&mismatch.schema, [0x12; 32]));
     let error = expect_load_error(&mismatch, &[binding], &control).await;
     assert!(error.to_string().contains("mismatched"));
     assert!(document_codec(&mismatch.schema).await.expect("codec registry").is_none());
@@ -1776,19 +1776,19 @@ fn owned_test_guest(hash: OwnedTestHash) -> Vec<u8> {
         body.push(0x0b);
         body
     };
-    let exports = semio_framework_plugin_host::interpreter::OwnedSemioExport::ALL;
+    let exports = semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::ALL;
     let (types, bodies): (Vec<u8>, Vec<Vec<u8>>) = exports
         .iter()
         .map(|export| match export {
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_host::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::PackSchemaHash => match hash {
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Allocate => (0u8, vec![0x00, 0x41, 0x00, 0x0b]),
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Deallocate => (1, vec![0x00, 0x0b]),
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Checkpoint | semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Describe => (2, vec![0x00, 0x42, 0x00, 0x0b]),
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::ChannelVersion => (2, returning(3072, &channel_output)),
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::PackSchemaHash => match hash {
                 OwnedTestHash::Answers(_) => (3, returning(1024, &hash_output)),
                 OwnedTestHash::Spins => (3, vec![0x00, 0x03, 0x40, 0x0c, 0x00, 0x0b, 0x42, 0x00, 0x0b]),
             },
-            semio_framework_plugin_host::interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
+            semio_framework_plugin_interpreter::interpreter::OwnedSemioExport::Genesis => (3, returning(2048, &genesis_output)),
             _ => (3, vec![0x00, 0x42, 0x00, 0x0b]),
         })
         .unzip();
@@ -1846,7 +1846,7 @@ fn install_owned_guest(fixture: &mut FixtureDirectory, hash: OwnedTestHash) {
     component["blake3"] = hex_lower(blake3.finalize().as_bytes()).into();
     fixture.bundle["packages"][0]["browserActor"]["sourceComponentSha256"] = sha256.into();
     let schema = fixture.schema.clone();
-    fixture.rewrite_descriptor(0, Some(&schema), Some(("fixture.base", "1.0.0")));
+    fixture.rewrite_descriptor(0, Some(&schema), Some(("fixture-base", "1.0.0")));
 }
 
 /// 🔐️ LAW (coordinator, session 13): no codec call is ever served from a row its component has not answered as the trust
@@ -2012,7 +2012,7 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
     let schema = "fixture.document@1";
     for case in fixture["cases"].as_array().unwrap() {
         let name = case["name"].as_str().unwrap();
-        let mut descriptor = decode_package_descriptor(&descriptor_bytes("fixture.editor", "semio:fixture-editor", "1.0.0", &"11".repeat(32), Some(schema), None)).expect("fixture descriptor");
+        let mut descriptor = decode_package_descriptor(&descriptor_bytes("fixture-editor", "semio:fixture-editor", "1.0.0", Some(schema), None)).expect("fixture descriptor");
         descriptor.execution = serde_json::from_value(case["execution"].clone()).expect("execution mode");
         descriptor.manifest.artifact_kinds[0].id = case["kindId"].as_str().unwrap().to_string();
         if case["declaredOn"] == "editor" {
@@ -2034,7 +2034,7 @@ fn descriptor_open_targets_follow_the_one_pairing_rule_and_validate_as_published
             let kind = descriptor.manifest.artifact_kinds[0].clone();
             descriptor.manifest.apps.iter_mut().find(|app| app.role == semio_framework::AppRole::Editor).expect("editor app").artifact_kinds.push(kind);
         }
-        let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+        let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
         let answer: serde_json::Value = serde_json::from_slice(&descriptor_open_targets_answer(&bytes).expect("open-target answer")).expect("answer json");
         assert_eq!(answer["schema"], fixture["answerSchema"], "{name}");
         let targets = answer["targets"].as_array().unwrap();
@@ -2297,15 +2297,13 @@ mod long {
                     "gis-trailing-byte" | "gis-duplicate-field" => {}
                     _ => panic!("unknown atomic fixture change {change}"),
                 }
-                descriptor.hashes.descriptor_sha256.clear();
-                descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
                 let mut value = semio_framework_value::ToValue::to_value(&descriptor);
                 if change == "gis-duplicate-field" {
                     let DslValue::Object(fields) = &mut value else { panic!("full descriptor object") };
                     let duplicate = fields.iter().find(|(key, _)| key == "manifest").unwrap().clone();
                     fields.push(duplicate);
                 }
-                let mut bytes = os_store::pack_rt::encode_wire_value(&value);
+                let mut bytes = os_pack::pack_rt::encode_wire_value(&value);
                 if change == "gis-trailing-byte" {
                     bytes.push(0);
                 }
@@ -2354,8 +2352,8 @@ async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_a
     let index = catalog.plugin_module_index();
     plugin_module::validate_plugin_module_index(&index).expect("canonical index");
     assert_eq!(index.generation_id, catalog.generation_id());
-    assert_eq!(index.modules.iter().map(|entry| entry.plugin_id.as_str()).collect::<Vec<_>>(), vec!["fixture.base", "fixture.editor"]);
-    assert_eq!(index.modules[1].dependencies, vec!["fixture.base".to_owned()]);
+    assert_eq!(index.modules.iter().map(|entry| entry.plugin_id.as_str()).collect::<Vec<_>>(), vec!["fixture-base", "fixture-editor"]);
+    assert_eq!(index.modules[1].dependencies, vec!["fixture-base".to_owned()]);
     assert_eq!(index.modules[1].dialect_artifact_kinds, vec!["s.fixture.document".to_owned()]);
     assert!(index.modules[0].dialect_artifact_kinds.is_empty(), "a package without apps opens no dialect");
     assert!(index.modules.iter().all(|entry| entry.extends_plugin_id.is_none()), "plugin packages extend nothing");
@@ -2372,7 +2370,7 @@ async fn a_loaded_catalog_indexes_and_serves_every_verified_plugin_module_file_a
     assert!(catalog.plugin_module(&"00".repeat(32)).is_none());
     let editor = catalog.plugin_module(&index.modules[1].bundle_sha256).expect("editor module");
     let bridge = editor.bundle().files.iter().find(|file| file.path.ends_with("🌉️bridge.js")).expect("editor entry");
-    assert!(editor.file("fixture.editor/unlisted.js").is_none());
+    assert!(editor.file("fixture-editor/unlisted.js").is_none());
     std::fs::write(fixture.root.join(plugin_module::plugin_module_blob_path(&bridge.sha256)), b"tampered").expect("tamper entry");
     assert!(editor.file(&bridge.path).expect("editor entry").read(&control.context()).await.is_err(), "a module file tampered after verification is never served");
     assert!(drain_stream(editor.file(&bridge.path).expect("editor entry")).await.1.is_some(), "a module file tampered after verification never completes its stream");
@@ -2527,7 +2525,7 @@ fn the_most_general_dialect_rule_answers_the_shared_fixture() {
 async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_general_editor() {
     for linked in [true, false] {
     let mut fixture = prepared_fixture();
-    let (schema, component_sha256) = (fixture.schema.clone(), snapshot_json()["componentSha256"].as_str().expect("component sha256").to_owned());
+    let schema = fixture.schema.clone();
     let codecs = fixture.bundle["packages"][0]["nativeCodecs"].take();
     fixture.bundle["packages"][0]["nativeCodecs"] = serde_json::json!([]);
     fixture.bundle["packages"][1]["nativeCodecs"] = codecs;
@@ -2540,20 +2538,20 @@ async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_ge
     selected["target"] = strict;
     fixture.bundle["profiles"][0]["openTargets"].as_array_mut().expect("profile targets").insert(0, selected);
     fixture.rewrite_descriptor(1, Some(&schema), None);
-    fixture.replace_descriptor(0, hosting_descriptor_bytes(&component_sha256, &schema));
-    let host = |plugin_id: &str| plugin_id == "fixture.editor";
+    fixture.replace_descriptor(0, hosting_descriptor_bytes(&schema));
+    let host = |plugin_id: &str| plugin_id == "fixture-editor";
     let descriptor = DocumentDescriptor {
         space_id: "space".into(),
         document_id: "document".into(),
         artifact_kind: "s.fixture.document".into(),
         artifact_schema: schema.clone(),
-        owner: directory::os_directory::DocumentOwner { plugin_id: "fixture.editor".into(), package_id: "semio:fixture-editor".into(), version: "1.2.3".into(), package_hash: component_sha256.clone() },
+        owner: directory::os_directory::DocumentOwner { plugin_id: "fixture-editor".into(), package_id: "semio:fixture-editor".into(), version: "1.2.3".into(), package_hash: component_sha256.clone() },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
         bootstrap_frontier: directory::os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
         bootstrap_snapshot_hash: "33".repeat(32),
     };
-        let bindings = if linked { vec![NativeCodecBinding::new("fixture.base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32]))] } else { Vec::new() };
+        let bindings = if linked { vec![NativeCodecBinding::new("fixture-base", "semio:fixture-base", "s.fixture.document", None, fixture_codec(&schema, [0x11; 32]))] } else { Vec::new() };
         let catalog = load_fixture(&fixture, &bindings, &TestControl::new().context()).await.expect("hosting catalog loads");
         let selection = catalog.artifact_creation_selection("s.fixture.document").expect("the hosted multi-subset kind is creatable");
         assert!(host(&selection.package.plugin_id), "the host creates: {:?}", selection.package);
@@ -2573,10 +2571,10 @@ async fn a_hosted_multi_subset_kind_is_created_and_executed_by_its_hosts_most_ge
         assert_eq!(codec.codec.is_some(), linked, "the owner's linked native codec executes the hosted identity");
         let declarations=directory::io::artifact_catalog_bindings().unwrap().into_iter().filter(|row|row.artifact.schema==schema).collect::<Vec<_>>();
         assert_eq!(declarations.len(),catalog.open_targets.len()+1);
-        for declaration in &declarations{assert_eq!(declaration.owner.plugin_id,"fixture.base");assert_eq!(declaration.owner.package_id,"semio:fixture-base");assert_eq!(matches!(declaration.capability,ArtifactCatalogCapability::Linked{..}),linked);if let ArtifactCatalogCapability::Linked{factory,..}=&declaration.capability{assert!(factory.is_none());}if let Some(target)=&declaration.target{assert!(host(&declaration.contributor.plugin_id));let original=catalog.open_targets.iter().find(|selection|selection.package==declaration.contributor&&selection.artifact==declaration.artifact&&selection.surface==target.surface&&selection.parent_dialect==target.parent_dialect).expect("exact immutable selected catalog target");assert_eq!(original.grant,target.grant);assert_eq!(original.browser_actor,target.browser_actor);}}
-        assert_eq!(codec.owner_declaration.owner.plugin_id,"fixture.base");assert_eq!(codec.owner_declaration.contributor.plugin_id,"fixture.base");assert_eq!(serde_json::to_value(codec.owner_declaration.owner.plugin_id.as_str()).unwrap(),serde_json::json!("fixture.base"));
+        for declaration in &declarations{assert_eq!(declaration.owner.plugin_id,"fixture-base");assert_eq!(declaration.owner.package_id,"semio:fixture-base");assert_eq!(matches!(declaration.capability,ArtifactCatalogCapability::Linked{..}),linked);if let ArtifactCatalogCapability::Linked{factory,..}=&declaration.capability{assert!(factory.is_none());}if let Some(target)=&declaration.target{assert!(host(&declaration.contributor.plugin_id));let original=catalog.open_targets.iter().find(|selection|selection.package==declaration.contributor&&selection.artifact==declaration.artifact&&selection.surface==target.surface&&selection.parent_dialect==target.parent_dialect).expect("exact immutable selected catalog target");assert_eq!(original.grant,target.grant);assert_eq!(original.browser_actor,target.browser_actor);}}
+        assert_eq!(codec.owner_declaration.owner.plugin_id,"fixture-base");assert_eq!(codec.owner_declaration.contributor.plugin_id,"fixture-base");assert_eq!(serde_json::to_value(codec.owner_declaration.owner.plugin_id.as_str()).unwrap(),serde_json::json!("fixture-base"));
         println!("[DEBUG] Original verified hosted catalog linked={linked} declarations={} exactOwnerPackage=true noGuessedFactory=true exactSelectedSurfaces=true independentSerde=true",declarations.len());
-        let owner = TrustedArtifactIdentity { plugin_id: "fixture.base".into(), package_id: "semio:fixture-base".into(), version: "1.0.0".into(), ..identity.clone() };
+        let owner = TrustedArtifactIdentity { plugin_id: "fixture-base".into(), package_id: "semio:fixture-base".into(), version: "1.0.0".into(), ..identity.clone() };
         assert_eq!(catalog.resolve(&owner).await.expect("the owner's row stays its own").guest.component.package.package.0, "semio:fixture-base");
         assert_eq!(catalog.resolve_document_open(&descriptor, None, true).expect("default editor").surface.surface_id, "s.fixture.document@1/*#editor");
         assert_eq!(catalog.resolve_document_open(&descriptor, Some("s.fixture.document@1/strict#editor"), true).expect("requested subset editor").surface.surface_id, "s.fixture.document@1/strict#editor");

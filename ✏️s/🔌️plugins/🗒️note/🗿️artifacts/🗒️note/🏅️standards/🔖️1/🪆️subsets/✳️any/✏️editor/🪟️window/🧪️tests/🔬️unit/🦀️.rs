@@ -29,7 +29,7 @@ fn retire_returned_note_transient(transient: NoteCompositeWindowTransient) {
 #[test]
 fn oversized_string_capacity_rejects_and_returns_the_exact_note_owner() {
     let owners = <NoteCompositeWindowTransientOwner as semio_framework_plugin::WindowTransientOwner>::build_owners();
-    let mut engagement_input = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+    let mut engagement_input = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
     engagement_input.push('n');
     let pointer = engagement_input.as_ptr();
     let capacity = engagement_input.capacity();

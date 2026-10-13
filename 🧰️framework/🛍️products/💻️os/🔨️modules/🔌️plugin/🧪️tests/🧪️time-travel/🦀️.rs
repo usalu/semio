@@ -8,7 +8,7 @@
 use super::*;
 use crate::test_app_mutation_fixture::{SetCount, SetLabel, SetSlotChildren, TestConfig, TestConfigMutation, TestMutation, TestSnapshot};
 use semio_framework_time_travel::TimeTravelStage;
-use store::{Backbone, BackboneMessage, MemoryBackbone};
+use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
 
 const TIME_TRAVEL_FIXTURE_JSON: &str = include_str!("../../🧫️fixtures/🧫️time-travel/🔣️.json");
 
@@ -92,19 +92,19 @@ impl ArtifactApp for ToyHistoryApp {
         built_text_to_component_tree(semio_framework_ui_locale::Label::data(format!("count={} label={}", doc.snapshot.count, doc.snapshot.label)))
     }
 
-    fn build_document_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+    fn build_document_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(bounded_document_store_owners::<Self::Snapshot, Self::Mutation>(grant))
     }
 
-    fn build_config_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Config, Self::ConfigMutation>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
+    fn build_config_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Config, Self::ConfigMutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Config, Self::ConfigMutation>>> {
         Some(bounded_config_store_owners::<Self::Config, Self::ConfigMutation>(grant))
     }
 
-    fn build_draft_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Draft, Self::DraftMutation>,RetainedCloneProgress),store::DocumentStoreOwnersAdmissionError<Self::Draft, Self::DraftMutation>>> {
+    fn build_draft_store_owners(grant:RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Draft, Self::DraftMutation>,RetainedCloneProgress),store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Draft, Self::DraftMutation>>> {
         Some(bounded_document_store_owners::<Self::Draft, Self::DraftMutation>(grant))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
@@ -434,7 +434,7 @@ async fn an_open_session_freezes_document_verbs_and_refuses_stale_or_invalid_dra
     let refusals = &fixture["refusals"];
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     run_step(&mut app, &fixture, &serde_json::json!({ "begin": 0 }), mounted_policy, &mut identity).await;
-    let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let emitted = app.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation> { artifact_mutations: vec![SetCount { value: 3 }.into()], ..Default::default() }, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(emitted.err().map(|fault| fault.code), Some(FaultCode::new(text(&refusals["frozen"]))), "an artifact emit is frozen");
     for action in refusals["frozenVerbs"].as_array().expect("frozen verbs") {
         let refused = app.handle_action(text(action), None, &meta(&fixture), &mut identity).await;
@@ -470,7 +470,7 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     let fixture = fixture();
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let (backbone, mut probe) = MemoryBackbone::pair("time-travel-remote", "time-travel-remote").await;
-    app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("attach probe backbone");
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach probe backbone");
     for step in [serde_json::json!({ "begin": 1 }), serde_json::json!({ "input": { "path": "/value", "value": "b" } }), serde_json::json!({ "accept": null })] {
         run_step(&mut app, &fixture, &step, mounted_policy, &mut identity).await;
     }
@@ -493,14 +493,14 @@ async fn cancel_keeps_drafts_and_a_remote_edit_replays_again() {
     assert_eq!(app.time_travel.status().and_then(|status| status.review), Some(semio_framework::kernel::HistoryTimeTravelReview::Ready));
     let mut remote = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("remote".into()), mounted_policy, &mut identity).await;
     let (remote_backbone, mut remote_probe) = MemoryBackbone::pair("time-travel-remote-peer", "time-travel-remote-peer").await;
-    remote.attach_backbone(store::Backbones::Memory(remote_backbone)).await.expect("attach remote probe");
+    remote.attach_backbone(store::os_store::backbone::Backbones::Memory(remote_backbone)).await.expect("attach remote probe");
     assert_eq!(remote.store.local_actor_id(), &protocol::ActorId("remote".into()));
     remote.store.dispatch(ArtifactCommand::Apply { mutations: vec![SetCount { value: 9 }.into()], transaction: None }, &mut identity).await.expect("remote edit");
     for message in remote_probe.receive().await.expect("remote outbox").into_iter().filter(|message| matches!(message, BackboneMessage::Mutations { .. })) {
         probe.send(message).await.expect("forward remote edit");
     }
     let generation = app.store.generation();
-    app.tick_backbone(&mut crate::app::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
+    app.tick_backbone(&mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("ingest remote edit");
     assert!(app.store.generation() > generation, "the remote edit is ingested while the session reviews");
     pump_until(&mut app, "the moved base replays again", |app| app.time_travel.session().stage == TimeTravelStage::Reviewing && app.time_travel.session().report.is_some() && app.time_travel.session().base.content_revision == app.store.content_revision(), mounted_policy, &mut identity)
         .await;
@@ -524,7 +524,7 @@ async fn a_committed_tool_transaction_is_one_row_with_its_reference_and_mutation
     let edits = app.store.envelope().vcs.edits.len();
     let transaction = protocol::TransactionRef { id: "tx-0123456789abcdef".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
     let emit = Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), vec![SetCount { value: 2 }.into(), SetLabel { value: "t".into() }.into()]);
-    app.dispatch_emit("select", emit, &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
+    app.dispatch_emit("select", emit, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
     assert_eq!(app.store.envelope().vcs.edits.len(), edits + 1, "one transaction is one edit");
     let patch = app.history_patch(true).await.expect("history patch");
     let row = patch.upserts.iter().find(|entry| entry.transaction.is_some()).expect("the transaction row");
@@ -556,10 +556,10 @@ async fn a_transaction_row_reads_its_declared_intent_leaf_before_and_after_reloa
     let gesture = protocol::TransactionRef { id: "tx-00000000000000c1".into(), tool: format!("{}#gesture", ToyHistoryApp::APP_ID) };
     let select = protocol::TransactionRef { id: "tx-00000000000000c2".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
     for transaction in [&gesture, &select] {
-        app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
+        app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), support_then_intent()), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the transaction publishes");
     }
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
-    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(text(&fixture["actor"]).into()), mounted_policy, &mut identity).await;
     artifact_app_laws::load_document(&mut repacked, &app.document_pack().await.expect("document pack"), &mut identity).await.expect("pack reload");
@@ -590,7 +590,7 @@ async fn the_catalogue_route_reads_the_framework_label_never_a_hand_written_one(
     let mut app = seeded_app(&fixture, mounted_policy, &mut identity).await;
     let label = app.verb_label(CATALOGUE_EXAMPLE_ACTION_ID).expect("the framework labels its runtime verb");
     assert_eq!((label.resolve(Terminology::Native, Locale::En), label.resolve(Terminology::Native, Locale::De)), ("Load example", "Beispiel laden"));
-    let result = app.dispatch_action(CATALOGUE_EXAMPLE_ACTION_ID, Some(&dsl(&serde_json::json!({ "exampleId": "five" }))), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the catalogue route loads the example");
+    let result = app.dispatch_action(CATALOGUE_EXAMPLE_ACTION_ID, Some(&dsl(&serde_json::json!({ "exampleId": "five" }))), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the catalogue route loads the example");
     assert!(result.requested_effects.iter().any(|effect| matches!(effect, Effect::LoadDocument { .. })), "the example is loaded: {:?}", result.requested_effects);
     let patch = app.history_patch(true).await.expect("history patch");
     assert!(patch.upserts.iter().filter(|row| row.action_id == CATALOGUE_EXAMPLE_ACTION_ID).all(|row| row.label.resolve(Terminology::Native, Locale::En) == "Load example"), "no row reads a hand-written label");
@@ -626,7 +626,7 @@ async fn every_mutation_of_a_long_transaction_is_reachable_and_edit_follows_the_
     let mut ops: Vec<TestMutation> = (1..40).map(|value| SetCount { value }.into()).collect();
     ops.push(SetLabel { value: head(&app).1 }.into());
     let transaction = protocol::TransactionRef { id: "tx-0000000000000040".into(), tool: format!("{}#select", ToyHistoryApp::APP_ID) };
-    app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), ops), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the long transaction publishes");
+    app.dispatch_emit("select", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::commit_transaction(transaction.clone(), ops), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the long transaction publishes");
     let row = app.history_patch(true).await.expect("history patch").upserts.into_iter().find(|entry| entry.transaction.as_ref().is_some_and(|reference| reference.id == transaction.id)).expect("the transaction row");
     let ids: Vec<String> = app.store.mutation_ops().expect("applied operations").iter().filter(|op| row.edit_id.as_deref() == Some(op.edit_id)).map(|op| op.mutation_id.0.clone()).collect();
     assert_eq!((row.op_count, ids.len()), (40, 40), "one edit of forty operations");
@@ -695,15 +695,15 @@ async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
     let edits = app.store.envelope().vcs.edits.len();
     let streamed = protocol::TransactionRef { id: "tx-00000000000000aa".into(), tool: format!("{}#import", ToyHistoryApp::APP_ID) };
     for value in [2, 3, 4] {
-        app.dispatch_emit("select", ToyEmit::stream_transaction(streamed.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
+        app.dispatch_emit("select", ToyEmit::stream_transaction(streamed.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
     }
     assert_eq!((app.store.envelope().vcs.edits.len(), app.store.open_transaction().map(|open| open.transaction.clone())), (edits + 1, Some(streamed.clone())), "the ticks grow one open edit");
-    let plain = app.dispatch_emit("select", ToyEmit::mutations(vec![SetCount { value: 9 }.into()]), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let plain = app.dispatch_emit("select", ToyEmit::mutations(vec![SetCount { value: 9 }.into()]), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(plain.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.open")), "a plain edit waits for the open transaction");
     let first = seeded_mutation(&app, 0);
     let busy = verb(&mut app, &fixture, "historyEditBegin", vec![("mutationId".into(), DslValue::String(first))], mounted_policy, &mut identity).await;
     assert_eq!(rejected(&busy), Some("timeTravel.busy"), "time travel waits for the open transaction");
-    app.dispatch_emit("select", ToyEmit::commit_transaction(streamed.clone(), Vec::new()), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("an empty commit closes the edit");
+    app.dispatch_emit("select", ToyEmit::commit_transaction(streamed.clone(), Vec::new()), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("an empty commit closes the edit");
     assert!(app.store.open_transaction().is_none());
     let tail = app.store.envelope().vcs.edits.last().expect("the committed edit");
     assert!(tail.forwards.len() == 3 && tail.mutation_meta.iter().all(|meta| meta.transaction.as_ref() == Some(&streamed)), "one edit, every op stamped");
@@ -713,17 +713,17 @@ async fn a_streamed_tool_transaction_is_one_row_and_its_abort_leaves_none() {
     let (edits, revision) = (app.store.envelope().vcs.edits.len(), app.store.content_revision_now());
     let aborted = protocol::TransactionRef { id: "tx-00000000000000bb".into(), tool: streamed.tool.clone() };
     for value in [5, 6] {
-        app.dispatch_emit("select", ToyEmit::stream_transaction(aborted.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
+        app.dispatch_emit("select", ToyEmit::stream_transaction(aborted.clone(), vec![SetCount { value }.into()]), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("a tick streams");
     }
-    app.dispatch_emit("select", ToyEmit::abort_transaction(aborted.clone()), &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the abort reverts the open edit");
+    app.dispatch_emit("select", ToyEmit::abort_transaction(aborted.clone()), &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the abort reverts the open edit");
     assert_eq!((app.store.envelope().vcs.edits.len(), app.store.content_revision_now(), app.store.open_transaction().is_none()), (edits, revision, true), "zero trace");
     let patch = app.history_patch(true).await.expect("history patch");
     let held: HashSet<&str> = app.store.envelope().vcs.edits.iter().map(|edit| edit.id.as_str()).collect();
     assert!(patch.upserts.iter().all(|entry| entry.transaction.as_ref().is_none_or(|reference| reference.id != aborted.id) && entry.edit_id.as_deref().is_none_or(|edit_id| held.contains(edit_id))), "no row of the aborted transaction remains");
     let unnamed = ToyEmit { transaction: None, transaction_phase: TransactionPhase::Stream, ..ToyEmit::mutations(vec![SetCount { value: 7 }.into()]) };
-    assert_eq!(app.dispatch_emit("select", unnamed, &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
+    assert_eq!(app.dispatch_emit("select", unnamed, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     let carrying = ToyEmit { artifact_mutations: vec![SetCount { value: 8 }.into()], ..ToyEmit::abort_transaction(aborted) };
-    assert_eq!(app.dispatch_emit("select", carrying, &meta(&fixture), &mut crate::app::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
+    assert_eq!(app.dispatch_emit("select", carrying, &meta(&fixture), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().map(|fault| fault.code), Some(FaultCode::new("toolTransaction.shape")));
     close(&mut app);
 }
 
@@ -1409,7 +1409,7 @@ async fn noted_shell_commands_keep_every_locale_and_undo_matches_its_chord() {
         ("label".to_string(), DslValue::object([("de".to_string(), DslValue::String("Exportieren".into())), ("en".to_string(), DslValue::String("Export".into()))])),
     ]);
     let admitted = app.handle_action(NOTE_SHELL_COMMAND_ACTION_ID, Some(&args), &meta(&fixture), &mut identity).await.expect("noteShellCommand admits");
-    crate::app::settle_framework_reserved_admission(&mut app, admitted).await.expect("noteShellCommand settles");
+    crate::artifact_instance::settle_framework_reserved_admission(&mut app, admitted).await.expect("noteShellCommand settles");
     let patch = app.history_patch(true).await.expect("history patch");
     let row = patch.upserts.iter().find(|entry| entry.action_id == "shell.export").expect("the noted row");
     assert_eq!(row.label.resolve(Terminology::Native, Locale::En), "Export - a.png");
@@ -1475,7 +1475,7 @@ fn snap_sources_resolve_to_numbers_and_colours_take_hex_text() {
 async fn replica(fixture: &Value, uri: &str, actor: &str, seed: bool, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ToyApp, MemoryBackbone) {
     let mut app = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.into()), mounted_policy, identity).await;
     let (backbone, probe) = MemoryBackbone::pair(uri, uri).await;
-    app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("attach the replica backbone");
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("attach the replica backbone");
     assert_eq!(app.store.local_actor_id(), &protocol::ActorId(actor.into()));
     if seed {
         for op in fixture["seed"].as_array().expect("seed") {
@@ -1517,7 +1517,7 @@ async fn commit_scenario(app: &mut ToyApp, fixture: &Value, id: &str, mounted_po
 async fn history_verb(app: &mut ToyApp, actor: &str, action: &str, args: Option<DslValue>, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) {
     let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
     let admitted = app.handle_action(action, args.as_ref(), &meta, identity).await.unwrap_or_else(|fault| panic!("{action}: {fault:?}"));
-    crate::app::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
+    crate::artifact_instance::settle_framework_reserved_admission(app, admitted).await.unwrap_or_else(|fault| panic!("{action} settles: {fault:?}"));
     app.refresh_cache().await.expect("history refresh");
 }
 
@@ -1560,7 +1560,7 @@ async fn a_history_edit_is_its_own_row_locally_remotely_and_after_reload() {
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
-    artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &local.document_text().await.expect("document text"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into()), mounted_policy, &mut identity).await;
     assert_eq!(repacked.store.local_actor_id(), &protocol::ActorId("reader".into()));
@@ -1843,7 +1843,7 @@ async fn a_warning_an_edit_introduces_stays_visible_after_finalize_and_reload() 
     pump_until(&mut app, "the finalize retires", |app| !app.time_travel.has_pending_work(), mounted_policy, &mut identity).await;
     let mut reloaded = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId(actor.clone().into()), mounted_policy, &mut identity).await;
     assert_eq!(reloaded.store.local_actor_id(), &protocol::ActorId(actor.clone().into()));
-    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("text reload");
+    artifact_app_laws::load_document_text(&mut reloaded, &app.document_text().await.expect("document text"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("text reload");
     reloaded.refresh_cache().await.expect("the reloaded log backfills");
     let mut repacked = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("reader".into()), mounted_policy, &mut identity).await;
     assert_eq!(repacked.store.local_actor_id(), &protocol::ActorId("reader".into()));
@@ -1926,7 +1926,7 @@ async fn apply_long_edit(app: &mut ToyApp, count: i32, identity: &mut semio_fram
         let end = (start + BATCH).min(count);
         let batch: Vec<TestMutation> = (start..end).map(|value| SetCount { value }.into()).collect();
         app.store.dispatch(ArtifactCommand::Apply { mutations: batch, transaction: None }, identity).await.expect("a long edit applies");
-        crate::app::artifact_app_laws::drain_store_displaced_retirements(&mut app.store);
+        crate::app_testing::artifact_app_laws::drain_store_displaced_retirements(&mut app.store);
         start = end;
     }
 }
@@ -1952,7 +1952,7 @@ async fn a_long_remote_history_change_replays_over_turns_and_pauses_on_cancel() 
     let actor = text(&fixture["actor"]).to_string();
     let (mut local, mut local_probe) = replica(&fixture, "remote-replay-local", &actor, true, mounted_policy, &mut identity).await;
     let (mut remote, mut remote_probe) = replica(&fixture, "remote-replay-remote", "remote", false, mounted_policy, &mut identity).await;
-    remote.store.defer_remote_replays(Some(store::ReplayTurnBudget::operations(1)));
+    remote.store.defer_remote_replays(Some(store::os_store::store_schema::ReplayTurnBudget::operations(1)));
     relay(&mut local_probe, &mut remote_probe, &mut remote, mounted_policy, &mut identity).await;
     assert_eq!(head(&remote), head(&local), "the remote replica holds the seed");
     commit_scenario(&mut local, &fixture, "overwrite-supersedes-in-place", mounted_policy, &mut identity).await;
@@ -2016,7 +2016,7 @@ async fn the_undo_of_a_finalize_over_a_long_history_lands_through_the_driver() {
 async fn history_verb_refusal(app: &mut ToyApp, actor: &str, action: &str, mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> Option<String> {
     let meta = ActionMeta { view_state: Some(ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native)), ..artifact_app_laws::meta(actor) };
     let settled = match app.handle_action(action, None, &meta, identity).await {
-        Ok(admitted) => crate::app::settle_framework_reserved_admission(app, admitted).await,
+        Ok(admitted) => crate::artifact_instance::settle_framework_reserved_admission(app, admitted).await,
         Err(fault) => Err(fault),
     };
     settled.err().map(|fault| fault.code.0)
@@ -2043,12 +2043,12 @@ async fn apply_other_edits(app: &mut ToyApp, count: i32) {
 
 /// 🪶️ Publishes one edit with an explicit author while preserving the opened instance actor.
 fn publish_as(app: &mut ToyApp, actor: &str, mutation: TestMutation) {
-    let grant = store::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant::from_retained(app.mounted_policy.preparation);
     let mut publication = app
         .store
-        .begin_apply_batch(semio_framework_job::OperationId(1), app.store.generation_now(), app.store.content_revision_now(), actor.into(), vec![mutation], store::HistoryLane::Document, app.artifact_one_item_factory.as_ref(), None)
+        .begin_apply_batch(semio_framework_job::OperationId(1), app.store.generation_now(), app.store.content_revision_now(), actor.into(), vec![mutation], store::os_store::store_schema::HistoryLane::Document, app.artifact_one_item_factory.as_ref(), None)
         .unwrap_or_else(|rejected| panic!("the edit is admitted: {}", rejected.into_owners().0));
-    let published = (0..65_536).any(|_| matches!(app.store.advance_apply_batch(&mut publication, grant).expect("the edit publishes"), store::ArtifactStoreOneItemAdvance::Published(_)));
+    let published = (0..65_536).any(|_| matches!(app.store.advance_apply_batch(&mut publication, grant).expect("the edit publishes"), store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_)));
     assert!(published && publication.acknowledge(), "the edit is published and acknowledged");
     publication.begin_close();
     let closed = (0..4_096).any(|_|{let grant=app.mounted_policy.close;let step=publication.close_step(grant).expect("the publication closes");assert!(step.progress().fits(grant));matches!(step,semio_framework_value::retained_clone::RetainedCloneStep::Complete(_))});
@@ -2166,12 +2166,12 @@ async fn a_pure_lane_hydrates_the_head_without_history_and_history_verbs_refuse(
     assert_eq!(pure.history_snapshot().await.err().map(code).as_deref(), Some(PURE_HISTORY_UNAVAILABLE_CODE), "so does the history query");
     let envelope = pure.store.envelope();
     let dialect: ArtifactDialect = <ToyHistoryApp as ArtifactApp>::DIALECT.into();
-    let parent_spr = store::stamp_document_spr_identity(&files.spr, &envelope.id, <ToyHistoryApp as ArtifactApp>::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref()).await.expect("the load identity stamp");
+    let parent_spr = store::os_store::text_format::stamp_document_spr_identity(&files.spr, &envelope.id, <ToyHistoryApp as ArtifactApp>::DOCUMENT_SCHEMA, &dialect, envelope.owner.as_ref()).await.expect("the load identity stamp");
     let operation = 0x51;
     PluginApp::begin_document_archive_load(&mut pure, operation, protocol::DocumentArchivePack { parent_pack: files.pack.clone(), parent_spr, members: Vec::new() }).expect("the archive load is admitted");
     let mut polls = 0;
     let status = loop {
-        let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the archive load status");
+        let status = PluginApp::poll_document_archive_load(&mut pure, operation, &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the archive load status");
         if !matches!(status.state, protocol::DocumentArchiveLoadState::Pending | protocol::DocumentArchiveLoadState::Running) {
             break status;
         }
@@ -2273,7 +2273,7 @@ async fn the_history_view_patches_only_the_rows_a_change_touched() {
     let _ = render_history(&mut app, Locale::En).await;
     assert_eq!(refreshed_rows(&mut app).await, 0, "rendering the history builds no row");
     let target = app.store.mutation_ops().expect("mutation ops")[0].mutation_id.clone();
-    app.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }, &mut identity).await.expect("a history edit lands");
+    app.store.dispatch(ArtifactCommand::Supersede { scope: None, inputs: vec![store::os_store::store_schema::SupersedeInput { target, replacement: Some(SetCount { value: 7 }.into()) }] }, &mut identity).await.expect("a history edit lands");
     assert!(refreshed_rows(&mut app).await >= rows, "a history edit rebuilds the whole view");
     close(&mut app);
 }
@@ -2321,7 +2321,7 @@ async fn a_deferred_history_step_ends_its_turn_at_the_wall_deadline_not_an_opera
     let actor = "author".to_string();
     let mut app = seeded_app_as(&fixture, &actor, mounted_policy, &mut identity).await;
     app.time_travel.set_turn_clock(counted_clock);
-    app.store.defer_local_replays(Some(store::ReplayTurnBudget { wall_us: TIME_TRAVEL_TURN_WALL_US, operations: time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, now_us: counted_clock }));
+    app.store.defer_local_replays(Some(store::os_store::store_schema::ReplayTurnBudget { wall_us: TIME_TRAVEL_TURN_WALL_US, operations: time_travel::TIME_TRAVEL_REPLAY_OPERATIONS, now_us: counted_clock }));
     bury_edit_of(&mut app, &actor, 600).await;
     history_verb(&mut app, &actor, "undo", None, mounted_policy, &mut identity).await;
     assert!(app.store.local_step_pending(), "the interior undo waits for its replay");
@@ -2409,7 +2409,7 @@ async fn every_route_authors_as_its_acting_actor() {
     let pack = app.document_pack().await.expect("Ada's authoritative document");
     let mut grace = artifact_app_laws::new_registered_app::<ToyHistoryApp, _>(toy_manifest(), protocol::ActorId("grace".into()), mounted_policy, &mut identity).await;
     artifact_app_laws::load_document(&mut grace, &pack, &mut identity).await.expect("Grace opens Ada's shared history");
-    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
+    grace.dispatch_emit("setCount", Emit::<TestMutation, TestConfigMutation, NoDraftMutation>::mutations(vec![SetCount { value: 2 }.into()]), &acting("grace"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the emit publishes");
     let emitted = edit_authors(&grace);
     close(&mut app);
     close(&mut grace);
@@ -2474,7 +2474,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     for value in &declared {
         let args = DslValue::Object(vec![("value".into(), DslValue::String(value.clone()))]);
         let admitted = app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&args), &meta, &mut identity).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
-        crate::app::settle_framework_reserved_admission(&mut app, admitted).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
+        crate::artifact_instance::settle_framework_reserved_admission(&mut app, admitted).await.unwrap_or_else(|fault| panic!("{value}: {fault:?}"));
         assert_eq!(&app.history_patch(true).await.expect("history patch").command_filter, value, "the wire echoes the declared option");
         let body = render_history(&mut app, Locale::En).await;
         let select = find_node(&body, "framework.history.filter.control").expect("the filter select");
@@ -2484,7 +2484,7 @@ async fn every_declared_history_filter_option_is_dispatched_and_echoed() {
     }
     let undeclared = DslValue::Object(vec![("value".into(), DslValue::String("withoutOperations".into()))]);
     let refused = match app.handle_action(SET_HISTORY_COMMAND_FILTER_ACTION_ID, Some(&undeclared), &meta, &mut identity).await {
-        Ok(admitted) => crate::app::settle_framework_reserved_admission(&mut app, admitted).await.err(),
+        Ok(admitted) => crate::artifact_instance::settle_framework_reserved_admission(&mut app, admitted).await.err(),
         Err(fault) => Some(fault),
     };
     assert!(refused.is_some(), "an undeclared filter value is refused");
@@ -2610,7 +2610,7 @@ async fn a_backbone_attach_and_detach_while_editing_is_no_base_move() {
     let before = app.time_travel.session().clone();
     let (store_generation, revision) = (app.store.generation(), app.store.content_revision());
     let (backbone, probe) = MemoryBackbone::pair("attach-while-editing", "attach-while-editing").await;
-    app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("the backbone attaches");
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("the backbone attaches");
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
@@ -2648,7 +2648,7 @@ async fn a_replay_finished_before_a_backbone_attach_and_detach_still_commits() {
     assert_eq!(before.stage, TimeTravelStage::Reviewing, "the replay finished");
     let (store_generation, revision) = (app.store.generation(), app.store.content_revision());
     let (backbone, probe) = MemoryBackbone::pair("attach-while-reviewing", "attach-while-reviewing").await;
-    app.attach_backbone(store::Backbones::Memory(backbone)).await.expect("the backbone attaches");
+    app.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone)).await.expect("the backbone attaches");
     app.detach_backbone().await.expect("the backbone detaches");
     assert!(app.store.generation() > store_generation && app.store.content_revision() == revision, "the port moved the store's local generation and no event");
     for _ in 0..4 {
@@ -2974,8 +2974,8 @@ const INERT_SCHEMA: &str = "semio.test.inert-label/v1";
 /// 🥊️ A document store over [`InertLabelOp`] holding count 1, label a, no children and count 5 — one edit each, authored
 /// by `local` — with the mutation ids of those four operations.
 async fn inert_document(mounted_policy:crate::MountedOwnerPolicyV1, identity:&mut semio_framework_os_kernel::os_vcs::io::binary::entity_identity::control::EntityIdentityAuthority<'_>) -> (ArtifactStore<TestSnapshot, InertLabelOp>, Vec<MutationId>) {
-    let genesis = store::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None);
-    let mut document = Box::pin(ArtifactStore::new(genesis, protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
+    let genesis = store::os_store::document_materialize::create_document_envelope::<TestSnapshot, InertLabelOp>(INERT_SCHEMA, "inert-label", TestSnapshot::default(), None);
+    let mut document = Box::pin(ArtifactStore::new(genesis, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("the document store");
     document.install_operation_wire(store::ArtifactOperationWire::canonical());
     let (mut catalog, receipt)=bounded_document_store_owners::<TestSnapshot, InertLabelOp>(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog admission")); let mut catalog_receipts=vec![(mounted_policy.preparation,receipt)]; while !catalog.constructor_is_complete(){let receipt=catalog.admit_constructor(mounted_policy.preparation).unwrap_or_else(|_|panic!("original inert catalog construction")); assert!(receipt.fits(mounted_policy.preparation)); catalog_receipts.push((mounted_policy.preparation,receipt));} assert!(catalog_receipts.iter().all(|(grant,receipt)|receipt.fits(*grant))); document.install_document_store_owners_exact(catalog);
     assert_eq!(document.local_actor_id(), &protocol::ActorId("local".into()));

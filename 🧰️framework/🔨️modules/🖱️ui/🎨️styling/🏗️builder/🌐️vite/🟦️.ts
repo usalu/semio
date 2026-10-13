@@ -51,22 +51,7 @@ export function playgroundStaticSiteBuildOptions(overrides?: OwnedBuildConfig["b
   };
 }
 
-/** @emoji 🚀️ Production Vite `build` defaults: minify, strip console/debugger, no sourcemaps. */
-export function semioViteProductionBuild(overrides?: OwnedBuildConfig["build"]): NonNullable<OwnedBuildConfig["build"]> {
-  return {
-    target: "es2022",
-    sourcemap: false,
-    minify: "esbuild",
-    cssMinify: true,
-    reportCompressedSize: false,
-    ...overrides,
-    esbuild: {
-      drop: ["console", "debugger"],
-      legalComments: "none",
-      ...(overrides?.esbuild ?? {}),
-    },
-  };
-}
+export { semioViteBuild } from "./🎚️mode/🟦️.ts";
 
 /** @emoji 🧭️ Vite's URL prefix for prebundled chunks under `cacheDir`: root-relative inside `root`, `/@fs/` outside. https://vite.dev/config/shared-options.html#cachedir */
 export function playgroundOptimizedDepUrlPrefix(root: string, cacheDir: string): string {

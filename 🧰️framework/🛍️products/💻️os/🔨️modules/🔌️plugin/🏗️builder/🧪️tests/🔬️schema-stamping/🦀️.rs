@@ -1,8 +1,8 @@
 use super::*;
 use crate::__semio_dispatch_PluginApp;
-use crate::app::{
-    ArtifactEditor, ArtifactView, ArtifactViewer, ConfigView, DraftView, Editor, Emit, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation, ViewEmit, Viewer,
-};
+use crate::surface_contract::{ArtifactEditor, ArtifactViewer, Editor, ViewEmit, Viewer};
+use crate::app_views::{ArtifactView, ConfigView, DraftView, InteractionView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, NoTransient, NoTransientMutation};
+use crate::app_emission::Emit;
 use crate::ViewModel;
 use {semio_framework::AppRole,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d::compute::EngineHandles;
@@ -180,7 +180,7 @@ fn routed_inference_is_frozen_into_the_plugin_roster_without_a_sync_service() {
     assert!(artifact_inference_service(metadata.artifact_kind, metadata.inference_schema).expect("global service lookup").is_none(), "route must not manufacture a synchronous service facade");
 }
 
-impl store::ArtifactSqliteSnapshot for NoConfig {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for NoConfig {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};

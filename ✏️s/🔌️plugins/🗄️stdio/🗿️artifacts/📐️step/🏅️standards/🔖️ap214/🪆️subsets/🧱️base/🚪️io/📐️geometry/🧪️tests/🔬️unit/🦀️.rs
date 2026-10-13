@@ -1,6 +1,6 @@
 use super::*;
-use semio_framework_3d::brep::engine::BrepKernel;
-use semio_framework_3d::brep::operations::primitives::make_box;
+use semio_framework_3d_brep_engine::BrepKernel;
+use semio_framework_3d_brep_operations::primitives::make_box;
 
 #[semio_framework_async_macros::async_test]
 async fn box_round_trip_topology_counts() {
@@ -47,7 +47,7 @@ async fn real_export_reads_optional_placement_slots_and_straight_bsplines_as_lin
     assert_eq!(body.edges.len(), 126);
     assert!(body.edges.iter().all(|(_, edge)| matches!(body.curves3.get(edge.curve), Some(Curve3::Line { .. }))), "every collinear B-spline edge is read as the line it is");
     let solid = body.solids.iter().next().map(|(id, _)| id).expect("solid");
-    let volume = semio_framework_3d::brep::queries::mass_properties::solid_volume(&body, solid, 1e-3).expect("volume");
+    let volume = semio_framework_3d_brep_queries::mass_properties::solid_volume(&body, solid, 1e-3).expect("volume");
     assert!((volume - CONCRETE_FOREST_VOLUME).abs() < 1e-4, "volume {volume} matches the GLB oracle {CONCRETE_FOREST_VOLUME}");
 }
 
@@ -55,13 +55,13 @@ async fn real_export_reads_optional_placement_slots_and_straight_bsplines_as_lin
 async fn read_faces_carry_pcurves_and_validate_clean() {
     let body = read_step(CONCRETE_FOREST_STEP).expect("read");
     assert!(body.coedges.iter().all(|(_, coedge)| coedge.pcurve.is_some()), "every imported coedge carries a p-curve");
-    let issues = semio_framework_3d::brep::queries::validation::validate_body(&body);
+    let issues = semio_framework_3d_brep_queries::validation::validate_body(&body);
     assert!(issues.is_empty(), "a valid export validates clean: {issues:?}");
 }
 
 #[semio_framework_async_macros::async_test]
 async fn read_solids_take_booleans() {
-    use semio_framework_3d::brep::engine::{Brep, BrepKernel};
+    use semio_framework_3d_brep_engine::{Brep, BrepKernel};
     let mut kernel = Brep::new();
     let piece = import_step(&mut kernel,CONCRETE_FOREST_STEP).expect("import").into_iter().next().expect("solid");
     let before = kernel.volume(&piece).expect("volume");
@@ -76,7 +76,7 @@ async fn read_solids_take_booleans() {
 
 #[semio_framework_async_macros::async_test]
 async fn import_step_merges_and_keeps_prior_handles_resolvable() {
-    let mut k = semio_framework_3d::brep::engine::Brep::new();
+    let mut k = semio_framework_3d_brep_engine::Brep::new();
     let original = k.box_prim_sync(1.0, 1.0, 1.0).expect("box");
     let step_text = export_step(&k,std::slice::from_ref(&original)).expect("export");
     let imported = import_step(&mut k,&step_text).expect("import");

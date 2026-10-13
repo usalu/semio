@@ -31,7 +31,7 @@ pub mod set_active_example {
         } else if example_id == CAD_EXAMPLE_FOREST_LEFT || example_id == "forest-left" {
             forest_play_scene()
         } else if example_id == crate::examples::demo::ID {
-            <CadSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).map_err(|error| Fault::from(format!("cad.example.invalid: registered example `{example_id}` does not parse: {error:?}")))?
+            <CadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).map_err(|error| Fault::from(format!("cad.example.invalid: registered example `{example_id}` does not parse: {error:?}")))?
         } else {
             return Err(Fault::from(format!("cad.example.unknown: `{example_id}` is not an example this app ships")));
         };

@@ -262,7 +262,7 @@ fn example_assets_decode_and_match_claimed_verdict() {
         ("compliant-two-zone", examples::compliant_two_zone::PRIMARY_TEXT, true),
         ("cooled-office", examples::cooled_office::PRIMARY_TEXT, false),
     ] {
-        let doc = <crate::Din18599Snapshot as store::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
+        let doc = <crate::Din18599Snapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).unwrap_or_else(|e| panic!("{id} parse: {e}"));
         let report = evaluate_document(&doc);
         if expect_comply {
             assert!(report.complies(), "{id} should comply; fails={:?}", report.failing().map(|c| c.id.clone()).collect::<Vec<_>>());

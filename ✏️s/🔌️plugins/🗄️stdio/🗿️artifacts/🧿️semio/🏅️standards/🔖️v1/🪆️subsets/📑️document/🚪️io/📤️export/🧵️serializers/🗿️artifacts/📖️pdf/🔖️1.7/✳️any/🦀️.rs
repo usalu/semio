@@ -18,9 +18,10 @@
 //!   `SemioDocumentSnapshot` actually carries — inventing extra page breaks would fabricate
 //!   structure the source document never declared.
 
-use crate::standards::v1::subsets::document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, SemioDocumentSnapshot};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_pdf::{standards::v1_7::subsets::base::io::text_document, PdfSnapshot};
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::text_document;
+use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 
 /// 📐️ US Letter, the only page size this subset can honestly claim.
 const PAGE_WIDTH: f64 = 612.0;
@@ -28,7 +29,7 @@ const PAGE_HEIGHT: f64 = 792.0;
 
 //#region 🔖️FieldMapping
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn join_runs(runs: &[crate::standards::v1::subsets::document::schema::snapshot::DocRun]) -> String {
+fn join_runs(runs: &[semio_s_artifact_stdio_semio_document::schema::snapshot::DocRun]) -> String {
     runs.iter().map(|r| r.text.as_str()).collect::<Vec<_>>().join("")
 }
 

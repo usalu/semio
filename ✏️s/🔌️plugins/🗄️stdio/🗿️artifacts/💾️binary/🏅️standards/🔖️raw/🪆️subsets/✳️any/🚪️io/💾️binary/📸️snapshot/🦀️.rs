@@ -18,10 +18,10 @@ use framework_schema::ArtifactSchema;
 /// `registry_export_media` class of bug the ticket exists to remove. Fixed here (the codec, not
 /// the test): `encode_pack_with`/`decode_pack_with` are now the identity function on `bytes`.
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️.rs`.
-impl store::ArtifactPack for BinarySnapshot {
+impl store::os_store::serialization::ArtifactPack for BinarySnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {

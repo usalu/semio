@@ -836,6 +836,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-s-plugin-cad-spatial-shape-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-async",
+ "semio-framework-async-macros",
+ "semio-framework-plugin",
+ "semio-s-plugin-cad-spatial-shape",
+]
+
+[[package]]
 name = "semver"
 version = "1.0.28"
 source = "registry+https://github.com/rust-lang/crates.io-index"

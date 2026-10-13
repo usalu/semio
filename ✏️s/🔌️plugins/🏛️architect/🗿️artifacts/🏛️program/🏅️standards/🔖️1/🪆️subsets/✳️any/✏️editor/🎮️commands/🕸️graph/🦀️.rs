@@ -4,9 +4,9 @@ pub mod node_graph_edit {
     use crate::editor::architect::catalog::{find_adjacency, new_adjacency};
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::registers::AdjacencyKind;
-    use crate::schema::mutations as leaves;
-    use crate::{EntityId, ProgramSnapshot};
+    use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
+    use crate::standards::v1::subsets::any::schema::mutations as leaves;
+    use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
     use semio_framework_value::DslValue as Value;
     
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
@@ -76,7 +76,7 @@ pub mod node_graph_edit {
 pub mod node_graph_viewport {
     use crate::editor::architect::config::{ArchitectConfig, ArchitectConfigMutation};
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     
     use semio_framework_os_kernel::Viewport2d;
     use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};

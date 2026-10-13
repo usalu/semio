@@ -24,7 +24,7 @@ fn identity() -> ToolRunIdentity {
 fn metabolism() -> DslValue {
     let snapshot = crate::standards::v1::subsets::any::io::text::snapshot::metabolism_wires_example_snapshot().expect("metabolism example");
     let pack = crate::genesis_wires_child_pack(&snapshot, crate::WIRES_CONTENT_SLOT, &snapshot.content.child_id).expect("declared metabolism child");
-    let content = <crate::SemioGraphSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
+    let content = <crate::SemioGraphSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("full metabolism graph child");
     crate::wires_composed(&snapshot, &content).board
 }
 
@@ -196,7 +196,7 @@ fn pump_until(app: &mut WiresApp, what: &str, done: impl Fn(&WiresApp) -> bool) 
         if done(app) {
             return;
         }
-        PluginApp::maintenance_step(app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
+        PluginApp::maintenance_step(app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).unwrap_or_else(|fault| panic!("{what}: maintenance faulted: {fault:?}"));
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).unwrap_or_else(|fault| panic!("{what}: driver turn faulted: {fault:?}"));
         if let Some(page) = app.take_typed_operation_result_page(1) {
             assert_ne!(page.lane, semio_framework_plugin::app::TypedOperationResultLane::Fault, "{what}: typed operation faulted: {}", String::from_utf8_lossy(page.bytes()));
@@ -277,7 +277,7 @@ fn debug_reorganize_undo_settles() {
             eprintln!("[DEBUG] finalize settled at turn {turn}");
             break;
         }
-        PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
+        PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         if let Some(page) = app.take_typed_operation_result_page(1) {
             eprintln!("[DEBUG] finalize page {:?}", page.lane);
@@ -296,7 +296,7 @@ fn debug_reorganize_undo_settles() {
             eprintln!("[DEBUG] undo settled at turn {turn}");
             break;
         }
-        PluginApp::maintenance_step(&mut *app, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
+        PluginApp::maintenance_step(&mut *app, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("[DEBUG] maintenance");
         ::semio_framework_async::poll::resolve_ready(app.advance_typed_operation_publication(&mut semio_framework_plugin::artifact_app_laws::fixture_identity(), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT.preparation)).expect("[DEBUG] advance");
         while let Some(page) = app.take_typed_operation_result_page(1) {
             eprintln!("[DEBUG] undo page {:?} {}", page.lane, String::from_utf8_lossy(page.bytes()).chars().take(300).collect::<String>());

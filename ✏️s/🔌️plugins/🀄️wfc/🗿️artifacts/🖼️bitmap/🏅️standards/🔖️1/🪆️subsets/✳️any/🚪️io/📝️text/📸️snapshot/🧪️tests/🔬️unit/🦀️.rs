@@ -35,8 +35,8 @@ fn the_normative_grammar_names_this_facets_dialect() {
 
 #[test]
 fn the_extension_and_envelope_are_this_artifacts_own() {
-    assert_eq!(<BitmapSnapshot as store::ArtifactDsl>::EXTENSION, "wfcbitmap");
-    assert_eq!(<BitmapSnapshot as store::ArtifactDsl>::envelope_id(), "wfc.bitmap");
+    assert_eq!(<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::EXTENSION, "wfcbitmap");
+    assert_eq!(<BitmapSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(), "wfc.bitmap");
 }
 
 #[test]

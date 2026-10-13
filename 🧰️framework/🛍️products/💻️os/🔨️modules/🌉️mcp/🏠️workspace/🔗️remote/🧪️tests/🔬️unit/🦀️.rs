@@ -158,11 +158,11 @@ async fn authenticated_hub_catalog_hydrates_exact_selected_descriptor_and_revoca
     manifest.package.plugin_id = descriptor.manifest.plugin_id.clone();
     manifest.package.package_id = descriptor.package_id.clone();
     manifest.package.version = descriptor.manifest.version.clone();
-    manifest.package.component_sha256 = descriptor.hashes.wasm_sha256.clone();
+    manifest.package.component_sha256 = manifest.component.sha256.clone();
     manifest.package.descriptor_byte_sha256 = descriptor_sha256.clone();
-    manifest.component.sha256 = descriptor.hashes.wasm_sha256.clone();
     manifest.descriptor.sha256 = descriptor_sha256;
     manifest.descriptor.byte_length = u64::try_from(descriptor_bytes.len()).expect("descriptor length");
+    manifest.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
     if let semio_framework_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
         source_component_sha256.clone_from(&manifest.package.component_sha256);
         source_descriptor_byte_sha256.clone_from(&manifest.package.descriptor_byte_sha256);
@@ -471,11 +471,11 @@ fn catalog_selection(seed: &AuthorizedDocumentView, document_id: &str) -> (Docum
     manifest.package.plugin_id = descriptor.manifest.plugin_id.clone();
     manifest.package.package_id = descriptor.package_id.clone();
     manifest.package.version = descriptor.manifest.version.clone();
-    manifest.package.component_sha256 = descriptor.hashes.wasm_sha256.clone();
+    manifest.package.component_sha256 = manifest.component.sha256.clone();
     manifest.package.descriptor_byte_sha256 = descriptor_sha256.clone();
-    manifest.component.sha256 = descriptor.hashes.wasm_sha256.clone();
     manifest.descriptor.sha256 = descriptor_sha256;
     manifest.descriptor.byte_length = u64::try_from(descriptor_bytes.len()).expect("descriptor length");
+    manifest.package.component_receipt = semio_framework_os_kernel::os_component_receipt::ComponentReceiptV1 { plugin_id: manifest.package.plugin_id.clone(), package_id: manifest.package.package_id.clone(), wasm_sha256: manifest.package.component_sha256.clone(), wasm_bytes: manifest.component.byte_length, semantic_descriptor_sha256: manifest.package.descriptor_byte_sha256.clone(), ..manifest.package.component_receipt.clone() };
     if let semio_framework_os_kernel::os_directory::schema::DocumentExecutionTargetBrowserActorV1::ClosedBrowserActor { source_component_sha256, source_descriptor_byte_sha256, .. } = &mut manifest.browser_actor {
         source_component_sha256.clone_from(&manifest.package.component_sha256);
         source_descriptor_byte_sha256.clone_from(&manifest.package.descriptor_byte_sha256);

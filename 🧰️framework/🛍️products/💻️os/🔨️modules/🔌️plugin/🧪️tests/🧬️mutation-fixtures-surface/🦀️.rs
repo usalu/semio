@@ -1,19 +1,33 @@
 #[path = "../../🧪️testing/🧬️mutation-fixtures/🪟️surface/🧬️mutations/🦀️.rs"]
 pub mod mutations;
-pub(crate) use mutations::{SetSurfaceCount, SurfaceMutation};
-crate::app::mutation_fixture::wire::fixture_operation_text!(SurfaceMutation);
+use mutations::{SetSurfaceCount, SurfaceMutation};
+crate::app_testing::mutation_fixture::wire::fixture_operation_text!(SurfaceMutation);
 
 #[path = "../🎞️media-owner-context/🦀️.rs"]
 mod media_owner_context;
 
 // 🧪️ Proves the viewer helpers against a minimal editor/viewer pair sharing one dialect.
-use crate::app::artifact_app_laws::new_registered_app;
-use crate::app::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
-use crate::app::{
-    built_text_to_component_tree, ArtifactEditor, ArtifactOwnedToolJobFactory, ArtifactOwnedToolJobRequest, ArtifactReservedToolInput, ArtifactReservedToolJob, ArtifactReservedToolJobRequest, ArtifactToolCompletion, ArtifactToolFactoryRegistry,
-    ArtifactToolPublicationContract, ArtifactToolPublicationLane, ArtifactView, ArtifactViewer, ChildContentView, ConfigView, DraftView, EditorApp, Emit, HistoryView, Media, MediaClass, MediaForm, MediaPayload, MediaType, NoConfig,
-    NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation, PluginApp, UiAssemblyResult, ViewEmit, ViewModel, NATURAL_FILE_PORT, REVERT_TO_COMMAND_ACTION_ID,
-};
+use crate::app_testing::artifact_app_laws::new_registered_app;
+use crate::app_testing::artifact_app_laws::{assert_editor_and_viewer_share_dialect, assert_viewer_never_mutates, close_registered_fixture_app, meta, new_app, new_viewer};
+use crate::window_surface::{built_text_to_component_tree, UiAssemblyResult};
+use crate::surface_contract::{ArtifactEditor, ArtifactViewer, EditorApp, ViewEmit};
+use crate::tool_contract::ArtifactOwnedToolJobFactory;
+use crate::tool_contract::ArtifactOwnedToolJobRequest;
+use crate::tool_contract::ArtifactReservedToolInput;
+use crate::tool_contract::ArtifactReservedToolJobRequest;
+use crate::tool_contract::ArtifactToolCompletion;
+use crate::tool_contract::ArtifactToolFactoryRegistry;
+use crate::tool_contract::ArtifactToolPublicationContract;
+use crate::tool_contract::ArtifactToolPublicationLane;
+use crate::tool_contract::ArtifactReservedToolJob;
+use crate::app_views::{ArtifactView, ConfigView, DraftView, NoConfig, NoConfigMutation, NoDraft, NoDraftMutation, NoPresence, NoPresenceMutation};
+use crate::child_view::ChildContentView;
+use crate::app_emission::Emit;
+use crate::history_view::HistoryView;
+use semio_framework::{Media, MediaClass, MediaPayload, MediaType};
+use crate::app_contract::NATURAL_FILE_PORT;
+use crate::plugin_app::PluginApp;
+use semio_framework::{MediaForm, ViewModel, REVERT_TO_COMMAND_ACTION_ID};
 use protocol::MutationDiff;
 use {semio_framework::action_bus,semio_framework::ActionKind,semio_framework_artifact_reference::Dialect,semio_framework::Fault,semio_framework::FaultOrigin,semio_framework::IconName,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework::ToolExecutionContract,semio_framework::ToolFactoryKey,semio_framework::ToolJobFactory,semio_framework::ToolOperationSpec};
 use semio_framework_2d::compute::EngineHandles;
@@ -25,13 +39,15 @@ const SURFACE_TESTKIT_DIALECT: Dialect = Dialect { artifact_kind: "testkit.surfa
 
 #[derive(semio_framework_dsl_record_derive::DslRecord, Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue, semio_framework_os_kernel::DslArtifact, semio_framework_value::RetireOwned, semio_framework_value::RetainedClone)]
 #[artifact(extension = "testkit-surface")]
-pub(crate) struct SurfaceSnapshot {
+struct SurfaceSnapshot {
     count: i32,
 }
 
 #[test]
 fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_original_batch() {
-    use crate::app::{ChildEmit, ChildEmitGenesis, OwnedChildEmit, PrivateChildPublicationInput};
+    use crate::app_emission::{ChildEmit, ChildEmitGenesis};
+    use crate::child_emit_preparation::OwnedChildEmit;
+    use crate::child_content::PrivateChildPublicationInput;
     use semio_framework_artifact_reference::{ArtifactRef, ArtifactDialect};
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     static DECLARATIONS: &[store::MemberOpenDeclaration] = &[
@@ -137,7 +153,7 @@ fn child_emission_private_input_metadata_and_genesis_retain_exact_request_and_or
 }
 
 
-impl store::ArtifactSqliteSnapshot for SurfaceSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for SurfaceSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn to_sqlite_database(&self, control: &mut store::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<store::sqlite_snapshot::SqliteDatabase, semio_framework_value::ValueError> {
         use store::sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotPhase, SqliteValue};
@@ -165,7 +181,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for SurfaceSn
     }
 }
 
-impl store::ArtifactDsl for SurfaceSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SurfaceSnapshot {
     const EXTENSION: &'static str = "testkit-surface";
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
         if text.trim().is_empty() {
@@ -178,10 +194,10 @@ impl store::ArtifactDsl for SurfaceSnapshot {
     }
 }
 
-impl store::ArtifactPack for SurfaceSnapshot {
+impl store::os_store::serialization::ArtifactPack for SurfaceSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -196,7 +212,7 @@ impl store::ArtifactPack for SurfaceSnapshot {
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, ToValue, FromValue)]
-pub(crate) struct SurfaceDiff {
+struct SurfaceDiff {
     count: Option<i32>,
 }
 
@@ -295,7 +311,7 @@ const SURFACE_TOOL_CONTRACT: ToolExecutionContract = ToolExecutionContract::resu
 /// substitute: it resolves to `interactive-job.missing-owned-reducer` at dispatch, so an editor
 /// surface with no owned factory can only ever prove what the runtime FORBIDS.
 struct SurfaceFixtureJob {
-    owners: crate::app::mutation_fixture::job_close::FixtureJobOwners<EditorApp<SurfaceEditorFixture>>,
+    owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners<EditorApp<SurfaceEditorFixture>>,
     count: i32,
     page: usize,
 }
@@ -319,13 +335,13 @@ impl semio_framework_job::InteractiveJob for SurfaceFixtureJob {
             .completion
             .as_ref()
             .expect("surface fixture completion")
-            .complete(Ok(Emit { artifact_mutations: vec![SetSurfaceCount { value: self.count + 1 }.into()], ..Default::default() }), crate::app::EphemeralEmit::default())
+            .complete(Ok(Emit { artifact_mutations: vec![SetSurfaceCount { value: self.count + 1 }.into()], ..Default::default() }), crate::app_emission::EphemeralEmit::default())
             .expect("one exact surface completion");
         semio_framework_job::JobOutcomeBorrow::admit_complete(cx, None, None)
     }
 
     fn borrow_outcome<'a>(&'a self, descriptor: &'a semio_framework_job::JobOutcomeDescriptor) -> Result<semio_framework_job::JobOutcomeView<'a>, semio_framework_value::ValueError> {
-        crate::app::artifact_app_laws::fixture_job_outcome(descriptor)
+        crate::app_testing::artifact_app_laws::fixture_job_outcome(descriptor)
     }
 
     fn begin_close(&mut self) {
@@ -402,14 +418,14 @@ impl ArtifactOwnedToolJobFactory for SurfaceFixtureFactory {
     fn latest_wins_target(_command: &SurfaceEditorCommand) -> Option<&str> {
         None
     }
-    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::app::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
+    fn build_latest_wins_command_disposer() -> Option<Box<dyn crate::store_lifecycle::ArtifactOwnedDisposer<SurfaceEditorCommand>>> {
         None
     }
 }
 
-async fn surface_manifest() -> crate::app::App {
-    crate::app::App::from_builder(
-        crate::app::App::builder(SURFACE_CONTROLLER_ID, LocalizedLabel::data("Surface Fixture"))
+async fn surface_manifest() -> crate::app_builder::App {
+    crate::app_builder::App::from_builder(
+        crate::app_builder::App::builder(SURFACE_CONTROLLER_ID, LocalizedLabel::data("Surface Fixture"))
             .await
             .document(["state"])
             .mode("edit", LocalizedLabel::data("Edit"), "pencil")
@@ -444,15 +460,15 @@ impl SurfaceNaturalDecodeCursor {
         Self { bytes: Some(bytes), retirement: None, offset: 0, decoded_items: 0, word: [0; 4], sum: 0, complete: false, closing: false }
     }
 
-    fn progress(&self) -> crate::app::NaturalFileDecodeProgress {
-        crate::app::NaturalFileDecodeProgress { consumed_input_bytes: self.offset, decoded_items: self.decoded_items, owned_output_bytes: 0, completed_work_units: self.offset as u64 }
+    fn progress(&self) -> crate::app_contract::NaturalFileDecodeProgress {
+        crate::app_contract::NaturalFileDecodeProgress { consumed_input_bytes: self.offset, decoded_items: self.decoded_items, owned_output_bytes: 0, completed_work_units: self.offset as u64 }
     }
 }
 
-impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDecodeCursor {
-    fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<crate::app::NaturalFileDecodeStep<SurfaceSnapshot>, crate::app::MediaError> {
+impl crate::app_contract::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDecodeCursor {
+    fn advance(&mut self, context: &mut semio_framework_job::StepContext<'_>) -> Result<crate::app_contract::NaturalFileDecodeStep<SurfaceSnapshot>, semio_framework::MediaError> {
         if self.closing || self.complete {
-            return Err(crate::app::MediaError::Payload(crate::app::NATURAL_FILE_PORT.into(), "surface decoder is no longer advanceable".into()));
+            return Err(semio_framework::MediaError::Payload(crate::app_contract::NATURAL_FILE_PORT.into(), "surface decoder is no longer advanceable".into()));
         }
         let bytes = self.bytes.as_ref().expect("surface decoder retains its bytes until close");
         while self.offset < bytes.len() && !context.should_yield() && !context.is_cancelled() {
@@ -460,39 +476,39 @@ impl crate::app::NaturalFileDecodeCursor<SurfaceSnapshot> for SurfaceNaturalDeco
             self.offset += 1;
             context.consume_fuel(1);
             if self.offset % 4 == 0 {
-                self.sum = self.sum.checked_add(i64::from(i32::from_be_bytes(self.word))).ok_or_else(|| crate::app::MediaError::Payload(crate::app::NATURAL_FILE_PORT.into(), "surface natural count overflow".into()))?;
+                self.sum = self.sum.checked_add(i64::from(i32::from_be_bytes(self.word))).ok_or_else(|| semio_framework::MediaError::Payload(crate::app_contract::NATURAL_FILE_PORT.into(), "surface natural count overflow".into()))?;
                 self.decoded_items += 1;
             }
         }
         if self.offset < bytes.len() {
-            return Ok(crate::app::NaturalFileDecodeStep::Progress(self.progress()));
+            return Ok(crate::app_contract::NaturalFileDecodeStep::Progress(self.progress()));
         }
-        let count = i32::try_from(self.sum).map_err(|_| crate::app::MediaError::Payload(crate::app::NATURAL_FILE_PORT.into(), "surface natural count is outside signed 32-bit range".into()))?;
+        let count = i32::try_from(self.sum).map_err(|_| semio_framework::MediaError::Payload(crate::app_contract::NATURAL_FILE_PORT.into(), "surface natural count is outside signed 32-bit range".into()))?;
         self.complete = true;
-        Ok(crate::app::NaturalFileDecodeStep::Complete { snapshot: SurfaceSnapshot { count }, progress: self.progress() })
+        Ok(crate::app_contract::NaturalFileDecodeStep::Complete { snapshot: SurfaceSnapshot { count }, progress: self.progress() })
     }
 
     fn begin_close(&mut self) {
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+    fn close_step(&mut self, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
         if self.retirement.is_some() {
-            let step=store::artifact_retirement_box_close_step(&mut self.retirement,grant).map_err(|error|Fault::from(error.into_message()))?;
-            return Ok(crate::app::PluginLifecycleStep::Progress(step.progress()));
+            let step=store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement,grant).map_err(|error|Fault::from(error.into_message()))?;
+            return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(step.progress()));
         }
         if let Some(original)=self.bytes.take(){
             return match semio_framework_value::retirement::admit_owned_retirement(original,grant){
-                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(crate::app::PluginLifecycleStep::Progress(progress))},
+                Ok((owner,progress))=>{self.retirement=Some(owner);Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(progress))},
                 Err((error,original))=>{self.bytes=Some(original);Err(Fault::from(error.into_message()))},
             };
         }
-        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
+        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
 
-    fn retirement_demands(&self,body:usize)->Result<crate::app::RetirementDemand,semio_framework_value::ValueError>{
-        if let Some(owner)=self.retirement.as_ref(){return store::artifact_retirement_box_demands(owner,body);}
-        Ok(crate::app::RetirementDemand{capacity_bytes:if self.bytes.is_some(){semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>()}else{0},depth:usize::from(self.bytes.is_some()),..Default::default()})
+    fn retirement_demands(&self,body:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{
+        if let Some(owner)=self.retirement.as_ref(){return store::os_store::snapshot_read::artifact_retirement_box_demands(owner,body);}
+        Ok(semio_framework_value::RetirementDemand{capacity_bytes:if self.bytes.is_some(){semio_framework_value::retirement::owned_retirement_birth_bytes::<Vec<u8>>()}else{0},depth:usize::from(self.bytes.is_some()),..Default::default()})
     }
 
     fn terminal_is_empty(&self) -> bool {
@@ -513,41 +529,41 @@ impl ArtifactEditor for SurfaceEditorFixture {
     type DraftMutation = NoDraftMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = crate::app::NoTransient;
-    type TransientMutation = crate::app::NoTransientMutation;
+    type Transient = crate::app_views::NoTransient;
+    type TransientMutation = crate::app_views::NoTransientMutation;
     type Command = SurfaceEditorCommand;
 
-    fn natural_file_codec() -> Option<crate::app::NaturalFileCodec> {
-        Some(crate::app::NaturalFileCodec { format_kind: "semio.testkit-surface-natural/v1", extension: ".surface", media_type: "application/vnd.semio.testkit-surface", binary: true })
+    fn natural_file_codec() -> Option<crate::app_contract::NaturalFileCodec> {
+        Some(crate::app_contract::NaturalFileCodec { format_kind: "semio.testkit-surface-natural/v1", extension: ".surface", media_type: "application/vnd.semio.testkit-surface", binary: true })
     }
 
-    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, crate::app::MediaError> {
+    fn encode_natural_file(snapshot: &Self::Snapshot) -> Result<Vec<u8>, semio_framework::MediaError> {
         Ok(snapshot.count.to_be_bytes().to_vec())
     }
 
-    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, crate::app::MediaError> {
-        let bytes: [u8; 4] = bytes.try_into().map_err(|_| crate::app::MediaError::Payload(crate::app::NATURAL_FILE_PORT.into(), "surface natural file requires one signed 32-bit count".into()))?;
+    fn decode_natural_file(bytes: &[u8]) -> Result<Self::Snapshot, semio_framework::MediaError> {
+        let bytes: [u8; 4] = bytes.try_into().map_err(|_| semio_framework::MediaError::Payload(crate::app_contract::NATURAL_FILE_PORT.into(), "surface natural file requires one signed 32-bit count".into()))?;
         Ok(SurfaceSnapshot { count: i32::from_be_bytes(bytes) })
     }
 
-    fn build_natural_file_decode_owner(bytes: Vec<u8>, _contract: ToolExecutionContract) -> Result<crate::app::NaturalFileDecodeOwner<Self::Snapshot>, crate::app::MediaError> {
+    fn build_natural_file_decode_owner(bytes: Vec<u8>, _contract: ToolExecutionContract) -> Result<crate::app_contract::NaturalFileDecodeOwner<Self::Snapshot>, semio_framework::MediaError> {
         if !bytes.is_empty() && bytes.len() % 4 == 0 {
-            Ok(crate::app::NaturalFileDecodeOwner::Controlled(Box::new(SurfaceNaturalDecodeCursor::new(bytes))))
+            Ok(crate::app_contract::NaturalFileDecodeOwner::Controlled(Box::new(SurfaceNaturalDecodeCursor::new(bytes))))
         } else {
-            Ok(crate::app::NaturalFileDecodeOwner::Synchronous(bytes))
+            Ok(crate::app_contract::NaturalFileDecodeOwner::Synchronous(bytes))
         }
     }
 
-    fn build_instance_operation_owner() -> Box<dyn crate::app::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn crate::tool_contract::ArtifactInstanceOperationOwner> {
         media_owner_context::owner("editor-instance")
     }
 
     fn export_media_with_request_context(
-        owner: &crate::app::ArtifactInstanceOperationOwnerHandle,
+        owner: &crate::tool_contract::ArtifactInstanceOperationOwnerHandle,
         port: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
-        _transient: &crate::app::TransientView<'_, Self::Transient>,
-    ) -> Result<Media, crate::app::MediaError> {
+        _transient: &crate::window_transient::TransientView<'_, Self::Transient>,
+    ) -> Result<Media, semio_framework::MediaError> {
         if port == "retained:out" {
             media_owner_context::export(owner, port, doc)
         } else {
@@ -572,41 +588,41 @@ impl ArtifactEditor for SurfaceEditorFixture {
     }
 
     fn build_tool_job(request: ArtifactOwnedToolJobRequest<EditorApp<Self>>) -> Result<Option<ToolOperationSpec>, Fault> {
-        let job = SurfaceFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
+        let job = SurfaceFixtureJob { owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners::new(request.command, request.completion).with_context(request.context), count: request.snapshot.count, page: 0 };
         Ok(Some(ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, job, request.operation)))
     }
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained"))
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app_testing::mutation_fixture::wire::preparation_factory::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained"))
     }
 
-    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
-    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
-        Some(crate::app::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained", grant))
+    fn document_store_owners_source_demands() -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { crate::app_testing::mutation_fixture::wire::document_store_owners_source_demands::<Self::Snapshot, Self::Mutation>() }
+    fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+        Some(crate::app_testing::mutation_fixture::wire::admit_document_store_owners::<Self::Snapshot, Self::Mutation>("testkit-surface-artifact-retained", grant))
     }
-    fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> crate::app::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(crate::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
-    fn build_draft_store_disposer() -> crate::app::ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
-        Some(crate::app::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
+    fn build_draft_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::DraftStore<Self::Draft, Self::DraftMutation>> {
+        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Draft, Self::DraftMutation>())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_local_root_retirement_factory())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_peer_retirement_factory())
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::transient_local_root_retirement_factory())
     }
-    fn build_presence_store_disposer() -> crate::app::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    fn build_presence_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> crate::app::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    fn build_transient_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn initial_snapshot() -> SurfaceSnapshot {
         SurfaceSnapshot::default()
@@ -616,7 +632,7 @@ impl ArtifactEditor for SurfaceEditorFixture {
         command: &SurfaceEditorCommand,
         doc: &ArtifactView<'_, SurfaceSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &crate::app::InteractionView<'_>,
+        _interaction: &crate::app_views::InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _draft: &DraftView<'_, NoDraft>,
         _engines: &EngineHandles,
@@ -645,20 +661,20 @@ impl ArtifactViewer for SurfaceViewerFixture {
     type ConfigMutation = NoConfigMutation;
     type Presence = NoPresence;
     type PresenceMutation = NoPresenceMutation;
-    type Transient = crate::app::NoTransient;
-    type TransientMutation = crate::app::NoTransientMutation;
+    type Transient = crate::app_views::NoTransient;
+    type TransientMutation = crate::app_views::NoTransientMutation;
     type Command = SurfaceViewerCommand;
 
-    fn build_instance_operation_owner() -> Box<dyn crate::app::ArtifactInstanceOperationOwner> {
+    fn build_instance_operation_owner() -> Box<dyn crate::tool_contract::ArtifactInstanceOperationOwner> {
         media_owner_context::owner("viewer-instance")
     }
 
     fn export_media_with_request_context(
-        owner: &crate::app::ArtifactInstanceOperationOwnerHandle,
+        owner: &crate::tool_contract::ArtifactInstanceOperationOwnerHandle,
         port: &str,
         doc: &ArtifactView<'_, Self::Snapshot>,
-        _transient: &crate::app::TransientView<'_, Self::Transient>,
-    ) -> Result<Media, crate::app::MediaError> {
+        _transient: &crate::window_transient::TransientView<'_, Self::Transient>,
+    ) -> Result<Media, semio_framework::MediaError> {
         if port == "retained:out" {
             media_owner_context::export(owner, port, doc)
         } else {
@@ -666,26 +682,26 @@ impl ArtifactViewer for SurfaceViewerFixture {
         }
     }
 
-    fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<crate::app::RetirementDemand, semio_framework_value::ValueError> {
-        Ok(if instance_id == u32::MAX { crate::app::RetirementDemand { release_bytes: 7, depth: 1, ..Default::default() } } else { Default::default() })
+    fn mounted_job_maintenance_demands(instance_id: u32, _body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
+        Ok(if instance_id == u32::MAX { semio_framework_value::RetirementDemand { release_bytes: 7, depth: 1, ..Default::default() } } else { Default::default() })
     }
 
-    fn mounted_job_maintenance_step(instance_id: u32, grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+    fn mounted_job_maintenance_step(instance_id: u32, grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
         if instance_id != u32::MAX {
-            return Ok(crate::app::PluginLifecycleStep::Complete(Default::default()));
+            return Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()));
         }
         let demand = Self::mounted_job_maintenance_demands(instance_id, grant.maximum_copy_bytes).map_err(|error| Fault::from(error.into_message()))?;
-        if !crate::app::plugin_turn_admitted(demand, grant)? {
-            return Ok(crate::app::PluginLifecycleStep::Progress(Default::default()));
+        if !crate::bounded_ownership::plugin_turn_admitted(demand, grant)? {
+            return Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()));
         }
-        Ok(crate::app::PluginLifecycleStep::Progress(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }))
+        Ok(crate::bounded_ownership::PluginLifecycleStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: demand.release_bytes, ..Default::default() }))
     }
 
-    fn mounted_job_close_step(instance_id: u32, _grant: crate::app::RetainedCloneGrant) -> Result<crate::app::PluginLifecycleStep, Fault> {
+    fn mounted_job_close_step(instance_id: u32, _grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<crate::bounded_ownership::PluginLifecycleStep, Fault> {
         if instance_id == u32::MAX {
-            return Ok(crate::app::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
+            return Ok(crate::bounded_ownership::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
         }
-        Ok(crate::app::PluginLifecycleStep::Complete(Default::default()))
+        Ok(crate::bounded_ownership::PluginLifecycleStep::Complete(Default::default()))
     }
 
     fn mounted_jobs_terminal_is_empty(instance_id: u32) -> bool {
@@ -700,26 +716,26 @@ impl ArtifactViewer for SurfaceViewerFixture {
         "surface-viewer-noop"
     }
 
-    fn build_document_store_disposer() -> crate::app::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
-        Some(crate::app::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
+    fn build_document_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::ArtifactStore<Self::Snapshot, Self::Mutation>> {
+        Some(crate::store_lifecycle::bounded_document_store_disposer::<Self::Snapshot, Self::Mutation>())
     }
-    fn build_config_store_disposer() -> crate::app::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
-        Some(crate::app::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
+    fn build_config_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::ConfigStore<Self::Config, Self::ConfigMutation>> {
+        Some(crate::store_lifecycle::bounded_config_store_disposer::<Self::Config, Self::ConfigMutation>())
     }
     fn build_presence_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_local_root_retirement_factory())
     }
     fn build_presence_peer_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Presence>>> {
-        Some(crate::app::mutation_fixture::no_state::presence_peer_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::presence_peer_retirement_factory())
     }
     fn build_transient_local_root_retirement_factory() -> Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<Self::Transient>>> {
-        Some(crate::app::mutation_fixture::no_state::transient_local_root_retirement_factory())
+        Some(crate::app_testing::mutation_fixture::no_state::transient_local_root_retirement_factory())
     }
-    fn build_presence_store_disposer() -> crate::app::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
-        Some(crate::app::mutation_fixture::no_state::presence_store_disposer())
+    fn build_presence_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::PresenceStore<Self::Presence, Self::PresenceMutation>> {
+        Some(crate::app_testing::mutation_fixture::no_state::presence_store_disposer())
     }
-    fn build_transient_store_disposer() -> crate::app::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
-        Some(crate::app::mutation_fixture::no_state::transient_store_disposer())
+    fn build_transient_store_disposer() -> crate::store_lifecycle::ArtifactDisposal<store::TransientStore<Self::Transient, Self::TransientMutation>> {
+        Some(crate::app_testing::mutation_fixture::no_state::transient_store_disposer())
     }
     fn initial_snapshot() -> SurfaceSnapshot {
         SurfaceSnapshot::default()
@@ -729,7 +745,7 @@ impl ArtifactViewer for SurfaceViewerFixture {
         _command: &SurfaceViewerCommand,
         _doc: &ArtifactView<'_, SurfaceSnapshot>,
         _cfg: &ConfigView<'_, NoConfig>,
-        _interaction: &crate::app::InteractionView<'_>,
+        _interaction: &crate::app_views::InteractionView<'_>,
         _view_state: Option<&ViewModel>,
         _engines: &EngineHandles,
     ) -> Result<ViewEmit<NoConfigMutation>, Fault> {
@@ -743,19 +759,19 @@ impl ArtifactViewer for SurfaceViewerFixture {
 
 #[semio_framework_async_macros::async_test]
 async fn viewer_never_mutates_the_document_or_draft_store() {
-    assert_viewer_never_mutates::<SurfaceViewerFixture>(crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    assert_viewer_never_mutates::<SurfaceViewerFixture>(crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
 }
 
 #[semio_framework_async_macros::async_test]
 async fn bounded_viewer_fixture_preserves_declared_lifecycle_hooks() {
-    type Fixture = crate::app::artifact_app_laws::BoundedViewerFixture<SurfaceViewerFixture>;
+    type Fixture = crate::app_testing::artifact_app_laws::BoundedViewerFixture<SurfaceViewerFixture>;
     let demand = <Fixture as ArtifactViewer>::mounted_job_maintenance_demands(u32::MAX, 0).expect("maintenance quote");
     assert_eq!((demand.release_bytes, demand.depth), (7, 1));
-    let grant = crate::app::plugin_demand_grant(demand);
-    let short = crate::app::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, short).expect("maintenance hook"), crate::app::PluginLifecycleStep::Progress(Default::default()), "a grant below the quoted release axis yields");
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, grant).expect("maintenance hook"), crate::app::PluginLifecycleStep::Progress(crate::app::RetainedCloneProgress { copied_items: 1, released_bytes: 7, ..Default::default() }));
-    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, grant).expect("close hook"), crate::app::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
+    let grant = crate::bounded_ownership::plugin_demand_grant(demand);
+    let short = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_release_bytes: demand.release_bytes - 1, ..grant };
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, short).expect("maintenance hook"), crate::bounded_ownership::PluginLifecycleStep::Progress(Default::default()), "a grant below the quoted release axis yields");
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_maintenance_step(u32::MAX, grant).expect("maintenance hook"), crate::bounded_ownership::PluginLifecycleStep::Progress(semio_framework_value::retained_clone::RetainedCloneProgress { copied_items: 1, released_bytes: 7, ..Default::default() }));
+    assert_eq!(<Fixture as ArtifactViewer>::mounted_job_close_step(u32::MAX, grant).expect("close hook"), crate::bounded_ownership::PluginLifecycleStep::Blocked { reason: "surface viewer lifecycle witness" });
     assert!(!<Fixture as ArtifactViewer>::mounted_jobs_terminal_is_empty(u32::MAX));
     assert_eq!(<Fixture as ArtifactViewer>::config_schema(), "semio.testkit-surface.viewer-config/v1");
     assert_eq!(<Fixture as ArtifactViewer>::command_id(&SurfaceViewerCommand::Noop), "surface-viewer-noop");
@@ -768,9 +784,9 @@ async fn editor_and_viewer_share_one_dialect() {
 
 #[semio_framework_async_macros::async_test]
 async fn new_viewer_constructs_a_registry_less_wrapper() {
-    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.snapshot().unwrap().count, 0);
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// ✅️ The editor surface mutates through the SAME route a product editor uses: a declared
@@ -785,12 +801,12 @@ async fn new_viewer_constructs_a_registry_less_wrapper() {
 /// turn. Asserting the count before settling would assert that a migrated editor does NOT mutate.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_still_mutates_normally() {
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("increment");
-    let receipt = crate::app::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the admitted operation settles");
-    assert!(receipt.lanes.contains(&crate::app::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("increment");
+    let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the admitted operation settles");
+    assert!(receipt.lanes.contains(&crate::tool_contract::TypedOperationResultLane::Artifact), "the increment settles on the Artifact publication lane it declares, got {:?}", receipt.lanes);
     assert_eq!(app.snapshot().unwrap().count, 1);
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 #[semio_framework_async_macros::async_test]
@@ -800,32 +816,32 @@ async fn registered_editor_consumes_intrinsic_natural_bytes_through_the_real_med
     let format_kind = row["formatKind"].as_str().expect("registered editor format kind");
     let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
     let expected = i32::try_from(row["expectedCount"].as_i64().expect("expected surface count")).expect("i32 surface count");
-    let artifact = crate::app::MediaArtifact {
-        descriptor: crate::app::MediaArtifactDescriptor {
+    let artifact = crate::app_contract::MediaArtifact {
+        descriptor: crate::app_contract::MediaArtifactDescriptor {
             edge_id: None,
-            port_id: Some(crate::app::NATURAL_FILE_PORT.into()),
+            port_id: Some(crate::app_contract::NATURAL_FILE_PORT.into()),
             kind_id: Some(format_kind.into()),
             media_type: None,
-            wire: crate::app::MediaWireFormat::Binary { format_kind: format_kind.into() },
+            wire: semio_framework::MediaWireFormat::Binary { format_kind: format_kind.into() },
             blob_hash: None,
         },
         data,
     };
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    app.consume_media(crate::app::NATURAL_FILE_PORT, artifact).await.expect("registered editor consumes natural bytes");
-    let receipt = crate::app::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("natural-file import settles");
-    let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    app.consume_media(crate::app_contract::NATURAL_FILE_PORT, artifact).await.expect("registered editor consumes natural bytes");
+    let receipt = crate::app_testing::artifact_app_laws::settle_registered_typed_operation(&mut app, meta("local").instance_id, crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("natural-file import settles");
+    let loads = receipt.effects.into_iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, spr } => Some(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "natural-file Open publishes exactly one document load, no mutation");
-    crate::app::artifact_app_laws::load_document(&mut app, &loads[0], &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("the document load lands");
+    crate::app_testing::artifact_app_laws::load_document(&mut app, &loads[0], &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("the document load lands");
     assert_eq!(app.snapshot().expect("imported surface snapshot").count, expected);
     let history_rows = app.history_snapshot().await.expect("natural-file import history").upserts.into_iter().filter(|entry| entry.edit_id.is_some()).count();
     let expected_history_rows = usize::try_from(fixture["lifecycle"]["expected"]["openedHistoryEntries"].as_u64().expect("opened history entries")).expect("usize history count");
     assert_eq!(history_rows, expected_history_rows, "natural-file Open is a document load: it writes no history row into the fresh owner history");
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 fn surface_natural_file_reserved_job(
-    snapshot_read: store::SnapshotRead<SurfaceSnapshot>,
+    snapshot_read: store::os_store::snapshot_read::SnapshotRead<SurfaceSnapshot>,
     data: Vec<u8>,
     maximum_work_units_per_step: u64,
 ) -> (
@@ -872,9 +888,9 @@ fn surface_natural_file_reserved_job(
 
 const SURFACE_JOB_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:4096,maximum_capacity_bytes:65536,maximum_release_bytes:262144,maximum_depth:64};
 const SURFACE_ONE_UNIT_POLICY:semio_framework_job::RetainedCloneGrant=semio_framework_job::RetainedCloneGrant{maximum_items:1,maximum_copy_bytes:32768,maximum_capacity_bytes:262144,maximum_release_bytes:1048576,maximum_depth:4096};
-fn surface_natural_file_step(job:&mut ArtifactReservedToolJob,operation:semio_framework_job::OperationId,cancel:semio_framework_job::CancelToken,work_units:u64,sequence:&mut u64,actual:&mut semio_framework_job::RetainedCloneProgress)->crate::app::artifact_app_laws::FixtureStepOutcome{
+fn surface_natural_file_step(job:&mut ArtifactReservedToolJob,operation:semio_framework_job::OperationId,cancel:semio_framework_job::CancelToken,work_units:u64,sequence:&mut u64,actual:&mut semio_framework_job::RetainedCloneProgress)->crate::app_testing::artifact_app_laws::FixtureStepOutcome{
     let mut context=semio_framework_job::StepContext::new(operation,semio_framework_job::Generation(1),semio_framework_job::StepBudget::new(work_units,u64::MAX,SURFACE_JOB_POLICY),cancel,semio_framework_job::default_now_us,sequence,actual);
-    let outcome=crate::app::artifact_app_laws::fixture_step(job,&mut context);assert!(context.retained_progress().fits(SURFACE_JOB_POLICY));outcome
+    let outcome=crate::app_testing::artifact_app_laws::fixture_step(job,&mut context);assert!(context.retained_progress().fits(SURFACE_JOB_POLICY));outcome
 }
 fn close_surface_natural_file_job(job:&mut ArtifactReservedToolJob){
     use semio_framework_job::{InteractiveJob as Job,InteractiveJobCloseStep as Step,RetainedCloneProgress};
@@ -889,7 +905,7 @@ fn close_surface_natural_file_job(job:&mut ArtifactReservedToolJob){
 /// per-turn grant. Both exits retire every retained owner with bounded positive progress.
 #[semio_framework_async_macros::async_test]
 async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedly() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).expect("natural-file lifecycle fixture");
     let row = &fixture["registeredEditor"];
     let data = row["octets"].as_array().expect("registered editor octets").iter().map(|octet| octet.as_u64().expect("octet") as u8).collect::<Vec<_>>();
@@ -900,13 +916,13 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     let (mut cancelled, cancelled_completion, cancelled_snapshot, cancelled_history) = surface_natural_file_reserved_job(app.store.snapshot_read().expect("surface store read"), data, 4_096);
     let mut sequence = 0;
     let mut actual=semio_framework_job::RetainedCloneProgress::default();
-    let mut first = crate::app::artifact_app_laws::FixtureStepOutcome::Idle;
+    let mut first = crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle;
     for _ in 0..64 {
         first = surface_natural_file_step(&mut cancelled, operation, cancel.clone(), turn, &mut sequence, &mut actual);
-        if !matches!(first, crate::app::artifact_app_laws::FixtureStepOutcome::Idle) { break; }
+        if !matches!(first, crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle) { break; }
     }
     match first {
-        crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
+        crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
             assert_eq!(applied_progress, cancel_after);
         }
         other => panic!("first bounded natural-file turn must checkpoint accounted bytes, got {other:?}"),
@@ -915,11 +931,11 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
     assert!(matches!(
         surface_natural_file_step(&mut cancelled, operation, cancel, turn, &mut sequence,&mut actual),
-        crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled
+        crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled
     ));
     drop((cancelled_snapshot, cancelled_history));
     close_surface_natural_file_job(&mut cancelled);
-    crate::app::mutation_fixture::job_close::retire_completion(cancelled_completion);
+    crate::app_testing::mutation_fixture::job_close::retire_completion(cancelled_completion);
 
     let oversized = usize::try_from(row["oversizedOctetCount"].as_u64().expect("oversized octet count")).expect("usize octet count");
     let maximum = u64::try_from(oversized - 1).expect("bounded maximum work");
@@ -931,7 +947,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     for expected in [maximum, u64::try_from(oversized).expect("oversized progress")] {
         assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
         match surface_natural_file_step(&mut refused, operation, cancel.clone(), maximum, &mut sequence,&mut actual) {
-            crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
                 assert_eq!(applied_progress, expected);
             }
             other => panic!("natural-file accounting must checkpoint monotonically, got {other:?}"),
@@ -939,7 +955,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     }
     assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
     match surface_natural_file_step(&mut refused, operation, cancel, maximum, &mut sequence,&mut actual) {
-        crate::app::artifact_app_laws::FixtureStepOutcome::Fault(bytes) => {
+        crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(bytes) => {
             let detail = String::from_utf8(bytes).expect("UTF-8 refusal");
             assert_eq!(detail, "natural-file codec requires a controlled decoder for this input size");
         }
@@ -948,8 +964,8 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
     close_surface_natural_file_job(&mut refused);
     assert!(refused_completion.take_emit().expect("refused completion cell").is_none());
     drop((refused_snapshot, refused_history));
-    crate::app::mutation_fixture::job_close::retire_completion(refused_completion);
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    crate::app_testing::mutation_fixture::job_close::retire_completion(refused_completion);
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🧭️ A format-owned decoder consumes a source larger than one scheduler grant over
@@ -957,7 +973,7 @@ async fn natural_file_reserved_job_accounts_cancels_refuses_and_retires_boundedl
 /// source owner under the ordinary reserved-job close contract.
 #[semio_framework_async_macros::async_test]
 async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📄️natural-file-lifecycle/🔣️.json")).expect("natural-file lifecycle fixture");
     let row = &fixture["controlledEditor"];
     let word_count = usize::try_from(row["wordCount"].as_u64().expect("controlled word count")).expect("usize word count");
@@ -983,17 +999,17 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     loop {
         assert!(actual.fits(SURFACE_JOB_POLICY));actual=Default::default();
         match surface_natural_file_step(&mut job, operation, cancel.clone(), work, &mut sequence,&mut actual) {
-            crate::app::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Checkpoint { applied_progress, .. } => {
                 assert!(applied_progress >= last_progress, "controlled decoder checkpoints are monotonic");
                 last_progress = applied_progress;
                 checkpoints += 1;
             }
-            crate::app::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Complete { .. } => {
                 break;
             }
-            crate::app::artifact_app_laws::FixtureStepOutcome::Yield | crate::app::artifact_app_laws::FixtureStepOutcome::Idle => {}
-            crate::app::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("controlled natural-file decode cancelled without a request"),
-            crate::app::artifact_app_laws::FixtureStepOutcome::Fault(bytes) => {
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Yield | crate::app_testing::artifact_app_laws::FixtureStepOutcome::Idle => {}
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Cancelled => panic!("controlled natural-file decode cancelled without a request"),
+            crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(bytes) => {
                 let detail = String::from_utf8_lossy(&bytes).into_owned();
                 panic!("controlled natural-file decode faulted: {detail}");
             }
@@ -1006,11 +1022,11 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
     assert!(emit.artifact_mutations.is_empty(), "natural-file Open is a document load: it emits no mutation");
     let loads = emit.effects.iter().filter_map(|effect| match effect { semio_framework::kernel::Effect::LoadDocument { pack, .. } => Some(pack), _ => None }).collect::<Vec<_>>();
     assert_eq!(loads.len(), 1, "the controlled decoder publishes exactly one document load");
-    assert_eq!(<SurfaceSnapshot as store::ArtifactPack>::decode_pack(loads[0]).expect("loaded surface pack"), SurfaceSnapshot { count: oracle });
+    assert_eq!(<SurfaceSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(loads[0]).expect("loaded surface pack"), SurfaceSnapshot { count: oracle });
     drop((snapshot, history));
     close_surface_natural_file_job(&mut job);
-    crate::app::mutation_fixture::job_close::retire_completion(completion);
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    crate::app_testing::mutation_fixture::job_close::retire_completion(completion);
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🪟️ The controller literal every proof row, tool key and manifest id in this fixture is stated
@@ -1020,9 +1036,9 @@ async fn natural_file_controlled_decoder_crosses_turns_and_retires_its_owner() {
 #[semio_framework_async_macros::async_test]
 async fn surface_editor_controller_is_the_derived_id() {
     assert_eq!(SURFACE_CONTROLLER_ID, semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor));
-    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     assert_eq!(app.app_id().await, SURFACE_CONTROLLER_ID);
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🔒️ The registry-less wrapper still fails CLOSED on the same editor: an owned factory never
@@ -1030,12 +1046,12 @@ async fn surface_editor_controller_is_the_derived_id() {
 /// before any factory is reached, and the document is untouched.
 #[semio_framework_async_macros::async_test]
 async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
-    let error = app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("registry-less editor must fail closed");
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
+    let error = app.dispatch_typed(SurfaceEditorCommand::Increment, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("registry-less editor must fail closed");
     assert_eq!(error.code.0, "interactive-job.unknown-key");
     assert!(error.message.contains(SURFACE_TOOL_ID), "the refusal names the editor's own verb, not the generic placeholder: {}", error.message);
     assert_eq!(app.snapshot().unwrap().count, 0, "a fail-closed dispatch never reaches the reducer");
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🐛️ Ticket 26/08/16/HUB-SPACES-LIVE-PRESENCE-AND-COLLABORATIVE-STUDIOS lane 4-G — WITH
@@ -1051,43 +1067,43 @@ async fn editor_fixture_without_a_manifest_declaration_fails_closed() {
 #[semio_framework_async_macros::async_test]
 async fn handle_action_invocation_accepts_the_real_canonical_surface_app_id() {
     use semio_framework::manifest::{ActionAddress, ActionInvocation};
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
     let invocation = ActionInvocation {
         address: ActionAddress { plugin_id: "test".into(), app_id: real_id.clone(), mode_id: "edit".into(), window_kind_id: "main".into(), window_instance_id: "main-instance".into(), action_id: "increment".into() },
         arguments: Default::default(),
     };
-    let error = app.handle_action_invocation(&invocation, Some("edit"), &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect_err("registry-less fixture declares no modes");
+    let error = app.handle_action_invocation(&invocation, Some("edit"), &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect_err("registry-less fixture declares no modes");
     assert!(!error.message.contains("does not match"), "the real canonical app id must satisfy the ownership check, got: {}", error.message);
     assert!(error.message.contains("unknown action mode owner"), "expected ownership to pass and the mode lookup to fail instead, got: {}", error.message);
     assert_eq!(app.app_id().await, real_id, "PluginApp::app_id must report the real canonical id, not the APP_ID placeholder");
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🪪️ Verifies `EditorApp` initializes its document, config, draft, and interaction
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn editor_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_app::<EditorApp<SurfaceEditorFixture>>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Editor);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
     assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
     assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 🪪️ Verifies `ViewerApp` initializes its document, config, draft, and interaction
 /// envelopes with the real canonical surface app id, not the `APP_ID` placeholder.
 #[semio_framework_async_macros::async_test]
 async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
-    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     let real_id = semio_framework::surface_app_id(&SURFACE_TESTKIT_DIALECT.into(), semio_framework::AppRole::Viewer);
     assert_eq!(app.store.envelope().id, real_id);
     assert_eq!(app.config_store.envelope().id, format!("{real_id}-config"));
     assert_eq!(app.draft_store.envelope().id, format!("{real_id}-draft"));
     assert_eq!(app.interaction_store.envelope().id, format!("{real_id}-interaction"));
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 /// 📌️ A hub Check In validates the pair it folded through the guest codec's `print-mirror`, and a zero-op `apply-ops`
@@ -1096,15 +1112,15 @@ async fn viewer_app_envelopes_carry_the_real_canonical_surface_app_id() {
 /// was refused `codec-refused` (ticket 26/09/23, session 14).
 #[semio_framework_async_macros::async_test]
 async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_aborting() {
-    let table = crate::app::artifact_codec_table::<EditorApp<SurfaceEditorFixture>>();
+    let table = crate::surface_contract::artifact_codec_table::<EditorApp<SurfaceEditorFixture>>();
     let genesis = (table.genesis)("artifact-5c0dec0de5c0dec0de5c0dec0de5c0de").await.expect("genesis pair of a server-minted artifact id");
     let op = protocol::OpBinary::encode_op(&SurfaceMutation::from(SetSurfaceCount { value: 7 })).expect("encode set-surface-count");
-    let populated = (table.apply_ops)(&genesis.pack, &genesis.spr, &store::os_spr::encode_ops_vec(&[op]), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("one op lands one edit");
+    let populated = (table.apply_ops)(&genesis.pack, &genesis.spr, &store::os_spr::encode_ops_vec(&[op]), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("one op lands one edit");
     let history = store::os_spr::decode_history(&populated.spr, &store::os_spr::DecodeOptions::default()).await.expect("populated history");
     assert_eq!(history.edits.len(), 1, "the pair carries one edit, so its history ledger is populated");
     let mirror = (table.print_mirror)(&populated.pack, &populated.spr).await.expect("a populated pair mirrors");
     assert!(mirror.ops.contains("set-surface-count"), "the mirror prints the pair's edit: {}", mirror.ops);
-    let passed = (table.apply_ops)(&populated.pack, &populated.spr, &store::os_spr::encode_ops_vec(&[]), &mut crate::app::artifact_app_laws::fixture_identity()).await.expect("an empty batch passes a populated pair through");
+    let passed = (table.apply_ops)(&populated.pack, &populated.spr, &store::os_spr::encode_ops_vec(&[]), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.expect("an empty batch passes a populated pair through");
     assert!(!passed.pack.is_empty() && !passed.spr.is_empty(), "an empty batch over a populated pair returns that pair");
 }
 
@@ -1114,9 +1130,9 @@ async fn the_codec_table_mirrors_and_passes_through_a_populated_pair_without_abo
 /// `Fault { origin: FaultOrigin::Framework, code: FaultCode::new("viewer.read-only"), .. }`.
 #[semio_framework_async_macros::async_test]
 async fn viewer_rejects_every_contract_mutating_verb() {
-    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+    let mut app = new_viewer::<SurfaceViewerFixture>(protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
     for verb in ["undo", "redo", "commitCheckpoint", "createAlternative", REVERT_TO_COMMAND_ACTION_ID, "cut", "paste"] {
-        let error = app.handle_action(verb, None, &meta("local"), &mut crate::app::artifact_app_laws::fixture_identity()).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
+        let error = app.handle_action(verb, None, &meta("local"), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await.err().unwrap_or_else(|| panic!("'{verb}' must be rejected on a viewer instance"));
         assert_eq!(error.origin, FaultOrigin::Framework, "'{verb}' rejection must carry FaultOrigin::Framework");
         assert_eq!(error.code.0, "viewer.read-only", "'{verb}' rejection must carry the frozen viewer.read-only code");
     }
@@ -1124,7 +1140,7 @@ async fn viewer_rejects_every_contract_mutating_verb() {
     let error = app.import_media("any-port", media, &meta("local")).await.err().expect("'import' must be rejected on a viewer instance");
     assert_eq!(error.origin, FaultOrigin::Framework, "'import' rejection must carry FaultOrigin::Framework");
     assert_eq!(error.code.0, "viewer.read-only", "'import' rejection must carry the frozen viewer.read-only code");
-    close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+    close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
 }
 
 #[test]
@@ -1135,7 +1151,7 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
     struct Probe { observed: Option<std::sync::Arc<std::sync::atomic::AtomicU64>>, consumes: u64, closing: bool }
     impl ArtifactCommandWork<EditorApp<SurfaceEditorFixture>> for Probe {
         fn tool_id(&self) -> &'static str { SURFACE_TOOL_ID }
-        fn extent(&self, _: &SurfaceEditorCommand, _: &SurfaceSnapshot, _: &protocol::InteractionState, _: Option<&crate::app::ArtifactOwnedToolJobContext<EditorApp<SurfaceEditorFixture>>>) -> Option<usize> { Some(1) }
+        fn extent(&self, _: &SurfaceEditorCommand, _: &SurfaceSnapshot, _: &protocol::InteractionState, _: Option<&crate::tool_contract::ArtifactOwnedToolJobContext<EditorApp<SurfaceEditorFixture>>>) -> Option<usize> { Some(1) }
         fn step(&mut self, _: &ArtifactCommandInputs<'_, EditorApp<SurfaceEditorFixture>>, cx: &mut semio_framework_job::StepContext<'_>) -> Result<ArtifactCommandWorkStep<EditorApp<SurfaceEditorFixture>>, Fault> {
             self.observed.as_ref().unwrap().store(cx.fuel_remaining(), std::sync::atomic::Ordering::SeqCst);
             cx.consume_fuel(self.consumes);
@@ -1164,15 +1180,15 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
             command: SurfaceEditorCommand::Increment,
             snapshot: std::sync::Arc::new(SurfaceSnapshot::default()), config: std::sync::Arc::new(NoConfig::default()), history: std::sync::Arc::new(HistoryView::empty()),
             interaction_state: std::sync::Arc::new(protocol::InteractionState::default()), interaction_hover: std::sync::Arc::new(Default::default()), context: None,
-            operation: crate::app::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], retained:SURFACE_ONE_UNIT_POLICY, authoring_seed: "unit-authority".into() }, completion,
+            operation: crate::app_views::AppOperationContext { app_instance_id: 1, parent_document_id: "unit-authority".into(), operation_id: 1, generation: 1, canonical_base_revision: [0;32], retained:SURFACE_ONE_UNIT_POLICY, authoring_seed: "unit-authority".into() }, completion,
         }, |_| SURFACE_TOOL_ID, 32, 1, Box::new(work));
         let mut job = ArtifactRetainedCommandJob::new(payload);
         let mut sequence = 0;
         for _ in 0..32 {
             let mut actual=semio_framework_job::RetainedCloneProgress::default();
             let mut cx = semio_framework_job::StepContext::new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), semio_framework_job::StepBudget::new(fixture["grantUnits"].as_u64().unwrap(),100_000,SURFACE_ONE_UNIT_POLICY), semio_framework_job::root_cancel_token(), || Some(0), &mut sequence,&mut actual);
-            let outcome = crate::app::artifact_app_laws::fixture_step(&mut job, &mut cx);
-            assert!(!matches!(outcome, crate::app::artifact_app_laws::FixtureStepOutcome::Fault(_)));
+            let outcome = crate::app_testing::artifact_app_laws::fixture_step(&mut job, &mut cx);
+            assert!(!matches!(outcome, crate::app_testing::artifact_app_laws::FixtureStepOutcome::Fault(_)));
             assert_eq!(cx.fuel_remaining(), row["remaining"].as_u64().unwrap());
             if observed.load(std::sync::atomic::Ordering::SeqCst) != u64::MAX { break; }
         }
@@ -1182,7 +1198,7 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
         }
         assert!(job.terminal_is_empty());
         assert!(consumer.take_emit().unwrap().is_none());
-        crate::app::mutation_fixture::job_close::retire_completion(consumer);
+        crate::app_testing::mutation_fixture::job_close::retire_completion(consumer);
         assert_eq!(observed.load(std::sync::atomic::Ordering::SeqCst), row["domainObserves"].as_u64().unwrap());
         println!("[DEBUG] Retained command one-unit work authority case={} observed=1 remaining=0", row["id"]);
     }
@@ -1190,7 +1206,8 @@ fn retained_command_work_receives_exact_one_unit_and_fallback_charges_once() {
 
 #[test]
 fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_denied_original() {
-    use crate::app::{ArtifactApp, ViewerApp};
+    use crate::app_contract::ArtifactApp;
+    use crate::surface_contract::ViewerApp;
     use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneStep};
     fn verify<A: ArtifactApp<Mutation = SurfaceMutation>>(count: usize) {
         let birth = A::owned_mutation_batch_birth_bytes().expect("selected surface declares its exact borrowed admission");
@@ -1235,7 +1252,8 @@ fn surface_owned_mutation_admission_forwards_exact_birth_and_preserves_every_den
 
 #[semio_framework_async_macros::async_test]
 async fn child_emission_private_typed_lanes_stage_three_original_batches_and_retire_all_cancelled_sources() {
-    use crate::app::{ArtifactApp, PrivateOwnedPublicationLane};
+    use crate::app_contract::ArtifactApp;
+    use crate::child_content::PrivateOwnedPublicationLane;
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     use store::SpaceMember;
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
@@ -1246,20 +1264,20 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
         let mut lanes = Vec::new();
         let mut owner = semio_framework_os_kernel::os_vcs::ArtifactGroupVisibilityOwner::new();
         let visibility = owner.view();
-        let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 262_144, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
+        let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 262_144, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
         for _ in 0..3 {
-            let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+            let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
             let (generation, revision) = app.store.one_item_publication_identity();
             let mut original = Some(vec![SurfaceMutation::from(SetSurfaceCount { value: 1 })]);
             let pointer = original.as_ref().unwrap().as_ptr();
             let birth = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::owned_mutation_batch_birth_bytes().unwrap();
             let (mutations, _) = <EditorApp<SurfaceEditorFixture> as ArtifactApp>::admit_owned_mutation_batch(&mut original, RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: birth, maximum_release_bytes: 0, maximum_depth: 64 }).unwrap().unwrap();
-            let request = store::MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(7101), expected_generation: generation, expected_revision: revision, actor: crate::app::LOCAL_ACTOR_ID.into(), group_id: Some("private-neutral-three-lane".into()), transaction: None, mutations };
+            let request = store::MemberStoreOwnedBatchRequest { operation: semio_framework_job::OperationId(7101), expected_generation: generation, expected_revision: revision, actor: protocol::LOCAL_ACTOR_ID.into(), group_id: Some("private-neutral-three-lane".into()), transaction: None, mutations };
             let mut lane = PrivateOwnedPublicationLane::new(request);
             let admitted = lane.next_capacity_byte_demand(&app.store).unwrap();
             for (items, bytes) in [(0, admitted), (1, admitted - 1)] {
-                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
-                assert_eq!(step, store::ArtifactStoreOneItemPreparationStep::Blocked);
+                let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lane.advance(&mut app.store, &visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: items, maximum_capacity_bytes: bytes, ..grant }).unwrap());
+                assert_eq!(step, store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(events.requested_bytes, 0);
                 assert_eq!(events.released_bytes, 0);
                 assert_eq!(lane.request().unwrap().mutations.mutations::<SurfaceMutation>().unwrap().as_ptr(), pointer);
@@ -1286,8 +1304,8 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
                 let (same_pointer, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| lanes[index].prepared_edit_id().unwrap().as_ptr());
                 assert_eq!(same_pointer, pointer);
                 assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
-                let paused = store::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
-                assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::ArtifactStoreOneItemPreparationStep::Blocked);
+                let paused = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..grant };
+                assert_eq!(lanes[index].advance(&mut apps[index].store, &visibility, paused).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
                 assert_eq!(lanes[index].prepared_edit_id().unwrap().as_ptr(), pointer);
             }
             assert_eq!(apps.iter().map(|app| app.store.snapshot_ref().count).collect::<Vec<_>>(), vec![0; 3]);
@@ -1301,7 +1319,7 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             let (_, decision_heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| {
                 assert!(owner.commit());
                 for index in 0..3 {
-                    assert!(matches!(lanes[index].adopt(&mut apps[index].store, &visibility, grant).unwrap(), store::ArtifactStoreOneItemPreparationStep::Prepared(..)));
+                    assert!(matches!(lanes[index].adopt(&mut apps[index].store, &visibility, grant).unwrap(), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..)));
                     assert_eq!(apps[index].store.generation_now(), 1);
                     assert_eq!(apps[index].store.snapshot_ref().count, 1);
                 }
@@ -1321,21 +1339,23 @@ async fn child_emission_private_typed_lanes_stage_three_original_batches_and_ret
             assert_eq!(apps[index].store.snapshot_ref().count, i32::from(stop.is_none()));
         }
         drop(lanes);
-        for mut app in apps { close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy()); }
+        for mut app in apps { close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy()); }
         println!("[DEBUG] private typed publication three original lanes stop={stop:?} retained every denied pointer, staged under one common decision and closed all source/metadata/publication owners");
     }
 }
 
 #[semio_framework_async_macros::async_test]
 async fn child_emission_private_group_row_frames_preserve_original_sources_on_every_input_cancel() {
-    use crate::app::{ChildEmit, ChildEmitGenesis, OwnedChildEmit, PrivateChildGroupSource, PrivateChildPublicationGroup};
+    use crate::app_emission::{ChildEmit, ChildEmitGenesis};
+    use crate::child_emit_preparation::OwnedChildEmit;
+    use crate::child_content::{PrivateChildGroupSource, PrivateChildPublicationGroup};
     use semio_framework_artifact_reference::{ArtifactRef, ArtifactDialect};
     use semio_framework_value::retained_clone::RetainedCloneGrant;
     let grant = RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 64, maximum_capacity_bytes: 262_144, maximum_release_bytes: 262_144, maximum_depth: 64 };
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../../🧩️composition/📨️emission/🌱️genesis/🧫️fixtures/🔣️.json")).unwrap();
     for parent_touched in corpus["receipts"]["parentTouched"].as_array().unwrap().iter().map(|value| value.as_bool().unwrap()) {
     for stop in corpus["ownerInput"]["cancelStops"].as_array().unwrap().iter().map(|stop| stop.as_u64().unwrap() as usize) {
-        let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(crate::app::LOCAL_ACTOR_ID.into()), crate::app::artifact_app_laws::fixture_mounted_policy(), &mut crate::app::artifact_app_laws::fixture_identity()).await;
+        let mut app = new_registered_app::<EditorApp<SurfaceEditorFixture>, _>(surface_manifest(), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()), crate::app_testing::artifact_app_laws::fixture_mounted_policy(), &mut crate::app_testing::artifact_app_laws::fixture_identity()).await;
         let parent_values: Vec<i32> = if parent_touched { serde_json::from_value(corpus["ownerInput"]["parentMutations"].clone()).unwrap() } else { Vec::new() };
         let child_values: Vec<i32> = serde_json::from_value(corpus["ownerInput"]["childMutations"].clone()).unwrap();
         let (parent, _) = store::MemberStoreOwnedBatch::try_new(parent_values, grant).unwrap();
@@ -1377,7 +1397,7 @@ async fn child_emission_private_group_row_frames_preserve_original_sources_on_ev
         }
         assert!(group.terminal_is_empty());
         drop(graph); drop(group);
-        close_registered_fixture_app(&mut app, crate::app::artifact_app_laws::fixture_mounted_policy());
+        close_registered_fixture_app(&mut app, crate::app_testing::artifact_app_laws::fixture_mounted_policy());
         println!("[DEBUG] private group input cancellation parent_touched={parent_touched} stop={stop} original parent/child sources, row frames and queued backing matched exact same-turn allocator receipts");
     }
     }

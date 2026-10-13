@@ -2,7 +2,7 @@ use crate::standards::v1::subsets::any::io::binary::mutations::*;
 use crate::standards::v1::subsets::any::schema;
 use crate::standards::v1::subsets::any::schema::mutations::update_analysis_settings;
 use crate::{FemAnalysisSettings, FemDof, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSupport};
-use store::{create_document_envelope, ArtifactCommand};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
 fn cantilever_fixture() -> crate::Fem3dSnapshot {
     crate::Fem3dSnapshot {
@@ -34,7 +34,7 @@ fn op_binary_round_trips_and_agrees_with_text() {
 async fn fem3d_document_text_round_trips_through_the_store() {
     let fixture = cantilever_fixture();
     let mut store = ::semio_framework_async::poll::resolve_ready(schema::mutations::Fem3dStore::new(create_document_envelope(crate::FEM_3D_SCHEMA, "fem3d", schema::empty_fem3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).expect("valid store");
-    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::funded_bounded_artifact_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
+    store.install_document_store_owners_exact(semio_framework_os_kernel::os_store::document_store_owners::funded_bounded_artifact_store_owners::<crate::Fem3dSnapshot, Fem3dMutation>().expect("funded bounded document owners")).unwrap_or_else(|(error, _)| panic!("bounded document owners install refused: {error}"));
     let mutations = vec![
         Fem3dMutation::CreateMaterial(schema::mutations::create_material::CreateMaterial { material: fixture.materials[0].clone(), index: None }),
         Fem3dMutation::CreateSection(schema::mutations::create_section::CreateSection { section: fixture.sections[0].clone(), index: None }),

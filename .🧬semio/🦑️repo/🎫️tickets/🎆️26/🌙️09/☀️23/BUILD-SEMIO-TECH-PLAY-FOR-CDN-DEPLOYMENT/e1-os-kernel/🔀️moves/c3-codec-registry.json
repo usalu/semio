@@ -1,0 +1,21 @@
+{
+  "target": "📦️codec/🦀️.rs",
+  "module": "codec_registry",
+  "anchor": "//#region 🔖️CodecRegistry\n//#region 🔖️CodecRegistry\n",
+  "doc": [
+    "//! 📦️ The document codec registry: registration, preflight and lookup of artifact codecs, bounded store owners for",
+    "//! codec-driven reductions, assembly registry guards and dialect migrations.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️CodecRegistry",
+    "🗃️BoundedArtifactStoreOwners",
+    "🔖️DialectMigration"
+  ],
+  "keepInherentImplsOf": [
+    "ArtifactCodec"
+  ],
+  "items": [],
+  "movableTraits": []
+}

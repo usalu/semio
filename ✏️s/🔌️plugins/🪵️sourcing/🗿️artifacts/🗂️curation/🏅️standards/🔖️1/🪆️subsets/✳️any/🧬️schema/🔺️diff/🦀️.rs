@@ -3,7 +3,7 @@
 use crate::{CuratedItem, ObjectKindExtra, CurationSnapshot};
 use protocol::MutationDiff;
 use framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse parent delta for catalog identity, sourcing entries and selection.
@@ -14,7 +14,7 @@ use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot:
 pub struct CurationDiff {
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub catalog: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    pub catalog: Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>,
     #[state(artifact)]
     pub stock_extra: Option<CurationStockExtraDelta>,
     #[state(artifact)]
@@ -42,7 +42,7 @@ impl semio_framework_value::FromValue for CurationDiff {
 impl CurationDiff {
     /// 🛡 Checks typed parent replacements before applying document changes.
     pub fn validate(&self) -> Result<(), String> {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if let Some(catalog) = &self.catalog { validate_semio_child_identity(&catalog.child_id, &catalog.target, "kit")?; }
         Ok(())
     }

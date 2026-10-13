@@ -70,7 +70,7 @@ use semio_framework_plugin::WindowMeasure;
 use semio_framework_plugin::INTERACTION_SELECT_ACTION_ID;
 use serde_json::Value;
 use std::collections::HashMap;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 use semio_framework_2d::compute::EngineHandles;
 
 //#region 🔖️Constants
@@ -587,15 +587,15 @@ impl semio_framework_value::FactoryPayloadRetirement for GisMapStampSlot {
 }
 
 /// 📍 Creates the exact parent Map preparation port used by the retained fixed-three assembly.
-pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
+pub fn gis_map_parent_one_item_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
 
 /// 🎨 Creates the exact drawing-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
-    dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+    dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+        semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot,
+        semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
@@ -603,16 +603,16 @@ pub fn gis_map_drawing_one_item_preparation_factory() -> std::sync::Arc<
 
 /// 🔢 Creates the exact value-child preparation port used by the retained fixed-three assembly.
 pub fn gis_map_value_one_item_preparation_factory() -> std::sync::Arc<
-    dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+    dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+        semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory::default())
 }
 
 /// 📍 Creates the exact stamped parent preparation port used by the Hub-owned fixed-three committer.
-pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemStampV1) -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
+pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemStampV1) -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
@@ -620,9 +620,9 @@ pub fn gis_map_parent_stamped_one_item_preparation_factory(stamp: GisMapOneItemS
 pub fn gis_map_drawing_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
-    dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-        semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+    dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+        semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot,
+        semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
@@ -632,31 +632,31 @@ pub fn gis_map_drawing_stamped_one_item_preparation_factory(
 pub fn gis_map_value_stamped_one_item_preparation_factory(
     stamp: GisMapOneItemStampV1,
 ) -> std::sync::Arc<
-    dyn store::ArtifactStoreOneItemPreparationFactory<
-        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-        semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+    dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+        semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
+        semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
     >,
 > {
     std::sync::Arc::new(Gis2dOneItemPreparationFactory { marker: std::marker::PhantomData, stamp: GisMapStampSlot(Some(stamp)) })
 }
 
 struct Gis2dOneItemPreparation<P, M> {
-    base: std::mem::ManuallyDrop<Option<store::SnapshotRead<P>>>,
+    base: std::mem::ManuallyDrop<Option<store::os_store::snapshot_read::SnapshotRead<P>>>,
 
     mutation: std::mem::ManuallyDrop<Option<M>>,
 
     inverse: std::mem::ManuallyDrop<Option<Vec<M>>>,
     refused: std::mem::ManuallyDrop<Option<(protocol::Edit<M>, std::sync::Arc<P>)>>,
     apply_refusal: std::mem::ManuallyDrop<Option<protocol::MutationApplyError>>,
-    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::ArtifactStoreOneItemLiveAuthority>>>,
+    authority: std::mem::ManuallyDrop<Option<std::sync::Arc<store::os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority>>>,
 
     candidate: std::mem::ManuallyDrop<Option<(P, Vec<M>, M)>>,
 
-    prepared: std::mem::ManuallyDrop<Option<store::ArtifactStoreOneItemPrepared<P, M>>>,
+    prepared: std::mem::ManuallyDrop<Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>>>,
 
     mutation_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::ArtifactOwnedValueRetirementFactory<M>>>>,
     snapshot_retirement: std::mem::ManuallyDrop<Option<std::sync::Arc<dyn store::SnapshotRetirementFactory<P>>>>,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     phase: u8,
     cancelled: bool,
     closing: bool,
@@ -667,7 +667,7 @@ struct Gis2dOneItemPreparation<P, M> {
 }
 
 /// 🛡️ The authority-minted one-item edit, carrying the Hub-derived identity when a stamped committer prepares it.
-fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, authority: &store::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
+fn gis2d_one_item_edit<M>(forward: M, inverse: Vec<M>, authority: &store::os_store::one_item_publication::ArtifactStoreOneItemLiveAuthority, stamp: Option<GisMapOneItemStampV1>) -> protocol::Edit<M> {
     let mut edit = authority.next_edit(forward, inverse);
     if let Some(stamp) = stamp {
         edit.id = stamp.mutation_id.0.clone();
@@ -682,22 +682,22 @@ where P: semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
 {
     fn close_demands(&self, body: usize) -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> {
         let nested = |mut demand: semio_framework_value::RetirementDemand| -> Result<semio_framework_value::RetirementDemand, semio_framework_value::ValueError> { demand.depth = demand.depth.checked_add(1).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::DepthLimit, "preparation close depth overflow"))?; Ok(demand) };
-        if let Some(active) = self.active.as_ref() { return nested(store::artifact_retirement_box_demands(active, body)?); }
-        if self.prepared.is_some() { let birth = store::ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
-        if self.mutation.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.mutation)?); }
-        if self.inverse.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.inverse)?); }
-        if self.refused.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.refused)?); }
-        if self.apply_refusal.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
-        if self.candidate.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.candidate)?); }
-        if self.stamp.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.stamp)?); }
-        if self.base.is_some() { return nested(store::artifact_retirement_owned_birth_demands(&self.base)?); }
+        if let Some(active) = self.active.as_ref() { return nested(store::os_store::snapshot_read::artifact_retirement_box_demands(active, body)?); }
+        if self.prepared.is_some() { let birth = store::os_store::one_item_publication::ArtifactStoreOneItemPrepared::<P, M>::retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
+        if self.mutation.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.mutation)?); }
+        if self.inverse.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.inverse)?); }
+        if self.refused.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.refused)?); }
+        if self.apply_refusal.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.apply_refusal)?); }
+        if self.candidate.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.candidate)?); }
+        if self.stamp.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.stamp)?); }
+        if self.base.is_some() { return nested(store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.base)?); }
         if let Some(authority) = self.authority.as_ref() { let birth = authority.retirement_birth_demand(); return Ok(semio_framework_value::RetirementDemand { capacity_bytes: birth.capacity_bytes, depth: birth.depth + 1, ..Default::default() }); }
         if self.mutation_retirement.is_some() || self.snapshot_retirement.is_some() { return Ok(semio_framework_value::RetirementDemand { copy_bytes: size_of::<std::sync::Arc<dyn semio_framework_value::FactoryRetirement>>(), depth: 1, ..Default::default() }); }
         self.factories.iter().find_map(Option::as_ref).map_or(Ok(Default::default()), |factory| nested(factory.demands(body)?))
     }
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for Gis2dOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
@@ -715,24 +715,24 @@ where
         self.stamp.as_ref().map(|stamp| &stamp.mutation_id)
     }
 
-    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("GIS map retained preparation rejected its lane".into());
         }
-        Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES))
     }
 
-    fn begin_demand(&self, _mutation: &M, _lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
+    fn begin_demand(&self, _mutation: &M, _lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
         let capacity_bytes = size_of::<Gis2dOneItemPreparation<P, M>>().checked_add(self.stamp.0.as_ref().map_or(0, |stamp| stamp.mutation_id.0.len())).ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::OwnershipLimit, "GIS original stamp birth extent overflow"))?;
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes, depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
-        if request.lane != store::HistoryLane::Document
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, semio_framework_value::retained_clone::RetainedCloneProgress), (semio_framework_value::ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+        if request.lane != store::os_store::store_schema::HistoryLane::Document
             || request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
         {
             return Err((semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS preparation rejected original publication authority"), request));
         }
@@ -754,7 +754,7 @@ where
             snapshot_retirement: std::mem::ManuallyDrop::new(Some(request.snapshot_retirement)),
             active: std::mem::ManuallyDrop::new(None),
             factories: std::mem::ManuallyDrop::new(Default::default()),
-            checkpoint: store::ArtifactStoreOneItemCheckpoint::default(),
+            checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(),
             phase: 0,
             cancelled: false,
             closing: false,
@@ -763,21 +763,21 @@ where
     }
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for Gis2dOneItemPreparation<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for Gis2dOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: protocol::Mutation<P> + semio_framework_value::retirement::RetireOwned + Send + 'static,
     M::Diff: protocol::MutationDiff<P>,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, semio_framework_value::ValueError> {
         if !grant.permits_one() || self.cancelled {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.refused.is_some() || self.apply_refusal.is_some() {
             return Err(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "preparation retains its original semantic refusal"));
         }
         if self.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         match self.phase {
             0 => {
@@ -799,38 +799,38 @@ where
                 };
                 *self.candidate = Some((post, inverse, mutation));
                 self.phase = 1;
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
-                Ok(store::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: 1, digest: [0; 32] };
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(self.checkpoint, Default::default()))
             }
             1 => {
                 let authority = self.authority.as_ref().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its Store authority"))?;
 
                 let line_bytes = authority.line_id().map_or(0, str::len);
-                if grant.maximum_copy_bytes < line_bytes { return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked); }
+                if grant.maximum_copy_bytes < line_bytes { return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked); }
                 let (post, inverse, mutation) = self.candidate.take().ok_or_else(|| semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "GIS map retained preparation lost its semantic candidate"))?;
                 let edit = gis2d_one_item_edit(mutation, inverse, authority, self.stamp.take());
                 let prepared = match authority.prepare_one_item(edit, std::sync::Arc::new(post)) {
                     Ok(prepared) => prepared,
                     Err((error, edit, post)) => { *self.refused = Some((edit, post)); return Err(error); }
                 };
-                self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
+                self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 2, completed_items: 2, completed_bytes: 1 + line_bytes as u64, digest: prepared.edit_digest() };
                 *self.prepared = Some(prepared);
                 self.phase = 2;
-                Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
+                Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()))
             }
-            _ => Ok(store::ArtifactStoreOneItemPreparationStep::Blocked),
+            _ => Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked),
         }
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
         self.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
         self.prepared.take()
     }
 
@@ -842,7 +842,7 @@ where
         self.closing = true;
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<semio_framework_value::retained_clone::RetainedCloneStep, semio_framework_value::ValueError> {
         use semio_framework_value::{ValueError, ValueRefusalKind, retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep}};
         let empty = RetainedCloneProgress::default(); let grant = grant.retained_grant();
         if !self.closing || grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(empty)); }
@@ -851,7 +851,7 @@ where
         if grant.maximum_depth < demand.depth { return Err(ValueError::literal(ValueRefusalKind::DepthLimit, "preparation close exceeds original depth")); }
         if grant.maximum_copy_bytes < demand.copy_bytes || grant.maximum_capacity_bytes < demand.capacity_bytes || grant.maximum_release_bytes < demand.release_bytes { return Ok(RetainedCloneStep::Progress(empty)); }
         let child = RetainedCloneGrant { maximum_items: 1, maximum_depth: grant.maximum_depth - 1, ..grant };
-        if self.active.is_some() { return store::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
+        if self.active.is_some() { return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.active, child).map(|step| RetainedCloneStep::Progress(step.progress())); }
         if self.prepared.is_some() {
             if self.mutation_retirement.is_none() || self.snapshot_retirement.is_none() { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation retains its original installed issuers")); }
             let original = self.prepared.take().expect("observed original prepared candidate");
@@ -862,13 +862,13 @@ where
                 Err((error, original, mutations, snapshots)) => { *self.prepared = Some(original); *self.mutation_retirement = Some(mutations); *self.snapshot_retirement = Some(snapshots); Err(error) },
             };
         }
-        if self.mutation.is_some() { return store::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child); }
-        if self.inverse.is_some() { return store::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child); }
-        if self.refused.is_some() { return store::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child); }
-        if self.apply_refusal.is_some() { return store::artifact_retirement_admit_owned(&mut self.apply_refusal, &mut self.active, child); }
-        if self.candidate.is_some() { return store::artifact_retirement_admit_owned(&mut self.candidate, &mut self.active, child); }
-        if self.stamp.is_some() { return store::artifact_retirement_admit_owned(&mut self.stamp, &mut self.active, child); }
-        if self.base.is_some() { return store::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child); }
+        if self.mutation.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.mutation, &mut self.active, child); }
+        if self.inverse.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.inverse, &mut self.active, child); }
+        if self.refused.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.refused, &mut self.active, child); }
+        if self.apply_refusal.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.apply_refusal, &mut self.active, child); }
+        if self.candidate.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.candidate, &mut self.active, child); }
+        if self.stamp.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.stamp, &mut self.active, child); }
+        if self.base.is_some() { return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.base, &mut self.active, child); }
         if let Some(authority) = self.authority.take() { return match authority.retire(child) { Ok((owner, progress)) => { *self.active = Some(owner); semio_framework_value::retained_clone::admit_retained_clone_progress(child, progress, "original preparation authority close birth")?; if progress.retained_capacity_bytes != demand.capacity_bytes { return Err(ValueError::literal(ValueRefusalKind::InvariantViolated, "preparation authority changed admitted birth")); } Ok(RetainedCloneStep::Progress(progress)) }, Err((error, original)) => { *self.authority = Some(original); Err(error) } }; }
         if let Some(factory) = self.mutation_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[0] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
         if let Some(factory) = self.snapshot_retirement.take() { let factory: std::sync::Arc<dyn semio_framework_value::FactoryRetirement> = factory; self.factories[1] = Some(semio_framework_value::FactoryAuthority::new(factory)); return Ok(RetainedCloneStep::Progress(RetainedCloneProgress { copied_items: 1, copied_bytes: demand.copy_bytes, ..empty })); }
@@ -965,7 +965,7 @@ impl ArtifactEditor for Gis2dPlayApp {
     const DIALECT: Dialect = crate::GISMAP_DIALECT;
     const DOCUMENT_SCHEMA: &'static str = GIS_MAP_SCHEMA;
 
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(std::sync::Arc::new(Gis2dOneItemPreparationFactory::<Self::Snapshot, Self::Mutation>::default()))
     }
 
@@ -1024,16 +1024,16 @@ impl ArtifactEditor for Gis2dPlayApp {
         Ok(Some(semio_framework::ToolOperationSpec::new(request.controller_id, request.tool_id, request.payload_schema_id, payload, request.operation)))
     }
 
-    fn build_envelope_decode_owner_bundle() -> Option<store::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
+    fn build_envelope_decode_owner_bundle() -> Option<store::os_store::owned_schema_decode::ArtifactEnvelopeDecodeOwnerBundle<Self::Snapshot, Self::Mutation>> {
         Some(crate::host::owned::gis_map_envelope_decode_owner_bundle())
     }
 
     fn build_document_store_initialization_job(
-        envelope: store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
+        envelope: store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>,
         operation: semio_framework_job::OperationId,
         generation: semio_framework_job::Generation,
         actor: protocol::ActorId,
-    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
+    ) -> Result<semio_framework_plugin::ArtifactStoreInitializationJob<Self::Snapshot, Self::Mutation>, store::os_store::store_schema::ArtifactEnvelope<Self::Snapshot, Self::Mutation>> {
         Ok(crate::host::owned::gis_map_document_store_initialization_job(envelope, operation, generation, actor))
     }
 

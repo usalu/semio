@@ -1,5 +1,5 @@
 use super::*;
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 
 #[semio_framework_async_macros::async_test]
 async fn the_tab_is_the_framework_inspection_tab_bound_to_this_apps_body_key() {

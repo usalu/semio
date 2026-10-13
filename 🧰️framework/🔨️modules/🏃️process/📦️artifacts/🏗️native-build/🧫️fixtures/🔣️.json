@@ -6,7 +6,8 @@
     "buildDirectory": "/compiler",
     "leaseDirectory": "/leases",
     "captureDirectory": "/captures",
-    "budgetMs": 0
+    "budgetMs": 0,
+    "mode": "prototype"
   },
   "files": [
     {
@@ -177,6 +178,7 @@
     "control",
     "read",
     "digest",
+    "measure",
     "directoryEntries",
     "checkpoint",
     "recheck"

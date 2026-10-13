@@ -6,7 +6,7 @@ import { ACTIVATION_RECEIPT_FILE, developmentRuntimeRoot, parseActivationReceipt
 import type { ActivationComponentSpec } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/🔌️vite-plugins/🟦️.ts";
 import { runtimeComponentClosure } from "../../../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🕸️dependencies/🧩️runtime/🟨️.mjs";
 import { EXTENSION_TARGETS, PLUGIN_BUILD_TARGETS } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🧩️plugins/🟦️.ts";
-import { MODULE_SHARD_DIRECTORY, moduleDirectoryName } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_SHARD_DIRECTORY, moduleDirectoryName, componentOwnerRootV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { artifactFiles } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/📋️inventory/🟦️.ts";
 import { PREVIEW2_VENDOR_RELATIVE } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🕸️imports/🟦️.ts";
 import { FONT_ASSET } from "../../../../../🧰️framework/🔨️modules/🖼️canvas/🔤️fonts/🟦️.ts";
@@ -91,7 +91,7 @@ function activationFilesDigestSync(files: ReadonlyMap<string, string>): string {
  * tens of megabytes), so a fleet whose lanes all agree never reads a byte. `undefined` when the component
  * or the support tree is not staged at all, which is a fact for the caller, never a thrown error. */
 export function playInstalledArtifactSha256(workspace: string): (pluginId: string) => string | undefined {
-  const moduleRoot = pluginModulesRootIn(workspace, "dev"), digests = new Map<string, string | undefined>();
+  const moduleRoot = pluginModulesRootIn(workspace), digests = new Map<string, string | undefined>();
   let support: string | undefined;
   return (pluginId) => {
     if (digests.has(pluginId)) return digests.get(pluginId);
@@ -205,7 +205,7 @@ export function playActivationComponents(workspace: string, extensionDirectories
   const byId = new Map([...PLUGIN_BUILD_TARGETS, ...EXTENSION_TARGETS].map(row => [row.pluginId, row]));
   return playRuntimeComponentIds().map(id => {
     const row = byId.get(id)!, directoryName = moduleDirectoryName(id, COMPONENT_MODULE_DIRECTORIES), installDirectory = extensionDirectories.get(directoryName);
-    return { pluginId: id, directoryName, role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, row.cratePath, "..", ".."), ...(installDirectory ? { installDirectory } : {}) };
+    return { pluginId: id, directoryName, role: row.role === "extension" ? "extension" : "plugin", sourceRoot: resolve(workspace, componentOwnerRootV1(row.cratePath)), ...(installDirectory ? { installDirectory } : {}) };
   });
 }
 

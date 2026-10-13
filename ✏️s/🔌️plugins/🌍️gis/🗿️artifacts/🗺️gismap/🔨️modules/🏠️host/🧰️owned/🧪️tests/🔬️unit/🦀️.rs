@@ -30,7 +30,7 @@ fn grant_for(demand: semio_framework_value::RetirementDemand) -> semio_framework
 }
 
 fn install_gis_map_owners(store: &mut store::ArtifactStore<GisMapSnapshot, GisMapMutation>) {
-    let owners = store::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("GIS store refused its exact owner catalog: {error}");
     }
@@ -39,17 +39,17 @@ fn install_gis_map_owners(store: &mut store::ArtifactStore<GisMapSnapshot, GisMa
 #[semio_framework_async_macros::async_test]
 async fn gis_map_document_text_round_trips_through_store() {
     let initial = empty_gis_map_snapshot();
-    let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
     install_gis_map_owners(&mut store);
-    store.dispatch(store::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![GisMapMutation::CreatePosition(create_position::CreatePosition { index: 0, item: sample_feature("p1") })], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
     close_gis_map_candidate(store);
 }
 
 fn empty_gis_map_initializer(operation: semio_framework_job::OperationId, generation: semio_framework_job::Generation) -> GisMapStoreInitializationAuthority {
-    let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-retained-load", empty_gis_map_snapshot(), None);
     GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
 }
 
@@ -164,7 +164,7 @@ fn gis_map_nested_value_mutation_and_all_child_handles_retire_one_owner_per_gran
     }
 
     let mut snapshot = empty_gis_map_snapshot();
-    snapshot.image = Some(store::ArtifactChild::new("image-child".into(), snapshot.drawing.target.clone()));
+    snapshot.image = Some(store::os_store::artifact_child::ArtifactChild::new("image-child".into(), snapshot.drawing.target.clone()));
     drain(retire_owned_exact(&GisMapSnapshotRetirementFactory, snapshot));
 
     let mutation = GisMapMutation::ReplacePositionData(replace_position_data::ReplacePositionData {
@@ -240,7 +240,7 @@ async fn the_initialization_candidate_projects_its_canonical_child_handles() {
 
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         let expected = snapshot.clone();
-        let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None);
+        let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-initialization-law", snapshot, None);
         let operation = semio_framework_job::OperationId(u64::MAX - 401);
         let generation = semio_framework_job::Generation(61);
         let mut authority = GisMapStoreInitializationAuthority::new(envelope, operation, generation, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()));

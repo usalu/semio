@@ -1,16 +1,7 @@
 //! ⏳️ Local operation status and exact cancellation controls shared by artifact editors.
+use crate::app_views::CANCEL_TYPED_OPERATION_ACTION_ID;
+use crate::app_views::ArtifactOperationProgress;
 use super::*;
-
-pub const CANCEL_TYPED_OPERATION_ACTION_ID: &str = "cancelTypedOperation";
-
-#[derive(Clone, Debug)]
-pub struct ArtifactOperationProgress {
-    pub operation_id: u64,
-    pub generation: u64,
-    pub label: LocalizedLabel,
-    pub completed_units: u64,
-    pub cancelling: bool,
-}
 
 pub fn decode_operation_cancellation(value: &DslValue) -> Option<(u64, u64)> {
     let DslValue::Object(fields) = value else { return None };
@@ -33,10 +24,6 @@ pub fn operation_progress_text(locale: Locale, completed: u64, cancelling: bool)
         Locale::De => (if cancelling { "Wird abgebrochen" } else { "Wird ausgeführt" }, "Abgeschlossene Schritte"),
     };
     format!("{state} · {units}: {completed}")
-}
-
-pub fn cancellation_action_definition() -> ActionDefinition {
-    ActionDefinition::resumable_framework(CANCEL_TYPED_OPERATION_ACTION_ID, LocalizedLabel::native("Cancel Operation", "Vorgang abbrechen"), ActionKind::View, "square").with_in_palette(false)
 }
 
 /// 🎯️ The scope an operation-progress change dirties: the app's declared scope (read only when something changed), never
@@ -112,52 +99,6 @@ pub fn operation_progress_controls(status: &[ArtifactOperationProgress], control
         .map_err(|_| ui_assembly_error("operation-progress.groups"))?
         .try_build()
         .map_err(|_| ui_assembly_error("operation-progress.root"))
-}
-
-impl<A: ArtifactApp, M: SpaceMember + MemberFactory + 'static> VcsArtifactApp<A, M> {
-    pub(super) fn operation_progress_snapshot(&self) -> Vec<ArtifactOperationProgress> {
-        let mut result = Vec::new();
-        self.tool_operations.each_id(|id| {
-            let Some(operation) = self.tool_operations.get(id) else { return };
-            let Some(completed_units) = operation.progress.filter(|_| !operation.terminal_seen) else { return };
-            let Some(definition) = self.registry.get(&operation.verb) else { return };
-            result.push(ArtifactOperationProgress {
-                operation_id: operation.operation.operation.0,
-                generation: operation.operation.generation.0,
-                label: definition.label.clone(),
-                completed_units,
-                cancelling: operation.cancellation_lease.as_ref().is_some_and(|lease| lease.cancel_token().is_cancelled_now()),
-            });
-        });
-        result
-    }
-
-    /// ⏳️ The app's declared operation-progress scope ([`ArtifactApp::operation_progress_scope`]) once an operation's
-    /// progress changed or it retired; `None` when nothing changed or the app renders no progress.
-    pub(super) fn take_operation_progress_scope(&mut self) -> Option<UiDirtyScope> {
-        let mut changed = std::mem::take(&mut self.operation_progress_retired);
-        for index in 0..ARTIFACT_LIVE_OUTPUT_SLOTS {
-            if let Some((_, operation)) = self.tool_operations.entry_mut(index) {
-                changed |= std::mem::take(&mut operation.progress_pending);
-            }
-        }
-        operation_progress_dirty_scope(changed, A::operation_progress_scope)
-    }
-
-    pub(super) async fn dispatch_operation_cancellation(&mut self, args: Option<&DslValue>, meta: &ActionMeta) -> Result<InvocationResult, Fault> {
-        let (id, generation) = args.and_then(decode_operation_cancellation).ok_or_else(|| plugin_sdk_fault("operation cancellation requires exact operationId and generation"))?;
-        let operation = self.tool_operations.get_mut(id).ok_or_else(|| plugin_sdk_fault("operation cancellation target is no longer live"))?;
-        if operation.meta.instance_id != meta.instance_id || operation.meta.actor != meta.actor || operation.operation.generation.0 != generation {
-            return Err(plugin_sdk_fault("operation cancellation authority does not match"));
-        }
-        if !operation_cancellation_target_admitted(true, operation.terminal_seen, operation.cancellation_lease.is_some()) {
-            return Err(plugin_sdk_fault("operation cancellation target is no longer cancellable"));
-        }
-        operation.user_cancel_requested = true;
-        operation.cancellation_lease.as_ref().expect("admitted cancellation has a lease").cancel();
-        operation.progress_pending = true;
-        Ok(Self::empty_result(CANCEL_TYPED_OPERATION_ACTION_ID, meta, Vec::new(), Vec::new(), A::operation_progress_scope()).await)
-    }
 }
 
 #[cfg(test)]

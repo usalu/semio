@@ -2,7 +2,7 @@
 
 use crate::editor::jack::window_config::JackGraphWindowConfig;
 use crate::JackSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use semio_framework_plugin::{scene_surface, ActionDescriptor, BuiltNode, MeasureSelectItem, NodeGraphScene, UiAssemblyResult, WindowMeasure};
 use semio_framework_os_kernel::Viewport2d;
 use semio_framework_ui_contract::SurfaceKind;

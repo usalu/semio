@@ -94,7 +94,8 @@
         "componentSha256",
         "componentBlake3",
         "descriptorByteSha256",
-        "executionProtocol"
+        "executionProtocol",
+        "componentReceipt"
       ],
       "properties": {
         "pluginId": {
@@ -130,6 +131,9 @@
               "const": 23
             }
           }
+        },
+        "componentReceipt": {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/describe/component-receipt/component.json#/$defs/ComponentReceiptV1"
         }
       }
     },

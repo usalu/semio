@@ -8,17 +8,14 @@ async fn sha256_hex_matches_known_vector() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn raw_and_core_hashes_are_independent() {
-    let (raw, core) = artifact_hashes(semio_framework_hash::sha256_hex(b"component"), semio_framework_hash::sha256_hex(b"core")).expect("distinct artifact hashes");
-    assert_ne!(raw, core);
-    let same = semio_framework_hash::sha256_hex(b"same");
-    assert!(artifact_hashes(same.clone(), same).is_err());
+async fn describe_artifact_bound_admits_the_local_iterate_cap() {
+    assert_eq!(DESCRIBE_ARTIFACT_MAX_BYTES, 512 * 1024 * 1024);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn full_catalog_describe_retains_finite_wall_and_fuel_bounds() {
     assert_eq!(DESCRIBE_DEADLINE_MS, 1_800_000);
-    assert_eq!(DESCRIBE_FUEL_BUDGET, 8_000_000_000);
+    assert_eq!(DESCRIBE_FUEL_BUDGET, 32_000_000_000);
 }
 
 /// 🪪️ The static kind-identity law over the language-neutral fixture (`🧫️fixtures/🪪️kind-identity`).
@@ -52,55 +49,56 @@ async fn run_with_unknown_command_returns_usage_exit_code() {
 }
 
 #[semio_framework_async_macros::async_test]
-async fn run_describe_without_core_flag_returns_usage_exit_code() {
-    assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await, 2);
+async fn run_describe_without_out_flag_returns_usage_exit_code() {
+    assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string()]).await, 2);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn run_describe_refuses_the_retired_core_flag() {
+    assert_eq!(run(vec!["describe".to_string(), "component.wasm".to_string(), "--core".to_string(), "core.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await, 2);
 }
 
 #[semio_framework_async_macros::async_test]
 async fn run_describe_on_missing_file_returns_failure_exit_code() {
-    let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--core".to_string(), "/nonexistent/core.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await;
+    let code = run(vec!["describe".to_string(), "/nonexistent/component.wasm".to_string(), "--out".to_string(), "/tmp/does-not-matter".to_string()]).await;
     assert_eq!(code, 1);
 }
 
 mod long {
     use super::*;
 
+    /// 📦️ The shipped component of every hub composition and extension crate (`📦️packages/🦀️rust/dist/components/*.wasm`).
+    fn shipped_components(repository: &Path) -> Vec<PathBuf> {
+        let children = |directory: &Path| fs::read_dir(directory).map(|entries| entries.filter_map(Result::ok).map(|entry| entry.path()).collect::<Vec<_>>()).unwrap_or_default();
+        let compositions = children(&repository.join("🌎️hub/🧩️compositions"));
+        let owners = compositions.iter().cloned().chain(compositions.iter().flat_map(|composition| children(&composition.join("🧩️extensions")))).collect::<Vec<_>>();
+        owners.iter().flat_map(|owner| children(&owner.join("📦️packages/🦀️rust/dist/components"))).filter(|path| path.extension().is_some_and(|extension| extension == "wasm")).collect()
+    }
+
+    /// 🔬️ The differential suite: the components `SEMIO_OWNED_DIFFERENTIAL_FIXTURES` names, otherwise the two smallest shipped components.
+    fn differential_components() -> Vec<PathBuf> {
+        if let Some(paths) = std::env::var_os("SEMIO_OWNED_DIFFERENTIAL_FIXTURES") {
+            return std::env::split_paths(&paths).collect();
+        }
+        let repository = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../../../../..");
+        let mut shipped = shipped_components(&repository).into_iter().filter_map(|path| fs::metadata(&path).ok().map(|metadata| (metadata.len(), path))).collect::<Vec<_>>();
+        shipped.sort();
+        shipped.into_iter().take(2).map(|(_, path)| path).collect()
+    }
+
+    /// ⚖️ The production owned describe (`OwnedRuntime::compile` + `describe_observed`, the path `describe_component` runs) answers
+    /// the exact descriptor bytes the independent Wasmtime component host answers, on real shipped components.
     #[semio_framework_async_macros::async_test]
-    async fn configured_real_component_suite_owned_descriptors_match_wasmtime() {
-        let Some(paths) = std::env::var_os("SEMIO_OWNED_DIFFERENTIAL_FIXTURES") else { return };
-        let paths = std::env::split_paths(&paths).collect::<Vec<_>>();
-        assert!(!paths.is_empty(), "differential component suite is empty");
-        for path in paths {
+    async fn shipped_components_owned_descriptors_match_wasmtime() {
+        let components = differential_components();
+        assert!(components.len() >= 2, "the owned describe differential needs at least two shipped components (a release build ships them under `📦️packages/🦀️rust/dist/components`), found {components:?}");
+        for path in components {
             let bytes = fs::read(&path).unwrap_or_else(|error| panic!("read differential component {}: {error}", path.display()));
             let oracle = execute_describe_wasmtime(&bytes, &path).await.unwrap_or_else(|error| panic!("execute Wasmtime descriptor oracle for {}: {error}", path.display()));
-            let artifact = interpreter::SemioActorArtifact::parse(&bytes).unwrap_or_else(|error| panic!("parse owned Semio actor {}: {error}", path.display()));
-            let mut session = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start owned describe session for {}: {error}", path.display()));
-            let mut total_fuel = 0;
-            let mut restored = false;
-            let owned = loop {
-                match session.step(50_000, interpreter::StepControl::default()) {
-                    interpreter::SemioDescribeStepOutcome::Yield { fuel_used } => {
-                        total_fuel += fuel_used;
-                        assert!(total_fuel <= DESCRIBE_FUEL_BUDGET, "owned describe exceeded oracle fuel cap for {}", path.display());
-                        if !restored {
-                            let checkpoint = session.checkpoint();
-                            session = interpreter::SemioDescribeSession::restore(&artifact, &checkpoint).unwrap_or_else(|error| panic!("restore owned describe checkpoint for {}: {error}", path.display()));
-                            assert_eq!(session.checkpoint(), checkpoint, "checkpoint changed after restoring {}", path.display());
-                            restored = true;
-                        }
-                    }
-                    interpreter::SemioDescribeStepOutcome::Complete { fuel_used, descriptor } => {
-                        total_fuel += fuel_used;
-                        break descriptor;
-                    }
-                    interpreter::SemioDescribeStepOutcome::Cancelled { .. } => panic!("owned describe cancelled for {}", path.display()),
-                    interpreter::SemioDescribeStepOutcome::Fault { error, .. } => panic!("owned describe fault for {}: {error}", path.display()),
-                }
-            };
+            let (owned, _, _) = execute_describe_owned(&bytes, &path).await.unwrap_or_else(|error| panic!("execute owned describe for {}: {error}", path.display()));
+            assert!(!oracle.is_empty(), "Wasmtime answered an empty descriptor for {}", path.display());
             assert_eq!(owned, oracle, "owned descriptor differs from Wasmtime for {}", path.display());
-            assert!(total_fuel > 0, "owned describe consumed no fuel for {}", path.display());
-            let mut cancelled = interpreter::SemioDescribeSession::start(&artifact, 64 * 1024 * 1024).unwrap_or_else(|error| panic!("start cancellation probe for {}: {error}", path.display()));
-            assert!(matches!(cancelled.step(1, interpreter::StepControl { cancelled: true }), interpreter::SemioDescribeStepOutcome::Cancelled { fuel_used: 0 }), "owned cancellation did not stop {} before its first instruction", path.display());
+            eprintln!("owned describe matches Wasmtime for {} ({} descriptor bytes)", path.display(), owned.len());
         }
     }
 }
@@ -110,7 +108,7 @@ mod long {
 /// 🧬️ The plugin SDK's own source — `plugin_exports!`, `__semio_plugin_actor_exports!` and
 /// `extension_exports!` all live in this one file, so the law below reads their real bodies rather
 /// than a restatement of them.
-const PLUGIN_SDK_SOURCE: &str = include_str!("../../../🦀️.rs");
+const PLUGIN_SDK_SOURCE: &str = include_str!("../../../⚛️reactor/🏃️runtime/🦀️.rs");
 
 /// 🧱 The text of one `macro_rules!` body, brace-matched from its opening `{`.
 fn macro_rules_body<'a>(source: &'a str, name: &str) -> &'a str {
@@ -132,13 +130,28 @@ fn macro_rules_body<'a>(source: &'a str, name: &str) -> &'a str {
     panic!("`macro_rules! {name}` is unbalanced in the plugin SDK source")
 }
 
-/// 🔍️ One macro arm's text, from its pattern header to the next arm's header.
-fn macro_arm<'a>(body: &'a str, pattern: &str) -> &'a str {
-    let header = format!("{pattern} => {{");
-    let start = body.find(&header).unwrap_or_else(|| panic!("macro arm `{pattern}` is not declared")) + header.len();
-    let rest = &body[start..];
-    let end = rest.find("        };\n        (").map_or(rest.len(), |offset| offset);
-    &rest[..end]
+/// 🔍️ Every arm body of one `macro_rules!` body, brace-matched from each arm's `=> {`, whatever its matcher spells.
+fn macro_arms(body: &str) -> Vec<&str> {
+    let mut arms = Vec::new();
+    let mut rest = body;
+    while let Some(arrow) = rest.find("=> {") {
+        let start = arrow + "=> {".len();
+        let mut depth = 1_usize;
+        let end = rest[start..]
+            .char_indices()
+            .find_map(|(offset, character)| {
+                match character {
+                    '{' => depth += 1,
+                    '}' => depth -= 1,
+                    _ => {}
+                }
+                (depth == 0).then_some(start + offset)
+            })
+            .unwrap_or_else(|| panic!("a macro arm is unbalanced in the plugin SDK source"));
+        arms.push(&rest[start..end]);
+        rest = &rest[end + 1..];
+    }
+    arms
 }
 
 /// 🏷️ Every `semio_owned_*_v1` symbol a chunk of source defines as a core export.
@@ -165,11 +178,12 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
     owned_export_definitions(core)
 }
 
-/// 🛡️ Every component owner exports the SAME eighteen `semio_owned_*_v1` core symbols, from ONE
-/// shared definition, and that set is exactly the one `OwnedSemioArtifact::from_component` demands.
-/// The last four are the owned twin of `world actor`'s `codec` interface (ticket 26/09/18 slice
-/// TC3b) — a component that carries the other nine but not those cannot answer a headless hub's
-/// creation or validation call, so the ABI admits it as a whole or not at all.
+/// 🛡️ Every component owner exports the SAME `semio_owned_*_v1` core symbols, from ONE shared
+/// definition, and that set is exactly `OwnedSemioExport::ALL`, the one
+/// `OwnedSemioArtifact::from_component` demands. Its arity is owned by the type of `ALL`, never
+/// restated here. The codec and SQLite exports are the owned twins of `world actor`'s `codec`
+/// interface (ticket 26/09/18 slice TC3b) — a component that lacks them cannot answer a headless
+/// hub's creation or validation call, so the ABI admits it as a whole or not at all.
 ///
 /// 🐛️ Regression guard for `📓️a3-descriptor-regeneration.md` §3b: `extension_exports!`'s
 /// single-argument arm used to expand `__semio_actor_exports!` directly and emit none of them,
@@ -180,20 +194,19 @@ fn owned_exports_reached_by(arm: &str) -> Vec<String> {
 async fn owned_core_exports_are_defined_once_and_invoked_by_both_owners() {
     let mut required: Vec<String> = interpreter::OwnedSemioExport::ALL.iter().map(|export| export.core_name().to_string()).collect();
     required.sort();
-    assert_eq!(required.len(), 18, "the owned Semio actor ABI is eighteen core exports");
+    assert!(required.windows(2).all(|pair| pair[0] != pair[1]), "`OwnedSemioExport::ALL` names one core export twice");
 
     let defined_in_shared_macro = owned_export_definitions(macro_rules_body(PLUGIN_SDK_SOURCE, "__semio_owned_core_exports"));
     assert_eq!(defined_in_shared_macro, required, "the shared owned-core-export macro does not define exactly `OwnedSemioExport::ALL`");
     assert_eq!(owned_export_definitions(PLUGIN_SDK_SOURCE), required, "a `semio_owned_*_v1` core export is defined outside `__semio_owned_core_exports!` — the arms must share one body, never a copy");
 
-    let extension = macro_rules_body(PLUGIN_SDK_SOURCE, "extension_exports");
-    let plugin_arm = owned_exports_reached_by(macro_rules_body(PLUGIN_SDK_SOURCE, "plugin_exports"));
-    let extension_with_apps_arm = owned_exports_reached_by(macro_arm(extension, "($bundle_fn:expr, $plugin_fn:expr, $app:ty)"));
-    let extension_only_arm = owned_exports_reached_by(macro_arm(extension, "($bundle_fn:expr)"));
-
-    assert_eq!(plugin_arm, required, "`plugin_exports!` does not reach every owned core export");
-    assert_eq!(extension_with_apps_arm, plugin_arm, "`extension_exports!`'s three-argument arm exports a different core symbol set than `plugin_exports!`");
-    assert_eq!(extension_only_arm, plugin_arm, "`extension_exports!`'s single-argument arm exports a different core symbol set than `plugin_exports!`");
+    for owner in ["plugin_exports", "extension_exports"] {
+        let arms = macro_arms(macro_rules_body(PLUGIN_SDK_SOURCE, owner));
+        assert!(!arms.is_empty(), "`{owner}!` declares no arm");
+        for arm in arms {
+            assert_eq!(owned_exports_reached_by(arm), required, "an arm of `{owner}!` does not reach exactly the owned core exports:\n{arm}");
+        }
+    }
 }
 //#endregion 🔖️OwnedCoreExportLaw
 

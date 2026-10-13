@@ -6,13 +6,13 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::animation::schema::diff::*;
-use crate::standards::v1::subsets::animation::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, enc_indexed_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::diff::*;
+use crate::schema::snapshot::{AnimChannel, AnimInterpolation, AnimKeyframe, AnimTarget, AnimTargetProperty, AnimTimeline, AnimValue, SemioAnimationSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, enc_indexed_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::{DiffBinary,DiffCodec,DiffText};
@@ -128,5 +128,5 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::standards::v1::subsets::animation::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_property, dec_property, enc_target, dec_target, enc_interpolation, dec_interpolation, enc_value, dec_value, enc_keyframe, dec_keyframe, enc_channel, dec_channel, enc_timeline, dec_timeline, enc_keyframe_diff, dec_keyframe_diff, enc_channel_diff, dec_channel_diff, enc_timeline_diff, dec_timeline_diff};
+use crate::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, parse_f64, enc_list, dec_list, enc_property, dec_property, enc_target, dec_target, enc_interpolation, dec_interpolation, enc_value, dec_value, enc_keyframe, dec_keyframe, enc_channel, dec_channel, enc_timeline, dec_timeline, enc_keyframe_diff, dec_keyframe_diff, enc_channel_diff, dec_channel_diff, enc_timeline_diff, dec_timeline_diff};
 }

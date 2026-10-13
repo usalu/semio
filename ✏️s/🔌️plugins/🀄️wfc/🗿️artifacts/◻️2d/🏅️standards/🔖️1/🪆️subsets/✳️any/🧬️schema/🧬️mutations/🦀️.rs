@@ -95,7 +95,7 @@ pub use super::set_slot_positions::{set_slot_positions, Wfc2dSlotPosition};
 pub use super::unpin_slot::unpin_slot;
 //#endregion 🔖️Builders
 
-pub type Wfc2dEnvelope = store::ArtifactEnvelope<Wfc2dSnapshot, Wfc2dMutation>;
+pub type Wfc2dEnvelope = store::os_store::store_schema::ArtifactEnvelope<Wfc2dSnapshot, Wfc2dMutation>;
 pub type Wfc2dStore = store::ArtifactStore<Wfc2dSnapshot, Wfc2dMutation>;
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.

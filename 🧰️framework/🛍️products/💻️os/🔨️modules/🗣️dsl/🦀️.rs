@@ -329,7 +329,7 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
     use crate::os_pack::{write_varint_u64, ByteReader};
     use crate::os_spr::ProtocolError;
-    use crate::os_store::pack_rt::{decode_wire_value, encode_wire_value};
+    use crate::os_pack::pack_rt::{decode_wire_value, encode_wire_value};
 
     pub const OP_BINARY_FORMAT: u8 = 1;
 

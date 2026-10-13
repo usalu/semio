@@ -779,11 +779,11 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 
     use crate::{PUZZLE_5D_SCHEMA, Puzzle5dPart, Puzzle5dPart2d, Puzzle5dPart3d};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::create_document_envelope;
+    use store::os_store::document_materialize::create_document_envelope;
 
     let mut store = puzzle5d_store(create_document_envelope(PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), part_kind: None, anchor: Default::default(), part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };
-    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
+    semio_framework_plugin::with_authoring_identity!(|identity| ::semio_framework_async::poll::resolve_ready(store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![crate::standards::v1::subsets::any::schema::mutations::create_part(part, None)], transaction: None }, &mut identity))).expect("apply");
     let envelope = store.envelope();
     let edit: &Edit<Puzzle5dMutation> = envelope.vcs.edits.last().expect("dispatch must have recorded an edit");
     ::semio_framework_async::poll::resolve_ready(semio_framework_os_kernel::os_store::test_support::assert_command_envelope_round_trip::<Puzzle5dSnapshot, Puzzle5dMutation>(edit, &ArtifactId(envelope.id.clone()), &SchemaId(envelope.schema.clone())));
@@ -2320,7 +2320,7 @@ async fn a_chunked_pick_lands_as_one_whole_document_load_through_the_framework_s
         }
     }
     let pack = loaded.expect("the closing chunk publishes the whole-document load");
-    let document = <crate::Puzzle5dSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("the load carries a puzzle 5d document");
+    let document = <crate::Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("the load carries a puzzle 5d document");
     assert_eq!(document.parts.len(), target.parts.len(), "the closing chunk loaded the whole document");
     close_app(&mut app);
 }

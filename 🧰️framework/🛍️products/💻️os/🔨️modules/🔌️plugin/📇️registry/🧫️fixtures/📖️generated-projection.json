@@ -16,19 +16,14 @@
       "activationEvents": [],
       "extensionPoints": [],
       "directoryName": "🗄️stdio",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "space",
       "packageId": "semio:space",
       "cratePath": "🌎️hub/🧩️compositions/🪐️space/📦️packages/🦀️rust",
       "packageName": "semio-hub-space",
-      "wasmOut": "semio_hub_space.wasm",
+      "wasmOut": "semio_hub_space_component.wasm",
       "role": "plugin",
       "capabilities": [
         "artifacts.write"
@@ -48,19 +43,14 @@
         "hostAppId": "studio"
       },
       "directoryName": "🪐️space",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "flow",
       "packageId": "semio:flow",
       "cratePath": "🌎️hub/🧩️compositions/🌊️flow/📦️packages/🦀️rust",
       "packageName": "semio-hub-flow",
-      "wasmOut": "semio_hub_flow.wasm",
+      "wasmOut": "semio_hub_flow_component.wasm",
       "role": "plugin",
       "capabilities": [
         "artifacts.write"
@@ -81,19 +71,14 @@
         "flow.extension"
       ],
       "directoryName": "🌊️flow",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "flow-extension-draw",
       "packageId": "semio:flow-extension-draw",
       "cratePath": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/🖍️draw/📦️packages/🦀️rust",
-      "packageName": "semio-s-plugin-flow-extension-draw",
-      "wasmOut": "semio_s_plugin_flow_extension_draw.wasm",
+      "packageName": "semio-s-plugin-flow-draw",
+      "wasmOut": "semio_s_plugin_flow_draw_component.wasm",
       "role": "extension",
       "capabilities": [
         "flow.extension"
@@ -110,19 +95,14 @@
       "extensionPoints": [],
       "extends": "flow",
       "directoryName": "🖍️flow-extension-draw",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "draw",
       "packageId": "semio:draw",
       "cratePath": "🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust",
       "packageName": "semio-hub-draw",
-      "wasmOut": "semio_hub_draw.wasm",
+      "wasmOut": "semio_hub_draw_component.wasm",
       "role": "plugin",
       "capabilities": [
         "artifacts.write"
@@ -138,12 +118,7 @@
       ],
       "extensionPoints": [],
       "directoryName": "🎨️draw",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "draw-fsm",
@@ -160,19 +135,14 @@
       "extensionPoints": [],
       "extends": "draw",
       "directoryName": "🔄️draw-fsm",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     },
     {
       "pluginId": "note",
       "packageId": "semio:note",
       "cratePath": "🌎️hub/🧩️compositions/🗒️note/📦️packages/🦀️rust",
       "packageName": "semio-hub-note",
-      "wasmOut": "semio_hub_note.wasm",
+      "wasmOut": "semio_hub_note_component.wasm",
       "role": "plugin",
       "capabilities": [
         "artifacts.write"
@@ -187,12 +157,7 @@
       ],
       "extensionPoints": [],
       "directoryName": "🗒️note",
-      "executionMode": "isolated",
-      "hashes": {
-        "wasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "coreWasmSha256": "0000000000000000000000000000000000000000000000000000000000000000",
-        "descriptorSha256": "0000000000000000000000000000000000000000000000000000000000000000"
-      }
+      "executionMode": "isolated"
     }
   ],
   "playgrounds": [

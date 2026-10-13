@@ -1,4 +1,5 @@
 use super::*;
+use crate::os_store::serialization::{ArtifactDsl, ArtifactPack, ArtifactSqliteSnapshot};
 use semio_framework_value::DslValue;
 use semio_framework_dsl_record::FieldSpec;
 use semio_framework_dsl_record::FieldValue;

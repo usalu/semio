@@ -1,7 +1,7 @@
 use super::*;
 use protocol::os_spr::protocol_laws::{assert_mutation_inverse_sum_law};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn busy() -> BimWindowTransient {
     BimWindowTransient { engagement_input: "Living".into(), pointer_generation: 4, preview: "{\"marks\":[]}".into() }

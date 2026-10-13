@@ -128,7 +128,7 @@ pub(crate) mod context {
     
         /// 📼️ What a renderer echoes after it applied a tool run trace delta for `window_id`.
         pub fn echo_tool_run_trace_cursor(&mut self, window_id: &str, cursor: semio_framework_tool_run::ToolRunTraceCursor) {
-            self.view.tool_run_trace_cursor_by_window_id.cold_insert(window_id.to_string(), cursor);
+            self.view.tool_run_trace_cursor_by_window_id.insert(window_id.to_string(), cursor);
         }
 
         pub fn window_view(&self, window_id: &str) -> ViewModel {
@@ -157,11 +157,11 @@ pub(crate) mod context {
             let window = args.and_then(|value| value.get("windowId")).and_then(Value::as_str).filter(|id| !id.is_empty()).unwrap_or(window_id).to_string();
             match resolve_activation(self.view.active_utility_by_window_id.get(&window).map(String::as_str), requested("utilityId")) {
                 Some(utility) => {
-                    self.view.active_utility_by_window_id.cold_insert(window, utility);
+                    self.view.active_utility_by_window_id.insert(window, utility);
                     self.view.active_tool_id = None;
                 }
                 None => {
-                    self.view.active_utility_by_window_id.cold_remove(&window);
+                    self.view.active_utility_by_window_id.remove(&window);
                 }
             }
         }
@@ -198,7 +198,7 @@ pub(crate) mod context {
             if app.close_terminal_is_empty() {
                 return Ok(true);
             }
-            let demand = PluginApp::close_retirement_demands(app, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
+            let demand = PluginApp::close_retirement_demands(app, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| Fault::from(error.into_message()))?;
             let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: demand.copy_bytes, maximum_capacity_bytes: demand.capacity_bytes, maximum_release_bytes: demand.release_bytes, maximum_depth: demand.depth.max(1) };
             match PluginApp::close_step(app, grant)? {
                 semio_framework_plugin::PluginLifecycleStep::Complete(_) => break,
@@ -272,7 +272,7 @@ pub(crate) mod context {
     
     pub async fn app() -> Puzzle3dApp {
         let registry = puzzle3d_action_registry();
-        let mut app = VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into())).await;
+        let mut app = semio_framework_plugin::with_authoring_identity!(|identity| VcsArtifactApp::with_registry(EditorApp::<Puzzle3dPlayApp>::default(), registry, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut identity).await);
         let instance_id = next_fixture_instance_id();
         app.bind_instance_id(instance_id).await;
         let view = ViewModel { window_instances: vec![ViewWindowInstance { id: main::WINDOW_KIND_ID.into(), window_kind_id: main::WINDOW_KIND_ID.into() }], ..ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native) };
@@ -507,8 +507,8 @@ pub(crate) mod context {
             Effect::LoadDocument { pack, .. } => Some(pack.clone()),
             _ => None,
         });
-        let document = <Puzzle3dSnapshot as store::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
-        semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&document))
+        let document = <Puzzle3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack.expect("an import publishes one whole-document load")).expect("the load carries a puzzle 3D document");
+        semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&document))
     }
 
     /// 🧪️ B1: test-only replacement for the deleted `VcsArtifactApp::handle_action` app-dispatch path
@@ -855,7 +855,7 @@ pub(crate) mod context {
     }
     
     pub fn projection_of(app: &Puzzle3dApp) -> Value {
-        semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(app.snapshot().expect("projection").typed()))
+        semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(app.snapshot().expect("projection").typed()))
     }
 
     pub fn object_count(app: &Puzzle3dApp) -> usize {
@@ -1901,12 +1901,11 @@ fn set_active_example_work_advances_through_multiple_bounded_steps_for_nakagin()
     // 🏷️ Example loading publishes exactly ONE config row, and it moves exactly ONE field: the id of
     // the example just loaded, which is what `export_snapshot` names its download after. The user's own
     // shared preferences (fill count, contact tolerance, kind weights) ride through untouched.
-    let Some(Puzzle3dConfigMutation::Snapshot { config: published }) = emit.config_mutations.first().cloned() else {
+    let Some(Puzzle3dConfigMutation::SetActiveExampleId(Puzzle3dConfigSetActiveExampleId { value: published })) = emit.config_mutations.first().cloned() else {
         panic!("example loading must stamp the active example id on the shared config: {:?}", emit.config_mutations);
     };
     assert_eq!(emit.config_mutations.len(), 1, "example loading publishes one config row, not many");
-    assert_eq!(published.active_example_id, PUZZLE3D_EXAMPLE_NAKAGIN, "the stamped id must be the example that was loaded");
-    assert_eq!(Puzzle3dConfig { active_example_id: config.active_example_id.clone(), ..published }, config, "example loading leaves shared app preferences untouched");
+    assert_eq!(published, PUZZLE3D_EXAMPLE_NAKAGIN, "the stamped id must be the example that was loaded");
 }
 
 /// 🧲️ Both hosts paint a gumball drag locally and dispatch ONE pose delta on release, so there is no gesture
@@ -2139,10 +2138,10 @@ async fn puzzle3d_play_projection_pack_round_trips() {
 /// as equal and cannot state this; the object count on BOTH halves can.
 #[semio_framework_async_macros::async_test]
 async fn play_snapshot_typed_authority_survives_every_store_round_trip() {
-    use store::{ArtifactDsl, ArtifactPack};
+    use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
     let app = app().await;
     let snapshot = app.snapshot().expect("projection");
-    let objects = snapshot.value().get("objects").and_then(semio_framework_value::DslValue::as_array).map(Vec::len).unwrap_or(0);
+    let objects = snapshot.value().get("objects").and_then(semio_framework_value::DslValue::as_array).map(<[_]>::len).unwrap_or(0);
     assert!(objects > 0, "the boot scene_snapshot ships objects");
     assert_eq!(snapshot.typed().objects.len(), objects, "the live snapshot's typed authority must carry the projection's objects");
     let via_pack = Puzzle3dPlaySnapshot::decode_pack(&snapshot.encode_pack()).expect("pack decode");
@@ -2311,7 +2310,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::host::owned::{close_puzzle3d_store,puzzle3d_store};
     use crate::{Puzzle3dObject as TypedObject, PUZZLE_3D_SCHEMA};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand};
 
     let mut store = puzzle3d_store(create_document_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", Puzzle3dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("store");
     let object = TypedObject { id: "o1".into(), label: None, object_kind: None, anchor: Default::default(), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false };
@@ -3739,7 +3738,7 @@ fn fill_tool_wins_the_world_lane_over_a_select_window_utility() {
     runtime.active_tool_id = Some(fill_tool::TOOL_ID.into());
     let mut view = semio_framework_plugin::ViewModel::new(semio_framework_ui_locale::Locale::En, semio_framework_ui_locale::Terminology::Native);
     view.active_utility_id = Some("select".into());
-    view.active_utility_by_window_id.cold_insert("pane".into(), "select".into());
+    view.active_utility_by_window_id.insert("pane".into(), "select".into());
     assert!(puzzle3d_fill_tool_active(&runtime), "the Fill tab arms the mode tool, not a window utility");
     assert_eq!(puzzle3d_scene_active_utility(&runtime, Some(&view), Some("pane")), fill_tool::TOOL_ID, "guest world lane must stay fill while the tool is armed");
     runtime.active_tool_id = None;
@@ -5334,7 +5333,7 @@ async fn kit_in_import_media_upserts_object_and_vortex_kinds_into_meta_kind_cata
         next_projection = protocol::apply_diff(protocol::Mutation::<crate::Puzzle3dSnapshot>::diff(operation, &next_projection).diff(), &next_projection).expect("valid mutation diff");
     }
 
-    let next_projection = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&next_projection));
+    let next_projection = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&next_projection));
     let objects = next_projection.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert!(objects.iter().any(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")), "the imported object kind must appear in meta.kind_catalogs.objects");
     let capsule = objects.iter().find(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).unwrap();
@@ -5374,7 +5373,7 @@ async fn kit_in_import_media_is_idempotent_on_repeated_delivery() {
         }
     }
 
-    let current = semio_framework_pack_json::from_dsl_value(semio_framework_value::ToValue::to_value(&current));
+    let current = semio_framework_pack_json::from_dsl_value(&semio_framework_value::ToValue::to_value(&current));
     let objects = current.pointer("/meta/kindCatalogs/objects").and_then(Value::as_array).expect("objects catalog present");
     assert_eq!(objects.iter().filter(|entry| entry.get("id").and_then(Value::as_str) == Some("capsule")).count(), 1, "repeated delivery of the same fragment must upsert, never duplicate");
 }
@@ -5395,13 +5394,13 @@ async fn kit_in_port_is_declared_on_the_app_io() {
 /// whole-document `setSnapshot` snapshots, which would clobber one side.
 #[semio_framework_async_macros::async_test]
 async fn two_instances_converge_disjoint_object_edits_via_backbone() {
-    use store::MemoryBackbone;
+    use store::os_store::backbone::MemoryBackbone;
     let mut instance_a = app().await;
     let mut instance_b = app().await;
     let seeded = object_count(&instance_a);
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://puzzle3d-convergence", "mem://puzzle3d-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
 
     dispatch(&mut instance_a, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 0.0, 0.0] })), None).await.expect("a adds object");
     dispatch(&mut instance_b, "addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.0, 0.0, 0.0] })), None).await.expect("b adds object");

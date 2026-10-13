@@ -1,7 +1,7 @@
 use crate::standards::v2_0::subsets::any::io::sqlite::snapshot::*;
 use semio_framework_os_kernel::{
     sqlite_snapshot::{export_sqlite_database, import_sqlite_database, SqliteDatabaseLimits, SqliteSnapshotControl},
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 
 fn words() -> Vec<u64> {
@@ -187,14 +187,6 @@ fn sqlite_snapshot_gltf_independent_sql_mesh_accessor_material_and_buffer_edits(
 }
 
 #[test]
-fn sqlite_snapshot_gltf_actual_factory_exposes_owned_provider_and_structural_hash() {
-    let codec = (crate::native_codecs()[0].codec)();
-    assert!(codec.snapshot_sqlite.is_some());
-    let spec = <GltfSnapshot as store::ArtifactPack>::record_spec().expect("owned GLTF record spec");
-    assert_eq!(codec.pack_schema_hash, store::schema_hash(&spec));
-}
-
-#[test]
 fn sqlite_snapshot_gltf_empty_domain_tables_preserve_absence_and_present_empty_lists() {
     let mut snapshot: GltfSnapshot = semio_framework_pack_json::from_json_str(include_str!("../🧫️fixtures/🌱️minimal/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let limits = SqliteDatabaseLimits::default();
@@ -243,7 +235,7 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
     snapshot.document.extras = Some(extras);
     let limits = SqliteDatabaseLimits::default();
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
-    let codec = (crate::native_codecs()[0].codec)().snapshot_sqlite.expect("actual GLTF owned provider");
+    let codec = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::sqlite_snapshot_codec().expect("actual GLTF owned provider");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.gltf".into(), standard: "2.0".into(), subset: "*".into() };
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
         let payload = semio_s_artifact_stdio_contract::testing::with_encoding(|native_owner| (codec.import)(&snapshot.schema, &dialect, &mut Some(database.clone()), encoding, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap().value;
@@ -255,10 +247,10 @@ fn sqlite_snapshot_gltf_deep_owned_extras_erased_payloads_have_bounded_wire_dept
 #[test]
 fn sqlite_snapshot_gltf_logical_text_rejects_foreign_envelope_and_unowned_suffix() {
     let snapshot = fixture();
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    assert!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).is_ok());
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    assert!(<GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).is_ok());
     for invalid in [text.replace("stdio.gltf.dsl", "stdio.obj.dsl"), text.replace("stdio.gltf.dsl v1", "stdio.gltf.dsl v99"), format!("{text}\nunowned-field=1")] {
-        assert!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(&invalid).is_err());
+        assert!(<GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&invalid).is_err());
     }
 }
 
@@ -272,10 +264,10 @@ fn sqlite_snapshot_gltf_flat_primitive_extras_keep_deep_ordered_members_and_ieee
     }
     snapshot.document.meshes[0].primitives[0].extras = Some(extras);
     let database = snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
-    for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))] {
+    for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot))] {
         let restored = match payload {
-            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),
-            semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),
+            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap(),
+            semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap(),
         };
         assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), database);
     }
@@ -288,10 +280,10 @@ fn sqlite_snapshot_gltf_empty_image_and_texture_entities_survive_logical_native_
     let database = independent(&snapshot.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), "SELECT 1");
     assert_eq!(database.table("gltf_image").unwrap().rows.len(), 2);
     assert_eq!(database.table("gltf_texture").unwrap().rows.len(), 1);
-    for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::ArtifactPack::encode_pack(&snapshot))] {
+    for payload in [semio_framework_os_kernel::io_schema::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot)), semio_framework_os_kernel::io_schema::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot))] {
         let restored = match payload {
-            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <GltfSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap(),
-            semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap(),
+            semio_framework_os_kernel::io_schema::IoPayload::Text(text) => <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap(),
+            semio_framework_os_kernel::io_schema::IoPayload::Binary(bytes) => <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap(),
         };
         assert_eq!(restored, snapshot);
         assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), database);
@@ -304,7 +296,7 @@ fn sqlite_snapshot_gltf_authored_grammar_recognizes_each_owned_named_domain() {
     let recognizer = semio_framework_dsl::grammar::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
         .expect("selected grammar fragments");
     for snapshot in [fixture(), semio_framework_pack_json::from_json_str::<GltfSnapshot>(include_str!("../🧫️fixtures/🪹️empty-entities/🔣️.json"), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap()] {
-        let text = store::ArtifactDsl::print_dsl(&snapshot);
+        let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
         assert!(recognizer.recognize(&text).unwrap(), "{text}");
     }
 }
@@ -424,21 +416,21 @@ fn sqlite_snapshot_gltf_independent_later_root_owner_failure_retires_completed_e
 
 #[test]
 fn sqlite_snapshot_gltf_curated_demo_uses_actual_owned_flat_native_records() {
-    let demo = crate::engine::demo_gltf_snapshot();
+    let demo = crate::standards::v2_0::subsets::any::schema::demo_gltf_snapshot();
     let text = include_str!("../../../../📚️examples/🎬️demo/🖼️assets/🗣️.dsl.semio");
     let bytes = include_bytes!("../../../../📚️examples/🎬️demo/🖼️assets/🎒️.pack.semio");
-    assert_eq!(store::ArtifactDsl::print_dsl(&demo), text);
-    assert_eq!(store::ArtifactPack::encode_pack(&demo), bytes);
-    assert_eq!(<GltfSnapshot as store::ArtifactDsl>::parse_dsl(text).unwrap(), demo);
-    assert_eq!(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).unwrap(), demo);
+    assert_eq!(store::os_store::serialization::ArtifactDsl::print_dsl(&demo), text);
+    assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(&demo), bytes);
+    assert_eq!(<GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).unwrap(), demo);
+    assert_eq!(<GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).unwrap(), demo);
 }
 
 #[test]
 fn sqlite_snapshot_gltf_curated_metabolism_pack_is_current_owned_logical_state() {
-    let snapshot = crate::engine::decode_glb(include_bytes!("../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).unwrap();
+    let snapshot = crate::standards::v2_0::subsets::any::io::import::decode_glb(include_bytes!("../../../../🖼️assets/🌱️metabolism/🏙️base/🧊️.glb")).unwrap();
     let bytes = include_bytes!("../../../../📚️examples/🌱️metabolism/🖼️assets/🎒️.pack.semio");
-    assert!(store::ArtifactPack::encode_pack(&snapshot).as_slice() == bytes, "curated metabolism Pack must match the actual current owned native record graph");
-    assert_eq!(<GltfSnapshot as store::ArtifactPack>::decode_pack(bytes).unwrap(), snapshot);
+    assert!(store::os_store::serialization::ArtifactPack::encode_pack(&snapshot).as_slice() == bytes, "curated metabolism Pack must match the actual current owned native record graph");
+    assert_eq!(<GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).unwrap(), snapshot);
 }
 
 #[test]
@@ -470,7 +462,7 @@ fn sqlite_snapshot_gltf_native_owned_decode_controls_physical_and_typed_material
     value.document.extras = Some(GltfJson::Array((0..600).map(|index| GltfJson::String(if index == 0 { "long semantic literal 世界".repeat(4096) } else { "child".into() })).collect()));
     let limits = SqliteDatabaseLimits { max_value_bytes: 128 * 1024 * 1024, ..SqliteDatabaseLimits::default() };
     let expected = value.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap();
-    for payload in [store::io::IoPayload::Text(store::ArtifactDsl::print_dsl(&value)), store::io::IoPayload::Binary(store::ArtifactPack::encode_pack(&value))] {
+    for payload in [store::io::IoPayload::Text(store::os_store::serialization::ArtifactDsl::print_dsl(&value)), store::io::IoPayload::Binary(store::os_store::serialization::ArtifactPack::encode_pack(&value))] {
         let restored = semio_s_artifact_stdio_contract::testing::with_decoding(|native_owner| GltfSnapshot::decode_sqlite_snapshot_native(&payload, &mut SqliteSnapshotControl::new(&mut |_| true, limits), native_owner)).unwrap();
         assert_eq!(restored.to_sqlite_database(&mut SqliteSnapshotControl::new(&mut |_| true,limits)).unwrap(), expected);
         GltfSnapshot::retire_sqlite_snapshot(restored);

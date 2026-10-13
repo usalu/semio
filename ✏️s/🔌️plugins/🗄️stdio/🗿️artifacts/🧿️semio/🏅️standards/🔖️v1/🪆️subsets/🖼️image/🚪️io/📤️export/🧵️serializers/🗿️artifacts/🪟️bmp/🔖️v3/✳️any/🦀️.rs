@@ -1,7 +1,7 @@
 //! 📤️ Converts the first resolved Semio RGBA8 frame into an explicit bottom-up Direct RGB24 BMP
 //! v3 profile. Alpha and later frames have no representation in that target profile.
 
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_bmp::{standards::v_v3::subsets::any::io::bmp_direct_rgb24_from_rgba8, BmpSnapshot};
 

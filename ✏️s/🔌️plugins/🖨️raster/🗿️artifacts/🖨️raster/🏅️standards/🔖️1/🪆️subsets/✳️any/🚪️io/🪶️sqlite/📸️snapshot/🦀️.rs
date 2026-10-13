@@ -118,7 +118,7 @@ impl Reader<'_,'_,'_>{
 }
 fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<RasterSnapshot,ValueError>{
  let mut r=Reader::new(database,control)?;let document=r.take("raster_document",1)?;let mut owner=SnapshotOwned(Some(RasterSnapshot{schema:r.text(document,1)?,id:r.text(document,2)?,title:r.optional_text(document,3)?,layers:Vec::new(),assets:RasterOwnedMap::new()}));
- let assets=r.list("raster_asset",1,1,2)?;if assets.len()>64{return Err(invalid("Raster map capacity"))}let mut previous=None;for row in assets{let key=r.text(row,3)?;if let Some(previous)=previous{if !ordered_keys(previous,row.text(3)?,r.control)?{return Err(invalid("Raster asset key order"))}}previous=Some(row.text(3)?);let child=store::ArtifactChild::new(r.text(row,4)?,semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:r.text(row,5)?,standard:r.text(row,6)?,subset:r.text(row,7)?},artifact_id:r.text(row,8)?});owner.0.as_mut().unwrap().assets.insert(key,child).map_err(|e|invalid(e.reason))?;}
+ let assets=r.list("raster_asset",1,1,2)?;if assets.len()>64{return Err(invalid("Raster map capacity"))}let mut previous=None;for row in assets{let key=r.text(row,3)?;if let Some(previous)=previous{if !ordered_keys(previous,row.text(3)?,r.control)?{return Err(invalid("Raster asset key order"))}}previous=Some(row.text(3)?);let child=store::os_store::artifact_child::ArtifactChild::new(r.text(row,4)?,semio_framework_artifact_reference::ArtifactRef{dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:r.text(row,5)?,standard:r.text(row,6)?,subset:r.text(row,7)?},artifact_id:r.text(row,8)?});owner.0.as_mut().unwrap().assets.insert(key,child).map_err(|e|invalid(e.reason))?;}
  enum Task<'a>{Node(&'a SqliteRow),Group(i64,Vec<i64>)}
  let roots=r.list("raster_layer",1,1,3)?;let root_ids=roots.iter().map(|v|v.rowid).collect::<Vec<_>>();let mut pending=Vec::new();for row in roots.into_iter().rev(){pending.push(Task::Node(row));}let mut forest=Forest(BTreeMap::new());
  while let Some(task)=pending.pop(){r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,0,0)?;match task{
@@ -127,20 +127,20 @@ fn reconstruct(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)-
  }}if r.rows.values().any(|v|!v.is_empty()){return Err(invalid("orphan Raster entities"))}r.control.checkpoint(SqliteSnapshotPhase::ReconstructSnapshot,1,1)?;for id in root_ids{owner.0.as_mut().unwrap().layers.push(forest.0.remove(&id).ok_or_else(||invalid("Raster root owner"))?);}if !forest.0.is_empty(){return Err(invalid("unowned Raster layer"))}Ok(owner.0.take().unwrap())
 }
 
-impl store::ArtifactSqliteSnapshot for RasterSnapshot{
+impl store::os_store::serialization::ArtifactSqliteSnapshot for RasterSnapshot{
  const SQLITE_SCHEMA:&'static str=SCHEMA;
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{reconstruct(database,control)}
  fn retire_sqlite_snapshot(self){retire_snapshot(self)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_from_record_controlled(record,native)?;document.into_snapshot(maximum_rows,native)
   })(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn encode_sqlite_snapshot_native(&self,encoding:store::sqlite_snapshot::SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
   let maximum_rows=control.limits().max_rows;
-  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
+  store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::__dsl_spec_producer(),|native|{
    let document=standards::v1::subsets::any::io::text::snapshot::record::RasterNativeDocument::from_snapshot(self,maximum_rows,native)?;
    document.__dsl_to_record_controlled(native)
   },control,native_owner)

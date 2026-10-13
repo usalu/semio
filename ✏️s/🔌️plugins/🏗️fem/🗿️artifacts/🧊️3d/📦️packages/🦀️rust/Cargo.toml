@@ -17,7 +17,7 @@ path = "../../🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-s-artifact-fem-2d/component-app-assembly", "semio-framework-plugin/component-guest", "dep:machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
+component-app-assembly = ["semio-s-artifact-fem-2d/component-app-assembly", "dep:machine", "dep:semio-framework-dispatch-macros", "dep:semio-framework-tool-machine", "dep:semio-framework-ui-contract", "dep:semio-framework-ui-scene"]
 
 [dependencies]
 semio-framework-artifact-reference = { workspace = true }
@@ -44,7 +44,9 @@ semio-s-artifact-stdio-csv = { workspace = true }
 semio-s-artifact-stdio-json = { workspace = true }
 semio-s-artifact-stdio-md = { workspace = true }
 semio-s-artifact-stdio-obj = { workspace = true }
-semio-s-artifact-stdio-semio = { workspace = true, features = ["conversion-mesh"] }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-mesh-export = { workspace = true }
 semio-s-artifact-stdio-stl = { workspace = true }
 pack = { workspace = true }
 semio-framework-dispatch-macros = { workspace = true, optional = true }

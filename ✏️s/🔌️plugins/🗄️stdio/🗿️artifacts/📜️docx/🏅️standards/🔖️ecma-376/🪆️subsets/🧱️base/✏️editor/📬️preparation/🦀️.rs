@@ -45,7 +45,7 @@ const PREFIX: &str = "stdio-docx-base-set-page";
 /// 📏️ The one-item store preparation copies the whole document in one step, so an owner (the document, or one mutation)
 /// plus one turn fits the one-item store budget exactly — one measured item per 16 owned bytes — and larger owners refuse
 /// typed (`paged-owner-required`) before the store ever sees an inadmissible footprint.
-const OWNER_BYTES: usize = app_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES - TURN_BYTES;
+const OWNER_BYTES: usize = app_store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES - TURN_BYTES;
 const OWNER_ITEMS: usize = OWNER_BYTES / 16;
 const OWNER_DEPTH: usize = 32;
 const TURN_BYTES: usize = 4_096;

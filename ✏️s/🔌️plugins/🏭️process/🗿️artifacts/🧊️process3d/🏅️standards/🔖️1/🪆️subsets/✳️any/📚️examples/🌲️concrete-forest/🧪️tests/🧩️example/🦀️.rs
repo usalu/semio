@@ -11,7 +11,7 @@ use protocol::Inference;
 
 #[semio_framework_async_macros::async_test]
 async fn example_parses_to_the_reference_stock() {
-    let snapshot = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
+    let snapshot = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
     assert_eq!(snapshot.stock_payload.solid, crate::WorkingSolid::Reference { reference_id: crate::REFERENCE_SOLID_CONCRETE_FOREST_LEFT.into() });
     assert_eq!(snapshot.step_payloads.len(), 7);
     assert_eq!(Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"), Process3dInference::infer(&snapshot).expect("valid materialized inference fixture"));
@@ -24,10 +24,10 @@ async fn example_parses_to_the_reference_stock() {
 /// member-less archive load (the react shell's `loadDocumentPair`) closes completely.
 #[semio_framework_async_macros::async_test]
 async fn every_composed_child_of_the_example_has_a_genesis_pack() {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-    use store::ArtifactPack;
-    let snapshot = <Process3dSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
+    use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+    use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+    use store::os_store::serialization::ArtifactPack;
+    let snapshot = <Process3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::concrete_forest::PRIMARY_TEXT).expect("concrete forest example parses");
     let stock = crate::genesis_process3d_child_pack(&snapshot, "stockSolid", &snapshot.stock_solid.child_id).expect("stock child pack");
     let brep = <SemioBrepSnapshot as ArtifactPack>::decode_pack(&stock).expect("stock brep decodes");
     assert_eq!((brep.faces.len(), brep.edges.len(), brep.vertices.len()), (57, 126, 71));

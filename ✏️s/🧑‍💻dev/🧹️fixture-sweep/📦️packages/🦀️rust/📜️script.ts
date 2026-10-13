@@ -16,10 +16,12 @@ class SourceScript extends BundleScript {
   }
 }
 
+/** 🧪️ `test [level]`: the extraction check, then (at every level but `quick`, which is the extraction check alone) the fleet's exact Cargo laws. */
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
-    const { rest } = resolveTestLevel(segments);
+    const { level, rest } = resolveTestLevel(segments);
     await testFixtureSweepExtraction();
+    if (level === "quick") return;
     const receipts = await runRepositoryExactCargoLaws({ invocation: this.invocation, policy: { ...configuredExactCargoLawPolicyV1(), buildMilliseconds: buildBudgetMs(), lawMilliseconds: 600_000 }, cwd: this.repoRoot, cargoArgs: rest, env: { ...process.env, RUST_TEST_NOCAPTURE: "1" }, groups: [fixtureSweepLawGroup()] });
     assertFixtureSweepLawCoverage(receipts);
   }

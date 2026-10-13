@@ -27,17 +27,17 @@ pub type BsplineCurveAttributes = (usize, Vec<u64>, Vec<u32>, Vec<f64>);
 use std::collections::HashMap;
 use std::fmt::Write as _;
 
-use semio_framework_3d::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use semio_framework_3d::brep::representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use semio_framework_3d::brep::representation::curve::bspline::KnotVector;
-use semio_framework_3d::brep::representation::curve::Curve3;
+use {semio_framework_3d_brep_operations::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::Curve3;
 
-use semio_framework_3d::brep::representation::surface::Surface;
-use semio_framework_3d::brep::representation::tolerance::Tol;
-use semio_framework_3d::brep::representation::topology::history::OpRecorder;
-use semio_framework_3d::brep::representation::topology::Body;
-use semio_framework_3d::brep::representation::vector::matrix::Frame3;
-use semio_framework_3d::brep::representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 // #region 🔖️Api
 
@@ -252,7 +252,7 @@ impl StepWriteContext {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_edge_loop(&mut self, body: &Body, loop_id: semio_framework_3d::brep::representation::arena::LoopId) -> Result<u64, StepError> {
+    fn write_edge_loop(&mut self, body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId) -> Result<u64, StepError> {
         let mut oriented_edge_ids = Vec::new();
         for coedge_id in body.loop_coedges(loop_id) {
             let coedge = body.coedges.get(coedge_id).ok_or(StepError::Syntax("missing coedge".to_string()))?;
@@ -370,7 +370,7 @@ impl StepWriteContext {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn write_shell(&mut self, body: &Body, shell_id: semio_framework_3d::brep::representation::arena::ShellId) -> Result<u64, StepError> {
+    fn write_shell(&mut self, body: &Body, shell_id: semio_framework_3d_brep_representation::arena::ShellId) -> Result<u64, StepError> {
         let shell = body.shells.get(shell_id).ok_or(StepError::Syntax("missing shell".to_string()))?;
         let mut face_step_ids = Vec::new();
         for &face_id in &shell.faces {
@@ -825,7 +825,7 @@ impl<'a> StepBuilder<'a> {
     }
 
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    fn build_shell(&mut self, shell_ref: u64) -> Result<semio_framework_3d::brep::representation::arena::ShellId, StepError> {
+    fn build_shell(&mut self, shell_ref: u64) -> Result<semio_framework_3d_brep_representation::arena::ShellId, StepError> {
         let attrs = self.get_entity(shell_ref)?.attrs.clone();
         let face_refs = parse_list_refs(&attrs);
         let mut face_ids = Vec::new();
@@ -1127,27 +1127,27 @@ mod tests;
 // #endregion 🔖️Tests
 
 /// 📤️ STEP format-owned geometry writer over the general mathematical engine.
-pub fn export_step(kernel: &semio_framework_3d::brep::engine::Brep, shapes: &[semio_framework_3d::brep::engine::GeometryHandle]) -> Result<String,semio_framework_3d::brep::engine::BrepError> {
+pub fn export_step(kernel: &semio_framework_3d_brep_engine::Brep, shapes: &[semio_framework_3d_brep_engine::GeometryHandle]) -> Result<String,semio_framework_3d_brep_engine::BrepError> {
     let solids = shapes.iter().map(|shape| kernel.geometry_solid(shape)).collect::<Result<Vec<_>,_>>()?;
-    write_step(kernel.representation(),&solids).map_err(|error| semio_framework_3d::brep::engine::BrepError::Operation(error.to_string()))
+    write_step(kernel.representation(),&solids).map_err(|error| semio_framework_3d_brep_engine::BrepError::Operation(error.to_string()))
 }
 /// 📥️ STEP format-owned reader preserves previously issued geometry handles.
-pub fn import_step(kernel: &mut semio_framework_3d::brep::engine::Brep, text: &str) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>,semio_framework_3d::brep::engine::BrepError> {
-    let body = read_step(text).map_err(|error| semio_framework_3d::brep::engine::BrepError::Operation(error.to_string()))?;
+pub fn import_step(kernel: &mut semio_framework_3d_brep_engine::Brep, text: &str) -> Result<Vec<semio_framework_3d_brep_engine::GeometryHandle>,semio_framework_3d_brep_engine::BrepError> {
+    let body = read_step(text).map_err(|error| semio_framework_3d_brep_engine::BrepError::Operation(error.to_string()))?;
     Ok(kernel.merge_representation(body))
 }
 /// 📤️ Owner-supplied STEP solid export codec.
 pub struct StepSolidExporter;
 /// 📥️ Owner-supplied STEP solid import codec.
 pub struct StepSolidImporter;
-impl semio_framework_3d::brep::engine::SolidExporter for StepSolidExporter {
+impl semio_framework_3d_brep_engine::SolidExporter for StepSolidExporter {
     async fn format_kind(&self) -> &'static str { "step" }
-    async fn export(&self,kernel:&semio_framework_3d::brep::engine::Brep,shapes:&[semio_framework_3d::brep::engine::GeometryHandle],_:f64) -> Result<Vec<u8>,semio_framework_3d::brep::engine::BrepError> { export_step(kernel,shapes).map(String::into_bytes) }
+    async fn export(&self,kernel:&semio_framework_3d_brep_engine::Brep,shapes:&[semio_framework_3d_brep_engine::GeometryHandle],_:f64) -> Result<Vec<u8>,semio_framework_3d_brep_engine::BrepError> { export_step(kernel,shapes).map(String::into_bytes) }
 }
-impl semio_framework_3d::brep::engine::SolidImporter for StepSolidImporter {
+impl semio_framework_3d_brep_engine::SolidImporter for StepSolidImporter {
     async fn format_kind(&self) -> &'static str { "step" }
-    async fn import(&self,kernel:&mut semio_framework_3d::brep::engine::Brep,bytes:&[u8],_:f64) -> Result<Vec<semio_framework_3d::brep::engine::GeometryHandle>,semio_framework_3d::brep::engine::BrepError> {
-        let text=std::str::from_utf8(bytes).map_err(|error|semio_framework_3d::brep::engine::BrepError::InvalidInput(error.to_string()))?;
+    async fn import(&self,kernel:&mut semio_framework_3d_brep_engine::Brep,bytes:&[u8],_:f64) -> Result<Vec<semio_framework_3d_brep_engine::GeometryHandle>,semio_framework_3d_brep_engine::BrepError> {
+        let text=std::str::from_utf8(bytes).map_err(|error|semio_framework_3d_brep_engine::BrepError::InvalidInput(error.to_string()))?;
         import_step(kernel,text)
     }
 }
@@ -1158,6 +1158,6 @@ pub mod session;
 /// 📐️ Exact STEP geometry operation identities owned by this codec.
 pub const STEP_GEOMETRY_OPERATIONS: &[&str] = &["export_step","import_step"];
 /// 📏️ Format fidelity for the closed STEP geometry operation table.
-pub fn operation_quality(method:&str) -> semio_framework_3d::brep::engine::OpQuality {
-    if STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_framework_3d::brep::engine::OpQuality::ExactAnalytic } else { semio_framework_3d::brep::engine::OpQuality::Unsupported }
+pub fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
+    if STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_framework_3d_brep_representation::contract::OpQuality::ExactAnalytic } else { semio_framework_3d_brep_representation::contract::OpQuality::Unsupported }
 }

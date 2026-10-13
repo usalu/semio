@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DeleteProperties`.
 
-use crate::standards::v1::subsets::kit::schema::mutations::{create_properties, SemioKitMutation};
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use crate::schema::mutations::{create_properties, SemioKitMutation};
+use crate::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Inverse
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

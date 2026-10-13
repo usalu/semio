@@ -4,6 +4,15 @@ import { createHash } from "node:crypto";
 import { createServer } from "node:http";
 import { createRequire } from "node:module";
 import { dirname, join } from "node:path";
+import { encodeComponentReceiptV1 } from "../../../../../../💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
+
+/** 🧾️ Writes one native component input set: semantic JSON descriptor, semantic pack and the shipped receipt binding the pack to `bytes`. */
+function writeNativeComponentInputs(directory: string, pluginId: string, bytes: Uint8Array, receiptWasmSha256 = createHash("sha256").update(bytes).digest("hex")): void {
+  const pack = Buffer.from(`semantic descriptor of ${pluginId}`);
+  writeFileSync(join(directory, "descriptor.json"), JSON.stringify({ manifest: { pluginId } }));
+  writeFileSync(join(directory, "descriptor.semio"), pack);
+  writeFileSync(join(directory, "🧾️receipt.json"), encodeComponentReceiptV1({ schema: "semio.plugin.component-receipt/v1", pluginId, packageId: `semio:${pluginId}`, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: receiptWasmSha256, wasmBytes: bytes.byteLength, semanticDescriptorSha256: createHash("sha256").update(pack).digest("hex"), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "1".repeat(64), provenanceSha256: "2".repeat(64) }));
+}
 
 /** 🧊️ Qualifies native variant prerequisites and completed component publication through native Nx. */
 export async function testNativeRuntime(workspace: string, output: string): Promise<void> {
@@ -19,9 +28,10 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   for (const profile of fixture.profiles) {
     const prepare = targets[`prepare-${fixture.variant}-native-${profile}`];
     assert.ok(prepare, "Every native variant/profile needs an outer Nx preparation producer");
-    assert.equal(prepare.cache, true);
+    assert.equal(prepare.cache, false, "A native preparation builds its session closure through the build driver");
+    assert.equal(prepare.metadata?.semio?.orchestrator, true);
     assert.deepEqual(prepare.outputs, [`{projectRoot}/dist/runtime/native/${profile}/${fixture.variant}`]);
-    assert.deepEqual(prepare.dependsOn, [`@semio-tech/plugin-registry:session-${fixture.variant}`, `sample:materialize-${profile}`]);
+    assert.deepEqual(prepare.dependsOn, [`@semio-tech/plugin-registry:session-${fixture.variant}`, "@semio-tech/os-plugin-describe-rs:build", "workspace:deps-wasm-opt"]);
     for (const operation of ["run", "smoke"]) {
       const target = targets[`${operation}-${fixture.variant}-native-${profile}`];
       assert.equal(target.cache, false);
@@ -38,10 +48,10 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
   for (const profile of fixture.profiles) for (const operation of ["run", "smoke"]) {
     const target = `@semio-tech/framework-os-dev:${operation}-${fixture.variant}-native-${profile}`, resolved = resolveInvocation(["run", target]);
     assert.deepEqual(resolved.args, ["run", target], "The generated per-playground native target is the only entry; the registry resolves playground:<variant> renderer=wgpu-native to it");
-    assert.deepEqual(resolved.env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "ship" : "dev" });
+    assert.deepEqual(resolved.env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: profile === "release" ? "release" : "prototype" });
   }
   for (const retired of [["--", fixture.variant, "--release"], ["--", fixture.variant, "--smoke"], []]) assert.deepEqual(resolveInvocation(["run", "@semio-tech/framework-renderer-wgpu:native", ...retired]).args, ["run", "@semio-tech/framework-renderer-wgpu:native", ...retired], "The hard-coded native alias no longer picks a variant");
-  assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`]).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "ship" });
+  assert.deepEqual(resolveInvocation(["run", `@semio-tech/framework-os-dev:run-${fixture.variant}-native-release`]).env, { SEMIO_PLUGIN: fixture.variant, SEMIO_RENDERER: "wgpu", SEMIO_BUILD_MODE: "release" });
   const script = readFileSync(join(native, "📜️script.ts"), "utf8"), old = readFileSync(join(native, "../📦️packages/🟦️typescript/📜️script.ts"), "utf8");
   assert.ok(!/runCmdStatus|new NativeRunScript|\["nx", "run"/.test(script));
   assert.ok(!/class NativeRunScript|ensureAssetServer/.test(old));
@@ -56,7 +66,7 @@ export async function testNativeRuntime(workspace: string, output: string): Prom
     const bytes = Buffer.concat([Buffer.from(fixture.componentHex, "hex"), Buffer.from([0, 3, 1, 112, profile === "dev" ? 100 : 114])]);
     put(`source/${profile}/component.wasm`, "");
     writeFileSync(join(root, `source/${profile}/component.wasm`), bytes);
-    put(`source/${profile}/descriptor.json`, JSON.stringify({ manifest: { pluginId: fixture.pluginId }, hashes: { wasmSha256: createHash("sha256").update(bytes).digest("hex") } }));
+    writeNativeComponentInputs(join(root, "source", profile), fixture.pluginId, bytes);
   }
   put("package.json", '{"name":"native-runtime-fixture","private":true,"type":"module"}');
   put("nx.json", JSON.stringify({ useDaemonProcess: false, cacheDirectory: ".nx/cache" }));
@@ -84,7 +94,8 @@ if (operation === "consumer" || operation === "waiting") {
     const directory = join(root, "dist/runtime/native", profile, fixture.variant), manifest = JSON.parse(readFileSync(join(directory, "🔣️runtime.json"), "utf8")), module = manifest.modules.find(row => row.pluginId === fixture.pluginId);
     const bytes = readFileSync(join(directory, module.wasmPath)), descriptor = JSON.parse(readFileSync(join(directory, module.descriptorPath), "utf8"));
     assert.equal(bytes.subarray(0, 8).toString("hex"), fixture.componentHex);
-    assert.equal(createHash("sha256").update(bytes).digest("hex"), descriptor.hashes.wasmSha256);
+    assert.equal(createHash("sha256").update(bytes).digest("hex"), module.wasmSha256);
+    assert.equal(descriptor.hashes, undefined);
     console.log("[DEBUG] Native consumer fetched its live asset");
   }
 } else {
@@ -92,9 +103,9 @@ if (operation === "consumer" || operation === "waiting") {
   const { runNativeSession } = await import(${JSON.stringify(join(native, "📜️script.ts"))});
   if (operation === "materialize") {
     mkdirSync(join(root, "compiled", profile), { recursive: true });
-    for (const name of ["component.wasm", "descriptor.json"]) copyFileSync(join(root, "source", profile, name), join(root, "compiled", profile, name));
+    for (const name of ["component.wasm", "descriptor.json", "descriptor.semio", "🧾️receipt.json"]) copyFileSync(join(root, "source", profile, name), join(root, "compiled", profile, name));
   } else if (operation === "publish") {
-    await publishNativeRuntime(root, fixture.variant, profile, [{ pluginId: fixture.pluginId, wasm: join(root, "compiled", profile, "component.wasm"), descriptor: join(root, "compiled", profile, "descriptor.json") }], new AbortController().signal);
+    await publishNativeRuntime(root, fixture.variant, profile, [{ pluginId: fixture.pluginId, wasm: join(root, "compiled", profile, "component.wasm"), descriptor: join(root, "compiled", profile, "descriptor.json"), descriptorPack: join(root, "compiled", profile, "descriptor.semio"), receipt: join(root, "compiled", profile, "🧾️receipt.json") }], new AbortController().signal);
     appendFileSync(join(root, ".counts"), profile + "\\n");
   } else {
     let server;
@@ -135,7 +146,7 @@ if (operation === "consumer" || operation === "waiting") {
   const locked = require("@iarna/toml").parse(readFileSync(join(workspace, "Cargo.lock"), "utf8")).package;
   const version = (name: string) => locked.find((entry: any) => entry.name === name).version;
   put("reader/Cargo.toml", `[package]\nname = "native-runtime-reader"\nversion = "0.1.0"\nedition = "2024"\n[[bin]]\nname = "reader"\npath = "🦀️.rs"\n[dependencies]\nserde = { version = "=${version("serde")}", features = ["derive"] }\nserde_json = "=${version("serde_json")}"\nsha2 = "=0.10.9"\n[workspace]\n`);
-  put("reader/🦀️.rs", "#[path = " + JSON.stringify(join(native, "📦️modules/🦀️.rs")) + "]\nmod native;\n" + "use std::{fs, io::Read, path::Path};\nuse sha2::{Digest, Sha256};\nfn main() {\n    let args = std::env::args().collect::<Vec<_>>();\n    let path = Path::new(&args[1]);\n    let bytes = fs::read(path).unwrap();\n    let manifest = match native::NativeRuntimeManifest::read(native::NativeJsonPages::new(bytes.chunks(3)), &args[2]) {\n        Ok(value) => value,\n        Err(_) => std::process::exit(2),\n    };\n    if args.get(3).is_some_and(|arg| arg == \"validate\") { return; }\n    let mut rows = Vec::new();\n    for module in manifest.modules {\n        let wasm = fs::read(path.parent().unwrap().join(module.wasm_path)).unwrap();\n        assert_eq!(&wasm[..8], &[0, 97, 115, 109, 13, 0, 1, 0]);\n        assert_eq!(format!(\"{:x}\", Sha256::digest(&wasm)), module.wasm_sha256);\n        let bytes = fs::read(path.parent().unwrap().join(module.descriptor_path)).unwrap();\n        let descriptor: serde_json::Value = serde_json::from_reader(native::NativeJsonPages::new(bytes.chunks(7))).unwrap();\n        assert_eq!(descriptor[\"manifest\"][\"pluginId\"], module.plugin_id);\n        assert_eq!(descriptor[\"hashes\"][\"wasmSha256\"], module.wasm_sha256);\n        rows.push(serde_json::json!({\"pluginId\": module.plugin_id, \"wasmSha256\": module.wasm_sha256}));\n    }\n    let pages: [&[u8]; 4] = [b\"\", b\"first\", b\"\", b\"second\"];\n    let mut reader = native::NativeJsonPages::new(pages.into_iter());\n    assert_eq!(reader.read(&mut []).unwrap(), 0);\n    let mut joined = Vec::new();\n    reader.read_to_end(&mut joined).unwrap();\n    assert_eq!(joined, b\"firstsecond\");\n    println!(\"{}\", serde_json::to_string(&rows).unwrap());\n}\n");
+  put("reader/🦀️.rs", "#[path = " + JSON.stringify(join(native, "📦️modules/🦀️.rs")) + "]\nmod native;\n" + "use std::{fs, io::Read, path::Path};\nuse sha2::{Digest, Sha256};\nfn main() {\n    let args = std::env::args().collect::<Vec<_>>();\n    let path = Path::new(&args[1]);\n    let bytes = fs::read(path).unwrap();\n    let manifest = match native::NativeRuntimeManifest::read(native::NativeJsonPages::new(bytes.chunks(3)), &args[2]) {\n        Ok(value) => value,\n        Err(_) => std::process::exit(2),\n    };\n    if args.get(3).is_some_and(|arg| arg == \"validate\") { return; }\n    let mut rows = Vec::new();\n    for module in manifest.modules {\n        let wasm = fs::read(path.parent().unwrap().join(module.wasm_path)).unwrap();\n        assert_eq!(&wasm[..8], &[0, 97, 115, 109, 13, 0, 1, 0]);\n        assert_eq!(format!(\"{:x}\", Sha256::digest(&wasm)), module.wasm_sha256);\n        let bytes = fs::read(path.parent().unwrap().join(module.descriptor_path)).unwrap();\n        let descriptor: serde_json::Value = serde_json::from_reader(native::NativeJsonPages::new(bytes.chunks(7))).unwrap();\n        assert_eq!(descriptor[\"manifest\"][\"pluginId\"], module.plugin_id);\n        assert!(descriptor.get(\"hashes\").is_none());\n        rows.push(serde_json::json!({\"pluginId\": module.plugin_id, \"wasmSha256\": module.wasm_sha256}));\n    }\n    let pages: [&[u8]; 4] = [b\"\", b\"first\", b\"\", b\"second\"];\n    let mut reader = native::NativeJsonPages::new(pages.into_iter());\n    assert_eq!(reader.read(&mut []).unwrap(), 0);\n    let mut joined = Vec::new();\n    reader.read_to_end(&mut joined).unwrap();\n    assert_eq!(joined, b\"firstsecond\");\n    println!(\"{}\", serde_json::to_string(&rows).unwrap());\n}\n");
   const { runTool } = await import("../../🚀️bootstrap/📦️dependencies/📜️script.ts");
   const compile = new AbortController(), deadline = setTimeout(() => compile.abort(new Error("Native reader deadline")), 90_000);
   const cancelCompile = () => compile.abort(new Error("Native reader cancelled"));
@@ -176,16 +187,16 @@ if (operation === "consumer" || operation === "waiting") {
   assert.equal(readFileSync(join(root, ".counts"), "utf8").trim().split("\n").filter(value => value === "dev").length, 1);
   const changed = Buffer.concat([Buffer.from(fixture.componentHex, "hex"), Buffer.from([0, 3, 1, 112, 120])]);
   writeFileSync(join(root, "source/dev/component.wasm"), changed);
-  put("source/dev/descriptor.json", JSON.stringify({ manifest: { pluginId: fixture.pluginId }, hashes: { wasmSha256: createHash("sha256").update(changed).digest("hex") } }));
+  writeNativeComponentInputs(join(root, "source/dev"), fixture.pluginId, changed);
   await run("dev");
   await run("release");
   const counts = readFileSync(join(root, ".counts"), "utf8").trim().split("\n");
   assert.equal(counts.filter(value => value === "dev").length, 2);
   assert.equal(counts.filter(value => value === "release").length, 1);
   const before = readFileSync(join(root, "dist/runtime/native/dev", fixture.variant, "🔣️runtime.json"), "utf8");
-  const source = { pluginId: fixture.pluginId, wasm: join(root, "source/dev/component.wasm"), descriptor: join(root, "source/dev/descriptor.json") };
+  const source = { pluginId: fixture.pluginId, wasm: join(root, "source/dev/component.wasm"), descriptor: join(root, "source/dev/descriptor.json"), descriptorPack: join(root, "source/dev/descriptor.semio"), receipt: join(root, "source/dev/🧾️receipt.json") };
   await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], AbortSignal.abort(new Error("cancelled"))), /cancelled/);
-  writeFileSync(source.descriptor, JSON.stringify({ manifest: { pluginId: fixture.pluginId }, hashes: { wasmSha256: "0".repeat(64) } }));
+  writeNativeComponentInputs(join(root, "source/dev"), fixture.pluginId, changed, "3".repeat(64));
   await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], new AbortController().signal), /digest mismatch/);
   writeFileSync(source.wasm, Buffer.from("0061736d01000000", "hex"));
   await assert.rejects(() => publication.publishNativeRuntime(root, fixture.variant, "dev", [source], new AbortController().signal), /component-model/);

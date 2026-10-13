@@ -1,5 +1,7 @@
 /** 🔁️ The one registered all-plugin rebuild: the build-input gates (no cargo unit built from outside this tree, a fresh
- * mutation-authority projection, the guest-linked framework crates compiling for every wasm target), every component built ONCE for both its descriptor and its dev staging, the generated registry
+ * mutation-authority projection, the guest-linked framework crates compiling for every wasm target), every component built ONCE
+ * in the one shipped profile by the release driver, its committed semantic descriptor written from those bytes with its receipt
+ * (`components describe --all`), every module page materialized from the receipt-bound bytes, the generated registry
  * and its check, the restaged `s` guests and their convergence proof, the flow-core browser bindings, then the catalog preflight
  * (seconds) and the trusted catalog of every package, from one tree, in the order `🔣️.json` declares. The whole span runs inside ONE queued exclusive `wasm-build`
  * lease, so no other all-plugin wasm build lands between a descriptor and the staging it describes. Each step is an
@@ -14,6 +16,7 @@ import { BundleScript } from "../../../../../../🔨️modules/🏃️process/�
 import { acquireQueuedResourceLease } from "../../../../../../🔨️modules/🏃️process/🔒️leases/🟦️.ts";
 import { repoCacheDirectory } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { developmentRuntimeRoot, pluginModulesRoot, readActivationReceipt } from "../../../🧑‍💻dev/♻️activation/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, readComponentReceiptV1 } from "../../🖨️describe/🏷️component-receipt/🟦️.ts";
 import { moduleDirectoryName } from "../📦️deployment/🟦️.ts";
 import { REGISTRY_DIAGNOSTICS_FILE, parseRegistryChannelDiagnosticsV1 } from "../🔎️discovery/🟦️.ts";
 import { readGeneratedCatalogProjection, registryModuleDirectories } from "../📖️catalog-view/🟦️.ts";
@@ -139,25 +142,29 @@ export class RebuildAllScript extends BundleScript {
   }
 }
 
-/** 🧾️ One component's convergence row: its committed descriptor, its `dist/component-dev` deliverable, its dev staging
- * and the activation receipt must name ONE build. */
+/** 🧾️ One component's convergence row: its committed semantic descriptor, the receipt of its shipped `dist/components`
+ * deliverable, the module page staged from it and the activation receipt must name ONE build. */
 export type StagedConvergenceRowV1 = Readonly<{ pluginId: string; committed: string; dist: string; staged: string; activated: boolean; missing: readonly string[]; ok: boolean }>;
 
-/** 🔍️ Proves `committed == dist == staged` and full staging for every registry component of one dev variant; every plugin the dev catalog withholds (§21.4 stale channel) is a refused row. */
+/** 🔍️ Proves `receipt(committed) == dist == staged` and full staging for every registry component of one dev variant: the shipped
+ * receipt names the committed semantic descriptor and the bytes the module page binds; every plugin the dev catalog withholds
+ * (§21.4 stale channel) is a refused row. */
 export function stagedConvergence(repoRoot: string, variant: string): Readonly<{ rows: readonly StagedConvergenceRowV1[]; receiptPlugins: number }> {
   const sha = (path: string): string => (existsSync(path) ? createHash("sha256").update(readFileSync(path)).digest("hex") : "-");
   const registry = readGeneratedCatalogProjection(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated")).entries;
   const inventory = registryModuleDirectories(registry);
   const receipt = readActivationReceipt(join(developmentRuntimeRoot(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript"), variant, "dev", "react"), "activation"));
   const activated = new Set(receipt.plugins.map((row) => row.pluginId));
-  const modules = pluginModulesRoot("dev");
+  const modules = pluginModulesRoot();
   const rows = registry.map((entry) => {
-    const descriptor = join(repoRoot, entry.cratePath, "..", "..", "🔣️.json");
-    const committed = existsSync(descriptor) ? String((JSON.parse(readFileSync(descriptor, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256 ?? "-") : "-";
-    const dist = sha(join(repoRoot, entry.cratePath, "dist", "component-dev", entry.wasmOut));
+    const deliverable = componentDeliverableV1(join(repoRoot, entry.cratePath), entry.packageName, SHIPPED_COMPONENT_PROFILE);
+    const receipt = existsSync(deliverable.receipt) ? readComponentReceiptV1(deliverable.receipt) : undefined;
+    const semantic = sha(join(repoRoot, entry.cratePath, "..", "..", "🛂️.descriptor.semio"));
+    const committed = receipt && receipt.semanticDescriptorSha256 === semantic ? receipt.wasmSha256 : "-";
+    const dist = sha(deliverable.wasm);
     const moduleRoot = join(modules, moduleDirectoryName(entry.pluginId, inventory));
-    const stagedDescriptor = join(moduleRoot, "🔣️.json");
-    const staged = existsSync(stagedDescriptor) ? String((JSON.parse(readFileSync(stagedDescriptor, "utf8")) as { hashes?: { wasmSha256?: string } }).hashes?.wasmSha256 ?? "-") : "-";
+    const stagedReceipt = join(moduleRoot, COMPONENT_RECEIPT_FILE);
+    const staged = existsSync(stagedReceipt) ? readComponentReceiptV1(stagedReceipt).wasmSha256 : "-";
     const manifest = join(moduleRoot, ".nx-artifact.json");
     const files = existsSync(manifest) ? (JSON.parse(readFileSync(manifest, "utf8")) as { files: string[] }).files : [];
     const missing = [...files.filter((file) => !existsSync(join(moduleRoot, file))), ...(files.some((file) => file.endsWith("_component.core.wasm")) ? [] : ["*_component.core.wasm"])];

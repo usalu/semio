@@ -6,7 +6,7 @@
 //! from `blocks` alone — the same shape stdio's own `md`/`docx`/`pptx` inference facets already
 //! establish for their own recursive block trees).
 
-use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
+use crate::schema::snapshot::SemioDocumentSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::outline::compute_semio_document_outline;

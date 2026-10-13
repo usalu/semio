@@ -17,9 +17,9 @@
 //! EVERY cache entry; the incrementality law below proves that honestly (an edit disjoint from a
 //! node's own component still misses that node's cache slot).
 
-use crate::standards::v1::subsets::graph::schema::normal_internals::undirected::UndirectedGraph;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::standards::v1::subsets::graph::schema::traversal_internals::dfs_preorder_nodes;
+use crate::schema::normal_internals::undirected::UndirectedGraph;
+use crate::schema::snapshot::SemioGraphSnapshot;
+use crate::schema::traversal_internals::dfs_preorder_nodes;
 use graph_core::{NodeId, PropertyBag};
 use std::collections::BTreeMap;
 

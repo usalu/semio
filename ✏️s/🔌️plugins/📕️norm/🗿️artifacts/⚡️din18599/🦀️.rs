@@ -279,7 +279,7 @@ impl MonthlyClimate {
 /// the child from the parent's own state through `genesis_child_pack` (`follow_derivable_children`). No leaf reads child
 /// content, so a decoded, reloaded or remote document folds and evaluates with its own climate.
 //#region 🔖️ChildTypes
-pub type Din18599ClimateChild = store::ArtifactChild<semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot>;
+pub type Din18599ClimateChild = store::os_store::artifact_child::ArtifactChild<semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot>;
 
 /// 🪆️ Child slot of the derived climate table (the camelCase name of `Din18599Snapshot::climate_table`).
 pub const DIN18599_CLIMATE_TABLE_SLOT: &str = "climateTable";
@@ -288,9 +288,9 @@ pub const DIN18599_CLIMATE_TABLE_SLOT: &str = "climateTable";
 //#region 🔖️Converters
 /// 🌉 `MonthlyClimate`'s two parallel twelve-month arrays -> `table` rows: one row per calendar month (month = row index
 /// + 1), two columns (`thetaEC: Float`, `gHWM2: Float`).
-pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot {
+    use semio_s_artifact_stdio_semio_table::schema::snapshot::{SemioTableCellKind, SemioTableColumn, SemioTableRow, SemioTableSnapshot, STDIO_SEMIOTABLE_DOCUMENT_SCHEMA};
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     SemioTableSnapshot {
         schema: STDIO_SEMIOTABLE_DOCUMENT_SCHEMA.into(),
         columns: vec![SemioTableColumn { name: "thetaEC".into(), kind: SemioTableCellKind::Float }, SemioTableColumn { name: "gHWM2".into(), kind: SemioTableCellKind::Float }],
@@ -300,9 +300,9 @@ pub fn din18599_climate_table_from_data(climate: &MonthlyClimate) -> semio_s_art
 
 /// 🔁️ Inverse of [`din18599_climate_table_from_data`] for a foreign reader of the derived child; a short or non-numeric row
 /// reads `0.0` for the missing month.
-pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::table::schema::snapshot::SemioTableRow;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot) -> MonthlyClimate {
+    use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableRow;
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     fn cell_f64(row: Option<&SemioTableRow>, index: usize) -> f64 {
         match row.and_then(|row| row.cells.get(index)) {
             Some(SemioValue::Float { lexeme }) | Some(SemioValue::Int { lexeme }) => lexeme.parse().unwrap_or(0.0),
@@ -326,13 +326,13 @@ pub fn din18599_climate_data_from_table(table: &semio_s_artifact_stdio_semio::st
 pub fn din18599_climate_table_child(climate: &MonthlyClimate) -> Din18599ClimateChild {
     let child_id = store::content_id("din18599-climate", semio_framework_pack_json::to_json_string(climate).as_bytes());
     let target = semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.clone(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "table".into() } };
-    store::ArtifactChild::new(child_id, target)
+    store::os_store::artifact_child::ArtifactChild::new(child_id, target)
 }
 
 /// 🌱️ Initial pack of the derived climate table the snapshot names (`ArtifactApp::genesis_child_pack`); `None` for any
 /// other slot and for a handle that is not the derivation of the snapshot's own climate.
 pub fn genesis_din18599_child_pack(snapshot: &Din18599Snapshot, slot: &str, child_id: &str) -> Option<Vec<u8>> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     (slot == DIN18599_CLIMATE_TABLE_SLOT && child_id == snapshot.climate_table.child_id && child_id == din18599_climate_table_child(&snapshot.climate).child_id).then(|| din18599_climate_table_from_data(&snapshot.climate).encode_pack())
 }
 

@@ -19,7 +19,7 @@ class OwnedVerifyScript extends BundleScript {
 
     if (segments.length === 1 && segments[0] === "snapshot-sqlite-source") {
       const snapshot = resolve(this.root, "../../🏅️standards/🔖️1/🪆️subsets/✳️any/🧬️schema/📸️snapshot");
-      await runRepositoryCommand(process.execPath, [resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")], this.repoRoot, "architect-snapshot-sqlite-public-types");
+      await runRepositoryCommand(this.invocation,process.execPath,[resolve(this.repoRoot, "node_modules/typescript/bin/tsc"), "--noEmit", "--strict", "--target", "ESNext", "--module", "ESNext", "--moduleResolution", "bundler", "--allowImportingTsExtensions", "--resolveJsonModule", "--esModuleInterop", "--skipLibCheck", resolve(snapshot, "🟦️.ts"), resolve(snapshot, "🧪️tests/🪶️sqlite/🟦️.ts")],this.repoRoot,"architect-snapshot-sqlite-public-types",{version:1,maximumElapsedMilliseconds:0,output:null});
       return;
     }
 

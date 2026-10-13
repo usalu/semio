@@ -4,8 +4,8 @@ use semio_framework_os_kernel::io::io_mechanism::Deserializer;
 use {semio_framework::io_schema::Confidence,semio_framework_artifact_reference::Dialect,semio_framework::io_schema::IoError,semio_framework::io_schema::IoFidelity,semio_framework::io_schema::IoOutcome,semio_framework::io_schema::IoPayload,semio_framework::io_schema::IoResult};
 use semio_framework_plugin::{ ArtifactDeserializer};
 use {semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
-use semio_s_artifact_stdio_gltf::standards::v2_0::engine::decode_glb;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
 
 /// 🎯️ The foreign dialect this leaf reads.
 pub const GLTF_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.gltf", standard: StandardId("2.0"), subset: SubsetId::ANY };

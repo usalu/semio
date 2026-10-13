@@ -8,12 +8,12 @@
 //! Mounted as a submodule of `➡️sweep` in ticket 26/09/03/BREP-KERNEL-DEPENDENCY-FREE-RUNTIME wave
 //! W2-C via `#[path]` from `➡️sweep/🦀️.rs`.
 
-use crate::brep::operations::primitives::Wire;
-use crate::brep::representation::curve::curve_ops::closest_parameter;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use semio_framework_3d_brep_representation::topology::Wire;
+use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt3, Vec3};
 
 /// 🐍 One sampled path station: world point and unit tangent for frame propagation.
 pub(super) struct Station {
@@ -106,7 +106,7 @@ pub(super) fn stations_to_frames(stations: &[Station]) -> Vec<Frame3> {
 /// closest point (Gram-Schmidt-orthogonalized against the tangent), per the ticket's
 /// guide-honouring instruction — the RMF propagation still seeds the very first station's axis.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(super) fn guide_frame(body: &Body, guide_edges: &[crate::brep::representation::arena::EdgeId], f: &RmfFrame) -> Result<Frame3, KernelError> {
+pub(super) fn guide_frame(body: &Body, guide_edges: &[semio_framework_3d_brep_representation::arena::EdgeId], f: &RmfFrame) -> Result<Frame3, KernelError> {
     let mut best: Option<Pnt3> = None;
     let mut best_d = f64::INFINITY;
     for &eid in guide_edges {

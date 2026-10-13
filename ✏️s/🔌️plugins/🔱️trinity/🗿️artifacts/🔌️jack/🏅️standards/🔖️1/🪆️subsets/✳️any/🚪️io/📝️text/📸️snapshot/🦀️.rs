@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::JackSnapshot;
 use semio_framework_diagnostic::TextError;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 #[path = "🧬️records/🦀️.rs"]
 mod records;
@@ -110,12 +110,12 @@ pub fn decode_jack_snapshot_json(text: &str) -> Result<JackSnapshot, semio_frame
 /// 📝️ Parses the literal Jack parent and its independent content-child address.
 /// Child materialization belongs to the host's composed artifact boundary.
 pub fn parse_jack_dsl(text: &str) -> Result<JackSnapshot, String> {
-    <JackSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
+    <JackSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| format!("{error:?}"))
 }
 
 /// 📝️ Renders the literal parent record with its native document preamble.
 pub fn print_jack_dsl(snapshot: &JackSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;

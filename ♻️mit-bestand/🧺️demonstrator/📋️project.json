@@ -99,7 +99,7 @@
     "build": {
       "executor": "nx:run-commands",
       "dependsOn": [
-        "prepare-release"
+        "prepare"
       ],
       "options": {
         "cwd": "♻️mit-bestand/🧺️demonstrator",
@@ -108,7 +108,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/site"
+        "{projectRoot}/dist/{options.env.SEMIO_BUILD_MODE}/site"
       ]
     },
     "test": {
@@ -234,6 +234,33 @@
         "cwd": "♻️mit-bestand/🧺️demonstrator",
         "command": "bun ./📜️script.ts test long \"./🧪️tests/🏛️shell-brand/🟦️.ts\"",
         "forwardAllArgs": true
+      }
+    },
+    "prepare": {
+      "executor": "nx:run-commands",
+      "cache": true,
+      "outputs": [],
+      "inputs": [
+        {
+          "dependentTasksOutputFiles": "**/*",
+          "transitive": true
+        }
+      ],
+      "dependsOn": [
+        "@semio-tech/framework-os-dev:prepare-aggregator-react",
+        "@semio-tech/framework-os-dev:prepare-aussuchen-react",
+        "@semio-tech/framework-os-dev:prepare-bearbeiten-react",
+        "@semio-tech/framework-os-dev:prepare-energy-react",
+        "@semio-tech/framework-os-dev:prepare-fem3d-react",
+        "@semio-tech/framework-os-dev:prepare-generation3d-react",
+        "@semio-tech/framework-os-dev:prepare-generator-react",
+        "@semio-tech/framework-os-dev:prepare-koordinator-react",
+        "@semio-tech/framework-os-dev:prepare-verfolgen-react"
+      ],
+      "options": {
+        "cwd": "♻️mit-bestand/🧺️demonstrator",
+        "command": "bun ./🔨️modules/🧩️runtime/📜️script.ts prepare",
+        "forwardAllArgs": false
       }
     }
   }

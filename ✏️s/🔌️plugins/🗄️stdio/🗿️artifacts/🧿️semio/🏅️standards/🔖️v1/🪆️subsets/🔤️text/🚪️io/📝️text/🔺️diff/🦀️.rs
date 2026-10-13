@@ -7,15 +7,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::text::schema::diff::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
-use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexedTripleDiff, Replace};
+use crate::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextMark;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::SemioTextMark;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn print_text_diff(d: &SemioTextDiff) -> String {
@@ -115,13 +115,13 @@ pub(crate) fn hex_decode(s: &str) -> Result<Vec<u8>, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn enc_mark_kind(k: crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind) -> char {
-    crate::standards::v1::subsets::text::io::text::snapshot::enc_mark_kind(k)
+pub(crate) fn enc_mark_kind(k: crate::schema::snapshot::SemioTextMarkKind) -> char {
+    crate::io::text::snapshot::enc_mark_kind(k)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(crate) fn dec_mark_kind(s: &str) -> Result<crate::standards::v1::subsets::text::schema::snapshot::SemioTextMarkKind, String> {
-    crate::standards::v1::subsets::text::io::text::snapshot::dec_mark_kind(s)
+pub(crate) fn dec_mark_kind(s: &str) -> Result<crate::schema::snapshot::SemioTextMarkKind, String> {
+    crate::io::text::snapshot::dec_mark_kind(s)
 }
 
 impl protocol::DiffText for SemioTextDiff {

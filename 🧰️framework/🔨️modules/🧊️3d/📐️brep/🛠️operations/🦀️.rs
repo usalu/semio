@@ -1,12 +1,13 @@
-//! 📐️ General boundary representation operations.
+//! 🛠️ Topology-mutating boundary-representation operations of the 3D kernel: the checked euler editors, primitives,
+//! staged drivers, booleans, blends, offsets, sweeps, sewing and transforms.
+//!
+//! Crate cut of `semio-framework-3d` (wave E4, `📓️2026-10-13-wave-e4-3d-architect-bim.md`).
 #[path = "🎨️blend/🦀️.rs"]
 pub mod blend;
 #[path = "🔀️boolean/🦀️.rs"]
 pub mod boolean;
 #[path = "🔺️euler/🦀️.rs"]
 pub mod euler;
-#[path = "✂️intersect/🦀️.rs"]
-pub mod intersect;
 #[path = "↔️offset/🦀️.rs"]
 pub mod offset;
 #[path = "🧱️primitives/🦀️.rs"]
@@ -19,3 +20,9 @@ pub mod sew;
 pub mod sweep;
 #[path = "🔁️transform/🦀️.rs"]
 pub mod transform;
+
+//#region 🧪️TestSupport
+#[cfg(test)]
+#[path = "../../🧪️tests/🧰️support/🦀️.rs"]
+pub(crate) mod test_support;
+//#endregion 🧪️TestSupport

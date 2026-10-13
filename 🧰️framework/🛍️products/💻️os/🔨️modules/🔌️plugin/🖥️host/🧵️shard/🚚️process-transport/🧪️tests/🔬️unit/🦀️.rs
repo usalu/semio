@@ -192,8 +192,8 @@ async fn an_externally_killed_child_is_detected_as_dead_without_this_type_callin
 /// 74-test baseline this packet must not regress) because it needs a pre-built component:
 ///
 /// ```text
-/// cargo component build -p semio-framework-os-scale-fixture --target wasm32-wasip2 --features component-guest
-/// SEMIO_SCALE_FIXTURE_WASM=<repo>/.🧬semio/🦑️repo/⚡️cache/cargo/target/wasm32-wasip2/wasm-dev/semio_framework_os_scale_fixture.wasm \
+/// bun nx run @semio-tech/framework-os-scale-fixture:build-wasm
+/// SEMIO_SCALE_FIXTURE_WASM=<repo>/🧰️framework/🛍️products/💻️os/🧪️testing/⚖️scale/📦️packages/🦀️rust/dist/component/semio_framework_os_scale_fixture.wasm \
 ///   cargo test -p semio-framework-plugin-host --lib -- --ignored process_shard_kill_is_detected
 /// ```
 ///

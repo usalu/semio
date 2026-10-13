@@ -1,0 +1,38 @@
+[
+ {
+  "files": [
+   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program"
+  ],
+  "exclude": [
+   "/🧪️tests/(🏛️mutate|🎚️mutate|👥️mutate|📤️export)"
+  ],
+  "moves": [
+   {
+    "from": "crate",
+    "to": "crate::standards::v1::subsets::any::schema",
+    "names": [
+     "artifact_kind"
+    ]
+   }
+  ]
+ },
+ {
+  "files": [
+   "🌎️hub/🧩️compositions/🏛️architect/📦️packages/🦀️rust/🦀️.rs",
+   "✏️s/🔌️plugins/🏛️architect/🏭️bridge/🦀️.rs",
+   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/📤️export-program-xlsx/🦀️.rs",
+   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/👥️mutate-architect-program-1-any-editor-presence/🦀️.rs",
+   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🎚️mutate-architect-program-1-any-editor-config/🦀️.rs",
+   "✏️s/🔌️plugins/🏛️architect/🗿️artifacts/🏛️program/🏅️standards/🔖️1/🪆️subsets/✳️any/🧪️tests/🏛️mutate-program-1/🦀️.rs"
+  ],
+  "moves": [
+   {
+    "from": "semio_s_artifact_architect_program",
+    "to": "semio_s_artifact_architect_program::standards::v1::subsets::any::schema",
+    "names": [
+     "artifact_kind"
+    ]
+   }
+  ]
+ }
+]

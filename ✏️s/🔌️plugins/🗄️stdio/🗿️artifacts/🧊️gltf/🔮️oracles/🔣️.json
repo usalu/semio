@@ -10,5 +10,19 @@
         "oracles"
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-gltf-model",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "🧬️ The glTF subject reads, edits and writes the model crate's snapshot."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-gltf-mutations",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf/🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust",
+      "rationale": "🧬️ The glTF subject applies the mutation crate's vocabulary."
+    }
   ]
 }

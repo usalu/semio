@@ -523,12 +523,12 @@ impl HubRemoteBinding {
                     if lease.descriptor.byte_length != descriptor_bytes.len() as u64 || lease.descriptor.sha256 != framework_hash::sha256_hex(&descriptor_bytes) {
                         return Err(HubBindingError::InvalidResponse("execution-target selection does not match authenticated document descriptor"));
                     }
-                    let descriptor_value = semio_framework_os_kernel::os_store::pack_rt::decode_wire_value(&descriptor_bytes)
+                    let descriptor_value = semio_framework_os_kernel::os_pack::pack_rt::decode_wire_value(&descriptor_bytes)
                         .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a canonical pack"))?;
                     let descriptor = semio_framework::PackageDescriptor::from_value(descriptor_value.clone())
                         .map_err(|_| HubBindingError::InvalidResponse("execution-target descriptor is not a package descriptor"))?;
-                    if semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor_value) != descriptor_bytes
-                        || semio_framework_os_kernel::os_store::pack_rt::encode_wire_value(&descriptor.to_value()) != descriptor_bytes
+                    if semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor_value) != descriptor_bytes
+                        || semio_framework_os_kernel::os_pack::pack_rt::encode_wire_value(&descriptor.to_value()) != descriptor_bytes
                     {
                         return Err(HubBindingError::InvalidResponse("execution-target descriptor is not its exact canonical package projection"));
                     }
@@ -541,7 +541,8 @@ impl HubRemoteBinding {
                 || descriptor.package_id != lease.package.package_id
                 || descriptor.manifest.plugin_id != lease.package.plugin_id
                 || descriptor.manifest.version != lease.package.version
-                || descriptor.hashes.wasm_sha256 != lease.package.component_sha256
+                || !lease.package.receipt_binds()
+                || lease.package.component_receipt.wasm_bytes != lease.component.byte_length
             {
                 return Err(HubBindingError::InvalidResponse("execution-target package descriptor identity mismatch"));
             }

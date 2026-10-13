@@ -39,9 +39,9 @@ async fn original_member_group_stage_and_adoption_preserve_physical_receipts_and
  let mut publication=store.begin_member_apply_batch(semio_framework_job::OperationId(919),store.generation(),store.content_revision_now(),fixture["actor"].as_str().unwrap().into(),vec![mutation.clone()]).unwrap_or_else(|_|panic!("original installed member factory admits its typed fixture"));
  let authority=publication.authority.as_ref().unwrap();
  let mut stage=super::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_stage(authority);stage.edit=Some(Box::new(super::ArtifactStore::<DemoSnapshot,DemoMutation>::empty_batch_edit(authority)));
- let id=fixture["edit"].as_str().unwrap();stage.applied_edit_id=id.into();stage.tail_edit_id=id.into();stage.post=Some(Arc::new(DemoSnapshot{n:Some(after)}));stage.local_actor=Some(authority.actor.as_str().into());stage.folded=1;stage.completed_items=1;stage.digest=[7;32];
+ let id=fixture["edit"].as_str().unwrap();stage.applied_edit_id=id.into();stage.tail_edit_id=id.into();stage.post=Some(Arc::new(DemoSnapshot{n:Some(after)}));stage.local_actor=Some(authority.actor().into());stage.folded=1;stage.completed_items=1;stage.digest=[7;32];
  stage.mutation_retirement=(*store.mutation_retirement_factory).clone();stage.snapshot_retirement=(*store.snapshot_retirement_factory).clone();stage.unit_flags.reserve_exact(2);
- let edit=stage.edit.as_mut().unwrap();edit.id=id.into();edit.actor=Some(authority.actor.clone());edit.forwards.push(mutation);edit.inverse.push(DemoMutation::SetN(SetN{n:before}));edit.mutation_meta.push(MutationMeta{mutation_id:Some(MutationId(fixture["mutation"].as_str().unwrap().into())),dependencies:Vec::new(),base_version:0,author_id:Some(ActorId(authority.actor.clone().into())),timestamp:authority.next_clock,undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:protocol::MutationOrigin::Owner,transaction:None});
+ let edit=stage.edit.as_mut().unwrap();edit.id=id.into();edit.actor=Some(authority.actor_utf8().clone());edit.forwards.push(mutation);edit.inverse.push(DemoMutation::SetN(SetN{n:before}));edit.mutation_meta.push(MutationMeta{mutation_id:Some(MutationId(fixture["mutation"].as_str().unwrap().into())),dependencies:Vec::new(),base_version:0,author_id:Some(ActorId(authority.actor_utf8().clone().into())),timestamp:authority.next_clock(),undo_policy:UndoPolicy::ExactBaseOnly,payload_hash:None,semantic_kind:None,label:None,group_id:None,origin:protocol::MutationOrigin::Owner,transaction:None});
  publication.stage=Some(Box::new(stage));publication.phase=ArtifactStoreOneItemPublicationPhase::Publishing;
  let original_stage=std::ptr::from_ref(publication.stage.as_ref().unwrap().as_ref());let original_flags=publication.stage.as_ref().unwrap().unit_flags.as_ptr();
  let mut publisher=crate::os_vcs::ArtifactGroupVisibilityOwner::new();let visibility=publisher.view();
@@ -465,7 +465,7 @@ fn ephemeral_one_item_publication_fixture_matches_the_third_party_json_oracle() 
 
 #[test]
 fn one_item_publication_source_denies_generic_or_unbounded_shortcuts() {
-    let source = include_str!("../../🦀️.rs");
+    let source = concat!(include_str!("../../🦀️.rs"), include_str!("../../🎮️one-item/📬️publication/🦀️.rs"));
     let authority_start = source.find("pub struct ArtifactStoreOneItemLiveAuthority").expect("private live authority");
     let authority_end = source[authority_start..].find("impl ArtifactStoreOneItemLiveAuthority").map(|offset| authority_start + offset).expect("authority helper");
     let authority_shape = &source[authority_start..authority_end];
@@ -2022,7 +2022,7 @@ impl Default for DemoSnapshot {
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6).
 
-impl crate::os_store::ArtifactSqliteSnapshot for DemoSnapshot {
+impl crate::os_store::serialization::ArtifactSqliteSnapshot for DemoSnapshot {
     const SQLITE_SCHEMA: &'static str = include_str!("🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self, _: crate::sqlite_snapshot::SnapshotEncoding, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> Result<(), semio_framework_value::ValueError> {
         let mut bound = crate::sqlite_snapshot::artifact::NativeEncodingBound::new(control)?;
@@ -2083,8 +2083,8 @@ std::thread_local! {
 /// 📦️ Handcrafted ArtifactPack (P6).
 impl ArtifactPack for DemoSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<crate::os_store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as crate::os_store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<crate::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as crate::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
@@ -2455,14 +2455,14 @@ impl MemberStoreOwner<DemoMutation> for DemoSnapshot {
         fixture_authoring_birth_demand::<DemoMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, DemoMutation>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, DemoMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, DemoMutation>> {
         fixture_authoring_member_owners::<DemoMutation>(grant)
     }
 }
 
-// `impl crate::os_store::ArtifactPack for DemoSnapshot` is now generated automatically by
+// `impl crate::os_store::serialization::ArtifactPack for DemoSnapshot` is now generated automatically by
 // `#[derive(crate::os_dsl::DslArtifact)]` above (see dsl/derive/rs/lib.rs's `🔖️DslArtifact` region) —
-// same seam as its `impl crate::os_store::ArtifactDsl for DemoSnapshot` sibling.
+// same seam as its `impl crate::os_store::serialization::ArtifactDsl for DemoSnapshot` sibling.
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, ToValue, Deserialize, FromValue)]
 pub(crate) struct DemoDiff {
@@ -3998,8 +3998,8 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
             let step=sealer.advance(grant)?;
             let progress=step.ownership_progress();
             if let Some(mut prepared)=sealer.take_prepared(){
-                if self.forge_digest{prepared.edit_digest[0]^=0xff;}
-                self.checkpoint=ArtifactStoreOneItemCheckpoint{cursor:1,completed_items:1,completed_bytes:1,digest:prepared.edit_digest};
+                if self.forge_digest{prepared.sealed_parts_mut().1[0]^=0xff;}
+                self.checkpoint=ArtifactStoreOneItemCheckpoint{cursor:1,completed_items:1,completed_bytes:1,digest:prepared.edit_digest()};
                 self.prepared=Some(prepared);
                 return Ok(ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint,progress));
             }
@@ -4020,7 +4020,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let authority = self.authority.as_ref().ok_or_else(|| ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "demo preparation lost its live Store authority"))?;
         let id_capacity=self.stamped_mutation_id.as_ref().map_or(29,|id|id.0.len());
         let mutation_identity_capacity=if self.stamped_mutation_id.is_some(){0}else{id_capacity+2};
-        let group_capacity=authority.group_id.as_ref().map_or(0,String::len);
+        let group_capacity=authority.group_id().map_or(0,str::len);
         let mut inverse_list=semio_framework_value::list::PagedList::<DemoMutation,{usize::MAX}>::empty();
         let inverse_metadata=inverse_list.next_exact_capacity_allocation_bytes(1).map_err(ValueError::from)?.unwrap();
         let mutation_bytes=std::mem::size_of::<DemoMutation>();
@@ -4037,7 +4037,7 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let post=match crate::os_spr::apply_diff(outcome.diff(),base.get()){Ok(post)=>post,Err(error)=>{self.mutation=Some(mutation);*self.semantic_refusal = Some(error);return Err(ValueError::literal(semio_framework_value::ValueRefusalKind::InvalidValue, "original mutation application refused"));}};
         let post_snapshot = Arc::new(post);
         let inverse = mutation.inverse(base.get()).expect("valid retained mutation inverse fixture");
-        let sequence_number = authority.next_sequence_number;
+        let sequence_number = authority.next_sequence_number();
         let stamped = self.stamped_mutation_id.take();
         let mut id=String::with_capacity(id_capacity);
         if let Some(stamped)=stamped.as_ref(){id.push_str(&stamped.0);}else{use std::fmt::Write;write!(&mut id,"retained-one-item-{sequence_number}").expect("bounded original identity");}
@@ -4054,20 +4054,20 @@ impl ArtifactStoreOneItemPreparation<DemoSnapshot, DemoMutation> for DemoOneItem
         let edit = Edit {
             line: None,
             id,
-            actor: Some(authority.actor.clone()),
+            actor: Some(authority.actor_utf8().clone()),
             forwards: vec![forward],
             inverse: inverse_list,
             mutation_meta: vec![MutationMeta {
                 mutation_id: Some(mutation_id),
                 dependencies: Vec::new(),
                 base_version: 0,
-                author_id: Some(ActorId(authority.actor.clone())),
-                timestamp: authority.next_clock,
+                author_id: Some(ActorId(authority.actor_utf8().clone())),
+                timestamp: authority.next_clock(),
                 undo_policy: UndoPolicy::ExactBaseOnly,
                 payload_hash: None,
                 semantic_kind: None,
                 label: None,
-                group_id: authority.group_id.clone(),
+                group_id: authority.group_id().map(str::to_owned),
                 origin: Default::default(),
                 transaction: None,
             }],
@@ -5799,8 +5799,8 @@ async fn artifact_store_one_item_digest_helper_matches_validation_and_rejects_fo
     assert_eq!(authority.generation(), semio_framework_job::Generation(generation));
     assert_eq!(authority.base_revision(), revision);
     assert_eq!(authority.base_applied_edit_count(), 0);
-    let canonical = authority.prepared_edit_digest(&prepared.edit).expect("Store helper accepts its exact semantic edit");
-    assert_eq!(canonical, CursorRevisionAccumulator::edit_digest(&prepared.edit), "public helper and private Store validation share one canonical digest law");
+    let canonical = authority.prepared_edit_digest(&prepared.edit()).expect("Store helper accepts its exact semantic edit");
+    assert_eq!(canonical, CursorRevisionAccumulator::edit_digest(&prepared.edit()), "public helper and private Store validation share one canonical digest law");
     assert_ne!(prepared.edit_digest(), canonical, "hostile domain altered only its exposed candidate digest");
     let mut rejected = false;
     for _ in 0..65_536 {
@@ -7710,7 +7710,7 @@ impl ComponentDocumentCodec for EchoComponentCodec {
 /// itself; a kind neither owns resolves to nothing (ticket 26/09/23 slice WG8, B2).
 #[semio_framework_async_macros::async_test]
 async fn a_kind_resolves_to_its_linked_codec_before_its_mounted_component() {
-    let linked = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.kind-codec-linked/v1");
+    let linked = artifact_codec::<DemoSnapshot, DemoMutation>("test.kind-codec-linked/v1");
     let linked_hash = linked.pack_schema_hash;
     register_document_codec(linked).expect("linked codec registers");
     register_component_document_codec(Arc::new(EchoComponentCodec { schema: "test.kind-codec-linked/v1" })).expect("component codec registers");
@@ -7730,7 +7730,7 @@ async fn a_kind_resolves_to_its_linked_codec_before_its_mounted_component() {
 
 #[semio_framework_async_macros::async_test]
 async fn document_codec_of_round_trips_dsl_and_pack_and_edit_text() {
-    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
+    let codec = artifact_codec::<DemoSnapshot, DemoMutation>("test.document-codec-roundtrip/v1");
     assert_eq!(codec.schema, "test.document-codec-roundtrip/v1");
     assert_eq!(codec.extension, "demo");
 
@@ -7804,7 +7804,7 @@ async fn apply_ops_under_fixture_identity(codec: &ArtifactCodec, pack: &[u8], sp
 /// than in a hub's creation log.
 #[semio_framework_async_macros::async_test]
 async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its_store() {
-    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.document-codec-apply-ops/v1");
+    let codec = artifact_codec::<DemoSnapshot, DemoMutation>("test.document-codec-apply-ops/v1");
     let envelope: ArtifactEnvelope<DemoSnapshot, DemoMutation> = create_document_envelope("test.document-codec-apply-ops/v1", "demo-apply-ops", DemoSnapshot { n: Some(4) }, None);
     let baseline = print_document_pack(&envelope).await;
     drop(envelope.into_owners());
@@ -7835,7 +7835,7 @@ async fn document_codec_apply_ops_binary_reduces_a_nonempty_batch_and_closes_its
 /// is refused while the reduction store still closes.
 #[semio_framework_async_macros::async_test]
 async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledger() {
-    let codec = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("demo/v1");
+    let codec = artifact_codec::<DemoSnapshot, DemoMutation>("demo/v1");
     let genesis = create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", "demo", DemoSnapshot { n: Some(0) }, None);
     let genesis_pair = print_document_pack(&genesis).await;
     drop(genesis.into_owners());
@@ -7879,7 +7879,7 @@ async fn replay_envelopes_onto_pair_equals_the_replica_that_folded_the_same_ledg
 
 #[semio_framework_async_macros::async_test]
 async fn register_document_codec_rejects_a_duplicate_schema_without_replacing_the_first() {
-    let first = ArtifactCodec::of::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
+    let first = artifact_codec::<DemoSnapshot, DemoMutation>("test.duplicate-id-probe/v1");
     let second = ArtifactCodec { pack_schema_hash: [7u8; 32], ..first.clone() };
     assert_ne!(first.pack_schema_hash, second.pack_schema_hash, "fixture precondition: the two codecs must be distinguishable");
 
@@ -8285,7 +8285,7 @@ async fn command_envelope_round_trip_panics_on_a_lossy_operation() {
     test_support::assert_command_envelope_round_trip::<DemoSnapshot, LossyMutation>(&edit, &ArtifactId("doc-lossy".into()), &SchemaId("lossy/v1".into())).await;
 }
 
-// `DemoSnapshot`'s `crate::os_store::ArtifactDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
+// `DemoSnapshot`'s `crate::os_store::serialization::ArtifactDsl` impl and `DemoMutation`'s `crate::os_store::OpText` impl are now
 // generated by `#[derive(crate::os_dsl::DslArtifact)]`/`#[derive(crate::os_dsl::DslOps)]` on the type definitions
 // themselves (see `DemoSnapshot`/`DemoMutation` above) — the `dsl_schema` grammar replaces
 // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
@@ -8795,7 +8795,7 @@ impl MemberStoreOwner<SeverityMutation> for DemoSnapshot {
         fixture_authoring_birth_demand::<SeverityMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, SeverityMutation>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, SeverityMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, SeverityMutation>> {
         fixture_authoring_member_owners::<SeverityMutation>(grant)
     }
 }
@@ -10185,7 +10185,7 @@ impl MemberStoreOwner<ValidatedMutation> for DemoSnapshot {
         fixture_authoring_birth_demand::<ValidatedMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, ValidatedMutation>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, ValidatedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, ValidatedMutation>> {
         fixture_authoring_member_owners::<ValidatedMutation>(grant)
     }
 }
@@ -10197,7 +10197,7 @@ impl MemberStoreOwner<TimestampedMutation> for DemoSnapshot {
         fixture_authoring_birth_demand::<TimestampedMutation>()
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::DocumentStoreOwnersAdmissionError<Self, TimestampedMutation>> {
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(DocumentStoreOwners<Self, TimestampedMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), crate::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, TimestampedMutation>> {
         fixture_authoring_member_owners::<TimestampedMutation>(grant)
     }
 }

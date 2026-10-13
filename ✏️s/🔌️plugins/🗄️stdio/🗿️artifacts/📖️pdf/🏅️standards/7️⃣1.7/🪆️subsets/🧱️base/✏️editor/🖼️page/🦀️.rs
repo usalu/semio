@@ -10,7 +10,7 @@ use crate::standards::v1_7::subsets::base::schema::mutations::{
     insert_object::InsertObject, insert_page::InsertPage, move_page::MovePage, remove_catalog_entry::RemoveCatalogEntry, remove_object::RemoveObject, remove_embedded_file::RemoveEmbeddedFile, remove_named_destination::RemoveNamedDestination, remove_page::RemovePage, replace_page::ReplacePage, remove_trailer_entry::RemoveTrailerEntry, set_annotation::SetAnnotation, set_embedded_file::SetEmbeddedFile, set_acro_form::SetAcroForm, set_document_id::SetDocumentId, set_color_space::SetColorSpace, set_catalog_entry::SetCatalogEntry, set_encryption::SetEncryption, set_ext_g_state::SetExtGState, set_font::SetFont, set_form::SetForm, set_trailer_entry::SetTrailerEntry, set_open_action::SetOpenAction, set_output_intents::SetOutputIntents, set_pattern::SetPattern, set_properties::SetProperties, set_image::SetImage, set_info::SetInfo, set_language::SetLanguage, set_mark_info::SetMarkInfo, set_metadata::SetMetadata, set_named_destination::SetNamedDestination, set_object_value::SetObjectValue, set_optional_content::SetOptionalContent, set_outlines::SetOutlines, set_page_box::SetPageBox, set_page_content::SetPageContent, set_page_labels::SetPageLabels, set_page_layout::SetPageLayout, set_page_media_box::SetPageMediaBox, set_page_mode::SetPageMode, set_page_rotation::SetPageRotation, set_page_user_unit::SetPageUserUnit, set_shading::SetShading, set_viewer_preferences::SetViewerPreferences, PdfMutation,
 };
 use crate::standards::v1_7::subsets::base::schema::snapshot::{ObjRef, PdfAction, PdfAnnotation, PdfAnnotationKind, PdfAppearance, PdfAppearanceEntry, PdfBaseEncoding, PdfBorderStyle, PdfCharProc, PdfColorSpace, PdfDate, PdfDestination, PdfDestinationFit, PdfDictEntry, PdfEmbeddedFile, PdfEncryption, PdfEncryptionAlgorithm, PdfExtGState, PdfFileSpecification, PdfFont, PdfLineCap, PdfLineJoin, PdfFontDescriptor, PdfFontKind, PdfFontProgram, PdfFormField, PdfFormFieldKind, PdfFunction, PdfFormXObject, PdfImage, PdfImageBody, PdfImageMask, PdfMarkInfo, PdfMarkupAnnotation, PdfMatrix, PdfNamedColorSpace, PdfNamedDestination, PdfNamedProperties, PdfObject, PdfOpenAction, PdfOutputIntent, PdfPattern, PdfPatternKind, PdfSimpleEncoding, PdfOp, PdfOptionalContentGroup, PdfOutlineItem, PdfPage, PdfPageLabelRange, PdfPageLabelStyle, PdfPageLayout, PdfPageMode, PdfShadingKind, PdfTextArrayItem, PdfTextString, PdfTransparencyGroup, PdfViewerPreferences, PDF_IDENTITY_MATRIX};
-use crate::PdfSnapshot;
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use semio_framework_plugin::plugin_app_close_prelude as ui;
 use semio_framework_plugin::ActionArgDef;
 use semio_framework_plugin::ActionDefinition;
@@ -2924,3 +2924,106 @@ impl Default for Graphics {
 #[cfg(test)]
 #[path = "🧪️tests/🔬️unit/🦀️.rs"]
 mod tests;
+
+//#region ✏️PageText
+/// ✏️ Replaces the Unicode text projection while preserving every non-text page-content operator.
+pub fn replace_page_unicode_text(page: &PdfPage, text: &str) -> Vec<PdfOp> {
+    fn replace_text_string(value: &mut PdfTextString, replacement: &mut Option<String>) {
+        let PdfTextString::Text { text } = value else { return };
+        *text = replacement.take().unwrap_or_default();
+    }
+
+    let mut content = page.content.clone();
+    let mut replacement = Some(text.to_string());
+    for operation in &mut content {
+        match operation {
+            PdfOp::ShowText { text } | PdfOp::NextLineShowText { text } | PdfOp::NextLineShowTextSpaced { text, .. } => replace_text_string(text, &mut replacement),
+            PdfOp::ShowTextArray { items } => {
+                for item in items {
+                    if let PdfTextArrayItem::Text { text } = item {
+                        *text = replacement.take().unwrap_or_default();
+                    }
+                }
+            }
+            _ => {}
+        }
+    }
+    if replacement.as_deref().is_some_and(|text| !text.is_empty()) {
+        content.extend([PdfOp::BeginText, PdfOp::ShowText { text: PdfTextString::text(replacement.take().expect("pending replacement")) }, PdfOp::EndText]);
+    }
+    content
+}
+
+/// 🔐️ The token an agent's omitted `set-page` revision is admitted against: the addressed page text's own token, as its draft
+/// binding carries it; a missing page is refused exactly as the edit itself would refuse it.
+pub fn page_text_agent_revision(snapshot: &PdfSnapshot, args: &semio_framework_value::DslValue) -> Result<Option<String>, Fault> {
+    let page_index = semio_s_artifact_stdio_contract::window_kit_required_index_argument(Some(args), "page")? as usize;
+    let target = snapshot.pages.get(page_index).ok_or_else(|| {
+        Fault::new(FaultOrigin::App, FaultCode::new("stdio.pdf.set-page.stale-target"), format!("PDF page {page_index} no longer exists"))
+    })?;
+    Ok(Some(semio_framework_plugin::app::DocumentWindowKit::text_revision(&target.text())))
+}
+
+/// 📄️ Builds one exact, reversible PDF page-text replacement or rejects an invalid/stale target.
+pub fn page_text_edit_mutation(snapshot: &PdfSnapshot, page: u32, item: u32, revision: &str, text: &str) -> Result<Option<PdfMutation>, Fault> {
+    if item != 0 {
+        return Err(Fault::new(
+            FaultOrigin::App,
+            FaultCode::new("stdio.pdf.set-page.invalid-item"),
+            "PDF page drafts require item zero",
+        ));
+    }
+    let page_index = page as usize;
+    let target = snapshot.pages.get(page_index).ok_or_else(|| {
+        Fault::new(
+            FaultOrigin::App,
+            FaultCode::new("stdio.pdf.set-page.stale-target"),
+            format!("PDF page {page_index} no longer exists"),
+        )
+    })?;
+    semio_s_artifact_stdio_contract::require_window_kit_document_revision(&target.text(), revision, "stdio.pdf.set-page.conflict")?;
+    if target.text() == text {
+        return Ok(None);
+    }
+    Ok(Some(PdfMutation::SetPageContent(SetPageContent { index: page_index, content: replace_page_unicode_text(target, text) })))
+}
+
+#[cfg(test)]
+mod document_text_edit_tests {
+    use super::{page_text_edit_mutation, replace_page_unicode_text};
+    use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+    use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfOp, PdfPage, PdfSnapshot, PdfTextString};
+
+    #[test]
+    fn replacement_preserves_non_text_operations_and_replaces_instead_of_appending() {
+        let mut page = PdfPage::default();
+        page.content = vec![
+            PdfOp::Save,
+            PdfOp::BeginText,
+            PdfOp::ShowText { text: PdfTextString::text("old") },
+            PdfOp::NextLineShowText { text: PdfTextString::text("tail") },
+            PdfOp::EndText,
+            PdfOp::Restore,
+        ];
+        page.content = replace_page_unicode_text(&page, "new\ncontent");
+        assert_eq!(page.text(), "new\ncontent");
+        assert!(matches!(page.content.first(), Some(PdfOp::Save)));
+        assert!(matches!(page.content.last(), Some(PdfOp::Restore)));
+        assert_eq!(page.content.len(), 6);
+    }
+
+    #[test]
+    fn page_text_edit_rejects_missing_stale_and_non_text_addresses() {
+        let mut snapshot = PdfSnapshot::default();
+        snapshot.pages.push(PdfPage::default());
+        let revision = semio_framework_plugin::app::DocumentWindowKit::text_revision("");
+        assert!(page_text_edit_mutation(&snapshot, 1, 0, &revision, "draft").is_err());
+        assert!(page_text_edit_mutation(&snapshot, 0, 1, &revision, "draft").is_err());
+        assert!(page_text_edit_mutation(&snapshot, 0, 0, "0000000000000000", "draft").is_err());
+        let Some(PdfMutation::SetPageContent(edit)) = page_text_edit_mutation(&snapshot, 0, 0, &revision, "draft").expect("addressed edit") else { panic!("set page content") };
+        let mut page = snapshot.pages[0].clone();
+        page.content = edit.content;
+        assert_eq!(page.text(), "draft");
+    }
+}
+//#endregion ✏️PageText

@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `RemoveEdgeProperty`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{add_edge_property::AddEdgeProperty, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use {crate::schema::mutations::add_edge_property::AddEdgeProperty, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one `add-edge-property` of the removed entry at its BASE index (byte-exact); nothing when the key is absent.

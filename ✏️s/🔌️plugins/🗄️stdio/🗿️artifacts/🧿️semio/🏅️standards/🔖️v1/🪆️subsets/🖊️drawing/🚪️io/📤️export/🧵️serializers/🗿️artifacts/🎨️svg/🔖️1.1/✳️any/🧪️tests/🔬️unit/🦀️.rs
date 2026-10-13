@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sample_drawing() -> SemioDrawingSnapshot {
@@ -28,8 +28,8 @@ fn sample_drawing() -> SemioDrawingSnapshot {
 async fn real_text_round_trip_through_svg_codec() {
     let drawing = sample_drawing();
     let svg = ::semio_framework_async::poll::resolve_ready(SemioDrawingToSvg::serialize(&drawing)).expect("serialize");
-    let text = <SvgSnapshot as store::ArtifactDsl>::print_dsl(&svg);
-    let reparsed = <SvgSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("reparse real svg text");
+    let text = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&svg);
+    let reparsed = <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("reparse real svg text");
     let root = semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::svg_element_from_xml_node(&semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::native_svg_node(reparsed.doc.root.as_ref().unwrap())).expect("typed view");
     match &root {
         SvgElement::Svg { view_box, .. } => assert_eq!(*view_box, Some(ViewBox { min_x: 0.0, min_y: 0.0, width: 100.0, height: 50.0 })),

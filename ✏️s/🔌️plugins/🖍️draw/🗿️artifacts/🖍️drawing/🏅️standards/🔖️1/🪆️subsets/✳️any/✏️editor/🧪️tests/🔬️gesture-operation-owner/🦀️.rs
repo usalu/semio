@@ -145,7 +145,7 @@ fn drawing_gesture_interrupted_and_repeated_close_is_terminal_empty() {
 /// declared budget handed back page by page, never a page over the grant.
 #[test]
 fn drawing_gesture_owner_closes_under_the_framework_page_grant() {
-    let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+    let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut owner = DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "");
     owner.begin_close();
     assert_eq!(owner.close_step(grant(1, page)), released(1, page));
@@ -218,7 +218,7 @@ fn drawing_instance_owner_close_reaches_every_slot_parity() {
     for operation in 0..3u64 {
         assert!(owner.operations.admit(key(operation, 0), DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     }
-    let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+    let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     for _ in 0..4_096 {
         if owner.terminal_is_empty() {
             break;
@@ -265,7 +265,7 @@ fn drawing_gesture_maintenance_retires_a_cancelled_owner_promptly() {
     let live = key(448, 3);
     assert!(owner.operations.admit(live, DrawingGestureOperationOwner::new(DRAWING_DEFAULT_UTILITY, "")).is_ok());
     owner.operations.cancel(live);
-    let page = store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
+    let page = store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES;
     let mut steps = 0;
     while !owner.operations.is_empty() {
         owner.maintenance_step(1, page).expect("gesture maintenance step");

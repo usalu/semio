@@ -1,0 +1,326 @@
+use super::*;
+
+#[semio_framework_async_macros::async_test]
+async fn empty_snapshot_matches_schema() {
+    let snapshot = crate::standards::v2_0::subsets::any::schema::empty_gltf_snapshot();
+    assert_eq!(snapshot.schema, STDIO_GLTF_DOCUMENT_SCHEMA);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn codec_round_trip() {
+    let snap = crate::standards::v2_0::subsets::any::schema::empty_gltf_snapshot();
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <GltfSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    assert_eq!(parsed.schema, snap.schema);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    assert_eq!(decoded.schema, snap.schema);
+    assert_eq!(decoded.document, snap.document);
+    assert_eq!(decoded.buffers, snap.buffers);
+    assert_eq!(decoded.source_form, snap.source_form);
+}
+
+//#region 🔖️Base64Tests
+#[semio_framework_async_macros::async_test]
+async fn base64_round_trips_plain_and_data_uri() {
+    for payload in [&b""[..], b"a", b"ab", b"abc", b"abcd", &[0u8, 255, 128, 1, 2, 3][..]] {
+        let enc = b64_encode(payload);
+        assert_eq!(b64_decode(&enc).unwrap(), payload);
+        let uri = encode_data_uri("application/octet-stream", payload);
+        assert_eq!(decode_data_uri(&uri).unwrap(), payload);
+        let img_uri = format!("data:image/png;base64,{}", b64_encode(payload));
+        assert_eq!(decode_data_uri(&img_uri).unwrap(), payload);
+    }
+}
+//#endregion 🔖️Base64Tests
+
+//#region 🔖️GlbPaddingTests
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn doc_with_buffer(byte_length: usize) -> GltfDocument {
+    GltfDocument { buffers: if byte_length > 0 { vec![GltfBuffer { byte_length, uri: None, name: None, extensions: None, extras: None }] } else { Vec::new() }, ..GltfDocument::default() }
+}
+
+/// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior `encode_glb` omitted the BIN chunk's own
+/// padding from the header's total-length field whenever `bin.len()` wasn't 4-byte-aligned.
+/// Sweeps json/bin lengths across every mod-4 residue to pin the fix down.
+#[semio_framework_async_macros::async_test]
+async fn glb_total_length_header_matches_actual_bytes_across_alignments() {
+    for json_len in [0usize, 1, 2, 3, 4, 5, 61] {
+        for bin_len in [0usize, 1, 2, 3, 4, 5, 100] {
+            let mut document = doc_with_buffer(bin_len);
+            // pad the json body itself out to `json_len` extra bytes via an "extras" string so
+            // encode_glb's real JSON serialization (not a synthetic buffer) varies in length.
+            if json_len > 0 {
+                document.extras = Some(GltfJson::String("x".repeat(json_len)));
+            }
+            let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: if bin_len > 0 { vec![vec![0xABu8; bin_len]] } else { vec![] }, source_form: GltfSourceForm::Glb };
+            let encoded = encode_glb(&snap).expect("encode");
+            let declared_total = u32::from_le_bytes(encoded[8..12].try_into().unwrap()) as usize;
+            assert_eq!(declared_total, encoded.len(), "total length header wrong for json_len={json_len} bin_len={bin_len}");
+            let decoded = decode_glb(&encoded).expect("decode");
+            assert_eq!(decoded.buffers.first().map(|b| b.len()).unwrap_or(0), bin_len);
+        }
+    }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn glb_json_padding_is_space_and_bin_padding_is_zero() {
+    let document = doc_with_buffer(3);
+    let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![vec![1u8, 2, 3]], source_form: GltfSourceForm::Glb };
+    let encoded = encode_glb(&snap).expect("encode");
+    let json_len = u32::from_le_bytes(encoded[12..16].try_into().unwrap()) as usize;
+    let json_start = 20usize;
+    let json_chunk = &encoded[json_start..json_start + json_len];
+    let real_json_len = serde_json::to_vec(&snap.document).unwrap().len();
+    for &b in &json_chunk[real_json_len..] {
+        assert_eq!(b, 0x20, "json padding byte must be space");
+    }
+    let bin_header_start = json_start + json_len;
+    let bin_len = u32::from_le_bytes(encoded[bin_header_start..bin_header_start + 4].try_into().unwrap()) as usize;
+    let bin_start = bin_header_start + 8;
+    let bin_chunk = &encoded[bin_start..bin_start + bin_len];
+    assert_eq!(&bin_chunk[..3], &[1u8, 2, 3]);
+    for &b in &bin_chunk[3..] {
+        assert_eq!(b, 0x00, "bin padding byte must be zero");
+    }
+}
+//#endregion 🔖️GlbPaddingTests
+
+//#region 🔖️AccessorTests
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn accessor(buffer_view: usize, component_type: GltfComponentType, kind: GltfAccessorType, count: usize) -> GltfAccessor {
+    GltfAccessor { buffer_view: Some(buffer_view), byte_offset: 0, component_type, normalized: false, count, kind, max: None, min: None, sparse: None, name: None, extensions: None, extras: None }
+}
+// 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
+fn buffer_view(buffer: usize, byte_offset: usize, byte_stride: Option<usize>) -> GltfBufferView {
+    GltfBufferView { buffer, byte_offset, byte_length: 0, byte_stride, target: None, name: None, extensions: None, extras: None }
+}
+
+#[semio_framework_async_macros::async_test]
+async fn decode_accessor_handles_byte_stride_interleaved_vec3() {
+    let mut buf = Vec::new();
+    let verts: [[f32; 3]; 2] = [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]];
+    let norms: [[f32; 3]; 2] = [[0.0, 0.0, 1.0], [0.0, 1.0, 0.0]];
+    for i in 0..2 {
+        for c in 0..3 {
+            buf.extend_from_slice(&verts[i][c].to_le_bytes());
+        }
+        for c in 0..3 {
+            buf.extend_from_slice(&norms[i][c].to_le_bytes());
+        }
+    }
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: buf.len(), uri: None, name: None, extensions: None, extras: None }],
+        buffer_views: vec![buffer_view(0, 0, Some(24)), buffer_view(0, 12, Some(24))],
+        accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2), accessor(1, GltfComponentType::Float, GltfAccessorType::Vec3, 2)],
+        ..GltfDocument::default()
+    };
+    let buffers = vec![buf];
+    let pos = decode_accessor(&document, &buffers, 0).unwrap();
+    assert_eq!(pos.components, vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]);
+    let nrm = decode_accessor(&document, &buffers, 1).unwrap();
+    assert_eq!(nrm.components, vec![0.0, 0.0, 1.0, 0.0, 1.0, 0.0]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn decode_accessor_handles_all_component_types() {
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: 32, uri: None, name: None, extensions: None, extras: None }],
+        buffer_views: vec![buffer_view(0, 0, None)],
+        accessors: vec![accessor(0, GltfComponentType::UnsignedByte, GltfAccessorType::Scalar, 4)],
+        ..GltfDocument::default()
+    };
+    let buffers = vec![vec![10u8, 20, 30, 255]];
+    let acc = decode_accessor(&document, &buffers, 0).unwrap();
+    assert_eq!(acc.components, vec![10.0, 20.0, 30.0, 255.0]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn decode_accessor_applies_spec_normalization_after_sparse_overlay() {
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: 7, uri: None, name: None, extensions: None, extras: None }],
+        buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 3, None)],
+        accessors: vec![GltfAccessor {
+            buffer_view: None,
+            byte_offset: 0,
+            component_type: GltfComponentType::Byte,
+            normalized: true,
+            count: 4,
+            kind: GltfAccessorType::Scalar,
+            max: None,
+            min: None,
+            sparse: Some(GltfSparseAccessor { count: 3, indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 1, byte_offset: 0 } }),
+            name: None,
+            extensions: None,
+            extras: None,
+        }],
+        ..GltfDocument::default()
+    };
+    let buffers = vec![vec![0, 2, 3, 128, 64, 127, 0]];
+    let acc = decode_accessor(&document, &buffers, 0).unwrap();
+    assert_eq!(acc.components, vec![-1.0, 0.0, 64.0 / 127.0, 1.0]);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn accessor_normalization_covers_every_legal_integer_component_type() {
+    let cases = [
+        (GltfComponentType::Byte, vec![-128.0, 127.0], vec![-1.0, 1.0]),
+        (GltfComponentType::UnsignedByte, vec![0.0, 255.0], vec![0.0, 1.0]),
+        (GltfComponentType::Short, vec![-32_768.0, 32_767.0], vec![-1.0, 1.0]),
+        (GltfComponentType::UnsignedShort, vec![0.0, 65_535.0], vec![0.0, 1.0]),
+        (GltfComponentType::UnsignedInt, vec![0.0, 4_294_967_295.0], vec![0.0, 1.0]),
+    ];
+    for (component_type, mut actual, expected) in cases {
+        normalize_components(component_type, &mut actual).unwrap();
+        assert_eq!(actual, expected);
+    }
+    assert!(normalize_components(GltfComponentType::Float, &mut [1.0]).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn decode_accessor_applies_sparse_substitution_over_zero_base() {
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: 100, uri: None, name: None, extensions: None, extras: None }],
+        buffer_views: vec![buffer_view(0, 0, None), buffer_view(0, 8, None)],
+        accessors: vec![GltfAccessor {
+            buffer_view: None,
+            byte_offset: 0,
+            component_type: GltfComponentType::Float,
+            normalized: false,
+            count: 5,
+            kind: GltfAccessorType::Scalar,
+            max: None,
+            min: None,
+            sparse: Some(GltfSparseAccessor { count: 2, indices: GltfSparseIndices { buffer_view: 0, byte_offset: 0, component_type: GltfComponentType::UnsignedByte }, values: GltfSparseValues { buffer_view: 1, byte_offset: 0 } }),
+            name: None,
+            extensions: None,
+            extras: None,
+        }],
+        ..GltfDocument::default()
+    };
+    let mut buffers_bytes = vec![0u8; 16];
+    buffers_bytes[0] = 1; // sparse index 0 -> element 1
+    buffers_bytes[1] = 3; // sparse index 1 -> element 3
+    buffers_bytes[8..12].copy_from_slice(&9.5f32.to_le_bytes());
+    buffers_bytes[12..16].copy_from_slice(&7.5f32.to_le_bytes());
+    let buffers = vec![buffers_bytes];
+    let acc = decode_accessor(&document, &buffers, 0).unwrap();
+    assert_eq!(acc.components, vec![0.0, 9.5, 0.0, 7.5, 0.0]);
+}
+//#endregion 🔖️AccessorTests
+
+//#region 🔖️LenientParseTests
+/// 🧪️ Ticket ARTIFACT-SYSTEM-OVERHAUL: the prior parser hard-failed any document lacking a
+/// POSITION accessor. A scene-only document (zero meshes) is legitimately valid glTF.
+#[semio_framework_async_macros::async_test]
+async fn parse_gltf_document_accepts_scene_only_document_without_position() {
+    let text = br#"{"asset":{"version":"2.0"},"scenes":[{"nodes":[]}],"scene":0}"#;
+    let snap = parse_gltf_document(text).expect("scene-only document must parse leniently");
+    assert_eq!(snap.document.asset.version, "2.0");
+    assert!(snap.buffers.is_empty());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn parse_gltf_document_preserves_morph_target_maps() {
+    let text = br#"{"asset":{"version":"2.0"},"meshes":[{"primitives":[{"attributes":{"POSITION":0},"targets":[{"POSITION":1,"NORMAL":2}]}]}]}"#;
+    let snap = parse_gltf_document(text).expect("morph targets are core glTF 2.0 data");
+    let target = &snap.document.meshes[0].primitives[0].targets[0].0;
+    assert_eq!(target, &vec![("POSITION".into(), 1), ("NORMAL".into(), 2)]);
+    let encoded = serialize_gltf_document(&snap);
+    let reparsed = parse_gltf_document(&encoded).expect("serialized morph target must remain valid");
+    assert_eq!(reparsed.document.meshes[0].primitives[0].targets, snap.document.meshes[0].primitives[0].targets);
+}
+
+#[semio_framework_async_macros::async_test]
+async fn parse_gltf_document_rejects_missing_asset_version() {
+    let text = br#"{"scenes":[]}"#;
+    assert!(parse_gltf_document(text).is_err());
+}
+
+#[semio_framework_async_macros::async_test]
+async fn parse_gltf_document_preserves_unknown_top_level_fields_verbatim() {
+    let text = br#"{"asset":{"version":"2.0"},"extensions":{"KHR_lights_punctual":{"lights":[{"type":"directional"}]}},"extras":{"authorNote":"kept verbatim"}}"#;
+    let snap = parse_gltf_document(text).expect("parse");
+    let GltfJson::Object(exts) = snap.document.extensions.clone().expect("extensions") else { panic!("expected object") };
+    assert_eq!(exts[0].0, "KHR_lights_punctual");
+    let GltfJson::Object(extras) = snap.document.extras.clone().expect("extras") else { panic!("expected object") };
+    assert_eq!(extras[0], ("authorNote".to_string(), GltfJson::String("kept verbatim".into())));
+}
+
+#[semio_framework_async_macros::async_test]
+async fn parse_gltf_document_decodes_data_uri_buffer() {
+    let bytes: &[u8] = &[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12];
+    let uri = encode_data_uri("application/octet-stream", bytes);
+    let text = format!(r#"{{"asset":{{"version":"2.0"}},"buffers":[{{"byteLength":{},"uri":"{uri}"}}]}}"#, bytes.len());
+    let snap = parse_gltf_document(text.as_bytes()).expect("parse");
+    assert_eq!(snap.buffers[0], bytes);
+}
+//#endregion 🔖️LenientParseTests
+
+//#region 🔖️DualCodecTests
+#[semio_framework_async_macros::async_test]
+async fn glb_round_trip_preserves_json_and_bin_semantically() {
+    let position_bytes: Vec<u8> = [[0.0f32, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]].iter().flat_map(|v| v.iter().flat_map(|c| c.to_le_bytes())).collect();
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: position_bytes.len(), uri: None, name: None, extensions: None, extras: None }],
+        buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: position_bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
+        accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 3)],
+        meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], ..GltfPrimitive::default() }], ..GltfMesh::default() }],
+        ..GltfDocument::default()
+    };
+    let original = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![position_bytes.clone()], source_form: GltfSourceForm::Glb };
+    let encoded = encode_glb(&original).expect("encode");
+    assert_eq!(&encoded[0..4], b"glTF");
+    let decoded = decode_glb(&encoded).expect("decode");
+    assert_eq!(decoded.buffers, original.buffers);
+    assert_eq!(decoded.document.asset.version, "2.0");
+    let pos_original = decode_accessor(&original.document, &original.buffers, 0).unwrap();
+    let pos_decoded = decode_accessor(&decoded.document, &decoded.buffers, 0).unwrap();
+    assert_eq!(pos_original.components, pos_decoded.components);
+    // decode -> encode -> decode a second time: semantic equality must hold (not necessarily
+    // byte-identical serialization, since key ordering / whitespace may legitimately differ).
+    let reencoded = encode_glb(&decoded).expect("re-encode");
+    let redecoded = decode_glb(&reencoded).expect("re-decode");
+    assert_eq!(redecoded.buffers, decoded.buffers);
+    assert_eq!(redecoded.document.accessors, decoded.document.accessors);
+}
+
+/// 🧪️ `codec_retention_law`: decode -> encode -> decode is byte-preserving up to the
+/// documented normal form (spec-default numeric fields round-trip as "present" iff they carry
+/// a non-default value -- see the `is_*`/`default_*` helpers in the snapshot module).
+#[semio_framework_async_macros::async_test]
+async fn codec_retention_law_glb_decode_encode_decode_is_semantically_faithful() {
+    let bytes: Vec<u8> = (0..24u8).collect();
+    let document = GltfDocument {
+        buffers: vec![GltfBuffer { byte_length: bytes.len(), uri: None, name: Some("payload".into()), extensions: None, extras: None }],
+        buffer_views: vec![GltfBufferView { buffer: 0, byte_offset: 0, byte_length: bytes.len(), byte_stride: None, target: None, name: None, extensions: None, extras: None }],
+        accessors: vec![accessor(0, GltfComponentType::Float, GltfAccessorType::Vec3, 2)],
+        meshes: vec![GltfMesh { primitives: vec![GltfPrimitive { attributes: vec![("POSITION".into(), 0)], mode: Some(4), ..GltfPrimitive::default() }], ..GltfMesh::default() }],
+        nodes: vec![crate::standards::v2_0::subsets::any::schema::snapshot::GltfNode { mesh: Some(0), name: Some("root".into()), ..Default::default() }],
+        scenes: vec![crate::standards::v2_0::subsets::any::schema::snapshot::GltfScene { nodes: vec![0], ..Default::default() }],
+        scene: Some(0),
+        extensions_used: vec!["KHR_materials_unlit".into()],
+        ..GltfDocument::default()
+    };
+    let original = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bytes], source_form: GltfSourceForm::Glb };
+    let encoded = encode_glb(&original).expect("encode");
+    let decoded = decode_glb(&encoded).expect("decode");
+    assert_eq!(decoded.buffers, original.buffers);
+    assert_eq!(decoded.document, original.document, "decode(encode(doc)) must equal doc for a document with no spec-default-equal fields");
+    let reencoded = encode_glb(&decoded).expect("re-encode");
+    let redecoded = decode_glb(&reencoded).expect("re-decode");
+    assert_eq!(redecoded, decoded, "second decode->encode->decode cycle must be a fixed point");
+}
+
+#[semio_framework_async_macros::async_test]
+async fn gltf_json_serialize_embeds_glb_sourced_buffer_as_data_uri() {
+    let bytes: Vec<u8> = vec![9, 9, 9, 9];
+    let document = doc_with_buffer(4);
+    let snap = GltfSnapshot { schema: STDIO_GLTF_DOCUMENT_SCHEMA.into(), document, buffers: vec![bytes.clone()], source_form: GltfSourceForm::Glb };
+    let text_bytes = serialize_gltf_document(&snap);
+    let text = String::from_utf8(text_bytes).unwrap();
+    assert!(text.contains("data:application/octet-stream;base64,"));
+    let reparsed = parse_gltf_document(text.as_bytes()).expect("reparse emitted .gltf text");
+    assert_eq!(reparsed.buffers[0], bytes);
+}
+//#endregion 🔖️DualCodecTests

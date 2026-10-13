@@ -1,7 +1,7 @@
 //! 🧭️ Architect trace window — the document-owned audit event feed.
 
 use crate::standards::v1::subsets::any::schema::inferences::audit_trail;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 use semio_framework_value::ToValue;
 use semio_framework_plugin::scene_surface;
 use semio_framework_plugin::BuiltNode;

@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `AddMark`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
-use crate::standards::v1::subsets::text::schema::diff::{SemioTextDiff, SemioTextRunDiff};
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff};
+use crate::schema::diff::{SemioTextDiff, SemioTextRunDiff};
+use crate::schema::snapshot::SemioTextSnapshot;
 
 //#region 🔖️Diff
 /// 🧮️ Inserts one mark at `index` (clamped to the end): the run's `marks` triple names exactly that addition.

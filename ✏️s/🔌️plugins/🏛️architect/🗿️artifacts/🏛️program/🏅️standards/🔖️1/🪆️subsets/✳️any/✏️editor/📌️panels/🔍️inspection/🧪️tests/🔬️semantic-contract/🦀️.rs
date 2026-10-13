@@ -18,7 +18,7 @@ fn first_binding(node: &semio_framework_plugin::BuiltNode) -> Option<&semio_fram
 #[test]
 fn architect_semantic_panels_match_the_json_oracle() {
     let vectors: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/🔣️panels.json")).expect("neutral semantic vectors");
-    let program = crate::sample_plugin();
+    let program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
     let tree = project(render(&program).expect("inspector"));
     let fields = tree["children"][0]["children"].as_array().expect("summary fields");
     assert_eq!(serde_json::Value::Array(fields.iter().map(|field| field["component"]["label"].clone()).collect()), vectors["summaryFields"]);

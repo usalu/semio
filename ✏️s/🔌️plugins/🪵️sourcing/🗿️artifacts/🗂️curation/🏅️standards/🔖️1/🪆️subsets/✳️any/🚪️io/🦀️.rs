@@ -54,7 +54,7 @@ pub fn io() -> semio_framework_plugin::app::declarations::IoDeclaration {
             diff: LanguagePair { text: language_spec(semio_framework_dsl::LanguageRole::Diff), binary: None },
             mutations: LanguagePair { text: language_spec(semio_framework_dsl::LanguageRole::Ops), binary: language_spec(semio_framework_dsl::LanguageRole::Spr) },
             inferences: None,
-            codec: store::ArtifactCodec::bare::<CurationSnapshot, SourcingMutation>(SOURCING_CURATION_SCHEMA.to_string()),
+            codec: store::bare_artifact_codec::<CurationSnapshot, SourcingMutation>(SOURCING_CURATION_SCHEMA.to_string()),
         },
         entries: entries(),
     }

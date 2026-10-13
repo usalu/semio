@@ -27,7 +27,7 @@ use protocol::OpText;
 /// `enc_json`/`dec_json` convention for structured fields with no dedicated grammar) — harmless
 /// since both are DOCUMENTED NO-OPS pending a resolver anyway (see the sibling `🧬️mutations/**`
 /// triads' own doc comments); `ReplaceStockSolid.new_solid` is now a real
-/// `store::ArtifactChild<SemioBrepSnapshot>` handle, JSON-encoded the same way (it already derives
+/// `store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>` handle, JSON-encoded the same way (it already derives
 /// `Serialize`/`Deserialize` regardless of `S`).
 #[derive(Clone, Debug, PartialEq, semio_framework_dsl_record_derive::DslEnum)]
 pub(crate) enum Process3dMutationDsl {

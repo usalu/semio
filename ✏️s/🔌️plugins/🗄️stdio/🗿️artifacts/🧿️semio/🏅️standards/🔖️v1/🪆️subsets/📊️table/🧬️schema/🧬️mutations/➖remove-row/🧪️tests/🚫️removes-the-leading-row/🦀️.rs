@@ -5,10 +5,10 @@
 //! `None`. Removing row #0 — the one that shifts every remaining index — is the case committed
 //! here, and its inverse must re-insert at that same BASE index rather than appending.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/➖remove-row/🚫️removes-the-leading-row/📸️snapshot/➡️after/🔣️.json");

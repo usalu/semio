@@ -109,13 +109,13 @@ fn encoding_rows(snapshot:&NoteSnapshot,maximum:usize,control:&mut semio_framewo
     control.scoped_stage(|control|->Result<(),ValueError>{control.begin_stage(0)?;let mut rows=1;add(&mut rows,snapshot.assets.len(),maximum)?;add(&mut rows,usize::from(snapshot.linked_artifact.is_some()),maximum)?;rows.checked_add(snapshot.blocks.len()).filter(|rows|*rows<=maximum).ok_or_else(||invalid("note owned encoding exceeds row limit"))?;for value in &snapshot.blocks{block(value,&mut rows,maximum,control)?;}Ok(())})
 }
 
-impl store::ArtifactSqliteSnapshot for NoteSnapshot {
+impl store::os_store::serialization::ArtifactSqliteSnapshot for NoteSnapshot {
     fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
         let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;
         let maximum=control.limits().max_rows;
-        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control,native_owner)
+        store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|{encoding_rows(self,maximum,native)?;self.__dsl_to_record_controlled(native)},control,native_owner)
     }
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(mut self){let mut pending=std::mem::take(&mut self.blocks);while let Some(block)=pending.pop(){if let NoteBlockNode::Group{mut children,..}=block{pending.append(&mut children);}}}
     fn preflight_sqlite_snapshot_encoding(&self, _: sqlite_snapshot::SnapshotEncoding, control: &mut Control<'_>) -> Result<(),ValueError> {
         control.checkpoint(Phase::EncodeNative, 0, 0)?;
@@ -284,7 +284,7 @@ impl<'a, 'c, 'p> Reader<'a, 'c, 'p> {
         Ok(match row.text(4)? {
             "text" => {
                 let detail = self.take("note_text", key)?;
-                let handle = store::ArtifactChild::new(self.text(detail,1)?, semio_framework_artifact_reference::ArtifactRef { artifact_id: self.text(detail,2)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: self.text(detail,3)?, standard: self.text(detail,4)?, subset: self.text(detail,5)? } });
+                let handle = store::os_store::artifact_child::ArtifactChild::new(self.text(detail,1)?, semio_framework_artifact_reference::ArtifactRef { artifact_id: self.text(detail,2)?, dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: self.text(detail,3)?, standard: self.text(detail,4)?, subset: self.text(detail,5)? } });
                 let mut paragraphs = Vec::new();
                 for paragraph in self.ordered("note_paragraph", Some(key)) { self.take("note_paragraph", paragraph.rowid)?; let mut runs = Vec::new(); for run in self.ordered("note_run", Some(paragraph.rowid)) { self.take("note_run", run.rowid)?; runs.push(NoteTextRun { text: self.text(run,3)?, bold: opt_bool(run, 4)?, italic: opt_bool(run, 5)?, underline: opt_bool(run, 6)?, link: self.optional_text(run,7)? }); } paragraphs.push(NoteTextParagraph { runs }); }
                 NoteBlockNode::Text { id, name, x, y, width, height, rotation, visible, locked, content: NoteTextChild { handle, paragraphs }, font_size: detail.real(6)?, font_weight: self.text(detail,7)?, align: self.text(detail,8)? }
@@ -342,7 +342,7 @@ mod tests {
 
     #[test]
     fn sqlite_snapshot_note_controlled_native_owner_preserves_full_fixture_and_stops_inside_text(){
-        use store::{ArtifactDsl,ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
+        use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};use semio_framework_os_kernel::io::IoPayload;
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🚦️control.json")).unwrap();let mut snapshot=fixture();snapshot.schema="owned Note 世界\0".into();snapshot.title=Some("x".repeat(plan["longTextBytes"].as_u64().unwrap()as usize));
         let limits=sqlite_snapshot::SqliteDatabaseLimits::default();
         for payload in [IoPayload::Binary(snapshot.encode_pack()),IoPayload::Text(snapshot.print_dsl())]{
@@ -364,7 +364,7 @@ mod tests {
         let plan:serde_json::Value=serde_json::from_str(include_str!("🧫️fixtures/🎯️dialect.json")).unwrap();let snapshot=fixture();let limits=sqlite_snapshot::SqliteDatabaseLimits::default();let database=snapshot.to_sqlite_database(&mut Control::new(&mut |_|true,limits)).unwrap();let dialect=|value:&serde_json::Value|semio_framework_artifact_reference::ArtifactDialect{artifact_kind:value["artifactKind"].as_str().unwrap().into(),standard:value["standard"].as_str().unwrap().into(),subset:value["subset"].as_str().unwrap().into()};let valid=dialect(&plan["valid"]);assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|true,limits)).unwrap().diagnostics.is_empty());for invalid in plan["invalid"].as_array().unwrap(){assert!(snapshot.validate_sqlite_snapshot_subset(&dialect(invalid),&database,&mut Control::new(&mut |_|true,limits)).is_err());}let mut mismatched=database.clone();mismatched.table_mut("note_document").unwrap().rows[0].values[1]=V::Text("other.schema".into());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&mismatched,&mut Control::new(&mut |_|true,limits)).is_err());assert!(snapshot.validate_sqlite_snapshot_subset(&valid,&database,&mut Control::new(&mut |_|false,limits)).is_err());
     }
     use crate::standards::v1::subsets::any::io::sqlite::snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
 use semio_framework_value::FromValue;
 
     fn fixture() -> NoteSnapshot { NoteSnapshot::from_value(serde_json::from_str(include_str!("🧫️fixtures/🔣️.json")).unwrap()).unwrap() }

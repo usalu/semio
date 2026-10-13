@@ -144,7 +144,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         let base = base();
         let mut store = crate::store_fixture::document_store(base.clone()).await;
         for mutation in &log {
-            store.dispatch(store::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
+            store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![mutation.clone()], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the gesture applies");
         }
         let ids: Vec<protocol::MutationId> = store.mutation_ops().expect("applied operations").into_iter().map(|operation| operation.mutation_id).collect();
         let target = ids[edited_at].clone();
@@ -160,7 +160,7 @@ async fn an_edited_gesture_leaf_replays_its_downstream_like_a_fresh_fold() {
         edited_log[edited_at] = edited.clone();
         let fresh = fresh_fold(&base, &edited_log);
         let mut replay = store.begin_report_replay(&drafts, Some(&target)).expect("the replay begins at the edited leaf");
-        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+        assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
         let result = replay.finish().expect("a finished replay yields its result");
         assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "an edited gesture never blocks finalizing");
         assert_eq!(result.state().expect("the replay reached a state").as_ref(), &fresh, "the replay equals the fresh fold of the edited log");

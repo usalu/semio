@@ -1,7 +1,7 @@
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 #[path = "💰️backing/🦀️.rs"]
 mod owned_requests;
-use semio_framework_os_kernel::{sqlite_snapshot::*, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::*, os_store::serialization::ArtifactSqliteSnapshot};
 fn profile_fixture(plan: &serde_json::Value) -> PptxSnapshot {
     use semio_s_artifact_stdio_zip::opc::{OpcPackage, OpcRelationship, OpcTargetMode};
     let mut opc = OpcPackage::default();
@@ -67,7 +67,7 @@ async fn sqlite_snapshot_pptx_actual_exact_profile_declarations_preserve_owned_w
 #[test]
 fn sqlite_snapshot_pptx_native_grammar_describes_complete_owned_fields() {
     let snapshot = fixture();
-    let text = <PptxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
+    let text = <PptxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
     let (envelope, body) = store::semio_format::split_text_preamble(&text).unwrap();
     let grammar = semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();
     assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros())
@@ -79,7 +79,7 @@ fn sqlite_snapshot_pptx_native_grammar_describes_complete_owned_fields() {
 #[test]
 fn sqlite_snapshot_pptx_native_protocol_checks_complete_literal_fields() {
     let snapshot = fixture();
-    let bytes = <PptxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
+    let bytes = <PptxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
     let (_, body) = store::semio_format::unwrap_binary(&bytes).unwrap();
     let protocol = semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).unwrap();
     assert_eq!(semio_framework_dsl::walk_protocol(&protocol, &body).unwrap().consumed, body.len());

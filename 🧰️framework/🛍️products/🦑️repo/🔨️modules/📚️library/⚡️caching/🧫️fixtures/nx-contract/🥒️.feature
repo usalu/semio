@@ -1,9 +1,10 @@
 Feature: Correct Nx cache contracts
-  Scenario: Cargo component manifests own separate development and release deliverables
+  Scenario: Component crates carry no per-component release targets
     Given a plugin or extension Cargo package declares a component identity
     When Nx discovers the package without running a compiler
-    Then both component profiles have a cacheable producer with exclusive staged outputs
-    And the producer compiles only that package through the shared Cargo incremental store
+    Then it infers one uncached on-demand component target that builds exactly that component through the driver, and no describe or materialize target
+    And every release orchestrator is one uncached driver task over all component crates
+    And the orchestrator depends only on its declared prerequisites and the native generators of its crates and job roots
 
   Scenario: Side effects always execute
     Given a setup or publish target inherits a cacheable default
@@ -11,7 +12,7 @@ Feature: Correct Nx cache contracts
     Then the target is uncached
 
   Scenario: Deterministic commands are cacheable
-    Given a test, lint, build, generate, verify, format-check, test-exhaustive, or contract target
+    Given a test, lint, build, generate, verify, format-check, or contract target
     When Nx resolves the project
     Then the target is cached
     And native Nx isCacheableTask agrees
@@ -139,17 +140,15 @@ Feature: Correct Nx cache contracts
     And repeated identical source reuses compact dependency facts
     And retained facts never exceed the configured byte budget
 
-  Scenario: Browser materialization consumes completed component and support artifacts
-    Given a Cargo component and a fixed development or release profile
-    When Nx selects browser materialization
-    Then the component and shared browser support producers run first
-    And the materializer owns only its profile-specific module directory
-    And the descriptor is emitted beside the browser bridge without writing into source owners
-    And restoring the cached directory restores a usable component and descriptor
+  Scenario: Browser support owns the shared module root assets
+    Given the one plugin-modules root every build driver materializes into
+    When Nx caches browser support
+    Then it owns the preview2 shims, the typst font asset and the shard worker
+    And it stages the font the fonts target publishes
 
-  Scenario: Cancelling component code generation owns the compiler process
-    Given a materializer subprocess that ignores graceful termination
-    When materialization is cancelled
+  Scenario: Cancelling a post-link tool owns its process tree
+    Given a tool subprocess that ignores graceful termination
+    When its stage is cancelled
     Then the subprocess stops before the shutdown deadline
     And failed subprocess diagnostics stay within the configured bound
 
@@ -180,10 +179,10 @@ Feature: Correct Nx cache contracts
     Then its output contract covers that exact directory
     And the TypeScript compiler independently reads the producer declaration
 
-  Scenario: Each browser preparation declares its real producer closure
+  Scenario: Each browser preparation builds exactly its component closure
     Given authored playground and component dependency metadata
     When Nx selects a variant and profile
-    Then its session, browser support, fonts and engines are prerequisites
-    And only the variant's runtime plugin closure is materialized
-    And the host variant includes every component
+    Then its session, browser support, fonts, engines, descriptor emitter and optimizer are prerequisites
+    And the preparation is an uncached driver task whose outputs are exactly its closure's module directories
+    And a boot preparation's closure is the host's app-scoped closure, never the catalog fan-out
     And every engine path resolves to an authored project

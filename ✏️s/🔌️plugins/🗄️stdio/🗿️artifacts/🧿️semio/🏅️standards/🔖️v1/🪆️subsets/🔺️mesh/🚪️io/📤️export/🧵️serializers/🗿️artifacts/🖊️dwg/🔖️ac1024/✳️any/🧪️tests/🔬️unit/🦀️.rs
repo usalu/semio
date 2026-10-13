@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::mesh::io::import::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::dwg::v_ac1024::any::SemioMeshFromDwg;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMesh, SemioPrimitive};
 use semio_framework_plugin::ArtifactDeserializer;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9

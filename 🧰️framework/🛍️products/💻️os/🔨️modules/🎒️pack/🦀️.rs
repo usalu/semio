@@ -15,6 +15,9 @@ pub use crate::os_pack::value::*;
 #[path = "🔎️scalar-witness/🦀️.rs"]
 pub mod scalar_witness;
 pub use scalar_witness::{ScalarRecordField, ScalarRecordView, ScalarRecordWireStep, ScalarRecordWireWitness};
+
+#[path = "🌉️bridge/🦀️.rs"]
+pub mod pack_rt;
 //#endregion 🔖️Value
 
 //#region 🔖️Encode

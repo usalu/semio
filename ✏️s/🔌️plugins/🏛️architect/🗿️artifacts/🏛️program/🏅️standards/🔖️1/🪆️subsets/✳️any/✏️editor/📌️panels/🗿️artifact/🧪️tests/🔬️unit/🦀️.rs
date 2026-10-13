@@ -1,5 +1,5 @@
 use super::*;
-use crate::{empty_plugin, sample_plugin};
+use crate::standards::v1::subsets::any::schema::snapshot::{empty_plugin, sample_plugin};
 use semio_framework_plugin::{TreeWindowRequest, ViewModel, TREE_WINDOW_DEFAULT_ROWS};
 
 fn unhosted(program: &ProgramSnapshot) -> String {
@@ -46,7 +46,7 @@ fn oversized_program(count: usize) -> ProgramSnapshot {
     program.elements = (0..count)
         .map(|index| {
             let mut element = seed.clone();
-            element.header.id = crate::kernel::EntityId(format!("element-{index}"));
+            element.header.id = crate::standards::v1::subsets::any::schema::kernel::EntityId(format!("element-{index}"));
             element.header.name = format!("Element {index}");
             element.parent_id = None;
             element

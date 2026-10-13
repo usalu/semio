@@ -1,6 +1,6 @@
 //! 🧪️ Forms neutral document and sparse-edit laws against independent JSON values.
 use crate::{FormsSnapshot, FormsDiff};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn vectors() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🪪️document/🔣️.json")).expect("neutral vectors")

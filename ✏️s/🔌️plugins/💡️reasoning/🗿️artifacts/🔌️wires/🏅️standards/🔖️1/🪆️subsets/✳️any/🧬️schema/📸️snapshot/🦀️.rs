@@ -5,7 +5,7 @@
 //! while the camera is owned by each concrete canvas window.
 //!
 //! Ticket `26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM` design.md §1 CORRECTION: the native
-//! codec (`impl store::ArtifactDsl`/`impl store::ArtifactPack for WiresSnapshot`, formerly here) now
+//! codec (`impl store::os_store::serialization::ArtifactDsl`/`impl store::os_store::serialization::ArtifactPack for WiresSnapshot`, formerly here) now
 //! lives directly under `🚪️io/📸️snapshot/{📝️text,💾️binary}` — one bidirectional trait impl per
 //! representation, unsplit, never mirrored under import/export. This file keeps only the type + its
 //! schema derive, per design.md rule 3 ("🧬️schema keeps types + pure transforms").
@@ -13,7 +13,7 @@
 use crate::WiresContentChild;
 use semio_framework_value::retirement::{deferred, deferred_birth_bytes, deferred_birth_bytes_for, sequence, sequence_birth_bytes, shared::SharedControlledRetirement, RetireOwned, RetirementCursor};
 use semio_framework_value::DslValue;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Snapshot

@@ -1,7 +1,7 @@
 //! 💰️ Original Drawing fields and scalar relational frontiers survive every cancellation boundary.
 use super::*;
 use semio_framework_os_kernel::sqlite_snapshot::{transfer,artifact::{reconstruct_text_into,reconstruct_blob_into}};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::workspace;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::workspace;
 #[derive(semio_framework_value::RetireOwned)]
 enum Task{Node(i64),Group{position:usize,start:usize,end:usize}}
 #[derive(semio_framework_value::RetireOwned)]

@@ -4,7 +4,7 @@ use semio_framework_plugin::{NoConfig, NoConfigMutation};
 use crate::standards::v1::subsets::any::schema::mutations::Fem2dMutation;
 use semio_framework_plugin::{ArtifactView, ConfigView, Emit, Fault};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 type Fem2dSnapshot = crate::Fem2dSnapshot;
 

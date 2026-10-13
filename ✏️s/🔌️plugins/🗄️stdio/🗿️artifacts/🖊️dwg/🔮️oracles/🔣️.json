@@ -10,5 +10,25 @@
         "oracles"
       ]
     }
+  ],
+  "subjectHostPackages": [
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-dwg-model",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust",
+      "rationale": "🧬️ The DWG subject edits the model crate's snapshot through its mutation vocabulary."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-dwg-read",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust",
+      "rationale": "📥️ The DWG subject decodes its carrier bytes through the reader crate."
+    },
+    {
+      "implementation": "rust",
+      "package": "semio-s-artifact-stdio-dwg-write",
+      "path": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust",
+      "rationale": "📤️ The DWG subject encodes the edited snapshot back to bytes through the writer crate."
+    }
   ]
 }

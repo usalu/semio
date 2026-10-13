@@ -2,7 +2,7 @@
 use super::*;
 
 fn receipts() -> Vec<NativeCodecFactoryReceipt> {
-    semio_hub_stdio::catalog::native_codec_factory_receipts().expect("verified stdio receipts")
+    semio_hub_stdio_catalog::native_codec_factory_receipts().expect("verified stdio receipts")
 }
 
 #[test]
@@ -10,7 +10,7 @@ fn native_openable_provider_consumes_exact_complete_stdio_factory_closure() {
     let expected=receipts();
     let provider = NativeOpenableCatalogProviderV1::from_receipts(env!("CARGO_PKG_VERSION"), receipts()).expect("complete provider");
     let bindings = provider.into_bindings();
-    assert_eq!(bindings.len(), semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap().len());
+    assert_eq!(bindings.len(), semio_hub_stdio_catalog::live_native_codec_factory_receipts().unwrap().len());
     assert!(bindings.iter().all(|binding| binding.codec().pack_schema_hash != [0; 32]), "every headless Stdio codec carries its structural pack schema identity");
     for(binding,receipt)in bindings.iter().zip(&expected){assert_eq!(binding.factory_id(),Some(receipt.factory_id.as_str()));assert_eq!(serde_json::to_value(binding.factory_id()).unwrap(),serde_json::to_value(Some(&receipt.factory_id)).unwrap());assert_eq!(binding.plugin_id(),receipt.plugin_id);assert_eq!(binding.package_id(),receipt.package_id);assert_eq!(binding.artifact_kind(),receipt.artifact_kind);assert_eq!(binding.codec().schema,receipt.schema);}
     println!("[DEBUG] Original Stdio catalog binding factoryIds={} exactVerifiedReceipts=true independentSerde=true",bindings.len());
@@ -89,7 +89,7 @@ mod quick {
         let independent: semio_framework::ArtifactKindSpec = serde_json::from_value(kind_json.clone()).unwrap();
         assert_eq!(kind, independent);
         let projected = semio_framework_value::ToValue::to_value(&kind);
-        assert_eq!(directory::os_store::pack_rt::encode_wire_value(&projected), directory::os_store::pack_rt::encode_wire_value(&kind_json.clone().into()));
+        assert_eq!(directory::os_pack::pack_rt::encode_wire_value(&projected), directory::os_pack::pack_rt::encode_wire_value(&kind_json.clone().into()));
         for field in ["exportStdioKinds", "importStdioKinds"] {
             for invalid in [serde_json::json!([1]), serde_json::json!("stdio.svg")] {
                 let mut candidate = kind_json.clone();
@@ -113,12 +113,12 @@ mod quick {
                 let _foreign = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("foreign").label("Foreign").version("99.0.0").package_id("semio:foreign").try_build().unwrap();
                 semio_framework_plugin::describe::describe_plugin(&runtime).await
             };
-            let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(directory::os_store::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();
+            let descriptor: semio_framework::PackageDescriptor = semio_framework_value::FromValue::from_value(directory::os_pack::pack_rt::decode_wire_value(&emitted).unwrap()).unwrap();
             assert_eq!(descriptor.package_id, package_id);
             assert_eq!(descriptor.manifest.plugin_id, plugin_id);
-            assert_eq!(directory::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)), emitted);
+            assert_eq!(directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor)), emitted);
             let selected = NativeCodecProviderPackageV1 { plugin_id, package_id, version: &descriptor.manifest.version };
-            let before = directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash));
+            let before = directory::os_store::codec_registry::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash));
             for row in fixture["nativeCases"].as_array().unwrap() {
                 let accepted = match serde_json::from_value::<Vec<semio_framework::PluginDependency>>(row["dependencies"].clone()) {
                     Err(refusal) => {
@@ -136,7 +136,7 @@ mod quick {
                     }
                 };
                 assert_eq!(accepted, row["accepted"].as_bool().unwrap(), "{plugin_id}: {}", row["id"]);
-                assert_eq!(directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
+                assert_eq!(directory::os_store::codec_registry::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
             }
             for row in fixture["consumerCatalogCases"].as_array().unwrap() {
                 let mut candidate = descriptor.clone();
@@ -156,7 +156,7 @@ mod quick {
                 }
                 let result = NativeCodecProviderSourceV1::preview(&providers, selected, &candidate, &context);
                 assert_eq!(result.is_ok(), row["accepted"].as_bool().unwrap(), "{plugin_id}: {}: {:?}", row["change"], result.as_ref().err());
-                assert_eq!(directory::os_store::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
+                assert_eq!(directory::os_store::codec_registry::document_codec(schema).await.unwrap().map(|codec| (codec.schema, codec.extension, codec.pack_schema_hash)), before);
             }
             assert!(NativeCodecProviderSourceV1::preview(&providers, NativeCodecProviderPackageV1 { plugin_id, package_id: "semio:foreign", version: selected.version }, &descriptor, &context).is_err());
         }
@@ -239,7 +239,7 @@ mod quick {
         let providers = NativeCodecProviderSetV1::linked();
         let control = SelectionControl { cancelled: false, now_ms: 0 };
         let context = OperationContext::new(u64::MAX, crate::artifact_authority::AuthorityLimits::maximum(), &control);
-        let counts = [("stdio", "semio:stdio", semio_hub_stdio::catalog::live_native_codec_factory_receipts().unwrap().len()), ("gis", "semio:gis", 2), ("vcs", "semio:vcs", NATIVE_VCS_PROVIDER_RECEIPTS)];
+        let counts = [("stdio", "semio:stdio", semio_hub_stdio_catalog::live_native_codec_factory_receipts().unwrap().len()), ("gis", "semio:gis", 2), ("vcs", "semio:vcs", NATIVE_VCS_PROVIDER_RECEIPTS)];
         for profile in fixture["unconsumedProfiles"].as_array().unwrap() {
             let selected = profile["selected"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
             let previews = profile["previews"].as_array().unwrap().iter().map(|value| value.as_str().unwrap()).collect::<Vec<_>>();
@@ -254,7 +254,7 @@ mod quick {
                 assert_eq!(bindings.len(), count, "{}", profile["name"]);
                 assert!(bindings.iter().all(|binding| binding.package_id() == package_id));
                 assert!(bindings.iter().all(|binding| binding.plugin_id() == plugin_id));
-                for binding in &bindings{let expected=match plugin_id{"stdio"=>semio_hub_stdio::catalog::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.schema==binding.codec().schema).unwrap().factory_id,"gis"=>semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),"vcs"=>semio_hub_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),_=>unreachable!()};assert_eq!(binding.factory_id(),Some(expected.as_str()));}
+                for binding in &bindings{let expected=match plugin_id{"stdio"=>semio_hub_stdio_catalog::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.schema==binding.codec().schema).unwrap().factory_id,"gis"=>semio_hub_gis::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),"vcs"=>semio_hub_vcs::native_codecs::native_codec_factory_receipts().unwrap().into_iter().find(|receipt|receipt.identity().schema==binding.codec().schema).unwrap().identity().factory_id.to_owned(),_=>unreachable!()};assert_eq!(binding.factory_id(),Some(expected.as_str()));}
                 requested.push(package_id);
                 receipts += count;
             }

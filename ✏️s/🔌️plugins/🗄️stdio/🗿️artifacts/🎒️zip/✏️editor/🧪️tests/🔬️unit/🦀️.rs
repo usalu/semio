@@ -272,7 +272,7 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     let original: ZipSnapshot = semio_framework_pack_json::from_json_str(&row["snapshot"].to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).unwrap();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let arguments = semio_framework_value::DslValue::object([("nodeId".into(), semio_framework_value::DslValue::String(entry_node_id(name))), ("value".into(), semio_framework_value::DslValue::String(value.into())), ("revision".into(), semio_framework_value::DslValue::String(text_revision(name)))]);
@@ -286,8 +286,8 @@ async fn retained_archive_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Mutation
     assert_eq!(app.snapshot().unwrap(), original);
     semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::settle_history_verb(&mut app, "redo", meta.instance_id, semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     assert_eq!(app.snapshot().unwrap(), expected);
-    let saved = <ZipSnapshot as store::ArtifactPack>::encode_pack(&expected);
-    assert_eq!(<ZipSnapshot as store::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
+    let saved = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&expected);
+    assert_eq!(<ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&saved).unwrap(), expected);
     artifact_app_laws::close_registered_fixture_app(&mut app, semio_s_artifact_stdio_contract::testing::mounted_policy());
 }
 
@@ -305,7 +305,7 @@ async fn agent_archive_rename_law<E: ArtifactEditor<Snapshot = ZipSnapshot, Muta
     let registered = definition.clone();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<E>, _>(async { semio_framework_plugin::App { definition: registered, examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, crate::STDIO_ZIP_DOCUMENT_SCHEMA) else { panic!("archive fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let name = row["rename"]["name"].as_str().unwrap();
     let value = row["rename"]["value"].as_str().unwrap();
     let address = |revision: Option<String>| {

@@ -25,8 +25,8 @@
 //!
 //! @see ../../🦀️.rs — `mesh_bridge`, the composition point all the leaves go through.
 
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::{SemioMeshSnapshot, SemioTopology};
 
 //#region 🧊️Fixture
 /// 🧊️ The one committed geometry, as authored — see the fixture file's own `$comment`.

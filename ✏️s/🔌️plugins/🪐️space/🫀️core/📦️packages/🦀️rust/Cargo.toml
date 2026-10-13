@@ -17,7 +17,7 @@ path = "🦀️.rs"
 
 [features]
 default = []
-component-app-assembly = ["semio-framework-plugin/component-guest", "dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-os", "dep:semio-framework-os-kernel", "dep:semio-framework-plugin"]
+component-app-assembly = ["dep:semio-framework", "dep:semio-framework-artifact-space-space", "dep:semio-framework-os", "dep:semio-framework-os-kernel", "dep:semio-framework-plugin"]
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }

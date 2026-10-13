@@ -713,7 +713,7 @@ async fn export_media_document_out_round_trips_through_pack() {
     let MediaPayload::Structured { schema, json } = media.payload else { panic!("expected structured payload") };
     assert_eq!(schema, crate::LAYOUT_DOCUMENT_SCHEMA);
     let bytes = store::pack_rt::pack_value_from_base64(&json).expect("decode base64 pack");
-    let decoded = <LayoutSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
+    let decoded = <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode pack");
     assert_eq!(decoded, document);
 }
 

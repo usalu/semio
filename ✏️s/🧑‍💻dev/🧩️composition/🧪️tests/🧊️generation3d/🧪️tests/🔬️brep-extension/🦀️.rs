@@ -17,13 +17,13 @@ fn bad_request(capability: &str, detail: impl Into<String>) -> Fault {
     Fault::new(FaultOrigin::Plugin, FaultCode::new(format!("extension.{capability}.bad-request")), detail.into())
 }
 
-static GEOMETRY_CONTEXT: std::sync::Mutex<Option<semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext>> = std::sync::Mutex::new(None);
+static GEOMETRY_CONTEXT: std::sync::Mutex<Option<semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext>> = std::sync::Mutex::new(None);
 static MATH_CONTEXT: std::sync::Mutex<Option<semio_framework_os_flow::ExtensionEvaluationResources>> = std::sync::Mutex::new(None);
 
 /// 🎟️ Borrows the original packaged geometry execution owner across every fixture hop.
-pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext) -> T) -> T {
+pub(crate) fn with_geometry_context<T>(operation: impl FnOnce(&semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext) -> T) -> T {
     let mut owner = GEOMETRY_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
-    operation(owner.get_or_insert_with(|| semio_s_plugin_flow_extension_brep::geometry_inference::GeometryInferenceContext::new(crate::flow_operators::geometry_session().capture())))
+    operation(owner.get_or_insert_with(|| semio_s_plugin_flow_brep::geometry_inference::GeometryInferenceContext::new(crate::flow_operators::geometry_session().capture())))
 }
 
 /// 🧹️ Releases the existing fixture execution owners through their bounded close authority.
@@ -60,7 +60,7 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
     use crate::flow_operators::{BREP_EXTENSION_PLUGIN_ID, MATH_EXTENSION_PLUGIN_ID};
     match (pending.extension_id.as_str(), pending.capability.as_str()) {
         (BREP_EXTENSION_PLUGIN_ID, "evaluate") => {
-            use semio_s_plugin_flow_extension_brep::geometry_inference::{GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA};
+            use semio_s_plugin_flow_brep::geometry_inference::{GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA};
             let service = semio_framework_plugin::artifact_inference_service(GEOMETRY_ARTIFACT_KIND, GEOMETRY_INFERENCE_SCHEMA).map_err(|error| bad_request("evaluate", error.message))?.ok_or_else(|| bad_request("evaluate", "geometry inference is not registered"))?;
             let payload: semio_framework_os_flow::EvaluateRequest = semio_framework_pack_json::from_json_str(&pending.request_json, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| bad_request("evaluate", error.to_string()))?;
             let units = if payload.round_units > 0 { payload.round_units } else if payload.budget > 0 { payload.budget } else { semio_framework_os_flow::EVALUATE_STEP_BUDGET as u64 };
@@ -76,7 +76,7 @@ pub fn serve(pending: &PendingExtensionInvocation) -> Result<Vec<u8>, Fault> {
             let mut context = MATH_CONTEXT.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
             let owner = context.get_or_insert_with(|| {
                 let mut registry = semio_framework_os_flow::neural::Registry::new();
-                semio_s_plugin_flow_extension_math::register(&mut registry);
+                semio_s_plugin_flow_math::register(&mut registry);
                 semio_framework_os_flow::ExtensionEvaluationResources::new(registry)
             });
             semio_framework_os_flow::evaluate_invoke_json(owner.registry(), pending.request_json.as_bytes()).map_err(|error| bad_request("evaluate", error))

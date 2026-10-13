@@ -3,7 +3,7 @@ use super::*;
 /// 🧹️ Original live handles, roots and body slots retire in exact funded turns without a copied directory.
 #[test]
 fn original_brep_retention_borrows_live_rows_and_restarts_changed_source(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use semio_framework_value::{retirement::controlled::ControlledRetirement,retained_clone::RetainedCloneGrant};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../📸️representation/🕸️topology/🧫️fixtures/🎟️reachability/🔣️.json")).unwrap();
     for copy_grant in [1,3,64]{for changing in [false,true]{

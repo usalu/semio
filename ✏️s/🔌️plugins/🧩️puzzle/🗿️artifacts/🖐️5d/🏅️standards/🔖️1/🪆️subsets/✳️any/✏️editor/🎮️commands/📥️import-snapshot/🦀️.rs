@@ -60,8 +60,8 @@ pub fn puzzle5d_import_value(args: &Value) -> Result<Value, Puzzle5dImportFault>
 /// 🌱️ The sanctioned whole-document replacement: the imported `document` as a pack plus a fresh, edit-free op log. A
 /// natural-file import is the load path, not a mutation — it carries no inverse and journals no history row.
 pub fn puzzle5d_load_document_effect(document: &crate::Puzzle5dSnapshot) -> Effect {
-    let pack = <crate::Puzzle5dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(crate::editor::puzzle5d::PUZZLE5D_PLAY_APP_ID, crate::PUZZLE_5D_SCHEMA));
+    let pack = <crate::Puzzle5dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(crate::editor::puzzle5d::PUZZLE5D_PLAY_APP_ID, crate::PUZZLE_5D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 

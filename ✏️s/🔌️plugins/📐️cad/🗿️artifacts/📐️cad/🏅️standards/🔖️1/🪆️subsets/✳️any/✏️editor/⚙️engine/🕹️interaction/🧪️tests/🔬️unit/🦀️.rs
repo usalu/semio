@@ -1,5 +1,5 @@
 use super::*;
-use semio_framework_3d::brep::engine::Brep;
+use semio_framework_3d_brep_engine::Brep;
 
 fn point_arg(x: f64, y: f64, z: f64) -> DslValue {
     DslValue::object([("point".to_string(), vec3_json([x, y, z]))])

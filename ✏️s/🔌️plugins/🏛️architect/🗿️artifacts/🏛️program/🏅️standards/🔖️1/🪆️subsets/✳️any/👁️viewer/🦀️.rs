@@ -7,7 +7,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
 use crate::viewer::architect::modes::view;
 use crate::viewer::architect::modes::view::windows::register;
-use crate::{sample_plugin, ProgramSnapshot, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
+use crate::standards::v1::subsets::any::schema::{snapshot::{sample_plugin, ProgramSnapshot}, ARCHITECT_DIALECT, ARCHITECT_PROGRAM_SCHEMA};
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;
 use semio_framework_plugin::ConfigView;
@@ -80,7 +80,7 @@ impl ArtifactViewer for ArchitectViewer {
 
     fn genesis_child_pack(snapshot: &Self::Snapshot, slot: &str, child_id: &str) -> Result<Option<Vec<u8>>,semio_framework_value::ValueError> {
  Ok((||{
-        crate::genesis_program_child_pack(snapshot, slot, child_id)
+        crate::standards::v1::subsets::any::schema::snapshot::genesis_program_child_pack(snapshot, slot, child_id)
     
 })())
 }

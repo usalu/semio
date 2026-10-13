@@ -10,9 +10,9 @@
 //! 🔗️ [Euler-Poincare formula](https://en.wikipedia.org/wiki/Euler_characteristic) ·
 //! [Principal curvature](https://en.wikipedia.org/wiki/Principal_curvature)
 
-use crate::brep::representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::{Body, EntityRef};
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, EdgeId, FaceId, LoopId, ShellId, SolidId, VertexId};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::{Body, EntityRef};
 
 #[path = "🛞️mass/🦀️.rs"]
 mod mass;
@@ -108,7 +108,7 @@ impl ShapeScope {
             }
         }
         let reach = body.reachable_from(&self.roots);
-        fn sorted<T: ArenaId + Copy + Ord>(set: &crate::brep::representation::topology::HistoryFoldSet<T>) -> Vec<T> {
+        fn sorted<T: ArenaId + Copy + Ord>(set: &semio_framework_3d_brep_representation::topology::HistoryFoldSet<T>) -> Vec<T> {
             let mut ids: Vec<T> = set.iter().copied().collect();
             ids.sort_unstable_by_key(|id| id.raw_index());
             ids

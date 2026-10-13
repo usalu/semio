@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &En1993Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(document)
+    store::os_store::serialization::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<En1993Snapshot, PackError> {
-    <En1993Snapshot as store::ArtifactPack>::decode_pack(bytes)
+    <En1993Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -40,12 +40,12 @@ use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// was parsed rather than copied.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_en1993_pack(bytes: &[u8]) -> Result<En1993Snapshot, String> {
-    <En1993Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <En1993Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 /// 📦️ Encodes a [`En1993Snapshot`] to its binary `.pack.semio` envelope.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_en1993_pack(snapshot: &En1993Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
+    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

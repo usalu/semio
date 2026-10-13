@@ -20,7 +20,7 @@ async fn viewer_declares_the_main_window() {
 
 #[test]
 fn own14_declared_document_and_mutation_owners_are_exact() {
-    assert_eq!(<Pdf14Viewer as ArtifactViewer>::DOCUMENT_SCHEMA, crate::STDIO_PDF_DOCUMENT_SCHEMA);
+    assert_eq!(<Pdf14Viewer as ArtifactViewer>::DOCUMENT_SCHEMA, crate::standards::v1_4::subsets::base::schema::STDIO_PDF_DOCUMENT_SCHEMA);
     assert_eq!(std::any::type_name::<<Pdf14Viewer as ArtifactViewer>::Snapshot>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::snapshot::PdfSnapshot>());
     assert_eq!(std::any::type_name::<<Pdf14Viewer as ArtifactViewer>::Mutation>(), std::any::type_name::<crate::standards::v1_4::subsets::base::schema::mutations::PdfMutation>());
 }

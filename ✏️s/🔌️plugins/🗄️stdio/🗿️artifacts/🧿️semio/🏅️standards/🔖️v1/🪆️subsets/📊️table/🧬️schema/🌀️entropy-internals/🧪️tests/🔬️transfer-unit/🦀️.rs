@@ -8,7 +8,7 @@ mod tests {
 
     #[test]
     fn te_of_independent_series_discrete_is_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let n = 3000;
         let source: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();
         let target: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();
@@ -21,7 +21,7 @@ mod tests {
     fn te_detects_coupling_discrete() {
         // 🔐️ target[i] = source[i-1] (with some noise mixed via binning): TE(source->target)
         // should be clearly larger than TE(target->source).
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
         let n = 4000;
         let source: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();
         let mut target = vec![0.0; n];
@@ -35,7 +35,7 @@ mod tests {
 
     #[test]
     fn ais_of_white_noise_is_near_zero() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let x: Vec<f64> = (0..2000).map(|_| rng.next_f64()).collect();
         let est = active_information_storage(&x, 1, TeBackend::Discrete { bins: 3 }, LogBase::Nats).unwrap();
         assert!(est.value.abs() < 0.05, "got {}", est.value);
@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn ais_of_highly_predictable_series_is_positive() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(4);
         let n = 2000;
         let mut x = vec![0.0; n];
         for i in 1..n {
@@ -65,7 +65,7 @@ mod tests {
 
         #[test]
         fn te_knn_detects_coupling_on_coupled_logistic_maps() {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(5);
             let n = 800;
             let mut x = vec![0.4 + 0.1 * rng.next_f64(); n];
             let mut y = vec![0.4 + 0.1 * rng.next_f64(); n];

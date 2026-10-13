@@ -3,7 +3,7 @@
 mod original_owners;
 use crate::standards::v1::subsets::any::io::sqlite::snapshot::Puzzle3dSnapshot;
 use crate::*;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn words() -> Vec<u64> {
     let corpus: serde_json::Value = serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap();
@@ -152,7 +152,7 @@ fn independent_puzzle3_edit(bytes: &[u8], edit: &str) -> Vec<u8> {
 #[test]
 fn sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_all_words() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     for word in words() {
         let expected = specimen(word);
         let mut cb = |_| true;
@@ -173,7 +173,7 @@ fn sqlite_snapshot_puzzle3d_all23_tables_physical_oracle_and_edit_reconstruct_al
 #[test]
 fn sqlite_snapshot_puzzle3d_independently_edited_malformed_graphs_are_rejected() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let mut cb = |_| true;
     let mut control = SqliteSnapshotControl::new(&mut cb, SqliteDatabaseLimits::default());
     let database = specimen(0).to_sqlite_database(&mut control).unwrap();
@@ -215,7 +215,7 @@ fn sqlite_snapshot_puzzle3d_actual_typed_and_play_erased_codecs_keep_all23_domai
 #[test]
 fn sqlite_snapshot_puzzle3d_exact_rows_and_all_four_interior_copy_phases() {
     use store::sqlite_snapshot::*;
-    use store::ArtifactSqliteSnapshot;
+    use store::os_store::serialization::ArtifactSqliteSnapshot;
     let small = specimen(0);
     let exact = SqliteDatabaseLimits { max_rows: 30, ..Default::default() };
     let short = SqliteDatabaseLimits { max_rows: 29, ..Default::default() };
@@ -259,7 +259,7 @@ semio_framework_dispatch_macros::dyn_enum_close! {
 /// 🗃️ Actual owner editor/viewer app wrappers for public I/O registration.
 pub(crate) enum PublicApps: PluginApp {Editor(VcsArtifactApp<EditorApp<crate::editor::puzzle3d::Puzzle3dPlayApp>>),Viewer(VcsArtifactApp<ViewerApp<crate::viewer::puzzle3d::Puzzle3dViewer>>),}
 }
-struct PublicOwned(Option<Puzzle3dSnapshot>);impl PublicOwned{fn new(value:Puzzle3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Puzzle3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Puzzle3dSnapshot as store::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}}}
+struct PublicOwned(Option<Puzzle3dSnapshot>);impl PublicOwned{fn new(value:Puzzle3dSnapshot)->Self{Self(Some(value))}fn get(&self)->&Puzzle3dSnapshot{self.0.as_ref().unwrap()}}impl Drop for PublicOwned{fn drop(&mut self){if let Some(value)=self.0.take(){<Puzzle3dSnapshot as store::os_store::serialization::ArtifactSqliteSnapshot>::retire_sqlite_snapshot(value);}}}
 fn exact(a:&Puzzle3dSnapshot,b:&Puzzle3dSnapshot){use semio_framework_value::{DslValue,Number,ToValue};fn same(a:&DslValue,b:&DslValue){match(a,b){(DslValue::Number(Number::Float(a)),DslValue::Number(Number::Float(b)))=>assert_eq!(a.to_bits(),b.to_bits()),(DslValue::Array(a),DslValue::Array(b))=>{assert_eq!(a.len(),b.len());for(a,b)in a.iter().zip(b){same(a,b);}},(DslValue::Object(a),DslValue::Object(b))=>{assert_eq!(a.len(),b.len());for((ka,a),(kb,b))in a.iter().zip(b){assert_eq!(ka,kb);same(a,b);}},_=>assert_eq!(a,b)}}same(&a.to_value(),&b.to_value());}
 
 fn register(){semio_framework_plugin::Plugin::<PublicApps>::builder("puzzle").label("Populated public SQLite").version("0.0.1").package_id("semio:puzzle").declare_artifact(crate::artifact::<PublicApps>()).try_build().unwrap();}

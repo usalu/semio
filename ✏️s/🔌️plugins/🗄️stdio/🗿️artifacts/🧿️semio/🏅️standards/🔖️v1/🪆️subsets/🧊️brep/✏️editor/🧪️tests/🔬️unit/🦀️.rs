@@ -14,14 +14,14 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::semio_brep::SemioBrepViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioBrepEditor, crate::viewer::SemioBrepViewer>().await;
 }
 
 //#region 🧪️SetVertex
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn one_vertex_snapshot() -> SemioBrepSnapshot {
     let mut s = SemioBrepSnapshot::default();
-    s.vertices = vec![crate::standards::v1::subsets::brep::schema::snapshot::BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 0.0 }];
+    s.vertices = vec![crate::schema::snapshot::BrepVertex { id: "v1".into(), point: SemioPoint3 { x: 0.0, y: 0.0, z: 0.0 }, tol: 0.0 }];
     s
 }
 
@@ -102,7 +102,7 @@ async fn set_vertex_is_visible_with_required_localized_arguments() {
 /// `MutationDiff::apply`, the exact production `mutate()` path, not a hand-rolled shortcut.
 #[semio_framework_async_macros::async_test]
 async fn applying_the_move_vertex_mutation_actually_moves_the_vertex() {
-    use protocol::{Mutation, MutationDiff};
+    use protocol::Mutation;
     let snapshot = one_vertex_snapshot();
     let mutation = move_vertex_mutation(&snapshot, "v1", [9.0, 8.0, 7.0]).expect("unique target").expect("changed point");
     let applied = protocol::apply_diff(mutation.diff(&snapshot).diff(), &snapshot).expect("apply succeeds for a well-formed fixture");
@@ -116,7 +116,7 @@ async fn registered_set_vertex_publishes_refuses_a_missing_target_and_undoes_red
     let original = one_vertex_snapshot();
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&original, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let meta = artifact_app_laws::meta("local");
     let arguments = |vertex_id: &str, point: [f64; 3]| DslValue::object([("vertexId".into(), DslValue::String(vertex_id.into())), ("point".into(), DslValue::Array(point.into_iter().map(DslValue::float).collect()))]);
 
@@ -146,7 +146,7 @@ async fn registered_set_vertex_refuses_duplicate_ids_without_history() {
     duplicate.vertices.push(duplicate.vertices[0].clone());
     let mut app = semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::new_registered_app::<EditorApp<SemioBrepEditor>, _>(async { semio_framework_plugin::App { definition: create_semio_brep_editor(), examples: Vec::new() } }, semio_framework_os_kernel::ActorId(semio_framework_os_kernel::LOCAL_ACTOR_ID.into()), semio_s_artifact_stdio_contract::testing::mounted_policy(), &mut identity).await);
     let semio_framework_plugin::Effect::LoadDocument { pack, spr } = semio_s_artifact_stdio_contract::load_example_effect(&duplicate, SEMIO_BREP_DOCUMENT_SCHEMA) else { panic!("B-rep fixture produces a document load") };
-    semio_framework_plugin::with_authoring_identity!(|identity| semio_framework_plugin::artifact_app_laws::load_document(&mut app, &store::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
+    semio_framework_plugin::with_authoring_identity!(|identity| artifact_app_laws::load_document(&mut app, &store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }, &mut identity).await).unwrap();
     let meta = artifact_app_laws::meta("local");
     let history_before = ::semio_framework_async::poll::resolve_ready(app.history_snapshot()).expect("initial history").upserts.len();
     let args = DslValue::object([("vertexId".into(), DslValue::String("v1".into())), ("point".into(), DslValue::Array(vec![DslValue::float(1.0), DslValue::float(2.0), DslValue::float(3.0)]))]);

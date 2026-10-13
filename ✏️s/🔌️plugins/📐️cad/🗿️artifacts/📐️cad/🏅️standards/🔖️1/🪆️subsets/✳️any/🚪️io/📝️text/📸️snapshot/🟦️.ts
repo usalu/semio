@@ -1,7 +1,7 @@
 import type { CadSnapshot } from "../../../🧬️schema/📸️snapshot/🟦️.ts";
 
 /** 🗣️ cad.cad snapshot text facade. Real codec: `parse_dsl`/`print_dsl` in the sibling
- * `🦀️.rs`, wrapping `store::ArtifactDsl for CadSnapshot` (callable natively from Rust
+ * `🦀️.rs`, wrapping `store::os_store::serialization::ArtifactDsl for CadSnapshot` (callable natively from Rust
  * today). Not wired here: `world actor`'s WIT surface (🧰️framework/🛍️products/💻️os/🔨️modules/
  * 🔌️plugin/🧬️schema/📜️.wit) exports only `poll`/`jobs`/`checkpoint`/`describe` — the
  * `read/load-app-document-text` export that could have carried this was deleted in the B1

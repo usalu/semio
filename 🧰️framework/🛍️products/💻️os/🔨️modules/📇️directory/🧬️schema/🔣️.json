@@ -3101,6 +3101,22 @@
       "type": "string",
       "pattern": "^(?!0{64}$)[0-9a-f]{64}$"
     },
+    "DocumentShippedComponentReceiptV1": {
+      "description": "The shipped `ComponentReceiptV1` a document-open package carries: the generated binding of its semantic descriptor to its component bytes. Every reader requires `pluginId`, `packageId`, `wasmSha256` and `semanticDescriptorSha256` to equal the package's own identity, `componentSha256` and `descriptorByteSha256`, and a lease requires `wasmBytes` to equal its component byte length.",
+      "allOf": [
+        {
+          "$ref": "https://json.schemas.assets.semio-tech.com/os/plugin/describe/component-receipt/component.json#/$defs/ComponentReceiptV1"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "profile": {
+              "const": "wasm-release"
+            }
+          }
+        }
+      ]
+    },
     "DocumentExecutionTargetSurfaceV1": {
       "type": "object",
       "additionalProperties": false,
@@ -3199,7 +3215,8 @@
             "componentSha256",
             "componentBlake3",
             "descriptorByteSha256",
-            "executionProtocol"
+            "executionProtocol",
+            "componentReceipt"
           ],
           "properties": {
             "pluginId": {
@@ -3237,6 +3254,9 @@
                   "const": 23
                 }
               }
+            },
+            "componentReceipt": {
+              "$ref": "#/$defs/DocumentShippedComponentReceiptV1"
             }
           }
         },
@@ -3258,7 +3278,7 @@
             "byteLength": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 67108864
+              "maximum": 268435456
             }
           }
         },
@@ -4914,7 +4934,8 @@
             "componentSha256",
             "componentBlake3",
             "descriptorByteSha256",
-            "executionProtocol"
+            "executionProtocol",
+            "componentReceipt"
           ],
           "properties": {
             "pluginId": {
@@ -4946,6 +4967,9 @@
                   "const": 23
                 }
               }
+            },
+            "componentReceipt": {
+              "$ref": "#/$defs/DocumentShippedComponentReceiptV1"
             }
           }
         },
@@ -4967,7 +4991,7 @@
             "byteLength": {
               "type": "integer",
               "minimum": 1,
-              "maximum": 67108864
+              "maximum": 268435456
             }
           }
         },
@@ -5142,7 +5166,8 @@
             "componentSha256",
             "componentBlake3",
             "descriptorByteSha256",
-            "executionProtocol"
+            "executionProtocol",
+            "componentReceipt"
           ],
           "properties": {
             "pluginId": {
@@ -5174,6 +5199,9 @@
                   "const": 23
                 }
               }
+            },
+            "componentReceipt": {
+              "$ref": "#/$defs/DocumentShippedComponentReceiptV1"
             }
           }
         },

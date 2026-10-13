@@ -146,7 +146,7 @@
                 "properties": {
                   "value": {
                     "type": "object",
-                    "x-semio-type": "store::ArtifactChild<SemioObjectSnapshot>"
+                    "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>"
                   }
                 }
               }
@@ -169,7 +169,7 @@
               },
               "item": {
                 "type": "object",
-                "x-semio-type": "store::ArtifactChild<SemioObjectSnapshot>"
+                "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>"
               }
             }
           }
@@ -210,7 +210,7 @@
                 "properties": {
                   "value": {
                     "type": "object",
-                    "x-semio-type": "store::ArtifactChild<SemioModelSnapshot>"
+                    "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>"
                   }
                 }
               }
@@ -233,7 +233,7 @@
               },
               "item": {
                 "type": "object",
-                "x-semio-type": "store::ArtifactChild<SemioModelSnapshot>"
+                "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>"
               }
             }
           }
@@ -242,7 +242,7 @@
     },
     "properties": {
       "type": "object",
-      "x-semio-type": "store::ArtifactChild<SemioValueSnapshot>"
+      "x-semio-type": "store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>"
     },
     "representations": {
       "type": "object",

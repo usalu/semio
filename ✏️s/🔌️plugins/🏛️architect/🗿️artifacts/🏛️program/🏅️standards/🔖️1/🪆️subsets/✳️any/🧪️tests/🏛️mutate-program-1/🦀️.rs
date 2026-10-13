@@ -352,7 +352,7 @@ mod subject {
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::mutations::{decode_program_mutation_json};
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::snapshot::{print_program_dsl};
     use semio_s_artifact_architect_program::standards::v1::subsets::any::io::text::snapshot::{parse_program_dsl};
-    use semio_s_artifact_architect_program::ProgramSnapshot;
+    use semio_s_artifact_architect_program::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_repo_test_host::law;
 
     fn block_on<F: std::future::Future>(future: F) -> F::Output {

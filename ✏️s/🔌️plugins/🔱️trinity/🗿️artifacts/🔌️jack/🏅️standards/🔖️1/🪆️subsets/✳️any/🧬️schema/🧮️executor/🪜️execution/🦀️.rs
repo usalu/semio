@@ -6,7 +6,7 @@ use crate::host::{admit_demand, JackSnapshotCloneAuthority, JackSnapshotCloneSte
 use semio_framework_value::retained_clone::{RetainedCloneGrant, RetainedCloneProgress, RetainedCloneStep};
 use semio_framework_value::RetirementDemand;
 use crate::{port_key, JackSnapshot, Port, PortDirection, PropertyBag};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
 use std::collections::{BTreeSet, VecDeque};
 use std::ops::Bound::{Excluded, Unbounded};
 
@@ -88,23 +88,23 @@ fn edge_owned_bytes(edge: &Edge, maximum: usize) -> Result<usize, ValueError> {
     Ok(bytes)
 }
 
-fn content_property_bytes(value:&semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue,depth:usize,items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+fn content_property_bytes(value:&semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue,depth:usize,items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{
+    use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
     if depth>QUERY_ENTITY_NESTING_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its nesting admission"))}
     *items=items.checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"query entity item count overflow"))?;
     if *items>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query entity exceeds its collection admission"))}
     add_owned_bytes(bytes,size_of::<PropertyValue>(),maximum)?;
     match value{SemioValue::Null|SemioValue::Bool{..}|SemioValue::Float{..}=>Ok(()),SemioValue::Str{value}=>add_owned_bytes(bytes,value.len(),maximum),SemioValue::List{items:values}=>{for value in values{content_property_bytes(value,depth+1,items,bytes,maximum)?;}Ok(())},SemioValue::Map{entries}=>{for entry in entries{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,depth+1,items,bytes,maximum)?;}Ok(())},_=>Err(ValueError::new(ValueRefusalKind::InvalidValue,"Jack query projection cannot represent this intrinsic Semio value family"))}
 }
-fn content_bag_bytes(values:&[semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueEntry],items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{for entry in values{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,0,items,bytes,maximum)?;}Ok(())}
-fn content_node_bytes(node:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphNode,maximum:usize)->Result<(),ValueError>{
+fn content_bag_bytes(values:&[semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry],items:&mut usize,bytes:&mut usize,maximum:usize)->Result<(),ValueError>{for entry in values{add_owned_bytes(bytes,entry.key.len(),maximum)?;content_property_bytes(&entry.value,0,items,bytes,maximum)?;}Ok(())}
+fn content_node_bytes(node:&semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphNode,maximum:usize)->Result<(),ValueError>{
     let mut bytes=size_of::<Node>();let mut items=0;
     if node.ports.len()>QUERY_ENTITY_COLLECTION_MAXIMUM{return Err(ValueError::new(ValueRefusalKind::WorkLimit,"query node exceeds its port admission"))}
     for value in[&node.id.value,&node.kind,&node.label]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
     content_bag_bytes(&node.properties,&mut items,&mut bytes,maximum)?;
     for port in &node.ports{add_owned_bytes(&mut bytes,size_of::<Port>(),maximum)?;add_owned_bytes(&mut bytes,port.name.len(),maximum)?;add_owned_bytes(&mut bytes,port.category.len(),maximum)?;content_bag_bytes(&port.properties,&mut items,&mut bytes,maximum)?;}Ok(())
 }
-fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge,maximum:usize)->Result<(),ValueError>{
+fn content_edge_bytes(edge:&semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphEdge,maximum:usize)->Result<(),ValueError>{
     let mut bytes=size_of::<Edge>();let mut items=0;
     for value in[&edge.id.value,&edge.kind,&edge.source.value,&edge.target.value]{add_owned_bytes(&mut bytes,value.len(),maximum)?;}
     for port in[edge.source_port.as_deref(),edge.target_port.as_deref()].into_iter().flatten(){add_owned_bytes(&mut bytes,port.len().checked_add(1).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"query entity byte count overflow"))?,maximum)?;}
@@ -281,10 +281,10 @@ impl QueryExecutionPreparation {
     /// 📏️ Quotes the next close turn: the retained child cursor, a staged typed owner, the partial metadata clone, else one extraction move.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.closing_owner.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.closing_owner);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.closing_owner);
         }
         if !self.metadata.terminal_is_empty() {
             return self.metadata.close_demands(body);
@@ -308,10 +308,10 @@ impl QueryExecutionPreparation {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.closing_owner.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
         }
         if !self.metadata.terminal_is_empty() {
             return self.metadata.close_step(grant);
@@ -908,10 +908,10 @@ impl QueryExecution {
     /// 📏️ Quotes the next close turn: the retained child cursor, a staged typed owner, else one extraction move.
     pub fn close_demands(&self, body: usize) -> Result<RetirementDemand, ValueError> {
         if let Some(owner) = self.retirement.as_ref() {
-            return store::artifact_retirement_box_demands(owner, body);
+            return store::os_store::snapshot_read::artifact_retirement_box_demands(owner, body);
         }
         if self.closing_owner.is_some() {
-            return store::artifact_retirement_owned_birth_demands(&self.closing_owner);
+            return store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&self.closing_owner);
         }
         if !self.residual_is_empty() {
             return Ok(RetirementDemand { copy_bytes: size_of::<QueryClosingOwner>().max(size_of::<Binding>()), depth: 1, ..Default::default() });
@@ -1008,10 +1008,10 @@ impl QueryExecution {
             return Ok(RetainedCloneStep::Progress(empty));
         }
         if self.retirement.is_some() {
-            return store::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
+            return store::os_store::snapshot_read::artifact_retirement_box_close_step(&mut self.retirement, grant).map(|step| RetainedCloneStep::Progress(step.progress()));
         }
         if self.closing_owner.is_some() {
-            return store::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
+            return store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut self.closing_owner, &mut self.retirement, grant);
         }
         match self.extract_closing_owner() {
             Some(staged) => {

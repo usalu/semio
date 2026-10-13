@@ -1,7 +1,17 @@
 use super::*;
 use semio_framework_plugin::ArtifactBuilder;
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfAccessorType, GltfComponentType, GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationSampler, GltfDocument, GltfInterpolation, GltfNode, GltfSourceForm};
-use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::io::{GltfAccessorSpec, GltfBuilderConstruction as GltfDocBuilder};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAccessorType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfComponentType;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimationChannel;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimationChannelTarget;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAnimationSampler;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfInterpolation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSourceForm;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::GltfAccessorSpec;
+use semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::GltfBuilderConstruction as GltfDocBuilder;
 
 /// 🏗️ Builds a real, decodable glTF document: two nodes, one animation with a Linear
 /// Translation channel (2 keyframes) and a CubicSpline Weights channel (2 keyframes, arity 2)

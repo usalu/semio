@@ -29,7 +29,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -45,7 +46,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -86,7 +88,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -102,7 +105,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -127,7 +131,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -173,7 +178,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -189,7 +195,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -227,7 +234,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -243,7 +251,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -281,7 +290,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -297,7 +307,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -335,7 +346,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -351,7 +363,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -390,7 +403,8 @@
           ],
           "unknown": true,
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -428,7 +442,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -462,7 +477,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -478,7 +494,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -516,7 +533,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -532,7 +550,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -570,7 +589,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -586,7 +606,8 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -637,7 +658,8 @@
             }
           ],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],
@@ -653,7 +675,164 @@
           ],
           "apps": [],
           "openTargets": [],
-          "catalogFeatures": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "family-catalog",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "family",
+          "package": "neutral-family",
+          "order": 3,
+          "selections": [
+            "full"
+          ],
+          "apps": [
+            {
+              "owner": "documents",
+              "order": 0,
+              "variant": "FamilyAlphaEditor",
+              "role": "editor",
+              "type": "neutral_family_alpha::editor::FamilyAlphaEditor",
+              "factory": "neutral_family_alpha::editor::create",
+              "mutationRoster": false,
+              "laws": {
+                "editing": "familyalpha_edit",
+                "sqliteSnapshot": "familyalpha_sqlite"
+              }
+            }
+          ],
+          "openTargets": [],
+          "catalogPackage": "neutral-family-catalog",
+          "symbolPackages": [
+            "neutral-family-base",
+            "neutral-family-alpha"
+          ],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "expected": [
+        "bravo",
+        "family"
+      ]
+    },
+    {
+      "id": "symbol-package-repeats-package",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "family",
+          "package": "neutral-family",
+          "order": 3,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogPackage": null,
+          "symbolPackages": [
+            "neutral-family"
+          ],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "catalog-package-repeats-symbol",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "family",
+          "package": "neutral-family",
+          "order": 3,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogPackage": "neutral-family-base",
+          "symbolPackages": [
+            "neutral-family-base"
+          ],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        }
+      ],
+      "selection": "full",
+      "error": true
+    },
+    {
+      "id": "package-shared-across-contributions",
+      "contributions": [
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "family",
+          "package": "neutral-family",
+          "order": 3,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogPackage": null,
+          "symbolPackages": [
+            "neutral-bravo"
+          ],
+          "playgrounds": [],
+          "mutationDescriptors": [],
+          "mutationCoordinates": [],
+          "nativeFactories": []
+        },
+        {
+          "schema": "semio.stdio.composition-contribution/v1",
+          "artifact": "bravo",
+          "package": "neutral-bravo",
+          "order": 1,
+          "selections": [
+            "full"
+          ],
+          "apps": [],
+          "openTargets": [],
+          "catalogPackage": null,
+          "symbolPackages": [],
           "playgrounds": [],
           "mutationDescriptors": [],
           "mutationCoordinates": [],

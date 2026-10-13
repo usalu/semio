@@ -5,15 +5,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::graph::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value_entry};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value_entry};
-use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_bin};
-use crate::standards::v1::subsets::value::io::binary::diff::{enc_semio_value_bin};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::io::binary::diff::dec_semio_value_bin;
+use semio_s_artifact_stdio_semio_value::io::binary::diff::enc_semio_value_bin;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Real hex/bracket-encoded value primitives backing the hand-rolled `ArtifactDsl` below — same
@@ -197,7 +197,7 @@ pub(crate) fn parse_graph_snapshot_body(body: &str) -> Result<SemioGraphSnapshot
 }
 
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
-impl store::ArtifactDsl for SemioGraphSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioGraphSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA
@@ -213,7 +213,7 @@ impl store::ArtifactDsl for SemioGraphSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_graph_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -233,19 +233,19 @@ pub fn decode_semio_graph_snapshot_json(text: &str) -> Result<SemioGraphSnapshot
 }
 
 /// 📝️ Parses `s.stdio.semio.graph` DSL text into a [`SemioGraphSnapshot`] — a named pass-through of this snapshot's own
-/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `🌳️mutate-semio-graph`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/🕸️wires/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_graph_dsl(text: &str) -> Result<SemioGraphSnapshot, String> {
-    <SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioGraphSnapshot`] back as `s.stdio.semio.graph` DSL text — the inverse of
 /// [`parse_semio_graph_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_graph_dsl(snapshot: &SemioGraphSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -253,16 +253,16 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::graph::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::native;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value_entry};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value_entry};
-use crate::standards::v1::subsets::value::io::binary::diff::{dec_semio_value_bin};
-use crate::standards::v1::subsets::value::io::binary::diff::{enc_semio_value_bin};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value_entry;
+use semio_s_artifact_stdio_semio_value::io::binary::diff::dec_semio_value_bin;
+use semio_s_artifact_stdio_semio_value::io::binary::diff::enc_semio_value_bin;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
 use framework_schema::ArtifactSchema;
 
 
@@ -278,7 +278,7 @@ use semio_framework_value::{ValueError,ValueRefusalKind};
 
 pub(crate) fn invalid(message:&str)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
-pub(crate) fn fields(value:&mut DslValue,required:&[&str],optional:&[&str])->Result<(),ValueError>{
+pub fn fields(value:&mut DslValue,required:&[&str],optional:&[&str])->Result<(),ValueError>{
  let DslValue::Object(entries)=value else{return Err(invalid("Semio graph declared object required"))};
  if required.iter().any(|key|!entries.iter().any(|(name,_)|name==key))||entries.iter().any(|(name,_)|!required.contains(&name.as_str())&&!optional.contains(&name.as_str())){return Err(invalid("Semio graph declared fields invalid"))}Ok(())
 }
@@ -302,8 +302,8 @@ pub fn convert(mut value:DslValue,decode:bool)->Result<DslValue,ValueError>{
  let DslValue::Array(edges)=member(&mut value,"edges")? else{return Err(invalid("Semio graph edges required"))};for edge in edges{fields(edge,&["id","source","target","kind","label","properties"],&["sourcePort","targetPort"])?;}Ok(value)
 }
 
-pub fn encode(snapshot:&crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot)->Result<String,ValueError>{let value=convert(snapshot.to_value(),false)?;Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))}
+pub fn encode(snapshot:&crate::schema::snapshot::SemioGraphSnapshot)->Result<String,ValueError>{let value=convert(snapshot.to_value(),false)?;Ok(semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(&value)))}
 
-pub fn decode(text:&str)->Result<crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot,ValueError>{let parsed=semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|invalid(&error.to_string()))?;crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot::from_value(convert(semio_framework_pack_json::to_dsl_value(&parsed),true)?)}
+pub fn decode(text:&str)->Result<crate::schema::snapshot::SemioGraphSnapshot,ValueError>{let parsed=semio_framework_pack_json::parse(text,semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error|invalid(&error.to_string()))?;crate::schema::snapshot::SemioGraphSnapshot::from_value(convert(semio_framework_pack_json::to_dsl_value(&parsed),true)?)}
 }
 pub use snapshot_wire2_codec::*;

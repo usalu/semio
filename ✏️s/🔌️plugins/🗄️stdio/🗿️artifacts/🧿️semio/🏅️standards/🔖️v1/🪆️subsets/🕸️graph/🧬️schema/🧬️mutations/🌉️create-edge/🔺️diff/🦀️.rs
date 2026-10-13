@@ -1,8 +1,8 @@
 //! 🔺️ Diff for `CreateEdge`.
 
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexedTripleDiff};
-use crate::standards::v1::subsets::graph::schema::diff::{SemioGraphDiff};
-use crate::standards::v1::subsets::graph::schema::snapshot::{SemioGraphEdge, SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexedTripleDiff};
+use crate::schema::diff::SemioGraphDiff;
+use crate::schema::snapshot::{SemioGraphEdge, SemioGraphSnapshot};
 
 //#region 🔖️Diff
 /// 🧮️ An edge id the graph already carries is a Fatal `mutation.duplicate-id`, an unknown endpoint a Fatal `mutation.invariant`;

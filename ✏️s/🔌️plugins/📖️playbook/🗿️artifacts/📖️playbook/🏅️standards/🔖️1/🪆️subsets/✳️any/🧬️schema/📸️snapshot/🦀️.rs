@@ -35,7 +35,7 @@ impl Default for PlaybookSnapshot {
 
 //#region 🔖️ValueCodec
 /// 🔀️ Hand-written, not derived — mirrors the sibling `PlaybookArtifact` impl one region up
-/// (`../🦀️.rs`'s `🔖️ValueCodec`): `flow` is a `store::ArtifactChild<S>` composed-artifact handle,
+/// (`../🦀️.rs`'s `🔖️ValueCodec`): `flow` is a `store::os_store::artifact_child::ArtifactChild<S>` composed-artifact handle,
 /// bridged through the pre-existing `to_dsl_value`/`from_dsl_value` seam instead of widening the
 /// derive macro to understand child-slot handles.
 impl semio_framework_value::ToValue for PlaybookSnapshot {

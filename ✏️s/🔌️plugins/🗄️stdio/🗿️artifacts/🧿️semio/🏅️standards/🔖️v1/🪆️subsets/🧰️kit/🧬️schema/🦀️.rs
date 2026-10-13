@@ -1,10 +1,10 @@
 //! 🧬️ SemioKitArtifact schema — full artifact state, mirrors `SemioKitSnapshot` field for field
 //! (see `🔤️text`'s `SemioTextArtifact`/`📦️object`'s `SemioObjectArtifact` for the precedent).
 
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, ArtifactSchema)]
@@ -18,13 +18,13 @@ pub struct SemioKitArtifact {
     pub designs: Vec<SemioKitDesign>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub objects: Vec<store::ArtifactChild<SemioObjectSnapshot>>,
+    pub objects: Vec<store::os_store::artifact_child::ArtifactChild<SemioObjectSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub models: Vec<store::ArtifactChild<SemioModelSnapshot>>,
+    pub models: Vec<store::os_store::artifact_child::ArtifactChild<SemioModelSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
+    pub properties: Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>,
     #[state(artifact)]
     #[link_slot(roles("representation"))]
     pub representations: Vec<store::ArtifactLink>,

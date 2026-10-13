@@ -1,10 +1,10 @@
 {
-  "componentHex": "616263",
-  "componentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-  "componentBlake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85",
+  "componentHex": "0061736d0d000100",
+  "componentSha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+  "componentBlake3": "48d3a2e8a9b0cde6293ba7f68824a97d069d096f44335a9e86aee55238dcdcb8",
   "limits": {
-    "componentBytesMax": 67108864,
-    "componentBytesMaxPlusOne": 67108865,
+    "componentBytesMax": 268435456,
+    "componentBytesMaxPlusOne": 268435457,
     "descriptorBytesMax": 4194304,
     "descriptorBytesMaxPlusOne": 4194305,
     "identityBytesMax": 256,
@@ -13,18 +13,30 @@
     "codecCountMaxPlusOne": 16385
   },
   "bundle": {
-    "schemaVersion": 3,
+    "schemaVersion": 4,
     "profiles": [
       {
         "id": "fixture",
         "selectedClosure": [
-          { "pluginId": "fixture.base", "packageId": "semio:fixture-base", "version": "1.0.0" },
-          { "pluginId": "fixture.editor", "packageId": "semio:fixture-editor", "version": "1.2.3" }
+          {
+            "pluginId": "fixture-base",
+            "packageId": "semio:fixture-base",
+            "version": "1.0.0"
+          },
+          {
+            "pluginId": "fixture-editor",
+            "packageId": "semio:fixture-editor",
+            "version": "1.2.3"
+          }
         ],
-        "selectedClosureSha256": "d7f0f91fff3c1b9547b40474de0b899037ec1c8ad38cafae73694415d426b393",
+        "selectedClosureSha256": "f7ecafefe15cdd48a5636b31ae99ebe2b6b9c7d758f56c60a31bf9c8306c086e",
         "openTargets": [
           {
-            "package": { "pluginId": "fixture.editor", "packageId": "semio:fixture-editor", "version": "1.2.3" },
+            "package": {
+              "pluginId": "fixture-editor",
+              "packageId": "semio:fixture-editor",
+              "version": "1.2.3"
+            },
             "target": {
               "artifactKind": "s.fixture.document",
               "artifactSchema": "fixture.document@1",
@@ -34,8 +46,16 @@
               "windowKindId": "fixture-main",
               "role": "editor",
               "rendererTarget": "wasm",
-              "parentDialect": { "artifactKind": "s.fixture.document", "standard": "1", "subset": "*" },
-              "grant": { "read": true, "write": true, "observe": true }
+              "parentDialect": {
+                "artifactKind": "s.fixture.document",
+                "standard": "1",
+                "subset": "*"
+              },
+              "grant": {
+                "read": true,
+                "write": true,
+                "observe": true
+              }
             }
           }
         ],
@@ -44,34 +64,64 @@
     ],
     "packages": [
       {
-        "pluginId": "fixture.editor",
+        "pluginId": "fixture-editor",
         "packageId": "semio:fixture-editor",
         "version": "1.2.3",
         "role": "plugin",
-        "executionProtocol": { "appChannelVersion": 23 },
+        "executionProtocol": {
+          "appChannelVersion": 23
+        },
         "dependencies": [
-          { "pluginId": "fixture.base", "packageId": "semio:fixture-base", "version": "1.0.0" }
+          {
+            "pluginId": "fixture-base",
+            "packageId": "semio:fixture-base",
+            "version": "1.0.0"
+          }
         ],
         "component": {
           "path": "components/editor.wasm",
-          "byteLength": 3,
-          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-          "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+          "byteLength": 8,
+          "sha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+          "blake3": "48d3a2e8a9b0cde6293ba7f68824a97d069d096f44335a9e86aee55238dcdcb8"
         },
-        "pluginModule": { "path": "plugin-module-fixture.editor.json", "byteLength": 1, "sha256": "5151515151515151515151515151515151515151515151515151515151515151", "blake3": "6161616161616161616161616161616161616161616161616161616161616161" },
+        "pluginModule": {
+          "path": "plugin-module-fixture-editor.json",
+          "byteLength": 1,
+          "sha256": "5151515151515151515151515151515151515151515151515151515151515151",
+          "blake3": "6161616161616161616161616161616161616161616161616161616161616161"
+        },
         "descriptor": {
           "path": "descriptors/editor.descriptor.semio",
           "byteLength": 1,
           "sha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a"
         },
+        "receipt": {
+          "schema": "semio.plugin.component-receipt/v1",
+          "pluginId": "fixture-editor",
+          "packageId": "semio:fixture-editor",
+          "profile": "wasm-release",
+          "target": "wasm32-wasip2",
+          "wasmSha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+          "wasmBytes": 8,
+          "semanticDescriptorSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
+          "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+          "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+          "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
         "browserActor": {
-          "kind": "closed-browser-actor", "schema": "semio.os.closed-browser-actor.v1", "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
-          "path": "browser/closed-actor.mjs", "byteLength": 3,
+          "kind": "closed-browser-actor",
+          "schema": "semio.os.closed-browser-actor.v1",
+          "codegenPolicy": "semio.os.browser-jco-1.34.0-jspi.v1",
+          "path": "browser/closed-actor.mjs",
+          "byteLength": 3,
           "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-          "sourceComponentSha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          "sourceComponentSha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
           "sourceDescriptorByteSha256": "4bf5122f344554c53bde2ebb8cd2b7e3d1600ad631c385a5d7cce23c7785459a",
           "policySha256": "4141414141414141414141414141414141414141414141414141414141414141",
-          "importInterfaces": ["semio:framework/host-async@1.0.0", "semio:framework/pure@1.0.0"]
+          "importInterfaces": [
+            "semio:framework/host-async@1.0.0",
+            "semio:framework/pure@1.0.0"
+          ]
         },
         "nativeCodecs": [
           {
@@ -90,8 +140,16 @@
             "windowKindId": "fixture-main",
             "role": "editor",
             "rendererTarget": "wasm",
-            "parentDialect": { "artifactKind": "s.fixture.document", "standard": "1", "subset": "*" },
-            "grant": { "read": true, "write": true, "observe": true }
+            "parentDialect": {
+              "artifactKind": "s.fixture.document",
+              "standard": "1",
+              "subset": "*"
+            },
+            "grant": {
+              "read": true,
+              "write": true,
+              "observe": true
+            }
           },
           {
             "artifactKind": "s.fixture.document",
@@ -102,32 +160,62 @@
             "windowKindId": "fixture-main",
             "role": "viewer",
             "rendererTarget": "wasm",
-            "parentDialect": { "artifactKind": "s.fixture.document", "standard": "1", "subset": "*" },
-            "grant": { "read": true, "write": false, "observe": true }
+            "parentDialect": {
+              "artifactKind": "s.fixture.document",
+              "standard": "1",
+              "subset": "*"
+            },
+            "grant": {
+              "read": true,
+              "write": false,
+              "observe": true
+            }
           }
         ]
       },
       {
-        "pluginId": "fixture.base",
+        "pluginId": "fixture-base",
         "packageId": "semio:fixture-base",
         "version": "1.0.0",
         "role": "plugin",
-        "executionProtocol": { "appChannelVersion": 23 },
+        "executionProtocol": {
+          "appChannelVersion": 23
+        },
         "dependencies": [],
         "component": {
           "path": "components/base.wasm",
-          "byteLength": 3,
-          "sha256": "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
-          "blake3": "6437b3ac38465133ffb63b75273a8db548c558465d79db03fd359c6cd5bd9d85"
+          "byteLength": 8,
+          "sha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+          "blake3": "48d3a2e8a9b0cde6293ba7f68824a97d069d096f44335a9e86aee55238dcdcb8"
         },
-        "pluginModule": { "path": "plugin-module-fixture.base.json", "byteLength": 1, "sha256": "5252525252525252525252525252525252525252525252525252525252525252", "blake3": "6262626262626262626262626262626262626262626262626262626262626262" },
+        "pluginModule": {
+          "path": "plugin-module-fixture-base.json",
+          "byteLength": 1,
+          "sha256": "5252525252525252525252525252525252525252525252525252525252525252",
+          "blake3": "6262626262626262626262626262626262626262626262626262626262626262"
+        },
         "descriptor": {
           "path": "descriptors/base.descriptor.semio",
           "byteLength": 1,
           "sha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986"
         },
+        "receipt": {
+          "schema": "semio.plugin.component-receipt/v1",
+          "pluginId": "fixture-base",
+          "packageId": "semio:fixture-base",
+          "profile": "wasm-release",
+          "target": "wasm32-wasip2",
+          "wasmSha256": "24eaf3439a60c96764c4f2c92a0a81b52bd4fe5d5b91f090184a0f6486b1bf29",
+          "wasmBytes": 8,
+          "semanticDescriptorSha256": "dbc1b4c900ffe48d575b5da5c638040125f65db0fe3e24494b76ea986457d986",
+          "toolchain": "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)",
+          "sourceTreeDigest": "3333333333333333333333333333333333333333333333333333333333333333",
+          "provenanceSha256": "4444444444444444444444444444444444444444444444444444444444444444"
+        },
         "nativeCodecs": [],
-        "browserActor": { "kind": "none" },
+        "browserActor": {
+          "kind": "none"
+        },
         "openTargets": []
       }
     ]

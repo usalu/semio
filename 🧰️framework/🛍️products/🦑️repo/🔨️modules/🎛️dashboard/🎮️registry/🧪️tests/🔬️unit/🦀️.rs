@@ -48,7 +48,7 @@ fn identities_round_trip_and_name_what_is_wrong() {
 fn verbs_come_from_the_leading_word_with_a_fallback() {
     assert_eq!(verb_of(None, "test-quick"), "test");
     assert_eq!(verb_of(None, "dev"), "dev");
-    assert_eq!(verb_of(None, "materialize-dev"), FALLBACK_VERB);
+    assert_eq!(verb_of(None, "materialize"), FALLBACK_VERB);
     assert_eq!(verb_of(Some("clean"), "erase"), "clean");
     assert!(verb_rank("dev") < verb_rank("test") && verb_rank("test") < verb_rank(FALLBACK_VERB) && verb_rank(FALLBACK_VERB) < verb_rank("goals") && verb_rank("goals") < verb_rank("unheard-of"));
 }

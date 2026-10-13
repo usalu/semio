@@ -30,7 +30,7 @@
       "id": "plugin-build-plan",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📋️plan/🟦️.ts",
       "exports": [
-        "pluginCargoArgs",
+        "pluginOutRoot",
         "resolvePluginBuildTargets"
       ]
     },
@@ -39,15 +39,16 @@
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/📦️materialization/🟦️.ts",
       "exports": [
         "buildPluginCargo",
-        "materializePlugin"
+        "materializePlugin",
+        "iterateComponentV1"
       ]
     },
     {
       "id": "plugin-build-descriptor",
       "path": "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🏗️build/🛂️descriptor/🟦️.ts",
       "exports": [
-        "stagePluginDescriptor",
-        "describeBuiltPlugin"
+        "assertPluginOutputChildren",
+        "pluginFileDigest"
       ]
     },
     {
@@ -368,12 +369,13 @@
     "PlaygroundSessionGenerateScript",
     "PlaygroundSessionPreviewScript",
     "ensurePluginRegistry",
-    "pluginCargoArgs",
+    "pluginOutRoot",
     "resolvePluginBuildTargets",
     "buildPluginCargo",
     "materializePlugin",
-    "stagePluginDescriptor",
-    "describeBuiltPlugin",
+    "iterateComponentV1",
+    "assertPluginOutputChildren",
+    "pluginFileDigest",
     "syncBuiltExtensionsToInstallRoot",
     "PluginBuildScript",
     "buildPlugins",

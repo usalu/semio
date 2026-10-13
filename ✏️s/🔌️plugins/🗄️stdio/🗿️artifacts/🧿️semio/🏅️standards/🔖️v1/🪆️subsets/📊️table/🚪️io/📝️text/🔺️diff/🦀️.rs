@@ -5,12 +5,12 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::table::schema::diff::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt, split_top_level, strip_brackets};
-use crate::standards::v1::subsets::base::schema::triples::{IndexedTripleDiff, Replace};
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_cell_kind, enc_cell_kind};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value, dec_str, enc_semio_value, enc_str};
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt, split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexedTripleDiff, Replace};
+use crate::io::text::snapshot::{dec_cell_kind, enc_cell_kind};
+use {semio_s_artifact_stdio_semio_value::io::text::diff::{dec_semio_value, enc_semio_value}, semio_s_artifact_stdio_semio_base::io::text::codec::{dec_str, enc_str}};
+use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 /// 🧪️ Hand-rolled `protocol::DiffCodec`. Unlike `🔤️text` (one mutable field), `table` has TWO —
@@ -19,10 +19,10 @@ use protocol::MutationDiff;
 /// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
 /// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
 /// purely a top-level field separator).
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_column};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_column};
+use crate::io::text::snapshot::dec_row;
+use crate::io::text::snapshot::enc_row;
+use crate::io::text::snapshot::dec_column;
+use crate::io::text::snapshot::enc_column;
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn enc_column_diff(d: &SemioTableColumnDiff) -> String {

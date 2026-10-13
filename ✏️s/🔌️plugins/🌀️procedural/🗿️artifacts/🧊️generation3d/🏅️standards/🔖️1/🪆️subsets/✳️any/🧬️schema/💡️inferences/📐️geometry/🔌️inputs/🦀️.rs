@@ -5,7 +5,7 @@ use super::value::{shape_kind, GeometryValue, PlaneValue, SelectionKind, Selecti
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, Port, PortType, SelectionComponent};
 use semio_framework_artifact_flow_flow::neural::Dictionary;
 use semio_framework_artifact_flow_flow::SynapseSpec;
-use semio_framework_3d::brep::engine::ShapeValue;
+use semio_framework_3d_brep_engine::ShapeValue;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use semio_framework_value::{DslValue, ToValue};
 use std::collections::BTreeMap;

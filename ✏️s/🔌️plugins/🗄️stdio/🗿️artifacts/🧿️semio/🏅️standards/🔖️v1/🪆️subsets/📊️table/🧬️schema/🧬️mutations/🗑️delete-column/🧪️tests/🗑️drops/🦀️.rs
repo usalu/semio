@@ -6,10 +6,10 @@
 //! `mutation.cascade` message counting the rows actually touched. Both rows are touched here, so
 //! the declared outcome carries that message.
 
-use crate::standards::v1::subsets::table::schema::diff::SemioTableDiff;
-use crate::standards::v1::subsets::table::schema::mutations::SemioTableMutation;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTableDiff;
+use crate::schema::mutations::SemioTableMutation;
+use crate::schema::snapshot::SemioTableSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🗑️delete-column/🗑️drops/📸️snapshot/➡️after/🔣️.json");
@@ -99,7 +99,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: SemioTableDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed delete-column diff decodes");
-    let rows = decoded.rows.as_ref().expect("delete-column must rebuild the row list, not only the column list");
+    let _rows = decoded.rows.as_ref().expect("delete-column must rebuild the row list, not only the column list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "delete-column/drops-the-middle-column-and-cascades-into-every-row: committed diff JSON is not canonical");

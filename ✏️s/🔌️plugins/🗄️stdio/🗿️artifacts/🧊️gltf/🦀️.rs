@@ -1,29 +1,22 @@
+//! 🎪 `stdio.gltf` artifact — stdio reference format: the definition, declaration, facets and registration over the
+//! model, mutation and inference crates (`semio-s-artifact-stdio-gltf-model`, `-gltf-mutations`, `-gltf-inferences`).
+//! The editor crate (`-gltf-editor`) is named directly by the hub composition.
+
 #![allow(async_fn_in_trait)]
 #![allow(long_running_const_eval)]
-//! 🎪 `stdio.gltf` artifact — stdio reference format.
-#[cfg(test)] use semio_framework_artifact_reference::{Dialect,StandardId,SubsetId};
 
-
-extern crate semio_framework_os_kernel as dsl;
 extern crate semio_framework_os_kernel as protocol;
 extern crate semio_framework_os_kernel as store;
-extern crate semio_framework_schema as framework_schema;
-extern crate semio_framework_value_derive as value_derive;
-
-pub use semio_s_artifact_stdio_contract::{apply_mutation_checked, mutation_from_payload_json, mutation_inverse, mutation_payload_json, MutationRefusal};
 
 use semio_framework_plugin::{
     ArtifactInference, ArtifactInferenceExecution, ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError, ArtifactInferenceExecutionRequest, ArtifactInferenceService, ArtifactInferenceServiceMetadata, ArtifactKindSpec, MediaClass, MediaForm, MediaType,
     OsMediaCapability,
 };
 
-pub use schema::diff::GltfDiff;
-pub use schema::mutations::GltfMutation;
-pub use schema::snapshot::GltfSnapshot;
-pub use schema::GltfArtifact;
+use semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::STDIO_GLTF_DOCUMENT_SCHEMA;
 
-/// 🏷️ Document schema / DSL envelope id.
-pub const STDIO_GLTF_DOCUMENT_SCHEMA: &str = "stdio.gltf";
 
 /// 🧬️ Artifact schema descriptor id.
 pub const GLTF_ARTIFACT_KIND_ID: &str = "s.stdio.gltf";
@@ -58,7 +51,7 @@ pub fn definition() -> Result<semio_framework_plugin::ArtifactDefinition, semio_
     executables.extend(
         ["s.stdio.gltf.mutation.change-material-alpha-mode.v1", "s.stdio.gltf.mutation.change-material-double-sided.v1", "s.stdio.gltf.mutation.create-scene.v1"]
             .into_iter()
-            .map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation as *const ())),
+            .map(|identity| semio_s_artifact_stdio_contract::ArtifactExecutable::from_function_pointer(identity, semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::apply_gltf_mutation as *const ())),
     );
     semio_s_artifact_stdio_contract::definition_from_schema_with_executables(ARTIFACT_DEFINITION_SCHEMA, executables)
 }
@@ -68,8 +61,8 @@ pub fn formats() -> Result<Vec<semio_framework_plugin::io::FormatDescriptor>, se
     semio_s_artifact_stdio_contract::format_descriptors(ARTIFACT_DEFINITION_SCHEMA)
 }
 
-fn native_codec() -> store::ArtifactCodec {
-    let mut codec = store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA);
+fn native_codec() -> store::os_store::serialization::ArtifactCodec {
+    let mut codec = store::bare_artifact_codec::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA);
     codec.extension = "gltf";
     codec
 }
@@ -83,19 +76,10 @@ pub fn contribution() -> semio_s_artifact_stdio_contract::ArtifactContribution {
 }
 
 //#region 🔖️Declaration
-/// 🔖️ This artifact's declaration (ticket 26/08/12/ARTIFACTS-ONLY-PLUGIN-ARCHITECTURE W6, g4) —
-/// replaces the old side-effecting `crate::engine::register()`, which the plugin
-/// root used to call unconditionally before `Plugin::builder(...)` was even constructed. Mirrors
-/// `🗜️deflate`'s own `s.stdio.deflate` exemplar exactly: a headless library artifact with zero
-/// `ArtifactApp`s, so `.document_codec_bare::<Snapshot, Mutation>(schema)` stands in for
-/// `store::register_document_codec(store::ArtifactCodec::bare::<GltfSnapshot, GltfMutation>(...))`.
-/// `.composers(...)` reaches the ENGINE's own `io_registry` (returns `&'static [ComposerEntry]`,
-/// owned rows) by its full path through the `engine` shim (`🦀️.rs`'s `pub mod engine { pub use
-/// super::standards::v2_0::engine::*; }`) — deliberately NOT this file's own `io_registry` module
-/// below, whose `entries()` returns `&'static [&'static ComposerEntry]` (references) and would
-/// silently rebind under a bare call (this ticket's "SILENT REBIND" hazard). gltf's own
-/// `register()` had no `register_schema_specs()` call, so every registration `engine::register()`
-/// performed is covered by a declaration field — no `.setup()` survivor needed.
+/// 🔖️ This artifact's declaration: a headless library artifact with zero `ArtifactApp`s, so
+/// `.document_codec_bare::<Snapshot, Mutation>(schema)` registers the native codec. `.composers(..)` takes the
+/// subset's own `io_registry` (owned `&'static [ComposerEntry]` rows), not this file's `io_registry`, whose
+/// `entries()` returns references. Every registration is a declaration field; no `.setup()` survivor is needed.
 /// 🧩️ Binds this executable root to its sole schema-owned definition.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, semio_framework_plugin::PluginAssemblyError> {
@@ -106,11 +90,11 @@ pub fn assembly() -> Result<semio_s_artifact_stdio_contract::ArtifactAssembly, s
 pub fn declaration(definition: semio_framework_plugin::ArtifactDefinition) -> Result<semio_framework_plugin::ArtifactDeclaration, semio_framework_plugin::ArtifactDefinitionError> {
     let formats = formats()?;
     semio_framework_plugin::ArtifactDeclaration::builder(definition)
-        .schema(schema::gltf_artifact_schema_descriptor())
+        .schema(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::gltf_artifact_schema_descriptor())
         .formats(formats)
-        .inferences(schema::inferences::gltf_artifact_inference_descriptors())
+        .inferences(semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::schema::inferences::gltf_artifact_inference_descriptors())
         .inference_services(gltf_inference_services())
-        .composers(engine::io_registry::entries())
+        .composers(standards::v2_0::subsets::any::io_registry::entries())
         .languages(pilot_languages())
         .document_codec_bare::<GltfSnapshot, GltfMutation>(STDIO_GLTF_DOCUMENT_SCHEMA, semio_framework_artifact_reference::Dialect { artifact_kind: "s.stdio.gltf", standard: semio_framework_artifact_reference::StandardId("2.0"), subset: semio_framework_artifact_reference::SubsetId("*") })
         .try_build()
@@ -209,9 +193,9 @@ fn gltf_inference_leaf_service(inference_schema: &'static str, infer: ArtifactIn
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRequest<'_>) -> Result<ArtifactInferenceExecutionStep, ArtifactInferenceExecutionError> {
-    let descriptor = schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
-    let snapshot = <GltfSnapshot as store::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
-    let assembly = <schema::inferences::GltfInference as protocol::Inference<GltfSnapshot>>::infer(&snapshot).map_err(|error|ArtifactInferenceExecutionError::new("stdio.gltf.inference.owner-refused",error.into_message()))?;
+    let descriptor = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::schema::inferences::gltf_inference_leaf_service_descriptor(id).ok_or_else(|| ArtifactInferenceExecutionError::new("stdio.gltf.inference.unknown-leaf", id))?;
+    let snapshot = <GltfSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(request.canonical_payload).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.snapshot-decode", error.to_string()))?;
+    let assembly = <semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::schema::inferences::GltfInference as protocol::Inference<GltfSnapshot>>::infer(&snapshot).map_err(|error|ArtifactInferenceExecutionError::new("stdio.gltf.inference.owner-refused",error.into_message()))?;
     let value = (descriptor.encode)(&assembly.geometry.overall);
     let policy_hash = format!("{:016x}", stable_hash(request.policy));
     let dependency_hashes = request.dependencies.iter().map(|(name, bytes)| format!("{name}:{:016x}", stable_hash(bytes))).collect::<Vec<_>>();
@@ -219,7 +203,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
     let provenance = value.get("provenance").map(|provenance| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(provenance))).into_iter().collect();
     let quality = value.get("quality").map_or_else(|| "unknown".into(), |quality| semio_framework_pack_json::to_string(&semio_framework_pack_json::from_dsl_value(quality)));
     let validity = value.get("validity").and_then(semio_framework_value::DslValue::as_str).unwrap_or("indeterminate").to_owned();
-    let envelope = standards::v2_0::subsets::any::io::text::inferences::GltfInferenceLeafEnvelope {
+    let envelope = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::text::inferences::GltfInferenceLeafEnvelope {
         id: id.into(),
         algorithm_version: descriptor.algorithm_version,
         policy_hash: policy_hash.clone(),
@@ -231,7 +215,7 @@ fn infer_gltf_leaf_cold(id: &'static str, request: &ArtifactInferenceExecutionRe
         provenance,
         value,
     };
-    let canonical_payload = standards::v2_0::subsets::any::io::binary::inferences::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
+    let canonical_payload = semio_s_artifact_stdio_gltf_inferences::standards::v2_0::subsets::any::io::binary::inferences::encode_gltf_inference_leaf_binary(&envelope).map_err(|error| ArtifactInferenceExecutionError::new("stdio.gltf.inference.leaf-binary-encode", error.to_string()))?;
     Ok(ArtifactInferenceExecution { retirement_progress: Default::default(), canonical_payload:Some(canonical_payload), diagnostics: Vec::new(), validity, quality: envelope.quality, complete: true, actual_cache_mode: request.requested_cache_mode.clone() }.into_step(true))
 }
 
@@ -589,28 +573,28 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     id: "stdio.gltf",
                     extension: Some("gltf"),
                     role: semio_framework_dsl::LanguageRole::Document,
-                    grammar: Some(standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::text::snapshot::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.op",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Ops,
-                    grammar: Some(standards::v2_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
-                    protocol: Some(standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    grammar: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::text::mutations::COMPONENT_GRAMMAR_PATH),
+                    protocol: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.op"),
                 },
                 semio_framework_dsl::LanguageSpec {
                     id: "stdio.gltf.diff",
                     extension: None,
                     role: semio_framework_dsl::LanguageRole::Diff,
-                    grammar: Some(standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
-                    grammar_path: Some(standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
+                    grammar: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_SEMIO),
+                    grammar_path: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::text::diff::COMPONENT_GRAMMAR_PATH),
                     protocol: None,
                     protocol_path: None,
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.diff"),
@@ -621,8 +605,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Pack,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.pack"),
                 },
                 semio_framework_dsl::LanguageSpec {
@@ -631,8 +615,8 @@ fn pilot_languages() -> &'static [semio_framework_dsl::LanguageSpec] {
                     role: semio_framework_dsl::LanguageRole::Spr,
                     grammar: None,
                     grammar_path: None,
-                    protocol: Some(standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
-                    protocol_path: Some(standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
+                    protocol: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_SEMIO),
+                    protocol_path: Some(semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::io::binary::mutations::COMPONENT_PROTOCOL_PATH),
                     hooks: semio_framework_dsl::passthrough_hooks("stdio.gltf.spr"),
                 },
             ]
@@ -663,7 +647,7 @@ pub fn artifact_kind() -> ArtifactKindSpec {
 //#endregion 🔖️ArtifactKind
 //#region 🚪️DerivedIoRegistry
 pub mod io_registry {
-    use crate::standards::v2_0::engine::io_registry as v2_0;
+    use crate::standards::v2_0::subsets::any::io_registry as v2_0;
     use {semio_framework_plugin::io::register_composer_entries,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposedArtifact,semio_framework_plugin::io::ComposerEntry,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource};
     use std::sync::OnceLock;
 
@@ -695,516 +679,25 @@ mod tests;
 pub mod standards {
     #[path = "."]
     pub mod v2_0 {
-        #[path = "🏅️standards/🔖️2.0/🦀️.rs"]
-        mod component;
-        #[cfg(test)] pub use component::*;
-        // ⚙️→🚪️/🧬️ dissolved (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES):
-        // real code now lives in `subsets::any::{io,schema}`; this stays an inline barrel
-        // so every existing `standards::v2_0::engine::*`/root `engine::*` path still resolves.
-        pub mod engine {
-            pub use super::subsets::any::io::*;
-            pub use super::subsets::any::schema::*;
-            // 🎯 io and schema each define their own inferences/mutations submodule
-            // (io holds binary/text codecs, schema holds the actual domain logic) --
-            // disambiguate the resulting glob collision by explicitly preferring
-            // schema, the richer, load-bearing side.
-            pub use super::subsets::any::schema::inferences;
-            pub use super::subsets::any::schema::mutations;
-        }
         #[path = "."]
         pub mod subsets {
             #[path = "."]
             pub mod any {
                 #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🦀️.rs"]
                 mod component;
-                #[cfg(test)] pub use component::*;
-                #[path = "."]
-                pub mod schema {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod snapshot {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📸️snapshot/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod diff {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🔺️diff/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                    #[path = "."]
-                    pub mod inferences {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🤝️adjacency/🦀️.rs"]
-                        pub mod adjacency;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🧱️area-volume/🦀️.rs"]
-                        pub mod area_volume;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/↔️clearance/🦀️.rs"]
-                        pub mod clearance;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🗜️compactness/🦀️.rs"]
-                        pub mod compactness;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕳️concavity/🦀️.rs"]
-                        pub mod concavity;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🌀️curvature/🦀️.rs"]
-                        pub mod curvature;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🏗️dag-assembly/🦀️.rs"]
-                        pub mod dag_assembly;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🔨️geometry-core/🦀️.rs"]
-                        pub mod geometry_core;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/⚖️mass-distribution/🦀️.rs"]
-                        pub mod mass_distribution;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🧭️orientation/🦀️.rs"]
-                        pub mod orientation;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📏️proportion/🦀️.rs"]
-                        pub mod proportion;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🌊️roughness/🦀️.rs"]
-                        pub mod roughness;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️size/🦀️.rs"]
-                        pub mod size;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🪞️symmetry/🦀️.rs"]
-                        pub mod symmetry;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/↕️thickness/🦀️.rs"]
-                        pub mod thickness;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/🕸️topology/🦀️.rs"]
-                        pub mod topology;
-                    }
-                    #[path = "."]
-                    pub mod mutations {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➕️add/🦀️.rs"]
-                        pub mod add_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➕️add/🦀️.rs"]
-                        pub mod add_used_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/🔗️bind/🦀️.rs"]
-                        pub mod bind_default_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔗️bind/🦀️.rs"]
-                        pub mod bind_morph_target_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/🔗️bind/🦀️.rs"]
-                        pub mod bind_node_camera;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔗️bind/🦀️.rs"]
-                        pub mod bind_node_child;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/🔗️bind/🦀️.rs"]
-                        pub mod bind_node_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/🔗️bind/🦀️.rs"]
-                        pub mod bind_node_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔗️bind/🦀️.rs"]
-                        pub mod bind_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/🔗️bind/🦀️.rs"]
-                        pub mod bind_primitive_indices;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/🔗️bind/🦀️.rs"]
-                        pub mod bind_primitive_material;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔗️bind/🦀️.rs"]
-                        pub mod bind_scene_root_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/📝️change-description/🦀️.rs"]
-                        pub mod change_asset_descriptive_metadata;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_asset_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🧾️change-extras/🦀️.rs"]
-                        pub mod change_asset_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪪️asset/🔖️version/🦀️.rs"]
-                        pub mod change_asset_version;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_document_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📃️document/📝️change-extras/🦀️.rs"]
-                        pub mod change_document_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🌫️change-alpha/🦀️.rs"]
-                        pub mod change_material_alpha_mode;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🪞️change-sides/🦀️.rs"]
-                        pub mod change_material_double_sided;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_mesh_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/📝️change-extras/🦀️.rs"]
-                        pub mod change_mesh_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/⚖️change-weights/🦀️.rs"]
-                        pub mod change_mesh_morph_weights;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🏷️rename/🦀️.rs"]
-                        pub mod change_mesh_name;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_node_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📝️change-extras/🦀️.rs"]
-                        pub mod change_node_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/⚖️change-weights/🦀️.rs"]
-                        pub mod change_node_morph_weights;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🏷️rename/🦀️.rs"]
-                        pub mod change_node_name;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/📐️transform/🦀️.rs"]
-                        pub mod change_node_transform;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_primitive_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📝️change-extras/🦀️.rs"]
-                        pub mod change_primitive_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/📐️change-topology/🦀️.rs"]
-                        pub mod change_primitive_topology_mode;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🧩️change-extensions/🦀️.rs"]
-                        pub mod change_scene_extension_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/📝️change-extras/🦀️.rs"]
-                        pub mod change_scene_extra_data;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🏷️rename/🦀️.rs"]
-                        pub mod change_scene_name;
-                        #[cfg(test)]
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧪️tests/🔬️contract/🦀️.rs"]
-                        pub(crate) mod contract_tests;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🌱️create/🦀️.rs"]
-                        pub mod create_accessor;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🌱️create/🦀️.rs"]
-                        pub mod create_animation;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🌱️create/🦀️.rs"]
-                        pub mod create_buffer;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🌱️create/🦀️.rs"]
-                        pub mod create_buffer_view;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎥️camera/🌱️create/🦀️.rs"]
-                        pub mod create_camera;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🖼️image/🌱️create/🦀️.rs"]
-                        pub mod create_image;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🌱️create/🦀️.rs"]
-                        pub mod create_material;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🌱️create/🦀️.rs"]
-                        pub mod create_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🌱️create/🦀️.rs"]
-                        pub mod create_morph_target;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌱️create/🦀️.rs"]
-                        pub mod create_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🌱️create/🦀️.rs"]
-                        pub mod create_primitive;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🌱️create/🦀️.rs"]
-                        pub mod create_sampler;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🌱️create/🦀️.rs"]
-                        pub mod create_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🌱️create/🦀️.rs"]
-                        pub mod create_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🌱️create/🦀️.rs"]
-                        pub mod create_texture;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🗑️delete/🦀️.rs"]
-                        pub mod delete_accessor;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🗑️delete/🦀️.rs"]
-                        pub mod delete_animation;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🗑️delete/🦀️.rs"]
-                        pub mod delete_buffer;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🗑️delete/🦀️.rs"]
-                        pub mod delete_buffer_view;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎥️camera/🗑️delete/🦀️.rs"]
-                        pub mod delete_camera;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🖼️image/🗑️delete/🦀️.rs"]
-                        pub mod delete_image;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🗑️delete/🦀️.rs"]
-                        pub mod delete_material;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🗑️delete/🦀️.rs"]
-                        pub mod delete_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🗑️delete/🦀️.rs"]
-                        pub mod delete_morph_target;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🗑️delete/🦀️.rs"]
-                        pub mod delete_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🗑️delete/🦀️.rs"]
-                        pub mod delete_primitive;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🗑️delete/🦀️.rs"]
-                        pub mod delete_sampler;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🗑️delete/🦀️.rs"]
-                        pub mod delete_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🗑️delete/🦀️.rs"]
-                        pub mod delete_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🗑️delete/🦀️.rs"]
-                        pub mod delete_texture;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🚚️move/🦀️.rs"]
-                        pub mod move_accessor;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🚚️move/🦀️.rs"]
-                        pub mod move_animation;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🚚️move/🦀️.rs"]
-                        pub mod move_buffer;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🚚️move/🦀️.rs"]
-                        pub mod move_buffer_view;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎥️camera/🚚️move/🦀️.rs"]
-                        pub mod move_camera;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🖼️image/🚚️move/🦀️.rs"]
-                        pub mod move_image;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🚚️move/🦀️.rs"]
-                        pub mod move_material;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🚚️move/🦀️.rs"]
-                        pub mod move_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🚚️move/🦀️.rs"]
-                        pub mod move_morph_target;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🚚️move/🦀️.rs"]
-                        pub mod move_morph_target_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🚚️move/🦀️.rs"]
-                        pub mod move_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🚚️move/🦀️.rs"]
-                        pub mod move_node_child;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🌿️reparent/🦀️.rs"]
-                        pub mod move_node_parent;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🚚️move/🦀️.rs"]
-                        pub mod move_primitive;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🚚️move/🦀️.rs"]
-                        pub mod move_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🚚️move/🦀️.rs"]
-                        pub mod move_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🚚️move/🦀️.rs"]
-                        pub mod move_sampler;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🚚️move/🦀️.rs"]
-                        pub mod move_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🚚️move/🦀️.rs"]
-                        pub mod move_scene_root_node;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🚚️move/🦀️.rs"]
-                        pub mod move_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🚚️move/🦀️.rs"]
-                        pub mod move_texture;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🚚️move/🦀️.rs"]
-                        pub mod move_used_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/➖️remove/🦀️.rs"]
-                        pub mod remove_required_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/➖️remove/🦀️.rs"]
-                        pub mod remove_used_extension;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📐️accessor/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_accessors;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎞️animation/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_animations;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🪟️buffer-view/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_buffer_views;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💿️buffer/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_buffers;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎥️camera/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_cameras;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🖼️image/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_images;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/💎️material/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_materials;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🕸️mesh/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_meshs;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_morph_target_attributes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧬️morph/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_morph_targets;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_node_children;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌳️node/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_nodes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_primitive_attributes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔺️primitive/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_primitives;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/✅️required/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_required_extensions;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎛️sampler/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_samplers;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_scene_root_nodes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎬️scene/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_scenes;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🦴️skin/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_skins;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎨️texture/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_textures;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📣️used/🔀️reorder/🦀️.rs"]
-                        pub mod reorder_used_extensions;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏠️default-scene/✂️unbind/🦀️.rs"]
-                        pub mod unbind_default_scene;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🎚️morph/✂️unbind/🦀️.rs"]
-                        pub mod unbind_morph_target_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📷️node-camera/✂️unbind/🦀️.rs"]
-                        pub mod unbind_node_camera;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌿️node-child/✂️unbind/🦀️.rs"]
-                        pub mod unbind_node_child;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🏗️node-mesh/✂️unbind/🦀️.rs"]
-                        pub mod unbind_node_mesh;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🩻️node-skin/✂️unbind/🦀️.rs"]
-                        pub mod unbind_node_skin;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔤️primitive/✂️unbind/🦀️.rs"]
-                        pub mod unbind_primitive_attribute;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🔢️primitive/✂️unbind/🦀️.rs"]
-                        pub mod unbind_primitive_indices;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🧱️primitive/✂️unbind/🦀️.rs"]
-                        pub mod unbind_primitive_material;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/🌲️scene-root/✂️unbind/🦀️.rs"]
-                        pub mod unbind_scene_root_node;
-                    }
-                    #[path = "."]
-                    pub mod modules {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/💡️inference-measures/🦀️.rs"]
-                        pub mod inference_measures;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧾️measurement-contracts/🦀️.rs"]
-                        pub mod measurement_contracts;
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🕸️mesh-topology/🦀️.rs"]
-                        pub mod mesh_topology;
-                        #[path = "."]
-                        pub mod mutation_support {
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🎬️create-scene/🦀️.rs"]
-                            pub mod create_scene;
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🎞️material-animation/🦀️.rs"]
-                            pub mod material_animation;
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🧱️structure-geometry/🦀️.rs"]
-                            pub mod structure_geometry;
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/📚️top-level/🦀️.rs"]
-                            pub mod top_level;
-                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧬️mutation-support/🗂️top-level-collections/🦀️.rs"]
-                            pub mod top_level_collections;
-                        }
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🔨️modules/🧮️vector-operations/🦀️.rs"]
-                        pub mod vector_operations;
-                    }
-                }
-                #[path = "."]
-                pub mod io {
-                    #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🦀️.rs"]
-                    mod component;
-                    pub use component::*;
-                    #[path = "."]
-                    pub mod import {
-                        #[path = "."]
-                        pub mod deserializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📥️import/🧩️deserializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    #[path = "."]
-                    pub mod export {
-                        #[path = "."]
-                        pub mod serializers {
-                            #[path = "."]
-                            pub mod artifacts {
-                                #[path = "."]
-                                pub mod json {
-                                    #[path = "."]
-                                    pub mod v_rfc8259 {
-                                        #[path = "."]
-                                        pub mod any {
-                                            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/📤️export/🧵️serializers/🗿️artifacts/🔣️json/🔖️rfc8259/✳️any/🦀️.rs"]
-                                            mod component;
-                                            pub use component::*;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-}
-
-// ---- Shims: keep pre-migration module paths resolving for external callers ----
-pub mod schema {
-    pub use super::standards::v2_0::subsets::any::schema::*;
-}
-pub mod engine {
-    pub use super::standards::v2_0::engine::*;
-}
-
-
-#[path = "."]
-pub mod examples {
-    #[path = "."]
-    pub mod demo {
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🎬️demo/🦀️.rs"]
-        mod component;
-        pub use component::*;
-    }
-    #[path = "."]
-    pub mod metabolism {
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🌱️metabolism/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[cfg(test)]
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🌱️metabolism/🧪️tests/🧩️example/🦀️.rs"]
-        mod metabolism_tests;
-    }
-}
-
-#[path = "."]
-pub mod editor {
-    #[path = "."]
-    pub mod gltf {
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod edit {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🎭️modes/✏️edit/🦀️.rs"]
-                mod component;
                 pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/🎭️modes/✏️edit/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
             }
         }
     }
 }
 
-#[path = "."]
-pub mod viewer {
-    #[path = "."]
-    pub mod gltf {
-        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/🦀️.rs"]
-        mod component;
-        pub use component::*;
-        #[path = "."]
-        pub mod presence {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/👥️presence/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod config {
-            #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/🎚️config/🧬️schema/🦀️.rs"]
-            pub mod schema;
-        }
-        #[path = "."]
-        pub mod modes {
-            #[path = "."]
-            pub mod view {
-                #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/🎭️modes/👁️view/🦀️.rs"]
-                mod component;
-                pub use component::*;
-                #[path = "."]
-                pub mod windows {
-                    #[path = "."]
-                    pub mod main {
-                        #[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/👁️viewer/🎭️modes/👁️view/🪟️windows/🪟️main/🦀️.rs"]
-                        mod component;
-                        pub use component::*;
-                    }
-                }
-            }
-        }
-    }
-}
-
-pub use crate::standards::v2_0::subsets::any::io::{GltfBuilderConstruction, GltfAccessorSpec, GltfParts, GltfAnalyzerAnalysis, GltfBuilderFacets, GltfBuilder, GltfAnalyzer, GltfComposer};
+#[cfg(test)]
+#[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/📚️examples/🌱️metabolism/🧪️tests/🧩️example/🦀️.rs"]
+mod metabolism_example_tests;
 
 /// ♻️ This synchronous executable retains no callback child between invocations.
 fn gltf_inference_demands(_request:&ArtifactInferenceExecutionRequest<'_>,_copy:usize)->Result<semio_framework_value::RetirementDemand,semio_framework_value::ValueError>{Ok(semio_framework_value::RetirementDemand::default())}
+
+#[cfg(test)]
+#[path = "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🚪️io/🪶️sqlite/📸️snapshot/🧪️tests/🏭️factory/🦀️.rs"]
+mod sqlite_snapshot_factory_tests;

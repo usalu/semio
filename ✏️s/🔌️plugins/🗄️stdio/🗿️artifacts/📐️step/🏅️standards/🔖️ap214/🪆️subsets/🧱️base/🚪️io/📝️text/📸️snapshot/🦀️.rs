@@ -21,7 +21,7 @@ use framework_schema::ArtifactSchema;
 /// snapshot only stores the generic graph. Re-exported for pre-existing call sites' convenience.
 use crate::engine::brep::{BrepFace, BrepMesh, BrepVertex};
 
-impl store::ArtifactDsl for StepSnapshot {
+impl store::os_store::serialization::ArtifactDsl for StepSnapshot {
     const EXTENSION: &'static str = "step";
     fn envelope_id() -> &'static str { STDIO_STEP_DOCUMENT_SCHEMA }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }

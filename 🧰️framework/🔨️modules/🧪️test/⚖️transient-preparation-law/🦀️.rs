@@ -7,8 +7,8 @@ use semio_framework_plugin::{WindowTransientOwner, WindowTransientOwnerBundle};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 use std::{fmt::Debug, sync::Arc};
 
-fn grant() -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 }
+fn grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+    store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 4096 }
 }
 
 fn prepare<P: Send + Sync + 'static, M: Send + 'static>(label: &str, bundle: &WindowTransientOwnerBundle<P, M>, base: &Arc<P>, mutation: M) -> Arc<P> {
@@ -25,8 +25,8 @@ fn prepare<P: Send + Sync + 'static, M: Send + 'static>(label: &str, bundle: &Wi
     let mut prepared = false;
     for _ in 0..1usize << 16 {
         match preparation.advance(grant()).unwrap_or_else(|error| panic!("{label}: a granted turn prepares: {error}")) {
-            store::ArtifactStoreOneItemPreparationStep::Prepared(..) => { prepared = true; break; }
-            store::ArtifactStoreOneItemPreparationStep::Progress(..) | store::ArtifactStoreOneItemPreparationStep::Blocked => {}
+            store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(..) => { prepared = true; break; }
+            store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Progress(..) | store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked => {}
         }
     }
     assert!(prepared, "{label}: the preparation reaches its prepared root");
@@ -35,7 +35,7 @@ fn prepare<P: Send + Sync + 'static, M: Send + 'static>(label: &str, bundle: &Wi
     for _ in 0..1usize << 16 {
         if preparation.terminal_is_empty() { break; }
         let copy = preparation.next_close_copy_byte_demand().unwrap_or_else(|error| panic!("{label}: close copy demand: {error}")).max(1);
-        let turn = store::ArtifactStoreOneItemGrant {
+        let turn = store::os_store::one_item::ArtifactStoreOneItemGrant {
             maximum_items: 1,
             maximum_copy_bytes: copy,
             maximum_capacity_bytes: preparation.next_close_capacity_byte_demand(copy).unwrap_or_else(|error| panic!("{label}: close capacity demand: {error}")),

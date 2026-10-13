@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `💭assumptions` per Wave C.
 
 use super::RenameAssumption;
-use crate::diff::{ProgramAssumptionsDelta, ProgramAssumptionsPatchEntry};
-use crate::registers::AssumptionPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramAssumptionsDelta, ProgramAssumptionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::AssumptionPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameAssumption, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -8,7 +8,7 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 
 use crate::DrawingSnapshot;
 
-/// 🗄️ The Semio emblem example fixture, handcrafted in `drawing`'s DSL (`store::ArtifactDsl`).
+/// 🗄️ The Semio emblem example fixture, handcrafted in `drawing`'s DSL (`store::os_store::serialization::ArtifactDsl`).
 pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/🎬️demo/🗣️.dsl.semio");
 
 //#region 🔖️HandcraftedArtifactDsl
@@ -16,7 +16,7 @@ pub const SEMIO_DRAW_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets/�
 /// `🧬️schema/📸️snapshot/🦀️.rs` (design.md §1 CORRECTION: the native codec is one
 /// bidirectional thing and sits unsplit at `🚪️io/<facet>/<representation>/`; `🧬️schema` keeps only
 /// the `DrawingSnapshot` struct and its `Default` impl).
-impl store::ArtifactDsl for DrawingSnapshot {
+impl store::os_store::serialization::ArtifactDsl for DrawingSnapshot {
     const EXTENSION: &'static str = "drawing";
     fn envelope_id() -> &'static str {
         "drawing.drawing"
@@ -31,7 +31,7 @@ impl store::ArtifactDsl for DrawingSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -39,12 +39,12 @@ impl store::ArtifactDsl for DrawingSnapshot {
 
 /// 📖️ Parses `.drawing` DSL text into a `DrawingSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<DrawingSnapshot, semio_framework_diagnostic::TextError> {
-    <DrawingSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <DrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `DrawingSnapshot` back to `.drawing` DSL text.
 pub fn print_dsl(document: &DrawingSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -87,7 +87,7 @@ use crate::standards::v1::subsets::transform::schema::mutations::drag_path_point
 /// halves — the bytes against the committed artifact, and the projection against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn round_trip_drawing_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let parsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed drawing example does not parse: {error:?}"))?;
     let printed = <DrawingSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <DrawingSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted drawing document does not parse: {error:?}"))?;

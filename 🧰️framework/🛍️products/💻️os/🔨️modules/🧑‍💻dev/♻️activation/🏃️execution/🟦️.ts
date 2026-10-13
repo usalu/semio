@@ -19,7 +19,7 @@ import { basename, dirname, isAbsolute, join, relative, resolve } from "node:pat
 
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, selectComponentWasmProfile, semioBuildMode, semioShipEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { daemonBudgetOpts, describeDevPortOccupant, devServerUrl, getWorkspaceRoot, getRepoMetaDir, isDevPortInUse, loadFrameworkOsPlaygroundCatalog, wgpuDevPlayUrl, runCmd, runCmdStatus, runBunxStatus, runNodeBinStatus, runProbe, runVitest, spawnDaemon, type SpawnDaemonHandle, runViteBunxDev, frameworkOsPlaygroundDefaultPort, frameworkOsLockedPrefsEnv, cargoProfileDir, semioBuildMode, semioReleaseEnv } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { BundleScript, ScriptRouter } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
 import { runScriptMain } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🚪️entrypoint/🟦️.ts";
 
@@ -42,7 +42,7 @@ import {
   type PluginWebMaterializeContext,
 } from "../../../🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 
-import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
+import { MODULE_BRIDGE_FILE, MODULE_SHARD_DIRECTORY, MODULE_HOT_SWAP_FILE, MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE, moduleDirectoryName, moduleIdForDirectoryName, moduleRoutePath, componentOwnerRootV1 } from "../../../🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
 
@@ -59,7 +59,7 @@ class ActivationScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     const [variant, renderer, selectedProfile] = args, profile = selectedProfile as "dev" | "release";
     if (args.length !== 3 || !["react", "wgpu"].includes(renderer) || !["dev", "release"].includes(profile) || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(variant)) throw new Error("activate <variant> react|wgpu <dev|release>");
-    const moduleRoot = pluginModulesRoot(profile);
+    const moduleRoot = pluginModulesRoot();
     const sessionPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/dist/sessions", variant, "🎮️playground-session", "🟦️.ts");
     const session = (await import(pathToFileURL(sessionPath).href)).PLAYGROUND_SESSION;
     if (session.variant !== variant) throw new Error("Activation session identity mismatch");
@@ -103,7 +103,7 @@ class ActivationScript extends BundleScript {
         const moduleDirectory = join(moduleRoot, moduleDirectoryName(pluginId, COMPONENT_MODULE_DIRECTORIES));
         const digest = await activationFilesDigest(artifactFiles(moduleDirectory), controller.signal);
         const catalogEntry = catalog.get(pluginId);
-        const sourceRoot = catalogEntry ? join(repoRoot, catalogEntry.cratePath, "..", "..") : moduleDirectory;
+        const sourceRoot = catalogEntry ? join(repoRoot, componentOwnerRootV1(catalogEntry.cratePath)) : moduleDirectory;
         const sourceContentSha256 = await writeStagedSourceFreshness(moduleDirectory, sourceRoot, controller.signal);
         completed.push({ pluginId, artifactSha256: createHash("sha256").update(supportDigest + digest).digest("hex"), sourceContentSha256 });
       }

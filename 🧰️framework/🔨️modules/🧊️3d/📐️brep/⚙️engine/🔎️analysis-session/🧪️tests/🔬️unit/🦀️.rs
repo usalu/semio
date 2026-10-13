@@ -1,5 +1,5 @@
 use super::*;
-use crate::brep::queries::analysis::{Convexity, SurfaceKind, Watertightness};
+use semio_framework_3d_brep_queries::analysis::{Convexity, SurfaceKind, Watertightness};
 use parry3d::math::{Isometry, Vector};
 use parry3d::query::PointQuery;
 use parry3d::shape::{Ball, Cone, Cuboid, Cylinder, Shape};

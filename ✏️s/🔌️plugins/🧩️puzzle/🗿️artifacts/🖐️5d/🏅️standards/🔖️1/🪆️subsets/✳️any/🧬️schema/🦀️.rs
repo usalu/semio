@@ -2,7 +2,7 @@
 
 use crate::{Puzzle5dKindCatalogsExtra, Puzzle5dSnapshot, Puzzle5dTargetVolume};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 use std::collections::HashSet;
 
 //#region 🔖️Artifact
@@ -22,7 +22,7 @@ pub struct Puzzle5dArtifact {
     pub meta: Puzzle5dMeta,
     #[child(kind = "s.stdio.semio")]
     #[state(artifact)]
-    pub kind_catalogs: Option<store::ArtifactChild<SemioKitSnapshot>>,
+    pub kind_catalogs: Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>,
     #[state(artifact)]
     pub kind_catalogs_extra: Option<Puzzle5dKindCatalogsExtra>,
     #[state(artifact)]

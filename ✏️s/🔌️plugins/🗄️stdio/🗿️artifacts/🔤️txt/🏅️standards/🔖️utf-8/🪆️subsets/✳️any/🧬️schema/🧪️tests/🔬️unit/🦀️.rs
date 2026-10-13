@@ -13,11 +13,11 @@ async fn empty_snapshot_matches_schema() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip() {
     let snap = empty_txt_snapshot();
-    let text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse");
     assert_eq!(parsed.schema, snap.schema);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <TxtSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -26,11 +26,11 @@ async fn nontrivial_multiline_unicode_round_trip() {
     let body = "Hello, \u{4e16}\u{754c}!\nLine two with an emoji \u{1f389}.\nTab\there.\n".to_string();
     let snap = TxtSnapshot::from_body(&body);
     assert_eq!(snap.to_body(), body);
-    let dsl_text = store::ArtifactDsl::print_dsl(&snap);
-    let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+    let dsl_text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+    let parsed = <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
     assert_eq!(parsed.to_body(), body);
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <TxtSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded.to_body(), body);
 }
 
@@ -46,14 +46,14 @@ async fn codec_retention_law() {
     for body in ["a\nb\nc\n", "a\r\nb\r\nc", "", "\n", "just one line, no newline"] {
         let snap = TxtSnapshot::from_body(body);
         assert_eq!(snap.to_body(), body, "to_body/from_body mismatch for {body:?}");
-        let bytes = store::ArtifactPack::encode_pack(&snap);
-        let decoded = <TxtSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+        let decoded = <TxtSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
         assert_eq!(decoded, snap, "pack round-trip mismatch for {body:?}");
     }
     for body in ["a\nb\nc\n", "a\r\nb\r\nc", "just one line, no newline"] {
         let snap = TxtSnapshot::from_body(body);
-        let dsl_text = store::ArtifactDsl::print_dsl(&snap);
-        let parsed = <TxtSnapshot as store::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
+        let dsl_text = store::os_store::serialization::ArtifactDsl::print_dsl(&snap);
+        let parsed = <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl_text).expect("parse");
         assert_eq!(parsed, snap, "dsl round-trip mismatch for {body:?}");
     }
 }
@@ -96,7 +96,7 @@ async fn grammar_conformance_law() {
     // input shape (`"<envelope-id>\n<body>"`) is a framework-level testing convention
     // unrelated to the real codec, so it is built directly here.
     let body = crate::examples::demo::PRIMARY_TEXT;
-    let normalized = format!("{}\n{body}", <TxtSnapshot as store::ArtifactDsl>::envelope_id());
+    let normalized = format!("{}\n{body}", <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id());
     let ok = recognizer.recognize(&normalized).expect("recognize should not error");
     assert!(ok, "snapshot grammar must recognize the real demo fixture body");
 }
@@ -110,7 +110,7 @@ async fn grammar_conformance_law() {
 async fn protocol_walk_law() {
     // Pack (snapshot binary facet).
     let snap = demo_txt_snapshot();
-    let pack_bytes = <TxtSnapshot as store::ArtifactPack>::encode_pack(&snap);
+    let pack_bytes = <TxtSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snap);
     let (_, payload) = store::semio_format::unwrap_binary(&pack_bytes).expect("unwrap_binary");
     let pack_protocol = semio_framework_dsl::parse_protocol(crate::standards::v_utf_8::subsets::any::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).expect("parse snapshot protocol");
     let trace = semio_framework_dsl::walk_protocol(&pack_protocol, &payload).expect("walk snapshot protocol");
@@ -138,11 +138,11 @@ async fn protocol_walk_law() {
 #[semio_framework_async_macros::async_test]
 async fn fixture_honesty_law() {
     let demo = demo_txt_snapshot();
-    assert_eq!(<TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
-    assert_eq!(<TxtSnapshot as store::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
+    assert_eq!(<TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap(), demo);
+    assert_eq!(<TxtSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&demo), crate::examples::demo::PRIMARY_TEXT);
 
-    assert_eq!(<TxtSnapshot as store::ArtifactPack>::decode_pack(crate::examples::demo::PACK_BYTES).unwrap(), demo);
-    assert_eq!(<TxtSnapshot as store::ArtifactPack>::encode_pack(&demo), crate::examples::demo::PACK_BYTES.to_vec());
+    assert_eq!(<TxtSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(crate::examples::demo::PACK_BYTES).unwrap(), demo);
+    assert_eq!(<TxtSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&demo), crate::examples::demo::PACK_BYTES.to_vec());
 
     let mutation = TxtMutation::InsertLine(InsertLineMutation { index: 1, text: "x".into() });
     let bytes = <TxtMutation as protocol::OpBinary>::encode_op(&mutation).unwrap();

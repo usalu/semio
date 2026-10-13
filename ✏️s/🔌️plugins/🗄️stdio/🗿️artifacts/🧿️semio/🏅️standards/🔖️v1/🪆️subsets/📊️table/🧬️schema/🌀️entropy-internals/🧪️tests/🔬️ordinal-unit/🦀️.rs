@@ -11,7 +11,7 @@ mod tests {
 
     #[test]
     fn permutation_entropy_of_noise_approaches_max() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(1);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(1);
         let x: Vec<f64> = (0..3000).map(|_| rng.next_f64()).collect();
         let cfg = OrdinalConfig::new(3, 1).unwrap();
         let est = permutation_entropy(&x, cfg, LogBase::Bits).unwrap();
@@ -26,7 +26,7 @@ mod tests {
 
     #[test]
     fn dispersion_entropy_of_noise_is_positive() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(2);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(2);
         let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
         let cfg = DispersionConfig::new(4, 2, 1).unwrap();
         let est = dispersion_entropy(&x, cfg, LogBase::Bits).unwrap();
@@ -43,7 +43,7 @@ mod tests {
 
     #[test]
     fn increment_entropy_of_noise_is_positive() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(3);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(3);
         let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
         let est = increment_entropy(&x, 2, 3, LogBase::Bits).unwrap();
         assert!(est.value > 0.0);
@@ -71,7 +71,7 @@ mod tests {
 
     #[test]
     fn slope_entropy_of_noise_is_positive() {
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(4);
         let x: Vec<f64> = (0..2000).map(|_| rng.next_gaussian()).collect();
         let est = slope_entropy(&x, (0.2, 0.8), 2, LogBase::Bits).unwrap();
         assert!(est.value > 0.0);
@@ -82,7 +82,7 @@ mod tests {
 
         #[test]
         fn permutation_entropy_orders_regularity_correctly() {
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(5);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(5);
             let n = 2000;
             let sine: Vec<f64> = (0..n).map(|i| (i as f64 * 0.1).sin()).collect();
             let noise: Vec<f64> = (0..n).map(|_| rng.next_f64()).collect();

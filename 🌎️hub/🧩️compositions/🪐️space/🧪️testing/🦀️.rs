@@ -1,9 +1,9 @@
 use crate::{prepare_space_document_sources, SpaceDocumentCodec, SpaceDocumentFormat, SpaceDocumentSource};
 
 /// 🧬️ Decodes the selected artifact's declared source format through its owned snapshot codec.
-fn decode<S: store::ArtifactDsl + semio_framework_value::ToValue + semio_framework_value::FromValue>(format: SpaceDocumentFormat, text: &str) -> Result<String, String> {
+fn decode<S: store::os_store::serialization::ArtifactDsl + semio_framework_value::ToValue + semio_framework_value::FromValue>(format: SpaceDocumentFormat, text: &str) -> Result<String, String> {
     let snapshot = match format {
-        SpaceDocumentFormat::Dsl => <S as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())?,
+        SpaceDocumentFormat::Dsl => <S as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())?,
         SpaceDocumentFormat::Json => semio_framework_pack_json::from_json_str::<S>(text, semio_framework_pack_json::JsonMemberPolicy::Reject).map_err(|error| error.to_string())?,
     };
     Ok(semio_framework_pack_json::to_json_string(&snapshot))

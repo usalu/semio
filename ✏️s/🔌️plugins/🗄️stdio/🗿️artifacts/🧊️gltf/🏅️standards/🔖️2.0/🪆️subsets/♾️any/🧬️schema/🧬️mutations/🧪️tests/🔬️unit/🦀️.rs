@@ -14,7 +14,7 @@ fn aggregate_descriptor_roster_is_exactly_the_direct_leaf_roster() {
 fn mutation_rejection_messages_match_the_language_neutral_json_oracle() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../🧫️fixtures/📨️mutation-carriers/🔣️.json")).unwrap();
     for case in fixture["rejections"].as_array().unwrap() {
-        let outcome = crate::schema::modules::mutation_support::top_level::rejection_outcome(case["code"].as_str().unwrap(), case["path"].as_str().unwrap(), case["detail"].as_str().unwrap().to_owned());
+        let outcome = crate::standards::v2_0::subsets::any::schema::modules::mutation_support::top_level::rejection_outcome(case["code"].as_str().unwrap(), case["path"].as_str().unwrap(), case["detail"].as_str().unwrap().to_owned());
         let encoded: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&outcome)).unwrap();
         assert_eq!(encoded, case["outcome"]);
     }

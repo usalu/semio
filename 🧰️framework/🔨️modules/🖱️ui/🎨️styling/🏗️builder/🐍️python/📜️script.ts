@@ -1,3 +1,4 @@
+import { readBuildMode } from "../../../../🏃️process/🏗️build/🎚️mode/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 import { mkdirSync, mkdtempSync, readdirSync, rmSync } from "node:fs";
 import { join, resolve } from "node:path";
@@ -31,7 +32,8 @@ export class StylingPythonDepsScript extends BundleScript {
 /** 📦️ Publishes one reproducible wheel from the prepared backend without dependency resolution or downloads. */
 export class StylingPythonBuildScript extends BundleScript {
   async run(args: string[]): Promise<void> {
-    if (args.length) throw new Error("The Python styling package has one wheel build contract");
+    if (args.length) throw new Error("The Python styling build uses SEMIO_BUILD_MODE");
+    const mode = readBuildMode(process.env.SEMIO_BUILD_MODE);
     await withPythonEnvironment(this.root, async signal => {
       const staging = join(process.env.SEMIO_STYLING_PYTHON_BUILD_ROOT ?? processCacheDirectoryV1(readProcessOwnerContextV1(process.env,this.root),"python","ui-styling"), "staging");
       mkdirSync(staging, { recursive: true });
@@ -40,7 +42,7 @@ export class StylingPythonBuildScript extends BundleScript {
         await runOwnedCommand("uv", ["run", "--locked", "--no-sync", "--offline", "--no-python-downloads", "--group", "build", "--project", this.root, "python", "-I", "-m", "hatchling", "build", "--target", "wheel", "--directory", temporary], this.root, "styling-python-build", buildBudgetMs(),{signal});
         const wheels = readdirSync(temporary).filter(name => name.endsWith(".whl"));
         if (wheels.length !== 1) throw new Error(`Expected one styling wheel, got ${wheels.length}`);
-        await stageArtifacts(join(this.root, "dist/build"), "@semio-tech/ui-styling-py:build", new Map([[wheels[0]!, join(temporary, wheels[0]!)]]), { signal, leaseDirectory:readProcessOwnerContextV1(process.env,this.root).leaseDirectory });
+        await stageArtifacts(join(this.root, "dist/build", mode), `@semio-tech/ui-styling-py:build:${mode}`, new Map([[wheels[0]!, join(temporary, wheels[0]!)]]), { signal, leaseDirectory:readProcessOwnerContextV1(process.env,this.root).leaseDirectory });
         console.log(`Published styling Python wheel: ${wheels[0]}`);
       } finally { rmSync(temporary, { recursive: true, force: true }); }
     });

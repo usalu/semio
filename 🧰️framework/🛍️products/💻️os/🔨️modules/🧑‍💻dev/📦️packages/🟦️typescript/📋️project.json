@@ -132,7 +132,7 @@
         "forwardAllArgs": true
       },
       "dependsOn": [
-        "build-s-react-release"
+        "build-s-react"
       ],
       "cache": true,
       "outputs": [],
@@ -143,45 +143,6 @@
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
-        "forwardAllArgs": true
-      },
-      "inputs": [
-        "default",
-        "^default",
-        "stagingRootSources"
-      ]
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      },
-      "inputs": [
-        "default",
-        "^default",
-        "stagingRootSources"
-      ]
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      },
-      "inputs": [
-        "default",
-        "^default",
-        "stagingRootSources"
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
         "forwardAllArgs": true
       },
       "inputs": [
@@ -210,6 +171,10 @@
     },
     "plugin": {
       "executor": "nx:run-commands",
+      "dependsOn": [
+        "@semio-tech/os-plugin-describe-rs:build",
+        "@semio-tech/framework-plugin-web:support"
+      ],
       "outputs": [],
       "options": {
         "cwd": "🧰️framework/🛍️products/💻️os/🔨️modules/🧑‍💻dev/📦️packages/🟦️typescript",

@@ -42,7 +42,7 @@ mod subject {
     use super::{spec_for, PdfSpec};
     use semio_s_plugin_stdio_document_test_oracle::project_pdf;
     use semio_repo_test_host::{Context, Outcome};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::encode_pdf;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::encode_pdf;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::{PdfInfo, PdfPage, PdfSnapshot};
 
     /// 🔁️ Translates the owned spec into this repository's typed PDF snapshot.

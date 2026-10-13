@@ -15,9 +15,7 @@ class RegenerateExampleAssetsScript extends BundleScript {
   async run(_segments: string[]): Promise<void> {
     const stop = startNativeProgress(`artifact-rust:${cargoName}:regenerate-example-assets`);
     try {
-      await runRepositoryCommand(
-        "cargo",
-        [
+      await runRepositoryCommand(this.invocation,"cargo",[
           "run",
           "--locked",
           "--manifest-path",
@@ -25,10 +23,7 @@ class RegenerateExampleAssetsScript extends BundleScript {
           "--bin",
           "regenerate-en1996-example-assets",
           "--quiet",
-        ],
-        this.repoRoot,
-        `artifact-rust:${cargoName}:regenerate-example-assets`,
-      );
+        ],this.repoRoot,`artifact-rust:${cargoName}:regenerate-example-assets`,{version:1,maximumElapsedMilliseconds:0,output:null});
     } finally {
       stop();
     }

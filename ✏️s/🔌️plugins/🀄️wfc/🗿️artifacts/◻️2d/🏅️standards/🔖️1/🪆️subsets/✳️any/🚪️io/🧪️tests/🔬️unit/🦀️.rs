@@ -5,7 +5,7 @@ use crate::examples;
 use crate::standards::v1::subsets::any::io::text::{mutations, snapshot};
 use crate::{Wfc2dMutation, Wfc2dSnapshot};
 use protocol::{OpBinary, OpText};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 #[test]
 fn io_declares_no_foreign_stdio_hops() {

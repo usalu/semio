@@ -1,6 +1,6 @@
 //! 📄️ PDF/X Document (1.7) editor -- one of stdio's 10 real PDF subset editors (ticket
 //! 26/08/16/ARTIFACT-VIEWERS-AND-EDITORS-PER-SUBSET). All 10 PDF dialects (standards 1.4/1.7 x
-//! their real subsets) share ONE unified logical object model -- `crate::PdfSnapshot`/
+//! their real subsets) share ONE unified logical object model -- `crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot`/
 //! `PdfMutation`, canonically the 1.7-shaped page/object/trailer graph (1.7 folds 1.0-1.7 in
 //! leniently, per that standard's own doc comment) -- the artifact kind root re-exports both bare,
 //! and its own `document_codec_bare::<PdfSnapshot, PdfMutation>(...)` call binds them to the 1.7
@@ -13,7 +13,10 @@
 
 use crate::editor::pdf17x::modes::edit;
 use crate::editor::pdf17x::modes::edit::windows::main;
-use crate::{page_text_edit_mutation, PdfMutation, PdfSnapshot, PDF_ARTIFACT_SCHEMA_ID, STDIO_PDF17_DOCUMENT_SCHEMA};
+use crate::editor::page::page_text_edit_mutation;
+use crate::standards::v1_7::subsets::base::schema::mutations::PdfMutation;
+use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfSnapshot, STDIO_PDF17_DOCUMENT_SCHEMA};
+use crate::standards::v1_7::subsets::base::schema::PDF_ARTIFACT_SCHEMA_ID;
 use {semio_framework_plugin::built_to_component_tree,semio_framework_plugin::ArtifactEditor,semio_framework_plugin::ArtifactView,semio_framework_plugin::ComponentTree,semio_framework_plugin::ConfigView,semio_framework_artifact_reference::Dialect,semio_framework_plugin::DraftView,semio_framework_plugin::Editor,semio_framework_plugin::Emit,semio_framework_plugin::Fault,semio_framework_plugin::NoConfig,semio_framework_plugin::NoConfigMutation,semio_framework_plugin::NoDraft,semio_framework_plugin::NoDraftMutation,semio_framework_plugin::NoPresence,semio_framework_plugin::NoPresenceMutation,semio_framework_plugin::NoTransient,semio_framework_plugin::NoTransientMutation,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_framework_2d::compute::EngineHandles;
 
@@ -128,7 +131,7 @@ impl ArtifactEditor for Pdf17XEditor {
     }
 
     fn agent_target_revision(_action: &str, args: &semio_framework_value::DslValue, doc: &ArtifactView<'_, Self::Snapshot>) -> Result<Option<String>, Fault> {
-        crate::page_text_agent_revision(doc.snapshot, args)
+        crate::editor::page::page_text_agent_revision(doc.snapshot, args)
     }
     fn command_from_action(action: &str, args: Option<&semio_framework_value::DslValue>) -> Result<Self::Command, Fault> {
         semio_s_artifact_stdio_contract::editing::snapshot_editing_command_from_action(action, args, |action, args| match action {

@@ -1,6 +1,6 @@
 //! ♻️ Byte-accounted retirement for complete interaction roots and whole-state history mutations.
 
-use crate::app::InteractionConfigMutation;
+use crate::local_interaction::mutations::InteractionConfigMutation;
 use protocol::{DomainHover, DomainSelection, InteractionState, SelectionMode};
 use semio_framework_value::{
     RetirementDemand, ValueError, ValueRefusalKind,
@@ -44,12 +44,12 @@ enum Move {
 }
 
 /// ♻️ Fixed-width frontier; payload vectors and strings are detached and drained separately.
-pub(crate) struct InteractionRetirement {
+struct InteractionRetirement {
     owned: ManuallyDrop<RetirementState>,
 }
 
 impl InteractionRetirement {
-    pub(crate) fn owned(state: InteractionState) -> Self {
+    fn owned(state: InteractionState) -> Self {
         Self { owned: ManuallyDrop::new(RetirementState { state: Some(state), ..Default::default() }) }
     }
     fn shared(state: Arc<InteractionState>) -> Self {
@@ -222,7 +222,7 @@ impl Drop for InteractionRetirement {
 
 //#region 🏪️StoreOwners
 #[derive(semio_framework_value::FactoryPayloadRetirement)]
-pub(crate) struct InteractionRetirementFactory;
+struct InteractionRetirementFactory;
 
 fn admit_birth(grant: RetainedCloneGrant) -> Result<RetainedCloneProgress, ValueError> {
     RetainedCloneBirthDemand { capacity_bytes: size_of::<InteractionRetirement>(), depth: 1 }.admit(grant)
@@ -264,20 +264,20 @@ impl ArtifactOwnedValueRetirementFactory<InteractionConfigMutation> for Interact
     }
 }
 
-pub(crate) fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<InteractionState, InteractionConfigMutation>> {
-    store::DocumentStoreOwners::admit_source_constructor(grant, || (InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer::<InteractionState, InteractionConfigMutation>::new()))
+pub(crate) fn interaction_store_owners(grant: RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<InteractionState, InteractionConfigMutation>> {
+    store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer::<InteractionState, InteractionConfigMutation>::new()))
 }
 
 pub(crate) fn interaction_store_owners_source_demands()->Result<RetirementDemand,ValueError>{
- type Owners=store::DocumentStoreOwners<InteractionState,InteractionConfigMutation>;
+ type Owners=store::os_store::document_store_owners::DocumentStoreOwners<InteractionState,InteractionConfigMutation>;
  type Disposer=store::ArtifactStoreCursorDisposer<InteractionState,InteractionConfigMutation>;
  Ok(RetirementDemand{copy_bytes:0,capacity_bytes:Owners::source_birth_bytes::<InteractionRetirementFactory,InteractionRetirementFactory,InteractionRetirementFactory,Disposer>()?,depth:1,..Default::default()})
 }
 
 /// 🎟️ Funds the interaction catalog from its own quoted source and ticket demands.
-pub(crate) fn funded_interaction_store_owners() -> Result<store::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, ValueError> {
-    let capacity = store::DocumentStoreOwners::<InteractionState, InteractionConfigMutation>::source_birth_bytes::<InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer<InteractionState, InteractionConfigMutation>>()?;
-    store::complete_unscheduled_catalog(interaction_store_owners(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }))
+fn funded_interaction_store_owners() -> Result<store::os_store::document_store_owners::DocumentStoreOwners<InteractionState, InteractionConfigMutation>, ValueError> {
+    let capacity = store::os_store::document_store_owners::DocumentStoreOwners::<InteractionState, InteractionConfigMutation>::source_birth_bytes::<InteractionRetirementFactory, InteractionRetirementFactory, InteractionRetirementFactory, store::ArtifactStoreCursorDisposer<InteractionState, InteractionConfigMutation>>()?;
+    store::os_store::document_store_owners::complete_unscheduled_catalog(interaction_store_owners(RetainedCloneGrant { maximum_items: 1, maximum_capacity_bytes: capacity, maximum_depth: 1, ..Default::default() }))
 }
 //#endregion 🏪️StoreOwners
 

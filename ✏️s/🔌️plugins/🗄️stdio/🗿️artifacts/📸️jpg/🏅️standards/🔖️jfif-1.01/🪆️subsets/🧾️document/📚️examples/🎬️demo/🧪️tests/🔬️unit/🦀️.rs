@@ -13,7 +13,7 @@ async fn inference_determinism_law() {
     use crate::standards::v_jfif_1_01::subsets::document::schema::inferences::JpgInference;
     use crate::JpgSnapshot;
     use protocol::Inference;
-    let snapshot = <JpgSnapshot as store::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
+    let snapshot = <JpgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(PRIMARY_TEXT).expect("demo fixture must parse");
     assert_eq!(JpgInference::infer(&snapshot).expect("valid materialized inference fixture"), JpgInference::infer(&snapshot).expect("valid materialized inference fixture"));
 }
 

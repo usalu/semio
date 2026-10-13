@@ -10,7 +10,7 @@ fn rejected_child_preparation_remains_owned_until_bounded_flow_work_close(){
     use semio_framework_plugin::retained_command::{ArtifactCommandWork,ArtifactCommandWorkStep};
     use semio_framework_plugin::app::ChildEmitPreparation;
     use semio_framework_job::InteractiveJobCloseStep;
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{SemioFlowMutation,drag_nodes::DragNodes};
+    use {semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation, semio_s_artifact_stdio_semio_flow::schema::mutations::drag_nodes::DragNodes};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🎮️commands/✏️node-graph-edit/🧫️fixtures/child-preparation/🔣️.json")).unwrap();
     let child_id=fixture["childId"].as_str().unwrap();
     let mut work=FlowChildGroupWork{tool_id:"nodeGraphEdit",instance_owner:None,output:None,completed:false,closing:false};

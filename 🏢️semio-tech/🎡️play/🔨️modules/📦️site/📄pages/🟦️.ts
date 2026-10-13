@@ -1,5 +1,12 @@
-import { cpSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { buildModePolicy, readBuildMode } from "../../../../../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { cpSync, existsSync, mkdirSync, readFileSync, readdirSync, renameSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { dirname, join, relative } from "node:path";
+import { copyBrowserArtifacts } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📦️distribution/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, readComponentReceiptV1 } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { validateJsonSchemaSubset } from "../../../../../🧰️framework/🔨️modules/🧬️schema/✅️validator/🟦️.ts";
+import { playRuntimeAssetSources } from "../../🧩️runtime/📦️assets/🟦️.ts";
+import runtimeSchema from "../../🧩️runtime/🧬️schema/🔣️.json";
 import { MODULE_EXTENSION_ROUTE, MODULE_PLUGIN_ROUTE, publishedPageUrl } from "../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
 import { SEMIO_ASSET_DIRECTORY } from "../../../../../🧰️framework/🔨️modules/🖼️assets/🔍️resolver/🌐️delivery/🟦️.ts";
 
@@ -102,6 +109,63 @@ export function publishPlayPages(siteDir: string, pagesDir: string, apex: string
   return published;
 }
 
+
+/** 🧾️ Where the module catalog is published, relative to the plugin route. */
+export const PLAY_MODULE_CATALOG_FILE = "🧾️catalog.json";
+
+/** 🧾️ One runtime module bound to its receipt and its published files (`PlayModuleBindingV1`). */
+export type PlayModuleBindingV1 = Readonly<{ pluginId: string; route: string; directory: string; receipt: Readonly<{ profile: "wasm-prototype" | "wasm-release"; wasmSha256: string; wasmBytes: number; semanticDescriptorSha256: string; sourceTreeDigest: string; provenanceSha256: string }>; files: readonly Readonly<{ path: string; sha256: string; bytes: number }>[] }>;
+
+/** 🧾️ The runtime module catalog of one deployment (`PlayModuleCatalogV1`). */
+export type PlayModuleCatalogV1 = Readonly<{ schemaVersion: 1; modules: readonly PlayModuleBindingV1[] }>;
+
+/** 🌲️ Every regular file below `directory` as a sorted `/` path. */
+function filesBelow(directory: string, prefix = ""): string[] {
+  return readdirSync(directory, { withFileTypes: true }).flatMap((entry) => entry.isDirectory() ? filesBelow(join(directory, entry.name), `${prefix}${entry.name}/`) : entry.isFile() ? [`${prefix}${entry.name}`] : []).sort();
+}
+
+/** 📦️ Binds the runtime into an already bundled site: copies every runtime module, the browser support and the fonts from their producers' owned outputs,
+ * then writes the module catalog that binds each module directory to its receipt and to the digest of every file it publishes. The bundle itself never
+ * embeds compiled bytes, so it is built before any component links. */
+export async function bindPlayRuntimeAssetsV1(siteDir: string, workspace: string, signal?: AbortSignal): Promise<PlayModuleCatalogV1> {
+  await copyBrowserArtifacts(siteDir, playRuntimeAssetSources(workspace, readBuildMode(process.env.SEMIO_BUILD_MODE)), signal ? { signal } : {});
+  const modules: PlayModuleBindingV1[] = [];
+  for (const route of [MODULE_PLUGIN_ROUTE, MODULE_EXTENSION_ROUTE].map(routeDirectory)) {
+    const root = join(siteDir, route);
+    if (!existsSync(root)) continue;
+    for (const directory of readdirSync(root, { withFileTypes: true }).filter((entry) => entry.isDirectory() && existsSync(join(root, entry.name, COMPONENT_RECEIPT_FILE))).map((entry) => entry.name).sort()) {
+      const receipt = readComponentReceiptV1(join(root, directory, COMPONENT_RECEIPT_FILE));
+      const profile = buildModePolicy(readBuildMode(process.env.SEMIO_BUILD_MODE)).wasmProfile;
+      if (receipt.profile !== profile) throw new Error(`Play ${profile} publication cannot bind ${directory}: ${receipt.profile}`);
+      modules.push({ pluginId: receipt.pluginId, route, directory, receipt: { profile, wasmSha256: receipt.wasmSha256, wasmBytes: receipt.wasmBytes, semanticDescriptorSha256: receipt.semanticDescriptorSha256, sourceTreeDigest: receipt.sourceTreeDigest, provenanceSha256: receipt.provenanceSha256 }, files: filesBelow(join(root, directory)).map((path) => { const bytes = readFileSync(join(root, directory, path)); return { path, sha256: createHash("sha256").update(bytes).digest("hex"), bytes: bytes.byteLength }; }) });
+    }
+  }
+  const catalog: PlayModuleCatalogV1 = { schemaVersion: 1, modules };
+  const errors = validateJsonSchemaSubset(runtimeSchema.$defs.PlayModuleCatalogV1, catalog, runtimeSchema);
+  if (errors.length) throw new Error(`Invalid play module catalog: ${errors.join("; ")}`);
+  writeFileSync(join(siteDir, routeDirectory(MODULE_PLUGIN_ROUTE), PLAY_MODULE_CATALOG_FILE), `${JSON.stringify(catalog, null, 1)}\n`);
+  return catalog;
+}
+
+/** 🔎️ Every way the published pages disagree with their module catalog: a missing catalog, a missing or changed file, or a module whose receipt is not the
+ * one the catalog binds. Empty when every module page file is exactly the one the catalog names. */
+export function playModuleCatalogFindingsV1(pagesDir: string): readonly string[] {
+  const page = join(pagesDir, "modules"), path = join(page, routeDirectory(MODULE_PLUGIN_ROUTE), PLAY_MODULE_CATALOG_FILE);
+  if (!existsSync(path)) return [`Missing module catalog ${relative(pagesDir, path)}`];
+  const catalog = JSON.parse(readFileSync(path, "utf8")) as PlayModuleCatalogV1, findings = validateJsonSchemaSubset(runtimeSchema.$defs.PlayModuleCatalogV1, catalog, runtimeSchema);
+  for (const module of catalog.modules ?? []) {
+    const directory = join(page, module.route, module.directory);
+    for (const file of module.files) {
+      const target = join(directory, file.path);
+      if (!existsSync(target)) { findings.push(`${module.pluginId}: missing ${file.path}`); continue; }
+      const bytes = readFileSync(target);
+      if (bytes.byteLength !== file.bytes || createHash("sha256").update(bytes).digest("hex") !== file.sha256) findings.push(`${module.pluginId}: ${file.path} changed after binding`);
+    }
+    const receipt = existsSync(join(directory, COMPONENT_RECEIPT_FILE)) ? readComponentReceiptV1(join(directory, COMPONENT_RECEIPT_FILE)) : undefined;
+    if (!receipt || receipt.wasmSha256 !== module.receipt.wasmSha256 || receipt.provenanceSha256 !== module.receipt.provenanceSha256 || receipt.semanticDescriptorSha256 !== module.receipt.semanticDescriptorSha256) findings.push(`${module.pluginId}: published receipt is not the bound receipt`);
+  }
+  return findings;
+}
 
 const PUBLISHED_STYLE_EXTENSIONS = new Set([".css", ".html", ".js"]);
 

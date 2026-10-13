@@ -3,8 +3,8 @@ use crate::standards::v1::subsets::any::io::mesh_bridge::{import_polygon_meshes,
 use crate::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
 use semio_s_artifact_stdio_obj::ObjSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::obj::v3_0::any::SemioMeshFromObj;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 /// 🔧️ The neuron kind that re-enters OBJ text into the flow graph.
 pub const IMPORT_NEURON_KIND: &str = "brep.mesh.construct";

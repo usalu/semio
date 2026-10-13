@@ -1,7 +1,7 @@
 //! 🧬️ Remodeling snapshot schema — artifact-lane fields only.
 //!
 //! Ticket `26/08/12/UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM`: `assets` carries real
-//! `store::ArtifactChild<SemioImageSnapshot>` handles (composed `s.stdio.semio.image` children, one
+//! `store::os_store::artifact_child::ArtifactChild<SemioImageSnapshot>` handles (composed `s.stdio.semio.image` children, one
 //! per asset id — see `🗿️artifacts/📸️remodeling/🦀️.rs`'s `🧩️Composition` region) instead of
 //! embedded `ImageAsset` bytes. `ArtifactChild<S>: dsl::DslField` is now real
 //! (`🏪️store/🦀️.rs:523`), and `BTreeMap<String, T: DslField>: DslField` already exists

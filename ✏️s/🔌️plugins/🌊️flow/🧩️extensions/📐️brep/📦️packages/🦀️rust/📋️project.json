@@ -17,30 +17,6 @@
         "forwardAllArgs": true
       }
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
-    },
     "package": {
       "executor": "nx:run-commands",
       "options": {
@@ -50,7 +26,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/flow-extension-brep.sxt"
+        "{workspaceRoot}/✏️s/🔌️plugins/🌊️flow/🧩️extensions/📐️brep/🧩️component/📦️packages/🦀️rust/dist/flow-extension-brep.sxt"
       ],
       "inputs": [
         "production",

@@ -1,0 +1,42 @@
+[package]
+workspace = "../../../../../../../.."
+name = "semio-s-artifact-stdio-semio-drawing-export"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "Stdio semio `drawing` subset export conversions"
+
+[package.metadata.semio]
+role = "library"
+
+[lints]
+workspace = true
+
+[lib]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-framework-async = { workspace = true }
+semio-framework-artifact-reference = { workspace = true }
+semio-framework-os-kernel = { workspace = true }
+semio-framework-plugin = { workspace = true }
+semio-framework-value = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+# 🧩️ Capability Dependencies
+semio-s-artifact-stdio-dwg-model = { workspace = true }
+semio-s-artifact-stdio-dwg-write = { workspace = true }
+semio-s-artifact-stdio-dxf = { workspace = true }
+semio-s-artifact-stdio-pdf = { workspace = true }
+semio-s-artifact-stdio-png = { workspace = true }
+semio-s-artifact-stdio-svg = { workspace = true }
+semio-s-artifact-stdio-xml = { workspace = true }
+# /🧩️ Capability Dependencies
+
+[dev-dependencies]
+semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
+semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
+hayro = { workspace = true }
+resvg = { workspace = true }
+semio-framework-async-macros = { workspace = true }
+semio-s-artifact-stdio-semio-drawing-import = { workspace = true }

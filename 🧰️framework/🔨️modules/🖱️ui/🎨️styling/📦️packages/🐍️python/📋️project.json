@@ -22,7 +22,7 @@
       },
       "cache": true,
       "outputs": [
-        "{projectRoot}/dist/build"
+        "{projectRoot}/dist/build/{options.env.SEMIO_BUILD_MODE}"
       ],
       "dependsOn": [
         "deps",
@@ -51,60 +51,6 @@
       "options": {
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
         "command": "bun ./📜️script.ts test"
-      },
-      "outputs": [],
-      "dependsOn": [
-        "build"
-      ],
-      "inputs": [
-        "default",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
-      ]
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts test quick"
-      },
-      "outputs": [],
-      "dependsOn": [
-        "build"
-      ],
-      "inputs": [
-        "default",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
-      ]
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts test long"
-      },
-      "outputs": [],
-      "dependsOn": [
-        "build"
-      ],
-      "inputs": [
-        "default",
-        "^production",
-        {
-          "dependentTasksOutputFiles": "**/*"
-        }
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🎨️styling/📦️packages/🐍️python",
-        "command": "bun ./📜️script.ts test exhaustive"
       },
       "outputs": [],
       "dependsOn": [

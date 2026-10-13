@@ -2,12 +2,12 @@
 use super::{Node,Edge,Port,PortDirection,PropertyBag,PropertyValue,JackSnapshot};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use semio_framework_value::retirement::{RetireOwned,RetirementCursor};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint2,binary64_lexeme,read_binary64_lexeme};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId,GraphNodeId,SemioGraphEdge,SemioGraphNode,SemioGraphPort,SemioGraphPortKind,SemioGraphSnapshot,STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue,SemioValueEntry};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, binary64_lexeme, read_binary64_lexeme};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::{GraphEdgeId, GraphNodeId, SemioGraphEdge, SemioGraphNode, SemioGraphPort, SemioGraphPortKind, SemioGraphSnapshot, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry};
 use std::sync::Arc;
 
-pub type JackContentChild=store::ArtifactChild<SemioGraphSnapshot>;
+pub type JackContentChild=store::os_store::artifact_child::ArtifactChild<SemioGraphSnapshot>;
 
 pub struct JackContentOwner { snapshot:Option<SemioGraphSnapshot> }
 impl JackContentOwner {
@@ -94,7 +94,7 @@ pub fn jack_node_from_content(node:&SemioGraphNode)->Result<Node,ValueError>{let
 /// 🔗️ Projects one representable query edge without copying the retained child graph.
 pub fn jack_edge_from_content(edge:&SemioGraphEdge)->Result<Edge,ValueError>{if !edge.label.is_empty(){return Err(invalid("Jack query projection cannot represent an intrinsic edge label"))}Ok(Edge{id:edge.id.value.clone(),kind:edge.kind.clone(),source:endpoint(&edge.source.value,edge.source_port.as_deref())?,target:endpoint(&edge.target.value,edge.target_port.as_deref())?,properties:properties_from_semio(&edge.properties)?})}
 
-pub fn jack_content_handle(snapshot:&SemioGraphSnapshot)->JackContentChild{use store::ArtifactPack;let bytes=SemioGraphSnapshot::encode_pack(snapshot);let child_id=store::content_id("jack-content",&bytes);let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:child_id.clone(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}};store::ArtifactChild::new(child_id,target)}
+pub fn jack_content_handle(snapshot:&SemioGraphSnapshot)->JackContentChild{use store::os_store::serialization::ArtifactPack;let bytes=SemioGraphSnapshot::encode_pack(snapshot);let child_id=store::content_id("jack-content",&bytes);let target=semio_framework_artifact_reference::ArtifactRef{artifact_id:child_id.clone(),dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:"s.stdio.semio".into(),standard:"v1".into(),subset:"graph".into()}};store::os_store::artifact_child::ArtifactChild::new(child_id,target)}
 pub fn jack_content_child_handle(nodes:&[Node],edges:&[Edge])->JackContentChild{jack_content_handle(&jack_content_snapshot_from_working(nodes,edges))}
 pub fn jack_content_child_with_snapshot(snapshot:SemioGraphSnapshot)->JackContentChild{jack_content_handle(&snapshot).with_local_owner(Arc::new(JackContentOwner::new(snapshot)))}
 pub fn jack_content_child_with_owner(nodes:Vec<Node>,edges:Vec<Edge>)->JackContentChild{jack_content_child_with_snapshot(jack_content_snapshot_from_working(&nodes,&edges))}
@@ -106,7 +106,7 @@ pub fn jack_content_for_handle(handle:&JackContentChild)->Result<Arc<JackContent
 pub struct JackWorkingScene {pub nodes:Vec<Node>,pub edges:Vec<Edge>}
 pub fn jack_working_scene_for_handle(handle:&JackContentChild)->Result<JackWorkingScene,ValueError>{let content=jack_content_for_handle(handle)?;let(nodes,edges)=working_from_jack_content_snapshot(content.snapshot())?;Ok(JackWorkingScene{nodes,edges})}
 pub fn jack_working_scene(snapshot:&JackSnapshot)->Result<JackWorkingScene,ValueError>{jack_working_scene_for_handle(&snapshot.content)}
-pub fn genesis_jack_child_pack(snapshot:&JackSnapshot,slot:&str,child_id:&str)->Result<Option<Vec<u8>>,ValueError>{use store::ArtifactPack;if slot!="content"||child_id!=snapshot.content.child_id{return Ok(None)}let owner=jack_content_for_handle(&snapshot.content)?;Ok(Some(SemioGraphSnapshot::encode_pack(owner.snapshot())))}
+pub fn genesis_jack_child_pack(snapshot:&JackSnapshot,slot:&str,child_id:&str)->Result<Option<Vec<u8>>,ValueError>{use store::os_store::serialization::ArtifactPack;if slot!="content"||child_id!=snapshot.content.child_id{return Ok(None)}let owner=jack_content_for_handle(&snapshot.content)?;Ok(Some(SemioGraphSnapshot::encode_pack(owner.snapshot())))}
 
 /// 📎️ The content child that ships with the plugin under `child_id`: the empty graph every fresh document starts from.
 fn bundled_jack_content(child_id: &str) -> Option<SemioGraphSnapshot> {
@@ -125,10 +125,7 @@ pub fn attach_bundled_content(snapshot: &mut JackSnapshot) {
 }
 
 //#region 🔖️ChildLane
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{
-    add_edge_property::AddEdgeProperty, add_node_property::AddNodeProperty, change_node_label::ChangeNodeLabel, create_edge::CreateEdge, create_node::CreateNode, delete_edge::DeleteEdge, delete_node::DeleteNode, move_node::MoveNode,
-    remove_edge_property::RemoveEdgeProperty, remove_node_property::RemoveNodeProperty, set_edge_property::SetEdgeProperty, set_node_property::SetNodeProperty, SemioGraphMutation,
-};
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::add_edge_property::AddEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::add_node_property::AddNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::create_edge::CreateEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::create_node::CreateNode, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_edge::DeleteEdge, semio_s_artifact_stdio_semio_graph::schema::mutations::delete_node::DeleteNode, semio_s_artifact_stdio_semio_graph::schema::mutations::move_node::MoveNode, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_edge_property::RemoveEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::remove_node_property::RemoveNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_edge_property::SetEdgeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::set_node_property::SetNodeProperty, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
 
 /// 🚫️ A named refusal of the composed content child; `jack_fault_notices` localizes every code.
 fn content_fault(code: &'static str, detail: impl Into<String>) -> semio_framework_plugin::Fault {
@@ -151,7 +148,7 @@ pub fn jack_fault_notices() -> &'static [(&'static str, semio_framework_ui_local
 
 /// 🧸️ The document's exact published `content` child, read through its captured member-store view: the child store is the
 /// scene's single source of truth (design §20.15), never the parent's genesis owner.
-pub fn jack_content_from_children<'a>(snapshot: &JackSnapshot, children: &'a semio_framework_plugin::app::ChildContentView) -> Result<store::SnapshotReadRef<'a, SemioGraphSnapshot>, semio_framework_plugin::Fault> {
+pub fn jack_content_from_children<'a>(snapshot: &JackSnapshot, children: &'a semio_framework_plugin::app::ChildContentView) -> Result<store::os_store::snapshot_read::SnapshotReadRef<'a, SemioGraphSnapshot>, semio_framework_plugin::Fault> {
     let child_id = &snapshot.content.child_id;
     let dialect = children.dialect("content", child_id).ok_or_else(|| content_fault("trinity.jack.content-missing", format!("the content child {child_id} is not open")))?;
     if dialect.artifact_kind != "s.stdio.semio" || dialect.standard != "v1" || dialect.subset != "graph" {

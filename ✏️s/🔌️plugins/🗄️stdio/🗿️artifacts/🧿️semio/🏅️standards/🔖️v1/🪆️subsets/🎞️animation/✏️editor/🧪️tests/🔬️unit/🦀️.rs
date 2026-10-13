@@ -14,7 +14,7 @@ async fn editor_dialect_matches_the_artifact_coordinate() {
 
 #[semio_framework_async_macros::async_test]
 async fn editor_and_viewer_share_one_dialect() {
-    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioAnimationEditor, crate::viewer::semio_animation::SemioAnimationViewer>().await;
+    semio_framework_plugin::artifact_app_laws::assert_editor_and_viewer_share_dialect::<SemioAnimationEditor, crate::viewer::SemioAnimationViewer>().await;
 }
 
 semio_framework_plugin::history_edit_acceptance_law!("stdio/SemioAnimationEditor", SemioAnimationEditor, || semio_framework_plugin::App { definition: create_semio_animation_editor(), examples: Vec::new() }, "../..");

@@ -1,0 +1,14 @@
+{
+  "target": "📒️ledger/♻️retirement/🦀️.rs",
+  "module": "edit_retirement",
+  "anchor": "#[path=\"🔗️read/🧾️return/🦀️.rs\"]\nmod retained_read_return_retirement;\n",
+  "doc": [
+    "//! ♻️ Retirement of ledger entries: decoded edits and their factory, changes, and the paged operation-row owners with",
+    "//! their row retirement. The ledger, the snapshot-read owner catalogs and the owned schema decoder retire through them.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "items": ["ArtifactStoreOperationRowsRetirement", "ArtifactStoreDecodedEditRetirement", "ArtifactStoreDecodedEditRetirementFactory", "ArtifactStoreChangeRetirementFactory"],
+  "implsOf": ["ArtifactStoreOperationRowOwners"],
+  "movableTraits": []
+}

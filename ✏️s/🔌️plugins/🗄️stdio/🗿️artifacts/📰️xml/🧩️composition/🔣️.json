@@ -3,10 +3,7 @@
   "artifact": "xml",
   "package": "semio-s-artifact-stdio-xml",
   "order": 2,
-  "selections": [
-    "full",
-    "home"
-  ],
+  "selections": ["full"],
   "apps": [
     {
       "owner": "stdio",
@@ -56,7 +53,8 @@
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [],
   "playgrounds": [
     {
       "owner": "stdio",

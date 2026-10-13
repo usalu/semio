@@ -23,7 +23,7 @@ use framework_schema::ArtifactSchema;
 /// a foreign header line instead of the honest raw text. Fixed here (the codec, not the test):
 /// `parse_dsl`/`print_dsl` are now `TxtSnapshot::from_body`/`to_body` directly, no preamble.
 /// Proven by `carrier_native_is_raw` in `🚪️io/🦀️.rs`.
-impl store::ArtifactDsl for TxtSnapshot {
+impl store::os_store::serialization::ArtifactDsl for TxtSnapshot {
     const EXTENSION: &'static str = "txt";
     fn envelope_id() -> &'static str {
         "stdio.txt"
@@ -57,7 +57,7 @@ pub fn empty_txt_snapshot() -> TxtSnapshot {
 /// same pattern as `note::semio_example_snapshot`/`csv::demo_csv_snapshot`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_txt_snapshot() -> TxtSnapshot {
-    <TxtSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
+    <TxtSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::demo::PRIMARY_TEXT).unwrap_or_else(|_| empty_txt_snapshot())
 }
 }
 pub use snapshot_wire_codec::*;

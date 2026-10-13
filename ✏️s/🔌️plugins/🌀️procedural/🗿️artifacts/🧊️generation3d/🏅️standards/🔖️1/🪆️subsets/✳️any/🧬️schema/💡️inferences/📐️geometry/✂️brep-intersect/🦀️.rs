@@ -6,13 +6,13 @@ use super::brep_sources::{curve_input, surface_input, CurveSource, SurfaceSource
 use super::brep_curve::guarded;
 use super::phased_job::{Pipeline, Work};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{BrepOperation, GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
-use semio_framework_3d::brep::operations::euler::{make_edge, make_vertex};
-use semio_framework_3d::brep::operations::intersect::{intersect_curve_curve, intersect_curve_surface, intersect_surface_surface};
-use semio_framework_3d::brep::representation::curve::Curve3;
-use semio_framework_3d::brep::representation::tolerance::Tol;
-use semio_framework_3d::brep::representation::topology::history::OpRecorder;
-use semio_framework_3d::brep::representation::topology::Body;
+use semio_framework_3d_brep_engine::{BrepOperation, GeometryKind, ShapeRoot, ShapeValue, ShapeWire};
+use semio_framework_3d_brep_operations::euler::{make_edge, make_vertex};
+use semio_framework_3d_brep_queries::intersect::{intersect_curve_curve, intersect_curve_surface, intersect_surface_surface};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
 use std::sync::Arc;
 
 const INTERSECT_FAILED: &str = "generation3d.geometry.intersect-failed";
@@ -20,7 +20,7 @@ const SHAPE_KIND: &str = "generation3d.geometry.shape-kind";
 const UNBOUNDED: &str = "generation3d.geometry.domain-unbounded";
 
 //#region 🔖️Plane
-type PlaneOperation = fn(semio_framework_3d::brep::engine::GeometryHandle, [f64; 3], [f64; 3]) -> BrepOperation;
+type PlaneOperation = fn(semio_framework_3d_brep_engine::GeometryHandle, [f64; 3], [f64; 3]) -> BrepOperation;
 
 fn plane_operation(kind: &Kind, inputs: &WidgetInputs, operation: PlaneOperation, sides: bool) -> Box<dyn WidgetJob> {
     guarded(kind, || {

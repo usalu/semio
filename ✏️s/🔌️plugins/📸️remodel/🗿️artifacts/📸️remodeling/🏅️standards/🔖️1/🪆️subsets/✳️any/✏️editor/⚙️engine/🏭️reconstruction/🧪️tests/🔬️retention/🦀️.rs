@@ -109,7 +109,7 @@ fn retention(engine: &ReconstructionEngine) -> Retention {
 
 /// 🛰️ The `synthetic-orbit` engine, frames pushed exactly as `🧵️reconstruction-session` pushes them.
 fn synthetic_orbit_engine() -> ReconstructionEngine {
-    let scene = <crate::RemodelingSnapshot as store::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("the synthetic-orbit document parses");
+    let scene = <crate::RemodelingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(crate::examples::synthetic_orbit::PRIMARY_TEXT).expect("the synthetic-orbit document parses");
     let params = crate::editor::remodeling::engine::build_engine_params(&scene.params, &scene.calibration);
     eprintln!("[RETAIN] params voxel={} truncation={} dense={:?} sources={} texture={}", params.tsdf_voxel_size, params.tsdf_truncation, params.dense, params.dense_source_views, params.texture_enabled);
     let mut engine = ReconstructionEngine::new(&params);

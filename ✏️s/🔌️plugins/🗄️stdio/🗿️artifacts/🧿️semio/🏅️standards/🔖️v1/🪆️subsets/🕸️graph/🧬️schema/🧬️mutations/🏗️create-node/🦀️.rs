@@ -2,10 +2,10 @@
 //! (per `create`'s canonical args). Nodes are id-keyed entities (not an ordered/index-addressed
 //! collection), so this is `create`/`delete`, not `insert`/`remove`.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::graph::schema::mutations::SemioGraphMutation;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueEntry;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::schema::mutations::SemioGraphMutation;
+use crate::schema::snapshot::{GraphNodeId, SemioGraphPort, SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueEntry;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

@@ -39,7 +39,7 @@ pub use crate::os_spr::channel::{
     AppDocumentIdentity, DocumentArchiveLoadHost, DocumentArchiveLoadOutcome, DocumentArchiveLoadRefusal, DocumentArchiveLoadState, DocumentArchiveLoadStatus, DocumentArchiveLoadStep, DocumentArchiveOwnerRef, DocumentArchivePack, MediaExportHandleWire, MediaExportStateWire, OwnedDocumentMemberPackEntry, PagedAppCommandDecodeCursor, PresenceCommandCursor, WindowConfigPackEntry, CHANNEL_VERSION, DOCUMENT_ARCHIVE_MAXIMUM_BYTES, DOCUMENT_ARCHIVE_MAXIMUM_MEMBERS,
 };
 pub use crate::os_spr::command::{
-    apply_diff, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_inverse_rows_declaration_failures, mutation_label_failures, mutation_payload_round_trip_failures,
+    apply_diff, indexed_apply, is_approved_verb, mutation_descriptor, mutation_input_schema_failures, mutation_label_failures, mutation_payload_round_trip_failures,
     named_apply, outcome_code_level, plan_of,
     register_mutation_descriptor, register_mutation_descriptors, str_eq, validate_mutation_leaf_descriptor, validate_mutation_leaf_descriptor_roster, validate_mutation_leaf_descriptor_roster_uniqueness, validate_mutation_leaf_source, worst_level,
     ApplyCapability, CollectionDiff, CommandOutcome, CompositeMutationKind, DiffAlgebra, DiffRegions, Edit, ForeignStep, ForeignStepSource, ForeignTarget, Identified, IndexedTripleDiff, Inference, InferenceFieldSpec, InferenceSpec, ItemPatch, Mutation,

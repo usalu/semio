@@ -25,6 +25,7 @@ export {
 } from "./🌐️browser-actor/🟦️.ts";
 export type { DocumentBrowserActorSourceV1, DocumentClosedBrowserActorV1, DocumentExecutionTargetBrowserActorV1, DocumentOpenBrowserActorV1 } from "./🌐️browser-actor/🟦️.ts";
 import { type EditedArtifactFrontierV1, isEditedArtifactFrontierV1 as editedArtifactFrontierIsValid } from "./📌️document-check-in-v1/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES, componentReceiptBindsV1, componentReceiptValueV1, encodeComponentReceiptV1, type ComponentReceiptV1 } from "../../🔌️plugin/🖨️describe/🏷️component-receipt/🧬️schema/🟦️.ts";
 export {
   DOCUMENT_CHECK_IN_MAX_BYTES,
   DOCUMENT_CHECK_IN_SCHEMA_V1,
@@ -908,6 +909,8 @@ export interface DocumentExecutionProtocolV1 {
   appChannelVersion: typeof DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1;
 }
 
+/** 📦️ Exact verified package projection: its identity, the byte identity of its component and semantic descriptor, and the
+ * shipped `ComponentReceiptV1` binding the two. */
 export interface DocumentOpenPackageV1 {
   pluginId: string;
   packageId: string;
@@ -916,6 +919,27 @@ export interface DocumentOpenPackageV1 {
   componentBlake3: string;
   descriptorByteSha256: string;
   executionProtocol: DocumentExecutionProtocolV1;
+  componentReceipt: ComponentReceiptV1;
+}
+
+/** 📦️ Strictly parses one package projection and holds its receipt to the package law: a valid shipped receipt naming exactly
+ * this package, its component digest and its semantic descriptor digest. `error` prefixes every refusal. */
+export function parseDocumentOpenPackageV1(value: unknown, error: string): DocumentOpenPackageV1 {
+  const packageValue = documentOpenObject(value, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol", "componentReceipt"]);
+  const executionProtocol = documentOpenObject(packageValue.executionProtocol, ["appChannelVersion"]);
+  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error(`${error}.unsupported-execution-protocol`);
+  const parsed: DocumentOpenPackageV1 = {
+    pluginId: documentOpenText(packageValue.pluginId),
+    packageId: documentOpenText(packageValue.packageId),
+    version: documentOpenText(packageValue.version),
+    componentSha256: documentOpenHash(packageValue.componentSha256),
+    componentBlake3: documentOpenHash(packageValue.componentBlake3),
+    descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
+    executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
+    componentReceipt: componentReceiptValueV1(packageValue.componentReceipt),
+  };
+  if (!componentReceiptBindsV1(parsed.componentReceipt, { pluginId: parsed.pluginId, packageId: parsed.packageId, wasmSha256: parsed.componentSha256, semanticDescriptorSha256: parsed.descriptorByteSha256 })) throw new Error(`${error}.unbound-receipt`);
+  return parsed;
 }
 
 export interface DocumentOpenArtifactV1 {
@@ -1069,9 +1093,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
   const catalog = documentOpenObject(object.catalog, ["generationId"]);
-  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
-  const executionProtocol = documentOpenObject(packageValue.executionProtocol, ["appChannelVersion"]);
-  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("document-open.unsupported-execution-protocol");
+  const parsedPackage = parseDocumentOpenPackageV1(object.package, "document-open");
   const artifact = documentOpenObject(object.artifact, ["kind", "schema", "packSchemaHash"]);
   const parentDialect = documentOpenObject(object.parentDialect, ["artifactKind", "standard", "subset"]);
   const surface = documentOpenObject(object.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
@@ -1099,15 +1121,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
     scope,
     descriptorDigestV1,
     catalog: { generationId: documentOpenHash(catalog.generationId) },
-    package: {
-      pluginId: documentOpenText(packageValue.pluginId),
-      packageId: documentOpenText(packageValue.packageId),
-      version: documentOpenText(packageValue.version),
-      componentSha256: documentOpenHash(packageValue.componentSha256),
-      componentBlake3: documentOpenHash(packageValue.componentBlake3),
-      descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
-      executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
-    },
+    package: parsedPackage,
     artifact: { kind: documentOpenText(artifact.kind), schema: documentOpenText(artifact.schema), packSchemaHash: documentOpenHash(artifact.packSchemaHash) },
     parentDialect: parsedParentDialect,
     surface: {
@@ -1117,7 +1131,7 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
       role: surface.role,
       rendererTarget: surface.rendererTarget,
     },
-    browserActor: parseDocumentOpenBrowserActorV1(object.browserActor, { componentSha256: documentOpenHash(packageValue.componentSha256), descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256) }, surface.rendererTarget),
+    browserActor: parseDocumentOpenBrowserActorV1(object.browserActor, parsedPackage, surface.rendererTarget),
     grant: { read: true, write: grant.write, observe: true },
     checkpoint: {
       checkpointId: documentOpenHash(checkpoint.checkpointId),
@@ -1135,9 +1149,9 @@ export function parseDocumentOpenPlanV1(value: unknown, nowMs: number): Document
 }
 
 //#region 🪪️ExecutionTargetLease
-/** 🧯️ Exact maximum accepted bytes for one verified execution-target component — the trusted
- * catalog's own `TRUSTED_COMPONENT_MAX_BYTES`, shared verbatim by every transport. */
-export const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES = 64 * 1024 * 1024;
+/** 🧯️ Exact maximum accepted bytes for one verified execution-target component — the shipped `wasm-release` cap every shipped
+ * component's receipt is held to, the trusted catalog's own `TRUSTED_COMPONENT_MAX_BYTES`, shared verbatim by every transport. */
+export const DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES = SHIPPED_COMPONENT_MAX_BYTES;
 /** 🧯️ Exact maximum accepted bytes for one verified raw package descriptor — the trusted catalog's
  * own `TRUSTED_DESCRIPTOR_MAX_BYTES`, shared verbatim by every transport. */
 export const DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES = 4 * 1024 * 1024;
@@ -1192,9 +1206,7 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
   const scope = parseDocumentOpenScope(object.scope);
   const descriptorDigestV1 = documentOpenHash(object.descriptorDigestV1);
   const catalog = documentOpenObject(object.catalog, ["generationId"]);
-  const packageValue = documentOpenObject(object.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
-  const executionProtocol = documentOpenObject(packageValue.executionProtocol, ["appChannelVersion"]);
-  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("document-execution-target-lease.unsupported-execution-protocol");
+  const parsedPackage = parseDocumentOpenPackageV1(object.package, "document-execution-target-lease");
   const component = documentOpenObject(object.component, ["sha256", "blake3", "byteLength"]);
   const descriptor = documentOpenObject(object.descriptor, ["sha256", "byteLength"]);
   const artifact = documentOpenObject(object.artifact, ["kind", "schema", "packSchemaHash"]);
@@ -1212,15 +1224,6 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     subset: documentOpenText(parentDialect.subset),
   };
   if (Object.values(parsedParentDialect).some((entry) => entry.trim() !== entry)) throw new Error("document-execution-target-lease.invalid-parent-dialect");
-  const parsedPackage: DocumentOpenPackageV1 = {
-    pluginId: documentOpenText(packageValue.pluginId),
-    packageId: documentOpenText(packageValue.packageId),
-    version: documentOpenText(packageValue.version),
-    componentSha256: documentOpenHash(packageValue.componentSha256),
-    componentBlake3: documentOpenHash(packageValue.componentBlake3),
-    descriptorByteSha256: documentOpenHash(packageValue.descriptorByteSha256),
-    executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
-  };
   const parsedComponent = {
     sha256: documentOpenHash(component.sha256),
     blake3: documentOpenHash(component.blake3),
@@ -1230,7 +1233,7 @@ export function parseDocumentExecutionTargetLeaseFieldsV1(value: unknown): Docum
     sha256: documentOpenHash(descriptor.sha256),
     byteLength: documentExecutionTargetByteLength(descriptor.byteLength, DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES),
   };
-  if (parsedComponent.sha256 !== parsedPackage.componentSha256 || parsedComponent.blake3 !== parsedPackage.componentBlake3 || parsedDescriptor.sha256 !== parsedPackage.descriptorByteSha256)
+  if (parsedComponent.sha256 !== parsedPackage.componentSha256 || parsedComponent.blake3 !== parsedPackage.componentBlake3 || parsedDescriptor.sha256 !== parsedPackage.descriptorByteSha256 || parsedComponent.byteLength !== parsedPackage.componentReceipt.wasmBytes)
     throw new Error("document-execution-target-lease.unbound-bytes");
   const checkpoint = documentOpenObject(object.checkpoint, ["checkpointId", "descriptorDigestV1", "baselineFrontier", "aggregateSha256"]);
   if (checkpoint.descriptorDigestV1 !== descriptorDigestV1) throw new Error("document-execution-target-lease.stale-checkpoint");
@@ -1387,6 +1390,7 @@ export function sameLeaseFieldsV1(left: DocumentExecutionTargetLeaseFieldsV1, ri
     left.package.componentBlake3 === right.package.componentBlake3 &&
     left.package.descriptorByteSha256 === right.package.descriptorByteSha256 &&
     left.package.executionProtocol.appChannelVersion === right.package.executionProtocol.appChannelVersion &&
+    encodeComponentReceiptV1(left.package.componentReceipt) === encodeComponentReceiptV1(right.package.componentReceipt) &&
     left.component.sha256 === right.component.sha256 &&
     left.component.blake3 === right.component.blake3 &&
     left.component.byteLength === right.component.byteLength &&

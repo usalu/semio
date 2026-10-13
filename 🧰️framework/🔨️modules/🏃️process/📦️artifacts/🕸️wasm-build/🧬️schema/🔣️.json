@@ -21,8 +21,8 @@
     },
     "mode": {
       "enum": [
-        "dev",
-        "ship"
+        "prototype",
+        "release"
       ]
     },
     "cwd": {

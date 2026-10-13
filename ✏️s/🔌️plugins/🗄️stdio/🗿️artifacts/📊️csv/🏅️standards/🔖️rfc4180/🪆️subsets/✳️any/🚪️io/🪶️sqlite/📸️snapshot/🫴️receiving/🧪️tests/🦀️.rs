@@ -18,7 +18,7 @@ fn sqlite_snapshot_csv_receiving_original_subset_validation_uses_both_original_c
  direction!(NativeEncodeControl,NativeSnapshotEncodeOwner,validate_sqlite_snapshot_subset_encoding);
  eprintln!("[DEBUG] CSV original subset receiving validation matches eight neutral directional cases with exact borrowed pointers, original native and SQL cancellation, zero physical allocation/release and literal unsupported policy");
 }
-use store::ArtifactSqliteSnapshot as _;
+use store::os_store::serialization::ArtifactSqliteSnapshot as _;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicUsize,Ordering as AtomicOrdering};
 #[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/⏱️trace/🧮️memory/🧪️testing/📥️requests/🦀️.rs"]

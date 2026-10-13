@@ -30,16 +30,6 @@
       },
       "outputs": []
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "options": {
-        "command": "bun ./📜️script.ts test quick",
-        "cwd": "✏️s/🧑‍💻dev/🧩️composition/📦️packages/🦀️rust",
-        "forwardAllArgs": true
-      },
-      "outputs": []
-    },
     "canonical-architecture": {
       "executor": "nx:run-commands",
       "cache": false,

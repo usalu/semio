@@ -29,11 +29,11 @@ async fn complex_instance_retains_every_type() {
 #[semio_framework_async_macros::async_test]
 async fn codec_round_trip_via_dsl_and_pack() {
     let snapshot = from_part21_document("stdio.ifc", &parse_part21(FIXTURE).expect("parse"));
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    let parsed = <IfcSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    let parsed = <IfcSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse_dsl");
     assert_eq!(parsed, snapshot);
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    let decoded = <IfcSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode_pack");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let decoded = <IfcSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode_pack");
     assert_eq!(decoded, snapshot);
 }
 

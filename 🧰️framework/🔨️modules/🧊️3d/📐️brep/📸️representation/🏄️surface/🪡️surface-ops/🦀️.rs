@@ -1,7 +1,7 @@
 //! 🧭️ Surface algorithms that operate *on* a [`super::Surface`]: closest-point
 //! projection (with closed-form fast paths for the surfaces that admit one) and Coons-patch
 //! transfinite interpolation from four boundary curves. Kept separate from `surface.rs` for the
-//! same reason as [`crate::brep::representation::curve::curve_ops`] versus [`crate::brep::representation::curve`].
+//! same reason as [`crate::curve::curve_ops`] versus [`crate::curve`].
 //!
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/🪡️surface-ops` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL4, mounted locally
@@ -13,9 +13,9 @@ pub type SurfaceControlStrip = (f64, f64, KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f6
 pub type SurfacePatchBounds = (f64, f64, f64, f64, (Pnt3, Pnt3));
 
 use super::Surface;
-use crate::brep::representation::curve::bspline::{insert_knot, KnotVector};
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt3, Vec3};
+use crate::curve::bspline::{insert_knot, KnotVector};
+use crate::vector::matrix::Frame3;
+use crate::vector::{Pnt3, Vec3};
 
 // #region 🔖️Project
 
@@ -83,7 +83,7 @@ fn wrap_or_clamp(x: f64, lo: f64, hi: f64, periodic: bool) -> f64 {
 }
 
 /// 🧭️ Wraps an unconstrained periodic angle into `domain` (mirrors
-/// [`crate::brep::representation::curve::curve_ops`]'s identical fix for closed curves) — shared by every surface-of-revolution
+/// [`crate::curve::curve_ops`]'s identical fix for closed curves) — shared by every surface-of-revolution
 /// direction (cylinder/cone/sphere `u`, torus `u` and `v`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn wrap_periodic(theta: f64, param_domain: (f64, f64)) -> f64 {
@@ -134,7 +134,7 @@ fn closest_on_torus(surface: &Surface, frame: &Frame3, major_radius: f64, domain
 
 /// 🧩️ Inserts `t` into the u-direction of a rational surface control net (Boehm's algorithm
 /// applied independently to every fixed-`v` "row", the standard tensor-product generalization of
-/// [`crate::brep::representation::curve::bspline::insert_knot`]) — geometrically a no-op, used to raise a knot to full
+/// [`crate::curve::bspline::insert_knot`]) — geometrically a no-op, used to raise a knot to full
 /// multiplicity for Bézier-patch extraction.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn insert_u_knot_grid(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>) {
@@ -186,7 +186,7 @@ fn transpose_grid_w(g: &[Vec<f64>]) -> Vec<Vec<f64>> {
 type Grid = (KnotVector, Vec<Vec<Pnt3>>, Vec<Vec<f64>>);
 
 /// 🧩️ Splits a surface control grid at u-parameter `t` into two grids covering each side —
-/// the exact 2D-grid analog of [`crate::brep::representation::curve::curve_ops::split_nurbs`] (repeated knot insertion
+/// the exact 2D-grid analog of [`crate::curve::curve_ops::split_nurbs`] (repeated knot insertion
 /// to full multiplicity, then slicing the u-rows at the resulting breakpoint).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn split_grid_u(u_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64>], t: f64) -> (Grid, Grid) {
@@ -224,7 +224,7 @@ fn split_grid_v(v_knots: &KnotVector, controls: &[Vec<Pnt3>], weights: &[Vec<f64
 
 /// 🧩️ An axis-aligned box guaranteed to contain the patch (convex hull of a positive-weight
 /// rational tensor-product Bézier patch's control net — the 2D analog of
-/// [`crate::brep::representation::curve::bezier::RationalBezier3::control_hull_box`]).
+/// [`crate::curve::bezier::RationalBezier3::control_hull_box`]).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 fn hull_box(grid: &[Vec<Pnt3>]) -> (Pnt3, Pnt3) {
     let mut lo = grid[0][0];
@@ -343,7 +343,7 @@ fn newton_uv(surface: &Surface, target: Pnt3, mut u: f64, mut v: f64, domain: ((
 /// 🧭️ 2D Newton seeds within one Bézier patch `[u0,u1]×[v0,v1]` — a single (midpoint) seed can
 /// converge to the wrong stationary point of a 2D distance landscape (multiple local minima, or a
 /// saddle redirecting Newton away from the true minimum), mirroring
-/// [`crate::brep::representation::curve::curve_ops::span_seeds`]'s
+/// [`crate::curve::curve_ops::span_seeds`]'s
 /// identical fix for the 1D curve case. A 5×5 interior grid (25 seeds) reliably separates the
 /// handful of basins a single bicubic-or-lower patch's distance function can have.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9

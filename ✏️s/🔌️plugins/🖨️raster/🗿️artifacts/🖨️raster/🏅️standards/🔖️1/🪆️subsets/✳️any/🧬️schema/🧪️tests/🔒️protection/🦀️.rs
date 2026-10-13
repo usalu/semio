@@ -4,7 +4,7 @@ use crate::standards::v1::subsets::any::io::text::snapshot::empty_raster_snapsho
 use super::*;
 use crate::{diff::diff_patch_layer,RasterLayerPatch};
 use crate::standards::v1::subsets::any::schema::snapshot;
-use store::{ArtifactDsl,ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl,os_store::serialization::ArtifactPack};
 #[test]
 fn protection_vectors_and_document_round_trips() {
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../../../../../../../../../../../🧰️framework/🔨️modules/🗺️surface/🎨️paint/🧫️fixtures/🔒️protection/🔣️.json")).unwrap();

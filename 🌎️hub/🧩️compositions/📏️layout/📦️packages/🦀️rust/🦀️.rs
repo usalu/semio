@@ -35,8 +35,7 @@ mod viewer {
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
-mod plugin;
+pub mod plugin;
 pub use plugin::LayoutApps;
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin::plugin, LayoutApps);
 
 //#endregion 🔖️Plugin

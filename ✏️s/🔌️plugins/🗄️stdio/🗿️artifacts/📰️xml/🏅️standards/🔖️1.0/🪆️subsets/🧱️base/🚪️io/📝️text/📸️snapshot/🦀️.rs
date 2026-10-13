@@ -10,7 +10,7 @@ use super::*;
 use crate::standards::v1_0::subsets::base::schema::snapshot::*;
 use crate::STDIO_XML_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
-impl store::ArtifactDsl for XmlSnapshot {
+impl store::os_store::serialization::ArtifactDsl for XmlSnapshot {
     const EXTENSION: &'static str = "xml";
     fn envelope_id() -> &'static str {
         "stdio.xml"
@@ -24,7 +24,7 @@ impl store::ArtifactDsl for XmlSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = crate::standards::v1_0::subsets::base::io::text::snapshot::encode_snapshot(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

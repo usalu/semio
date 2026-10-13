@@ -161,12 +161,12 @@ pub fn example_snapshot(example_id: &str) -> Option<Grid3dSnapshot> {
 }
 
 /// 🔁️ The sanctioned whole-document replace: a `LoadDocument` effect over a freshly packed snapshot
-/// and an EDIT-FREE op log (`store::empty_document_spr`). Never a live `ArtifactEnvelope` minted just
+/// and an EDIT-FREE op log (`store::os_store::text_format::empty_document_spr`). Never a live `ArtifactEnvelope` minted just
 /// to print it — such an envelope owns a bounded retirement authority whose `Drop` traps the guest
 /// (`🧊️process3d`'s own boot `setActiveExample` incident).
 pub fn reset_document_effect(document: &Grid3dSnapshot) -> semio_framework::kernel::Effect {
-    let pack = <Grid3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr("grid3d", WFC_GRID3D_DOCUMENT_SCHEMA));
+    let pack = <Grid3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr("grid3d", WFC_GRID3D_DOCUMENT_SCHEMA));
     semio_framework::kernel::Effect::LoadDocument { pack, spr }
 }
 //#endregion 🔖️Helpers
@@ -643,7 +643,7 @@ impl ArtifactEditor for Grid3dEditor {
     /// `ArtifactToolPublicationLane::Artifact` is registered with an unsupported publication contract
     /// and stays dispatch-dead — the live playground answers "typed command 'worldSelect' declares the
     /// unsupported artifact publication lane" on the first pick.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 

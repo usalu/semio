@@ -5,19 +5,19 @@
 //! Moved from `🧰️framework/🔨️modules/🧊️3d/📐️brep/{📏️measure,🔮️oracles}/🦀️.rs` in ticket
 //! 26/08/12/DISSOLVE-KERNELS-AND-MODULES-INTO-EVENT-SOURCED-ARTIFACTS wave PEEL2.
 
-// 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`crate::brep::representation::topology::Body`].
+// 📏 Divergence-theorem mass properties, axis-aligned bounds, and solid distance queries on [`semio_framework_3d_brep_representation::topology::Body`].
 
 #[cfg(test)]
-use crate::brep::representation::arena::{CoedgeId, VertexId};
-use crate::brep::representation::arena::{EdgeId, FaceId, ShellId, SolidId};
-use crate::brep::representation::curve::curve_ops;
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::surface_ops;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::predicates::{orient2d, Orient};
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_representation::arena::{CoedgeId, VertexId};
+use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId, ShellId, SolidId};
+use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::surface_ops;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::predicates::{orient2d, Orient};
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Types
 
@@ -470,8 +470,8 @@ pub fn distance_solid_solid(body: &Body, a: SolidId, b: SolidId) -> Result<f64, 
 /// the one authoritative classifier — not a bounding-box or sample-distance proxy for overlap.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn solids_overlap(body: &Body, a: SolidId, b: SolidId) -> Result<bool, KernelError> {
-    use crate::brep::engine::PointClassification;
-    use crate::brep::queries::classification::point_in_solid;
+    use semio_framework_3d_brep_representation::contract::PointClassification;
+    use crate::classification::point_in_solid;
     for face in body.solid_faces(a) {
         for p in face_sample_points(body, face)? {
             if matches!(point_in_solid(body, b, p, 1e-9)?, PointClassification::Inside) {
@@ -863,7 +863,7 @@ fn gap_1d(a0: f64, a1: f64, b0: f64, b1: f64) -> f64 {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_area(body: &Body, face: FaceId, loop_id: crate::brep::representation::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
+fn loop_area(body: &Body, face: FaceId, loop_id: semio_framework_3d_brep_representation::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
@@ -890,14 +890,14 @@ fn loop_area(body: &Body, face: FaceId, loop_id: crate::brep::representation::ar
 /// (`face_moments_general`'s own doc already notes the general quadrature is exact on a flat facet
 /// too, so this loses nothing but the fast path's cheapness).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_has_only_straight_edges(body: &Body, loop_id: crate::brep::representation::arena::LoopId) -> bool {
+fn loop_has_only_straight_edges(body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId) -> bool {
     body.loop_coedges(loop_id).into_iter().all(|coedge| body.coedges.get(coedge).and_then(|co| body.edges.get(co.edge)).and_then(|edge| body.curves3.get(edge.curve)).is_some_and(|curve| matches!(curve, Curve3::Line { .. })))
 }
 
 /// ⚖️ ONE face's divergence-theorem contribution to the signed volume of the shell that owns it —
 /// the atomic unit [`shell_signed_volume`] sums, and therefore the smallest piece of that sum a
 /// budgeted validator can do per step. Exposed so a resumable pass
-/// ([`crate::brep::queries::validation::BodyValidationJob`])
+/// ([`crate::validation::BodyValidationJob`])
 /// can accumulate the same total one face at a time instead of paying the whole shell in one
 /// non-preemptible call (ticket `26/09/09/PROCEDURAL-3D-END-TO-END`).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -942,13 +942,13 @@ fn face_volume_moments(body: &Body, face: FaceId, chord_tol: f64) -> Result<(f64
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: crate::brep::representation::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
+fn loop_volume_contribution(body: &Body, face: FaceId, loop_id: semio_framework_3d_brep_representation::arena::LoopId, chord_tol: f64) -> Result<f64, KernelError> {
     let (sv, _, _, _) = loop_volume_moments(body, face, loop_id, chord_tol)?;
     Ok(sv / 6.0)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_volume_moments(body: &Body, face: FaceId, loop_id: crate::brep::representation::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
+fn loop_volume_moments(body: &Body, face: FaceId, loop_id: semio_framework_3d_brep_representation::arena::LoopId, chord_tol: f64) -> Result<(f64, f64, f64, f64), KernelError> {
     let surface = face_surface(body, face)?;
     let flipped = body.faces.get(face).is_some_and(|f| f.flipped);
     match surface {
@@ -1022,7 +1022,7 @@ fn signed_tetra_sum(pts: &[Pnt3]) -> (f64, f64, f64, f64) {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_positions(body: &Body, loop_id: crate::brep::representation::arena::LoopId) -> Result<Vec<Pnt3>, KernelError> {
+fn loop_positions(body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId) -> Result<Vec<Pnt3>, KernelError> {
     let mut pts = Vec::new();
     for coedge in body.loop_coedges(loop_id) {
         let (v0, _) = body.coedge_endpoints(coedge).ok_or_else(|| KernelError::InvalidInput("open coedge".into()))?;
@@ -1039,7 +1039,7 @@ fn face_surface(body: &Body, face: FaceId) -> Result<&Surface, KernelError> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn outward_plane_normal(frame: &crate::brep::representation::vector::matrix::Frame3, flipped: bool) -> Vec3 {
+fn outward_plane_normal(frame: &semio_framework_3d_brep_representation::vector::matrix::Frame3, flipped: bool) -> Vec3 {
     let mut n = frame.z;
     if flipped {
         n = -n;
@@ -1087,7 +1087,7 @@ fn newell_area(pts: &[Pnt3], normal: Vec3) -> f64 {
 /// reversing only when `forward == false` (W1-E's binding convention, fixed alongside this pass —
 /// see [`coedge_uv_sample`]'s own doc); the 3D-curve fallback already reverses via `t`.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_uv_polygon(body: &Body, loop_id: crate::brep::representation::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
+fn loop_uv_polygon(body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<Vec<Pnt2>, KernelError> {
     loop_uv_polygon_with(body, loop_id, surface, chord_tol, false)
 }
 
@@ -1095,7 +1095,7 @@ fn loop_uv_polygon(body: &Body, loop_id: crate::brep::representation::arena::Loo
 /// once per `π/4` of `u` instead of by the 3D chord deviation of its curve, which is exact (a straight UV
 /// segment needs no more) and keeps the mass quadrature's triangulation free of collinear slivers.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn loop_uv_polygon_with(body: &Body, loop_id: crate::brep::representation::arena::LoopId, surface: &Surface, chord_tol: f64, coarse_pcurves: bool) -> Result<Vec<Pnt2>, KernelError> {
+fn loop_uv_polygon_with(body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId, surface: &Surface, chord_tol: f64, coarse_pcurves: bool) -> Result<Vec<Pnt2>, KernelError> {
     let mut poly: Vec<Pnt2> = Vec::new();
     let mut prev_u: Option<f64> = None;
     let mut prev_was_pole = false;
@@ -1168,8 +1168,8 @@ const UV_WELD: f64 = 1e-12;
 /// quadrature is not performance-critical enough to warrant the recursive bisection tessellation's
 /// `sample_curve_adaptive` uses).
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_sample_count(body: &Body, co: &crate::brep::representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
-    if let (true, Some(crate::brep::representation::curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
+fn coedge_sample_count(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, chord_tol: f64, coarse_pcurves: bool) -> usize {
+    if let (true, Some(semio_framework_3d_brep_representation::curve::Curve2::Line { dir, .. })) = (coarse_pcurves, co.pcurve.and_then(|id| body.curves2.get(id))) {
         let turn = dir.x.abs() * (co.prange.1 - co.prange.0).abs();
         return (turn / std::f64::consts::FRAC_PI_4).ceil().max(1.0) as usize + 1;
     }
@@ -1228,7 +1228,7 @@ fn segments_for_chord_deviation(radius: f64, arc_range: f64, deflection: f64) ->
 /// a backwards circuit — such a face can still be topologically coherent and can still integrate to
 /// the right magnitude, so nothing else notices it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn loop_uv_signed_area(body: &Body, loop_id: crate::brep::representation::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<f64, KernelError> {
+pub fn loop_uv_signed_area(body: &Body, loop_id: semio_framework_3d_brep_representation::arena::LoopId, surface: &Surface, chord_tol: f64) -> Result<f64, KernelError> {
     let polygon = loop_uv_polygon(body, loop_id, surface, chord_tol)?;
     if polygon.len() < 3 {
         return Ok(0.0);
@@ -1243,7 +1243,7 @@ pub fn loop_uv_signed_area(body: &Body, loop_id: crate::brep::representation::ar
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn coedge_uv_sample(body: &Body, co: &crate::brep::representation::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
+fn coedge_uv_sample(body: &Body, co: &semio_framework_3d_brep_representation::topology::Coedge, surface: &Surface, s: f64) -> Result<Pnt2, KernelError> {
     if let Some(pcurve_id) = co.pcurve {
         let pcurve = body.curves2.get(pcurve_id).ok_or_else(|| KernelError::MissingEntity("pcurve".into()))?;
         let (p0, p1) = co.prange;
@@ -1435,7 +1435,7 @@ pub fn closest_point_on_face(body: &Body, face: FaceId, point: Pnt3) -> Result<(
         _ => {
             let domain = surface.domain();
             let closest = surface_ops::closest_uv(surface, domain, point, 1e-9);
-            if crate::brep::queries::classification::point_in_face_uv_closure(body, face, Pnt2::new(closest.u, closest.v), 1e-9)? {
+            if crate::classification::point_in_face_uv_closure(body, face, Pnt2::new(closest.u, closest.v), 1e-9)? {
                 Ok((closest.point, closest.distance))
             } else {
                 closest_point_on_face_boundary(body, face, point)
@@ -1521,9 +1521,9 @@ pub mod oracle {
     //! primitives it can already describe; mass-property, watertightness and shape-generator oracles
     //! land in the phases that need them.
 
-    use crate::brep::representation::topology::Body;
-    use crate::brep::representation::vector::matrix::Trsf;
-    use crate::brep::representation::vector::Pnt3;
+    use semio_framework_3d_brep_representation::topology::Body;
+    use semio_framework_3d_brep_representation::vector::matrix::Trsf;
+    use semio_framework_3d_brep_representation::vector::Pnt3;
 
     // #region 🔖️Sdf
 

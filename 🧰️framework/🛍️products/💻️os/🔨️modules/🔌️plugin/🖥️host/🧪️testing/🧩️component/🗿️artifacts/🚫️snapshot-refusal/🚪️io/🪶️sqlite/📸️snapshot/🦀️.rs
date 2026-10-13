@@ -38,7 +38,7 @@ fn binary_bound()->usize{
  let manifest=1+32+20+10+20+20+20+10+10+10+10;
  pack::format::HEADER_SIZE+compressed_bound(1)+compressed_bound(10)+compressed_bound(manifest)+2+10+4+pack::format::FOOTER_SIZE
 }
-impl store::ArtifactSqliteSnapshot for Snapshot{
+impl store::os_store::serialization::ArtifactSqliteSnapshot for Snapshot{
  const SQLITE_SCHEMA:&'static str=SQL;
  fn to_sqlite_database(&self,c:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{
   c.checkpoint(SqliteSnapshotPhase::ProjectSnapshot,0,1)?;c.check_rows(1)?;c.check_value_bytes(16)?;

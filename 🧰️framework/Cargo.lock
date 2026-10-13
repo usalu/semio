@@ -3904,12 +3904,76 @@ dependencies = [
 name = "semio-framework-3d"
 version = "0.1.0"
 dependencies = [
- "num-rational",
  "parry3d",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-async-macros",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-engine"
+version = "0.1.0"
+dependencies = [
+ "parry3d",
+ "semio-framework-3d",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-async-macros",
+ "semio-framework-hash",
+ "semio-framework-mesh-engine",
+ "semio-framework-pack-json",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-operations"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-queries",
+ "semio-framework-3d-brep-representation",
+ "semio-framework-async-macros",
+ "semio-framework-value",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-queries"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-3d",
+ "semio-framework-3d-brep-engine",
+ "semio-framework-3d-brep-operations",
+ "semio-framework-3d-brep-representation",
  "semio-framework-async-macros",
  "semio-framework-geometry",
- "semio-framework-hash",
- "semio-framework-job",
+ "semio-framework-mesh-engine",
+ "semio-framework-replication",
+ "semio-framework-value",
+ "semio-framework-value-derive",
+ "serde",
+ "serde_json",
+]
+
+[[package]]
+name = "semio-framework-3d-brep-representation"
+version = "0.1.0"
+dependencies = [
+ "num-rational",
+ "semio-framework-async-macros",
+ "semio-framework-geometry",
  "semio-framework-mesh-engine",
  "semio-framework-number",
  "semio-framework-pack",
@@ -3937,6 +4001,13 @@ dependencies = [
  "serde",
  "serde_json",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "semio-framework-actor-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-actor",
 ]
 
 [[package]]
@@ -4102,6 +4173,13 @@ dependencies = [
  "serde_json",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "semio-framework-editor-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-editor",
 ]
 
 [[package]]
@@ -4457,6 +4535,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "semio-framework-surface-component"
+version = "0.1.0"
+dependencies = [
+ "semio-framework-surface",
+]
+
+[[package]]
 name = "semio-framework-test-mutation-inventory"
 version = "0.1.0"
 dependencies = [
@@ -4707,6 +4792,7 @@ dependencies = [
  "semio-framework-dsl-record",
  "semio-framework-dsl-record-derive",
  "semio-framework-io-base64",
+ "semio-framework-schema-registry",
  "semio-framework-value-derive",
  "serde",
  "serde_json",

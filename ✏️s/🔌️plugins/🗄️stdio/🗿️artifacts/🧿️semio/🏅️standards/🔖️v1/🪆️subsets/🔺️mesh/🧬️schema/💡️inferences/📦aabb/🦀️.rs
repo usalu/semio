@@ -29,8 +29,8 @@
 //! `📌️important.md`'s "if a real dependency chain cannot be authored honestly for a field, omit
 //! that field and say why rather than faking one", mirroring brep's own two omissions in shape.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::{SemioMesh, SemioMeshSnapshot, SemioPrimitive};
 
 //#region 🔖️Value
 /// 📦 One primitive's axis-aligned bounding box. `SemioAabb::default()` (`min`/`max` both the

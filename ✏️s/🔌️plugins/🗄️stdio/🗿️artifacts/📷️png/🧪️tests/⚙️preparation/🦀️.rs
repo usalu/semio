@@ -20,7 +20,7 @@ fn publication_preparation_publishes_the_post_snapshot_and_a_restoring_inverse()
     assert_ne!(base, edited);
     let mutation = PngMutation::ReplaceImage(ReplaceImage { image: edited.image.clone() });
     let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
@@ -42,11 +42,11 @@ fn publication_preparation_edits_an_image_beyond_the_one_item_cap() {
     base.image.width = 512;
     base.image.height = 264;
     base.image.samples = (0..512usize * 264 * 4).map(|index| (index % 251) as u16).collect();
-    assert!(base.image.samples.len() * 2 > store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
+    assert!(base.image.samples.len() * 2 > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
     let region = PngRegion { x: 3, y: 5, width: 2, height: 2 };
     let mutation = PngMutation::PaintNativeSamples(PaintNativeSamplesMutation { revision: png_revision(&base), region, paint: PngNativePaint::rgba(200, 100, 50, 255) });
     let factory = <PngEditor as ArtifactEditor>::build_artifact_store_one_item_preparation_factory().expect("the PNG document lane declares a preparation factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let law = store::snapshot_clone_preparation::drive_one_item_preparation_law(&factory, base.clone(), mutation.clone(), grant);
     let mut expected = base.clone();
     apply_mutation(&mut expected, &mutation);
@@ -65,7 +65,7 @@ fn publication_preparation_turns_are_bounded_by_pages_at_real_image_size() {
     use semio_s_artifact_stdio_png::schema::mutations::PaintNativeSamplesMutation;
     use semio_s_artifact_stdio_png::schema::operations::png_revision;
     use semio_s_artifact_stdio_png::schema::snapshot::{PngNativePaint, PngRegion};
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let started = std::time::Instant::now();
     let mut turns_by_size = Vec::new();
     for (width, height) in [(256u32, 128u32), (512, 264), (1024, 512)] {
@@ -103,7 +103,7 @@ fn publication_preparation_turns_of_a_large_paint_region_are_bounded_by_pages_th
     use semio_s_artifact_stdio_png::schema::mutations::PaintNativeSamplesMutation;
     use semio_s_artifact_stdio_png::schema::operations::png_revision;
     use semio_s_artifact_stdio_png::schema::snapshot::{PngNativePaint, PngRegion};
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 };
     let mut base = PngSnapshot::default();
     base.image.width = 1024;
     base.image.height = 512;

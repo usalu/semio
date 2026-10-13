@@ -25,8 +25,8 @@ const SYNTHETIC_COMPONENT: &[u8] = b"synthetic-gis-component-for-hub-integration
 const SYNTHETIC_ACTOR: &[u8] = b"synthetic-gis-closed-actor-for-hub-integration-fixtures-profile";
 
 /// 🧱️ The GIS plugin's own release component as this tree builds it
-/// (`@semio-tech/gis-plugin:component-release`, which the hub's all-features test target depends on).
-const GIS_RELEASE_COMPONENT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_hub_gis.wasm");
+/// (`semio-hub-gis-component:component`, which the hub's all-features test target depends on).
+const GIS_RELEASE_COMPONENT: &str = concat!(env!("CARGO_MANIFEST_DIR"), "/../../../🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_gis_component.wasm");
 
 /// 🆔️ The profile identifier every caller of this builder passes to the loader.
 pub const GIS_MAP_INTEGRATION_PROFILE_ID: &str = "gis-map-integration-fixtures";
@@ -91,7 +91,7 @@ pub async fn verified_gis_map_integration_profile(root: &Path) -> Result<Verifie
 /// that runs the guest — genesis above all — executes the genuine component, never synthetic bytes or
 /// a native shortcut. Refused when the component has not been built.
 pub async fn verified_gis_map_release_profile(root: &Path) -> Result<VerifiedGisMapIntegrationProfileV1, AuthorityError> {
-    let component = std::fs::read(GIS_RELEASE_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("GIS release component unavailable at {GIS_RELEASE_COMPONENT} (build `@semio-tech/gis-plugin:component-release`): {error}")))?;
+    let component = std::fs::read(GIS_RELEASE_COMPONENT).map_err(|error| AuthorityError::Catalog(format!("GIS release component unavailable at {GIS_RELEASE_COMPONENT} (build `semio-hub-gis-component:component`): {error}")))?;
     verified_gis_map_profile(root, &component).await
 }
 
@@ -99,18 +99,14 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     let runtime = semio_framework_plugin::plugin_runtime::PluginRuntime::new(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT).expect("explicit test mounted owner policy");
     semio_framework_plugin::plugin_runtime::install_plugin_bundle(&runtime, semio_hub_gis::plugin().map_err(|error| AuthorityError::Catalog(format!("GIS assembly unavailable: {error:?}")))?);
     let emitted = semio_framework_plugin::describe::describe_plugin(&runtime).await;
-    let mut descriptor = super::decode_package_descriptor(&emitted)?;
-    semio_hub_stdio::catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
-    semio_hub_stdio::catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
+    let descriptor = super::decode_package_descriptor(&emitted)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_dependency(&descriptor.manifest.dependencies).map_err(super::catalog_error)?;
+    semio_hub_stdio_catalog::validate_native_artifact_catalog_contributions(&descriptor.manifest.topic_contributions).map_err(super::catalog_error)?;
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let actor_sha256 = hex_lower(&Sha256::digest(SYNTHETIC_ACTOR));
     let mut component_blake3 = Hasher::new();
     component_blake3.update(component);
-    descriptor.hashes.wasm_sha256 = component_sha256.clone();
-    descriptor.hashes.core_wasm_sha256 = component_sha256.clone();
-    descriptor.hashes.descriptor_sha256.clear();
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
-    let descriptor_bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let descriptor_bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let native_codecs: Vec<_> = semio_hub_gis::native_codecs::native_codec_factory_receipts()
         .map_err(|error| AuthorityError::Catalog(format!("GIS native codec receipts unavailable: {error:?}")))?
         .into_iter()
@@ -141,9 +137,10 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
     std::fs::write(root.join("descriptor.semio"), &descriptor_bytes).map_err(|error| AuthorityError::Catalog(format!("descriptor write failed: {error}")))?;
     std::fs::write(root.join("closed-actor.mjs"), SYNTHETIC_ACTOR).map_err(|error| AuthorityError::Catalog(format!("synthetic actor write failed: {error}")))?;
     let (stdio_identity, stdio_record) = super::headless_stdio_fixture_package(root)?;
-    let plugin_module = super::write_fixture_plugin_module(root, &descriptor.manifest.plugin_id, &descriptor.package_id, &descriptor.manifest.version, &component_sha256, &descriptor_bytes)?;
+    let receipt = super::fixture_component_receipt(&descriptor.manifest.plugin_id, &descriptor.package_id, &component_sha256, component.len() as u64, &descriptor_bytes);
+    let plugin_module = super::write_fixture_plugin_module(root, &descriptor.manifest.plugin_id, &descriptor.package_id, &descriptor.manifest.version, &receipt, &descriptor_bytes)?;
     let mut bundle = serde_json::json!({
-        "schemaVersion": 3,
+        "schemaVersion": super::TRUSTED_BUNDLE_SCHEMA_VERSION,
         "profiles": [{
             "id": GIS_MAP_INTEGRATION_PROFILE_ID,
             "selectedClosure": [package.clone(), stdio_identity.clone()],
@@ -156,6 +153,7 @@ async fn verified_gis_map_profile(root: &Path, component: &[u8]) -> Result<Verif
             "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
             "component": { "path": "component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
             "descriptor": { "path": "descriptor.semio", "byteLength": descriptor_bytes.len(), "sha256": hex_lower(&Sha256::digest(&descriptor_bytes)) },
+            "receipt": receipt,
             "browserActor": {
                 "kind":"closed-browser-actor", "schema":"semio.os.closed-browser-actor.v1", "codegenPolicy":"semio.os.browser-jco-1.34.0-jspi.v1",
                 "path":"closed-actor.mjs", "byteLength":SYNTHETIC_ACTOR.len(), "sha256":actor_sha256,

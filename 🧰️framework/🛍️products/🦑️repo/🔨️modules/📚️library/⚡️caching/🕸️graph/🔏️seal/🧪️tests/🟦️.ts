@@ -1,0 +1,66 @@
+/** 🔏️ Graph seal laws over `../🧫️fixtures/🔣️.json`: a seal written for a fixture workspace holds exactly while nothing Nx could read for
+ * its graph changed (each scenario mutates one thing), every seal satisfies `../🧬️schema/🔣️.json` (Ajv), and the stamped directories are
+ * exactly the directories fast-glob lists under the fixture's ignore rules (third-party oracle for the indexable walk). */
+import { expect, test } from "bun:test";
+import { spawnSync } from "node:child_process";
+import { createHash } from "node:crypto";
+import { mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import Ajv from "ajv";
+import fg from "fast-glob";
+import { nxGraphSealHolds, writeNxGraphSeal } from "../🟦️.ts";
+
+type Mutation = { kind: "none" } | { kind: "write"; path: string; content: string };
+const fixture = JSON.parse(readFileSync(resolve(import.meta.dir, "../🧫️fixtures/🔣️.json"), "utf8")) as { schemaVersion: number; workspace: { files: Record<string, string>; observedFile: string }; scenarios: { id: string; mutation: Mutation; holds: boolean }[] };
+const validate = new Ajv({ strict: false, allErrors: true }).compile(JSON.parse(readFileSync(resolve(import.meta.dir, "../🧬️schema/🔣️.json"), "utf8")));
+const artifacts = resolve(process.env.SEMIO_TEST_ARTIFACT_DIR || tmpdir());
+mkdirSync(artifacts, { recursive: true });
+
+/** 🏗️ A fixture workspace with a Git repository, a cached graph and both plugin receipts naming inference records that observed one file. */
+function workspace(): { root: string; data: string; pid: number; startedAt: number } {
+  const root = mkdtempSync(join(artifacts, "graph-seal-")), data = join(root, ".nx", "workspace-data"), pid = 424242, startedAt = Date.now() - 1000;
+  spawnSync("git", ["init", "-q"], { cwd: root });
+  for (const [path, content] of Object.entries(fixture.workspace.files)) { mkdirSync(dirname(join(root, path)), { recursive: true }); writeFileSync(join(root, path), content); }
+  mkdirSync(join(data, "inference"), { recursive: true });
+  const observed = join(root, fixture.workspace.observedFile), stamp = statSync(observed);
+  const fact = { kind: "file", path: observed, fact: { size: stamp.size, mtimeMs: stamp.mtimeMs, ctimeMs: stamp.ctimeMs, ino: stamp.ino, sha256: createHash("sha256").update(readFileSync(observed)).digest("hex") } };
+  const inference: [string, string][] = [];
+  for (const name of ["emoji-project-json.json", "test-cases.json"]) {
+    const header = JSON.stringify({ digest: "0".repeat(64), observations: [fact] }), path = join(data, "inference", name);
+    writeFileSync(path, `${header}\n{}`);
+    inference.push([path, createHash("sha256").update(header).digest("hex")]);
+  }
+  for (const name of ["emoji-project-json.receipt.json", "test-cases.receipt.json"]) writeFileSync(join(data, "inference", name), JSON.stringify({ format: 1, revision: "test", pid, completedAt: Date.now(), inference, observations: [] }));
+  writeFileSync(join(data, "file-map.json"), "{}\n");
+  writeFileSync(join(data, "project-graph.json"), "{\"nodes\":{}}\n");
+  return { root, data, pid, startedAt };
+}
+
+test("each fixture scenario holds exactly when nothing graph-relevant changed", async () => {
+  expect(fixture.schemaVersion).toBe(1);
+  for (const scenario of fixture.scenarios) {
+    const { root, data, pid, startedAt } = workspace();
+    try {
+      expect(await writeNxGraphSeal(root, data, pid, startedAt), scenario.id).toBe(true);
+      const seal = JSON.parse(readFileSync(join(data, "semio-graph-seal.json"), "utf8")) as { directories: [string][] };
+      expect(validate(seal), JSON.stringify(validate.errors)).toBe(true);
+      const oracle = ["", ...fg.sync("**", { cwd: root, onlyDirectories: true, dot: true, ignore: ["**/.git/**", "**/node_modules/**", "dist/**", ".nx/workspace-data/**", "tickets/**"] })].map((path) => path.replace(/\/$/u, "")).sort();
+      expect(seal.directories.map(([path]) => path).sort()).toEqual(oracle);
+      expect(await nxGraphSealHolds(root, data), `${scenario.id} before mutation`).toBe(true);
+      if (scenario.mutation.kind === "write") { mkdirSync(dirname(join(root, scenario.mutation.path)), { recursive: true }); writeFileSync(join(root, scenario.mutation.path), scenario.mutation.content); }
+      expect(await nxGraphSealHolds(root, data), scenario.id).toBe(scenario.holds);
+    } finally { rmSync(root, { recursive: true, force: true }); }
+  }
+});
+
+test("a seal is refused for another process's receipts or a graph older than the invocation", async () => {
+  const { root, data, pid, startedAt } = workspace();
+  try {
+    expect(await writeNxGraphSeal(root, data, pid + 1, startedAt)).toBe(false);
+    expect(await writeNxGraphSeal(root, data, pid, Date.now() + 60_000)).toBe(false);
+    expect(await nxGraphSealHolds(root, data)).toBe(false);
+    expect(await writeNxGraphSeal(root, data, pid, startedAt)).toBe(true);
+    expect(await nxGraphSealHolds(root, data)).toBe(true);
+  } finally { rmSync(root, { recursive: true, force: true }); }
+});

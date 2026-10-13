@@ -34,7 +34,8 @@ const SCENE_IMPORT_JSON: &str = include_str!("../../🧫️fixtures/🎬️scene
 #[test]
 fn gltf_scene_import_preserves_hierarchy_and_instances_as_editable_transforms() {
     use semio_framework_artifact_flow_flow::Widget;
-    use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfNode};
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::import::deserializers::artifacts::gltf::v2_0::any::apply_scene_nodes;
     use parry3d::na::{Matrix4, Quaternion, Translation3, UnitQuaternion, Vector3};
     let source: serde_json::Value = serde_json::from_str(SCENE_IMPORT_JSON).unwrap();
@@ -180,7 +181,7 @@ fn every_geometry_export_format_moves_the_committed_cube_past_the_oracle() {
             "obj" => import_leaves::obj::v3_0::any::mesh_from_bytes(&bytes),
             "ply" => import_leaves::ply::v1_0::any::mesh_from_bytes(&bytes),
             "gltf" => import_leaves::gltf::v2_0::any::mesh_from_bytes(&bytes),
-            "las" => semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::decode_mesh(&bytes, semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::SemioMeshFormat::Las).map_err(|error| mesh_bridge::io_error(error.to_string())),
+            "las" => semio_s_artifact_stdio_semio_mesh_import::decode_mesh(&bytes, semio_s_artifact_stdio_semio_mesh::io::SemioMeshFormat::Las).map_err(|error| mesh_bridge::io_error(error.to_string())),
             "dwg" => import_leaves::dwg::v_ac1018::any::mesh_from_bytes(&bytes),
             other => panic!("{other}: the fixture calls this a geometry row but no import leaf is named"),
         }
@@ -615,7 +616,7 @@ fn gltf_authored_surface_metadata_enters_the_editable_constructor() {
 #[test]
 fn gltf_authored_attribute_palettes_restore_editable_source_domains() {
     use semio_framework_value::FromValue;
-    use semio_s_artifact_stdio_gltf::schema::snapshot::GltfJson;
+    use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
     use semio_s_artifact_procedural_generation3d::standards::v1::subsets::any::io::{import::deserializers::artifacts::gltf::v2_0::any as import,export::serializers::artifacts::gltf::v2_0::any as export};
     let fixture:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🎨️surface/🔣️.json")).unwrap();
     let metadata:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🔁️authored-attributes/🔣️.json")).unwrap();
@@ -809,7 +810,7 @@ fn gltf_prepared_export_retains_rich_channels_and_role_sampling() {
     }
 
     assert_eq!(material.emissive_factor, [0.125, 0.25, 0.5]);
-    assert_eq!(material.alpha_mode, semio_s_artifact_stdio_gltf::schema::snapshot::GltfAlphaMode::Mask);
+    assert_eq!(material.alpha_mode, semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode::Mask);
     assert_eq!(material.alpha_cutoff, 0.25);
     assert!(material.double_sided);
     assert_eq!(material.normal_texture.as_ref().unwrap().scale, 0.5);

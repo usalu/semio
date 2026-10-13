@@ -10,4 +10,4 @@ pub(super) struct Owned(Option<PresentationSnapshot>);
 impl Owned{pub(super) fn new(value:PresentationSnapshot)->Self{Self(Some(value))}}
 impl std::ops::Deref for Owned{type Target=PresentationSnapshot;fn deref(&self)->&Self::Target{self.0.as_ref().unwrap()}}
 impl std::ops::DerefMut for Owned{fn deref_mut(&mut self)->&mut Self::Target{self.0.as_mut().unwrap()}}
-impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){store::ArtifactSqliteSnapshot::retire_sqlite_snapshot(value);}}}
+impl Drop for Owned{fn drop(&mut self){if let Some(value)=self.0.take(){store::os_store::serialization::ArtifactSqliteSnapshot::retire_sqlite_snapshot(value);}}}

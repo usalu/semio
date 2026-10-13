@@ -149,7 +149,7 @@ mod tests {
     #[test]
     fn dispersion_symbolizer_symbol_count_matches_embedding() {
         let symbolizer = DispersionSymbolizer::new(4, 3, 1).unwrap();
-        let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(11);
+        let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(11);
         let x: Vec<f64> = (0..30).map(|_| rng.next_gaussian()).collect();
         let symbols = symbolizer.symbolize(&x).unwrap();
         assert_eq!(symbols.len(), 30 - (3 - 1));
@@ -209,7 +209,7 @@ mod tests {
             let cfg = OrdinalConfig::new(4, 2).unwrap();
             let symbolizer = OrdinalSymbolizer::new(cfg);
             let alphabet = symbolizer.alphabet_size();
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(4242);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(4242);
             for _ in 0..50 {
                 let n = 20 + rng.next_below(50);
                 let x: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();
@@ -221,7 +221,7 @@ mod tests {
         #[test]
         fn quantile_symbolizer_bins_are_roughly_balanced() {
             let symbolizer = QuantileSymbolizer::new(4).unwrap();
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(777);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(777);
             let x: Vec<f64> = (0..4000).map(|_| rng.next_gaussian()).collect();
             let symbols = symbolizer.symbolize(&x).unwrap();
             let mut counts = [0usize; 4];
@@ -238,7 +238,7 @@ mod tests {
         fn dispersion_symbols_always_within_alphabet_for_random_series() {
             let symbolizer = DispersionSymbolizer::new(5, 3, 1).unwrap();
             let alphabet = symbolizer.alphabet_size();
-            let mut rng = crate::standards::v1::subsets::table::schema::entropy_internals::numeric::Xorshift64::new(909);
+            let mut rng = crate::schema::entropy_internals::numeric::Xorshift64::new(909);
             for _ in 0..50 {
                 let n = 30 + rng.next_below(40);
                 let x: Vec<f64> = (0..n).map(|_| rng.next_gaussian()).collect();

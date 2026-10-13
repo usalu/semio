@@ -57,8 +57,8 @@
 //! (`📌️important.md`): whole-document replace goes through `ArtifactStore::reset`, outside history.
 
 #[cfg(test)]
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
-use crate::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff};
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioUv};
+use crate::schema::diff::SemioMeshDiff;
 
 
 
@@ -83,9 +83,9 @@ use crate::standards::v1::subsets::mesh::schema::diff::{SemioMeshDiff};
 
 
 
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioMeshSnapshot;
 #[cfg(test)]
-use crate::standards::v1::subsets::mesh::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
+use crate::schema::snapshot::{SemioMaterial, SemioMesh, SemioPrimitive, SemioTexture, SemioTopology};
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioMeshMutation` block below
 /// calls `self.print_op()` via method syntax, which needs `OpText` in scope in production code
 /// too, not merely under `#[cfg(test)]` (same fix `🧊️brep`/`🌊️flow`'s own facets document).

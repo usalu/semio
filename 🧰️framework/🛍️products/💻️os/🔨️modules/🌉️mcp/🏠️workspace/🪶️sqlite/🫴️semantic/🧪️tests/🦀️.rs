@@ -1,6 +1,6 @@
 //! 🫴️ Original semantic recipients preserve every admitted SQL and DSL birth across refusals.
 use super::*;
-use store::{ArtifactSqliteSnapshot as _,ArtifactDsl as _};
+use store::{os_store::serialization::ArtifactSqliteSnapshot as _,os_store::serialization::ArtifactDsl as _};
 use semio_framework_value::{NativeDecodeControl,NativeEncodeControl,RetainedCloneGrant,RetainedCloneProgress};
 use std::cell::Cell;
 fn contract()->serde_json::Value{serde_json::from_str(include_str!("../🧫️fixtures/🔣️.json")).unwrap()}

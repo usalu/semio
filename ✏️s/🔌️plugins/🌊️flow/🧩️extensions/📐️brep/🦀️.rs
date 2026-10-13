@@ -4,8 +4,8 @@ use semio_s_spatial_kernel_semio_session::*;
 use flow_extension_sdk::mesh::*;
 use flow_extension_sdk::build_manifest_json;
 use neural_engine::{channel_output, ChannelSpec, Dictionary, EvalError, Operator, OperatorImpl, OperatorInfo, Registry, Value};
-use semio_framework_3d::brep::operations::boolean::BooleanOp;
-use semio_framework_3d::brep::engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
+use semio_framework_3d_brep_operations::boolean::BooleanOp;
+use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, BrepKernel};
 
 /// 🎯️ Appends a node's live [`OpQuality`] (looked up by the `BrepKernel` method it wraps) to a
 /// human-readable summary, so both `register()`'s catalogue and the packaged `🔣️.json` descriptor
@@ -1003,7 +1003,7 @@ impl Operator for SurfaceClosestUv {
 // #endregion 🔖️Evaluate
 
 // #region 🔖️Topology
-use semio_framework_3d::brep::engine::{Brep, GeometryHandle};
+use semio_framework_3d_brep_engine::{Brep, GeometryHandle};
 
 /// 📇️ A `geometry`-schema list, each entry carrying its own live [`GeometryKind`] (via
 /// `geometry_dict`) — unlike [`topology_list`], which hardcodes one fixed schema/kind for the
@@ -1274,7 +1274,7 @@ impl Operator for ExportDwg {
         self.0.with_kernel_read(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
             let deflection = read_channel_number(input, "deflection")?;
-            let data = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::export(kernel, &[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
+            let data = semio_s_artifact_stdio_semio_brep_export::dwg::export(kernel, &[geometry], deflection).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("dwg", text_dictionary(encode_base64(&data))))
         })
     }
@@ -1292,7 +1292,7 @@ impl Operator for ImportDwg {
         self.0.with_kernel(|kernel| {
             let data = decode_base64(&read_text(input, "data")?)?;
             let tolerance = read_channel_number(input, "tolerance")?;
-            let handle = semio_s_artifact_stdio_semio::standards::v1::subsets::brep::io::dwg::import(kernel, &data, tolerance).map_err(|error| map_kernel_error(&error))?;
+            let handle = semio_s_artifact_stdio_semio_brep_import::dwg::import(kernel, &data, tolerance).map_err(|error| map_kernel_error(&error))?;
             Ok(channel_output("geometry", geometry_dict(kernel, &handle)?))
         })
     }
@@ -2414,13 +2414,11 @@ mod tests;
 
 // #endregion 🔖️Tests
 
-#[cfg(feature = "component-guest")]
 #[path = "💡️inferences/📐️geometry/🦀️.rs"]
 pub mod geometry_inference;
 
 // #region 🔖️ExtensionGuest
-#[cfg(feature = "component-guest")]
-mod extension_guest {
+pub mod extension_guest {
     use flow_extension_sdk::flow_extension_topic_contribution;
     use semio_framework::{Fault, FaultCode, FaultOrigin};
     use semio_framework_plugin::{ExecutionMode, ExtensionBundle, ExtensionResourceOwner, PluginLifecycleStep};
@@ -2513,15 +2511,14 @@ mod extension_guest {
     #[cfg(test)]
     include!("🧪️tests/🔬️extension-guest-standalone/🦀️.rs");
 
-    semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, bundle);
 }
 // #endregion 🔖️ExtensionGuest
 
 #[cfg(test)]
-use semio_framework_3d::brep::engine::BREP_KERNEL_OPERATIONS;
+use semio_framework_3d_brep_representation::contract::BREP_KERNEL_OPERATIONS;
 
 fn out_step() -> ChannelSpec { ChannelSpec::named("S","Stp","step","StepExport").with_value_types(&["text"]) }
 
-fn operation_quality(method:&str) -> semio_framework_3d::brep::engine::OpQuality {
-    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step::geometry::operation_quality(method) } else { semio_framework_3d::brep::engine::operation_quality(method) }
+fn operation_quality(method:&str) -> semio_framework_3d_brep_representation::contract::OpQuality {
+    if semio_s_artifact_stdio_step::geometry::STEP_GEOMETRY_OPERATIONS.contains(&method) { semio_s_artifact_stdio_step::geometry::operation_quality(method) } else { semio_framework_3d_brep_representation::contract::operation_quality(method) }
 }

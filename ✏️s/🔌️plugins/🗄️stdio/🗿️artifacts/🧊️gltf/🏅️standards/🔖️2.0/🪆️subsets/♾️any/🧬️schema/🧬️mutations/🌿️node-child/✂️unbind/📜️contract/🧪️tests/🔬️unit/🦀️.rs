@@ -1,6 +1,6 @@
-use crate::schema::mutations::contract_tests::{assert_laws, decode};
-use crate::schema::mutations::unbind_node_child as mutation;
-use crate::GltfSnapshot;
+use crate::standards::v2_0::subsets::any::schema::mutations::contract_tests::{assert_laws, decode};
+use crate::standards::v2_0::subsets::any::schema::mutations::unbind_node_child as mutation;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 #[test]
 fn canonical_vectors_execute_direct_mutation_and_codec_laws() {

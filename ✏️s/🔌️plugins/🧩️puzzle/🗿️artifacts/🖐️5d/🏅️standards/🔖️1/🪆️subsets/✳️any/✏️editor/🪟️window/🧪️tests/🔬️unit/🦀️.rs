@@ -37,7 +37,7 @@ use super::*;
         let oracle: serde_json::Value = serde_json::from_str(&spr).expect("serde_json oracle accepts the neutral config");
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(6));
         assert_eq!(oracle["fillCount"], serde_json::json!(crate::editor::puzzle5d::PUZZLE5D_DEFAULT_FILL_COUNT), "the fill count is document-instance configuration the fill run reads");
-        let pack = store::ArtifactPack::encode_pack(&shared);
+        let pack = store::os_store::serialization::ArtifactPack::encode_pack(&shared);
         for forbidden in ["camera2d", "camera3d", "engagementInput", "brushCandidateIndex", "suggestionMenu", "sun"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
@@ -63,7 +63,7 @@ use super::*;
     #[test]
     fn oversized_string_capacity_rejects_and_returns_the_exact_puzzle5d_owner() {
         let owners = <Puzzle5dBoardWindowTransientOwner as semio_framework_plugin::WindowTransientOwner>::build_owners();
-        let mut engagement_input = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+        let mut engagement_input = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
         engagement_input.push('5');
         let pointer = engagement_input.as_ptr();
         let capacity = engagement_input.capacity();
@@ -98,9 +98,9 @@ use super::*;
             selectable_kinds: Puzzle5dSelectableKinds { parts: true, grips: false, fasteners: true },
         };
         assert_ne!(board, Puzzle5dBoardWindowConfig::default(), "the board fixture must differ from the default");
-        let decoded = <Puzzle5dBoardWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&board)).expect("board pack decodes");
+        let decoded = <Puzzle5dBoardWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&board)).expect("board pack decodes");
         assert_eq!(decoded, board, "one board pack round trip must preserve every persisted option");
-        let parsed = <Puzzle5dBoardWindowConfig as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&board)).expect("board text parses");
+        let parsed = <Puzzle5dBoardWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::os_store::serialization::ArtifactDsl::print_dsl(&board)).expect("board text parses");
         assert_eq!(parsed, board, "one board text round trip must preserve every persisted option");
 
         let world = Puzzle5dWorldWindowConfig {
@@ -126,8 +126,8 @@ use super::*;
             voxel_dims: [7, 2, 64],
         };
         assert_ne!(world, Puzzle5dWorldWindowConfig::default(), "the world fixture must differ from the default");
-        let decoded = <Puzzle5dWorldWindowConfig as store::ArtifactPack>::decode_pack(&store::ArtifactPack::encode_pack(&world)).expect("world pack decodes");
+        let decoded = <Puzzle5dWorldWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&store::os_store::serialization::ArtifactPack::encode_pack(&world)).expect("world pack decodes");
         assert_eq!(decoded, world, "one world pack round trip must preserve every persisted option");
-        let parsed = <Puzzle5dWorldWindowConfig as store::ArtifactDsl>::parse_dsl(&store::ArtifactDsl::print_dsl(&world)).expect("world text parses");
+        let parsed = <Puzzle5dWorldWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&store::os_store::serialization::ArtifactDsl::print_dsl(&world)).expect("world text parses");
         assert_eq!(parsed, world, "one world text round trip must preserve every persisted option");
     }

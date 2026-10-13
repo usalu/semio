@@ -22,7 +22,7 @@ const ALL_LEAVES: FacetLeaves = FacetLeaves { rust: include_str!("🦀️.rs"), 
 const MODULE_JSON: &str = include_str!("🔣️.json");
 
 /// 🏷️ `$defs` of `🔣️.json`, in declaration order.
-const EXPORTS: [SchemaExport; 26] = [
+const EXPORTS: [SchemaExport; 27] = [
     SchemaExport { id: "TrustedCatalogRelativePathV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleIdentityV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleCodecV1", leaves: ALL_LEAVES },
@@ -36,6 +36,7 @@ const EXPORTS: [SchemaExport; 26] = [
     SchemaExport { id: "TrustedBundleExecutionProtocolV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleBrowserActorV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundlePluginModuleV1", leaves: ALL_LEAVES },
+    SchemaExport { id: "TrustedBundleReceiptV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundlePackageV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleProfileOpenTargetV1", leaves: ALL_LEAVES },
     SchemaExport { id: "TrustedBundleProfileV1", leaves: ALL_LEAVES },
@@ -336,6 +337,7 @@ pub struct TrustedBundlePackageV1 {
     pub dependencies: Vec<TrustedBundleIdentityV1>,
     pub component: TrustedBundleComponentV1,
     pub descriptor: TrustedBundleFileV1,
+    pub receipt: directory::os_component_receipt::ComponentReceiptV1,
     pub browser_actor: TrustedBundleBrowserActorV1,
     pub plugin_module: TrustedBundlePluginModuleV1,
     pub native_codecs: Vec<TrustedBundleCodecV1>,
@@ -365,6 +367,9 @@ pub struct TrustedBundleProfileOpenTargetV1 {
     pub target: TrustedBundleOpenTargetV1,
 }
 
+/// 🔢️ The one bundle format a hub reads (`TrustedBundleV1.schemaVersion`): semantic descriptors bound to their component
+/// bytes by an inline shipped `ComponentReceiptV1` per package.
+pub const TRUSTED_BUNDLE_SCHEMA_VERSION: u32 = 4;
 #[derive(Clone, Debug, Deserialize)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TrustedBundleV1 {

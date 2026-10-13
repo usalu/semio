@@ -2,7 +2,7 @@
 
 use crate::{ProcedureDiff, ProcedureSnapshot};
 use crate::schema::ProcedureArtifact;
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[test]
 fn procedure_document_contract_round_trips_children_and_rejects_foreign_owners() {

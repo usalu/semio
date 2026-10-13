@@ -1,6 +1,6 @@
 //! 🧬️ SemioObjectSnapshot — one *spatial thing*: a placement/transform, its geometry, and its
 //! property sets. FIRST COMPOSITE subset (UNIFIED-COMPOSABLE-ARTIFACT-SYSTEM, W2c) — carries real
-//! `store::ArtifactChild<S>` CHILD slots, unlike every leaf subset authored before it. ⚠️ The name
+//! `store::os_store::artifact_child::ArtifactChild<S>` CHILD slots, unlike every leaf subset authored before it. ⚠️ The name
 //! is reused from the old value-tree `object` (renamed to `🔢️value` earlier in this ticket); this
 //! is a brand-new spatial subset, unrelated in shape.
 //!
@@ -9,10 +9,10 @@
 //! history, this snapshot holds only the two-string handle (`child_id`/`target`), never embedded
 //! content (per `📌️important.md`'s composition section).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 
 //#region 🔖️Ids
@@ -36,13 +36,13 @@ pub struct SemioObjectSnapshot {
     pub transform: SemioTransform,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub brep: Option<store::ArtifactChild<SemioBrepSnapshot>>,
+    pub brep: Option<store::os_store::artifact_child::ArtifactChild<SemioBrepSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub mesh: Option<store::ArtifactChild<SemioMeshSnapshot>>,
+    pub mesh: Option<store::os_store::artifact_child::ArtifactChild<SemioMeshSnapshot>>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub properties: Option<store::ArtifactChild<SemioValueSnapshot>>,
+    pub properties: Option<store::os_store::artifact_child::ArtifactChild<SemioValueSnapshot>>,
 }
 
 impl Default for SemioObjectSnapshot {
@@ -103,7 +103,7 @@ impl semio_framework_value::FromValue for SemioObjectSnapshot {
 impl SemioObjectSnapshot {
     /// 📦️ Validates the persisted parent boundary across JSON, text and Pack ingress.
     pub fn validate(&self) -> Result<(), String> {
-        use crate::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if self.schema != STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA {
             return Err("Object schema required".into());
         }
@@ -186,14 +186,14 @@ impl SemioObjectSnapshot {
 #[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_object_snapshot() -> SemioObjectSnapshot {
-    use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioQuaternion};
+    use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioQuaternion};
     let dialect = |subset: &str| semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: subset.into() };
     SemioObjectSnapshot {
         schema: STDIO_SEMIOOBJECT_DOCUMENT_SCHEMA.into(),
         transform: SemioTransform { translation: SemioPoint3 { x: 1.0, y: 2.0, z: 3.0 }, rotation: SemioQuaternion { x: 0.0, y: 0.0, z: 0.0, w: 1.0 }, scale: SemioPoint3 { x: 1.0, y: 1.0, z: 1.0 } },
-        brep: Some(store::ArtifactChild::new("crate-brep".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
-        mesh: Some(store::ArtifactChild::new("crate-mesh".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
-        properties: Some(store::ArtifactChild::new("crate-props".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
+        brep: Some(store::os_store::artifact_child::ArtifactChild::new("crate-brep".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-brep".into(), dialect: dialect("brep") })),
+        mesh: Some(store::os_store::artifact_child::ArtifactChild::new("crate-mesh".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-mesh".into(), dialect: dialect("mesh") })),
+        properties: Some(store::os_store::artifact_child::ArtifactChild::new("crate-props".into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: "crate-props".into(), dialect: dialect("value") })),
     }
 }
 //#endregion 🔖️Demo

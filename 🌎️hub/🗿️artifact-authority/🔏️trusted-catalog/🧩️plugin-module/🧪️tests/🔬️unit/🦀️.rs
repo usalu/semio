@@ -14,6 +14,7 @@ fn source(fixture: &serde_json::Value) -> TrustedPluginModuleSourceV1<'_> {
         version: record["version"].as_str().unwrap(),
         component_sha256: record["componentSha256"].as_str().unwrap(),
         descriptor_byte_sha256: record["descriptorByteSha256"].as_str().unwrap(),
+        receipt_sha256: record["receiptSha256"].as_str().unwrap(),
     }
 }
 

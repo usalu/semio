@@ -26,7 +26,7 @@ fn restored_actor_receives_original_decoder_and_grant_before_arc_birth(){
 
 #[semio_framework_async_macros::async_test]
 async fn checkpoint_of_no_instances_round_trips_through_json() {
-    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = plugin_runtime::PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let bytes = checkpoint(&runtime, &[], vec![1, 2], vec![7], Vec::new()).await.expect("an empty instance list must still encode");
     let pack: CheckpointPack = serde_json::from_slice(&bytes).expect("checkpoint bytes must be valid CheckpointPack json");
     assert!(pack.instances.is_empty());
@@ -37,13 +37,13 @@ async fn checkpoint_of_no_instances_round_trips_through_json() {
 
 #[semio_framework_async_macros::async_test]
 async fn task_restarts_round_trip_through_json_and_are_exposed_by_the_accessor() {
-    let runtime = plugin_runtime::PluginRuntime::<crate::app::NoPluginApp>::new({ let grant = crate::app::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
+    let runtime = plugin_runtime::PluginRuntime::<crate::plugin_app::NoPluginApp>::new({ let grant = semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1, maximum_copy_bytes: 32_768, maximum_capacity_bytes: 262_144, maximum_release_bytes: 1_048_576, maximum_depth: 4_096 }; crate::MountedOwnerPolicyV1 { preparation: grant, maintenance: grant, close: grant } }).expect("explicit test mounted owner policy");
     let restarts = vec![TaskRestart { instance: 5, command: vec![1, 2, 3] }, TaskRestart { instance: 6, command: vec![4] }];
     let bytes = checkpoint(&runtime, &[], Vec::new(), Vec::new(), restarts.clone()).await.expect("must encode");
     let mut observer = |_| true;
     let mut native = semio_framework_value::NativeDecodeControl::new(1 << 20, &mut observer);
-    let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, crate::app::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 });
-    let pack = restore(&runtime, &bytes, &mut crate::app::artifact_app_laws::fixture_identity(), &mut original).await.expect("must decode back").pack;
+    let mut original = semio_framework_os_kernel::io::control::NativeSnapshotDecodeOwner::new(&mut native, semio_framework_value::retained_clone::RetainedCloneGrant { maximum_items: 1 << 20, maximum_copy_bytes: 1 << 20, maximum_capacity_bytes: 1 << 20, maximum_release_bytes: 1 << 20, maximum_depth: 64 });
+    let pack = restore(&runtime, &bytes, &mut crate::app_testing::artifact_app_laws::fixture_identity(), &mut original).await.expect("must decode back").pack;
     assert_eq!(pack.task_restarts().await.len(), 2);
     assert_eq!(pack.task_restarts().await[0].instance, 5);
     assert_eq!(pack.task_restarts().await[0].command, vec![1, 2, 3]);

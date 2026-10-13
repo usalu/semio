@@ -1,14 +1,14 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::triples::IndexedTripleDiff;
-use crate::standards::v1::subsets::graph::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use semio_s_artifact_stdio_semio_base::schema::triples::IndexedTripleDiff;
+use crate::schema::snapshot::{GraphEdgeId, GraphNodeId, STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA};
+use protocol::{DiffBinary,DiffText};
 
 fn one_node() -> SemioGraphSnapshot {
     SemioGraphSnapshot { schema: STDIO_SEMIOGRAPH_DOCUMENT_SCHEMA.into(), nodes: vec![SemioGraphNode { id: GraphNodeId::new("a"), ..Default::default() }], edges: vec![] }
 }
 
 fn relabel(label: &str) -> SemioGraphDiff {
-    use crate::standards::v1::subsets::base::schema::triples::IndexModified;
+    use semio_s_artifact_stdio_semio_base::schema::triples::IndexModified;
     SemioGraphDiff { nodes: Some(IndexedTripleDiff { modified: vec![IndexModified { index: 0, diff: SemioGraphNodeDiff { label: Some(label.into()), ..Default::default() } }], ..Default::default() }), edges: None }
 }
 
@@ -60,5 +60,5 @@ async fn empty_diff_prints_empty_string() {
 
 #[semio_framework_async_macros::async_test]
 async fn edge_id_helper_smoke() {
-    assert_eq!(crate::standards::v1::subsets::graph::io::text::snapshot::dec_edge_id("").unwrap(), GraphEdgeId::new(""));
+    assert_eq!(crate::io::text::snapshot::dec_edge_id("").unwrap(), GraphEdgeId::new(""));
 }

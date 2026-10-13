@@ -283,7 +283,7 @@ pub struct NativeCodecFactory {
     pub id: &'static str,
     pub artifact: &'static str,
     pub kind: fn() -> ArtifactKindSpec,
-    pub codec: fn() -> kernel::ArtifactCodec,
+    pub codec: fn() -> kernel::os_store::serialization::ArtifactCodec,
 }
 
 /// 🪢 One verified native codec factory bound to schema and component identities.
@@ -299,12 +299,12 @@ pub struct NativeCodecFactoryReceipt {
     pub schema: String,
     pub pack_schema_hash: [u8; 32],
     pub extension: String,
-    pub factory: fn() -> kernel::ArtifactCodec,
+    pub factory: fn() -> kernel::os_store::serialization::ArtifactCodec,
 }
 
 impl NativeCodecFactoryReceipt {
     /// 🔐 Rechecks the immutable factory result before a loader can bind it.
-    pub fn instantiate(&self) -> Result<kernel::ArtifactCodec, PluginAssemblyError> {
+    pub fn instantiate(&self) -> Result<kernel::os_store::serialization::ArtifactCodec, PluginAssemblyError> {
         let codec = (self.factory)();
         if self.plugin_id.is_empty()
             || self.package_id.is_empty()
@@ -1664,9 +1664,9 @@ pub fn media_duration_ms(duration_seconds: f64) -> Option<u64> {
 /// in-history mutation (no stdio subset mints a whole-snapshot edit for it), so the switch emits an
 /// `Effect::LoadDocument` carrying the example's own pack plus an edit-free `.spr` log — the shape
 /// `dag`/`reasoning.wires` already use, and the reason the route publishes on the HostOnly lane.
-pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
+pub fn load_example_effect<P: kernel::os_store::serialization::ArtifactPack>(document: &P, schema: &'static str) -> semio_framework_plugin::Effect {
     let pack = document.encode_pack();
-    let spr = ::semio_framework_async::poll::resolve_ready(kernel::empty_document_spr(schema, schema));
+    let spr = ::semio_framework_async::poll::resolve_ready(kernel::os_store::text_format::empty_document_spr(schema, schema));
     semio_framework_plugin::Effect::LoadDocument { pack, spr }
 }
 
@@ -1676,7 +1676,7 @@ pub fn load_example_effect<P: kernel::ArtifactPack>(document: &P, schema: &'stat
 pub fn import_media_as_load<E>(port: &str, media: &semio_framework_plugin::app::Media) -> Result<semio_framework_plugin::Emit<E::Mutation, E::ConfigMutation, E::DraftMutation>, semio_framework_plugin::MediaError>
 where
     E: semio_framework_plugin::ArtifactEditor,
-    E::Snapshot: kernel::ArtifactPack,
+    E::Snapshot: kernel::os_store::serialization::ArtifactPack,
 {
     use semio_framework_plugin::app::MediaPayload;
     use semio_framework_plugin::MediaError;
@@ -1694,7 +1694,7 @@ where
             return Err(MediaError::Payload(port.to_string(), "document importer only accepts a Structured (base64 pack) payload".into()));
         };
         let bytes = kernel::pack_rt::pack_value_from_base64(json).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?;
-        <E::Snapshot as kernel::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?
+        <E::Snapshot as kernel::os_store::serialization::ArtifactPack>::decode_pack(&bytes).map_err(|error| MediaError::Payload(port.to_string(), error.to_string()))?
     } else {
         return Err(MediaError::NotImplemented);
     };

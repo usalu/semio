@@ -10,20 +10,20 @@
 use std::collections::HashMap;
 use std::collections::HashSet;
 
-use crate::brep::operations::euler::{add_face, add_shell, add_solid, make_edge, make_loop, make_vertex};
-use crate::brep::operations::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
-use crate::brep::queries::validation::validate_body;
-use crate::brep::representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
-use crate::brep::representation::curve::bspline::KnotVector;
-use crate::brep::representation::curve::Curve3;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::Pnt3;
+use {crate::euler::{add_face, add_shell, add_solid, make_edge, make_vertex}, semio_framework_3d_brep_representation::topology::make_loop};
+use crate::staged::{drive_solid, Plan, StageOutput, StageProgress, StageStep, StagedOperation};
+use semio_framework_3d_brep_queries::validation::validate_body;
+use semio_framework_3d_brep_representation::arena::{ArenaId, Curve3Id, EdgeId, FaceId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::curve::bspline::KnotVector;
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::Pnt3;
 #[cfg(test)]
-use crate::brep::representation::vector::Vec3;
+use semio_framework_3d_brep_representation::vector::Vec3;
 
 // #region 🔖️SewApi
 
@@ -126,7 +126,7 @@ impl HealingReport {
 
 /// 🩹 Validates a clean solid (no-op success); dirty solids are rejected until full healing lands.
 /// `rec` records every vertex this merges as modified — repositioning `body.vertices` directly
-/// (not through euler) is a pre-existing exception the docstring on [`crate::brep::operations::euler`] calls
+/// (not through euler) is a pre-existing exception the docstring on [`crate::euler`] calls
 /// out as the checked editors' exclusive right; `rec` at least keeps the entity's provenance honest.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn heal_solid(body: &mut Body, solid: SolidId, tolerance: f64, rec: &mut OpRecorder) -> Result<HealingReport, KernelError> {

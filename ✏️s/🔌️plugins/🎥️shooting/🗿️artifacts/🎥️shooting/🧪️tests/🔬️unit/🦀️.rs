@@ -21,7 +21,7 @@ async fn emblem_materialization_is_owned_by_the_exact_snapshot_child() {
     shooting_set_emblem_from_base64(&mut first, Some("AQID"));
     let first_handle = first.emblem.as_ref().expect("materialized emblem child");
     let mut second = empty_shooting_snapshot();
-    second.emblem = Some(store::ArtifactChild::new(first_handle.child_id.clone(), first_handle.target.clone()));
+    second.emblem = Some(store::os_store::artifact_child::ArtifactChild::new(first_handle.child_id.clone(), first_handle.target.clone()));
 
     assert_eq!(shooting_emblem_bytes(&first), Some(vec![1, 2, 3]));
     assert_eq!(shooting_emblem_bytes(&second), None, "a matching wire identity cannot read another snapshot's instance-owned payload");

@@ -24,28 +24,38 @@ impl EvaluationSlotLookup{
  }
 }
 
+type EvaluationOriginalInsertion=protocol::HistoryFoldIndexInsert<(neural_engine::RegistryIdentity,String,u64),EvaluateRequest>;
+
+fn original_insertion_compare(source:&(neural_engine::RegistryIdentity,String,u64),candidate:&(neural_engine::RegistryIdentity,String,u64),position:usize,grant:RetainedCloneGrant)->Result<(Option<std::cmp::Ordering>,usize,RetainedCloneProgress),ValueError>{
+ let empty=RetainedCloneProgress::default();if grant.maximum_items==0||grant.maximum_depth==0{return Ok((None,position,empty))}let item=RetainedCloneProgress{copied_items:1,..empty};let identity=source.0.cmp(&candidate.0);if identity!=std::cmp::Ordering::Equal{return Ok((Some(identity),0,item))}
+ let original=source.1.as_bytes();let expected=candidate.1.as_bytes();let length=original.len().min(expected.len());if position>=length{return Ok((Some(original.len().cmp(&expected.len()).then_with(||source.2.cmp(&candidate.2))),position,item))}
+ let count=grant.maximum_copy_bytes.min(64).min(length-position);if count==0{return Ok((None,position,empty))}let mut copied=[0;64];copied[..count].copy_from_slice(&expected[position..position+count]);let order=original[position..position+count].cmp(&copied[..count]);let position=position+count;let order=if order!=std::cmp::Ordering::Equal{Some(order)}else if position==length{Some(original.len().cmp(&expected.len()).then_with(||source.2.cmp(&candidate.2)))}else{None};Ok((order,position,RetainedCloneProgress{copied_bytes:count,..item}))
+}
+
 /// 🪪️ One bounded invocation keeps the exact caller source until its paid response exists.
 pub struct EvaluationInvokeCursor {
     operation:u64,generation:u64,pointer:usize,length:usize,
     parser:Option<JsonGrammarCursor<Value>>,continuation:Option<NativeDecodeContinuation>,
     root:Option<Value>,request:Option<EvaluateRequest>,reply_pending:Option<neural_engine::PendingExtensionEval>,active:Option<Box<dyn ErasedSnapshotRetirement>>,
     field:usize,result_field:usize,result_required:u8,retained_field:usize,required:u8,policy:Option<RetainedCloneGrant>,
-    slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,budget:usize,wall:u64,round_units:u64,
+    slot:Option<usize>,lookup:Option<EvaluationSlotLookup>,insertion:Option<EvaluationOriginalInsertion>,insertion_registry:Option<neural_engine::SharedRegistry>,budget:usize,wall:u64,round_units:u64,
     suppressed_wire:Option<String>,ready_wire:Option<String>,ready_complete:bool,ready_faulted:bool,ready_external:bool,wait_terminal:bool,fault:Option<EvaluationFailure>,response:Option<EvaluationOutput>,response_failed:bool,context:Option<EvaluationRequestContext>,context_prepared:bool,closing:bool,
 }
 impl EvaluationInvokeCursor {
     pub fn new(operation:u64,generation:u64,request:&[u8])->Self {
-        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,retained_field:0,required:0,policy:None,slot:None,lookup:None,budget:0,wall:0,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
+        Self {operation,generation,pointer:request.as_ptr()as usize,length:request.len(),parser:None,continuation:None,root:None,request:None,reply_pending:None,active:None,field:0,result_field:0,result_required:0,retained_field:0,required:0,policy:None,slot:None,lookup:None,insertion:None,insertion_registry:None,budget:0,wall:0,round_units:0,suppressed_wire:None,ready_wire:None,ready_complete:false,ready_faulted:false,ready_external:false,wait_terminal:false,fault:None,response:None,response_failed:false,context:None,context_prepared:false,closing:false}
     }
     pub fn matches(&self,operation:u64,generation:u64,request:&[u8])->bool{self.operation==operation&&self.generation==generation&&self.pointer==request.as_ptr()as usize&&self.length==request.len()}
     pub fn begin_close(&mut self){self.closing=true;}
-    pub fn terminal_is_empty(&self)->bool{self.ready_wire.is_none()&&self.suppressed_wire.is_none()&&self.context.is_none()&&self.parser.is_none()&&self.continuation.is_none()&&self.root.is_none()&&self.request.is_none()&&self.reply_pending.is_none()&&self.active.is_none()&&self.fault.is_none()&&self.response.is_none()&&self.slot.is_none()&&self.lookup.is_none()}
+    pub fn terminal_is_empty(&self)->bool{self.ready_wire.is_none()&&self.suppressed_wire.is_none()&&self.context.is_none()&&self.parser.is_none()&&self.continuation.is_none()&&self.root.is_none()&&self.request.is_none()&&self.reply_pending.is_none()&&self.active.is_none()&&self.fault.is_none()&&self.response.is_none()&&self.slot.is_none()&&self.lookup.is_none()&&self.insertion.is_none()&&self.insertion_registry.is_none()}
     pub fn retirement_demands(&self,copy:usize)->Result<RetirementDemand,ValueError>{
         if let Some(context)=&self.context{return context.retirement_demands(copy);}
         if self.active.is_some(){return evaluation_child_demands(&self.active,copy);}
         if self.parser.is_some(){return Ok(evaluation_owned_birth::<JsonGrammarCursor<Value>>());}
         if self.root.is_some(){return Ok(evaluation_owned_birth::<Value>());}
         if self.ready_wire.is_some()||self.suppressed_wire.is_some(){return Ok(evaluation_owned_birth::<String>());}
+        if self.insertion.is_some(){return Ok(evaluation_owned_birth::<EvaluationOriginalInsertion>());}
+        if self.insertion_registry.is_some(){return Ok(evaluation_owned_birth::<neural_engine::SharedRegistry>());}
         if self.request.is_some(){return Ok(evaluation_owned_birth::<EvaluateRequest>());}
         if self.reply_pending.is_some(){return Ok(evaluation_owned_birth::<neural_engine::PendingExtensionEval>());}
         if self.fault.is_some(){return Ok(evaluation_owned_birth::<EvaluationFailure>());}
@@ -69,6 +79,8 @@ impl EvaluationInvokeCursor {
         if self.root.is_some(){return evaluation_admit_original(&mut self.root,&mut self.active,grant);}
         if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant);}
         if self.suppressed_wire.is_some(){return evaluation_admit_original(&mut self.suppressed_wire,&mut self.active,grant);}
+        if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant);}
+        if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant);}
         if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant);}
         if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant);}
         if self.fault.is_some(){return evaluation_admit_original(&mut self.fault,&mut self.active,grant);}
@@ -80,7 +92,7 @@ impl EvaluationInvokeCursor {
         }
         Ok(RetainedCloneStep::Complete(Default::default()))
     }
-    pub fn original_request(&self)->Option<&EvaluateRequest>{self.request.as_ref()}
+    pub fn original_request(&self)->Option<&EvaluateRequest>{self.request.as_ref().or_else(||self.insertion.as_ref().and_then(|owner|owner.original().map(|(_,request)|request)))}
     fn fail(&mut self,fault:EvaluationFailure){assert!(self.fault.is_none());self.fault=Some(fault);self.closing=true;}
     fn retain_reply(&mut self,mut reply:EvaluationReply)->Option<EvaluationReply>{
         assert!(self.request.is_none()&&self.reply_pending.is_none());self.request=reply.returned_request.take();self.reply_pending=reply.pending_source.take();
@@ -137,6 +149,14 @@ impl EvaluationInvokeCursor {
         }
         self.field+=1;Ok(RetainedCloneProgress{copied_items:1,..empty})
     }
+    fn insertion_step(&mut self,registry:&neural_engine::SharedRegistry,jobs:&mut EvaluationJobRegistry,grant:RetainedCloneGrant)->Result<RetainedCloneProgress,ValueError>{
+        let empty=RetainedCloneProgress::default();if grant.maximum_items==0||grant.maximum_depth==0{return Ok(empty)}
+        if self.insertion_registry.is_none(){self.insertion_registry=Some(registry.clone());return Ok(RetainedCloneProgress{copied_items:1,..empty})}
+        let insertion=self.insertion.as_mut().unwrap();let(ready,receipt)=insertion.step(&mut jobs.jobs,grant,original_insertion_compare)?;if !ready{return Ok(receipt)}
+        let remaining=evaluation_remaining_grant(grant,receipt);let(slot,committed)=insertion.commit_with(&mut jobs.jobs,remaining,|request|RetainedEvaluation::new(self.insertion_registry.take().unwrap(),request))?;let physical=receipt.checked_add(committed)?;
+        if let Some(slot)=slot{self.slot=Some(slot);self.insertion=None;jobs.admission_owner=None;jobs.lookup_epoch=jobs.lookup_epoch.checked_add(1).expect("original registry inserted key epoch");}
+        Ok(physical)
+    }
     pub fn step(&mut self,registry:&neural_engine::SharedRegistry,request:&[u8],grant:RetainedCloneGrant,cancelled:bool)->Result<(Option<EvaluationReply>,RetainedCloneProgress),ValueError>{self.step_original(registry,request,grant,cancelled,None)}
     pub fn step_with_context(&mut self,registry:&neural_engine::SharedRegistry,request:&[u8],grant:RetainedCloneGrant,cancelled:bool,context:EvaluationRequestContextInput<'_>)->Result<(Option<EvaluationReply>,RetainedCloneProgress),ValueError>{self.step_original(registry,request,grant,cancelled,Some(context))}
     fn step_original(&mut self,registry:&neural_engine::SharedRegistry,request:&[u8],grant:RetainedCloneGrant,cancelled:bool,context_input:Option<EvaluationRequestContextInput<'_>>)->Result<(Option<EvaluationReply>,RetainedCloneProgress),ValueError>{
@@ -165,11 +185,14 @@ impl EvaluationInvokeCursor {
             if self.fault.is_some(){
                 if self.ready_wire.is_some(){return evaluation_admit_original(&mut self.ready_wire,&mut self.active,grant).map(|step|(None,step.progress()));}
                 if self.request.is_some(){return evaluation_admit_original(&mut self.request,&mut self.active,grant).map(|step|(None,step.progress()));}
+                if self.insertion.is_some(){return evaluation_admit_original(&mut self.insertion,&mut self.active,grant).map(|step|(None,step.progress()));}
+                if self.insertion_registry.is_some(){return evaluation_admit_original(&mut self.insertion_registry,&mut self.active,grant).map(|step|(None,step.progress()));}
                 if self.reply_pending.is_some(){return evaluation_admit_original(&mut self.reply_pending,&mut self.active,grant).map(|step|(None,step.progress()));}
                 self.response=Some(EvaluationOutput::fault(self.fault.take().unwrap(),0));return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));
             }
             self.closing=false;
         }
+        if self.insertion.is_some(){let policy=intersect(grant,self.policy.unwrap());let mut jobs=evaluation_jobs().lock().unwrap_or_else(std::sync::PoisonError::into_inner);let result=self.insertion_step(registry,&mut jobs,policy);drop(jobs);return match result{Ok(receipt)=>Ok((None,receipt)),Err(error)=>{let receipt=error.retained_progress();self.fail(error.into());Ok((None,receipt))}};}
         if self.policy.is_some()&&self.request.is_some(){
             if !self.context_prepared{if let Some(input)=context_input{
                 if self.context.is_none(){self.context=Some(EvaluationRequestContext::new());return Ok((None,RetainedCloneProgress{copied_items:1,..empty}));}
@@ -182,6 +205,11 @@ impl EvaluationInvokeCursor {
             let(existing,physical)=lookup.step(&jobs,registry.owner_identity(),self.request.as_ref().unwrap(),policy)?;let Some(existing)=existing else{return Ok((None,physical))};
             let remaining=evaluation_remaining_grant(policy,physical);if remaining.maximum_items==0{return Ok((None,physical))}
             let mut original=self.request.take().unwrap();original.retained=policy;self.budget=if original.budget==0{EVALUATE_STEP_BUDGET}else{usize::try_from(original.budget).unwrap_or(usize::MAX)};self.wall=if original.wall_micros==0{EVALUATE_STEP_WALL_MICROS}else{original.wall_micros};self.round_units=original.round_units;
+            if existing.is_none(){
+                if original.resume||original.external_result.is_some(){drop(jobs);let reply=EvaluationReply::refused(original,physical,"evaluation continuation has no retained owner");return Ok((self.retain_reply(reply),physical))}
+                if jobs.closing_owner.is_some()||jobs.jobs.len()>=EVALUATION_JOB_CAPACITY{drop(jobs);let reply=EvaluationReply::refused(original,physical,"evaluation capacity remains owned by pending work");return Ok((self.retain_reply(reply),physical))}
+                let key=(registry.owner_identity(),std::mem::take(&mut original.operator_id),original.node_hash);self.insertion=Some(protocol::HistoryFoldIndexInsert::new(key,original));self.lookup=None;if jobs.jobs.is_empty(){jobs.admission_owner=Some(registry.owner_identity());}drop(jobs);return Ok((None,physical.checked_add(RetainedCloneProgress{copied_items:1,..empty})?))
+            }
             let reply=evaluation_admit_original_request(registry,original,&mut jobs,existing,physical,&mut self.slot);let receipt=reply.retirement_progress;self.lookup=None;drop(jobs);
             return Ok((self.retain_reply(reply),receipt));
         }

@@ -5,10 +5,10 @@
 //! unchanged colour ⇒ Warning `mutation.no-op` — but writing the `stroke` slot instead. Stroke
 //! colour and stroke WIDTH are two separate triads, so this diff must not mention `strokeWidth`.
 
-use crate::standards::v1::subsets::drawing::schema::diff::SemioDrawingDiff;
-use crate::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioDrawingDiff;
+use crate::schema::mutations::SemioDrawingMutation;
+use crate::schema::snapshot::SemioDrawingSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke/🎨️recolours/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️change-stroke/🎨️recolours/📸️snapshot/➡️after/🔣️.json");

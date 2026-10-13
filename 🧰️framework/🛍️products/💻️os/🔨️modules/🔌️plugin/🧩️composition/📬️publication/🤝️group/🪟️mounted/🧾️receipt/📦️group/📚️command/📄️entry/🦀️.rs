@@ -5,17 +5,17 @@ const ENTRY_FIELDS: usize = ENTRY_LABELS + 2;
 
 #[derive(Clone, Copy)]
 pub(crate) struct MountedCommandEntrySource<'a> {
-    pub(crate) action_id: &'a str,
-    pub(crate) label: Option<&'a LocalizedLabel>,
-    pub(crate) captured_millis: i64,
-    pub(crate) kind: ActionKind,
-    pub(crate) count: u32,
-    pub(crate) parent_touched: bool,
-    pub(crate) child_edit_count: usize,
+    action_id: &'a str,
+    label: Option<&'a LocalizedLabel>,
+    captured_millis: i64,
+    kind: ActionKind,
+    count: u32,
+    parent_touched: bool,
+    child_edit_count: usize,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
+enum MountedCommandEntryRefusal { Timestamp, Stale, Closed }
 
 impl<'a> MountedCommandEntrySource<'a> {
     fn text(&self, index: usize) -> &'a str {
@@ -53,7 +53,7 @@ impl MountedCommandEntry {
     fn bytes<'a>(&'a self, source: MountedCommandEntrySource<'a>) -> &'a [u8] { if self.field == ENTRY_FIELDS - 1 { &self.timestamp } else { source.text(self.field).as_bytes() } }
     pub(crate) fn ready(&self) -> bool { !self.closing && self.field == ENTRY_FIELDS }
     pub(crate) fn next_capacity_byte_demand(&self, source: MountedCommandEntrySource<'_>) -> Result<usize, MountedCommandEntryRefusal> { self.validate(source)?; Ok(if self.ready() || self.active.is_some() { 0 } else { self.bytes(source).len() }) }
-    pub(crate) fn next_minimum_copy_byte_demand(&self) -> usize { usize::from(self.active.as_ref().is_some_and(|active| self.field != ENTRY_FIELDS && active.len() < if self.field == ENTRY_FIELDS - 1 { self.timestamp.len() } else { self.source[self.field].1 })) }
+    fn next_minimum_copy_byte_demand(&self) -> usize { usize::from(self.active.as_ref().is_some_and(|active| self.field != ENTRY_FIELDS && active.len() < if self.field == ENTRY_FIELDS - 1 { self.timestamp.len() } else { self.source[self.field].1 })) }
     /// 🧵️ Births one whole field, then copies at most the admitted 64-byte borrowed prefix.
     pub(crate) fn advance(&mut self, source: MountedCommandEntrySource<'_>, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, MountedCommandEntryRefusal> {
         self.validate(source)?;

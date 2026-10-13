@@ -9,7 +9,7 @@
     {
       "name": "base",
       "hidden": true,
-      "binaryDir": "${sourceDir}/.🧬semio/🦑️repo/⚡️cache/cmake/${presetName}",
+      "binaryDir": "$env{SEMIO_CMAKE_BINARY_DIR}",
       "cacheVariables": {
         "CMAKE_EXPORT_COMPILE_COMMANDS": "ON",
         "CMAKE_CXX_STANDARD": "23",
@@ -19,123 +19,129 @@
       }
     },
     {
-      "name": "ninja-base",
-      "hidden": true,
+      "name": "linux-prototype",
+      "displayName": "Linux C++23 Prototype",
       "inherits": "base",
       "generator": "Ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
-      "name": "ninja-release-base",
-      "hidden": true,
+      "name": "linux-release",
+      "displayName": "Linux C++23 Release",
       "inherits": "base",
       "generator": "Ninja",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Linux"
+      },
       "cacheVariables": {
         "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "linux",
-      "displayName": "Linux C++23",
-      "inherits": "ninja-base",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
-      }
-    },
-    {
-      "name": "macos",
-      "displayName": "macOS C++23",
-      "inherits": "ninja-base",
+      "name": "macos-prototype",
+      "displayName": "Darwin C++23 Prototype",
+      "inherits": "base",
+      "generator": "Ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Darwin"
-      }
-    },
-    {
-      "name": "linux-release",
-      "displayName": "Linux C++23 Release",
-      "inherits": "ninja-release-base",
-      "condition": {
-        "type": "equals",
-        "lhs": "${hostSystemName}",
-        "rhs": "Linux"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
       }
     },
     {
       "name": "macos-release",
-      "displayName": "macOS C++23 Release",
-      "inherits": "ninja-release-base",
+      "displayName": "Darwin C++23 Release",
+      "inherits": "base",
+      "generator": "Ninja",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Darwin"
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release"
       }
     },
     {
-      "name": "windows",
-      "displayName": "Windows C++23 (Visual Studio 2026)",
+      "name": "windows-prototype",
+      "displayName": "Windows C++23 Prototype",
       "inherits": "base",
       "generator": "Visual Studio 18 2026",
-      "architecture": "x64",
       "condition": {
         "type": "equals",
         "lhs": "${hostSystemName}",
         "rhs": "Windows"
-      }
+      },
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Debug"
+      },
+      "architecture": "x64"
     },
     {
-      "name": "cxx26",
-      "displayName": "Experimental C++26",
+      "name": "windows-release",
+      "displayName": "Windows C++23 Release",
       "inherits": "base",
+      "generator": "Visual Studio 18 2026",
+      "condition": {
+        "type": "equals",
+        "lhs": "${hostSystemName}",
+        "rhs": "Windows"
+      },
       "cacheVariables": {
-        "CMAKE_CXX_STANDARD": "26"
-      }
+        "CMAKE_BUILD_TYPE": "Release"
+      },
+      "architecture": "x64"
     }
   ],
   "buildPresets": [
     {
-      "name": "linux",
-      "configurePreset": "linux"
-    },
-    {
-      "name": "macos",
-      "configurePreset": "macos"
+      "name": "linux-prototype",
+      "configurePreset": "linux-prototype",
+      "configuration": "Debug"
     },
     {
       "name": "linux-release",
-      "configurePreset": "linux-release"
-    },
-    {
-      "name": "macos-release",
-      "configurePreset": "macos-release"
-    },
-    {
-      "name": "windows",
-      "configurePreset": "windows",
+      "configurePreset": "linux-release",
       "configuration": "Release"
     },
     {
-      "name": "cxx26",
-      "configurePreset": "cxx26",
+      "name": "macos-prototype",
+      "configurePreset": "macos-prototype",
       "configuration": "Debug"
+    },
+    {
+      "name": "macos-release",
+      "configurePreset": "macos-release",
+      "configuration": "Release"
+    },
+    {
+      "name": "windows-prototype",
+      "configurePreset": "windows-prototype",
+      "configuration": "Debug"
+    },
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release",
+      "configuration": "Release"
     }
   ],
   "testPresets": [
     {
-      "name": "linux",
-      "configurePreset": "linux",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "macos",
-      "configurePreset": "macos",
+      "name": "linux-prototype",
+      "configurePreset": "linux-prototype",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -143,6 +149,15 @@
     {
       "name": "linux-release",
       "configurePreset": "linux-release",
+      "configuration": "Release",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "macos-prototype",
+      "configurePreset": "macos-prototype",
+      "configuration": "Debug",
       "output": {
         "outputOnFailure": true
       }
@@ -150,22 +165,23 @@
     {
       "name": "macos-release",
       "configurePreset": "macos-release",
-      "output": {
-        "outputOnFailure": true
-      }
-    },
-    {
-      "name": "windows",
-      "configurePreset": "windows",
       "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }
     },
     {
-      "name": "cxx26",
-      "configurePreset": "cxx26",
+      "name": "windows-prototype",
+      "configurePreset": "windows-prototype",
       "configuration": "Debug",
+      "output": {
+        "outputOnFailure": true
+      }
+    },
+    {
+      "name": "windows-release",
+      "configurePreset": "windows-release",
+      "configuration": "Release",
       "output": {
         "outputOnFailure": true
       }

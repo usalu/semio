@@ -6,28 +6,28 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::presentation::schema::mutations::*;
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
-use crate::standards::v1::subsets::presentation::io::text::diff::{dec_shape};
-use crate::standards::v1::subsets::presentation::io::text::diff::{enc_shape};
-use crate::standards::v1::subsets::presentation::io::text::diff::{dec_slide};
-use crate::standards::v1::subsets::presentation::io::text::diff::{enc_slide};
-use crate::standards::v1::subsets::presentation::io::text::diff::{dec_layout};
-use crate::standards::v1::subsets::presentation::io::text::diff::{enc_layout};
-use crate::standards::v1::subsets::presentation::io::text::diff::{dec_master};
-use crate::standards::v1::subsets::presentation::io::text::diff::{enc_master};
-use crate::standards::v1::subsets::presentation::io::text::diff::{dec_frame};
-use crate::standards::v1::subsets::presentation::io::text::diff::{enc_frame};
-use crate::standards::v1::subsets::document::io::text::diff::{dec_block};
-use crate::standards::v1::subsets::document::io::text::diff::{enc_block};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::diff::{diff_insert_layout, diff_insert_master, diff_insert_shape, diff_insert_slide, diff_remove_layout, diff_remove_master, diff_remove_shape, diff_remove_slide, diff_set_layout_master, diff_set_shape_frame, diff_set_slide_layout, diff_set_slide_notes, diff_set_textbox_blocks, frame_of, SemioPresentationDiff};
+use crate::io::text::diff::dec_shape;
+use crate::io::text::diff::enc_shape;
+use crate::io::text::diff::dec_slide;
+use crate::io::text::diff::enc_slide;
+use crate::io::text::diff::dec_layout;
+use crate::io::text::diff::enc_layout;
+use crate::io::text::diff::dec_master;
+use crate::io::text::diff::enc_master;
+use crate::io::text::diff::dec_frame;
+use crate::io::text::diff::enc_frame;
+use semio_s_artifact_stdio_semio_document::io::text::diff::dec_block;
+use semio_s_artifact_stdio_semio_document::io::text::diff::enc_block;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::{SemioPresentationSnapshot, Slide, SlideFrame, SlideLayout, SlideMaster, SlideShape};
 /// 🔧️ `OpBinary`/`OpText` both unconditional (not `#[cfg(test)]`-gated): the real
 /// `impl protocol::OpBinary for SemioPresentationMutation` below (production code) calls
 /// `self.print_op()`/`Self::parse_op(...)` via method syntax, which needs both traits in scope.

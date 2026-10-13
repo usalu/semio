@@ -1847,9 +1847,9 @@ struct EditorSceneHoverField {
 }
 
 /// 🔎️ One `*Json` member of the contract's scene in its typed form: the encoded field expanded
-/// (`semio_framework_os_kernel::os_store::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
+/// (`semio_framework_os_kernel::os_pack::pack_rt::scene_field_json_text`, React's `parseSceneJsonField`) and read; a JSON `null` is no value.
 fn text_editor_scene_member<T: serde::de::DeserializeOwned>(member: &str, raw: &str) -> Result<Option<T>, String> {
-    let json = semio_framework_os_kernel::os_store::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
+    let json = semio_framework_os_kernel::os_pack::pack_rt::scene_field_json_text(raw).map_err(|error| format!("{member}: {error}"))?;
     serde_json::from_str::<Option<T>>(&json).map_err(|error| format!("{member}: {error}"))
 }
 

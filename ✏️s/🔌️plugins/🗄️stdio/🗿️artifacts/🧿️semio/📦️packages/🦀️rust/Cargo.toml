@@ -15,195 +15,52 @@ workspace = true
 [lib]
 path = "../../🦀️.rs"
 
-[features]
-default = []
-component-app-assembly = []
-# 🧩️ Capability Features
-conversion-animation = ["conversion-animation-gif","conversion-animation-gltf","conversion-animation-mp4"]
-conversion-animation-gif = ["dep:semio-s-artifact-stdio-gif"]
-conversion-animation-gltf = ["dep:semio-s-artifact-stdio-gltf"]
-conversion-animation-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
-conversion-audio = ["conversion-audio-mp3","conversion-audio-wav"]
-conversion-audio-mp3 = ["dep:semio-s-artifact-stdio-mp3"]
-conversion-audio-wav = ["dep:semio-s-artifact-stdio-wav"]
-conversion-brep = ["conversion-brep-dwg","conversion-brep-step"]
-conversion-brep-dwg = ["dep:semio-s-artifact-stdio-dwg"]
-conversion-brep-step = ["dep:semio-s-artifact-stdio-step"]
-conversion-cad = ["conversion-cad-dwg","conversion-cad-dxf","conversion-cad-step"]
-conversion-cad-dwg = ["dep:semio-s-artifact-stdio-dwg"]
-conversion-cad-dxf = ["dep:semio-s-artifact-stdio-dxf"]
-conversion-cad-step = ["dep:semio-s-artifact-stdio-step"]
-conversion-document = ["conversion-document-docx","conversion-document-md","conversion-document-pdf","conversion-document-txt","conversion-document-zip"]
-conversion-document-docx = ["dep:semio-s-artifact-stdio-docx"]
-conversion-document-md = ["dep:semio-s-artifact-stdio-md"]
-conversion-document-pdf = ["dep:semio-s-artifact-stdio-pdf"]
-conversion-document-txt = ["dep:semio-s-artifact-stdio-txt"]
-conversion-document-zip = ["dep:semio-s-artifact-stdio-zip"]
-conversion-drawing = ["conversion-drawing-dwg","conversion-drawing-dxf","conversion-drawing-pdf","conversion-drawing-png","conversion-drawing-svg","conversion-drawing-xml"]
-conversion-drawing-dwg = ["dep:semio-s-artifact-stdio-dwg"]
-conversion-drawing-dxf = ["dep:semio-s-artifact-stdio-dxf"]
-conversion-drawing-pdf = ["dep:semio-s-artifact-stdio-pdf"]
-conversion-drawing-png = ["dep:semio-s-artifact-stdio-png"]
-conversion-drawing-svg = ["dep:semio-s-artifact-stdio-svg"]
-conversion-drawing-xml = ["dep:semio-s-artifact-stdio-xml"]
-conversion-flow = ["conversion-flow-json"]
-conversion-flow-json = ["dep:semio-s-artifact-stdio-json"]
-conversion-image = ["conversion-image-bmp","conversion-image-gif","conversion-image-jpg","conversion-image-png","conversion-image-tiff"]
-conversion-image-bmp = ["dep:semio-s-artifact-stdio-bmp"]
-conversion-image-gif = ["dep:semio-s-artifact-stdio-gif"]
-conversion-image-jpg = ["dep:semio-s-artifact-stdio-jpg"]
-conversion-image-png = ["dep:semio-s-artifact-stdio-png"]
-conversion-image-tiff = ["dep:semio-s-artifact-stdio-tiff"]
-conversion-mesh = ["conversion-drawing","conversion-mesh-dwg","conversion-mesh-gltf","conversion-mesh-las","conversion-mesh-obj","conversion-mesh-ply","conversion-mesh-stl"]
-conversion-mesh-dwg = ["dep:semio-s-artifact-stdio-dwg"]
-conversion-mesh-gltf = ["dep:semio-s-artifact-stdio-gltf"]
-conversion-mesh-las = ["dep:semio-s-artifact-stdio-las"]
-conversion-mesh-obj = ["dep:semio-s-artifact-stdio-obj"]
-conversion-mesh-ply = ["dep:semio-s-artifact-stdio-ply"]
-conversion-mesh-stl = ["dep:semio-s-artifact-stdio-stl"]
-conversion-model = ["conversion-model-bcf","conversion-model-ifc","conversion-model-step"]
-conversion-model-bcf = ["dep:semio-s-artifact-stdio-bcf"]
-conversion-model-ifc = ["dep:semio-s-artifact-stdio-ifc"]
-conversion-model-step = ["dep:semio-s-artifact-stdio-step"]
-conversion-presentation = ["conversion-presentation-pptx","conversion-presentation-xml","conversion-presentation-zip"]
-conversion-presentation-pptx = ["dep:semio-s-artifact-stdio-pptx"]
-conversion-presentation-xml = ["dep:semio-s-artifact-stdio-xml"]
-conversion-presentation-zip = ["dep:semio-s-artifact-stdio-zip"]
-conversion-value = ["conversion-value-csv","conversion-value-json","conversion-value-xml"]
-conversion-value-csv = ["dep:semio-s-artifact-stdio-csv"]
-conversion-value-json = ["dep:semio-s-artifact-stdio-json"]
-conversion-value-xml = ["dep:semio-s-artifact-stdio-xml"]
-conversion-video = ["conversion-video-avi","conversion-video-mp4"]
-conversion-video-avi = ["dep:semio-s-artifact-stdio-avi"]
-conversion-video-mp4 = ["dep:semio-s-artifact-stdio-mp4"]
-# /🧩️ Capability Features
-
 [dependencies]
+semio-framework-schema-state = { workspace = true }
+semio-framework-schema-composition = { workspace = true }
+semio-framework-async = { workspace = true }
+semio-framework-2d = { workspace = true }
 semio-framework-artifact-reference = { workspace = true }
-semio-framework-dsl-record = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/📦️packages/🦀️rust" }
-semio-framework-dsl-record-derive = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/🧬️schema/✨️derive/📦️packages/🦀️rust" }
-semio-framework-async = { path = "../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
-semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
-semio-framework-diagnostic = { path = "../../../../../../../🧰️framework/🔨️modules/⚠️diagnostic/📦️packages/🦀️rust" }
-semio-framework-dsl = { path = "../../../../../../../🧰️framework/🔨️modules/🗣️dsl/📦️packages/🦀️rust" }
-semio-framework-ui-locale = { path = "../../../../../../../🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust" }
-semio-framework-schema-state = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📶️state/📦️packages/🦀️rust" }
-semio-framework-schema-composition = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/🧩️composition/📦️packages/🦀️rust" }
-semio-framework-schema-registry = { path = "../../../../../../../🧰️framework/🔨️modules/🧬️schema/📇️registry/📦️packages/🦀️rust" }
-semio-framework-2d = { path = "../../../../../../../🧰️framework/🔨️modules/◻️2d/📦️packages/🦀️rust" }
-semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
-pack = { workspace = true }
-semio-framework = { workspace = true }
-semio-framework-3d = { workspace = true }
-semio-framework-geometry = { workspace = true }
+semio-framework-diagnostic = { workspace = true }
 semio-framework-graph = { workspace = true }
-semio-framework-hash = { workspace = true }
 semio-framework-job = { workspace = true }
-semio-framework-math = { workspace = true }
-semio-framework-mesh-engine = { workspace = true }
 semio-framework-os-kernel = { workspace = true }
+semio-framework-pack-json = { workspace = true }
 semio-framework-plugin = { workspace = true }
 semio-framework-schema = { workspace = true }
+semio-framework-schema-registry = { workspace = true }
+semio-framework-ui-locale = { workspace = true }
+semio-framework-value = { workspace = true }
 semio-framework-value-derive = { workspace = true }
 semio-s-artifact-stdio-contract = { workspace = true }
-# 🧩️ Capability Dependencies
-semio-s-artifact-stdio-avi = { workspace = true, optional = true }
-semio-s-artifact-stdio-bcf = { workspace = true, optional = true }
-semio-s-artifact-stdio-bmp = { workspace = true, optional = true }
-semio-s-artifact-stdio-csv = { workspace = true, optional = true }
-semio-s-artifact-stdio-docx = { workspace = true, optional = true }
-semio-s-artifact-stdio-dwg = { workspace = true, optional = true }
-semio-s-artifact-stdio-dxf = { workspace = true, optional = true }
-semio-s-artifact-stdio-gif = { workspace = true, optional = true }
-semio-s-artifact-stdio-gltf = { workspace = true, optional = true }
-semio-s-artifact-stdio-ifc = { workspace = true, optional = true }
-semio-s-artifact-stdio-jpg = { workspace = true, optional = true }
-semio-s-artifact-stdio-json = { workspace = true, optional = true }
-semio-s-artifact-stdio-las = { workspace = true, optional = true }
-semio-s-artifact-stdio-md = { workspace = true, optional = true }
-semio-s-artifact-stdio-mp3 = { workspace = true, optional = true }
-semio-s-artifact-stdio-mp4 = { workspace = true, optional = true }
-semio-s-artifact-stdio-obj = { workspace = true, optional = true }
-semio-s-artifact-stdio-pdf = { workspace = true, optional = true }
-semio-s-artifact-stdio-ply = { workspace = true, optional = true }
-semio-s-artifact-stdio-png = { workspace = true, optional = true }
-semio-s-artifact-stdio-pptx = { workspace = true, optional = true }
-semio-s-artifact-stdio-step = { workspace = true, optional = true }
-semio-s-artifact-stdio-stl = { workspace = true, optional = true }
-semio-s-artifact-stdio-svg = { workspace = true, optional = true }
-semio-s-artifact-stdio-tiff = { workspace = true, optional = true }
-semio-s-artifact-stdio-txt = { workspace = true, optional = true }
-semio-s-artifact-stdio-wav = { workspace = true, optional = true }
-semio-s-artifact-stdio-xml = { workspace = true, optional = true }
-semio-s-artifact-stdio-zip = { workspace = true, optional = true }
-# /🧩️ Capability Dependencies
-serde = { workspace = true }
-serde_json = { workspace = true }
+semio-s-artifact-stdio-semio-animation = { workspace = true }
+semio-s-artifact-stdio-semio-audio = { workspace = true }
+semio-s-artifact-stdio-semio-base = { workspace = true }
+semio-s-artifact-stdio-semio-brep = { workspace = true }
+semio-s-artifact-stdio-semio-cad = { workspace = true }
+semio-s-artifact-stdio-semio-document = { workspace = true }
+semio-s-artifact-stdio-semio-drawing = { workspace = true }
+semio-s-artifact-stdio-semio-flow = { workspace = true }
+semio-s-artifact-stdio-semio-graph = { workspace = true }
+semio-s-artifact-stdio-semio-image = { workspace = true }
+semio-s-artifact-stdio-semio-kit = { workspace = true }
+semio-s-artifact-stdio-semio-mesh = { workspace = true }
+semio-s-artifact-stdio-semio-model = { workspace = true }
+semio-s-artifact-stdio-semio-object = { workspace = true }
+semio-s-artifact-stdio-semio-presentation = { workspace = true }
+semio-s-artifact-stdio-semio-table = { workspace = true }
+semio-s-artifact-stdio-semio-text = { workspace = true }
+semio-s-artifact-stdio-semio-value = { workspace = true }
+semio-s-artifact-stdio-semio-video = { workspace = true }
 
 [dev-dependencies]
-semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
-semio-framework-trace = { path = "../../../../../../../🧰️framework/🔨️modules/⏱️trace/📦️packages/🦀️rust" }
 semio-framework-os-kernel = { workspace = true, features = ["protocol-laws", "mutation-testing"] }
 semio-framework-plugin = { workspace = true, features = ["artifact-app-testing"] }
-# 🔮 Test-only geometry ORACLE (never a `[dependencies]` entry, never reachable from a
-# production target) — same crate and version `semio-framework-3d` already uses as its collision
-# oracle. `🧲️procedural-example-booleans` measures the tessellated boolean result with parry3d's
-# own signed-volume integrator to cross-check this kernel's `solid_volume`.
-parry3d = "0.17"
-# 🔮 Test-only EXACT-ARITHMETIC oracle for `🧊️brep/…/➡️vector/⚖️predicates` (never a
-# `[dependencies]` entry, never reachable from a production target). The predicates' exact path is
-# nonoverlapping floating-point expansion arithmetic (Shewchuk error-free transformations); this
-# recomputes the SAME determinants in arbitrary-precision rationals — a completely different
-# representation and a completely different algorithm, written by someone else — so the claim "the
-# expansion path returns the exact sign" rests on an independent derivation rather than on the
-# expansion code agreeing with itself (ticket 26/09/09/PROCEDURAL-3D-END-TO-END,
-# `📓️kernel-performance-2026-09-13.md`).
-num-rational = "0.4"
-# 🔮 Test-only RASTER oracle (never a `[dependencies]` entry): resvg renders the svg leaf's output
-# of the same drawing the `🖊️drawing → 📷️png` rasterizer paints, and hayro renders the pdf leaf's
-# output, so neither raster expectation is computed by this repository's own code.
-resvg = "0.45.1"
-hayro = "0.4.0"
+semio-s-artifact-stdio-contract = { workspace = true, features = ["testing"] }
 semio-framework-async-macros = { workspace = true }
-semio-s-artifact-stdio-csv = { workspace = true }
-semio-s-artifact-stdio-json = { workspace = true }
-
-[[test]]
-name = "flow_retained_decode"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/💾️binary/🦀️.rs"
-
-[[test]]
-name = "brep_procedural_example_booleans"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🧲️procedural-example-booleans/🦀️.rs"
-
-# 📦️ Extrude/sweep prism ORIENTATION laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Two profile
-# shapes × both windings × both sweep directions × both profile-coedge senses, each held to outward
-# face normals and a POSITIVE tessellated signed volume equal to the closed form, with `parry3d` as
-# the third-party integrator.
-[[test]]
-name = "brep_extrude_orientation"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/📦️extrude-orientation/🦀️.rs"
-
-# ⏱️ Resumable tessellator + validate-gate laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Declared
-# as its own `[[test]]` (rather than a `#[cfg(test)]` module) so the interactive-job contract stays
-# runnable from the crate's PUBLIC surface alone, independent of the lib's own test target.
-[[test]]
-name = "brep_tessellation_jobs"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/⏱️tessellation-jobs/🦀️.rs"
-
-# 🎨️ ANALYTIC blend laws — ticket 26/09/09/PROCEDURAL-3D-END-TO-END. Constant-radius rolling-ball
-# fillets as `Surface::Cylinder` edge patches and `Surface::Sphere` corner patches, chamfers as
-# planar cut faces, over the full 12-edge box and every partial selection, each held to χ = 2, a
-# silent `validate_body`, an outward shell, its Steiner closed-form volume, and `parry3d`'s own
-# integration of the tessellated result — plus the interactive wall-clock budget the NURBS patches
-# this rewrite replaced could not meet.
-[[test]]
-name = "brep_analytic_blend"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🎨️analytic-blend/🦀️.rs"
-
-[[test]]
-name = "brep_shell_orientation"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🧊️brep/🧪️tests/🐚️shell-orientation/🦀️.rs"
+semio-framework-dsl = { workspace = true }
+semio-framework-trace = { workspace = true }
+serde_json = { workspace = true }
 
 [package.metadata.semio.composition]
 manifest = "../../🧩️composition/🔣️.json"
@@ -213,21 +70,8 @@ script = "📜️script.ts"
 command = ["composition", "prepare"]
 
 [[test]]
-name = "drawing_original_prefix"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🖊️drawing/🧬️schema/📸️snapshot/🧩️component/🌳️nodes/🧾️original/🧪️tests/🦀️.rs"
-
-[[test]]
-name = "value_path_frames"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🔢️value/🚪️io/💾️binary/🧬️mutations/🧭️path/🧪️tests/🔗️native/🦀️.rs"
-
-[[test]]
-name = "flow_original_close"
-path = "../../🏅️standards/🔖️v1/🪆️subsets/🌊️flow/🚪️io/💾️binary/📸️snapshot/🧪️tests/🧾️original/🦀️.rs"
-
-[[test]]
 name = "preparation_law"
 path = "../../🧪️tests/⚙️preparation/🦀️.rs"
-required-features = ["component-app-assembly"]
 
 [[test]]
 name = "native_prefix"

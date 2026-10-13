@@ -1,0 +1,51 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "schema://repo.build/StageCacheV1",
+  "title": "Content-addressed cache of post-link build stages",
+  "description": "A post-link stage (describe, transpile, optimize, probe, …) is a pure function of the digests of its inputs, the identities of its tools and its own schema version. Its outputs are stored once under the key's SHA-256 and restored on every later request.",
+  "definitions": {
+    "Policy": {
+      "const": {
+        "version": 1,
+        "warmRoot": "stages",
+        "freshStore": "s",
+        "entryFile": "🧾️entry.json",
+        "temporaryPrefix": ".stage-"
+      }
+    },
+    "Sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "StageName": { "type": "string", "pattern": "^[a-z][a-z0-9-]{0,47}$" },
+    "StageKeyV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stage", "schemaVersion", "inputs", "tools"],
+      "properties": {
+        "stage": { "$ref": "#/definitions/StageName" },
+        "schemaVersion": { "type": "integer", "minimum": 1 },
+        "inputs": { "type": "object", "minProperties": 1, "additionalProperties": { "$ref": "#/definitions/Sha256" } },
+        "tools": { "type": "object", "additionalProperties": { "type": "string", "minLength": 1, "maxLength": 512 } }
+      }
+    },
+    "StageFileV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "sha256", "bytes"],
+      "properties": {
+        "path": { "type": "string", "minLength": 1, "maxLength": 160, "pattern": "^[^/\\\\\\u0000]+(?:/[^/\\\\\\u0000]+)*$" },
+        "sha256": { "$ref": "#/definitions/Sha256" },
+        "bytes": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "StageEntryV1": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["version", "key", "digest", "files"],
+      "properties": {
+        "version": { "const": 1 },
+        "key": { "$ref": "#/definitions/StageKeyV1" },
+        "digest": { "$ref": "#/definitions/Sha256" },
+        "files": { "type": "array", "items": { "$ref": "#/definitions/StageFileV1" } }
+      }
+    }
+  }
+}

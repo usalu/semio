@@ -7,10 +7,10 @@ pub fn export_stdio_kinds() -> &'static [&'static str] {
     &["stdio.dwg", "stdio.dxf", "stdio.json", "stdio.png", "stdio.svg"]
 }
 pub fn layout_to_wire(from: &LayoutSnapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(from)
+    store::os_store::serialization::ArtifactPack::encode_pack(from)
 }
 pub fn layout_from_wire(bytes: &[u8]) -> Result<LayoutSnapshot, store::PackError> {
-    <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)
+    <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
@@ -164,12 +164,15 @@ use semio_framework_value::FromValue;
 use semio_framework_value::ToValue;
 use {semio_framework_plugin::io::io_dispatch,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::ErasedComposeSource,semio_framework_plugin::io::IoDirection,semio_framework_plugin::io::IoKey,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 #[cfg(test)]
-use semio_s_artifact_stdio_dwg::{DwgColor, DwgEntity};
-use semio_s_artifact_stdio_dwg::{DwgDrawing, DwgGeometry};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
-use semio_s_artifact_stdio_svg::schema::snapshot::{SvgSnapshot};
-use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::{write_svg_xml};
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgColor;
+#[cfg(test)]
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgEntity;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgDrawing;
+use semio_s_artifact_stdio_dwg_model::standards::v_ac1024::subsets::any::schema::geometry::DwgGeometry;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint3, SemioRgba, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawCanvas, DrawLayer, DrawNode, DrawStyle, PathSegment, SemioDrawingSnapshot, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_svg::schema::snapshot::SvgSnapshot;
+use semio_s_artifact_stdio_svg::standards::v1_1::subsets::base::io::text::snapshot::write_svg_xml;
 
 const DRAWING_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("drawing") };
 const SVG_FORMAT_KIND: &str = "s.stdio.svg";
@@ -179,7 +182,7 @@ const SVG_FORMAT_STANDARD: &str = "1.1";
 /// "rects-as-paths" primitive both `layout_snapshot_to_semio_drawing` (page/frame rects) and the app
 /// engine's `display_list_to_semio_drawing` (rendered display-list rects) build on.
 pub fn rect_path_segments(x: f64, y: f64, width: f64, height: f64) -> Vec<PathSegment> {
-    use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
+    use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
     vec![
         PathSegment::MoveTo { to: SemioPoint2 { x, y } },
         PathSegment::LineTo { to: SemioPoint2 { x: x + width, y } },
@@ -248,14 +251,14 @@ pub fn compose_svg_from_drawing(drawing: &SemioDrawingSnapshot) -> Result<String
         format_standard: SVG_FORMAT_STANDARD.to_string(),
         format_subset: "*".to_string(),
     };
-    let bytes = <SemioDrawingSnapshot as store::ArtifactPack>::encode_pack(drawing);
+    let bytes = <SemioDrawingSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(drawing);
     let source = ErasedComposeSource { dialect: DRAWING_DIALECT, payload: IoPayload::Binary(bytes) };
     let composed = ::semio_framework_async::poll::resolve_ready(io_dispatch(&key, std::slice::from_ref(&source))).map_err(|e| format!("layout->semio/drawing->svg: {}", e.message))?;
     let svg_bytes = match composed.payload {
         IoPayload::Binary(bytes) => bytes,
         IoPayload::Text(text) => text.into_bytes(),
     };
-    let svg = <SvgSnapshot as store::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
+    let svg = <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&svg_bytes).map_err(|e| format!("layout->semio/drawing->svg decode: {e:?}"))?;
     write_svg_xml(&svg.doc).map_err(|e| format!("layout->semio/drawing->svg write: {e}"))
 }
 
@@ -445,7 +448,11 @@ pub fn layout_document_json_from_drawing(drawing_snapshot: &SemioDrawingSnapshot
 #[cfg(test)]
 pub fn ensure_stdio_semio_drawing_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
-    ONCE.call_once(semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::io::register);
+    ONCE.call_once(|| {
+        semio_s_artifact_stdio_semio_drawing::io::register();
+        (semio_s_artifact_stdio_semio_drawing_import::CONVERSION.register)();
+        (semio_s_artifact_stdio_semio_drawing_export::CONVERSION.register)();
+    });
 }
 //#endregion 🔖️TestSupport
 
@@ -593,10 +600,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -647,14 +654,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

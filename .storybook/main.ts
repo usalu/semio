@@ -1,3 +1,6 @@
+import { readBuildMode } from "../🧰️framework/🔨️modules/🏃️process/🏗️build/🎚️mode/🟦️.ts";
+import { semioViteBuild } from "../🧰️framework/🔨️modules/🖱️ui/🎨️styling/🏗️builder/🌐️vite/🎚️mode/🟦️.ts";
+import { viteCacheDirectory } from "../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/🌐️vite/🟦️.ts";
 // This file has been automatically migrated to valid ESM format by Storybook.
 // #region 🧲️Header
 // 💻️ .storybook/main.ts
@@ -77,7 +80,7 @@ const config: StorybookConfig = {
   // the shell's "plugin artifact missing" panel instead of booting. These are build OUTPUTS produced
   // by `dev`'s materialize step, not sources — storybook only serves whatever is already on disk and
   // never triggers a cargo build itself.
-  staticDirs: [{ from: pluginModulesRoot("dev"), to: "/plugin-modules" }],
+  staticDirs: [{ from: pluginModulesRoot(), to: "/plugin-modules" }],
   addons: [getAbsolutePath("@storybook/addon-vitest"), getAbsolutePath("@storybook/addon-docs")],
   framework: {
     name: getAbsolutePath("@storybook/react-vite"),
@@ -97,7 +100,7 @@ const config: StorybookConfig = {
   async viteFinal(config, { configType }) {
     // ⚡️ Routes Storybook's Vite dependency-optimizer cache into the ONE shared cache root instead of
     // the Vite default (`node_modules/.vite`), so disk is bounded by the pruner rather than by `node_modules`.
-    config.cacheDir = repoCacheDirectory(repoRootPath, "vite", "storybook");
+    config.cacheDir = viteCacheDirectory(repoCacheDirectory(repoRootPath, "vite", "storybook"), { ...process.env, SEMIO_BUILD_MODE: configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE) }, import.meta.url);
     config.resolve = config.resolve || {};
     // #region 🔖️ResolvePackageExports
     /** SB 10’s resolver prefers `storybook`/`stories` export conditions; most deps only declare `import`/`require`, so `"."` fails. Put standard bundler conditions first. */
@@ -191,7 +194,7 @@ const config: StorybookConfig = {
       target: "es2022",
       loader: { ...(config.optimizeDeps.esbuildOptions?.loader || {}), ".ts": "tsx" },
     };
-    config.build = config.build || {};
+    config.build = { ...config.build, ...semioViteBuild(undefined, configType === "DEVELOPMENT" ? "prototype" : readBuildMode(process.env.SEMIO_BUILD_MODE)) };
     config.build.target = "es2022";
     config.build.rollupOptions = config.build.rollupOptions || {};
     const existingExternal = config.build.rollupOptions.external;

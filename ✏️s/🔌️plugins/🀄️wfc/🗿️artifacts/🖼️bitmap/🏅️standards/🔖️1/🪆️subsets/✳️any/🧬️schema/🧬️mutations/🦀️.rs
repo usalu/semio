@@ -51,7 +51,7 @@ pub use super::set_input_pixels::set_input_pixels;
 pub use super::unpin_pixel::unpin_pixel;
 //#endregion 🔖️Builders
 
-pub type BitmapEnvelope = store::ArtifactEnvelope<BitmapSnapshot, BitmapMutation>;
+pub type BitmapEnvelope = store::os_store::store_schema::ArtifactEnvelope<BitmapSnapshot, BitmapMutation>;
 pub type BitmapStore = store::ArtifactStore<BitmapSnapshot, BitmapMutation>;
 
 /// ↩️ Computes a mutation's inverse against a projection — generic over every variant.

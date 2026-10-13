@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🏁benchmarks` per Wave C.
 
 use super::RenameBenchmarkRecord;
-use crate::diff::{ProgramBenchmarksDelta, ProgramBenchmarksPatchEntry};
-use crate::registers::BenchmarkRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramBenchmarksDelta, ProgramBenchmarksPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::BenchmarkRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameBenchmarkRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

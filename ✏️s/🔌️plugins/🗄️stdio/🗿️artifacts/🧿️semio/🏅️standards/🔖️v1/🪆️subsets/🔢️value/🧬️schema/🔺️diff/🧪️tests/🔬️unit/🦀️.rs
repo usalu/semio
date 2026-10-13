@@ -1,6 +1,5 @@
 use super::*;
-use crate::standards::v1::subsets::value::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
-use std::collections::HashMap;
+use crate::schema::snapshot::STDIO_SEMIOVALUE_DOCUMENT_SCHEMA;
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn snap(root: SemioValue, nodes: Vec<SemioValueNode>) -> SemioValueSnapshot {
@@ -312,7 +311,7 @@ fn sweep_b() -> SemioValueSnapshot {
 /// the empty (`None`/`None`) diff.
 #[test]
 fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::{DiffBinary,DiffCodec,DiffText};
+    use protocol::{DiffBinary,DiffText};
 
     for d in demo_diff_cases() {
         let printed = d.print_diff();

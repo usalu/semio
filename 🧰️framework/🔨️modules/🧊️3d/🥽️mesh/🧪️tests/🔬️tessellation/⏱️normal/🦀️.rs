@@ -3,7 +3,7 @@ use super::*;
 /// ⏱️ The same original full normal cursor funds every effect and retains exact source/output custody through six interruptions.
 #[test]
 fn original_mesh_tessellation_normal_cursor_preserves_all_actual_receipts(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){for cut in std::iter::once(None).chain(law["normalTessellation"]["cancellationTurns"].as_array().unwrap().iter().map(|value|Some(value.as_u64().unwrap()as usize))){

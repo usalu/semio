@@ -1,7 +1,7 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioTransform;
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
-use crate::standards::v1::subsets::model::io::binary::mutations::wire_tag;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioTransform;
+use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, RelationKind, SemioModelElement, SpatialKind, SpatialNode};
+use crate::io::binary::mutations::wire_tag;
 
 /// 🧪️ kinds_match_the_enum_and_the_catalog — the honesty check the test platform cannot make
 /// for itself, because the framework reads a DECLARED list and never parses Rust. Two claims:
@@ -33,7 +33,7 @@ fn kinds_match_the_enum_and_the_catalog() {
 fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
     let diff = <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(&mutation, base);
     let mut applied = base.clone();
-    let (__next, produced) = crate::applied(&applied, &mutation);
+    let (__next, produced) = semio_s_artifact_stdio_semio_base::applied(&applied, &mutation);
     applied = __next;
     assert_eq!(produced, diff, "diff() must match what apply_semio_model_mutation actually applied for {mutation:?}");
     let expected = protocol::apply_diff(diff.diff(), base).expect("apply must succeed for a well-formed fixture");
@@ -42,7 +42,7 @@ fn assert_round_trips(base: &SemioModelSnapshot, mutation: SemioModelMutation) {
     let inv = <SemioModelMutation as Mutation<SemioModelSnapshot>>::inverse(&mutation, base).expect("valid retained mutation inverse fixture");
     let mut restored = applied.clone();
     for m in inv.iter().rev() {
-        let (__next, _) = crate::applied(&restored, m);
+        let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&restored, m);
         restored = __next;
     }
     assert_eq!(&restored, base, "inverse must restore the original base for {mutation:?}");
@@ -119,7 +119,7 @@ async fn relative_placement_leaves_derive_from_the_base_and_undo_exactly() {
         assert_round_trips(&base, leaf);
     }
     let mut moved = base.clone();
-    let (__next, _) = crate::applied(&moved, &drag);
+    let (__next, _) = semio_s_artifact_stdio_semio_base::applied(&moved, &drag);
     moved = __next;
     assert_eq!((moved.elements[1].placement.translation.x, moved.elements[1].placement.translation.y, moved.elements[1].placement.translation.z), (6.5, 4.0, 7.25));
     let level = |mutation: &SemioModelMutation| <SemioModelMutation as Mutation<SemioModelSnapshot>>::diff(mutation, &base).messages().iter().map(|message| message.code.0.clone()).collect::<Vec<_>>();

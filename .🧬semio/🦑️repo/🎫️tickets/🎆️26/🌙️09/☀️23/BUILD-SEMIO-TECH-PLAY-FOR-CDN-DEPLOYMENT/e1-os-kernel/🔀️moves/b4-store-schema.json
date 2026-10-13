@@ -1,0 +1,19 @@
+{
+  "target": "🧬️schema/🦀️.rs",
+  "module": "store_schema",
+  "anchor": "//#region 🔖️Schemas\n",
+  "doc": [
+    "//! 🧬️ Store schemas: the command vocabulary (`ArtifactCommand` and friends), cursors and envelopes, history lanes,",
+    "//! projection stamps and events. Plain data every layer of the Store reads.",
+    "//!",
+    "//! Layering: `📓️2026-10-13-wave-e1-os-kernel.md` (ticket BUILD-SEMIO-TECH-PLAY-FOR-CDN-DEPLOYMENT)."
+  ],
+  "regions": [
+    "🔖️Schemas",
+    "🔖️HistoryLane",
+    "🧭️Stamps",
+    "📡️Events"
+  ],
+  "items": [],
+  "movableTraits": []
+}

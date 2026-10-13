@@ -154,7 +154,7 @@
       "target": null
     },
     {
-      "profile": "wasm-dev",
+      "profile": "wasm-prototype",
       "package": "semio-framework-os-kernel",
       "target": "wasm32-wasip2"
     },

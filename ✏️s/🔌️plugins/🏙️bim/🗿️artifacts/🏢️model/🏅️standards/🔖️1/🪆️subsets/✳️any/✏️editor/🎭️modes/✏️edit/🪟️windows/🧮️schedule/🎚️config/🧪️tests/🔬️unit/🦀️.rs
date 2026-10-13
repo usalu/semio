@@ -1,7 +1,7 @@
 use super::*;
 use protocol::os_spr::protocol_laws::assert_diff_algebra_inverse_law;
 use protocol::{Mutation, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn pinned() -> BimScheduleWindowConfig {
     BimScheduleWindowConfig { schedule: "sch-doors".into(), editing: true }

@@ -72,7 +72,7 @@ fn workspace_worker_pool() -> Arc<semio_framework_async::WorkerPool> {
 // `bun nx run @semio-tech/plugin-registry:generate`, the JSON-mirror twin of the `.rs`
 // `PLUGIN_WASM_ARTIFACTS` table `🏃️run/🏗️bootstrap/🦀️.rs` `include!`s) rather than guessing a naming
 // convention — several plugin ids transform irregularly (`cad-extension-aec-building` ->
-// `semio_s_plugin_cad_aec_building.wasm`, NOT the mechanical `_extension_` retained), so only the
+// `semio_s_plugin_cad_aec_building_component.wasm`, NOT the mechanical `_extension_` retained), so only the
 // generated table is a source of truth.
 #[derive(Clone, Debug)]
 pub struct PluginRegistryEntry {
@@ -83,15 +83,15 @@ pub struct PluginRegistryEntry {
     /// `_languageNeutralityComment`, restated in `📓️status.md`'s E1-describe entry: "descriptors
     /// live at the plugin/extension owner root ... siblings of `📦️packages`").
     pub owner_root: PathBuf,
-    /// 📦️ The component crate path relative to the repo root (`cratePath`): its `dist/component-{dev,release}` holds the
-    /// exact bytes `describe` read, so the committed descriptor describes the component this gateway runs.
+    /// 📦️ The component crate path relative to the repo root (`cratePath`): its `dist/components` holds the shipped
+    /// `wasm-release` bytes its `🧾️receipt.json` names, which the committed semantic descriptor describes.
     pub crate_path: PathBuf,
     pub wasm_out: String,
 }
 
-/// 🎯️ A component's deliverables relative to its crate root, in the order a profile wins: `component-dev` is the build
-/// `describe` reads (one build per component per rebuild), `component-release` the shipped one.
-const PLUGIN_COMPONENT_PROFILE_DIRS: [&str; 2] = ["dist/component-dev", "dist/component-release"];
+/// 🎯️ A component's one shipped deliverable directory relative to its crate root: the `wasm-release` bytes the describe
+/// stage verified against the committed semantic descriptor (ticket 26/09/23 wave A2).
+const PLUGIN_COMPONENT_DIRECTORY: &str = "dist/components";
 
 /// 🧭️ Locates the repo root — identical algorithm to `🏃️run/🏗️bootstrap/🦀️.rs::find_repo_root` (walk up from
 /// this crate's own `CARGO_MANIFEST_DIR` for `nx.json`, `SEMIO_REPO_ROOT` override first) so a direct
@@ -140,18 +140,14 @@ pub fn find_plugin_entry<'a>(entries: &'a [PluginRegistryEntry], plugin_id: &str
     entries.iter().find(|entry| entry.plugin_id == plugin_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{plugin_id}` is not in the plugin registry")))
 }
 
-/// 🗺️ Resolves one plugin's component under its crate's `dist/component-{dev,release}` — the same order as
+/// 🗺️ Resolves one plugin's shipped component under its crate's `dist/components` — the same path as
 /// `🏃️run/🏗️bootstrap/🦀️.rs::resolve_plugin_paths` and the TypeScript preflight in `🌉️mcp/🟦️.ts`.
 pub fn resolve_plugin_wasm_path(repo_root: &Path, entry: &PluginRegistryEntry) -> Result<PathBuf, GatewayError> {
-    let mut tried = Vec::new();
-    for profile_dir in PLUGIN_COMPONENT_PROFILE_DIRS {
-        let path = repo_root.join(&entry.crate_path).join(profile_dir).join(&entry.wasm_out);
-        tried.push(path.display().to_string());
-        if path.is_file() {
-            return Ok(path);
-        }
+    let path = repo_root.join(&entry.crate_path).join(PLUGIN_COMPONENT_DIRECTORY).join(&entry.wasm_out);
+    if path.is_file() {
+        return Ok(path);
     }
-    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s compiled wasm is missing (tried: {}); build its component-dev deliverable with `bun nx run-many -t describe --projects <its crate project>`", entry.plugin_id, tried.join(", "))))
+    Err(GatewayError::new(GatewayErrorCode::NotFound, format!("plugin `{}`'s shipped component is missing at {}; build it with `bun nx run <its crate project>:describe`", entry.plugin_id, path.display())))
 }
 //#endregion 🔖️PluginPaths
 
@@ -202,7 +198,7 @@ mod probe_json;
 #[path = "🪶️sqlite/🦀️.rs"]
 mod probe_sqlite;
 
-impl store::ArtifactDsl for ProbeSnapshot {
+impl store::os_store::serialization::ArtifactDsl for ProbeSnapshot {
     const EXTENSION: &'static str = "probe";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
@@ -221,10 +217,10 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for ProbeSnap
     }
 }
 
-impl store::ArtifactPack for ProbeSnapshot {
+impl store::os_store::serialization::ArtifactPack for ProbeSnapshot {
     /// 🪶️ Publishes this owner's actual relational snapshot capability.
-    fn sqlite_snapshot_codec() -> Option<store::ArtifactSqliteSnapshotCodec> {
-        Some(<Self as store::ArtifactSqliteSnapshot>::sqlite_codec())
+    fn sqlite_snapshot_codec() -> Option<store::os_store::serialization::ArtifactSqliteSnapshotCodec> {
+        Some(<Self as store::os_store::serialization::ArtifactSqliteSnapshot>::sqlite_codec())
     }
 
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
@@ -406,7 +402,7 @@ pub type ProbeStore = store::ArtifactStore<ProbeSnapshot, ProbeMutation>;
 pub fn ensure_probe_codec_registered() {
     static ONCE: std::sync::Once = std::sync::Once::new();
     ONCE.call_once(|| {
-        store::register_document_codec(store::ArtifactCodec::of::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA)).expect("register MCP probe codec");
+        store::os_store::codec_registry::register_document_codec(store::artifact_codec::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA)).expect("register MCP probe codec");
     });
 }
 
@@ -420,8 +416,8 @@ pub fn ensure_probe_codec_registered() {
 /// accumulator, the checkpoint/local-actor ids), the tail/current snapshot roots, the backbone, the
 /// causal DAG, and finally the envelope shell — in the exact order `ArtifactStore::drop`'s witness
 /// checks them.
-fn probe_store_owners() -> store::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
-    store::funded_bounded_artifact_store_owners::<ProbeSnapshot, ProbeMutation>().expect("Probe first-party store retirement catalog")
+fn probe_store_owners() -> store::os_store::document_store_owners::DocumentStoreOwners<ProbeSnapshot, ProbeMutation> {
+    store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<ProbeSnapshot, ProbeMutation>().expect("Probe first-party store retirement catalog")
 }
 
 /// 🚪️ Drains one `ProbeStore` to `ArtifactStore::drop`'s exact terminal-empty witness before
@@ -945,7 +941,7 @@ fn shared_plugin_runtime() -> Result<Arc<GuestRuntimes>, GatewayError> {
 /// component's own content hash so a rebuilt plugin is a different entry rather than a stale one.
 ///
 /// 🪦️ This is not only about not compiling twice. A `wasmtime::Component` owns a mapped code image
-/// — 136 MB for `🖍️draw`'s `wasm-dev` build — and releasing the LAST `Arc` to one runs
+/// — 136 MB for an unoptimized `🖍️draw` build — and releasing the LAST `Arc` to one runs
 /// `CodeMemory`'s `UnwindRegistration::drop`, i.e. a `__deregister_frame` walk over every frame in
 /// that image. Measured 2026-09-20 on a calm machine: the open itself is 34 ms and the drop of the
 /// component behind it pins a thread at 100 % for minutes, which is what made the gateway's first
@@ -1530,7 +1526,7 @@ impl PluginArtifactChannel {
     /// publishes back onto the backbone is kept for the relay, and an `AppFrame::Error` it answers on
     /// its shell lane is the refusal it is.
     pub fn receive_document_backbone(&mut self, instance: u32, message: Vec<u8>) -> Result<(), Fault> {
-        store::decode_hot_backbone_message_exact(&message).map_err(|error| Self::not_wired("document-backbone ingress", error))?;
+        store::os_store::backbone::decode_hot_backbone_message_exact(&message).map_err(|error| Self::not_wired("document-backbone ingress", error))?;
         self.ensure_instance(instance)?;
         let mut owed = vec![semio_framework::kernel::Event::Message { source: semio_framework::kernel::MessageEndpoint::Backbone { uri: self.actor_label.clone() }, payload: message }];
         let deadline = std::time::Instant::now() + COMMAND_RESUME_WALL_BUDGET;
@@ -1808,7 +1804,7 @@ impl PluginArtifactChannel {
             .collect();
         let budget = headless_open_budget();
         let mut guest = semio_framework_async::block_on(self.runtime.instantiate(&self.compiled, actor, &caps, &budget)).map_err(|error| match error {
-            semio_framework_plugin_host::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
+            semio_framework_plugin_interpreter::PluginHostError::Refused(fault) => Fault { code: fault.code.0.clone(), message: fault.message.clone() },
             other => Self::not_wired("instantiate", other),
         })?;
         let mut owed = vec![semio_framework::kernel::Event::InstanceOpen {
@@ -1836,7 +1832,7 @@ impl PluginArtifactChannel {
                 Err(error) if semio_framework_plugin_host::retryable_lifecycle_turn(&error, &events) => {
                     owed.splice(0..0, events);
                 }
-                Err(error @ (semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted)) => {
+                Err(error @ (semio_framework_plugin_interpreter::TurnFault::DeadlineExceeded | semio_framework_plugin_interpreter::TurnFault::FuelExhausted)) => {
                     semio_framework_async::block_on(self.runtime.drop_instance(guest));
                     return Err(Fault { code: "budget.exceeded".to_string(), message: format!("InstanceOpen exceeded one turn's ceiling ({error}); the guest never came up") });
                 }
@@ -2004,7 +2000,7 @@ impl PluginArtifactChannel {
                 self.pending_command_closes.resume(u64::from(instance), seq).map_err(|fault| Self::not_wired("resuming command owner", format!("{}: {}", fault.code.0, fault.message)))?;
                 self.discard_instance(instance);
                 return Err(match error {
-                    semio_framework_plugin_host::TurnFault::DeadlineExceeded | semio_framework_plugin_host::TurnFault::FuelExhausted => {
+                    semio_framework_plugin_interpreter::TurnFault::DeadlineExceeded | semio_framework_plugin_interpreter::TurnFault::FuelExhausted => {
                         Fault { code: "budget.exceeded".to_string(), message: format!("AppCommand exceeded one turn's ceiling ({error}); the instance was discarded") }
                     }
                     error => Self::not_wired("execute_turn", error),
@@ -3014,7 +3010,7 @@ struct GuestCodecRoute {
 
 /// 🗂️ Every guest-backed codec this process has registered, in registration order.
 ///
-/// 🧭️ A process-global table exists because [`store::ArtifactCodec`]'s four operations are bare,
+/// 🧭️ A process-global table exists because [`store::os_store::serialization::ArtifactCodec`]'s four operations are bare,
 /// NON-CAPTURING `fn` pointers — an erasure table, by design, so that a schema-string-keyed caller
 /// can print and apply without naming a concrete `P`/`Mutation`. A thunk therefore cannot close over
 /// a component, and cannot be told which schema it was registered under either: the signatures carry
@@ -3040,13 +3036,13 @@ fn guest_codec_route_snapshot() -> Vec<Arc<GuestCodecRoute>> {
 /// the exact fence the interface defines, once per candidate. In a real gateway session the
 /// candidate list is the packages whose documents this agent has open, which is one or two.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<store::ArtifactTextFiles, store::VcsError>> + Send + 'a>> {
+fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<store::os_store::text_format::ArtifactTextFiles, store::VcsError>> + Send + 'a>> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             match route.runtime.codec_print_mirror(&route.compiled, &route.artifact_schema, pack, spr, &headless_codec_budget()).await {
-                Ok(mirror) => return Ok(store::ArtifactTextFiles { dsl: mirror.dsl, ops: mirror.ops }),
+                Ok(mirror) => return Ok(store::os_store::text_format::ArtifactTextFiles { dsl: mirror.dsl, ops: mirror.ops }),
                 Err(error) => refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema)),
             }
         }
@@ -3057,7 +3053,7 @@ fn guest_print_mirror<'a>(pack: &'a [u8], spr: &'a [u8]) -> std::pin::Pin<Box<dy
 /// 🧩️ `(pack, spr, encode_ops_vec) -> (pack, spr, ops text)` through the same route resolution.
 /// The ops text is the component's own print of the RESULT pair, never a host re-derivation.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::ArtifactCodecApplyFuture<'a> {
+fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
@@ -3084,13 +3080,13 @@ fn guest_apply_ops_binary<'a>(pack: &'a [u8], spr: &'a [u8], ops: &'a [u8]) -> s
 /// 📜️ `(pack, spr, encode_envelopes) -> (pack, spr, ops text)` — the replica fold of a ledger
 /// stream through the same route resolution; the ops text is the component's own print of the result.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> store::ArtifactCodecApplyFuture<'a> {
+fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]) -> store::os_store::serialization::ArtifactCodecApplyFuture<'a> {
     Box::pin(async move {
         let routes = guest_codec_route_snapshot();
         let mut refusals: Vec<String> = Vec::new();
         for route in &routes {
             let budget = headless_codec_budget();
-            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_host::GuestCallCancellation::default()).await {
+            let replayed = match route.runtime.codec_replay_envelopes(&route.compiled, &route.artifact_schema, pack, spr, envelopes, &budget, |_, _| {}, &semio_framework_plugin_interpreter::GuestCallCancellation::default()).await {
                 Ok(replayed) => replayed,
                 Err(error) => {
                     refusals.push(format!("{}/{}: {error}", route.plugin_id, route.artifact_schema));
@@ -3114,7 +3110,7 @@ fn guest_replay_envelopes<'a>(pack: &'a [u8], spr: &'a [u8], envelopes: &'a [u8]
 /// binding that has no folder. A typed refusal naming that is the honest answer; fabricating text
 /// here would put bytes in a `.ops` file that no component ever produced.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
+fn guest_compile_dsl<'a>(_dsl: &'a str, _ops: &'a str) -> std::pin::Pin<Box<dyn std::future::Future<Output = Result<(store::os_store::serialization::ArtifactPackFiles, String), store::VcsError>> + Send + 'a>> {
     Box::pin(async move { Err(store::VcsError::Deserialize("a guest-backed document codec has no `compile-dsl`: `interface codec` exports pack-schema-hash, genesis, print-mirror, apply-ops and replay-envelopes only".to_string())) })
 }
 
@@ -3126,8 +3122,8 @@ fn guest_edit_text_from_envelope<'a>(_envelope: &'a store::os_spr::MutationEnvel
 /// 🪶️ Resolves semantic snapshot conversion by its declared schema and exact dialect.
 /// 🖥️ Classifies the VM's intrinsic outcome separately from a provider rejection.
 #[cfg(not(target_arch = "wasm32"))]
-fn guest_sqlite_turn_error(error: semio_framework_plugin_host::TurnFault) -> semio_framework::io_schema::IoError {
-    use semio_framework_plugin_host::TurnFault;
+fn guest_sqlite_turn_error(error: semio_framework_plugin_interpreter::TurnFault) -> semio_framework::io_schema::IoError {
+    use semio_framework_plugin_interpreter::TurnFault;
     use semio_framework_value::{ValueError, ValueRefusalKind};
     let kind = match &error {
         TurnFault::Cancelled => ValueRefusalKind::Canceled,
@@ -3150,7 +3146,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     use semio_framework::{ io_schema::{IoError, IoOutcome, IoPayload}, sqlite_snapshot::{self, SnapshotEncoding, SqliteSnapshotPhase}};
     use semio_framework_os_kernel::io::{self};
-    use semio_framework_plugin_host::{sqlite_wire, GuestCallCancellation};
+    use semio_framework_plugin_interpreter::{sqlite_wire, GuestCallCancellation};
     control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
     let route = guest_sqlite_route(schema, dialect)?;
     let (encoding, bytes) = match payload { IoPayload::Binary(bytes) => (SnapshotEncoding::Binary, bytes.as_slice()), IoPayload::Text(text) => (SnapshotEncoding::Text, text.as_bytes()) };
@@ -3176,7 +3172,7 @@ struct GuestSqliteImportFrame {
     database: Option<semio_framework::sqlite_snapshot::SqliteDatabase>,
     bytes: Vec<u8>,
     coordinate: String,
-    wire: Option<semio_framework_plugin_host::sqlite_wire::SnapshotPayloadResult>,
+    wire: Option<semio_framework_plugin_interpreter::sqlite_wire::SnapshotPayloadResult>,
     diagnostics: Vec<semio_framework::Diagnostic>,
 }
 
@@ -3211,7 +3207,7 @@ fn guest_sqlite_import_coordinate(dialect:&semio_framework_artifact_reference::A
 #[cfg(not(target_arch = "wasm32"))]
 fn guest_sqlite_import(schema: &str, dialect: &semio_framework_artifact_reference::ArtifactDialect, database: &mut Option<semio_framework::sqlite_snapshot::SqliteDatabase>, encoding: semio_framework::sqlite_snapshot::SnapshotEncoding, control: &mut semio_framework::sqlite_snapshot::SqliteSnapshotControl<'_>, native: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> semio_framework::io_schema::IoResult<semio_framework::io_schema::IoPayload> {
     use semio_framework::{io_schema::{IoError,IoOutcome,IoPayload},sqlite_snapshot::{self,SqliteSnapshotPhase}};
-    use semio_framework_plugin_host::{sqlite_wire,GuestCallCancellation};
+    use semio_framework_plugin_interpreter::{sqlite_wire,GuestCallCancellation};
     use semio_framework_value::{ValueError,ValueRefusalKind,RetainedCloneGrant};
     if database.is_none(){return Err(IoError::from_value_error(ValueError::literal(ValueRefusalKind::InvariantViolated,"guest SQLite import original database is absent")))}
     native.receive_nested::<GuestSqliteImportFrame,semio_framework::io_schema::IoResult<IoPayload>>(|slot,native|{
@@ -3287,11 +3283,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         if route.plugin_id != plugin_id || route.compiled.package_hash != compiled.package_hash { return Err(GatewayError::new(GatewayErrorCode::PreconditionFailed, "an exact guest snapshot route is already owned by another plugin or component")); }
         return Ok(pack_schema_hash);
     }
-    let codec = store::ArtifactCodec {
+    let codec = store::os_store::serialization::ArtifactCodec {
         schema: artifact_schema.to_string(),
         extension: "semio",
-        native_identity: store::ArtifactNativeSnapshotIdentity::Guest { plugin_id: plugin_id.to_string(), package_hash: compiled.package_hash, schema: artifact_schema.to_string() },
-        snapshot_sqlite: Some(store::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import }),
+        native_identity: store::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest { plugin_id: plugin_id.to_string(), package_hash: compiled.package_hash, schema: artifact_schema.to_string() },
+        snapshot_sqlite: Some(store::os_store::serialization::ArtifactSqliteSnapshotCodec { schema: std::borrow::Cow::Owned(sqlite_schema), snapshot_type: None, export: guest_sqlite_export, import: guest_sqlite_import }),
         pack_schema_hash,
         compile_dsl: guest_compile_dsl,
         print_mirror: guest_print_mirror,
@@ -3593,10 +3589,10 @@ impl RoutingArtifactChannel {
         };
         let since = relay.version();
         for message in egress {
-            match store::decode_hot_backbone_message_exact(&message) {
-                Ok(store::BackboneMessage::Mutations { .. }) => {}
-                Ok(store::BackboneMessage::Ack { .. }) => continue,
-                Ok(store::BackboneMessage::Genesis { .. } | store::BackboneMessage::Member { .. } | store::BackboneMessage::Retract { .. }) => {
+            match store::os_store::backbone::decode_hot_backbone_message_exact(&message) {
+                Ok(store::os_store::backbone::BackboneMessage::Mutations { .. }) => {}
+                Ok(store::os_store::backbone::BackboneMessage::Ack { .. }) => continue,
+                Ok(store::os_store::backbone::BackboneMessage::Genesis { .. } | store::os_store::backbone::BackboneMessage::Member { .. } | store::os_store::backbone::BackboneMessage::Retract { .. }) => {
                     return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published a genesis, member or retraction message on its hot document backbone") });
                 }
                 Err(error) => return Err(Fault { code: "channel.not-wired".to_string(), message: format!("`{artifact_id}`'s guest published an undecodable document-backbone message: {error}") }),
@@ -3887,7 +3883,7 @@ pub struct InstalledArtifactKind {
     pub export_formats: Vec<String>,
 }
 
-/// 📦️ One document's authoritative binary pair — the exact `(pack, spr)` `store::print_document_pack`
+/// 📦️ One document's authoritative binary pair — the exact `(pack, spr)` `store::os_store::text_format::print_document_pack`
 /// writes and the hub's `active-checkpoint/pair` route serves. Held behind an `Arc` on a
 /// [`PluginArtifactBinding`] so the ~80 KB of a real document is read from the hub ONCE per open and
 /// then only ever cloned into the single archive load that seeds a guest with it.
@@ -4243,7 +4239,7 @@ pub struct PluginArtifactBinding {
     #[cfg(not(target_arch = "wasm32"))]
     pub backbone: Option<store::sync::ArtifactMailboxSender>,
     /// 🚧️ Why this binding opened no document actor, when it did not. A hub document whose artifact
-    /// schema has no registered `store::ArtifactCodec` in this process cannot open a document socket
+    /// schema has no registered `store::os_store::serialization::ArtifactCodec` in this process cannot open a document socket
     /// at all: `connect_hub` reads `document_codec(schema).pack_schema_hash` to build its
     /// `SocketHelloV1` and silently reschedules a reconnect forever when there is none. Recording
     /// the reason here is what turns that silence into something a reader can see.
@@ -4580,7 +4576,7 @@ impl HeadlessWorkspace {
         let mut probe_store = match existing {
             Some(probe_store) => probe_store,
             None => {
-                let envelope = store::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
+                let envelope = store::os_store::document_materialize::create_document_envelope::<ProbeSnapshot, ProbeMutation>(PROBE_SCHEMA, artifact_id, ProbeSnapshot::default(), None);
                 let mut probe_store = ProbeStore::new(envelope).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("constructing probe store for `{artifact_id}`: {error}")))?;
                 probe_store.install_document_store_owners_exact(probe_store_owners());
                 let document_key = self.origin.artifact_document_key(artifact_id);
@@ -4598,13 +4594,13 @@ impl HeadlessWorkspace {
                     self.artifact_host.close_key(&channels.document_key);
                     return Err(GatewayError::new(GatewayErrorCode::PluginUnavailable, format!("artifact `{artifact_id}` opened outside its authenticated document scope")).retryable());
                 }
-                probe_store.attach_backbone(store::Backbones::Channel(channels.channel_backbone)).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
+                probe_store.attach_backbone(store::os_store::backbone::Backbones::Channel(channels.channel_backbone)).await.map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("attaching backbone for `{artifact_id}`: {error}")))?;
                 probe_store
             }
         };
         if probe_store.applied_edit_ids().is_empty() {
             probe_store
-                .dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], transaction: None })
+                .dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(initial)], transaction: None })
                 .await
                 .map_err(|error| GatewayError::new(GatewayErrorCode::Internal, format!("seeding `{artifact_id}`: {error}")))?;
             self.artifact_host.send_key(&self.origin.artifact_document_key(artifact_id), store::sync::ArtifactActorMsg::LocalMutations { envelopes: Vec::new() }).await;
@@ -4627,7 +4623,7 @@ impl HeadlessWorkspace {
         self.ensure_probe_artifact(artifact_id, semio_framework_value::DslValue::Null).await?;
         let mut probe_store =
             self.open_probes.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(artifact_id).ok_or_else(|| GatewayError::new(GatewayErrorCode::Internal, format!("`{artifact_id}` was just ensured open but is missing from open_probes")))?;
-        let dispatched = probe_store.dispatch(store::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }).await;
+        let dispatched = probe_store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![ProbeMutation::SetValue(value)], transaction: None }).await;
         let applied_edit_ids = probe_store.applied_edit_ids();
         let head_edit_id = applied_edit_ids.last().cloned().unwrap_or_default();
         let cursor = applied_edit_ids.len().to_string();
@@ -5026,7 +5022,7 @@ impl HeadlessWorkspace {
     #[cfg(not(target_arch = "wasm32"))]
     fn open_hub_document_actor(&self, artifact_id: &str, lease: &semio_framework_os_kernel::os_directory::DocumentExecutionTargetLeaseFieldsV1, relay: Arc<HubRelay>) -> (Option<store::sync::ArtifactMailboxSender>, Option<String>) {
         let schema = lease.artifact.schema.clone();
-        match ::semio_framework_async::poll::resolve_ready(store::document_codec(&schema)) {
+        match ::semio_framework_async::poll::resolve_ready(store::os_store::codec_registry::document_codec(&schema)) {
             Ok(Some(_)) => {}
             Ok(None) => {
                 if let Err(error) = self.register_hub_document_codec(&lease) {

@@ -2,7 +2,9 @@
 
 use super::remove_encryption_dictionary::RemoveEncryptionDictionary;
 use super::PdfXMutation;
-use crate::standards::v1_7::subsets::base::schema::{conformance_support as support, diff::{self, PdfDiff}, snapshot::PdfSnapshot};
+use crate::standards::v1_7::subsets::base::schema::conformance_support as support;
+use crate::standards::v1_7::subsets::base::schema::diff::{self, PdfDiff};
+use crate::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
 use protocol::{MutationKind, MutationOutcome, SemanticDescriptor};
 
 //#region 🔖️Mutation

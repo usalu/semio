@@ -8,14 +8,14 @@
 //! is certified only up to its sampling, like `distance_solid_solid`.
 
 use super::{ScopeMembers, ShapeKind, ShapeScope};
-use crate::brep::queries::bounding_volume::face_aabb;
-use crate::brep::queries::classification::point_in_solid;
-use crate::brep::queries::mass_properties::{closest_point_on_face, solids_overlap};
-use crate::brep::representation::arena::{EdgeId, FaceId};
-use crate::brep::representation::curve::curve_ops;
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::topology::Body;
-use crate::brep::representation::vector::Pnt3;
+use crate::bounding_volume::face_aabb;
+use crate::classification::point_in_solid;
+use crate::mass_properties::{closest_point_on_face, solids_overlap};
+use semio_framework_3d_brep_representation::arena::{EdgeId, FaceId};
+use semio_framework_3d_brep_representation::curve::curve_ops;
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::topology::Body;
+use semio_framework_3d_brep_representation::vector::Pnt3;
 
 /// 📍 The nearest pair of points between two shapes.
 #[derive(Clone, Copy, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue)]
@@ -98,7 +98,7 @@ pub fn point_distance(body: &Body, scope: &ShapeScope, point: Pnt3) -> Result<Po
     let signed = if matches!(scope.kind, ShapeKind::Solid | ShapeKind::Compound) {
         let mut inside = false;
         for &solid in &members.solids {
-            if matches!(point_in_solid(body, solid, point, 1e-9)?, crate::brep::engine::PointClassification::Inside) {
+            if matches!(point_in_solid(body, solid, point, 1e-9)?, semio_framework_3d_brep_representation::contract::PointClassification::Inside) {
                 inside = true;
             }
         }

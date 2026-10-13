@@ -1,7 +1,7 @@
 use super::*;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::set_node_label::SetNodeLabel;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowNode;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_flow::schema::mutations::set_node_label::SetNodeLabel;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowNode;
 
 fn content() -> SemioFlowSnapshot {
     let node = |id: &str, x: f64, y: f64| FlowNode { id: id.into(), kind: "inputSlider".into(), label: id.into(), params: Vec::new(), position: SemioPoint2 { x, y } };

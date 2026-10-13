@@ -24,7 +24,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
         overrides: Vec::new(),
     }];
     snapshot.background_drawing =
-        Some(LayoutDrawingChild { handle: store::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: Default::default() });
+        Some(LayoutDrawingChild { handle: store::os_store::artifact_child::ArtifactChild::new("child-drawing-1".to_string(), semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-1!s.stdio.semio@v1/drawing").expect("valid child ref uri")), content: Default::default() });
     snapshot.referenced_model = Some(store::ArtifactLink { target: semio_framework_artifact_reference::ArtifactRef::parse_uri("doc-2!s.stdio.semio@v1/model").expect("valid link ref uri"), pin: store::LinkPin::Head, role: "model".into() });
     snapshot
 }
@@ -35,12 +35,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{ArtifactR
 #[semio_framework_async_macros::async_test]
 async fn background_drawing_and_referenced_model_round_trip_through_text_and_binary() {
     let snapshot = sample_with_composition();
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    let from_text = <LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    let from_text = <LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse round-tripped text");
     assert_eq!(from_text, snapshot);
 
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    let from_binary = <LayoutSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    let from_binary = <LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode round-tripped binary");
     assert_eq!(from_binary, snapshot);
 }
 
@@ -49,8 +49,8 @@ async fn absent_composition_slots_round_trip_as_none() {
     let mut snapshot = sample_with_composition();
     snapshot.background_drawing = None;
     snapshot.referenced_model = None;
-    let text = store::ArtifactDsl::print_dsl(&snapshot);
-    assert_eq!(<LayoutSnapshot as store::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
-    let bytes = store::ArtifactPack::encode_pack(&snapshot);
-    assert_eq!(<LayoutSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
+    let text = store::os_store::serialization::ArtifactDsl::print_dsl(&snapshot);
+    assert_eq!(<LayoutSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).expect("parse"), snapshot);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snapshot);
+    assert_eq!(<LayoutSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode"), snapshot);
 }

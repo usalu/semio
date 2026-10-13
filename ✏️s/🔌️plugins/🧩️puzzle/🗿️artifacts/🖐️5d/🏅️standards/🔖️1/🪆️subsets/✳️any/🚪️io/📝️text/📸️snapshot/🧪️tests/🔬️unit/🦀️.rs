@@ -101,7 +101,7 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Puzzle5dMutation;
     use crate::host::owned::{close_puzzle5d_store,puzzle5d_store};
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{ArtifactCommand, create_document_envelope};
+    use store::{os_store::store_schema::ArtifactCommand, os_store::document_materialize::create_document_envelope};
 
     let mut store = (puzzle5d_store(create_document_envelope(crate::PUZZLE_5D_SCHEMA, "puzzle5d", Puzzle5dSnapshot::default(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))).await.expect("store");
     let part = Puzzle5dPart { id: "p1".into(), anchor: Puzzle5dPartAnchor::Fixed, part_kind: None, part_2d: Puzzle5dPart2d::default(), part_3d: Puzzle5dPart3d::default(), grips: Vec::new() };

@@ -1,6 +1,6 @@
 //! 🧪️ Recursive closure admission from actual typed snapshot projections.
 use super::*;
-use crate::os_store::ChildRef;
+use crate::os_store::artifact_child::ChildRef;
 use semio_framework_job::{StepBudget, root_cancel_token};
 use semio_framework_schema_composition::{ArtifactCompositionFields, ChildRefFields, ChildRefVisitor, ChildSlotSpec};
 use std::cell::Cell;

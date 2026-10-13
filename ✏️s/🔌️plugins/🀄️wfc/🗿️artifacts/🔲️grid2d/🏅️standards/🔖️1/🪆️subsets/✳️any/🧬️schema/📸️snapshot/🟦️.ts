@@ -13,7 +13,7 @@ export interface ArtifactRef {
   dialect: ArtifactDialect;
 }
 
-/** 🌉️ Mirrors `store::ArtifactChild<S>` — `childId`/`target` only. */
+/** 🌉️ Mirrors `store::os_store::artifact_child::ArtifactChild<S>` — `childId`/`target` only. */
 export interface ArtifactChildHandle {
   childId: string;
   target: ArtifactRef;

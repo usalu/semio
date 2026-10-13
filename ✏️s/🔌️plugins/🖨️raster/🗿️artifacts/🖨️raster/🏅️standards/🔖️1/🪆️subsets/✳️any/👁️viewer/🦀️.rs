@@ -78,7 +78,7 @@ impl ArtifactViewer for RasterViewer {
 
     fn build_document_store_owners(
         grant: semio_framework_value::retained_clone::RetainedCloneGrant,
-    ) -> Option<Result<(store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+    ) -> Option<Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
         Some(crate::host::owned::raster_document_store_owners_admission(grant))
     }
 

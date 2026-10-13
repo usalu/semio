@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "argumentCases": [
+    { "id": "workspace-folder-prefix", "command": "node ${workspaceFolder}/a/b.ts", "values": ["a/b.ts"] },
+    { "id": "assignment", "command": "cargo run --manifest-path=./x/Cargo.toml", "values": ["./x/Cargo.toml"] },
+    { "id": "quoted-workspace-path", "command": "bun x.ts --config \"${workspaceFolder}/c/nextest.toml\"", "values": ["x.ts", "--config", "c/nextest.toml"] },
+    { "id": "json-in-json", "command": "bun x.ts {\"configPath\":\"${workspaceFolder}/c/n.toml\",\"level\":\"long\"}", "values": ["x.ts", "{", "configPath", ":", "c/n.toml", "level", ":", "long", "}"] },
+    { "id": "scheme-prefixed-relative", "command": "open file:./x/y.md", "values": ["open", "file:./x/y.md", "./x/y.md"] },
+    { "id": "word-internal-separator", "command": "bun run scripts/build.ts", "values": ["scripts/build.ts"] },
+    { "id": "rooted", "command": "bun /abs/root.ts", "values": ["/abs/root.ts"] },
+    { "id": "flag-glued-relative", "command": "bun -I./include main.c", "values": ["-I./include", "./include", "main.c"] },
+    { "id": "parent-relative", "command": "go test ../pkg/...", "values": ["../pkg/..."] },
+    { "id": "escaped-backslashes", "command": "python3 \"C:\\tools\\x.py\" ./y.py", "values": ["C:", "tools", "x.py", "./y.py"] }
+  ],
+  "frozenEvidenceContractId": "remaining-package-purity-history-v1"
+}

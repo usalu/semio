@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📄documents` per Wave C.
 
 use super::RenameDocument;
-use crate::diff::{ProgramArtifactsDelta, ProgramArtifactsPatchEntry};
-use crate::registers::ArtifactRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramArtifactsDelta, ProgramArtifactsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::ArtifactRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameDocument, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

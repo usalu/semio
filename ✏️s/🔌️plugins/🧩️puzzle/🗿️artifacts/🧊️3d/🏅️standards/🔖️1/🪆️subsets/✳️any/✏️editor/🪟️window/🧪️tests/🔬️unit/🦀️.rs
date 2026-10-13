@@ -38,7 +38,7 @@ use super::*;
         // 🧮️ Four fill/distribution preferences plus `activeExampleId` (wave B26) — see the twin law in
         // `✏️editor/🧪️tests/🔬️unit/🦀️.rs`.
         assert_eq!(oracle.as_object().map(serde_json::Map::len), Some(5));
-        let pack = store::ArtifactPack::encode_pack(&shared);
+        let pack = store::os_store::serialization::ArtifactPack::encode_pack(&shared);
         for forbidden in ["camera", "windowOptions", "engagementInput", "suggestionMenu", "fillCheckpoint", "fillApplyGeneration"] {
             assert!(!spr.contains(forbidden));
             assert!(!pack.windows(forbidden.len()).any(|bytes| bytes == forbidden.as_bytes()));
@@ -87,7 +87,7 @@ use super::*;
     #[test]
     fn every_oversized_string_capacity_returns_the_exact_puzzle3d_owner() {
         {
-            let mut engagement_input = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+            let mut engagement_input = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
             engagement_input.push('3');
             let pointer = engagement_input.as_ptr();
             let capacity = engagement_input.capacity();
@@ -98,7 +98,7 @@ use super::*;
             retire_returned_puzzle3d_transient(transient);
         }
         {
-            let mut window_id = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+            let mut window_id = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
             window_id.push('w');
             let pointer = window_id.as_ptr();
             let capacity = window_id.capacity();
@@ -113,7 +113,7 @@ use super::*;
             retire_returned_puzzle3d_transient(transient);
         }
         {
-            let mut vortex_full_id = String::with_capacity(store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
+            let mut vortex_full_id = String::with_capacity(store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES + 1);
             vortex_full_id.push('v');
             let pointer = vortex_full_id.as_ptr();
             let capacity = vortex_full_id.capacity();
@@ -185,10 +185,10 @@ use super::*;
             camera: Puzzle3dCamera { position: [1.0, 2.0, 3.0], target: [4.0, 5.0, 6.0], zoom: 2.5, up: Some([0.0, 0.0, 1.0]), projection: Default::default() },
         };
         assert_ne!(original, Puzzle3dWindowConfig::default(), "the scene_snapshot must differ from the default in every field it asserts");
-        let bytes = store::ArtifactPack::encode_pack(&original);
-        let decoded = <Puzzle3dWindowConfig as store::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
+        let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&original);
+        let decoded = <Puzzle3dWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("window config pack decodes");
         assert_eq!(decoded, original, "one pack round trip must preserve every persisted window option");
-        let printed = store::ArtifactDsl::print_dsl(&original);
-        let parsed = <Puzzle3dWindowConfig as store::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
+        let printed = store::os_store::serialization::ArtifactDsl::print_dsl(&original);
+        let parsed = <Puzzle3dWindowConfig as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("window config text parses");
         assert_eq!(parsed, original, "one text round trip must preserve every persisted window option");
     }

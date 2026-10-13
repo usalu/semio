@@ -4,7 +4,7 @@ use native_caller::*;
 use crate::*;
 use semio_framework_value::{DslValue, FromValue, Number, ToValue};
 
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 #[path="./🧮️properties/🦀️.rs"]
 pub(crate) mod property_allocation;
 
@@ -172,7 +172,7 @@ fn sqlite_snapshot_framework_dag_controlled_value_keeps_actual_owned_state() {
 #[test]
 fn sqlite_snapshot_framework_dag_erased_both_native_formats_have_queryable_entities() {
     use store::sqlite_snapshot::*;
-    let capability = store::ArtifactCodec::bare::<DagSnapshot, DagMutation>("dag.host_snapshot").snapshot_sqlite.expect("framework DAG relational owner");
+    let capability = store::bare_artifact_codec::<DagSnapshot, DagMutation>("dag.host_snapshot").snapshot_sqlite.expect("framework DAG relational owner");
     let dialect = semio_framework_artifact_reference::ArtifactDialect { artifact_kind: laws()["documentSchema"].as_str().unwrap().into(), standard: "1".into(), subset: "*".into() };
     let expected = Owned::new(full(words()[6]));
     for encoding in [SnapshotEncoding::Binary, SnapshotEncoding::Text] {
@@ -217,7 +217,7 @@ fn sqlite_snapshot_framework_dag_native_output_cancels_inside_owned_text_copy() 
 
 #[test]
 fn sqlite_snapshot_framework_dag_borrowed_preflight_preserves_zero_owned_admission(){
- use store::ArtifactSqliteSnapshot;
+ use store::os_store::serialization::ArtifactSqliteSnapshot;
  use store::sqlite_snapshot::*;
  use semio_framework_value::ValueRefusalKind;
  let snapshot=Owned::new(full(words()[6]));

@@ -5,8 +5,8 @@
 use super::brep_curve::{coincide, cross, direction, dot, guarded, minus, norm, points, refusal};
 use super::phased_job::{Pipeline, Work};
 use super::super::prelude::*;
-use semio_framework_3d::brep::engine::{BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::representation::curve::Curve3;
+use semio_framework_3d_brep_engine::{BrepOperation, GeometryHandle, ShapeRoot, ShapeValue};
+use semio_framework_3d_brep_representation::curve::Curve3;
 use std::f64::consts::PI;
 
 //#region 🔖️Fit

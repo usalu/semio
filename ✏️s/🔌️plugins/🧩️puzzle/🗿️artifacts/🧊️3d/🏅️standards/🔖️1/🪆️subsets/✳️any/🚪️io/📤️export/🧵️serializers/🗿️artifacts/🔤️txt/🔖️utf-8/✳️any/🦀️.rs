@@ -5,5 +5,5 @@ use crate::Puzzle3dSnapshot;
 pub fn register() {}
 
 pub fn serialize_bytes(from: &Puzzle3dSnapshot) -> Result<Vec<u8>, semio_framework_diagnostic::TextError> {
-    Ok(<Puzzle3dSnapshot as store::ArtifactDsl>::print_dsl(from).into_bytes())
+    Ok(<Puzzle3dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(from).into_bytes())
 }

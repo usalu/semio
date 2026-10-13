@@ -19,23 +19,18 @@ pub type ParametricEdge = (EdgeId, bool, Option<Curve2Id>, (f64, f64));
 /// 🚶 Ordered vertices and oriented edges around a loop.
 pub type LoopWalk = (Vec<VertexId>, Vec<(EdgeId, bool)>);
 
-use crate::brep::representation::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
-use crate::brep::representation::curve::curve_ops::closest_parameter;
-use crate::brep::representation::curve::{Curve2, Curve3};
-use crate::brep::representation::error::KernelError;
-use crate::brep::representation::surface::Surface;
-use crate::brep::representation::tolerance::Tol;
-use crate::brep::representation::topology::history::OpRecorder;
-use crate::brep::representation::topology::{Body, Coedge, Edge, Face, Loop, Shell, Solid, Vertex};
-use crate::brep::representation::vector::matrix::Frame3;
-use crate::brep::representation::vector::{Pnt2, Pnt3, Vec3};
+use semio_framework_3d_brep_representation::arena::{ArenaId, CoedgeId, Curve2Id, Curve3Id, EdgeId, FaceId, LoopId, ShellId, SolidId, SurfaceId, VertexId};
+use semio_framework_3d_brep_representation::curve::curve_ops::closest_parameter;
+use semio_framework_3d_brep_representation::curve::{Curve2, Curve3};
+use semio_framework_3d_brep_representation::error::KernelError;
+use semio_framework_3d_brep_representation::surface::Surface;
+use semio_framework_3d_brep_representation::tolerance::Tol;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::{dummy_coedge, make_loop, Body, Coedge, Edge, Face, Shell, Solid, Vertex};
+use semio_framework_3d_brep_representation::vector::matrix::Frame3;
+use semio_framework_3d_brep_representation::vector::{Pnt2, Pnt3, Vec3};
 
 // #region 🔖️Make
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dummy_coedge() -> CoedgeId {
-    ArenaId::from_raw(0, 0)
-}
 
 /// ✂️ Creates a new vertex, recording it as generated.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -51,23 +46,6 @@ pub fn make_edge(body: &mut Body, curve: Curve3Id, range: (f64, f64), v0: Vertex
     let label = body.new_label();
     rec.record_generated(label);
     body.edges.insert(Edge { curve, range, v0, v1, tol, label })
-}
-
-/// ✂️ Builds a closed coedge ring from `members` (one `(edge, forward)` pair per coedge, in ring
-/// order) and links it into a new [`Loop`]. Loops/coedges have no [`crate::brep::representation::topology::history::PersistentLabel`]
-/// of their own (they are structural, not independently document-nameable), so nothing is recorded.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn make_loop(body: &mut Body, face: FaceId, members: &[(EdgeId, bool)]) -> LoopId {
-    let loop_id = body.loops.insert(Loop { first: dummy_coedge(), face });
-    let coedge_ids: Vec<CoedgeId> = members.iter().map(|&(edge, forward)| body.coedges.insert(Coedge { edge, forward, pcurve: None, prange: (0.0, 0.0), loop_id, next: dummy_coedge(), prev: dummy_coedge() })).collect();
-    let n = coedge_ids.len();
-    for i in 0..n {
-        let coedge = body.coedges.get_mut(coedge_ids[i]).unwrap();
-        coedge.next = coedge_ids[(i + 1) % n];
-        coedge.prev = coedge_ids[(i + n - 1) % n];
-    }
-    body.loops.get_mut(loop_id).unwrap().first = coedge_ids[0];
-    loop_id
 }
 
 /// ✂️ Creates a new face, recording it as generated.
@@ -100,7 +78,7 @@ pub fn add_solid(body: &mut Body, outer: ShellId, inners: Vec<ShellId>, rec: &mu
 /// caller owns them now.
 ///
 /// A scaffold left behind is not inert. It is a second, independent solid that
-/// [`crate::brep::queries::validation::validate_body`]
+/// [`semio_framework_3d_brep_queries::validation::validate_body`]
 /// walks like any other — so when `↔️offset::shell_solid` flips every one of its faces to build
 /// the cavity, the scaffold's own outer shell integrates to −V and the body carries a permanent
 /// `shell-orientation-inward` issue. `Brep::validate_gate_sync` validates the WHOLE body, so that
@@ -144,7 +122,7 @@ pub fn split_edge(body: &mut Body, edge_id: EdgeId, t: f64, position: Pnt3, rec:
 /// p-curve (when present) is split proportionally alongside the 3D curve, using the SAME
 /// normalized split fraction on both — pcurve `prange` and edge `range` share one parametrization
 /// convention (`t = edge.range.0 + (edge.range.1 - edge.range.0)·s`, `p = prange.0 +
-/// (prange.1-prange.0)·s`, always in the edge's own curve order per [`crate::brep::operations::primitives`]'s
+/// (prange.1-prange.0)·s`, always in the edge's own curve order per [`crate::primitives`]'s
 /// documented convention) — this was the previous version's own latent bug (it dropped every
 /// split coedge's pcurve to `None`, silently breaking validation's `missing-pcurve` check on any
 /// face that had ever been imprinted).
@@ -684,7 +662,7 @@ pub fn split_face_by_interior_curve(body: &mut Body, face: FaceId, edge_id: Edge
 /// inner loop (hole) on the original face and the outer ring of a second face on the same surface —
 /// only with the ring walked over every member of `chain` instead of one self-closing edge. `chain`
 /// must be end-to-end connected and closed (each member's `forward` flag oriented along the walk),
-/// as [`crate::brep::operations::boolean`]'s chain assembly emits it.
+/// as [`crate::boolean`]'s chain assembly emits it.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn split_face_by_interior_chain(body: &mut Body, face: FaceId, chain: &[ParametricEdge], rec: &mut OpRecorder) -> Result<(FaceId, FaceId), KernelError> {
     if chain.len() < 2 {

@@ -6,7 +6,7 @@ use semio_framework_os_kernel::{
         transfer::{heap_sort, reserve},
         validate_sqlite_database_schema_controlled, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase, ValueError, ValueRefusalKind,
     },
-    ArtifactSqliteSnapshot,
+    os_store::serialization::ArtifactSqliteSnapshot,
 };
 use semio_framework_value::{native_decoding::NativeDecodeProgress, DecodedValue, NativeDecodeControl};
 use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::sqlite::snapshot::reconstruct_xml_documents;

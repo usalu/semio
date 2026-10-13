@@ -66,7 +66,7 @@ impl semio_framework_value::FromValue for FormsSnapshot {
 impl FormsSnapshot {
     /// 🪆️ Enforces the document marker and exact owned-child coordinates.
     pub fn validate(&self) -> Result<(), String> {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::child::validate_semio_child_identity;
+        use semio_s_artifact_stdio_semio_base::schema::child::validate_semio_child_identity;
         if self.schema != "forms.form" { return Err("invalid Forms document marker".into()); }
         self.definition.validate()?;
         let mut responses = std::collections::HashSet::new();
@@ -86,7 +86,7 @@ impl Default for FormsSnapshot {
 //#endregion 🔖️Snapshot
 
 // 🧬️ Ticket 26/08/17/CLEAN-ARTIFACT-STANDARD-SUBSET-MECHANISM (design.md §1 CORRECTION): the native
-// `store::ArtifactDsl`/`store::ArtifactPack` codec impls (and their hex/LEB128 primitives) moved to
+// `store::os_store::serialization::ArtifactDsl`/`store::os_store::serialization::ArtifactPack` codec impls (and their hex/LEB128 primitives) moved to
 // `🚪️io/📸️snapshot/{📝️text,💾️binary}` — this facet root keeps only the struct + pure defaults, no
 // codecs (design.md rule: `🧬️schema` is types + pure transforms only). Their round-trip tests moved
 // with them.

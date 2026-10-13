@@ -13,7 +13,7 @@
   "limits": {
     "requestBytes": 8192,
     "manifestBytes": 8192,
-    "componentBytes": 67108864,
+    "componentBytes": 268435456,
     "descriptorBytes": 4194304,
     "inFlight": 2,
     "hubDeadlineMs": 8000,

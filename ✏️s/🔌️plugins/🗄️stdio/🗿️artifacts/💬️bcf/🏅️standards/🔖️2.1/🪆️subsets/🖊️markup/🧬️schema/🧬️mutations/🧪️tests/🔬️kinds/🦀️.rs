@@ -1,4 +1,4 @@
-use crate::standards::v2_1::subsets::any::io::text::mutations::print_bcf_mutation;
+use protocol::OpText;
 use super::*;
 
 #[test]
@@ -20,7 +20,7 @@ fn kinds_const_matches_enum_variants_in_declaration_order() {
     ];
     assert_eq!(one_per_variant.len(), KINDS.len(), "one_per_variant must cover every KINDS entry exactly once");
     for (mutation, kind) in one_per_variant.iter().zip(KINDS.iter()) {
-        let printed = print_bcf_mutation(mutation);
+        let printed = mutation.print_op();
         let keyword = printed.split(' ').next().unwrap_or(&printed);
         assert_eq!(keyword, *kind, "KINDS order must match the enum's own OpText keyword order for {mutation:?}");
     }

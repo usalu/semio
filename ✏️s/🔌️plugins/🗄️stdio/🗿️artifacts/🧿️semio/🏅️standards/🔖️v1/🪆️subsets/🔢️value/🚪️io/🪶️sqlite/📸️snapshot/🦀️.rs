@@ -1,9 +1,9 @@
 //! 🔢️ Typed Semio value primitives, structural ownership and referential graph nodes.
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native::Bound;
-use crate::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding::Owned;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native::Bound;
+use crate::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot, sqlite_snapshot::{artifact::{Cell, RowWriter, reconstruct_text, reconstruct_blob}, SqliteDatabase, SqliteRow, SqliteValue, SqliteSnapshotControl, SqliteSnapshotPhase}};
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding::Owned;
 
 fn number(value: usize) -> Result<i64,ValueError> { i64::try_from(value).map_err(|error|ValueError::new(ValueRefusalKind::WorkLimit,error.to_string())) }
 fn identity(row: &SqliteRow, columns: usize) -> Result<(),ValueError> { if row.rowid <= 0 || row.integer(0)? != row.rowid || row.values.len() != columns { Err(ValueError::new(ValueRefusalKind::InvalidValue,"invalid Semio value identity or columns")) } else { Ok(()) } }
@@ -16,7 +16,7 @@ pub const VALUE_TABLES: ValueSqliteTables = ValueSqliteTables { value: "semio_va
 
 use store::sqlite_snapshot::SqliteDatabaseLimits;
 #[path="🧮️semantic/🦀️.rs"]
-pub(crate)mod semantic;
+pub mod semantic;
 /// 🎟️ Admits every typed cell before native forecasting or allocation.
 pub(crate)fn admit_values(snapshot:&SemioValueSnapshot,phase:SqliteSnapshotPhase,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::borrowed(control,phase)?;visit_rows(snapshot,&mut out)?;out.finish_borrowed()}
 /// 🏛️ Checks the exact authored layout before native ownership.
@@ -30,7 +30,7 @@ fn value_reference(nodes:&[(&str,i64)],id:&str,out:&mut RowWriter<'_,'_>)->Resul
  let mut lo=0;let mut hi=nodes.len();while lo<hi{let mid=lo+(hi-lo)/2;match out.compare_text(nodes[mid].0,id)?{std::cmp::Ordering::Less=>lo=mid+1,std::cmp::Ordering::Greater=>hi=mid,std::cmp::Ordering::Equal=>return Ok(nodes[mid].1)}}Err(ValueError::new(ValueRefusalKind::InvalidValue,"dangling Semio value reference"))
 }
 /// 🌳️ Visits the complete owned graph through the caller's borrowed or owned writer.
-pub(crate)fn visit_rows(snapshot:&SemioValueSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
+pub fn visit_rows(snapshot:&SemioValueSnapshot,out:&mut RowWriter<'_,'_>)->Result<(),ValueError>{
  out.check_rows(snapshot.nodes.len().checked_add(2).ok_or_else(||ValueError::new(ValueRefusalKind::WorkLimit,"Semio value row overflow"))?)?;
  let mut nodes=out.allocate_frontier(snapshot.nodes.len())?;for(ordinal,node)in snapshot.nodes.iter().enumerate(){out.checkpoint()?;nodes.push((node.id.value.as_str(),number(ordinal+1)?));}
  out.sort_frontier(&mut nodes,|a,b,c|semio_framework_os_kernel::sqlite_snapshot::transfer::compare_text(a.0,b.0,SqliteSnapshotPhase::ProjectSnapshot,c))?;
@@ -153,16 +153,13 @@ impl SemioValueSnapshot{
 pub fn project_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{semantic::layout(control.limits())?;let mut out=RowWriter::new(Self::SQLITE_SCHEMA,control)?;visit_rows(self,&mut out)?;out.finish()} 
 }
 
-#[cfg(test)]
-#[path = "🧪️tests/🦀️.rs"]
-pub(crate) mod tests;
 
 
 #[path = "💰️reconstruction/🦀️.rs"]
 mod reconstruction;
 
 #[path = "🛫️native/🦀️.rs"]
-pub(crate) mod native_encoding;
+pub mod native_encoding;
 
 #[path = "🛬️native/🦀️.rs"]
-pub(crate) mod native_decoding;
+pub mod native_decoding;

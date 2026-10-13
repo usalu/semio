@@ -1,7 +1,7 @@
 //! 🧪️ The generic `Mutation<S>` structural edit prepares insert, remove, replace and multi-row removal over documents of any size, restores the base through its ordered inverse rows and conserves custody through every cancellation frontier.
 use super::mutation_apply_preparation_factory;
 use crate::os_spr::{ApplyCapability, DiffAlgebra, MutationApplyError, MutationApplyResult, MutationComposition, MutationDiff, MutationDiffParticipation, MutationInvertibility, MutationLanguageSurface, MutationLeafDescriptor, MutationOutcome, MutationOutcomeClass, OpBinary};
-use crate::os_store::{ArtifactStoreOneItemGrant, ArtifactStoreOneItemLiveAuthority, ArtifactStoreOneItemPreparation, ArtifactStoreOneItemPreparationFactory, ArtifactStoreOneItemPreparationRequest, ArtifactStoreOneItemPreparationStep, HistoryLane, SnapshotRead, SnapshotReadRegistryHandle};
+use crate::os_store::{one_item::ArtifactStoreOneItemGrant, one_item_publication::ArtifactStoreOneItemLiveAuthority, one_item_publication::ArtifactStoreOneItemPreparation, one_item_publication::ArtifactStoreOneItemPreparationFactory, one_item_publication::ArtifactStoreOneItemPreparationRequest, one_item::ArtifactStoreOneItemPreparationStep, store_schema::HistoryLane, snapshot_read::SnapshotRead, SnapshotReadRegistryHandle};
 use crate::Mutation;
 use semio_framework_trace::observe_heap_allocations_on_this_thread as observe;
 use semio_framework_value::retirement::{OwnedValueRetirementFactory, SharedValueRetirementFactory};
@@ -153,7 +153,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
     let registry = SnapshotReadRegistryHandle::new();
     let root = Arc::new(document);
     let lease = registry.try_issue(Arc::clone(&root)).unwrap_or_else(|_| panic!("registry admission"));
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1), base_revision: [0; 32], base_applied_edit_count: 0, next_sequence_number: 1, next_clock: crate::os_spr::HybridLogicalTimestamp::new(1, 0), actor: "actor".into(), line: None, group_id: None, stamped_edit_id: None });
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), [0; 32], 0, 1, crate::os_spr::HybridLogicalTimestamp::new(1, 0), "actor".into(), None, None, None));
     let request = ArtifactStoreOneItemPreparationRequest { operation: semio_framework_job::OperationId(1), generation: semio_framework_job::Generation(1), base_revision: [0; 32], lane: HistoryLane::Document, authority, base: SnapshotRead::new(Arc::clone(&root), lease), mutation, mutation_retirement: Arc::new(OwnedValueRetirementFactory::<DocumentMutation>::default()), snapshot_retirement: Arc::new(SharedValueRetirementFactory::<Document>::default()) };
     let footprint = factory.preflight(&request.mutation, request.lane);
     let begun = factory.begin(request, grant);
@@ -174,7 +174,7 @@ fn prepare_with(factory: &Arc<dyn ArtifactStoreOneItemPreparationFactory<Documen
         }
     }
     let outcome = match (prepared, refused) {
-        (Some(prepared), _) => Outcome::Completed { post: (*prepared.post_snapshot).clone(), inverse: prepared.edit.inverse.iter().cloned().collect(), turns, retained, peak },
+        (Some(prepared), _) => Outcome::Completed { post: (**prepared.post_snapshot()).clone(), inverse: prepared.edit().inverse.iter().cloned().collect(), turns, retained, peak },
         (None, Some(error)) => Outcome::Refused(error),
         (None, None) => Outcome::Cancelled,
     };
@@ -241,7 +241,7 @@ fn mutation_apply_admits_documents_beyond_the_one_item_cap_when_turns_fund_the_s
     let large = Document { title: "large".into(), nodes: (0..1400).map(|index| Node { id: format!("n{index}"), text: text.clone() }).collect() };
     let build = || (large.clone(), DocumentMutation::SetText { index: 700, text: "edited".into() });
     let bytes: usize = large.nodes.iter().map(|node| node.id.len() + node.text.len()).sum();
-    assert!(bytes > crate::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
+    assert!(bytes > crate::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES, "fixture exceeds the one-item cap");
     let factory = mutation_apply_preparation_factory::<Document, DocumentMutation>();
     let footprint = factory.preflight(&build().1, HistoryLane::Document).unwrap();
     assert!(footprint.retained_bytes < 4096 && footprint.is_admissible(), "the footprint counts only the mutation");

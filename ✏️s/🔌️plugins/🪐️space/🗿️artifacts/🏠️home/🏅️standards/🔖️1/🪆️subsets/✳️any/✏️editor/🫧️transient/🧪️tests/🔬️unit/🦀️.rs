@@ -71,7 +71,7 @@ fn item(page_json: &str) -> HomeTransientMutation {
 
 /// 📬️ Publishes one page item through the PRODUCTION transient preparation (the bounded one-item factory the Home surfaces
 /// install), exactly as the transient store does: preflight, begin over the captured root, advance with the pump's page grant.
-fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<HomeTransient>, store::ArtifactStoreOneItemFootprint) {
+fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<HomeTransient>, store::os_store::one_item::ArtifactStoreOneItemFootprint) {
     let factory = semio_framework_plugin::bounded_transient_preparation_factory::<HomeTransient, HomeTransientMutation>();
     let footprint = factory.preflight(&mutation).expect("one page is one admissible item");
     assert!(footprint.is_admissible());
@@ -82,8 +82,8 @@ fn publish(root: &Arc<HomeTransient>, mutation: HomeTransientMutation) -> (Arc<H
         mutation,
     };
     let Ok(mut preparation) = factory.begin(request) else { panic!("the bounded factory begins every admitted page") };
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
-    assert!(matches!(preparation.advance(grant).expect("the page folds"), store::ArtifactStoreOneItemPreparationStep::Prepared(_)));
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: semio_framework_plugin::app::TYPED_OPERATION_RESULT_PAGE_BYTES };
+    assert!(matches!(preparation.advance(grant).expect("the page folds"), store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(_)));
     let prepared = preparation.take_prepared().expect("prepared root");
     (prepared.next_root, footprint)
 }
@@ -108,7 +108,7 @@ fn a_ten_thousand_space_directory_bootstraps_page_by_page_under_the_one_item_bou
         root = next;
     }
     assert!(largest_item <= store::os_directory::DIRECTORY_EVENT_PAGE_MAX_BYTES + 64);
-    assert!(largest_item < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 8, "a page stays far inside the one-item bound whatever the directory size");
+    assert!(largest_item < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES / 8, "a page stays far inside the one-item bound whatever the directory size");
     let directory = root.directory();
     assert_eq!(directory.space_count(), SPACES);
     assert_eq!(directory.cursor(), 2 * SPACES as u64);
@@ -127,7 +127,7 @@ fn a_page_item_never_exceeds_the_one_item_bound() {
     let footprint = factory.preflight(&largest).expect("the largest admitted page is one item");
     assert!(footprint.is_admissible());
     assert!(footprint.retained_bytes <= crate::editor::home::config::HOME_DIRECTORY_PAGE_BYTES + 64);
-    assert!(footprint.retained_bytes <= store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    assert!(footprint.retained_bytes <= store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
 }
 //#endregion 🔖️Bootstrap
 
@@ -216,8 +216,8 @@ fn the_projection_wire_round_trips_documents_and_rejects_corruption() {
     let half_bound = semio_framework_pack_json::json!({ "sessionBindingSha256": BINDING, "authorizationGeneration": 0, "receiptSha256": "", "directory": fixture["wire"].clone() });
     assert!(semio_framework_pack_json::from_json_str::<HomeTransient>(&half_bound.to_string(), semio_framework_pack_json::JsonMemberPolicy::Reject).is_err(), "a partial resume authority is refused");
     store::os_store::test_support::assert_dsl_round_trip(&transient);
-    let bytes = store::ArtifactPack::encode_pack(&transient);
-    assert_eq!(<HomeTransient as store::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&transient);
+    assert_eq!(<HomeTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("pack round trip"), transient);
 }
 
 /// 🔤️ The one verb round-trips its text line and its binary op.

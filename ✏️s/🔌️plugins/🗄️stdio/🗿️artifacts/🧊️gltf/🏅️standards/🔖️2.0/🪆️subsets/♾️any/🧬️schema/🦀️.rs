@@ -1,8 +1,11 @@
 //! 🧬️ GltfArtifact schema — full artifact state.
 
-use crate::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
-use crate::{GltfSnapshot, STDIO_GLTF_DOCUMENT_SCHEMA};
+use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessor, GltfBuffer, GltfBufferView, GltfDocument, GltfJson, GltfMesh, GltfPrimitive, GltfSourceForm};
+use crate::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 use framework_schema::ArtifactSchema;
+
+/// 🏷️ Document schema / DSL envelope id.
+pub const STDIO_GLTF_DOCUMENT_SCHEMA: &str = "stdio.gltf";
 
 //#region 🔖️Artifact
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]
@@ -96,7 +99,7 @@ pub fn gltf_artifact_schema_descriptor() -> semio_framework_schema_registry::Art
 //#region 🔖️DocumentHelpers
 /// 🌱 Empty persisted snapshot. Dissolved out of `⚙️engine`
 /// (ticket 26/08/12/ENGINELESS-ARTIFACTS-AND-APP-STATE-MACHINES) — reached as
-/// `crate::engine::empty_gltf_snapshot` through the `engine` barrel shim.
+/// `crate::standards::v2_0::subsets::any::schema::empty_gltf_snapshot` through the `engine` barrel shim.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn empty_gltf_snapshot() -> GltfSnapshot {
     GltfSnapshot::default()
@@ -111,7 +114,7 @@ pub fn empty_gltf_snapshot() -> GltfSnapshot {
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn demo_gltf_snapshot() -> GltfSnapshot {
     use crate::standards::v2_0::subsets::any::schema::snapshot::{GltfAccessorType, GltfComponentType};
-    use crate::schema::snapshot::{
+    use crate::standards::v2_0::subsets::any::schema::snapshot::{
         GltfAnimation, GltfAnimationChannel, GltfAnimationChannelTarget, GltfAnimationPath, GltfAsset, GltfCamera, GltfCameraProjection, GltfImage, GltfInterpolation, GltfMaterial, GltfNode, GltfPbrMetallicRoughness, GltfPerspective, GltfSampler,
         GltfScene, GltfSkin, GltfTexture,
     };
@@ -155,7 +158,7 @@ pub fn demo_gltf_snapshot() -> GltfSnapshot {
         skins: vec![GltfSkin { joints: vec![0], name: Some("root-skin".into()), ..GltfSkin::default() }],
         animations: vec![GltfAnimation {
             channels: vec![GltfAnimationChannel { sampler: 0, target: GltfAnimationChannelTarget { node: Some(0), path: GltfAnimationPath::Translation, extensions: None, extras: None }, extensions: None, extras: None }],
-            samplers: vec![crate::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
+            samplers: vec![crate::standards::v2_0::subsets::any::schema::snapshot::GltfAnimationSampler { input: 0, interpolation: GltfInterpolation::Linear, output: 0, extensions: None, extras: None }],
             name: Some("spin".into()),
             extensions: None,
             extras: None,

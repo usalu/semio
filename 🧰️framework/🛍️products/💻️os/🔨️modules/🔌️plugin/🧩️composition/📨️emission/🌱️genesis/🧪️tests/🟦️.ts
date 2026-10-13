@@ -25,10 +25,10 @@ test("private group copies exact prepared edit receipts before final staging", (
     expect(state.staged.filter((_, index) => index !== 0 || parentTouched).every(Boolean)).toBe(true);
     expect(state.staged[0]).toBe(parentTouched);
   }
-  const store = readFileSync(new URL("../../../../../🏪️store/🦀️.rs", import.meta.url), "utf8");
+  const publication = readFileSync(new URL("../../../../../🏪️store/🎮️one-item/📬️publication/🦀️.rs", import.meta.url), "utf8");
   const owner = readFileSync(new URL("../../../📬️publication/🤝️group/📦️owner/🦀️.rs", import.meta.url), "utf8");
-  expect(store.includes("fn prepared_edit_id(&self) -> Option<&str>")).toBe(true);
-  for (const authority of ["prepared_operation_count", "prepared_operation_metadata", "prepared_operation("]) expect(store.includes(authority)).toBe(true);
+  expect(publication.includes("fn prepared_edit_id(&self) -> Option<&str>")).toBe(true);
+  for (const authority of ["prepared_operation_count", "prepared_operation_metadata", "prepared_operation("]) expect(publication.includes(authority)).toBe(true);
   for (const authority of ["prepared_receipt", "prepared_publication", "acknowledge_prepared_receipt", "parent_receipt_copied", "receipt_copied", "parent_touched", "parent_identity"]) expect(owner.includes(authority)).toBe(true);
   console.log("[DEBUG] independent receipt corpus preserves three exact UTF8 edit identifiers, prestage copy acknowledgment, one common group and original optional transaction");
 });

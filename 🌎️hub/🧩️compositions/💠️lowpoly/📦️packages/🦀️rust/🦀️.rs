@@ -34,7 +34,6 @@ mod viewer {
 
 //#region 🔖️Plugin
 #[path = "../../🦀️.rs"]
-mod plugin;
-semio_framework_plugin::plugin_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, plugin::plugin, plugin::LowpolyApps);
+pub mod plugin;
 
 //#endregion 🔖️Plugin

@@ -1,0 +1,19 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg",
+ "layers": "../e3-format-split/🕸️dwg-layers.json",
+ "crate": "semio_s_artifact_stdio_dwg",
+ "aggregator": "aggregator",
+ "crates": {
+  "model": {"package": "semio-s-artifact-stdio-dwg-model", "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🧬️schema/📦️packages/🦀️rust"},
+  "read": {"package": "semio-s-artifact-stdio-dwg-read", "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📥️import/📦️packages/🦀️rust"},
+  "write": {"package": "semio-s-artifact-stdio-dwg-write", "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/🚪️io/📤️export/📦️packages/🦀️rust"},
+  "editor": {"package": "semio-s-artifact-stdio-dwg-editor", "dir": "🏅️standards/🔟ac1024/🪆️subsets/✳️any/✏️editor/📦️packages/🦀️rust"}
+ },
+ "header": {
+  "model": ["//! 🧬️ `stdio.dwg` model: the AC1018 and AC1024 schemas, the drawing geometry, and the native text, binary and SQLite codecs.", "", "#![allow(async_fn_in_trait)]", "#![allow(long_running_const_eval)]", "", "extern crate semio_framework_os_kernel as dsl;", "extern crate semio_framework_os_kernel as protocol;", "extern crate semio_framework_os_kernel as store;", "extern crate semio_framework_schema as framework_schema;", "extern crate semio_framework_value_derive as value_derive;"],
+  "read": ["//! 📥️ `stdio.dwg` reader: R2004 and R2007 container decoding, LZ77 decompression and every entity decoder.", "", "#![allow(async_fn_in_trait)]", "#![allow(long_running_const_eval)]", "", "extern crate semio_framework_os_kernel as dsl;", "extern crate semio_framework_os_kernel as protocol;", "extern crate semio_framework_os_kernel as store;", "extern crate semio_framework_schema as framework_schema;", "extern crate semio_framework_value_derive as value_derive;"],
+  "write": ["//! 📤️ `stdio.dwg` writer: LZ77 compression, the R2004 container writer and every entity encoder.", "", "#![allow(async_fn_in_trait)]", "#![allow(long_running_const_eval)]", "", "extern crate semio_framework_os_kernel as dsl;", "extern crate semio_framework_os_kernel as protocol;", "extern crate semio_framework_os_kernel as store;", "extern crate semio_framework_schema as framework_schema;", "extern crate semio_framework_value_derive as value_derive;"],
+  "editor": ["//! ✏️ `stdio.dwg` editors, viewers and examples of both standards.", "", "#![allow(async_fn_in_trait)]", "#![allow(long_running_const_eval)]", "", "extern crate semio_framework_os_kernel as dsl;", "extern crate semio_framework_os_kernel as protocol;", "extern crate semio_framework_os_kernel as store;", "extern crate semio_framework_schema as framework_schema;", "extern crate semio_framework_value_derive as value_derive;"]
+ },
+ "consumers": ["✏️s", "🌎️hub", "🧰️framework", "♻️mit-bestand", "🎓️teaching"]
+}

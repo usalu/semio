@@ -43,39 +43,6 @@
         "generate-entity-kinds"
       ]
     },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      },
-      "dependsOn": [
-        "generate-entity-kinds"
-      ]
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      },
-      "dependsOn": [
-        "generate-entity-kinds"
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "🧰️framework/🛍️products/🦑️repo/🔨️modules/💻️client/⌨️cli/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      },
-      "dependsOn": [
-        "generate-entity-kinds"
-      ]
-    },
     "generate-entity-kinds": {
       "executor": "nx:run-commands",
       "options": {

@@ -48,7 +48,7 @@ pub struct EquationCarrierSnapshot {
     pub equation: EquationExprSnapshot,
 }
 
-// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::ArtifactChild<S>`, a generic framework handle
+// 🌱️ Hand-written, not derived — `notation`/`results`/`computed` are `store::os_store::artifact_child::ArtifactChild<S>`, a generic framework handle
 // `#[derive(ToValue, FromValue)]` cannot route through (see `semio-framework-value-derive`'s fan-out playbook trap #3); every
 // other field goes through `ToValue`/`FromValue` directly.
 impl ToValue for EquationSnapshot {

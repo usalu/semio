@@ -16,11 +16,11 @@
 //! @see https://www.w3.org/TR/SVG11/painting.html
 //! @see https://www.w3.org/TR/SVG11/implnote.html#ArcImplementationNotes
 
-use crate::standards::v1::subsets::base::schema::geometry::{SemioRgba};
-#[cfg(test)] use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioTransform};
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
-#[cfg(test)] use crate::standards::v1::subsets::drawing::schema::snapshot::{PathSegment};
-use crate::standards::v1::subsets::drawing::schema::geometry::{Affine, Subpath, compose_affine, distance, flatten, semio_transform_affine, transform_point};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba;
+#[cfg(test)] use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioTransform};
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::{DrawNode, DrawStyle, SemioDrawingSnapshot};
+#[cfg(test)] use semio_s_artifact_stdio_semio_drawing::schema::snapshot::PathSegment;
+use semio_s_artifact_stdio_semio_drawing::schema::geometry::{Affine, Subpath, compose_affine, distance, flatten, semio_transform_affine, transform_point};
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_png::{schema::snapshot::{PngImage, PngColorType}, PngSnapshot};
 

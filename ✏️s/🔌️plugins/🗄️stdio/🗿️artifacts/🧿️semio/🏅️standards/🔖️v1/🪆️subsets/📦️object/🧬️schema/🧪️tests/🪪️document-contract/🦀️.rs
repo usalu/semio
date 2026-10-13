@@ -1,6 +1,6 @@
-use crate::standards::v1::subsets::object::schema::{SemioObjectArtifact, diff::SemioObjectDiff, snapshot::SemioObjectSnapshot};
-use protocol::{DiffBinary,DiffCodec,DiffText, MutationDiff};
-use store::{ArtifactDsl, ArtifactPack};
+use {crate::schema::SemioObjectArtifact, crate::schema::diff::SemioObjectDiff, crate::schema::snapshot::SemioObjectSnapshot};
+use protocol::{DiffBinary,DiffText};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_round_trips_exact_children() {
@@ -53,14 +53,14 @@ async fn stdio_document_contract_object_round_trips_exact_children() {
 #[semio_framework_async_macros::async_test]
 async fn stdio_document_contract_object_rejects_invalid_typed_mutations() {
     use protocol::Mutation;
-    use crate::standards::v1::subsets::object::schema::mutations::{SemioObjectMutation, create_mesh::CreateMesh};
+    use {crate::schema::mutations::SemioObjectMutation, crate::schema::mutations::create_mesh::CreateMesh};
     let mut snapshot = SemioObjectSnapshot::default();
     let before = snapshot.clone();
     let mutation = SemioObjectMutation::CreateMesh(CreateMesh {
         child_id: "wrong-owner-child".into(),
         target: semio_framework_artifact_reference::ArtifactRef { artifact_id: "mesh-1".into(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "foreign.artifact".into(), standard: "v1".into(), subset: "mesh".into() } },
     });
-    let (__next, outcome) = crate::applied(&snapshot, &mutation);
+    let (__next, outcome) = semio_s_artifact_stdio_semio_base::applied(&snapshot, &mutation);
     snapshot = __next;
     assert_eq!(snapshot, before);
     assert!(mutation.inverse(&before).expect("valid retained mutation inverse fixture").is_empty(), "rejected creation has no inverse effect");

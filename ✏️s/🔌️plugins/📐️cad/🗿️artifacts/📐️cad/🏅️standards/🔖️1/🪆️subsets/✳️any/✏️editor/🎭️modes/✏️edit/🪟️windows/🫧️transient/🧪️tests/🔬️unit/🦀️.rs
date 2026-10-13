@@ -2,7 +2,7 @@
 //! rest is idle, and every value survives the window-transient pack.
 
 use super::*;
-use store::ArtifactPack;
+use store::os_store::serialization::ArtifactPack;
 
 const SCHEMA_JSON: &str = include_str!("../../🧬️schema/🔣️.json");
 

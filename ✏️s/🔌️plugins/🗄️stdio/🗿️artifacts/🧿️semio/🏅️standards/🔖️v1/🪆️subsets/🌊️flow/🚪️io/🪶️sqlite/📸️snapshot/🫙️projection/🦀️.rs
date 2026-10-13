@@ -1,6 +1,6 @@
 //! 🌊️ Original Flow projection retains only scalar source ordinals and complete SQL ownership.
 use super::{SemioFlowSnapshot,number,float_columns};
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::projection::NameIndex;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::projection::NameIndex;
 use store::sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,artifact::{Cell,ProjectionStorage,RowWriter,project_owned,owned_workspace}};
 use semio_framework_value::{ValueError,ValueRefusalKind};
 fn invalid(message:&'static str)->ValueError{ValueError::literal(ValueRefusalKind::InvalidValue,message)}

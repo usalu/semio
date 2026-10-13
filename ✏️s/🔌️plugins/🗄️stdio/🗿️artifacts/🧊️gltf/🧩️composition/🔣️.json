@@ -12,8 +12,8 @@
       "order": 0,
       "variant": "GltfAnyEditor",
       "role": "editor",
-      "type": "semio_s_artifact_stdio_gltf::editor::gltf::GltfAnyEditor",
-      "factory": "semio_s_artifact_stdio_gltf::editor::gltf::create_gltf_any_editor",
+      "type": "semio_s_artifact_stdio_gltf_editor::editor::gltf::GltfAnyEditor",
+      "factory": "semio_s_artifact_stdio_gltf_editor::editor::gltf::create_gltf_any_editor",
       "mutationRoster": false,
       "laws": {
         "editing": "gltf_any_editor",
@@ -25,14 +25,19 @@
       "order": 1,
       "variant": "GltfAnyViewer",
       "role": "viewer",
-      "type": "semio_s_artifact_stdio_gltf::viewer::gltf::GltfAnyViewer",
-      "factory": "semio_s_artifact_stdio_gltf::viewer::gltf::create_gltf_any_viewer",
+      "type": "semio_s_artifact_stdio_gltf_editor::viewer::gltf::GltfAnyViewer",
+      "factory": "semio_s_artifact_stdio_gltf_editor::viewer::gltf::create_gltf_any_viewer",
       "mutationRoster": false,
       "laws": null
     }
   ],
   "openTargets": [],
-  "catalogFeatures": [],
+  "catalogPackage": null,
+  "symbolPackages": [
+    "semio-s-artifact-stdio-gltf-model",
+    "semio-s-artifact-stdio-gltf-mutations",
+    "semio-s-artifact-stdio-gltf-editor"
+  ],
   "playgrounds": [
     {
       "owner": "stdio-mesh",
@@ -50,8 +55,8 @@
   "mutationDescriptors": [
     {
       "name": "GltfMutation",
-      "snapshot": "semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot",
-      "mutation": "semio_s_artifact_stdio_gltf::standards::v2_0::subsets::any::schema::mutations::GltfMutation"
+      "snapshot": "semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot",
+      "mutation": "semio_s_artifact_stdio_gltf_mutations::standards::v2_0::subsets::any::schema::mutations::GltfMutation"
     }
   ],
   "mutationCoordinates": [

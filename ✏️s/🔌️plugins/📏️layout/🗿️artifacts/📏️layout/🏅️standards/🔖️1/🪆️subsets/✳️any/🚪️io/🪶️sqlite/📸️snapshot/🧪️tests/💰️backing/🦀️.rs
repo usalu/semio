@@ -1,9 +1,9 @@
 //! 🔬️ Complete Layout ownership is checked against actual System allocation requests.
 use super::*;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 #[path="../../../../../../../../../../../../../../🧰️framework/🔨️modules/🚪️io/🪶️sqlite-snapshot/🧪️testing/💰️backing/🦀️.rs"]
 mod observed;
-fn literal_equal(actual:&LayoutSnapshot,expected:&LayoutSnapshot){assert_eq!(actual.data_fields,expected.data_fields,"complete typed dictionary tags, words, octets and member order");assert_eq!(store::ArtifactPack::encode_pack(actual),store::ArtifactPack::encode_pack(expected),"complete Layout native fields and raw words");}
+fn literal_equal(actual:&LayoutSnapshot,expected:&LayoutSnapshot){assert_eq!(actual.data_fields,expected.data_fields,"complete typed dictionary tags, words, octets and member order");assert_eq!(store::os_store::serialization::ArtifactPack::encode_pack(actual),store::os_store::serialization::ArtifactPack::encode_pack(expected),"complete Layout native fields and raw words");}
 #[test]
 fn sqlite_snapshot_layout_full_concrete_requests_preserve_every_owned_field(){
  let plan:serde_json::Value=serde_json::from_str(include_str!("../../🧫️fixtures/🧾️dictionary/🔣️.json")).unwrap();assert_eq!(plan["allocation"],"fullConcreteRequests");assert_eq!(plan["retirementRefund"],false);

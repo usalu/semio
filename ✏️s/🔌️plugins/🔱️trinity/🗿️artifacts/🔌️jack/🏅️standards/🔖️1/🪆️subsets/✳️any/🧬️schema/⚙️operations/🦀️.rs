@@ -3,7 +3,7 @@
 use crate::standards::v1::subsets::any::schema::mutations::TrinityGraphMutation;
 use crate::{EntityRef, Graph, GraphEffect, JackSnapshot, PropertyBag, PropertyValue, TRINITY_GRAPH_SCHEMA};
 use protocol::Mutation;
-use store::{create_document_envelope, ArtifactCommand, ArtifactEnvelope, ArtifactStore};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 
 //#region 🔖️Store
 pub type TrinityGraphEnvelope = ArtifactEnvelope<JackSnapshot, TrinityGraphMutation>;

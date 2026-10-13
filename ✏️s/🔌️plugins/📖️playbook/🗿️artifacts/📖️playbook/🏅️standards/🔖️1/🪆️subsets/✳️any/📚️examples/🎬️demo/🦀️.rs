@@ -18,6 +18,6 @@ pub fn source() -> ExampleSource {
 }
 
 /// 🌊️ The demo's `flow` child content, the genesis of [`FLOW_ID`] (`crate::playbook_genesis_flow`).
-pub fn flow() -> Result<semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot, String> {
-    <semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(FLOW_TEXT).map_err(|error| error.to_string())
+pub fn flow() -> Result<semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot, String> {
+    <semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(FLOW_TEXT).map_err(|error| error.to_string())
 }

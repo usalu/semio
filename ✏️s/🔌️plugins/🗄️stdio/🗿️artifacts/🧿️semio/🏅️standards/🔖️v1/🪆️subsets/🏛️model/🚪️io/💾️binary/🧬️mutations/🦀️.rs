@@ -6,37 +6,37 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::model::schema::mutations::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioQuaternion, SemioTransform};
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::model::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{parse_f64};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_relation};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_relation};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_relation_kind};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_relation_kind};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_element};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_element};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_spatial_node};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_spatial_node};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_property_set};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_property_set};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_geometry_ref};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_geometry_ref};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_element_class};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_element_class};
-use crate::standards::v1::subsets::model::io::text::snapshot::{dec_spatial_kind};
-use crate::standards::v1::subsets::model::io::text::snapshot::{enc_spatial_kind};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_transform};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_list};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{decode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{encode_option};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::model::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
+use crate::schema::mutations::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioQuaternion, SemioTransform};
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use crate::schema::diff::{ModelRelationDiff, SemioModelDiff, SemioModelElementDiff, SpatialNodeDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::parse_f64;
+use crate::io::text::snapshot::dec_relation;
+use crate::io::text::snapshot::enc_relation;
+use crate::io::text::snapshot::dec_relation_kind;
+use crate::io::text::snapshot::enc_relation_kind;
+use crate::io::text::snapshot::dec_element;
+use crate::io::text::snapshot::enc_element;
+use crate::io::text::snapshot::dec_spatial_node;
+use crate::io::text::snapshot::enc_spatial_node;
+use crate::io::text::snapshot::dec_property_set;
+use crate::io::text::snapshot::enc_property_set;
+use crate::io::text::snapshot::dec_geometry_ref;
+use crate::io::text::snapshot::enc_geometry_ref;
+use crate::io::text::snapshot::dec_element_class;
+use crate::io::text::snapshot::enc_element_class;
+use crate::io::text::snapshot::dec_spatial_kind;
+use crate::io::text::snapshot::enc_spatial_kind;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_transform;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::decode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::encode_option;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use crate::schema::snapshot::{ElementClass, GeometryRef, ModelRelation, PropertySet, RelationKind, SemioModelElement, SemioModelSnapshot, SpatialKind, SpatialNode};
 use protocol::Mutation;
 /// 🔧️ Unconditional — the non-test `impl protocol::OpBinary for SemioModelMutation` block below
 /// calls `Self::parse_op(...)` via trait method syntax, which needs `OpText` in scope in
@@ -44,7 +44,7 @@ use protocol::Mutation;
 /// mutations facet needed).
 use protocol::{OpBinary, OpText};
 use semio_s_artifact_stdio_contract::deserialize_double_option;
-use crate::standards::v1::subsets::model::io::text::mutations::{print_semio_model_mutation};
+use crate::io::text::mutations::print_semio_model_mutation;
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn wire_tag(m: &SemioModelMutation) -> u8 {
     match m {
@@ -125,8 +125,8 @@ const TAG_SCALE_ELEMENTS: u8 = dsl::protocol_record::tag_u8(WIRE_PROTOCOL, "scal
 mod borrowed;
 
 /// 📦️ Reborrows original typed patch or imported element fields for bounded prestage receipts.
-pub fn prepared_operation_wire_source(mutation: &crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
-    use crate::standards::v1::subsets::model::schema::mutations::SemioModelMutation;
+pub fn prepared_operation_wire_source(mutation: &crate::schema::mutations::SemioModelMutation) -> Option<store::ArtifactPreparedOperationSource<'_>> {
+    use crate::schema::mutations::SemioModelMutation;
     use semio_framework_plugin::plugin_app_close_prelude::store::ArtifactPreparedOperationSource;
     Some(match mutation {
         SemioModelMutation::InsertElement(_) => ArtifactPreparedOperationSource::Text { header: &[1, TAG_INSERT_ELEMENT], body: mutation },

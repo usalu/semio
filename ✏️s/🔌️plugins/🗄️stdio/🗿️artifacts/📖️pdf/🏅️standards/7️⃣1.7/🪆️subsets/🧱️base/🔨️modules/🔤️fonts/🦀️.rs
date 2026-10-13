@@ -3,6 +3,8 @@
 //! (§7.9.2), and [`FontCodec`] — the one place that turns a typed [`PdfFont`] into "these bytes
 //! show this text at these widths" and back.
 
+#[cfg(test)]
+use crate::standards::v1_7::subsets::base::io::{decode_text_string, encode_text_string};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfBaseEncoding, PdfCMap, PdfFont, PdfFontKind, PdfFontProgram, PdfSimpleEncoding, PdfToUnicode, PdfToUnicodeMapping};
 use std::collections::{BTreeMap, HashMap};
 use std::sync::OnceLock;
@@ -14,7 +16,7 @@ pub mod truetype;
 #[path = "🗺️cmap/🦀️.rs"]
 pub mod cmap;
 
-pub use tables::{StandardFontMetrics, ADOBE_GLYPH_LIST, MAC_ROMAN_ENCODING, PDF_DOC_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
+pub use tables::{StandardFontMetrics, ADOBE_GLYPH_LIST, MAC_ROMAN_ENCODING, STANDARD_ENCODING, STANDARD_FONTS, WIN_ANSI_ENCODING};
 pub use truetype::TrueTypeFont;
 
 //#region 🔖️GlyphList
@@ -128,39 +130,9 @@ pub fn base_encoding_name(base: PdfBaseEncoding) -> &'static str {
     }
 }
 
-/// 🔤 Decodes a PDF text string (§7.9.2.2): UTF-16BE with BOM, UTF-8 with BOM, else PDFDoc.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn decode_text_string(bytes: &[u8]) -> String {
-    if bytes.len() >= 2 && bytes[0] == 0xFE && bytes[1] == 0xFF {
-        let units: Vec<u16> = bytes[2..].chunks(2).filter(|c| c.len() == 2).map(|c| u16::from_be_bytes([c[0], c[1]])).collect();
-        return String::from_utf16_lossy(&units);
-    }
-    if bytes.len() >= 3 && bytes[0] == 0xEF && bytes[1] == 0xBB && bytes[2] == 0xBF {
-        return String::from_utf8_lossy(&bytes[3..]).into_owned();
-    }
-    bytes.iter().map(|byte| PDF_DOC_ENCODING.binary_search_by(|(code, _)| code.cmp(byte)).ok().and_then(|index| char::from_u32(PDF_DOC_ENCODING[index].1)).unwrap_or('\u{FFFD}')).collect()
-}
 
-/// 🔤 Encodes a text string: PDFDoc when every character is representable, else UTF-16BE + BOM.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn encode_text_string(text: &str) -> Vec<u8> {
-    static REVERSE: OnceLock<HashMap<u32, u8>> = OnceLock::new();
-    let reverse = REVERSE.get_or_init(|| PDF_DOC_ENCODING.iter().map(|(code, value)| (*value, *code)).collect());
-    let mut out = Vec::with_capacity(text.len());
-    for character in text.chars() {
-        match reverse.get(&(character as u32)) {
-            Some(code) if character != '\u{FFFD}' => out.push(*code),
-            _ => {
-                let mut utf16 = vec![0xFE, 0xFF];
-                for unit in text.encode_utf16() {
-                    utf16.extend_from_slice(&unit.to_be_bytes());
-                }
-                return utf16;
-            }
-        }
-    }
-    out
-}
+
+
 //#endregion 🔖️Encodings
 
 //#region 🔖️Standard14
@@ -300,7 +272,7 @@ pub struct FontCodec {
 }
 
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::PdfArtifactResourcePort;
-use super::lexer::{PResult,PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 
 fn program_data(program:&PdfFontProgram,resources:&dyn PdfArtifactResourcePort)->PResult<Vec<u8>> {crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;match resources.resolve(program.reference())? {crate::standards::v1_7::subsets::base::schema::snapshot::PdfObject::Stream {data,..}=>Ok(data),_=>Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()))}}
 

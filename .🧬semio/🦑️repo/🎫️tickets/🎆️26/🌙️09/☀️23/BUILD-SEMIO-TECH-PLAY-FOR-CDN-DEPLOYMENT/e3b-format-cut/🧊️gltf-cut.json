@@ -1,0 +1,81 @@
+{
+ "artifact": "✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🧊️gltf",
+ "layers": "🧊️gltf-layers.json",
+ "crate": "semio_s_artifact_stdio_gltf",
+ "aggregator": "aggregator",
+ "crates": {
+  "model": {
+   "package": "semio-s-artifact-stdio-gltf-model",
+   "dir": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/📦️packages/🦀️rust"
+  },
+  "mutations": {
+   "package": "semio-s-artifact-stdio-gltf-mutations",
+   "dir": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/🧬️mutations/📦️packages/🦀️rust"
+  },
+  "inferences": {
+   "package": "semio-s-artifact-stdio-gltf-inferences",
+   "dir": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/🧬️schema/💡️inferences/📦️packages/🦀️rust"
+  },
+  "editor": {
+   "package": "semio-s-artifact-stdio-gltf-editor",
+   "dir": "🏅️standards/🔖️2.0/🪆️subsets/♾️any/✏️editor/📦️packages/🦀️rust"
+  }
+ },
+ "header": {
+  "model": [
+   "//! 🧬️ `stdio.gltf` model: the glTF 2.0 snapshot, diff and schema, the accessor and GLB vocabulary, the reader, the writer and the native codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "mutations": [
+   "//! 🧬️ `stdio.gltf` mutations: the mutation vocabulary, its dispatch and support modules and its text and binary codecs.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "inferences": [
+   "//! 💡️ `stdio.gltf` inferences: the measurement and topology modules, the inference schema and codecs and the decoded-accessor projection.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ],
+  "editor": [
+   "//! ✏️ `stdio.gltf` editor, viewer and examples.",
+   "",
+   "#![allow(async_fn_in_trait)]",
+   "#![allow(long_running_const_eval)]",
+   "",
+   "extern crate semio_framework_os_kernel as dsl;",
+   "extern crate semio_framework_os_kernel as protocol;",
+   "extern crate semio_framework_os_kernel as store;",
+   "extern crate semio_framework_schema as framework_schema;",
+   "extern crate semio_framework_value_derive as value_derive;"
+  ]
+ },
+ "consumers": [
+  "✏️s",
+  "🌎️hub",
+  "🧰️framework",
+  "♻️mit-bestand",
+  "🎓️teaching"
+ ]
+}

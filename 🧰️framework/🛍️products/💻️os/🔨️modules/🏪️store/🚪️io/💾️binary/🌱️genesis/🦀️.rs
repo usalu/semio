@@ -1,5 +1,5 @@
 //! 🌱️ Store native ArtifactPack genesis admission capability.
-use crate::os_store::{ArtifactPack,PackEncodeOptions};
+use crate::os_store::{serialization::ArtifactPack,PackEncodeOptions};
 use crate::os_vcs::io::binary::genesis::ArtifactGenesisCodec;
 use semio_framework_value::ValueError;
 impl<P: ArtifactPack> ArtifactGenesisCodec for P {
@@ -11,7 +11,7 @@ impl<P: ArtifactPack> ArtifactGenesisCodec for P {
     }
 }
 
-use crate::os_store::{OwnedSchemaToken,OwnedSchemaTokenKind,OwnedSchemaDecodeDiagnostic,OwnedSchemaRecordCursor,ArtifactEnvelopeFreshVcsAuthority};
+use crate::os_store::{owned_schema_decode::OwnedSchemaToken,owned_schema_decode::OwnedSchemaTokenKind,owned_schema_decode::OwnedSchemaDecodeDiagnostic,owned_schema_decode::OwnedSchemaRecordCursor,owned_schema_decode::ArtifactEnvelopeFreshVcsAuthority};
 pub(super) struct ArtifactGenesisPackCapture {
     pub(super) operation: semio_framework_job::OperationId,
     pub(super) generation: semio_framework_job::Generation,

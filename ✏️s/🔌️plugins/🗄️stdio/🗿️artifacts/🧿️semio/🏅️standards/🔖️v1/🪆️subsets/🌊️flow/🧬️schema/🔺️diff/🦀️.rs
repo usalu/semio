@@ -18,12 +18,12 @@
 //! per this ticket's explicit instruction ("hand-roll all diff/op codecs — do not fight the
 //! derive").
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
+use crate::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -322,11 +322,11 @@ impl MutationDiff<SemioFlowSnapshot> for SemioFlowDiff {
     fn apply(&self, base: &SemioFlowSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioFlowSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.nodes {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.nodes, d, |item| item.id.clone(), |added| added.item.id.clone(), ["nodes"])?;
             apply_named(&mut next.nodes, d, |n| n.id.clone(), apply_node);
         }
         if let Some(d) = &self.edges {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.edges, d, |item| item.id.clone(), |added| added.item.id.clone(), ["edges"])?;
             apply_named(&mut next.edges, d, |e| e.id.clone(), apply_edge);
         }
         Ok(next)
@@ -426,7 +426,7 @@ pub fn diff_set_edge_kind(id: &str, kind: &str) -> SemioFlowDiff {
 //#region 🔖️Demo
 /// 🌱 Representative `SemioFlowDiff` cases built declaratively (empty/no-op and an empty-but-present node and edge row triple) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-flow"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioFlowDiff> {
     vec![SemioFlowDiff::default(), SemioFlowDiff { nodes: Some(Default::default()), edges: Some(Default::default()) }]

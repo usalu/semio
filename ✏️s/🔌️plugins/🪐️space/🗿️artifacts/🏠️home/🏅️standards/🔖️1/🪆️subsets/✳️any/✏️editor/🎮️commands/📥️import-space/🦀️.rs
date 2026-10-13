@@ -39,7 +39,7 @@ pub fn validate(dsl: &str) -> Result<(), Fault> {
     if dsl.trim().is_empty() {
         return Err(Fault::new(FaultOrigin::App, "s.home.import-space.empty", "the imported studio text is empty"));
     }
-    let manifest = <semio_framework_artifact_space_space::SpaceSnapshot as store::ArtifactDsl>::parse_dsl(dsl)
+    let manifest = <semio_framework_artifact_space_space::SpaceSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(dsl)
         .map_err(|error| Fault::new(FaultOrigin::App, "s.home.import-space.not-a-studio", format!("the imported text is not a studio manifest: {}", error.message)))?;
     if manifest.name.trim().is_empty() {
         return Err(Fault::new(FaultOrigin::App, "s.home.import-space.unnamed", "the imported studio manifest has no name"));

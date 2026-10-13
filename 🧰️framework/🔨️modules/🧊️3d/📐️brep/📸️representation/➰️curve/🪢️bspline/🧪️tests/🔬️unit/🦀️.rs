@@ -125,8 +125,8 @@ async fn elevate_bezier_span_preserves_curve_value() {
     let control_values = vec![0.0, 3.0, -2.0, 5.0];
     let elevated = elevate_bezier_span(&control_values);
     assert_eq!(elevated.len(), control_values.len() + 1);
-    let b = super::super::bezier::RationalBezier2::unweighted(control_values.iter().map(|&v| crate::brep::representation::vector::Pnt2::new(v, 0.0)).collect());
-    let be = super::super::bezier::RationalBezier2::unweighted(elevated.iter().map(|&v| crate::brep::representation::vector::Pnt2::new(v, 0.0)).collect());
+    let b = super::super::bezier::RationalBezier2::unweighted(control_values.iter().map(|&v| crate::vector::Pnt2::new(v, 0.0)).collect());
+    let be = super::super::bezier::RationalBezier2::unweighted(elevated.iter().map(|&v| crate::vector::Pnt2::new(v, 0.0)).collect());
     for i in 0..=10 {
         let t = i as f64 / 10.0;
         assert!((b.eval(t).x - be.eval(t).x).abs() < 1e-9);
@@ -285,7 +285,7 @@ mod quick {
             let n_cp = degree + 1;
             let kv = KnotVector::clamped_uniform(n_cp, degree);
             let values: Vec<f64> = (0..n_cp).map(|_| rng.next_f64() * 10.0 - 5.0).collect();
-            let bernstein = crate::brep::representation::polynomial::Bernstein::new(values.clone());
+            let bernstein = crate::polynomial::Bernstein::new(values.clone());
             for i in 0..=20 {
                 let u = i as f64 / 20.0;
                 let via_de_boor = de_boor(&kv, &values, u);

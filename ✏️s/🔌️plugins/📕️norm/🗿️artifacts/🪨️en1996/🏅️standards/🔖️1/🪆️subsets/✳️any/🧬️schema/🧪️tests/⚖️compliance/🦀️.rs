@@ -369,7 +369,7 @@ fn committed_dsl_pack_assets_parse_and_assert_verdicts() {
         let pack = std::fs::read(dir.join("🎒️.pack.semio"))
             .unwrap_or_else(|e| panic!("missing committed pack at {}: {e}", dir.display()));
         let parsed = parse_dsl(&dsl).expect("parse DSL");
-        let from_pack = <En1996Snapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode pack");
+        let from_pack = <En1996Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode pack");
         assert_eq!(parsed.walls.len(), from_pack.walls.len(), "{folder}");
         let report = evaluate_building(parsed.annex, parsed.masonry_class, parsed.design_situation, parsed.storeys, &parsed.walls);
         assert_eq!(report.complies(), expect_pass, "{folder}");

@@ -28,7 +28,7 @@ use semio_framework_plugin::plugin_app_close_prelude::*;
 use semio_framework_ui_locale::app_labels;
 use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Mutex, OnceLock};
-use store::{BackbonePorts, LocalStorageBackbonePort};
+use store::{os_store::backbone::BackbonePorts, os_store::backbone::LocalStorageBackbonePort};
 
 //#region 🔖️Constants
 pub const DEMO_STUDIO_ID: &str = "demo-studio";
@@ -47,7 +47,7 @@ const OS_BOOT_STUDIO_ID: &str = "default";
 /// holds only the `WorkflowSnapshot` payload (`DEMO_STUDIO_DSL`); the envelope metadata
 /// (schema/id/name, freshly-minted history) is built via `create_backbone_document`.
 pub async fn parse_demo_space_document() -> OsWorkflowArtifactDocument {
-    let initial_snapshot = <WorkflowSnapshot as store::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
+    let initial_snapshot = <WorkflowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(DEMO_STUDIO_DSL).expect("bundled example/✏️demo.s is valid WorkflowSnapshot DSL text");
     create_backbone_document(S_WORKFLOW_SCHEMA, DEMO_STUDIO_ID, DEMO_STUDIO_NAME, initial_snapshot)
 }
 
@@ -67,7 +67,7 @@ pub async fn demo_space_projection() -> WorkflowSnapshot {
 /// per port identity (`list_os_space_catalog_entries` keys them by the `Arc`) and `LocalStorageBackbonePort` keeps its
 /// fallback bytes per instance, so a port minted per call listed nothing a previous call admitted: a studio bound,
 /// persisted or imported was gone on the next listing, and every call re-parsed and re-seeded the demo studio.
-/// O1 — enum dispatch (`OsBackbonePorts::Store(store::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
+/// O1 — enum dispatch (`OsBackbonePorts::Store(store::os_store::backbone::BackbonePorts)`), no `dyn`. The demo seed is a `SpaceSnapshot`
 /// manifest named after the bundled demo fixture and owned by the `"local"` guest sentinel: it runs before any user
 /// session exists, so there is no signed-in identity to attribute it to.
 /// @see ✏️s/🔌️plugins/🪐️space/🗿️artifacts/🏠️home/🏅️standards/🔖️1/🪆️subsets/✳️any/✏️editor/🎮️commands/📎️bind-space-file/🦀️.rs
@@ -100,11 +100,11 @@ async fn temp_catalog_port_concrete() -> Arc<OsBackbonePorts> {
     PORT.get_or_init(|| Arc::new(OsBackbonePorts::Store(BackbonePorts::Memory(MemoryBackbonePort::default())))).clone()
 }
 
-/// 🧬️ Independent in-memory singleton for draft byte storage — kept as a bare `Arc<store::BackbonePorts>`
+/// 🧬️ Independent in-memory singleton for draft byte storage — kept as a bare `Arc<store::os_store::backbone::BackbonePorts>`
 /// (not `Arc<OsBackbonePorts>`) because `draft_catalog_for`/`DraftCatalog::list_drafts_sweeping_expired`/
 /// `DraftCatalog::discard_draft` (framework/modules/space) predate `OsBackbonePorts` and can never depend
 /// on it (os-host depends on space, not the other way; a back-dependency would cycle). `OsBackbonePorts::
-/// Store` owns its inner `store::BackbonePorts` BY VALUE, not by `Arc`, so no wrapper can share this
+/// Store` owns its inner `store::os_store::backbone::BackbonePorts` BY VALUE, not by `Arc`, so no wrapper can share this
 /// allocation's identity with `temp_catalog_port_concrete()`'s own singleton above — kept deliberately
 /// separate rather than faked. Every real caller reaches drafts through THIS port (`draft_uri`-prefixed
 /// reads/writes); `temp_catalog_port()`'s fallback-loop reads never see draft entries anyway (they are
@@ -143,8 +143,8 @@ pub async fn temp_catalog_port() -> Arc<OsBackbonePorts> {
 /// 🔌️ `Arc<BackbonePorts>` — the concrete `store` enum, NOT `Arc<dyn SpaceBackbonePort>`. Every real
 /// consumer of this return value — `draft_catalog_for`, `DraftCatalog::list_drafts_sweeping_expired`,
 /// `DraftCatalog::discard_draft`, all declared in `🧰️framework/🔨️modules/🪐️space/🦀️.rs` (out
-/// of this packet's owned path) — takes `&Arc<store::BackbonePorts>` directly; `SpaceBackbonePort`'s
-/// blanket impl over `T: store::BackbonePort` covers this enum for free (`SpaceBackbonePort::read`/
+/// of this packet's owned path) — takes `&Arc<store::os_store::backbone::BackbonePorts>` directly; `SpaceBackbonePort`'s
+/// blanket impl over `T: store::os_store::backbone::BackbonePort` covers this enum for free (`SpaceBackbonePort::read`/
 /// `::write`, UFCS-disambiguated below against the sibling `OsBackbonePort` blanket).
 pub async fn draft_backbone_port() -> Arc<BackbonePorts> {
     draft_backbone_port_concrete().await
@@ -157,11 +157,11 @@ pub async fn ephemeral_draft_catalog() -> Arc<DraftCatalog> {
     draft_catalog_for(&draft_backbone_port().await)
 }
 
-/// 🕰️ Wall-clock millis, reusing `store::now_iso`'s own wasm-safe implementation (its string is
+/// 🕰️ Wall-clock millis, reusing `store::os_store::document_materialize::now_iso`'s own wasm-safe implementation (its string is
 /// already the millis count as text) rather than duplicating the `cfg(target_arch = "wasm32")`
 /// branching this crate has no `js-sys` dependency to replicate directly.
 async fn now_ms() -> u64 {
-    store::now_iso().parse().unwrap_or(0)
+    store::os_store::document_materialize::now_iso().parse().unwrap_or(0)
 }
 
 pub async fn register_studio_port(space_id: &str, port: Arc<dyn OsBackbonePort>) {
@@ -224,7 +224,7 @@ pub async fn resolve_studio_document(space_id: &str) -> Option<OsSpaceDocument> 
 }
 
 /// 📦️ Pack+spr bytes for `Effect::LoadDocument` / host `loadAppArtifactPack`.
-pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::ArtifactPackFiles> {
+pub async fn space_document_envelope_pack(document: &OsSpaceDocument) -> Option<store::os_store::serialization::ArtifactPackFiles> {
     export_os_space_pack(document).ok()
 }
 
@@ -252,7 +252,7 @@ pub async fn resolve_backbone_bytes(uri: &str) -> Option<Vec<u8>> {
     }
     for port in [temp_catalog_port().await, catalog_port().await] {
         // 🧬️ `port` is `Arc<OsBackbonePorts>`; the enum's own `impl OsBackbonePort for OsBackbonePorts`
-        // (not the `store::BackbonePort` blanket) is the only trait it satisfies, so UFCS needs the
+        // (not the `store::os_store::backbone::BackbonePort` blanket) is the only trait it satisfies, so UFCS needs the
         // `&OsBackbonePorts` the `Arc` derefs to, not the `Arc` itself.
         if let Ok(payload) = OsBackbonePort::read(port.as_ref(), uri) {
             if !payload.is_empty() {
@@ -276,7 +276,7 @@ pub async fn empty_workflow_artifact_document(space_id: &str, space_name: &str) 
 /// 📦️ `s.workflow` counterpart of `space_document_envelope_pack` — pack+spr bytes for
 /// `Effect::LoadDocument` / host `loadAppArtifactPack`, sized to what the `🪐️space` studio app's
 /// `ArtifactApp::Snapshot` (`WorkflowSnapshot`) actually decodes.
-pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::ArtifactPackFiles> {
+pub async fn workflow_artifact_envelope_pack(document: &OsWorkflowArtifactDocument) -> Option<store::os_store::serialization::ArtifactPackFiles> {
     export_backbone_pack(document).ok()
 }
 //#endregion 🔖️WorkflowArtifactResolution
@@ -516,12 +516,12 @@ fn space_retained_mutation_bytes<M: ::protocol::OpBinary>(mutation: &M) -> Resul
     ::protocol::OpBinary::encode_op(mutation).map(|bytes| bytes.len()).map_err(|_| "s.space.retained.mutation-encode".to_string())
 }
 
-fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutation<P>>(mutation: &M, maximum_bytes: usize) -> Result<store::ArtifactStoreOneItemFootprint, String> {
+fn admit_space_retained_mutation<P, M: ::protocol::OpBinary + ::protocol::Mutation<P>>(mutation: &M, maximum_bytes: usize) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
     let retained_bytes = space_retained_mutation_bytes(mutation)?;
     if retained_bytes > maximum_bytes {
         return Err("s.space.retained.mutation-envelope".into());
     }
-    Ok(store::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
+    Ok(store::os_store::one_item::ArtifactStoreOneItemFootprint::for_leaf::<P, M>(mutation, retained_bytes))
 }
 
 fn prepare_space_retained_one_item<P, M>(base: &P, mutation: &M, maximum_bytes: usize) -> Result<(P, Vec<M>), ValueError>
@@ -558,12 +558,12 @@ impl<P, M> SpaceOneItemPreparationFactory<P, M> {
 struct SpaceOneItemPreparation<P: 'static, M: 'static> {
     owners: store::OneItemOwners<P, M>,
     maximum_bytes: usize,
-    checkpoint: store::ArtifactStoreOneItemCheckpoint,
+    checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint,
     retained_bytes: usize,
     cancelled: bool,
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M> for SpaceOneItemPreparationFactory<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,
@@ -572,21 +572,21 @@ where
         store::admit_artifact_batch_digest(edit, grant)
     }
 
-    fn preflight(&self, mutation: &M, lane: store::HistoryLane) -> Result<store::ArtifactStoreOneItemFootprint, String> {
-        if lane != store::HistoryLane::Document {
+    fn preflight(&self, mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<store::os_store::one_item::ArtifactStoreOneItemFootprint, String> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err("s.space.retained.lane".into());
         }
         admit_space_retained_mutation::<P, M>(mutation, self.maximum_bytes)
     }
 
-    fn begin_demand(&self, _mutation: &M, lane: store::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
-        if lane != store::HistoryLane::Document {
+    fn begin_demand(&self, _mutation: &M, lane: store::os_store::store_schema::HistoryLane) -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, ValueError> {
+        if lane != store::os_store::store_schema::HistoryLane::Document {
             return Err(space_refusal("s.space.retained.lane"));
         }
         Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: size_of::<SpaceOneItemPreparation<P, M>>(), depth: 1 })
     }
 
-    fn begin(&self, request: store::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, store::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
+    fn begin(&self, request: store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<(Box<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M>>, RetainedCloneProgress), (ValueError, store::os_store::one_item_publication::ArtifactStoreOneItemPreparationRequest<P, M, M>)> {
         let demand = match self.begin_demand(&request.mutation, request.lane) {
             Ok(demand) => demand,
             Err(error) => return Err((error, request)),
@@ -599,32 +599,32 @@ where
         if request.operation != request.authority.operation()
             || request.generation != request.authority.generation()
             || request.base_revision != request.authority.base_revision()
-            || request.authority.actor().len() > store::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
+            || request.authority.actor().len() > store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_ID_BYTES
             || retained_bytes > self.maximum_bytes
         {
             return Err((space_refusal("s.space.retained.request-refused"), request));
         }
-        Ok((Box::new(SpaceOneItemPreparation { owners: store::OneItemOwners::from_request(request), maximum_bytes: self.maximum_bytes, checkpoint: store::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
+        Ok((Box::new(SpaceOneItemPreparation { owners: store::OneItemOwners::from_request(request), maximum_bytes: self.maximum_bytes, checkpoint: store::os_store::one_item::ArtifactStoreOneItemCheckpoint::default(), retained_bytes, cancelled: false }), progress))
     }
 }
 
-impl<P, M> store::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
+impl<P, M> store::os_store::one_item_publication::ArtifactStoreOneItemPreparation<P, M> for SpaceOneItemPreparation<P, M>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + Send + 'static,
 {
-    fn advance(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<store::ArtifactStoreOneItemPreparationStep, ValueError> {
+    fn advance(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<store::os_store::one_item::ArtifactStoreOneItemPreparationStep, ValueError> {
         if !grant.permits_one() || self.cancelled || self.owners.is_closing() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         if self.owners.refused.is_some() {
             return Err(space_refusal("s.space.retained.original-refusal-retained"));
         }
         if self.owners.prepared.is_some() {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, Default::default()));
         }
         if grant.maximum_copy_bytes < self.retained_bytes {
-            return Ok(store::ArtifactStoreOneItemPreparationStep::Blocked);
+            return Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Blocked);
         }
         let base = self.owners.base.as_ref().ok_or_else(|| space_refusal("s.space.retained.base-owner-missing"))?;
         let mutation = self.owners.mutation.as_ref().ok_or_else(|| space_refusal("s.space.retained.mutation-owner-missing"))?;
@@ -639,20 +639,20 @@ where
                 return Err(error);
             }
         };
-        self.checkpoint = store::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
+        self.checkpoint = store::os_store::one_item::ArtifactStoreOneItemCheckpoint { cursor: 1, completed_items: 1, completed_bytes: self.retained_bytes as u64, digest: prepared.edit_digest() };
         *self.owners.prepared = Some(prepared);
-        Ok(store::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
+        Ok(store::os_store::one_item::ArtifactStoreOneItemPreparationStep::Prepared(self.checkpoint, RetainedCloneProgress { copied_items: 1, copied_bytes: self.retained_bytes, ..Default::default() }))
     }
 
-    fn checkpoint(&self) -> store::ArtifactStoreOneItemCheckpoint {
+    fn checkpoint(&self) -> store::os_store::one_item::ArtifactStoreOneItemCheckpoint {
         self.checkpoint
     }
 
-    fn prepared(&self) -> Option<&store::ArtifactStoreOneItemPrepared<P, M>> {
+    fn prepared(&self) -> Option<&store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
         self.owners.prepared.as_ref()
     }
 
-    fn take_prepared(&mut self) -> Option<store::ArtifactStoreOneItemPrepared<P, M>> {
+    fn take_prepared(&mut self) -> Option<store::os_store::one_item_publication::ArtifactStoreOneItemPrepared<P, M>> {
         self.owners.prepared.take()
     }
 
@@ -664,7 +664,7 @@ where
         self.owners.begin_close();
     }
 
-    fn close_step(&mut self, grant: store::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
+    fn close_step(&mut self, grant: store::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<RetainedCloneStep, ValueError> {
         self.owners.close_step(grant.retained_grant())
     }
 
@@ -690,7 +690,7 @@ where
 }
 
 /// 📬️ One lane's `Artifact`/`Config` store override, addressed by its edit-id prefix and byte ceiling.
-pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::ArtifactStoreOneItemPreparationFactory<P, M>>>
+pub fn space_retained_store_preparation<P, M>(prefix: &'static str, maximum_bytes: usize) -> Option<Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<P, M>>>
 where
     P: Clone + semio_framework_value::retirement::RetireOwned + Send + Sync + 'static,
     M: ::protocol::Mutation<P> + ::protocol::OpBinary + semio_framework_value::retirement::RetireOwned + store::ArtifactCanonicalJsonTree + Send + Sync + 'static,

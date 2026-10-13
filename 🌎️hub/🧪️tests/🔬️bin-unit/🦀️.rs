@@ -443,10 +443,10 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
     let stage = root.join("generation-stage");
     std::fs::create_dir_all(stage.join("components")).expect("stdio component directory");
     std::fs::create_dir_all(stage.join("descriptors")).expect("stdio descriptor directory");
-    let component = b"abc";
+    let component = b"\0asm\x0d\x00\x01\x00";
     let component_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(component));
     let component_blake3 = blake3::hash(component).to_hex().to_string();
-    let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
+    let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().expect("artifact-owned stdio receipts");
     let viewer = semio_framework_plugin::Viewer::builder(semio_framework_plugin::Dialect { artifact_kind: "s.stdio.json", standard: semio_framework_plugin::StandardId("rfc8259"), subset: semio_framework_plugin::SubsetId::ANY })
         .document(["semio", "stdio", "json"])
         .mode("view", semio_framework_plugin::LocalizedLabel::native("View", "Ansicht"), "eye")
@@ -454,11 +454,11 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         .window_kind_def(<semio_framework_plugin::app::TreeWindowKit as semio_framework_plugin::app::WindowKit>::window_kind())
         .build_definition();
     let mut viewer = viewer;
-    viewer.artifact_kinds = semio_hub_stdio::catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
+    viewer.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds().into_iter().filter(|kind| kind.id == "s.stdio.json").collect();
     let mut manifest = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::new("stdio", "Stdio Fixture", receipts[0].package_version).manifest;
-    manifest.artifact_kinds = semio_hub_stdio::catalog::native_codec_artifact_kinds();
+    manifest.artifact_kinds = semio_hub_stdio_catalog::native_codec_artifact_kinds();
     manifest.apps.push(viewer.clone());
-    manifest.topic_contributions.push(semio_hub_stdio::catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
+    manifest.topic_contributions.push(semio_hub_stdio_catalog::native_artifact_catalog_contribution().expect("synthetic fixture retains full catalog semantics"));
     let receipt_pairs = receipts.iter().map(|receipt| (receipt.artifact_kind.clone(), receipt.schema.clone())).collect::<std::collections::BTreeSet<_>>();
     let authored: serde_json::Value = serde_json::from_str(include_str!("../../🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json")).expect("schema-qualified factory roster");
     let expected_pairs = authored["receipts"].as_array().unwrap().iter().map(|receipt| (receipt["artifact_kind"].as_str().unwrap().to_owned(), receipt["artifact_schema"].as_str().unwrap().to_owned())).collect::<std::collections::BTreeSet<_>>();
@@ -502,10 +502,24 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         quotas: semio_framework::kernel::QuotaSchema::default(),
         contributions: semio_framework::ContributionSet::default(),
         assets: Vec::new(),
-        hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: "22".repeat(32), descriptor_sha256: "33".repeat(32) },
     };
-    let descriptor_bytes = directory::os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let descriptor_bytes = directory::os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     let descriptor_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&descriptor_bytes));
+    let receipt = directory::os_component_receipt::ComponentReceiptV1 {
+        schema: directory::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+        plugin_id: "stdio".into(),
+        package_id: "semio:stdio".into(),
+        profile: directory::os_component_receipt::ComponentProfileV1::WasmRelease,
+        target: directory::os_component_receipt::COMPONENT_TARGET.into(),
+        wasm_sha256: component_sha256.clone(),
+        wasm_bytes: component.len() as u64,
+        semantic_descriptor_sha256: descriptor_sha256.clone(),
+        toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+        source_tree_digest: "3".repeat(64),
+        provenance_sha256: "4".repeat(64),
+    };
+    let receipt_bytes = receipt.encode_canonical();
+    let receipt_sha256 = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&receipt_bytes));
     let json = receipts.iter().find(|receipt| receipt.factory_id == "stdio.native.json.v1").expect("JSON receipt");
     let native_codecs = receipts
         .iter()
@@ -535,7 +549,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         "grant": { "read": true, "write": false, "observe": true }
     });
     let mut bundle = serde_json::json!({
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "profiles": [{
             "id": "stdio-native-openable-v1",
             "selectedClosure": [{ "pluginId": "stdio", "packageId": "semio:stdio", "version": version }],
@@ -564,6 +578,7 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
                 "byteLength": descriptor_bytes.len(),
                 "sha256": descriptor_sha256
             },
+            "receipt": receipt,
             "nativeCodecs": native_codecs,
             "openTargets": [target]
         }]
@@ -574,8 +589,8 @@ fn native_openable_stdio_bundle() -> std::path::PathBuf {
         "sourceComponentSha256":component_sha256, "sourceDescriptorByteSha256":descriptor_sha256, "policySha256":"41".repeat(32), "importInterfaces":[]
     });
     std::fs::write(stage.join("closed-actor.mjs"), component).expect("synthetic actor, never executed");
-    let plugin_module_files = vec![("stdio/🌉️bridge.js".to_owned(), b"export {};\n".to_vec()), ("stdio/🔣️.json".to_owned(), b"{}\n".to_vec()), ("stdio/🛂️.descriptor.semio".to_owned(), descriptor_bytes.clone())];
-    let plugin_module_source = semio_hub::artifact_authority::trusted_catalog::plugin_module::TrustedPluginModuleSourceV1 { plugin_id: "stdio", package_id: "semio:stdio", version: &*version, component_sha256: &component_sha256, descriptor_byte_sha256: &descriptor_sha256 };
+    let plugin_module_files = vec![("stdio/🌉️bridge.js".to_owned(), b"export {};\n".to_vec()), ("stdio/🔣️.json".to_owned(), b"{}\n".to_vec()), ("stdio/🛂️.descriptor.semio".to_owned(), descriptor_bytes.clone()), ("stdio/🧾️receipt.json".to_owned(), receipt_bytes)];
+    let plugin_module_source = semio_hub::artifact_authority::trusted_catalog::plugin_module::TrustedPluginModuleSourceV1 { plugin_id: "stdio", package_id: "semio:stdio", version: &*version, component_sha256: &component_sha256, descriptor_byte_sha256: &descriptor_sha256, receipt_sha256: &receipt_sha256 };
     let plugin_module = semio_hub::artifact_authority::trusted_catalog::plugin_module::write_plugin_module_bundle(&stage, "plugin-module-stdio.json", plugin_module_source, "stdio", &plugin_module_files).expect("stdio plugin module");
     bundle["packages"][0]["pluginModule"] = serde_json::to_value(plugin_module).expect("stdio plugin module record");
     let carried = serde_json::to_vec(&bundle).expect("provisional stdio bundle");
@@ -1046,7 +1061,7 @@ fn document_descriptor_for_test(space_id: &str, document_id: &str) -> os_directo
         document_id: document_id.to_string(),
         artifact_kind: "test.artifact".into(),
         artifact_schema: "test.v1".into(),
-        owner: os_directory::DocumentOwner { plugin_id: "test".into(), package_id: "test.package".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
+        owner: os_directory::DocumentOwner { plugin_id: "test".into(), package_id: "semio:test".into(), version: "1.0.0".into(), package_hash: "22".repeat(32) },
         pack_schema_hash: "11".repeat(32),
         bootstrap_version: 1,
         bootstrap_frontier: os_directory::DocumentFrontier { head_seq: 0, commit_seq: 0, epoch: 0 },
@@ -1316,8 +1331,8 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
     state.verified_catalog = Some(profile.catalog().clone());
     state.openable_catalog = Some(profile.catalog().clone());
     let document = db_artifact_id(&scope);
-    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
-    let spr = directory::os_store::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
+    let pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let spr = directory::os_store::text_format::empty_document_spr(&document.0, &descriptor.artifact_schema).await;
     descriptor.bootstrap_snapshot_hash = os_directory::io::binary::artifact_hash::hex_lower(&Sha256::digest(&pack));
     let session = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("check-in author capability")).await.expect("check-in author session read").expect("check-in author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: session.id, authorization_generation: session.authorization_generation };
@@ -1331,12 +1346,12 @@ async fn check_in_fixture(label: &str) -> CheckInFixture {
 /// addressed to the hub's document key.
 #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
 async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<MutationEnvelope> {
-    use directory::os_store::{ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
+    use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::mutations::create_position::CreatePosition;
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot, MapFeature};
-    let parsed = directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr).await.expect("genesis pair parses");
+    let parsed = directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr).await.expect("genesis pair parses");
     let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(parsed.into_envelope(), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("editor store");
-    store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
+    store.install_document_store_owners_exact(directory::os_store::document_store_owners::bounded_artifact_store_owners());
     let mut applied = Ok(());
     for (index, id) in ids.iter().enumerate() {
         let point = directory::DslValue::object([("lon".into(), directory::DslValue::float(7.0 + index as f64)), ("lat".into(), directory::DslValue::float(47.0))]);
@@ -1348,7 +1363,7 @@ async fn check_in_map_edits(fixture: &CheckInFixture, ids: &[&str]) -> Vec<Mutat
     }
     let events = store.event_log();
     loop {
-        match store.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
+        match store.close_owned_step(1, directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("editor store closes") {
             SnapshotRetirementStep::Complete => break,
             SnapshotRetirementStep::Pending { .. } => {}
             SnapshotRetirementStep::Blocked => panic!("editor store close blocked"),
@@ -1377,7 +1392,7 @@ async fn check_in_commit(fixture: &CheckInFixture, envelope: MutationEnvelope) -
 #[cfg(all(feature = "native-artifact-execution", feature = "integration-fixtures"))]
 async fn check_in_replica_pair(fixture: &CheckInFixture, envelopes: &[MutationEnvelope]) -> (Vec<u8>, Vec<u8>) {
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
-    let files = directory::os_store::replay_envelopes_onto_pair::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr, &directory::os_spr::encode_envelopes(envelopes), directory::os_store::bounded_artifact_store_owners).await.expect("replica fold");
+    let files = directory::os_store::replay_envelopes_onto_pair::<GisMapSnapshot, GisMapMutation>(&fixture.pack, &fixture.spr, &directory::os_spr::encode_envelopes(envelopes), directory::os_store::document_store_owners::bounded_artifact_store_owners).await.expect("replica fold");
     (files.pack, files.spr)
 }
 
@@ -1516,12 +1531,12 @@ async fn check_in_process_fixture_emits_verified_gis_ledger_and_catalog() {
 /// position and route onto an empty map: its store's own event log, exactly what a client sends.
 #[cfg(all(feature = "sqlite", feature = "integration-fixtures"))]
 async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope> {
-    use directory::os_store::{ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
+    use directory::os_store::{store_schema::ArtifactCommand, ArtifactStore, SnapshotRetirementStep};
     use semio_s_artifact_gis_gismap::mutations::{create_position::CreatePosition, create_route::CreateRoute};
     use semio_s_artifact_gis_gismap::{GisMapMutation, GisMapSnapshot};
     let target = gis_map_test_snapshot();
-    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(directory::os_store::create_document_envelope(schema, "check-in-fixture", GisMapSnapshot::default(), None), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("fixture GIS store");
-    store.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
+    let mut store = ArtifactStore::<GisMapSnapshot, GisMapMutation>::new(directory::os_store::document_materialize::create_document_envelope(schema, "check-in-fixture", GisMapSnapshot::default(), None), directory::ActorId(directory::os_spr::LOCAL_ACTOR_ID.into())).await.expect("fixture GIS store");
+    store.install_document_store_owners_exact(directory::os_store::document_store_owners::bounded_artifact_store_owners());
     let applied = store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![GisMapMutation::CreatePosition(CreatePosition { index: 0, item: target.positions[0].clone() }), GisMapMutation::CreateRoute(CreateRoute { index: 0, item: target.routes[0].clone() })],
@@ -1530,7 +1545,7 @@ async fn check_in_fixture_gis_ledger_edit(schema: &str) -> Vec<MutationEnvelope>
         .await;
     let events = store.event_log();
     loop {
-        match store.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("fixture GIS store closes") {
+        match store.close_owned_step(1, directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("fixture GIS store closes") {
             SnapshotRetirementStep::Complete => break,
             SnapshotRetirementStep::Pending { .. } => {}
             SnapshotRetirementStep::Blocked => panic!("fixture GIS store close blocked"),
@@ -2269,7 +2284,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
     upsert_member_for_test(&state, &space_id, spectator_email, DirectorySpaceRole::Spectator).await;
     let document_id = artifact_document_id_for_test("gis-map-inference");
     let selection = profile.binding().selection();
-    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
+    let genesis_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&semio_s_artifact_gis_gismap::GisMapSnapshot::default());
     let genesis_spr = b"gis-map-genesis-spr";
     let descriptor = os_directory::DocumentDescriptor {
         space_id: space_id.clone(),
@@ -2285,7 +2300,7 @@ async fn gis_map_inference_fixture(author_email: &str, spectator_email: &str) ->
     let authenticated = state.directory.authenticate_session(&SessionCapability::parse(&author.token).expect("GIS Map author capability")).await.expect("GIS Map author session read").expect("GIS Map author session");
     let actor = ArtifactCreationActorV1 { user_id: author.user_id.clone(), session_id: authenticated.id, authorization_generation: authenticated.authorization_generation };
     let genesis = publish_genesis_checkpoint_for_test(&state, actor, profile.catalog().generation_id().to_string(), selection.parent_dialect.clone(), descriptor, &genesis_pack, genesis_spr).await;
-    let snapshot_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
+    let snapshot_pack = <semio_s_artifact_gis_gismap::GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&gis_map_test_snapshot());
     publish_gis_checkpoint_for_test(&state, &space_id, &document_id, &snapshot_pack, &genesis).await;
     (GisMapInferenceFixture { state, profile, space_id, document_id, snapshot_pack, ledger_path }, author, spectator)
 }
@@ -3160,6 +3175,19 @@ fn document_open_catalog_for_descriptor_with_generation(descriptor: &DocumentDes
         component_blake3: "44".repeat(32),
         descriptor_byte_sha256: "55".repeat(32),
         execution_protocol: os_directory::DocumentExecutionProtocolV1 { app_channel_version: directory::os_spr::CHANNEL_VERSION },
+        component_receipt: directory::os_component_receipt::ComponentReceiptV1 {
+            schema: directory::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+            plugin_id: descriptor.owner.plugin_id.clone(),
+            package_id: descriptor.owner.package_id.clone(),
+            profile: directory::os_component_receipt::ComponentProfileV1::WasmRelease,
+            target: directory::os_component_receipt::COMPONENT_TARGET.into(),
+            wasm_sha256: descriptor.owner.package_hash.clone(),
+            wasm_bytes: TEST_EXECUTION_TARGET_COMPONENT_BYTES.len() as u64,
+            semantic_descriptor_sha256: "55".repeat(32),
+            toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+            source_tree_digest: "3".repeat(64),
+            provenance_sha256: "4".repeat(64),
+        },
     };
     let artifact = DocumentOpenArtifactV1 { kind: descriptor.artifact_kind.clone(), schema: descriptor.artifact_schema.clone(), pack_schema_hash: descriptor.pack_schema_hash.clone() };
     Arc::new(TestDocumentOpenCatalog {
@@ -4388,17 +4416,17 @@ impl SupersedeAuthor {
         let (mut socket, _) = connect_async(document_socket_request(url, token)).await.expect("document socket");
         socket.send(client_binary(&socket_hello(), Lane::Command).await).await.expect("hello");
         while !matches!(next_command_frame(&mut socket, "until session").await, ServerFrame::Session { .. }) {}
-        let pack = <GisMapSnapshot as directory::os_store::ArtifactPack>::encode_pack(&GisMapSnapshot::default());
-        let spr = directory::os_store::empty_document_spr(document, GIS_MAP_SCHEMA).await;
-        let parsed = directory::os_store::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
+        let pack = <GisMapSnapshot as directory::os_store::serialization::ArtifactPack>::encode_pack(&GisMapSnapshot::default());
+        let spr = directory::os_store::text_format::empty_document_spr(document, GIS_MAP_SCHEMA).await;
+        let parsed = directory::os_store::text_format::parse_document_pack::<GisMapSnapshot, GisMapMutation>(&pack, &spr).await.expect("genesis pair parses");
         let mut replica = SupersedeReplica::new(parsed.into_envelope(), directory::ActorId(actor.clone())).await.expect("replica");
-        replica.install_document_store_owners_exact(directory::os_store::bounded_artifact_store_owners());
+        replica.install_document_store_owners_exact(directory::os_store::document_store_owners::bounded_artifact_store_owners());
         assert_eq!(replica.local_actor_id(), &directory::ActorId(actor.clone()), "the replica authors as its socket's actor");
         Self { actor, socket, replica, known: std::collections::HashSet::new(), relayed: Vec::new(), batch: 0 }
     }
 
     /// 🖋️ Dispatches `command` on the replica and answers the events it authored, as its socket sends them.
-    async fn author(&mut self, command: directory::os_store::ArtifactCommand<semio_s_artifact_gis_gismap::GisMapMutation>) -> Vec<MutationEnvelope> {
+    async fn author(&mut self, command: directory::os_store::store_schema::ArtifactCommand<semio_s_artifact_gis_gismap::GisMapMutation>) -> Vec<MutationEnvelope> {
         self.replica.dispatch(command).await.expect("the replica authors");
         let fresh: Vec<MutationEnvelope> = self.replica.event_log().expect("event log").into_iter().filter(|event| self.known.insert(event.mutation_id.0.clone())).collect();
         fresh.into_iter().map(|envelope| MutationEnvelope { actor: ActorId(self.actor.clone()), ..envelope }).collect()
@@ -4443,7 +4471,7 @@ impl SupersedeAuthor {
     /// 🧽️ Closes the replica through its bounded retirement.
     fn close(mut self) {
         loop {
-            match self.replica.close_owned_step(1, directory::os_store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("replica closes") {
+            match self.replica.close_owned_step(1, directory::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES).expect("replica closes") {
                 directory::os_store::SnapshotRetirementStep::Complete => break,
                 directory::os_store::SnapshotRetirementStep::Pending { .. } => {}
                 directory::os_store::SnapshotRetirementStep::Blocked => panic!("replica close blocked"),
@@ -4490,7 +4518,7 @@ fn last_supersession(events: &[&MutationEnvelope]) -> String {
 #[test]
 fn concurrent_supersessions_through_the_hub_converge_both_replicas() {
     run_socket_test(|| async {
-        use directory::os_store::{ArtifactCommand, SupersedeInput};
+        use directory::os_store::{store_schema::ArtifactCommand, store_schema::SupersedeInput};
         let supersede = |target: &MutationEnvelope, replacement: Option<semio_s_artifact_gis_gismap::GisMapMutation>| SupersedeInput { target: target.mutation_id.clone(), replacement };
         for policy in [protocol::MergePolicy::Normal, protocol::MergePolicy::Vigilant] {
             let mut state = test_state().await;
@@ -4525,9 +4553,9 @@ fn concurrent_supersessions_through_the_hub_converge_both_replicas() {
                     }
                     other => panic!("vigilant refuses the concurrent supersession of the same operation: {other:?}"),
                 }
-                let (channel, remote) = directory::os_store::ChannelBackbone::pair("concurrent-supersede-retract").await;
-                bob.replica.attach_backbone(directory::os_store::Backbones::Channel(channel)).await.expect("attach");
-                remote.push(directory::os_store::BackboneMessage::Retract { mutation_ids: second.iter().map(|event| event.mutation_id.0.clone()).collect() }).await.expect("retract");
+                let (channel, remote) = directory::os_store::backbone::ChannelBackbone::pair("concurrent-supersede-retract").await;
+                bob.replica.attach_backbone(directory::os_store::backbone::Backbones::Channel(channel)).await.expect("attach");
+                remote.push(directory::os_store::backbone::BackboneMessage::Retract { mutation_ids: second.iter().map(|event| event.mutation_id.0.clone()).collect() }).await.expect("retract");
                 bob.replica.tick().await.expect("the refused supersession retracts");
                 alice.await_relay(&first).await;
                 for author in [&mut alice, &mut bob] {
@@ -9023,7 +9051,7 @@ mod quick {
         let root = native_openable_stdio_bundle();
         let configured = configured_artifact_authority(&root, Some(&providers), &Tracer::disabled(), &StartupCancellationV1::default(), &StartupProgressCellV1::default()).await.expect("verified stdio authority").configured().expect("configured stdio authority");
         assert_eq!(configured.catalog.artifact_kind_count(), 29);
-        let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().expect("actual stdio schema-qualified receipts");
+        let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().expect("actual stdio schema-qualified receipts");
         let pairs = receipts.iter().map(|receipt| (receipt.artifact_kind.as_str(), receipt.schema.as_str())).collect::<std::collections::BTreeSet<_>>();
         assert_eq!(pairs.len(), receipts.len(), "every current executable codec has one exact kind/schema identity");
         assert_eq!(pairs.len(), 30, "both original PDF standards retain their executable authority");

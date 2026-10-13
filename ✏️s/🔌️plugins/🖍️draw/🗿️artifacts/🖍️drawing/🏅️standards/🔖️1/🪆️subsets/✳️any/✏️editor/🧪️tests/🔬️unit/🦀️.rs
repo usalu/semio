@@ -55,9 +55,9 @@ pub(crate) mod context {
 use super::*;
 #[path="../../📋️clipboard/🧪️tests/🪟️runtime/🦀️.rs"]
 mod clipboard_runtime;
-use crate::schema::{layer_id};
-use crate::standards::v1::subsets::any::schema::{default_drawing_document};
-use crate::standards::v1::subsets::any::io::text::snapshot::{semio_drawing_example_json};
+use crate::schema::layer_id;
+use crate::standards::v1::subsets::any::schema::default_drawing_document;
+use crate::standards::v1::subsets::any::io::text::snapshot::semio_drawing_example_json;
 use crate::DrawingLayerNode;
 use semio_framework_plugin::kernel::Effect;
 use semio_framework_plugin::{artifact_app_laws as artifact_laws, PluginApp, ViewModel, SET_ACTIVE_UTILITY_ACTION_ID};
@@ -87,7 +87,7 @@ async fn rendered_drawing_canvas(app:&mut DrawingApp,fixture:Option<&str>,view:&
 }
 
 fn drawing_envelope_wire() -> Vec<u8> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     let mut snapshot = default_drawing_document("drawing-retained-load", None);
     let mut group = crate::schema::create_drawing_group_layer(crate::schema::identity::DrawingIdentity::admit((("Nested")).to_string().into()).expect("nonempty authored identity"), "Nested");
@@ -126,7 +126,7 @@ fn drawing_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first Drawing fixture envelope");
-    let envelope = store::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(DRAWING_DOCUMENT_SCHEMA, "drawing-retained-load", snapshot, None);
     let mut retirement = crate::spr::drawing_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
         let copy_bytes = retirement.next_copy_byte_demand().expect("Drawing fixture envelope copy demand");
@@ -149,12 +149,12 @@ fn drawing_envelope_wire() -> Vec<u8> {
 }
 
 fn admit_drawing_envelope(app: &mut DrawingApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("Drawing live envelope ingress credits");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Drawing envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded Drawing envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("Drawing envelope page admission failed: {fault:?}"));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("Drawing envelope seal"));
@@ -163,7 +163,7 @@ fn admit_drawing_envelope(app: &mut DrawingApp, wire: &[u8]) -> semio_framework_
 
 fn drive_drawing_load(app: &mut DrawingApp, handle: semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll {
     for _ in 0..100_000 {
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Drawing maintenance turn");
+        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one Drawing maintenance turn");
         let poll = app.advance_artifact_envelope_load(handle).expect("Drawing load advancement");
         if matches!(poll, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Ready | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Cancelled | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault) {
             return poll;
@@ -194,12 +194,12 @@ async fn drawing_live_envelope_cancel_closes_retained_pages_without_publication(
     let mut app = drawing_app().await;
     let base_generation = app.artifact_generation_now();
     let wire = drawing_envelope_wire();
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled Drawing ingress credits");
-    let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
-    let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    let first = &wire[..wire.len().min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+    let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
     bytes[..first.len()].copy_from_slice(first);
-    let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Drawing first page");
+    let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled Drawing first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled Drawing page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel Drawing ingress");
     assert_eq!(drive_drawing_load(&mut app, handle), semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);
@@ -214,7 +214,7 @@ async fn drawing_live_initializer_candidate_container_commit_ack_cancel_stale_pr
         let base_id = app.snapshot().expect("Drawing last-valid snapshot").id;
         let handle = admit_drawing_envelope(&mut app, &drawing_envelope_wire());
         for _ in 0..turns {
-            app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded Drawing staged maintenance");
+            app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("bounded Drawing staged maintenance");
         }
         let stale = semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle { operation: handle.operation, generation: semio_framework_job::Generation(handle.generation.0 + 1) };
         assert!(app.advance_artifact_envelope_load(stale).is_err(), "stale staged handle cannot consume the exact operation owner");
@@ -244,7 +244,7 @@ async fn drawing_live_envelope_rejects_single_and_final_edit_id_plus_one_before_
             first["id"] = serde_json::Value::String("drawing-retained-edit-first".into());
             edits.insert(0, first);
         }
-        edits.last_mut().expect("Drawing final edit")["id"] = serde_json::Value::String("x".repeat(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES + 1));
+        edits.last_mut().expect("Drawing final edit")["id"] = serde_json::Value::String("x".repeat(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES + 1));
         let wire = serde_json::to_vec(&value).expect("hostile Drawing edit fixture");
         let mut app = drawing_app().await;
         let generation = app.artifact_generation_now();
@@ -601,7 +601,7 @@ async fn settled(app: &mut DrawingApp, command: DrawingCommand, meta: &semio_fra
 
 /// 📸️ Loads test geometry through the same retained envelope owner as the host.
 fn load_drawing_fixture(app: &mut DrawingApp, snapshot: &DrawingSnapshot) {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
     let pack = snapshot.encode_pack().iter().map(|byte| format!("{byte:02x}")).collect::<String>();
     let wire = serde_json::to_vec(&serde_json::json!({
         "schema": DRAWING_DOCUMENT_SCHEMA, "id": snapshot.id,

@@ -2,9 +2,9 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🧵traces` per Wave C.
 
 use super::ConnectTrace;
-use crate::diff::ProgramTracesDelta;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProgramTracesDelta;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// 🔌️ Warning `mutation.no-op` if the trace already carries this exact value, Error `mutation.target-missing` if a new trace's `index` lies past the end (both empty diff);
 /// else `inserted = [{index, trace}]` if the id is new (appended when `index` is absent), else the trace is replaced in place under its own id:

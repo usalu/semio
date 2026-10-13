@@ -1,5 +1,5 @@
 //! 🧬️ schema leaf
-use crate::registers::AdjacencyKind;
+use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, Default, PartialEq, semio_framework_value::ToValue, semio_framework_value::FromValue, ArtifactSchema, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

@@ -29,7 +29,7 @@ macro_rules! define_id {
             index: u32,
             generation: u32,
         }
-        impl $crate::brep::representation::arena::ArenaId for $name {
+        impl $crate::arena::ArenaId for $name {
             fn from_raw(index: u32, generation: u32) -> Self {
                 $name { index, generation }
             }
@@ -180,11 +180,11 @@ impl<T, Id: ArenaId> Store<T, Id> {
         Some(value)
     }
     /// 🎟️ The intrusive original free head changes no backing allocation.
-    pub(crate) fn remove_backing_demand(&self,_id:Id)->(usize,usize) {(0,0)}
+    pub fn remove_backing_demand(&self,_id:Id)->(usize,usize) {(0,0)}
     /// 🧭️ Quotes the original existing slot path without changing its generation or payload.
     pub fn next_remove_depth_demand(&self,id:Id)->Result<usize,semio_framework_value::ValueError>{self.next_slot_depth_demand(id.raw_index() as usize).map(|depth|depth.max(1))}
     /// 🎟️ Removes one original slot through its inline free head after scalar work admission.
-    pub(crate) fn remove_granted(&mut self,id:Id,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<T>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework_value::ValueError> {
+    pub fn remove_granted(&mut self,id:Id,grant:semio_framework_value::retained_clone::RetainedCloneGrant)->Result<(Option<T>,semio_framework_value::retained_clone::RetainedCloneProgress),semio_framework_value::ValueError> {
         use semio_framework_value::retained_clone::RetainedCloneProgress;
         if grant.maximum_items==0 || grant.maximum_depth<self.next_remove_depth_demand(id)? {return Ok((None,RetainedCloneProgress::default()));}
         let value=self.remove(id);
@@ -199,7 +199,7 @@ impl<T, Id: ArenaId> Store<T, Id> {
         self.len() == 0
     }
     /// 🗄️ Frees `id`'s slot without needing its value back — the arena-GC primitive [`Body::compact`]
-    /// (`crate::brep::representation::topology::Body`) calls per unreachable id: bumps the slot's generation
+    /// (`crate::topology::Body`) calls per unreachable id: bumps the slot's generation
     /// (see [`Self::remove`]) so a still-held stale id self-detects instead of aliasing whatever
     /// reuses the slot next. Returns `false` (no-op) for an already-stale or out-of-range id.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -213,11 +213,11 @@ impl<T, Id: ArenaId> Store<T, Id> {
         self.contains(id)
     }
     /// 🎟️ The original arena slot count, including holes, without a live-entry scan.
-    pub(crate) fn slot_count(&self) -> usize { self.slots.len() }
+    pub fn slot_count(&self) -> usize { self.slots.len() }
     /// 📏️ Borrows the exact original arena page path for one source slot.
     pub(crate) fn next_slot_depth_demand(&self,index:usize)->Result<usize,semio_framework_value::ValueError>{self.slots.next_get_depth_demand(index).map_err(Into::into)}
     /// 🎟️ Borrows one original slot; a hole consumes its caller's scan turn.
-    pub(crate) fn slot_at(&self, index: usize) -> Option<(Id, &T)> {
+    pub fn slot_at(&self, index: usize) -> Option<(Id, &T)> {
         let slot = self.slots.get(index)?;
         slot.value.as_ref().map(|value| (Id::from_raw(index as u32, slot.generation), value))
     }

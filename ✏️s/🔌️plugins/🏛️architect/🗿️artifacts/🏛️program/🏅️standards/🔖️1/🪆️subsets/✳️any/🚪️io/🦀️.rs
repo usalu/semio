@@ -21,8 +21,8 @@ pub(crate) struct ProgramExportTable {
 
 struct ProgramIdentity<'a> {
     schema: &'a str,
-    knowledge: &'a crate::ProgramKnowledgeChild,
-    benchmarks: &'a crate::ProgramBenchmarksChild,
+    knowledge: &'a crate::standards::v1::subsets::any::schema::snapshot::ProgramKnowledgeChild,
+    benchmarks: &'a crate::standards::v1::subsets::any::schema::snapshot::ProgramBenchmarksChild,
 }
 
 /// 🖐️ Hand-written rather than `#[derive(ToValue)]`: every field here is a reference
@@ -58,7 +58,7 @@ impl ProgramExportTable {
 }
 
 /// 🧭️ Explicitly projects every persisted program field into a stable named table.
-pub(crate) fn program_export_tables(snapshot: &crate::ProgramSnapshot) -> Result<Vec<ProgramExportTable>, String> {
+pub(crate) fn program_export_tables(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot) -> Result<Vec<ProgramExportTable>, String> {
     let knowledge = &snapshot.knowledge_payload;
     let benchmarks = &snapshot.benchmarks_payload;
     let mut tables = vec![
@@ -147,7 +147,7 @@ pub(crate) fn program_export_tables(snapshot: &crate::ProgramSnapshot) -> Result
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
     use crate::standards::v1::subsets::any::io::ProgramAnalyzer;
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use {semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.architect.program", standard: StandardId("1"), subset: SubsetId("*") };
@@ -242,7 +242,7 @@ pub mod io_registry {
     const PROGRAM_DIALECT: Dialect = Dialect { artifact_kind: "s.architect.program", standard: StandardId("1"), subset: SubsetId("*") };
     const PROGRAM_JSON_BRIDGE_DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.json", standard: StandardId("rfc8259"), subset: SubsetId("*") };
 
-    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::ProgramSnapshot, ComposeError> {
+    fn rebuild_native_snapshot(sources: &[ErasedComposeSource]) -> Result<crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, ComposeError> {
         if let Some(source) = sources.iter().find(|s| s.dialect == PROGRAM_DIALECT) {
             let builder = match &source.payload {
                 IoPayload::Text(t) => ProgramAnyBuilder::from_text(t).map_err(|e| ComposeError { message: e.to_string(), diagnostics: Vec::new() })?,
@@ -329,9 +329,9 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::schema::diff::ProgramDiff;
-    use crate::schema::mutations::ProgramMutation;
-    use crate::schema::snapshot::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+    use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -351,10 +351,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<ProgramSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<ProgramSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<ProgramSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <ProgramMutation as protocol::Mutation<ProgramSnapshot>>::diff(&mutation, &self.snapshot);
@@ -381,7 +381,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::ProgramSnapshot;
+    use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -405,14 +405,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <ProgramSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <ProgramSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <ProgramSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <ProgramSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
@@ -449,8 +449,8 @@ pub mod mutation_bridge {
     /// `🎯️outcome` vector declares a status AND its diagnostic codes. A diff the central applier rejects becomes a fatal message on an
     /// empty outcome and leaves the snapshot unchanged.
     // 🚫️async: E1 pure computation over an in-memory snapshot, consumed from a synchronous external test host — see R9
-    pub fn apply_program_mutation_outcome(snapshot: &crate::ProgramSnapshot, mutation: &crate::ProgramMutation) -> (crate::ProgramSnapshot, protocol::MutationOutcome<crate::ProgramDiff>) {
-        let outcome = <crate::ProgramMutation as protocol::Mutation<crate::ProgramSnapshot>>::diff(mutation, snapshot);
+    pub fn apply_program_mutation_outcome(snapshot: &crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, mutation: &crate::standards::v1::subsets::any::schema::mutations::ProgramMutation) -> (crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot, protocol::MutationOutcome<crate::standards::v1::subsets::any::schema::diff::ProgramDiff>) {
+        let outcome = <crate::standards::v1::subsets::any::schema::mutations::ProgramMutation as protocol::Mutation<crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot>>::diff(mutation, snapshot);
         match protocol::apply_diff(outcome.diff(), snapshot) {
             Ok(next) => (next, outcome),
             Err(error) => {

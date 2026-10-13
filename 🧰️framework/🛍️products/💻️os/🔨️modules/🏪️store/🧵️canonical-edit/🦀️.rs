@@ -389,8 +389,6 @@ impl ArtifactCanonicalJsonCursor {
 //#endregion 🔣️ByteEncoder
 
 //#region 🔏️Sealing
-#[path="🪪️authority/🦀️.rs"]
-mod publication_authority_retirement;
 
 pub(super) struct ArtifactStoreOneItemAuthorityRetirement {
     owner: semio_framework_value::retirement::shared::SharedControlledRetirement<ArtifactStoreOneItemLiveAuthority>,
@@ -558,9 +556,9 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
         let authority = self.authority.as_ref().expect("nonterminal sealer retains its authority");
         ArtifactStoreOneItemSealCheckpoint {
             version: 1,
-            operation: authority.operation.0,
-            generation: authority.generation.0,
-            base_revision: authority.base_revision,
+            operation: authority.operation().0,
+            generation: authority.generation().0,
+            base_revision: authority.base_revision(),
             authority_digest: self.authority_digest(),
             phase: self.phase,
             completed_bytes: self.completed_bytes,
@@ -577,9 +575,9 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
             || self.closing
             || checkpoint.version != 1
             || checkpoint.phase > 6
-            || checkpoint.operation != authority.operation.0
-            || checkpoint.generation != authority.generation.0
-            || checkpoint.base_revision != authority.base_revision
+            || checkpoint.operation != authority.operation().0
+            || checkpoint.generation != authority.generation().0
+            || checkpoint.base_revision != authority.base_revision()
             || checkpoint.authority_digest != self.authority_digest()
             || checkpoint.canonical_bytes > CANONICAL_EDIT_MAXIMUM_BYTES
             || checkpoint.completed_bytes > CANONICAL_EDIT_MAXIMUM_BYTES * 2 + CANONICAL_EDIT_MAXIMUM_OVERHEAD_BYTES
@@ -627,18 +625,18 @@ impl<P, M> ArtifactStoreOneItemSealer<P, M> {
         CursorRevisionAccumulator::hash_record(
             b"one-item-authority",
             &[
-                &authority.operation.0.to_be_bytes(),
-                &authority.generation.0.to_be_bytes(),
-                &authority.base_revision,
-                &authority.next_sequence_number.to_be_bytes(),
-                &authority.next_clock.actor.to_be_bytes(),
-                &authority.next_clock.physical_ms.to_be_bytes(),
-                &authority.next_clock.logical.to_be_bytes(),
-                authority.actor.as_bytes(),
-                &[u8::from(authority.line.is_some())],
-                authority.line.as_deref().unwrap_or("").as_bytes(),
-                &[u8::from(authority.group_id.is_some())],
-                authority.group_id.as_deref().unwrap_or("").as_bytes(),
+                &authority.operation().0.to_be_bytes(),
+                &authority.generation().0.to_be_bytes(),
+                &authority.base_revision(),
+                &authority.next_sequence_number().to_be_bytes(),
+                &authority.next_clock().actor.to_be_bytes(),
+                &authority.next_clock().physical_ms.to_be_bytes(),
+                &authority.next_clock().logical.to_be_bytes(),
+                authority.actor().as_bytes(),
+                &[u8::from(authority.line_id().is_some())],
+                authority.line_id().unwrap_or("").as_bytes(),
+                &[u8::from(authority.group_id().is_some())],
+                authority.group_id().unwrap_or("").as_bytes(),
             ],
         )
     }

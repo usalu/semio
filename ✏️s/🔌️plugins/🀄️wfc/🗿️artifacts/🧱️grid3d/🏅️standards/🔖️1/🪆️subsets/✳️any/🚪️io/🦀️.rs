@@ -3,7 +3,7 @@
 //! composed INTO this dialect; conformance runs inside the io mechanism's own entry, never here.
 
 /// 📸️ Native document capability shared by the exact subset declaration and owned I/O laws.
-pub fn native_snapshot_codec()->store::ArtifactCodec{store::ArtifactCodec::bare::<crate::Grid3dSnapshot,crate::Grid3dMutation>(crate::WFC_GRID3D_DOCUMENT_SCHEMA.to_string())}
+pub fn native_snapshot_codec()->store::os_store::serialization::ArtifactCodec{store::bare_artifact_codec::<crate::Grid3dSnapshot,crate::Grid3dMutation>(crate::WFC_GRID3D_DOCUMENT_SCHEMA.to_string())}
 
 pub fn import_stdio_kinds() -> &'static [&'static str] {
     &["stdio.txt"]
@@ -89,10 +89,10 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new() }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<Grid3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<Grid3dSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<Grid3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <Self::Mutation as protocol::Mutation<Self::Snapshot>>::diff(&mutation, &self.snapshot);
@@ -143,14 +143,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <Grid3dSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <Grid3dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(error) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), error.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <Grid3dSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <Grid3dSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(error) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

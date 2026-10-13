@@ -8,7 +8,7 @@ async fn demo_mutations_of_this_kind_invert_and_sum_to_the_negative_diff() {
     let base = fixture();
     let mut checked = 0usize;
     for mutation in demo_mutation_cases().into_iter().filter(|mutation| matches!(mutation, SemioAnimationMutation::InsertTimeline(_))) {
-        let (_, messages) = <SemioAnimationMutation as protocol::Mutation<_>>::diff(&mutation, &base).into_parts();
+        let (_, messages) = <SemioAnimationMutation as Mutation<_>>::diff(&mutation, &base).into_parts();
         if messages.iter().any(|message| matches!(message.level, semio_framework_diagnostic::Severity::Error | semio_framework_diagnostic::Severity::Fatal)) {
             continue;
         }

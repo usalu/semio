@@ -5,11 +5,11 @@
 //! `width * height * 4` is FATAL `mutation.invariant`. The 2x1 before-snapshot therefore takes an
 //! 8-byte buffer and nothing else. The per-frame diff sets `rgba8` and leaves `delay_ms` at `None`
 //! — the mirror image of `set-frame-delay`.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_frame_pixels;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_frame_pixels;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-frame-pixels/⬛️repaints/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🖌️set-frame-pixels/⬛️repaints/📸️snapshot/➡️after/🔣️.json");
@@ -40,7 +40,7 @@ async fn repaints_the_frame_without_changing_its_delay() {
     assert_ne!(produced.frames[0].rgba8, base.frames[0].rgba8, "the buffer really must have changed");
     assert_eq!(produced.frames[0].delay_ms, base.frames[0].delay_ms, "repainting must not disturb the frame's animation delay");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -53,9 +53,9 @@ async fn the_undo_set_frame_pixels_restores_the_captured_buffer() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetFramePixels(set_frame_pixels::SetFramePixels { index: 0, rgba8: base.frames[0].rgba8.clone() })], "the undo must recapture BASE's own pixel buffer");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-frame-pixels/repaints-the-only-frame-black: the undo did not restore the before-snapshot");
 }

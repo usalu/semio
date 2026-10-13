@@ -2,7 +2,7 @@
 
 use crate::standards::v1::subsets::any::schema::mutations::Puzzle2dMutation;
 use crate::Puzzle2dSnapshot;
-use store::{ArtifactEnvelope, ArtifactStore};
+use store::{os_store::store_schema::ArtifactEnvelope, ArtifactStore};
 pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 
 /// 🏪️ THE constructor for a puzzle2d document store, app-side or standalone. A bare
@@ -13,7 +13,7 @@ pub type Puzzle2dStore = ArtifactStore<Puzzle2dSnapshot, Puzzle2dMutation>;
 /// under one authority instead of two.
 pub async fn puzzle2d_store(envelope: Puzzle2dEnvelope, actor: protocol::ActorId) -> Result<Puzzle2dStore, String> {
     let mut store = Puzzle2dStore::new(envelope, actor).await.map_err(|error| format!("puzzle2d store construction refused: {error:?}"))?;
-    let owners = store::funded_bounded_artifact_store_owners::<Puzzle2dSnapshot, Puzzle2dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Puzzle2dSnapshot, Puzzle2dMutation>().map_err(semio_framework_value::ValueError::into_message)?;
     store.install_document_store_owners_exact(owners).map_err(|(error, _)| error.into_message())?;
     Ok(store)
 }

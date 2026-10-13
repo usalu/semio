@@ -110,9 +110,9 @@ pub(crate) mod context {
         let document_b = instance_b.document_text().await.expect("initial document b");
         assert_eq!(document_a.dsl, document_b.dsl, "hot peers start from the same serialized initial snapshot");
         assert_eq!(document_a.ops, document_b.ops, "hot peers start with the same document identity and history cursor");
-        let (backbone_a, backbone_b) = store::MemoryBackbone::pair(channel, channel).await;
-        instance_a.attach_hot_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach hot backbone a after equal initial state proof");
-        instance_b.attach_hot_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach hot backbone b after equal initial state proof");
+        let (backbone_a, backbone_b) = store::os_store::backbone::MemoryBackbone::pair(channel, channel).await;
+        instance_a.attach_hot_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach hot backbone a after equal initial state proof");
+        instance_b.attach_hot_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach hot backbone b after equal initial state proof");
         dispatch(&mut instance_a, command_a).await;
         dispatch(&mut instance_b, command_b).await;
         for _ in 0..8 {
@@ -135,17 +135,17 @@ use semio_framework_plugin::{ContextMenuRequest, EditorApp, PluginApp, VcsArtifa
 
 #[test]
 fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
-    let parent: std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
+    let parent: std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<GisMapSnapshot, GisMapMutation>> = gis_map_parent_one_item_preparation_factory();
     let drawing: std::sync::Arc<
-        dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::drawing::schema::mutations::SemioDrawingMutation,
+        dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+            semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot,
+            semio_s_artifact_stdio_semio_drawing::schema::mutations::SemioDrawingMutation,
         >,
     > = gis_map_drawing_one_item_preparation_factory();
     let value: std::sync::Arc<
-        dyn store::ArtifactStoreOneItemPreparationFactory<
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot,
-            semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::SemioValueMutation,
+        dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<
+            semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot,
+            semio_s_artifact_stdio_semio_value::schema::mutations::SemioValueMutation,
         >,
     > = gis_map_value_one_item_preparation_factory();
     assert_eq!([std::sync::Arc::strong_count(&parent), std::sync::Arc::strong_count(&drawing), std::sync::Arc::strong_count(&value)], [1, 1, 1]);
@@ -159,11 +159,11 @@ fn gis_map_durable_three_store_factory_builders_are_exact_role_ports() {
 #[semio_framework_async_macros::async_test]
 async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_once() {
     let snapshot = empty_gis_map_snapshot();
-    let envelope = store::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(crate::GIS_MAP_SCHEMA, "gis-map-preparation-law", snapshot, None);
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into()))
         .await
         .expect("GIS Map preparation-law Store opens");
-    let owners = store::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
+    let owners = store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<GisMapSnapshot, GisMapMutation>().expect("GIS owner catalog is fully funded");
     if let Err((error, _owners)) = store.install_document_store_owners_exact(owners) {
         panic!("GIS store refused its exact owner catalog: {error}");
     }
@@ -179,23 +179,23 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
             store.content_revision_now(),
             "gis-map-preparation-law".into(),
             vec![mutation],
-            store::HistoryLane::Document,
+            store::os_store::store_schema::HistoryLane::Document,
             Some(&factory),
             None,
         )
         .expect("GIS Map one-item publication admits its exact factory");
-    let grant = store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
+    let grant = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_bytes: store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES };
     let mut published = false;
     for _ in 0..64 {
         match store.advance_apply_batch(&mut publication, grant).expect("GIS Map candidate transfer turn") {
-            store::ArtifactStoreOneItemAdvance::Published(_) => {
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Published(_) => {
                 published = true;
                 break;
             }
-            store::ArtifactStoreOneItemAdvance::Blocked => panic!("GIS Map one-item preparation blocked after admitting its exact candidate"),
-            store::ArtifactStoreOneItemAdvance::Progress(_) => {}
-            store::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("GIS Map one-item preparation reached ACK without exposing its exact publication receipt"),
-            store::ArtifactStoreOneItemAdvance::Complete => panic!("GIS Map one-item preparation completed before publishing its exact candidate"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Blocked => panic!("GIS Map one-item preparation blocked after admitting its exact candidate"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Progress(_) => {}
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::AwaitingAck(_) => panic!("GIS Map one-item preparation reached ACK without exposing its exact publication receipt"),
+            store::os_store::one_item_publication::ArtifactStoreOneItemAdvance::Complete => panic!("GIS Map one-item preparation completed before publishing its exact candidate"),
         }
     }
     assert!(published, "GIS Map one-item preparation must publish after one semantic-candidate turn and one exact transfer turn");
@@ -209,7 +209,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
     drop(publication);
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<GisMapSnapshot, GisMapMutation>::new();
     for _ in 0..100_000 {
-        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS Map preparation-law Store close"), semio_framework_plugin::PluginCloseStep::Complete) {
+        if matches!(semio_framework_plugin::ArtifactOwnedDisposer::close_step(&mut disposer, &mut store, 1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS Map preparation-law Store close"), semio_framework_plugin::PluginCloseStep::Complete) {
             break;
         }
     }
@@ -224,7 +224,7 @@ async fn gis_map_window_ownership_one_item_preparation_transfers_its_candidate_o
 /// produce and on each codec round trip that reaches the candidate store.
 #[test]
 fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     let admit = |label: &str, snapshot: &GisMapSnapshot| {
         let projection = store::ChildRestoreProjection::from_snapshot(snapshot).unwrap_or_else(|error| panic!("{label} parent is not projectable: {error:?} (drawing {:?}/{:?}, image {:?}, value {:?}/{:?})", snapshot.drawing.child_id, snapshot.drawing.target, snapshot.image, snapshot.value.child_id, snapshot.value.target));
@@ -239,12 +239,12 @@ fn every_gis_map_parent_snapshot_projects_its_canonical_child_handles() {
     for (label, snapshot) in [("empty", empty_gis_map_snapshot()), ("default-document", default_document())] {
         admit(label, &snapshot);
         admit(&format!("{label} pack round trip"), &GisMapSnapshot::decode_pack(&snapshot.encode_pack()).unwrap_or_else(|error| panic!("{label} parent pack round trip: {error}")));
-        admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as store::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as store::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
+        admit(&format!("{label} dsl round trip"), &<GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&<GisMapSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot)).unwrap_or_else(|error| panic!("{label} parent dsl round trip: {error}")));
     }
 }
 
 fn gis_map_envelope_wire() -> Vec<u8> {
-    use store::ArtifactPack;
+    use store::os_store::serialization::ArtifactPack;
 
     let snapshot = empty_gis_map_snapshot();
     let snapshot_pack = snapshot.encode_pack();
@@ -263,10 +263,10 @@ fn gis_map_envelope_wire() -> Vec<u8> {
         "conflicts": []
     }))
     .expect("schema-first GIS fixture envelope");
-    let envelope = store::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
+    let envelope = store::os_store::document_materialize::create_document_envelope(GIS_MAP_SCHEMA, "gis-map-live-load", snapshot, None);
     let mut retirement = crate::host::owned::gis_map_envelope_decode_owner_bundle().retire_envelope(envelope);
     for _ in 0..100_000 {
-        match retirement.close_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
+        match retirement.close_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("GIS fixture envelope retirement") {
             store::SnapshotRetirementStep::Complete => {
                 assert!(retirement.terminal_is_empty());
                 drop(retirement);
@@ -274,7 +274,7 @@ fn gis_map_envelope_wire() -> Vec<u8> {
             }
             store::SnapshotRetirementStep::Pending { released_items, released_bytes } => {
                 assert!(released_items <= 1);
-                assert!(released_bytes <= store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
+                assert!(released_bytes <= store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES);
             }
             store::SnapshotRetirementStep::Blocked => panic!("unshared GIS fixture envelope retirement blocked"),
         }
@@ -283,12 +283,12 @@ fn gis_map_envelope_wire() -> Vec<u8> {
 }
 
 fn admit_gis_map_envelope(app: &mut Gis2dApp, wire: &[u8]) -> semio_framework_plugin::ArtifactEnvelopeDecodeOperationHandle {
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len().max(1)).expect("GIS live envelope ingress credits");
-    for chunk in wire.chunks(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
-        let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    for chunk in wire.chunks(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES) {
+        let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
         bytes[..chunk.len()].copy_from_slice(chunk);
-        let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded GIS live envelope page");
+        let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, chunk.len()).expect("bounded GIS live envelope page");
         app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("GIS live envelope page admission failed: {fault:?}"));
     }
     assert!(app.seal_artifact_envelope_ingress(handle).expect("GIS live envelope seal/submit"));
@@ -310,7 +310,7 @@ async fn drive_gis_map_live_load(app: &mut Gis2dApp, handle: semio_framework_plu
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
             return last;
         }
-        app.maintenance_step(1, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one GIS live maintenance turn");
+        app.maintenance_step(1, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("one GIS live maintenance turn");
         let _ = semio_framework_job::pump_worker_job_retirements(8, 1, semio_framework_job::JOB_PAYLOAD_PAGE_BYTES);
         last = app.advance_artifact_envelope_load(handle).expect("GIS live load advancement after maintenance");
         if !matches!(last, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Pending | semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Progress) {
@@ -345,12 +345,12 @@ async fn gis_map_live_envelope_cancel_closes_retained_pages_without_publication(
     let mut app = app().await;
     let base_generation = app.artifact_generation_now();
     let wire = gis_map_envelope_wire();
-    let pages = wire.len().div_ceil(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
+    let pages = wire.len().div_ceil(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).max(1);
     let handle = app.begin_artifact_envelope_ingress(pages, wire.len()).expect("cancelled GIS ingress credits");
-    let first = &wire[..wire.len().min(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
-    let mut bytes = [0; store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
+    let first = &wire[..wire.len().min(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES)];
+    let mut bytes = [0; store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES];
     bytes[..first.len()].copy_from_slice(first);
-    let page = store::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled GIS first page");
+    let page = store::os_store::owned_schema_decode::ArtifactEnvelopeDecodePage::try_from_array(bytes, first.len()).expect("cancelled GIS first page");
     app.admit_artifact_envelope_ingress_page(handle, page).unwrap_or_else(|(fault, _page)| panic!("cancelled GIS page admission failed: {fault:?}"));
     app.cancel_artifact_envelope_load(handle).expect("cancel exact GIS ingress");
     assert_eq!(drive_gis_map_live_load(&mut app, handle).await, semio_framework_plugin::ArtifactEnvelopeDecodeOperationPoll::Fault);

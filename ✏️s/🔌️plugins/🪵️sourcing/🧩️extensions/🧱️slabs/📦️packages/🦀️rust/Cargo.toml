@@ -9,30 +9,16 @@ description = "Sourcing slabs module — contributes the slabs typology and demo
 [lints]
 workspace = true
 
-[package.metadata.component]
-package = "semio:sourcing-module-slabs"
-
 [package.metadata.semio]
-deployment-directory = "🧇️sourcing-module-slabs"
-component-kind = "extension"
 role = "extension"
-extends = "sourcing"
-contributes = ["sourcing.module"]
-
-[package.metadata.wasm-pack.profile.dev]
-wasm-opt = false
-
-[package.metadata.wasm-pack.profile.release]
-wasm-opt = false
 
 [lib]
-crate-type = ["cdylib", "rlib"]
 path = "🦀️.rs"
 
 [dependencies]
 semio-framework-value = { path = "../../../../../../../🧰️framework/🔨️modules/🌱️value/📦️packages/🦀️rust" }
 semio-s-artifact-sourcing-curation = { workspace = true }
-semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", features = ["component-guest"], package = "semio-framework-plugin" }
+semio-framework-plugin = { path = "../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust", package = "semio-framework-plugin" }
 semio-framework = { path = "../../../../../../../🧰️framework/📦️packages/🦀️rust", package = "semio-framework" }
 semio-framework-pack-json = { path = "../../../../../../../🧰️framework/🔨️modules/🎒️pack/🔤️json/📦️packages/🦀️rust" }
 

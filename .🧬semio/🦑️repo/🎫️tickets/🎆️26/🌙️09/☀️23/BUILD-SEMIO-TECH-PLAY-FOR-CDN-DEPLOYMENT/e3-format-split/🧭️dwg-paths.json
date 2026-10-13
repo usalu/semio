@@ -1,0 +1,69 @@
+{
+ "root": "/Users/ueli/Documents/semio/✏️s/🔌️plugins/🗄️stdio/🗿️artifacts/🖊️dwg/🦀️.rs",
+ "crate": "semio_s_artifact_stdio_dwg",
+ "barrels": {
+  "": [
+   "standards::v_ac1024::subsets::any::schema::snapshot",
+   "standards::v_ac1024::subsets::any::schema::diff",
+   "standards::v_ac1024::subsets::any::schema::mutations",
+   "standards::v_ac1024::subsets::any::schema",
+   "standards::v_ac1024::subsets::any::schema::geometry",
+   "standards::v_ac1024::subsets::any::io::import",
+   "standards::v_ac1024::subsets::any::io::export",
+   "standards::v_ac1024::subsets::any::io"
+  ],
+  "schema": [
+   "standards::v_ac1024::subsets::any::schema"
+  ],
+  "engine": [
+   "standards::v_ac1024::subsets::any::io",
+   "standards::v_ac1024::subsets::any::io::import",
+   "standards::v_ac1024::subsets::any::io::export",
+   "standards::v_ac1024::subsets::any::schema::geometry",
+   "standards::v_ac1024::subsets::any::io::binary::snapshot",
+   "standards::v_ac1024::subsets::any::schema"
+  ],
+  "standards::v_ac1024::engine": [
+   "standards::v_ac1024::subsets::any::io",
+   "standards::v_ac1024::subsets::any::io::import",
+   "standards::v_ac1024::subsets::any::io::export",
+   "standards::v_ac1024::subsets::any::schema::geometry",
+   "standards::v_ac1024::subsets::any::io::binary::snapshot",
+   "standards::v_ac1024::subsets::any::schema"
+  ],
+  "standards::v_ac1018::engine": [
+   "standards::v_ac1018::subsets::any::io",
+   "standards::v_ac1018::subsets::any::schema"
+  ],
+  "standards::v_ac1024::subsets::any::io": [
+   "standards::v_ac1024::subsets::any::io",
+   "standards::v_ac1024::subsets::any::io::import",
+   "standards::v_ac1024::subsets::any::io::export",
+   "standards::v_ac1024::subsets::any::schema::geometry",
+   "standards::v_ac1024::subsets::any::io::binary::snapshot"
+  ],
+  "standards::v_ac1024::subsets::any::io::binary::snapshot": [
+   "standards::v_ac1024::subsets::any::io::binary::snapshot",
+   "standards::v_ac1024::subsets::any::io::import",
+   "standards::v_ac1024::subsets::any::io::export"
+  ]
+ },
+ "aliases": {
+  "semio_s_artifact_stdio_contract": [
+   "apply_mutation",
+   "apply_mutation_checked",
+   "mutation_from_payload_json",
+   "mutation_inverse",
+   "mutation_payload_json",
+   "MutationRefusal"
+  ]
+ },
+ "defs": {
+  "standards::v_ac1024::subsets::any::io": [
+   "DwgAnalyzer",
+   "DwgBuilder",
+   "DwgBuilderFacets",
+   "DwgComposer"
+  ]
+ }
+}

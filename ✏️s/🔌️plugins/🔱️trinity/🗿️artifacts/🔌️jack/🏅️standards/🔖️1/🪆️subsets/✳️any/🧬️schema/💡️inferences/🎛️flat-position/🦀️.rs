@@ -1,8 +1,8 @@
 //! 🎛️ Derived positions read actual rich Semio endpoints and declared numeric offset fields.
 use crate::JackSnapshot;
 use semio_framework_value::{ValueError,ValueRefusalKind};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphEdge;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphEdge;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use std::collections::{BTreeMap,BTreeSet};
 #[derive(Clone,Copy,Debug,Default,PartialEq,value_derive::ToValue,value_derive::FromValue)]
 #[value(rename_all="camelCase")]
@@ -16,7 +16,7 @@ fn offset(edge:&SemioGraphEdge,key:&str)->Result<f64,ValueError>{
  let Some(value)=values.next()else{return Ok(0.0)};
  if values.next().is_some(){return Err(invalid("Jack flattened offset requires unique property key"))}
  match &value.value {
-  SemioValue::Float{lexeme}=>semio_s_artifact_stdio_semio::standards::v1::subsets::base::schema::geometry::read_binary64_lexeme(lexeme),
+  SemioValue::Float{lexeme}=>semio_s_artifact_stdio_semio_base::schema::geometry::read_binary64_lexeme(lexeme),
   SemioValue::Int{lexeme}=>lexeme.parse::<f64>().map_err(|_|invalid("Jack flattened integer lexeme invalid")),
   _=>Err(invalid("Jack flattened offset requires numeric intrinsic family")),
  }

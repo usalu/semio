@@ -4,8 +4,8 @@
 //! These live at app level (not in the artifact engine) because they produce framework UI types and
 //! app-addressed `ActionDescriptor`s — an artifact must never depend on an app.
 
-use crate::registers::AdjacencyKind;
-use crate::{EntityId, ProgramSnapshot};
+use crate::standards::v1::subsets::any::schema::registers::AdjacencyKind;
+use crate::standards::v1::subsets::any::schema::{kernel::EntityId, snapshot::ProgramSnapshot};
 use semio_framework_value::DslValue as Value;
 
 //#region 🔖️Labels

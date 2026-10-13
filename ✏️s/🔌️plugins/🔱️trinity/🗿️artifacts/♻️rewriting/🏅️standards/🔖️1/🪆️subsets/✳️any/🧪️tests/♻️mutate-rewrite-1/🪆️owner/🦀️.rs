@@ -4,8 +4,8 @@ use semio_framework_value::FromValue;
 use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::schema::snapshot::{RewritingSnapshot};
 use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{decode_rewriting_snapshot_json};
 use semio_s_artifact_trinity_rewriting::standards::v1::subsets::any::io::text::snapshot::{encode_rewriting_snapshot_json};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{decode_semio_graph_snapshot_json};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::{encode_semio_graph_snapshot_json};
+use semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json;
+use semio_s_artifact_stdio_semio_graph::io::text::snapshot::encode_semio_graph_snapshot_json;
 use semio_s_artifact_trinity_jack::{jack_content_for_handle, materialize_jack_snapshot};
 
 pub fn declared_text(ctx: &Context, role: &str) -> Result<String, String> {

@@ -1,5 +1,5 @@
 use super::*;
-use crate::app::mutation_fixture::job_close::{job_grant as grant, job_quote, retire_completion};
+use crate::app_testing::mutation_fixture::job_close::{job_grant as grant, job_quote, retire_completion};
 use semio_framework_job::{InteractiveJob, InteractiveJobCloseStep};
 use semio_framework_value::retained_clone::RetainedCloneGrant;
 
@@ -129,10 +129,10 @@ fn check(id: &str) {
     let command_identity = std::ptr::from_ref(command.as_ref());
     let completion = ArtifactToolCompletion::<TxnApp>::new();
     if case.completion != Completion::Empty {
-        completion.complete(Ok(Emit::mutations(vec![SetTransactionCount { value: 7 }.into()])), crate::app::EphemeralEmit::default()).expect("one real pending mutation output");
+        completion.complete(Ok(Emit::mutations(vec![SetTransactionCount { value: 7 }.into()])), crate::app_emission::EphemeralEmit::default()).expect("one real pending mutation output");
     }
     let external = (case.completion == Completion::PendingExternal).then(|| completion.clone());
-    let mut job = TxnFixtureJob { owners: crate::app::mutation_fixture::job_close::FixtureJobOwners::new(command, completion), count: 0, page: 0 };
+    let mut job = TxnFixtureJob { owners: crate::app_testing::mutation_fixture::job_close::FixtureJobOwners::new(command, completion), count: 0, page: 0 };
     if case.begin_close {
         job.begin_close();
     }

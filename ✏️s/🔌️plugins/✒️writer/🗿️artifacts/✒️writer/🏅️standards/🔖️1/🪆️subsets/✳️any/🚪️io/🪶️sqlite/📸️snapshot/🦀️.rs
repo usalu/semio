@@ -1,6 +1,6 @@
 //! ✒️ Writer-owned strings and fixed persisted document handle use two handcrafted entities.
 use crate::standards::v1::subsets::any::schema::snapshot::WriterSnapshot;
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,Reconstruction}}};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{Projection,Cell,NativeEncodingBound,Reconstruction}}};
 use semio_framework_value::ValueError;
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue,message)}
 #[path="🛂️native/🦀️.rs"]mod native;
@@ -28,7 +28,7 @@ impl ArtifactSqliteSnapshot for WriterSnapshot{
   let document=database.table("writer_document")?.single_row()?;let child=database.table("writer_document_child")?.single_row()?;
   if document.integer(0)?!=document.rowid||document.values.len()!=6||child.integer(0)?!=child.rowid||child.integer(1)?!=document.rowid||child.values.len()!=7{return Err(invalid("Writer fixed ownership differs"))}
   let mut owned=Reconstruction::new(control)?;
-  let result=Self{schema:owned.text(document.text(1)?)?,id:owned.text(document.text(2)?)?,language_id:owned.text(document.text(3)?)?,uri:owned.text(document.text(4)?)?,text:owned.text(document.text(5)?)?,document:store::ArtifactChild::new(owned.text(child.text(2)?)?,semio_framework_artifact_reference::ArtifactRef{artifact_id:owned.text(child.text(3)?)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:owned.text(child.text(4)?)?,standard:owned.text(child.text(5)?)?,subset:owned.text(child.text(6)?)?}})};
+  let result=Self{schema:owned.text(document.text(1)?)?,id:owned.text(document.text(2)?)?,language_id:owned.text(document.text(3)?)?,uri:owned.text(document.text(4)?)?,text:owned.text(document.text(5)?)?,document:store::os_store::artifact_child::ArtifactChild::new(owned.text(child.text(2)?)?,semio_framework_artifact_reference::ArtifactRef{artifact_id:owned.text(child.text(3)?)?,dialect:semio_framework_artifact_reference::ArtifactDialect{artifact_kind:owned.text(child.text(4)?)?,standard:owned.text(child.text(5)?)?,subset:owned.text(child.text(6)?)?}})};
   owned.checkpoint()?;Ok(result)
  }
  fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->semio_framework_os_kernel::io_schema::IoResult<()>{

@@ -4,10 +4,10 @@
 //! (framework SDK) is the sole runtime adapter, so this file can never structurally emit an artifact
 //! or draft mutation. MUST NOT reference the sibling editor module.
 
-use crate::standards::v1::subsets::cad::schema::mutations::SemioCadMutation;
-use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use crate::viewer::semio_cad::modes::view;
-use crate::viewer::semio_cad::modes::view::windows::main;
+use crate::schema::mutations::SemioCadMutation;
+use crate::schema::snapshot::SemioCadSnapshot;
+use crate::viewer::modes::view;
+use crate::viewer::modes::view::windows::main;
 use semio_framework_plugin::app::InteractionView;
 use semio_framework_plugin::ArtifactView;
 use semio_framework_plugin::ArtifactViewer;

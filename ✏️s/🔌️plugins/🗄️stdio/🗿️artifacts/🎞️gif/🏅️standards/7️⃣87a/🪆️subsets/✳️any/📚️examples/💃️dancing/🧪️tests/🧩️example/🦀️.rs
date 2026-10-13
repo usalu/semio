@@ -50,7 +50,7 @@ async fn decode_encode_decode_round_trip_is_stable() {
 #[semio_framework_async_macros::async_test]
 async fn analyzer_builder_round_trip_matches() {
     let original = decode_gif(DANCING_GIF_BYTES).expect("decode real fixture");
-    let packed_original = <GifSnapshot as store::ArtifactPack>::encode_pack(&original);
+    let packed_original = <GifSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&original);
     let analysis_a = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_original)]);
     let parts_a = analysis_a.parts.snapshot.clone().expect("analyzer must report a snapshot for a valid real fixture");
 
@@ -67,7 +67,7 @@ async fn analyzer_builder_round_trip_matches() {
     }
     let rebuilt = builder.build().expect("typed-constructor rebuild must succeed");
 
-    let packed_rebuilt = <GifSnapshot as store::ArtifactPack>::encode_pack(&rebuilt);
+    let packed_rebuilt = <GifSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&rebuilt);
     let analysis_b = GifAnalyzer::analyze(&[AnalyzeSource::Binary(&packed_rebuilt)]);
     let parts_b = analysis_b.parts.snapshot.clone().expect("analyzer must report a snapshot for the rebuilt document");
 

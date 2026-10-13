@@ -16,6 +16,16 @@ import { checkFrameWorker, generateFrameWorker, renderFrameWorker } from "../../
 
 import { runNativeBinary } from "../../⌨️native-entrypoint/📜️script.ts";
 
+/** 📇️ Verifies actual native publication and launch against the independent catalog selection oracle. */
+class NativeEntrypointCatalogTestScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-native-entrypoint-catalog accepts no arguments");
+  const remaining=this.invocation.control.remainingMilliseconds();
+  if(remaining!==null&&remaining<1)throw Error("Original native entrypoint catalog deadline exhausted");
+  await runRepositoryTestCommand(process.execPath,["test",resolve(this.root,"../../⌨️native-entrypoint/🧪️tests/📇️catalog/🟦️.ts")],{cwd:this.repoRoot,env:process.env,budgetMs:remaining===null?0:Math.floor(remaining),signal:this.invocation.control.signal});
+ }
+}
+
 const repoRoot = getWorkspaceRoot();
 const rustPackageRoot = resolve(import.meta.dir, "../🦀️rust");
 const crateName = "semio-framework-os-renderer-wgpu";
@@ -481,6 +491,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("test-socket-snapshot-sqlite",SocketSnapshotSqliteScript)
   .register("test-original-frame-source", OriginalFrameSourceScript)
   .register("test-native", NativeTestScript)
+  .register("test-native-entrypoint-catalog", NativeEntrypointCatalogTestScript)
   .register("test-wgpu-unit", WgpuUnitTestScript)
   .register("test-media-slots", MediaSlotContractTestScript)
   .register("canonical-architecture", MediaSlotContractTestScript)

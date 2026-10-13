@@ -103,8 +103,8 @@ async fn absorb_law_modify_then_remove_drops_pending_patch() {
 //#region 🔖️diff_codec_text_binary_roundtrip_law
 #[semio_framework_async_macros::async_test]
 async fn diff_codec_text_binary_roundtrip_law() {
-    use protocol::{DiffBinary,DiffCodec,DiffText};
-    let (a, b) = (sweep_a(), sweep_b());
+    use protocol::{DiffBinary,DiffText};
+    let (_a, _b) = (sweep_a(), sweep_b());
     let cases = demo_diff_cases();
     for d in cases {
         let printed = d.print_diff();

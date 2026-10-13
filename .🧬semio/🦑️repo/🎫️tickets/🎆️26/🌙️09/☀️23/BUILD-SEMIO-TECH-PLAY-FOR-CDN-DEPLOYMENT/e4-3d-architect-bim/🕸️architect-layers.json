@@ -1,0 +1,75 @@
+{
+ "order": [
+  "model",
+  "mutations",
+  "inferences",
+  "io",
+  "editor",
+  "root"
+ ],
+ "allow": {
+  "model": [],
+  "mutations": [
+   "model"
+  ],
+  "inferences": [
+   "model"
+  ],
+  "io": [
+   "model",
+   "mutations",
+   "inferences"
+  ],
+  "editor": [
+   "model",
+   "mutations",
+   "inferences",
+   "io"
+  ],
+  "root": [
+   "model",
+   "mutations",
+   "inferences",
+   "io",
+   "editor"
+  ]
+ },
+ "rules": [
+  [
+   "^🦀️\\.rs$",
+   "root"
+  ],
+  [
+   "^🧪️tests/",
+   "root"
+  ],
+  [
+   "/✏️editor/",
+   "editor"
+  ],
+  [
+   "/👁️viewer/",
+   "editor"
+  ],
+  [
+   "/📚️examples/",
+   "editor"
+  ],
+  [
+   "/🧬️schema/🧬️mutations/",
+   "mutations"
+  ],
+  [
+   "/🧬️schema/💡️inferences/",
+   "inferences"
+  ],
+  [
+   "/🧬️schema/",
+   "model"
+  ],
+  [
+   "/🚪️io/",
+   "io"
+  ]
+ ]
+}

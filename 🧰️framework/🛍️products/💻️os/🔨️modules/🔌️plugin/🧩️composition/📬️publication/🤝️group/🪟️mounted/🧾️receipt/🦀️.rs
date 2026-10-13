@@ -7,10 +7,6 @@ pub(crate) fn mounted_nested_retirement_demand(mut demand: RetirementDemand, lay
     Ok(demand)
 }
 
-pub(crate) fn mounted_retirement_grant_funds(demand: RetirementDemand, grant: RetainedCloneGrant) -> bool {
-    grant.maximum_items != 0 && grant.maximum_copy_bytes >= demand.copy_bytes && grant.maximum_capacity_bytes >= demand.capacity_bytes && grant.maximum_release_bytes >= demand.release_bytes && grant.maximum_depth >= demand.depth
-}
-
 pub(crate) const MOUNTED_RECEIPT_MAXIMUM_BYTES: usize = 1_048_576;
 
 pub(crate) struct MountedReceiptBytes {
@@ -82,7 +78,7 @@ impl MountedReceiptBytes {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         let bytes = self.next_close_byte_demand();
         if grant.maximum_items == 0 || grant.maximum_release_bytes < bytes { return RetainedCloneStep::Progress(Default::default()); }
-        if !mounted_retirement_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
+        if !plugin_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
         if self.candidate.is_some() { drop(self.candidate.take()); self.required = None; self.copied = 0; }
         else { drop(std::mem::take(&mut *self.bytes)); self.closed = true; }
@@ -150,7 +146,7 @@ impl MountedPreparedOperationBytes {
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if !self.cursor_closed {
             let progress = self.cursor.close(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }).map_err(|error| error.reason)?;
@@ -237,7 +233,7 @@ impl MountedPreparedOperationsBytes {
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> Result<RetainedCloneStep, ValueError> {
         if self.terminal_is_empty() { return Ok(RetainedCloneStep::Complete(Default::default())); }
         if grant.maximum_items == 0 { return Ok(RetainedCloneStep::Progress(Default::default())); }
-        if !mounted_retirement_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
+        if !plugin_grant_funds(self.retirement_demands()?, grant) { return Ok(RetainedCloneStep::Progress(Default::default())); }
         self.closing = true;
         if let Some(operation) = self.operation.as_mut() { let step = operation.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant })?; if operation.terminal_is_empty() { self.operation = None; } return Ok(step); }
         if let Some(encoded) = self.encoded.as_ref() {
@@ -254,18 +250,18 @@ impl MountedPreparedOperationsBytes {
 impl Drop for MountedPreparedOperationsBytes { fn drop(&mut self) { assert!(std::thread::panicking() || self.terminal_is_empty(), "mounted operation framing retains every original owner until funded transfer or close"); } }
 
 pub(crate) struct MountedKernelMutationReceiptSource<'a> {
-    pub(crate) document: ArtifactHandle,
-    pub(crate) mutation_id: &'a str,
-    pub(crate) invocation_id: &'a str,
-    pub(crate) schema: &'a str,
-    pub(crate) schema_separator: &'a str,
-    pub(crate) schema_suffix: &'a str,
-    pub(crate) author: &'a str,
-    pub(crate) dependencies: &'a [MutationId],
-    pub(crate) inverse: &'a [u8],
-    pub(crate) base_version: ArtifactVersion,
-    pub(crate) timestamp: HybridLogicalTimestamp,
-    pub(crate) undo_policy: UndoPolicy,
+    document: ArtifactHandle,
+    mutation_id: &'a str,
+    invocation_id: &'a str,
+    schema: &'a str,
+    schema_separator: &'a str,
+    schema_suffix: &'a str,
+    author: &'a str,
+    dependencies: &'a [MutationId],
+    inverse: &'a [u8],
+    base_version: ArtifactVersion,
+    timestamp: HybridLogicalTimestamp,
+    undo_policy: UndoPolicy,
 }
 
 impl MountedKernelMutationReceiptSource<'_> {
@@ -298,7 +294,7 @@ pub(crate) struct MountedKernelMutationReceipt {
 }
 
 impl MountedKernelMutationReceipt {
-    pub(crate) fn frame_birth_bytes() -> usize { size_of::<Self>() }
+    fn frame_birth_bytes() -> usize { size_of::<Self>() }
     pub(crate) fn new(source: &MountedKernelMutationReceiptSource<'_>, forward: Vec<u8>) -> Self { Self { identity: source.identity(), document: source.document, base_version: source.base_version, timestamp: source.timestamp, undo_policy: source.undo_policy, strings: std::array::from_fn(|_| MountedReceiptBytes::new()), forward: MountedReceiptBytes::from_original(forward), inverse: std::array::from_fn(|_| MountedReceiptBytes::new()), dependencies: std::array::from_fn(|_| ManuallyDrop::new(Vec::new())), dependency: Some(MountedReceiptBytes::new()), author: ManuallyDrop::new(None), phase: MountedKernelReceiptPhase::Strings, field: 0, segment: 0, offset: 0, dependency_index: 0, closing: false, transferred: false } }
     fn validate(&self, source: &MountedKernelMutationReceiptSource<'_>) -> Result<(), ValueError> { if self.closing || self.transferred || self.identity != source.identity() || self.document != source.document || self.base_version != source.base_version || self.timestamp != source.timestamp || self.undo_policy != source.undo_policy { Err(ValueError::new(ValueRefusalKind::InvariantViolated, "mounted host receipt lost its exact original causal source")) } else { Ok(()) } }
     fn active_bytes(&self) -> Option<&MountedReceiptBytes> { match self.phase { MountedKernelReceiptPhase::Strings => self.strings.get(self.field), MountedKernelReceiptPhase::Inverse => self.inverse.get(self.field), MountedKernelReceiptPhase::Dependencies => self.dependency.as_ref(), _ => None } }
@@ -385,7 +381,7 @@ impl MountedKernelMutationReceipt {
     pub(crate) fn close_step(&mut self, grant: RetainedCloneGrant) -> RetainedCloneStep {
         if self.terminal_is_empty() { return RetainedCloneStep::Complete(Default::default()); }
         if grant.maximum_items == 0 { return RetainedCloneStep::Progress(Default::default()); }
-        if !mounted_retirement_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
+        if !plugin_grant_funds(self.retirement_demands().expect("bounded receipt close demand"), grant) { return RetainedCloneStep::Progress(Default::default()); }
         self.closing = true;
         if !self.forward.terminal_is_empty() { return self.forward.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }
         if let Some(bytes) = self.strings.iter_mut().chain(self.inverse.iter_mut()).find(|bytes| !bytes.terminal_is_empty()) { return bytes.close_step(RetainedCloneGrant { maximum_depth: grant.maximum_depth - 1, ..grant }); }

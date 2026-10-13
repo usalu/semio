@@ -4,6 +4,7 @@ import Ajv from "ajv";
 import { describe, expect, it } from "vitest";
 import { registryModuleDirectories } from "../../📖️catalog-view/🟦️.ts";
 import { parseComponentPackageId, type DeployedRegistryEntryV1 } from "../../🔎️discovery/🟦️.ts";
+import { componentLibraryManifestV1 } from "../../📽️projection/🟦️.ts";
 import { getWorkspaceRoot } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 
 const repoRoot = getWorkspaceRoot();
@@ -18,12 +19,19 @@ const BUILDER_IDENTITY = /::builder\(\s*(?:"([a-z0-9-]+)"|([A-Z][A-Z0-9_]*))\s*\
 const BUNDLE_IDENTITY = /ExtensionBundle::new\(\s*(?:"([a-z0-9-]+)"|([A-Z][A-Z0-9_]*))\s*,/u;
 const PACKAGE_ID_CALL = /\.package_id\(\s*"([^"]+)"/u;
 
-/** 🦀️ Resolves the ONE root source file that performs a crate's identity call. Every crate but
- * `demonstrator` declares it in `<pluginDir>/🦀️.rs`; the fallback takes the shallowest `🦀️.rs`
- * under the plugin directory that carries the call, which is how `🪪️manifest/🎪️demonstrator/🦀️.rs`
+/** 🧩️ The directory that owns a deployed component's identity: the library owner whose `🧩️component` facet holds the
+ * component crate (a hub composition or extension), never the facet itself. Its root source, `🧫️fixtures/🧫️plugin-identity`
+ * and `🧬️schema/🪪️plugin-identity` are the identity's authorities. */
+function identityOwner(cratePath: string): string {
+  return resolve(repoRoot, componentLibraryManifestV1(cratePath), "..", "..", "..");
+}
+
+/** 🦀️ Resolves the ONE root source file that performs a component's identity call. Every owner but
+ * `demonstrator` declares it in `<owner>/🦀️.rs`; the fallback takes the shallowest `🦀️.rs`
+ * under the owner that carries the call, which is how `🪪️manifest/🎪️demonstrator/🦀️.rs`
  * is found without a per-plugin literal here. */
 function identityRootSource(cratePath: string, role: DeployedRegistryEntryV1["role"]): { readonly path: string; readonly text: string } {
-  const pluginDir = resolve(repoRoot, cratePath, "..", "..");
+  const pluginDir = identityOwner(cratePath);
   const pattern = role === "extension" ? BUNDLE_IDENTITY : BUILDER_IDENTITY;
   const direct = join(pluginDir, "🦀️.rs");
   if (existsSync(direct)) {
@@ -83,10 +91,11 @@ describe("plugin identity is the same in every authority", () => {
     const ajv = new Ajv({ strict: true });
     let checked = 0;
     for (const entry of registry) {
-      const fixtureDir = resolve(repoRoot, entry.cratePath, "..", "..", "🧫️fixtures", "🧫️plugin-identity");
-      if (!existsSync(join(fixtureDir, "🔣️.json"))) continue;
-      const fixture = JSON.parse(readFileSync(join(fixtureDir, "🔣️.json"), "utf8")) as Record<string, string>;
-      const schema = JSON.parse(readFileSync(join(fixtureDir, "../../🧬️schema/🔣️.json"), "utf8"));
+      const owner = identityOwner(entry.cratePath);
+      const fixturePath = join(owner, "🧫️fixtures", "🧫️plugin-identity", "🔣️.json");
+      if (!existsSync(fixturePath)) continue;
+      const fixture = JSON.parse(readFileSync(fixturePath, "utf8")) as Record<string, string>;
+      const schema = JSON.parse(readFileSync(join(owner, "🧬️schema", "🪪️plugin-identity", "🔣️.json"), "utf8"));
       const definitions = Object.entries(schema.$defs).filter(([, value]) => (value as { properties?: { schema?: { const?: string } } }).properties?.schema?.const === fixture.schema);
       expect(definitions, `${entry.pluginId} identity schema`).toHaveLength(1);
       const validate = ajv.addSchema(schema).getSchema(`${schema.$id}#/$defs/${definitions[0]![0]}`)!;

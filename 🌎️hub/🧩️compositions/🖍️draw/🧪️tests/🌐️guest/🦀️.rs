@@ -1,5 +1,5 @@
 //! 🖍️ Actual Draw component opening under the independent compiled host runtime.
-use semio_framework_plugin_host::{GuestRuntime,GuestInstance,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,TurnFault,retryable_lifecycle_turn};
+use semio_framework_plugin_host::{GuestRuntime,GuestInstance,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash,retryable_lifecycle_turn}; use semio_framework_plugin_interpreter::TurnFault;
 use semio_framework::kernel::{Budget,Event,TurnResult,TurnStatus};
 use semio_framework_actor::ActorId as RuntimeActorId;
 use std::path::PathBuf;
@@ -7,7 +7,7 @@ const DRAW_EDITOR_APP:&str="s.draw.drawing@1/*#editor";
 const OPEN_WALL_BUDGET:std::time::Duration=std::time::Duration::from_secs(120);
 fn plugin_wasm(_file:&str)->PathBuf{
     let root=PathBuf::from(env!("CARGO_MANIFEST_DIR")).ancestors().find(|path|path.join("nx.json").is_file()).unwrap().to_path_buf();
-    let path=root.join("🌎️hub/🧩️compositions/🖍️draw/📦️packages/🦀️rust/dist/component-dev/semio_hub_draw.wasm");
+    let path=root.join("🌎️hub/🧩️compositions/🖍️draw/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_draw_component.wasm");
     assert!(path.is_file(),"Draw component producer prerequisite is required");path
 }
 fn package_ref(package_id: &str, bytes: &[u8]) -> PackageRef {
@@ -62,7 +62,7 @@ mod quick {
 use super::*;
 #[semio_framework_async_macros::async_test]
 async fn wasmtime_runtime_instance_open_settles_against_the_draw_component() {
-    let path=plugin_wasm("semio_hub_draw.wasm");
+    let path=plugin_wasm("semio_hub_draw_component.wasm");
     let bytes = std::fs::read(&path).expect("read plugin component");
     let runtime = WasmtimeRuntime::new(SharedEngineConfig::default()).await.expect("engine builds");
     let compiled = runtime.compile(&package_ref("semio:draw", &bytes), &bytes).await.expect("compile plugin component");

@@ -13,12 +13,12 @@ pub const SEMIO_RASTER_EXAMPLE_TEXT: &str = include_str!("../../../🖼️assets
 
 /// 📖️ Parses `.raster` DSL text into a `RasterSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<RasterSnapshot, semio_framework_diagnostic::TextError> {
-    <RasterSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <RasterSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `RasterSnapshot` back to `.raster` DSL text.
 pub fn print_dsl(document: &RasterSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -52,7 +52,7 @@ pub(crate) fn parse_pack_record_text(body:&str)->Result<RasterSnapshot,semio_fra
 }
 
 /// ✉️ Native text and pack encode the same literal typed Raster graph.
-impl store::ArtifactDsl for RasterSnapshot {
+impl store::os_store::serialization::ArtifactDsl for RasterSnapshot {
     const EXTENSION: &'static str = "raster";
     fn envelope_id() -> &'static str {
         "raster.raster"
@@ -66,7 +66,7 @@ impl store::ArtifactDsl for RasterSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = print_pack_record_text(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -107,7 +107,7 @@ use crate::standards::v1::subsets::any::schema::mutations::fill_selection;
 /// halves — the bytes against the committed artifact, and the projection against itself.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn round_trip_raster_dsl(text: &str) -> Result<String, String> {
-    use store::ArtifactDsl;
+    use store::os_store::serialization::ArtifactDsl;
     let parsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(text).map_err(|error| format!("the committed raster example does not parse: {error:?}"))?;
     let printed = <RasterSnapshot as ArtifactDsl>::print_dsl(&parsed);
     let reparsed = <RasterSnapshot as ArtifactDsl>::parse_dsl(&printed).map_err(|error| format!("the reprinted raster document does not parse: {error:?}"))?;

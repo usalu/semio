@@ -12,11 +12,11 @@ pub type SemioBrepSnapshotText = String;
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::brep::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
 
 /// 🧪️ ARTIFACT-SYSTEM-OVERHAUL-REAL-CODECS-RUNTIME-REUSE-EVOLUTION brep wave (following the
 /// flow pilot's proven template, `ws-codec-workflow-report.md`): real hex/bracket-encoded
@@ -59,7 +59,7 @@ pub(crate) fn dec_str(s: &str) -> Result<String, String> {
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn parse_f64(s: &str) -> Result<f64, String> {
-    crate::standards::v1::subsets::base::schema::geometry::native::parse(s)
+    semio_s_artifact_stdio_semio_base::schema::geometry::native::parse(s)
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
@@ -347,24 +347,24 @@ pub(crate) fn dec_solid_shell(s: &str) -> Result<BrepSolidShell, String> {
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::io) fn enc_vertex(v: &BrepVertex) -> String {
+pub(in crate::io) fn enc_vertex(v: &BrepVertex) -> String {
     format!("[{},{},{}]", enc_str(&v.id), enc_point3(&v.point), NativeF64(v.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::io) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
+pub(in crate::io) fn dec_vertex(s: &str) -> Result<BrepVertex, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, point, tol] = parts.as_slice() else { return Err(format!("vertex: expected 3 fields, got {}", parts.len())) };
     Ok(BrepVertex { id: dec_str(id)?, point: dec_point3(point)?, tol: parse_f64(tol)? })
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::io) fn enc_edge(e: &BrepEdge) -> String {
+pub(in crate::io) fn enc_edge(e: &BrepEdge) -> String {
     format!("[{},{},{},{},{}]", enc_str(&e.id), enc_str(&e.start_vertex), enc_str(&e.end_vertex), enc_curve(&e.curve), NativeF64(e.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::io) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
+pub(in crate::io) fn dec_edge(s: &str) -> Result<BrepEdge, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, start_vertex, end_vertex, curve, tol] = parts.as_slice() else { return Err(format!("edge: expected 5 fields, got {}", parts.len())) };
     Ok(BrepEdge { id: dec_str(id)?, start_vertex: dec_str(start_vertex)?, end_vertex: dec_str(end_vertex)?, curve: dec_curve(curve)?, tol: parse_f64(tol)? })
@@ -387,12 +387,12 @@ pub(crate) fn enc_loop_id(value:&str)->String{format!("[{}]",enc_str(value))}
 
 pub(crate) fn dec_loop_id(value:&str)->Result<String,String>{dec_str(strip_brackets(value)?)}
 
-pub(in crate::standards::v1::subsets::brep::io) fn enc_face(f: &BrepFace) -> String {
+pub(in crate::io) fn enc_face(f: &BrepFace) -> String {
     format!("[{},{},{},{},{},{}]", enc_str(&f.id), enc_str(&f.outer_loop), enc_list(&f.inner_loops, |s: &String| enc_loop_id(s)), enc_surface(&f.surface), enc_bool(f.orientation), NativeF64(f.tol))
 }
 
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub(in crate::standards::v1::subsets::brep::io) fn dec_face(s: &str) -> Result<BrepFace, String> {
+pub(in crate::io) fn dec_face(s: &str) -> Result<BrepFace, String> {
     let parts = split_top_level(strip_brackets(s)?, ',');
     let [id, outer_loop, inner_loops, surface, orientation, tol] = parts.as_slice() else { return Err(format!("face: expected 6 fields, got {}", parts.len())) };
     Ok(BrepFace { id: dec_str(id)?, outer_loop: dec_str(outer_loop)?, inner_loops: dec_list(inner_loops, dec_loop_id)?, surface: dec_surface(surface)?, orientation: parse_bool(orientation)?, tol: parse_f64(tol)? })
@@ -488,7 +488,7 @@ pub(crate) fn parse_brep_snapshot_body(body: &str) -> Result<SemioBrepSnapshot, 
 /// 🎁 Real structured text/binary codecs (brep wave — off the old hex-dump-of-`serde_json`
 /// shortcut, following the flow pilot's proven template). Wrapped in the repo-wide
 /// `store::semio_format` envelope, unchanged.
-impl store::ArtifactDsl for SemioBrepSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioBrepSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOBREP_DOCUMENT_SCHEMA
@@ -504,7 +504,7 @@ impl store::ArtifactDsl for SemioBrepSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_brep_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -532,19 +532,19 @@ pub fn decode_semio_brep_snapshot_json(text: &str) -> Result<SemioBrepSnapshot, 
 }
 
 /// 📥️ Parses this subset's own committed `.dsl.semio` text into a real [`SemioBrepSnapshot`] — a
-/// thin wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// thin wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `🧊️mutate-semio-brep` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🧊️solid` artifact) can still
 /// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_brep_dsl(text: &str) -> Result<SemioBrepSnapshot, String> {
-    <SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_brep_dsl`] — same rationale.
+/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_brep_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_brep_dsl(snapshot: &SemioBrepSnapshot) -> String {
-    <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -552,12 +552,12 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::brep::schema::snapshot::*;
-use crate::standards::v1::subsets::base::schema::geometry::{SemioPoint2, SemioPoint3};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::{SemioPoint2, SemioPoint3};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
 use framework_schema::ArtifactSchema;
-use crate::standards::v1::subsets::base::schema::geometry::native::NativeF64;
+use semio_s_artifact_stdio_semio_base::schema::geometry::native::NativeF64;
 
 
 

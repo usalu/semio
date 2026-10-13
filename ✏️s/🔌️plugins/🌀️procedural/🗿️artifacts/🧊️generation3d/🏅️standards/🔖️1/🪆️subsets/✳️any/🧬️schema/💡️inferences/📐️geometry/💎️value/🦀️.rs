@@ -1,8 +1,8 @@
 //! 💎️ The values a geometry widget computes and the faults it can raise — typed, in memory, never text.
 
 use crate::standards::v1::subsets::any::schema::catalogue::{Localized, Quality, ShapeKind};
-use semio_framework_3d::brep::engine::{BrepError, GeometryKind, ShapeValue};
-use semio_framework_3d::brep::representation::error::KernelError;
+use semio_framework_3d_brep_engine::{BrepError, GeometryKind, ShapeValue};
+use semio_framework_3d_brep_representation::error::KernelError;
 use semio_framework_3d::mesh::HalfedgeMesh;
 use std::collections::BTreeMap;
 use std::sync::Arc;

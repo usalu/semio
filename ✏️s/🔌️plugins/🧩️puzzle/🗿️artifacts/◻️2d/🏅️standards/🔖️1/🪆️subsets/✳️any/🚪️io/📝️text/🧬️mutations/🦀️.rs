@@ -79,19 +79,19 @@ use crate::standards::v1::subsets::any::schema::mutations::rotate_selection::{ro
 use crate::standards::v1::subsets::any::schema::mutations::scale_node::{scale_node, ScaleNode};
 use crate::standards::v1::subsets::any::schema::mutations::scale_selection::{scale_selection, ScaleSelection};
 
-impl store::ArtifactDsl for Puzzle2dPlaySnapshot {
+impl store::os_store::serialization::ArtifactDsl for Puzzle2dPlaySnapshot {
     const EXTENSION: &'static str = "puzzle2d-play";
 
     fn envelope_id() -> &'static str {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id()
+        <Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id()
     }
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
+        <Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map(Self::from_typed)
     }
 
     fn print_dsl(&self) -> String {
-        <Puzzle2dSnapshot as store::ArtifactDsl>::print_dsl(self.typed())
+        <Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(self.typed())
     }
 }
 }

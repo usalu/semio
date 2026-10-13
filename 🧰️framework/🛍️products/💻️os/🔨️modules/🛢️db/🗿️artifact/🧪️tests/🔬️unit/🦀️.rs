@@ -1528,8 +1528,8 @@ async fn journal_authority() -> (ArtifactAuthority, StdArc<db_storage::DbBackend
     (authority, storage, pool)
 }
 
-fn journal_grant() -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: store::durable_group::DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, maximum_release_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
+fn journal_grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+    store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 4096, maximum_capacity_bytes: store::durable_group::DURABLE_OWNED_GROUP_STRUCTURAL_MAX_BYTES, maximum_release_bytes: store::durable_group::DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
 //#region 🔖️RecoveryFixtureStore
@@ -1547,7 +1547,7 @@ impl semio_framework_schema_composition::ArtifactCompositionFields for HashProje
     }
 }
 
-impl store::ArtifactDsl for HashProjection {
+impl store::os_store::serialization::ArtifactDsl for HashProjection {
     const EXTENSION: &'static str = "dbhash";
 
     fn parse_dsl(text: &str) -> Result<HashProjection, semio_framework_diagnostic::TextError> {
@@ -1572,7 +1572,7 @@ impl store::ArtifactDsl for HashProjection {
     }
 }
 
-impl store::ArtifactPack for HashProjection {
+impl store::os_store::serialization::ArtifactPack for HashProjection {
     fn encode_pack_with(&self, _options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         Ok(self.latest_hash.to_vec())
     }
@@ -1828,23 +1828,23 @@ impl store::SnapshotRetirementFactory<HashProjection> for HashSnapshotRetirement
     }
 }
 
-impl store::MemberStoreOwner<HashMutation> for HashProjection {
+impl store::os_store::document_store_owners::MemberStoreOwner<HashMutation> for HashProjection {
     /// 📦️ The fixture projection opens as an owned member through its own `ArtifactPack` codec.
     type SnapshotOpen = store::PackMemberSnapshotOpen<Self>;
 
     fn member_store_owners_birth_demand() -> Result<semio_framework_value::retained_clone::RetainedCloneBirthDemand, semio_framework_value::ValueError> {
-        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::DocumentStoreOwners::<Self, HashMutation>::source_birth_bytes::<HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer<Self, HashMutation>>()?, depth: 1 })
+        Ok(semio_framework_value::retained_clone::RetainedCloneBirthDemand { capacity_bytes: store::os_store::document_store_owners::DocumentStoreOwners::<Self, HashMutation>::source_birth_bytes::<HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer<Self, HashMutation>>()?, depth: 1 })
     }
 
-    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::DocumentStoreOwners<Self, HashMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::DocumentStoreOwnersAdmissionError<Self, HashMutation>> {
-        store::DocumentStoreOwners::admit_source_constructor(grant, || (HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer::<Self, HashMutation>::new()))
+    fn member_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Result<(store::os_store::document_store_owners::DocumentStoreOwners<Self, HashMutation>, semio_framework_value::retained_clone::RetainedCloneProgress), store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self, HashMutation>> {
+        store::os_store::document_store_owners::DocumentStoreOwners::admit_source_constructor(grant, || (HashSnapshotRetirementFactory, HashOwnedRetirementFactory, HashOwnedRetirementFactory, store::ArtifactStoreCursorDisposer::<Self, HashMutation>::new()))
     }
 }
 //#endregion 🔖️RecoveryFixtureStore
 
 async fn committed_recovery_hash_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<store::OwnerRef>) -> store::ArtifactStore<HashProjection, HashMutation> {
-    use store::MemberStoreOwner as _;
-    let mut envelope = store::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None);
+    use store::os_store::document_store_owners::MemberStoreOwner as _;
+    let mut envelope = store::os_store::document_materialize::create_document_envelope::<HashProjection, HashMutation>("db.hash/v1", id, HashProjection::default(), None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
     let mut store = store::ArtifactStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("committed recovery fixture creates one exact Store");

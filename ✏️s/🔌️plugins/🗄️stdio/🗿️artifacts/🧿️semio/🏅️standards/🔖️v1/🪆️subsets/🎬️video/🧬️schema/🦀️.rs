@@ -1,7 +1,7 @@
 //! 🧬️ SemioVideoArtifact schema — full artifact state, mirrors `SemioVideoSnapshot` field for
 //! field (see gif's `GifArtifact` for the precedent this follows). 🚧 scaffolded by W1b.
 
-use crate::standards::v1::subsets::video::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
+use crate::schema::snapshot::{SemioVideoSnapshot, SemioVideoStream};
 use framework_schema::ArtifactSchema;
 
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, ArtifactSchema)]

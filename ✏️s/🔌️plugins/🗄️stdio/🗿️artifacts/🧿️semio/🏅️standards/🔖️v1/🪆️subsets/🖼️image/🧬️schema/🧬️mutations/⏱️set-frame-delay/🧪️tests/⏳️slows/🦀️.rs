@@ -4,11 +4,11 @@
 //! `mutation.target-missing`. The enum arm then builds a `frames.modified` entry whose per-frame
 //! diff sets `delay_ms` and leaves `rgba8` at `None` — that half-populated `SemioImageFrameDiff` is
 //! the whole point: a frame is a STRONG entity, diffed per field, not replaced wholesale.
-use crate::standards::v1::subsets::image::schema::diff::SemioImageDiff;
-use crate::standards::v1::subsets::image::schema::mutations::set_frame_delay;
-use crate::standards::v1::subsets::image::schema::mutations::{SemioImageMutation};
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioImageDiff;
+use crate::schema::mutations::set_frame_delay;
+use crate::schema::mutations::SemioImageMutation;
+use crate::schema::snapshot::SemioImageSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⏱️set-frame-delay/⏳️slows/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/⏱️set-frame-delay/⏳️slows/📸️snapshot/➡️after/🔣️.json");
@@ -39,7 +39,7 @@ async fn changes_only_the_second_frames_delay() {
     assert_eq!(produced.frames[1].rgba8, base.frames[1].rgba8, "a delay change must not rewrite a single pixel");
     assert_eq!(produced.frames[0], base.frames[0], "the untargeted frame must be byte-identical");
     let mut in_place = before();
-    in_place = crate::applied(&in_place, &mutation()).0;
+    in_place = semio_s_artifact_stdio_semio_base::applied(&in_place, &mutation()).0;
     assert_eq!(in_place, expected_after(), "the subset's own apply entry point must reach the same state as the leaf diff");
 }
 
@@ -52,9 +52,9 @@ async fn the_undo_set_frame_delay_restores_the_captured_delay() {
     let undo = <SemioImageMutation as Mutation<SemioImageSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture");
     assert_eq!(undo, vec![SemioImageMutation::SetFrameDelay(set_frame_delay::SetFrameDelay { index: 1, delay_ms: base.frames[1].delay_ms })], "the undo must carry BASE's own delay for that frame");
     let mut current = before();
-    current = crate::applied(&current, &mutation).0;
+    current = semio_s_artifact_stdio_semio_base::applied(&current, &mutation).0;
     for step in undo.iter().rev() {
-        current = crate::applied(&current, step).0;
+        current = semio_s_artifact_stdio_semio_base::applied(&current, step).0;
     }
     assert_eq!(current, base, "set-frame-delay/slows-the-second-frame-down: the undo did not restore the before-snapshot");
 }

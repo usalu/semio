@@ -9,9 +9,9 @@
 use crate::standards::v1::subsets::any::schema::catalogue::{Kind, PortType};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
 use crate::standards::v1::subsets::any::schema::inferences::geometry::registry;
-use semio_framework_3d::brep::engine::{GeometryKind, ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::representation::curve::Curve3;
-use semio_framework_3d::brep::representation::surface::Surface;
+use semio_framework_3d_brep_engine::{GeometryKind, ShapeRoot, ShapeValue};
+use semio_framework_3d_brep_representation::curve::Curve3;
+use semio_framework_3d_brep_representation::surface::Surface;
 use serde_json::Value;
 use std::collections::BTreeMap;
 use std::f64::consts::TAU;

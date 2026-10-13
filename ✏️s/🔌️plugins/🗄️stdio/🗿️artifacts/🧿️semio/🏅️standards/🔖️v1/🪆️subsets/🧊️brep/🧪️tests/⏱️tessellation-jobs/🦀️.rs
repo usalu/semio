@@ -9,12 +9,12 @@
 //! Ticket 26/09/09/PROCEDURAL-3D-END-TO-END.
 
 // #region 🔖️Imports
-use semio_framework_3d::brep::operations::primitives::{make_box, make_sphere};
-use semio_framework_3d::brep::engine::{Brep, BrepKernel, GeometryHandle};
-use semio_framework_3d::brep::queries::tessellation::{tessellate_solid, TessellationJob, TessellationPhase, TessellationStep};
-use semio_framework_3d::brep::representation::arena::SolidId;
-use semio_framework_3d::brep::representation::topology::history::OpRecorder;
-use semio_framework_3d::brep::representation::topology::Body;
+use semio_framework_3d_brep_operations::primitives::{make_box, make_sphere};
+use semio_framework_3d_brep_engine::{Brep, BrepKernel, GeometryHandle};
+use semio_framework_3d_brep_queries::tessellation::{tessellate_solid, TessellationJob, TessellationPhase, TessellationStep};
+use semio_framework_3d_brep_representation::arena::SolidId;
+use semio_framework_3d_brep_representation::topology::history::OpRecorder;
+use semio_framework_3d_brep_representation::topology::Body;
 // #endregion 🔖️Imports
 
 // #region 🧰️Fixtures
@@ -51,7 +51,7 @@ fn a_budgeted_step_never_outruns_its_budget_and_progress_is_monotone() {
         let mut calls = 0;
         loop {
             let before = job.progress().units_done;
-            let step = job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 3).expect("step");
+            let step = job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 3).expect("step");
             let after = job.progress().units_done;
             assert!(after >= previous, "progress went backwards: {previous} then {after}");
             assert!(after<=job.progress().units_total,"progress exceeded discovered total");
@@ -76,7 +76,7 @@ fn a_zero_budget_step_is_a_pure_progress_probe() {
     let (body, solid) = boxed_body();
     let mut job = TessellationJob::new(0.05);
     let before = job.progress();
-    assert!(matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 0).expect("step"), TessellationStep::Working(_)));
+    assert!(matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 0).expect("step"), TessellationStep::Working(_)));
     assert_eq!(job.progress(), before, "a zero budget must change nothing");
 }
 
@@ -87,7 +87,7 @@ fn stepping_produces_the_same_mesh_as_one_shot_tessellation() {
     for (body, solid) in [boxed_body(), sphere_body()] {
         let one_shot = tessellate_solid(&body, solid, 0.05).expect("one shot");
         let mut job = TessellationJob::new(0.05);
-        while !matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 2).expect("step"), TessellationStep::Done(_)) {}
+        while !matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 2).expect("step"), TessellationStep::Done(_)) {}
         let (stepped, _report) = job.into_mesh().expect("a completed job yields its mesh");
         assert_eq!(stepped.position, one_shot.position, "stepped positions must match the one-shot result");
         assert_eq!(stepped.index, one_shot.index, "stepped indices must match the one-shot result");
@@ -117,13 +117,13 @@ fn phase_tags_are_stable_and_distinct() {
 fn cancel_retires_a_job_without_panicking_or_producing_a_mesh() {
     let (body, solid) = sphere_body();
     let mut job = TessellationJob::new(0.05);
-    assert!(matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 2).expect("step"), TessellationStep::Working(_)), "two units must not finish a sphere");
+    assert!(matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 2).expect("step"), TessellationStep::Working(_)), "two units must not finish a sphere");
     let before = job.progress().units_done;
     job.cancel();
     assert_eq!(job.progress().phase, TessellationPhase::Cancelled);
     assert!(job.is_terminal());
     for _ in 0..3 {
-        assert!(matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 64).expect("step"), TessellationStep::Cancelled(_)), "a cancelled job must stay cancelled");
+        assert!(matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 64).expect("step"), TessellationStep::Cancelled(_)), "a cancelled job must stay cancelled");
     }
     assert_eq!(job.progress().units_done, before, "a cancelled job must not keep advancing");
     assert!(job.into_mesh().is_none(), "a cancelled job must never hand out a mesh");
@@ -135,7 +135,7 @@ fn cancel_retires_a_job_without_panicking_or_producing_a_mesh() {
 fn cancelling_a_completed_job_keeps_its_mesh() {
     let (body, solid) = boxed_body();
     let mut job = TessellationJob::new(0.05);
-    while !matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 64).expect("step"), TessellationStep::Done(_)) {}
+    while !matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 64).expect("step"), TessellationStep::Done(_)) {}
     job.cancel();
     assert_eq!(job.progress().phase, TessellationPhase::Complete, "a finished job is not cancellable");
     assert!(job.into_mesh().is_some(), "a finished job keeps its mesh through a late cancel");
@@ -157,7 +157,7 @@ fn preview_lod_tolerances_are_ordered_and_bounded() {
             let started = std::time::Instant::now();
             let mut job = TessellationJob::new(tolerance);
             let mut steps = 0;
-            while !matches!(job.step(&body,semio_framework_3d::brep::queries::tessellation::TessellationInput::Solid(solid), 24).expect("step"), TessellationStep::Done(_)) {
+            while !matches!(job.step(&body,semio_framework_3d_brep_queries::tessellation::TessellationInput::Solid(solid), 24).expect("step"), TessellationStep::Done(_)) {
                 steps += 1;
                 assert!(steps < 10_000, "a bounded job must converge");
             }

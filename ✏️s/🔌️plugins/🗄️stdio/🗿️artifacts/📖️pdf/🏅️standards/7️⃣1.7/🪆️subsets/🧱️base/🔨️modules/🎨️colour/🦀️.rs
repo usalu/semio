@@ -3,7 +3,8 @@
 //! Lowering allocates indirect objects through an [`ObjectSink`] wherever the spec requires a
 //! stream (sampled/PostScript functions, ICC profiles, mesh shadings, tiling patterns).
 
-use super::lexer::{dict_f64, dict_get, dict_i64, dict_name,PResult,PdfEngineError};
+use crate::standards::v1_7::subsets::base::modules::lexer::{dict_f64, dict_get, dict_i64, dict_name};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 use super::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::io::foreign_artifacts::{NativePdfArtifactResources, PdfArtifactResourcePort};
 use crate::standards::v1_7::subsets::base::schema::stream_roles::PdfStreamRoleValue;

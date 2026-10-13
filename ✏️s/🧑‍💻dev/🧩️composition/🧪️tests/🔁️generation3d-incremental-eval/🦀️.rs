@@ -119,8 +119,8 @@ fn resolve_ready<T>(future: impl std::future::Future<Output = T>) -> T {
 }
 
 fn install_example_operators(registry: &mut Registry) {
-    semio_s_plugin_flow_extension_brep::register(registry, geometry_session());
-    semio_s_plugin_flow_extension_math::register(registry);
+    semio_s_plugin_flow_brep::register(registry, geometry_session());
+    semio_s_plugin_flow_math::register(registry);
 }
 
 fn operators_installed() {

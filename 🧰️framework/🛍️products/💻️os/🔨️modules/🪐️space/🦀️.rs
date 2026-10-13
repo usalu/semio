@@ -50,10 +50,10 @@ impl std::error::Error for SpaceError {}
 /// `OsBackbonePort`/blanket-bridge pattern exactly (`🧰️framework/🛍️products/💻️os`'s `host::OsBackbonePort`),
 /// but declared HERE rather than reused from there: os-core depends on `space` (`pub use space::*;`),
 /// so depending back on os-core's trait would cycle the dependency graph. Every real transport this
-/// crate needs (`store::MemoryBackbonePort`, `store::LocalStorageBackbonePort`, the host file/folder
-/// ports) is already `store::BackbonePort`-shaped (string payloads) — the blanket impl below bridges
-/// bytes<->base64 text exactly like os-core's own bridge, so any `Arc<dyn store::BackbonePort>`-backed
-/// concrete port a caller already holds satisfies `Arc<store::BackbonePorts>` for free, and (crucially
+/// crate needs (`store::os_store::backbone::MemoryBackbonePort`, `store::os_store::backbone::LocalStorageBackbonePort`, the host file/folder
+/// ports) is already `store::os_store::backbone::BackbonePort`-shaped (string payloads) — the blanket impl below bridges
+/// bytes<->base64 text exactly like os-core's own bridge, so any `Arc<dyn store::os_store::backbone::BackbonePort>`-backed
+/// concrete port a caller already holds satisfies `Arc<store::os_store::backbone::BackbonePorts>` for free, and (crucially
 /// for `draft_catalog_for`'s per-port keying below) preserves the SAME underlying `Arc` data pointer
 /// across both trait-object views since unsizing coercion never reallocates.
 pub trait SpaceBackbonePort: Send + Sync {
@@ -61,17 +61,17 @@ pub trait SpaceBackbonePort: Send + Sync {
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError>;
 }
 
-/// 🌉️ `T: Send + Sync` is added here on the blanket impl itself, not on `store::BackbonePort`'s own
+/// 🌉️ `T: Send + Sync` is added here on the blanket impl itself, not on `store::os_store::backbone::BackbonePort`'s own
 /// supertraits (that trait deliberately omits them — R7) — every real implementor already satisfies
 /// it, so this only narrows the blanket, never the port trait.
-impl<T: store::BackbonePort + Send + Sync> SpaceBackbonePort for T {
+impl<T: store::os_store::backbone::BackbonePort + Send + Sync> SpaceBackbonePort for T {
     fn read(&self, uri: &str) -> Result<Vec<u8>, vcs::VcsError> {
-        // 🌉️ `store::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
+        // 🌉️ `store::os_store::backbone::BackbonePort::read`/`write` turned `async fn` under the runtime-dependency
         // sweep; `crate::host::resolve_kernel_future` (`🖥️host/🦀️.rs`) resolves them
         // synchronously here, same justification as its own doc comment: every real backbone port
-        // this crate wraps (`store::MemoryBackbonePort`/`store::LocalStorageBackbonePort`, the host
+        // this crate wraps (`store::os_store::backbone::MemoryBackbonePort`/`store::os_store::backbone::LocalStorageBackbonePort`, the host
         // file/folder ports) is an in-memory/local lookup, never a park-worthy network await.
-        let text = crate::host::resolve_kernel_future(store::BackbonePort::read(self, uri))?;
+        let text = crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::read(self, uri))?;
         if text.is_empty() {
             return Ok(Vec::new());
         }
@@ -80,9 +80,9 @@ impl<T: store::BackbonePort + Send + Sync> SpaceBackbonePort for T {
 
     fn write(&self, uri: &str, payload: &[u8]) -> Result<(), vcs::VcsError> {
         if payload.is_empty() {
-            return crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, ""));
+            return crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, ""));
         }
-        crate::host::resolve_kernel_future(store::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
+        crate::host::resolve_kernel_future(store::os_store::backbone::BackbonePort::write(self, uri, &base64_codec::base64_standard_encode(payload)))
     }
 }
 //#endregion 🔖️DraftBackbone
@@ -112,7 +112,7 @@ pub struct DraftEntry {
 /// dependency would cycle), it just now offers the SAME per-port-identity registry SHAPE os-core's
 /// `list_os_space_catalog_entries`/`create_os_space` already use, so a caller (os-core, or an app like
 /// `home`) wires it in by simply calling `draft_catalog_for(&port)` with whatever
-/// `Arc<store::BackbonePorts>` it already holds.
+/// `Arc<store::os_store::backbone::BackbonePorts>` it already holds.
 #[derive(Default)]
 pub struct DraftCatalog {
     drafts: Mutex<HashMap<String, DraftEntry>>,
@@ -144,7 +144,7 @@ impl DraftCatalog {
     /// convention as os-core's `delete_os_space`) so an expired draft doesn't leak backbone storage —
     /// bookkeeping removal is still the source of truth (a tombstone write failure doesn't undo it).
     /// Returns the expired ids.
-    pub fn expire_drafts(&self, now_ms: u64, port: &Arc<store::BackbonePorts>) -> Vec<String> {
+    pub fn expire_drafts(&self, now_ms: u64, port: &Arc<store::os_store::backbone::BackbonePorts>) -> Vec<String> {
         let expired: Vec<String> = {
             let mut drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             let expired: Vec<String> = drafts.values().filter(|entry| entry.expires_at_ms.is_some_and(|expires_at| expires_at <= now_ms)).map(|entry| entry.artifact_id.clone()).collect();
@@ -162,14 +162,14 @@ impl DraftCatalog {
     /// 📚️ `list_drafts` preceded by a real `expire_drafts` sweep — the natural "sweep before listing"
     /// call site (mirrors the spirit of os-core's catalog-listing entry points): any caller that lists
     /// drafts for display should always see a freshly-swept set rather than stale expired entries.
-    pub fn list_drafts_sweeping_expired(&self, now_ms: u64, port: &Arc<store::BackbonePorts>) -> Vec<DraftEntry> {
+    pub fn list_drafts_sweeping_expired(&self, now_ms: u64, port: &Arc<store::os_store::backbone::BackbonePorts>) -> Vec<DraftEntry> {
         self.expire_drafts(now_ms, port);
         self.list_drafts()
     }
 
     /// 🗑️ Discards a draft outright (never promoted) — removes its bookkeeping and best-effort
     /// tombstones its `draft_uri` bytes via `port`. Returns the removed bookkeeping, if any existed.
-    pub fn discard_draft(&self, port: &Arc<store::BackbonePorts>, draft_id: &str) -> Option<DraftEntry> {
+    pub fn discard_draft(&self, port: &Arc<store::os_store::backbone::BackbonePorts>, draft_id: &str) -> Option<DraftEntry> {
         let removed = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(draft_id);
         if removed.is_some() {
             let _ = port.write(&draft_uri(draft_id), &[]);
@@ -192,7 +192,7 @@ impl DraftCatalog {
     /// their `store::SpaceHost` (`register_member`/`register_space_documents`) — this catalog stays
     /// type-erased on purpose (same reasoning as `ArtifactBody`'s hand-written `DslVariants`) and never
     /// touches `P`/`Mutation` itself, so it never calls `SpaceHost` directly.
-    pub fn promote_draft(&self, port: &Arc<store::BackbonePorts>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionMutation), SpaceError> {
+    pub fn promote_draft(&self, port: &Arc<store::os_store::backbone::BackbonePorts>, space_id: &str, draft_id: &str, folder_id: Option<String>) -> Result<(DraftEntry, CollectionMutation), SpaceError> {
         let draft = {
             let drafts = self.drafts.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
             drafts.get(draft_id).cloned().ok_or_else(|| SpaceError::UnknownDraft(draft_id.to_string()))?
@@ -229,7 +229,7 @@ impl DraftCatalog {
     /// (identical to `demote_operation`'s output — this is the byte-touching sibling of that pure
     /// helper, needed whenever a demotion must actually relocate bytes rather than just undo an
     /// in-hand `CreateEntry`).
-    pub fn demote_asset(&self, port: &Arc<store::BackbonePorts>, space_id: &str, entry: &CollectionEntry, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
+    pub fn demote_asset(&self, port: &Arc<store::os_store::backbone::BackbonePorts>, space_id: &str, entry: &CollectionEntry, schema: &str, now_ms: u64, ttl_ms: Option<u64>) -> Result<CollectionMutation, SpaceError> {
         let source_uri = artifact_backbone_uri(space_id, &entry.id);
         let target_uri = draft_uri(&entry.id);
         let envelope_bytes = port.read(&source_uri).map_err(|error| SpaceError::Backbone(error.to_string()))?;
@@ -250,14 +250,14 @@ impl DraftCatalog {
 /// identity, shared by every caller holding (a clone of) that port.
 static DRAFT_CATALOG_REGISTRY: LazyLock<Mutex<HashMap<usize, Arc<DraftCatalog>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
 
-fn draft_catalog_port_key(port: &Arc<store::BackbonePorts>) -> usize {
+fn draft_catalog_port_key(port: &Arc<store::os_store::backbone::BackbonePorts>) -> usize {
     Arc::as_ptr(port) as *const () as usize
 }
 
 /// 🔎️ Gets (or lazily creates) the `DraftCatalog` for `port`'s identity. Returns a cheap `Arc` clone —
 /// every caller sharing the same port shares the same draft bookkeeping, exactly the way
 /// `list_os_space_catalog_entries`/`create_os_space` share `SPACE_CATALOG_URIS` per port in os-core.
-pub fn draft_catalog_for(port: &Arc<store::BackbonePorts>) -> Arc<DraftCatalog> {
+pub fn draft_catalog_for(port: &Arc<store::os_store::backbone::BackbonePorts>) -> Arc<DraftCatalog> {
     DRAFT_CATALOG_REGISTRY.lock().unwrap_or_else(std::sync::PoisonError::into_inner).entry(draft_catalog_port_key(port)).or_insert_with(|| Arc::new(DraftCatalog::new())).clone()
 }
 //#endregion 🔖️DraftRegistry
@@ -334,7 +334,7 @@ pub fn export_collection_zip(
     read_blob: &dyn Fn(&str) -> Result<Vec<u8>, SpaceZipError>,
 ) -> Result<Vec<u8>, SpaceZipError> {
     let mut writer = semio_framework_deflate::zip_archive::ZipWriter::new();
-    writer.add("collection.collection.pack", &store::ArtifactPack::encode_pack(collection))?;
+    writer.add("collection.collection.pack", &store::os_store::serialization::ArtifactPack::encode_pack(collection))?;
     writer.add("collection.collection.spr", collection_spr)?;
 
     let mut entries: Vec<&CollectionEntry> = collection.entries.iter().collect();
@@ -365,7 +365,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
     let archive = semio_framework_deflate::zip_archive::ZipArchive::parse(bytes)?;
     let collection_pack = archive.read("collection.collection.pack", MAX_COLLECTION_ENTRY_BYTES)?;
     let collection_spr = archive.read("collection.collection.spr", MAX_COLLECTION_ENTRY_BYTES)?;
-    let collection = <CollectionSnapshot as store::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let collection = <CollectionSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&collection_pack).map_err(|error| SpaceZipError::Pack(error.to_string()))?;
 
     let mut artifacts = Vec::new();
     let mut blobs = Vec::new();
@@ -392,7 +392,7 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 //#region 🔖️ZipStoreBridge
 /// 🌉️ Real (non-mock) reader/writer bridge from `export_collection_zip`/`import_collection_zip`'s
 /// injected-callback shape to the actual `store` crate types (`store::ArtifactStore`/
-/// `store::ArtifactPackFiles`/`store::BlobStore`). This crate depends on `store` (see this crate's
+/// `store::os_store::serialization::ArtifactPackFiles`/`store::BlobStore`). This crate depends on `store` (see this crate's
 /// `Cargo.toml`), never the reverse, so the bridge lives HERE rather than inside `store` — the
 /// direction that keeps the dependency graph acyclic; `store` itself stays app-agnostic and never
 /// names a collection/space type. W2 shipped `export_collection_zip`/`import_collection_zip` IO-free
@@ -402,19 +402,19 @@ pub fn import_collection_zip(bytes: &[u8]) -> Result<ImportedCollection, SpaceZi
 /// round-trips through a real `.zip` byte stream.
 ///
 /// 📤️ EXPORT side: a caller snapshots each open document artifact's `store::ArtifactStore<P,
-/// Mutation>` via its own `snapshot_pack()` into a `document_id -> store::ArtifactPackFiles` table,
+/// Mutation>` via its own `snapshot_pack()` into a `document_id -> store::os_store::serialization::ArtifactPackFiles` table,
 /// then hands `real_artifact_reader`/`real_blob_reader` (closures over that table and a live
 /// `store::BlobStore`) straight to `export_collection_zip`.
 ///
 /// 📥️ IMPORT side: `import_document_artifact`/`import_blob` are the inverse — reconstructing a real
 /// `store::ArtifactStore<P, Mutation>` from one `ImportedCollection::artifacts` entry's pack+spr
-/// bytes (generic over the artifact's own concrete schema, mirroring `store::parse_document_pack`'s
+/// bytes (generic over the artifact's own concrete schema, mirroring `store::os_store::text_format::parse_document_pack`'s
 /// own genericity — this crate never knows a document artifact's concrete type, only its `schema`
 /// string, so the caller supplies `P`/`Mutation` at the call site), and re-`put`-ing one imported
 /// blob's bytes into a live `store::BlobStore`, verifying the freshly computed content hash still
 /// matches the `store::BlobRef` recorded in the collection.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
-pub fn real_artifact_reader(pack_files: &HashMap<String, store::ArtifactPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
+pub fn real_artifact_reader(pack_files: &HashMap<String, store::os_store::serialization::ArtifactPackFiles>) -> impl Fn(&str) -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> + '_ {
     move |entry_id: &str| -> Result<(Vec<u8>, Vec<u8>), SpaceZipError> {
         let files = pack_files.get(entry_id).ok_or_else(|| SpaceZipError::MissingPath(entry_id.to_string()))?;
         Ok((files.pack.clone(), files.spr.clone()))
@@ -440,17 +440,17 @@ pub fn real_blob_reader<B: store::BlobStore>(blob_store: &B) -> impl Fn(&str) ->
 /// pack+spr bytes — the import-side counterpart to snapshotting it for `real_artifact_reader`.
 /// 🌉️ `async fn` and `Send + 'static`-bounded: mirrors `store::ArtifactStore<P, Mutation>`'s own
 /// where-clause exactly (`🏪️store/🦀️.rs`'s `impl<P, Mutation> ArtifactStore<P, Mutation>`)
-/// since `ArtifactStore::new`/`store::parse_document_pack` both turned `async fn` under the
+/// since `ArtifactStore::new`/`store::os_store::text_format::parse_document_pack` both turned `async fn` under the
 /// runtime-dependency sweep — no `resolve_kernel_future` bridge here (unlike this file's other async
 /// fallout fixes): reconstructing a document store from real pack/spr bytes is exactly the kind of
 /// caller-visible async boundary that sweep is meant to expose, not hide.
 #[cfg(not(all(target_arch = "wasm32", target_env = "p2")))]
 pub async fn import_document_artifact<P, Mutation>(pack_bytes: &[u8], spr_bytes: &[u8], actor: protocol::ActorId) -> Result<store::ArtifactStore<P, Mutation>, SpaceZipError>
 where
-    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::ArtifactPack + Send + Sync + 'static,
+    P: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + store::os_store::serialization::ArtifactPack + Send + Sync + 'static,
     Mutation: Clone + semio_framework_value::ToValue + semio_framework_value::FromValue + protocol::Mutation<P> + protocol::OpBinary + protocol::OpText + Send + 'static,
 {
-    let parsed = store::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
+    let parsed = store::os_store::text_format::parse_document_pack::<P, Mutation>(pack_bytes, spr_bytes).await.map_err(|error| SpaceZipError::Pack(error.to_string()))?;
     store::ArtifactStore::new(parsed.envelope, actor).await.map_err(|error| SpaceZipError::Pack(error.to_string()))
 }
 

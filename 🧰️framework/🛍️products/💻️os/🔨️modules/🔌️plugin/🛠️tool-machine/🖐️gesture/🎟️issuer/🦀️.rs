@@ -1,14 +1,7 @@
 //! 🎟️ Original gesture issuance keeps the runtime and captured alias behind a strong-only authority.
-use super::{GestureSlot,GestureSlotDecision};
+use crate::gesture_contract::GestureCapture;
+use crate::gesture_contract::{GestureSlot,GestureSlotDecision};
 use semio_framework_value::{ValueError,ValueRefusalKind,retained_clone::RetainedCloneGrant,retirement::{RetireOwned,shared::sealed::{SealedShared,SealedSharedBirth,SharedIssuer}}};
-
-#[derive(semio_framework_value::RetireOwned)]
-pub enum GestureCapture<M:Send+'static>{Detached(GestureSlot<M>),Issued(SealedShared<GestureSlot<M>>)}
-impl<M:Send+'static> GestureCapture<M>{
- pub fn detached()->Self{Self::Detached(GestureSlot::detached())}
- pub fn get(&self)->&GestureSlot<M>{match self{Self::Detached(slot)=>slot,Self::Issued(slot)=>slot.get()}}
-}
-impl<M:Send+'static> std::ops::Deref for GestureCapture<M>{type Target=GestureSlot<M>;fn deref(&self)->&Self::Target{self.get()}}
 
 #[derive(semio_framework_value::RetireOwned)]
 pub(crate) struct GestureOperation<M:Send+'static>{pub operation:u64,pub slot:SealedShared<GestureSlot<M>>,pub decision:Option<GestureSlotDecision<M>>,pub settled:bool}

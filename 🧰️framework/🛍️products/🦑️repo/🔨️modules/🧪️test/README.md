@@ -52,11 +52,11 @@ bun ./📜️script.ts matrix   [--enforce]     # the 16-dimension coverage repo
 bun ./📜️script.ts gc       [--apply]       # mark-and-sweep over the fixture CAS and run directories; dry by default
 ```
 
-`--owner <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;
+`--owner <path>`, `--owner-root <path>`, `--case <slug>` and `--project <name>` narrow case-based phases;
 `--implementation <id>` narrows their subject implementations. `discover` lists all cases.
 From the repository root the same phases are reachable as `bun ./📜️script.ts test <phase>`, and every
-case also has generated Nx targets (`test`, `test-quick`, `test-long`, `test-exhaustive`,
-`test-contract`, `test-oracle`, `test-subject`, `test-parity`).
+test owner has one generated Nx project: `lint` runs its contract phase and `test` runs its cases
+(`cases <owner> [level] [--facet <phase>] [--case <slug>]`), the level and selection passed as arguments.
 
 Protocol v2 defines the full selector vocabulary — `--artifact`, `--standard`, `--subset`,
 `--mutation`, `--outcome`, `--case`, `--fixture-class`, `--fixture-family`, `--oracle`, `--probe`,

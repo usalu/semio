@@ -1,7 +1,7 @@
 use super::*;
 use crate::editor::architect::modes::edit::windows::{adjacency, graph, report};
 use protocol::{Mutation, OpBinary, OpText};
-use store::{ArtifactDsl, ArtifactPack};
+use store::{os_store::serialization::ArtifactDsl, os_store::serialization::ArtifactPack};
 
 fn block_on_architect_windows<F: std::future::Future>(mut future: std::pin::Pin<Box<F>>) -> F::Output {
     let waker = std::task::Waker::noop();
@@ -110,13 +110,13 @@ fn architect_window_ownership_report_handler_preserves_exact_invocation_identity
     use crate::standards::v1::subsets::any::schema::mutations::ProgramMutation;
     use semio_framework_plugin::{ArtifactView, HistoryView, ViewModel, ViewWindowInstance, WindowConfigOwner};
 
-    fn authored_id(emit: &semio_framework_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::EntityId {
+    fn authored_id(emit: &semio_framework_plugin::Emit<crate::standards::v1::subsets::any::schema::mutations::ProgramMutation, crate::editor::architect::config::ArchitectConfigMutation>) -> crate::standards::v1::subsets::any::schema::kernel::EntityId {
         let Some(ProgramMutation::CreateReportRecord(payload)) = emit.artifact_mutations.first() else { panic!("one authored ReportRecord") };
         assert_eq!(emit.artifact_mutations.len(), 1);
         payload.report_record.header.id.clone()
     }
 
-    let program = crate::sample_plugin();
+    let program = crate::standards::v1::subsets::any::schema::snapshot::sample_plugin();
     let history = HistoryView::empty();
     let doc = ArtifactView::new(&program, &history);
     let all = ViewModel {
@@ -267,7 +267,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     }
                     if register_config(&mut app, &register_left).await?.active_register != "requirements"
                         || register_config(&mut app, &register_right).await? != ArchitectRegisterWindowConfig::default()
-                        || adjacency_config(&mut app, &adjacency_left).await?.adjacency_kind_filter != Some(crate::registers::AdjacencyKind::Preferred)
+                        || adjacency_config(&mut app, &adjacency_left).await?.adjacency_kind_filter != Some(crate::standards::v1::subsets::any::schema::registers::AdjacencyKind::Preferred)
                         || adjacency_config(&mut app, &adjacency_right).await? != adjacency::config::ArchitectAdjacencyWindowConfig::default()
                         || graph_config(&mut app, &graph_left).await?.viewport != (semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
                         || graph_config(&mut app, &graph_right).await? != graph::config::ArchitectGraphWindowConfig::default()
@@ -308,7 +308,7 @@ fn architect_window_ownership_runtime_isolates_renders_reloads_and_closes() {
                     artifact_app_laws::close_registered_fixture_app(&mut *reopened, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT);
                     if restored_left_register.active_register != "requirements"
                         || restored_right_register != ArchitectRegisterWindowConfig::default()
-                        || restored_left_adjacency.adjacency_kind_filter != Some(crate::registers::AdjacencyKind::Preferred)
+                        || restored_left_adjacency.adjacency_kind_filter != Some(crate::standards::v1::subsets::any::schema::registers::AdjacencyKind::Preferred)
                         || restored_right_adjacency != adjacency::config::ArchitectAdjacencyWindowConfig::default()
                         || restored_left_graph.viewport != (semio_framework_os_kernel::Viewport2d { x: -20.0, y: 12.5, zoom: 1.75 })
                         || restored_right_graph != graph::config::ArchitectGraphWindowConfig::default()

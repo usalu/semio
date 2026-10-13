@@ -283,7 +283,7 @@ pub(crate) struct Generation2dSnapshotDsl {
 }
 //#region 🔖️HandcraftedArtifactCodecs
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Generation2dSnapshotDsl {
+impl store::os_store::serialization::ArtifactDsl for Generation2dSnapshotDsl {
     const EXTENSION: &'static str = "generation2d";
     fn envelope_id() -> &'static str {
         "procedural.generation2d"
@@ -298,7 +298,7 @@ impl store::ArtifactDsl for Generation2dSnapshotDsl {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -332,16 +332,16 @@ pub(crate) fn generation2d_document_from_dsl(parsed: Generation2dSnapshotDsl) ->
 }
 
 /// 📜️ `.generation2d` textual document — derive-engine grammar via `Generation2dSnapshotDsl`.
-impl store::ArtifactDsl for Generation2dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Generation2dSnapshot {
     const EXTENSION: &'static str = "generation2d";
 
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-        let parsed = <Generation2dSnapshotDsl as store::ArtifactDsl>::parse_dsl(text)?;
+        let parsed = <Generation2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?;
         generation2d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        <Generation2dSnapshotDsl as store::ArtifactDsl>::print_dsl(&generation2d_document_to_dsl(self))
+        <Generation2dSnapshotDsl as store::os_store::serialization::ArtifactDsl>::print_dsl(&generation2d_document_to_dsl(self))
     }
 }
 
@@ -352,12 +352,12 @@ impl store::ArtifactDsl for Generation2dSnapshot {
 
 /// 📖️ Parses `.generation2d` DSL text into a `Generation2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Generation2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Generation2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Generation2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Generation2dSnapshot` back to `.generation2d` DSL text.
 pub fn print_dsl(document: &Generation2dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -395,7 +395,7 @@ use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map,
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;
@@ -560,7 +560,7 @@ use semio_framework_os_flow::{flow_host_with_session, flow_neuron_kind_info_map,
 #[cfg(feature = "component-app-assembly")]
 use semio_framework_ui::wgpu::{NodeGraphEdgeRecord, NodeGraphNodeRecord, NodeGraphPortRecord};
 use semio_framework_value_derive::{FromValue, ToValue};
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 /// 🔁️ Entities this module's schema exports and its crate declares elsewhere.
 use semio_framework_artifact_flow_flow::CameraJson;
 use semio_framework_artifact_flow_flow::FlowHostSnapshot;

@@ -36,10 +36,10 @@ pub fn connect_edit(payload: &ConnectMediaPorts, composed: &FlowSnapshot, config
         ));
     };
     let mut edit = ContentEdit::new(flow_composed_content(composed)?);
-    edit.connect(semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::FlowEdge {
+    edit.connect(semio_s_artifact_stdio_semio_flow::schema::snapshot::FlowEdge {
         id,
-        from: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: payload.source_node_id.clone(), port: payload.source_port_id.clone() },
-        to: semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::PortRef { node: payload.target_node_id.clone(), port: payload.target_port_id.clone() },
+        from: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: payload.source_node_id.clone(), port: payload.source_port_id.clone() },
+        to: semio_s_artifact_stdio_semio_flow::schema::snapshot::PortRef { node: payload.target_node_id.clone(), port: payload.target_port_id.clone() },
         kind: "data".into(),
     });
     Ok(flow_content_leaves_emit(&composed.content.child_id, edit.leaves))

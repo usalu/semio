@@ -237,7 +237,7 @@
         "publicationRevision": "2"
       },
       "header": {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "profiles": [
           {
             "id": "local-stdio-gis-open-v1"
@@ -265,6 +265,19 @@
             "pluginModule": {
               "path": "packages/stdio/plugin-module.json"
             },
+            "receipt": {
+              "schema": "semio.plugin.component-receipt/v1",
+              "pluginId": "stdio",
+              "packageId": "semio:stdio",
+              "profile": "wasm-release",
+              "target": "wasm32-wasip2",
+              "wasmSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "wasmBytes": 4096,
+              "semanticDescriptorSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "toolchain": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)",
+              "sourceTreeDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "provenanceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            },
             "nativeCodecs": [],
             "openTargets": []
           },
@@ -288,6 +301,19 @@
             },
             "pluginModule": {
               "path": "packages/gis/plugin-module.json"
+            },
+            "receipt": {
+              "schema": "semio.plugin.component-receipt/v1",
+              "pluginId": "gis",
+              "packageId": "semio:gis",
+              "profile": "wasm-release",
+              "target": "wasm32-wasip2",
+              "wasmSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "wasmBytes": 4096,
+              "semanticDescriptorSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "toolchain": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)",
+              "sourceTreeDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "provenanceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
             },
             "nativeCodecs": [],
             "openTargets": []
@@ -358,15 +384,15 @@
         ]
       },
       "expected": "stale",
-      "reason": "format 2 ≠ 3"
+      "reason": "format 2 ≠ 4"
     },
     {
-      "name": "format 3 whose package lacks its plugin module",
+      "name": "format 4 whose package lacks its plugin module",
       "pointer": {
         "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       },
       "header": {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "profiles": [
           {
             "id": "p"
@@ -394,6 +420,19 @@
             "pluginModule": {
               "path": "packages/stdio/plugin-module.json"
             },
+            "receipt": {
+              "schema": "semio.plugin.component-receipt/v1",
+              "pluginId": "stdio",
+              "packageId": "semio:stdio",
+              "profile": "wasm-release",
+              "target": "wasm32-wasip2",
+              "wasmSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "wasmBytes": 4096,
+              "semanticDescriptorSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "toolchain": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)",
+              "sourceTreeDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "provenanceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            },
             "nativeCodecs": [],
             "openTargets": []
           },
@@ -415,6 +454,19 @@
             "browserActor": {
               "kind": "closed-browser-actor"
             },
+            "receipt": {
+              "schema": "semio.plugin.component-receipt/v1",
+              "pluginId": "gis",
+              "packageId": "semio:gis",
+              "profile": "wasm-release",
+              "target": "wasm32-wasip2",
+              "wasmSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "wasmBytes": 4096,
+              "semanticDescriptorSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "toolchain": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)",
+              "sourceTreeDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "provenanceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            },
             "nativeCodecs": [],
             "openTargets": []
           }
@@ -422,6 +474,85 @@
       },
       "expected": "stale",
       "reason": "package gis has no pluginModule"
+    },
+    {
+      "name": "format 4 whose package lacks its component receipt",
+      "pointer": {
+        "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+      },
+      "header": {
+        "schemaVersion": 4,
+        "profiles": [
+          {
+            "id": "p"
+          }
+        ],
+        "packages": [
+          {
+            "pluginId": "stdio",
+            "packageId": "semio:stdio",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/stdio/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/stdio/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 23
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "pluginModule": {
+              "path": "packages/stdio/plugin-module.json"
+            },
+            "receipt": {
+              "schema": "semio.plugin.component-receipt/v1",
+              "pluginId": "stdio",
+              "packageId": "semio:stdio",
+              "profile": "wasm-release",
+              "target": "wasm32-wasip2",
+              "wasmSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+              "wasmBytes": 4096,
+              "semanticDescriptorSha256": "dddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd",
+              "toolchain": "rustc 1.90.0 (1159e78c4747b02ef996e55082b704c09b970588)",
+              "sourceTreeDigest": "eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee",
+              "provenanceSha256": "ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          },
+          {
+            "pluginId": "gis",
+            "packageId": "semio:gis",
+            "version": "0.1.0",
+            "role": "plugin",
+            "dependencies": [],
+            "component": {
+              "path": "packages/gis/component.wasm"
+            },
+            "descriptor": {
+              "path": "packages/gis/descriptor.semio"
+            },
+            "executionProtocol": {
+              "appChannelVersion": 23
+            },
+            "browserActor": {
+              "kind": "closed-browser-actor"
+            },
+            "pluginModule": {
+              "path": "packages/gis/plugin-module.json"
+            },
+            "nativeCodecs": [],
+            "openTargets": []
+          }
+        ]
+      },
+      "expected": "stale",
+      "reason": "package gis has no receipt"
     },
     {
       "name": "pointer naming no generation",
@@ -442,12 +573,12 @@
       "reason": "generation aaaaaaaaaaaa is unreadable"
     },
     {
-      "name": "format 3 without packages",
+      "name": "format 4 without packages",
       "pointer": {
         "generationId": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
       },
       "header": {
-        "schemaVersion": 3,
+        "schemaVersion": 4,
         "profiles": [
           {
             "id": "p"

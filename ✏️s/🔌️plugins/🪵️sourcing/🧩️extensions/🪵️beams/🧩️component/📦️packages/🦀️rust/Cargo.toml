@@ -1,0 +1,38 @@
+[package]
+workspace = "../../.."
+name = "semio-s-plugin-sourcing-beams-component"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+description = "The `sourcing-module-beams` extension component: the one cdylib of `semio-s-plugin-sourcing-beams`, holding only its entry point"
+
+[lints]
+workspace = true
+
+[package.metadata.component]
+package = "semio:sourcing-module-beams"
+
+[package.metadata.semio]
+role = "extension"
+deployment-directory = "🪜️sourcing-module-beams"
+component-kind = "extension"
+extends = "sourcing"
+contributes = ["sourcing.module"]
+
+[package.metadata.wasm-pack.profile.dev]
+wasm-opt = false
+
+[package.metadata.wasm-pack.profile.release]
+wasm-opt = false
+
+[lib]
+crate-type = ["cdylib"]
+path = "../../🦀️.rs"
+
+[dependencies]
+semio-s-plugin-sourcing-beams = { path = "../../../📦️packages/🦀️rust" }
+semio-framework-plugin = { path = "../../../../../../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📦️packages/🦀️rust" }
+
+[dev-dependencies]
+semio-framework-async = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/📦️packages/🦀️rust" }
+semio-framework-async-macros = { path = "../../../../../../../../🧰️framework/🔨️modules/⏳️async/✨️macros/📦️packages/🦀️rust" }

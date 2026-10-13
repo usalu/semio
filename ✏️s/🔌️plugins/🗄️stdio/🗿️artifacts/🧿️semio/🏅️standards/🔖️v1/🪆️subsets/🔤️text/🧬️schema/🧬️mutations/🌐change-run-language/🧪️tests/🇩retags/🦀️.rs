@@ -5,10 +5,10 @@
 //! otherwise ONLY `runs[index].language` is assigned on a clone of `base.runs`. The before-snapshot
 //! deliberately mis-tags a German word (`Welt`) as `en` so the retag is semantically real.
 
-use crate::standards::v1::subsets::text::schema::diff::SemioTextDiff;
-use crate::standards::v1::subsets::text::schema::mutations::SemioTextMutation;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use protocol::{Mutation, MutationDiff};
+use crate::schema::diff::SemioTextDiff;
+use crate::schema::mutations::SemioTextMutation;
+use crate::schema::snapshot::SemioTextSnapshot;
+use protocol::Mutation;
 
 const BEFORE: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌐change-run-language/🇩retags/📸️snapshot/⬅️before/🔣️.json");
 const AFTER: &str = include_str!("../../../../../🧫️fixtures/🧬️mutations/🌐change-run-language/🇩retags/📸️snapshot/➡️after/🔣️.json");
@@ -91,7 +91,7 @@ async fn produces_committed_diff() {
 #[semio_framework_async_macros::async_test]
 async fn committed_diff_is_canonical() {
     let decoded: SemioTextDiff = semio_framework_pack_json::from_json_str(DIFF, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("committed change-run-language diff decodes");
-    let list = decoded.runs.as_ref().expect("an applied change-run-language diff carries a runs list");
+    let _list = decoded.runs.as_ref().expect("an applied change-run-language diff carries a runs list");
     let reencoded = serde_json::from_str::<serde_json::Value>(&semio_framework_pack_json::to_json_string(&decoded)).expect("diff re-encodes");
     let original: serde_json::Value = serde_json::from_str(DIFF).expect("committed diff reparses");
     assert_eq!(reencoded, original, "change-run-language/retags-the-second-run-as-german: committed diff JSON is not canonical");

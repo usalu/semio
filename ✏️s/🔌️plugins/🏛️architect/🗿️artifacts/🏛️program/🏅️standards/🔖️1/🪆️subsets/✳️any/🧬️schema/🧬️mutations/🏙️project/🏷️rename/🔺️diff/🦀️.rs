@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `📁update-project` per Wave C.
 
 use super::RenameProject;
-use crate::diff::ProjectDefinitionEdit;
-use crate::registers::ProjectDefinitionPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::ProjectDefinitionEdit;
+use crate::standards::v1::subsets::any::schema::registers::ProjectDefinitionPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Patches only `code` of the section. Root-scoped singleton — always present, so
 /// Warning `mutation.no-op` (empty diff) covers the only degenerate case: the code is unchanged.

@@ -1993,7 +1993,7 @@ class RetainedCloneCheckScript extends BundleScript {
     const storeSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
     const handoffMethod = storeSource.slice(storeSource.indexOf("pub fn handoff_batch_publication_close("), storeSource.indexOf("pub fn maintenance_retirements_terminal_is_empty", storeSource.indexOf("pub fn handoff_batch_publication_close(")));
     assert(handoffMethod.indexOf("displaced_retirements.reserve(1)?") < handoffMethod.indexOf("publication.take()"), "Store reserves surviving close authority before taking the scheduler owner");
-    assert(storeSource.includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
+    assert(readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🎮️one-item/📬️publication/🦀️.rs"), "utf8").includes("ErasedSnapshotRetirement for ArtifactStoreBatchPublication"));
     const pluginSource = readFileSync(join(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🦀️.rs"), "utf8");
     assert(pluginSource.includes("fn handoff_mounted_durable_publication("));
     assert(pluginSource.match(/handoff_mounted_durable_publication\(/g)?.length ?? 0 >= 4, "cancel, stale and terminal-error paths transfer durable publications");
@@ -2815,6 +2815,17 @@ class ReturnedReadCustodyScript extends BundleScript {
  }
 }
 router.register("test-returned-read-custody",ReturnedReadCustodyScript);
+/** 🏭️ Checks the actual returned read owner mount without native compilation. */
+class ReturnedReadFactoryMountScript extends BundleScript {
+ async run(segments:string[]):Promise<void>{
+  if(segments.length)throw Error("test-returned-read-factory-mount accepts no arguments");
+  const remaining=this.invocation.control.remainingMilliseconds();
+  if(remaining!==null&&remaining<1)throw Error("Original returned read mount deadline exhausted");
+  await runRepositoryTestCommand(process.execPath,["test",join(this.repoRoot,"🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🔗️read/🧾️return/🧪️tests/🏭️mount/🟦️.ts")],{cwd:this.repoRoot,env:process.env,budgetMs:remaining===null?0:Math.floor(remaining),signal:this.invocation.control.signal});
+ }
+}
+router.register("test-returned-read-factory-mount",ReturnedReadFactoryMountScript);
+
 
 /** 🪪️ Runs the original metadata schema and independent SQLite semantic oracle. */
 class NativeEditMetadataSourceScript extends BundleScript {

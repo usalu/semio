@@ -3,7 +3,7 @@
 use crate::*;
 use crate::io::text::package::{COLLECTION_PACKAGE_DECLARATION_JSON, decode_collection_package_json, read_builtin_collection_package};
 use protocol::Mutation as _;
-use store::ArtifactDsl as _;
+use store::os_store::serialization::ArtifactDsl as _;
 
 #[test]
 fn collection_native_schema_factories_admit_both_directions_before_copies(){

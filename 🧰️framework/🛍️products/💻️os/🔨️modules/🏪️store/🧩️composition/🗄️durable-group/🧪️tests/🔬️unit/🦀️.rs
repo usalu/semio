@@ -6,8 +6,8 @@ fn fixture() -> serde_json::Value {
     serde_json::from_str(include_str!("../../🧫️fixtures/🔣️.json")).expect("durable group fixture")
 }
 
-fn copy_grant(bytes: usize) -> crate::os_store::ArtifactStoreOneItemGrant {
-    crate::os_store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
+fn copy_grant(bytes: usize) -> crate::os_store::one_item::ArtifactStoreOneItemGrant {
+    crate::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: bytes, maximum_capacity_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_release_bytes: DURABLE_OWNED_GROUP_EVENT_MAX_BYTES, maximum_depth: 64 }
 }
 
 fn hex(value: &str) -> Vec<u8> {
@@ -51,18 +51,18 @@ fn member(value: &serde_json::Value) -> DurableOwnedGroupMemberV1 {
 fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_revision: [u8; 32], ordinal: u64) -> (ArtifactStoreOneItemPrepared<DslValue, String>, DurableStorePreparedOutcomeV1) {
     let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{role}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 1_000 + ordinal, logical: ordinal + 1 };
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-        operation: semio_framework_job::OperationId(100 + ordinal),
-        generation: semio_framework_job::Generation(generation),
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        semio_framework_job::OperationId(100 + ordinal),
+        semio_framework_job::Generation(generation),
         base_revision,
-        base_applied_edit_count: ordinal as usize,
-        next_sequence_number: ordinal as i32 + 10,
+        ordinal as usize,
+        ordinal as i32 + 10,
         next_clock,
-        actor: actor.clone(),
-        group_id: None,
-        stamped_edit_id: None,
-        line: None,
-    });
+        actor.clone(),
+        None,
+        None,
+        None,
+    ));
     let edit_id = format!("map-{role}-edit-{ordinal}");
     let edit = Edit {
         line: None,
@@ -91,7 +91,7 @@ fn prepared_outcome(role: &str, recovery_schema: &str, generation: u64, base_rev
     };
     let post_snapshot = Arc::new(DslValue::Object(vec![("role".into(), DslValue::String(role.into())), ("ordinal".into(), DslValue::uint(ordinal))]));
     let prepared = authority.prepare_one_item(edit, post_snapshot).expect("Store seals one exact unbound prepared owner");
-    let outcome = prepared.durable_unbound_outcome(recovery_schema).expect("Store derives and verifies the unbound outcome pack");
+    let outcome = DurableStorePreparedOutcomeV1::from_prepared(recovery_schema, &prepared).expect("Store derives and verifies the unbound outcome pack");
     (prepared, outcome)
 }
 
@@ -121,7 +121,7 @@ fn decision() -> DurableOwnedThreeMemberDecisionV1 {
 }
 
 async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::ArtifactDialect, owner: Option<OwnerRef>) -> ArtifactStore<DemoSnapshot, DemoMutation> {
-    let mut envelope = crate::os_store::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None);
+    let mut envelope = crate::os_store::document_materialize::create_document_envelope::<DemoSnapshot, DemoMutation>("demo/v1", id, DemoSnapshot { n: Some(0) }, None);
     envelope.dialect = Some(dialect);
     envelope.owner = owner;
     let mut store = ArtifactStore::new(envelope, crate::os_spr::ActorId(fixture()["openedActor"].as_str().expect("declared opened group actor").into())).await.expect("owned group fixture Store");
@@ -132,18 +132,18 @@ async fn owned_store(id: &str, dialect: semio_framework_artifact_reference::Arti
 fn store_prepared(store: &ArtifactStore<DemoSnapshot, DemoMutation>, ordinal: u64, next: i32) -> ArtifactStoreOneItemPrepared<DemoSnapshot, DemoMutation> {
     let actor = semio_framework_value::SharedUtf8::admit(format!("map-owner-{ordinal}"), crate::os_store::component::tests::physical_test_close_grant()).unwrap_or_else(|(error,_)| panic!("funded original actor: {error}")).0;
     let next_clock = HybridLogicalTimestamp { actor: ordinal, physical_ms: 2_000 + ordinal, logical: ordinal + 1 };
-    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority {
-        operation: semio_framework_job::OperationId(200 + ordinal),
-        generation: semio_framework_job::Generation(store.generation),
-        base_revision: store.content_revision,
-        base_applied_edit_count: store.applied_edit_ids.len(),
-        next_sequence_number: store.edit_sequence + 1,
+    let authority = Arc::new(ArtifactStoreOneItemLiveAuthority::mint(
+        semio_framework_job::OperationId(200 + ordinal),
+        semio_framework_job::Generation(store.generation),
+        store.content_revision,
+        store.applied_edit_ids.len(),
+        store.edit_sequence + 1,
         next_clock,
-        actor: actor.clone(),
-        group_id: None,
-        stamped_edit_id: None,
-        line: None,
-    });
+        actor.clone(),
+        None,
+        None,
+        None,
+    ));
     let edit_id = format!("map-store-edit-{ordinal}");
     let edit = Edit {
         line: None,
@@ -269,7 +269,7 @@ impl DurableOwnedGroupJournalSinkV1 for FakeJournalSink {
 }
 
 impl DurableOwnedGroupJournalCommitV1 for FakeJournalCommit {
-    fn advance(&mut self, grant: crate::os_store::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
+    fn advance(&mut self, grant: crate::os_store::one_item::ArtifactStoreOneItemGrant) -> Result<DurableOwnedGroupJournalAdvanceV1, String> {
         if !grant.permits_one() {
             return Ok(DurableOwnedGroupJournalAdvanceV1::Pending);
         }
@@ -411,9 +411,9 @@ fn map_assembly(
     let drawing_admission = map_member_admission(&drawing, 2, 11, stale_role == Some(DRAWING_ROLE));
     let value_admission = map_member_admission(&value, 3, 13, stale_role == Some(VALUE_ROLE));
     let factories = std::array::from_fn(|_| Arc::new(DemoOneItemPreparationFactory::admissible()));
-    let parent_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
-    let drawing_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
-    let value_factory: Arc<dyn crate::os_store::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
+    let parent_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[0].clone();
+    let drawing_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[1].clone();
+    let value_factory: Arc<dyn crate::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<DemoSnapshot, DemoMutation>> = factories[2].clone();
     (DurableOwnedThreeStoreMapAssemblyV1::new(parent, drawing, value, parent_admission, drawing_admission, value_admission, parent_factory, drawing_factory, value_factory, Box::new(FakeJournalSink { resolution, state })), factories)
 }
 
@@ -627,8 +627,8 @@ fn durable_store_prepared_outcome_derives_and_verifies_exact_unbound_bytes() {
     let parent = &fixture["members"]["parent"];
     let (prepared, outcome) = prepared_outcome(PARENT_ROLE, parent["recoverySchema"].as_str().unwrap(), parent["expectedGeneration"].as_u64().unwrap(), revision(parent["expectedRevisionHex"].as_str().unwrap()), 1);
     let verified = outcome.verify_inverse::<DslValue, String>().expect("Store-owned bytes invert to the same typed owners");
-    assert_eq!(ValueToValue::to_value(verified.edit.as_ref()), ValueToValue::to_value(prepared.edit.as_ref()),);
-    assert_eq!(verified.post_snapshot.encode_pack(), prepared.post_snapshot.encode_pack(),);
+    assert_eq!(ValueToValue::to_value(verified.edit.as_ref()), ValueToValue::to_value(prepared.edit()),);
+    assert_eq!(verified.post_snapshot.encode_pack(), prepared.post_snapshot().encode_pack(),);
     assert_eq!(outcome.sha256, semio_framework_hash::sha256_hex(&outcome.pack));
     assert_eq!(hex_string(&outcome.pack), parent["unboundOutcomePackHex"]);
     assert_eq!(outcome.sha256, parent["unboundOutcomeSha256"]);
@@ -734,9 +734,9 @@ async fn durable_store_owned_three_member_bind_and_base_recovery_retain_exact_pr
     assert_eq!(decision.parent.expected_revision, parent_store.content_revision_now());
     assert_eq!(decision.drawing.expected_revision, drawing_store.content_revision_now());
     assert_eq!(decision.value.expected_revision, value_store.content_revision_now());
-    assert_eq!(bound.parent.prepared.edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
-    assert_eq!(bound.drawing.prepared.edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
-    assert_eq!(bound.value.prepared.edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
+    assert_eq!(bound.parent.prepared.edit().mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
+    assert_eq!(bound.drawing.prepared.edit().mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
+    assert_eq!(bound.value.prepared.edit().mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
     for member in [&decision.parent, &decision.drawing, &decision.value] {
         assert!(member.recovery_pack.starts_with(b"\x89SEM\r\n\x1a\n"));
         assert_eq!(member.recovery_pack_sha256, semio_framework_hash::sha256_hex(&member.recovery_pack));
@@ -746,8 +746,8 @@ async fn durable_store_owned_three_member_bind_and_base_recovery_retain_exact_pr
         DurableOwnedThreeStoreRecoveryV1::AlreadyApplied => panic!("base stores cannot report already applied"),
     };
     for prepared in [&recovered.parent.prepared, &recovered.drawing.prepared, &recovered.value.prepared] {
-        prepared.seal.authority.validate_prepared(prepared).expect("recovery reconstructs a valid private Store seal");
-        assert_eq!(prepared.edit.mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
+        prepared.authority().validate_prepared(prepared).expect("recovery reconstructs a valid private Store seal");
+        assert_eq!(prepared.edit().mutation_meta[0].group_id.as_deref(), Some(decision.decision_sha256.as_str()));
     }
     let mut tampered = decision;
     tampered.value.recovery_pack[0] ^= 1;

@@ -5,25 +5,25 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::base::schema::snapshot::*;
-use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
+use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 
 
@@ -62,24 +62,24 @@ pub(crate) fn strip_inner_preamble(text: &str) -> &str {
 pub(crate) fn enc_semio_snapshot_body(snap: &SemioSnapshot) -> String {
     let tag = subset_tag(&snap.subset);
     let inner_printed = match &snap.subset {
-        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::ArtifactDsl>::print_dsl(s),
-        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as store::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Brep(s) => <SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Mesh(s) => <SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Model(s) => <SemioModelSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Value(s) => <SemioValueSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Document(s) => <SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Cad(s) => <SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Drawing(s) => <SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Image(s) => <SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Video(s) => <SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Audio(s) => <SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Animation(s) => <SemioAnimationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Presentation(s) => <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Flow(s) => <SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Text(s) => <SemioTextSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Table(s) => <SemioTableSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Graph(s) => <SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Object(s) => <SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
+        SemioSubsetSnapshot::Kit(s) => <SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(s),
     };
     let inner_body = strip_inner_preamble(&inner_printed);
     format!("subset={tag}\nschema={}\n{inner_body}", hex_encode(snap.schema.as_bytes()))
@@ -95,24 +95,24 @@ pub(crate) fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, Strin
     let schema = String::from_utf8(hex_decode(schema_hex)?).map_err(|e| e.to_string())?;
     let inner_body = parts.next().unwrap_or("");
     let subset = match tag {
-        "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "value" => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "image" => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "video" => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "table" => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "graph" => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
-        "kit" => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "brep" => SemioSubsetSnapshot::Brep(<SemioBrepSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "mesh" => SemioSubsetSnapshot::Mesh(<SemioMeshSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "model" => SemioSubsetSnapshot::Model(<SemioModelSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "value" => SemioSubsetSnapshot::Value(<SemioValueSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "document" => SemioSubsetSnapshot::Document(<SemioDocumentSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "cad" => SemioSubsetSnapshot::Cad(<SemioCadSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "drawing" => SemioSubsetSnapshot::Drawing(<SemioDrawingSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "image" => SemioSubsetSnapshot::Image(<SemioImageSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "video" => SemioSubsetSnapshot::Video(<SemioVideoSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "audio" => SemioSubsetSnapshot::Audio(<SemioAudioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "animation" => SemioSubsetSnapshot::Animation(<SemioAnimationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "presentation" => SemioSubsetSnapshot::Presentation(<SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "flow" => SemioSubsetSnapshot::Flow(<SemioFlowSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "text" => SemioSubsetSnapshot::Text(<SemioTextSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "table" => SemioSubsetSnapshot::Table(<SemioTableSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "graph" => SemioSubsetSnapshot::Graph(<SemioGraphSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "object" => SemioSubsetSnapshot::Object(<SemioObjectSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
+        "kit" => SemioSubsetSnapshot::Kit(<SemioKitSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(inner_body).map_err(|e| e.to_string())?),
         other => return Err(format!("semio snapshot: unknown subset tag {other:?}")),
     };
     Ok(SemioSnapshot { schema, subset })
@@ -122,7 +122,7 @@ pub(crate) fn dec_semio_snapshot_body(body: &str) -> Result<SemioSnapshot, Strin
 /// byte of the WRAPPED subset's own payload is produced/consumed by THAT subset's own real,
 /// already-conformance-tested `ArtifactDsl`/`ArtifactPack` impl; this envelope only adds the
 /// `subset`/`schema` header and the outer `store::semio_format` wrapping every stdio artifact uses.
-impl store::ArtifactDsl for SemioSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIO_DOCUMENT_SCHEMA
@@ -138,25 +138,25 @@ impl store::ArtifactDsl for SemioSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = enc_semio_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📥️ Parses the ENVELOPE's own committed `.dsl.semio` text into a real [`SemioSnapshot`] — a thin
-/// wrapper over `store::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
+/// wrapper over `store::os_store::serialization::ArtifactDsl::parse_dsl` so external Rust callers that cannot name this
 /// crate's private `store` extern-crate item (the `✉️mutate-semio-base` test adapter, whose
 /// `identity-round-trip` scenario reads the REAL committed `📚️examples/🌐️envelope` artifact) can still
 /// drive the same codec production does. Same shape and same rationale as `🌊️flow`'s own bridge.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_envelope_dsl(text: &str) -> Result<SemioSnapshot, String> {
-    <SemioSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
-/// 📤️ The `store::ArtifactDsl::print_dsl` inverse of [`parse_semio_envelope_dsl`] — same rationale.
+/// 📤️ The `store::os_store::serialization::ArtifactDsl::print_dsl` inverse of [`parse_semio_envelope_dsl`] — same rationale.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_envelope_dsl(snapshot: &SemioSnapshot) -> String {
-    <SemioSnapshot as store::ArtifactDsl>::print_dsl(snapshot)
+    <SemioSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(snapshot)
 }
 
 /// 📤️ The envelope's JSON carrier, derived from the schema types themselves: `SemioSnapshot`'s own
@@ -179,25 +179,25 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::base::schema::snapshot::*;
-use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
-use crate::standards::v1::subsets::audio::schema::snapshot::SemioAudioSnapshot;
-use crate::standards::v1::subsets::brep::schema::snapshot::SemioBrepSnapshot;
-use crate::standards::v1::subsets::cad::schema::snapshot::SemioCadSnapshot;
-use crate::standards::v1::subsets::document::schema::snapshot::SemioDocumentSnapshot;
-use crate::standards::v1::subsets::drawing::schema::snapshot::SemioDrawingSnapshot;
-use crate::standards::v1::subsets::flow::schema::snapshot::SemioFlowSnapshot;
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::standards::v1::subsets::table::schema::snapshot::SemioTableSnapshot;
-use crate::standards::v1::subsets::text::schema::snapshot::SemioTextSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
-use crate::standards::v1::subsets::video::schema::snapshot::SemioVideoSnapshot;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_s_artifact_stdio_semio_audio::schema::snapshot::SemioAudioSnapshot;
+use semio_s_artifact_stdio_semio_brep::schema::snapshot::SemioBrepSnapshot;
+use semio_s_artifact_stdio_semio_cad::schema::snapshot::SemioCadSnapshot;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::SemioDocumentSnapshot;
+use semio_s_artifact_stdio_semio_drawing::schema::snapshot::SemioDrawingSnapshot;
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::SemioFlowSnapshot;
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_presentation::schema::snapshot::SemioPresentationSnapshot;
+use semio_s_artifact_stdio_semio_table::schema::snapshot::SemioTableSnapshot;
+use semio_s_artifact_stdio_semio_text::schema::snapshot::SemioTextSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
+use semio_s_artifact_stdio_semio_video::schema::snapshot::SemioVideoSnapshot;
 use framework_schema::ArtifactSchema;
 
 
@@ -205,127 +205,3 @@ use framework_schema::ArtifactSchema;
 
 }
 
-#[allow(unused_imports)]
-mod snapshot_wire2_codec {
-use crate::standards::v1::subsets::base::schema::triples::*;
-
-
-/// 📐️ Bracket-depth-aware split — a `sep` inside `[...]` never splits (so a modified/added
-/// entry's own nested `[...]` payload survives the outer `;`/`,` split intact).
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn split_top_level(s: &str, sep: char) -> Vec<&str> {
-    if s.is_empty() {
-        return Vec::new();
-    }
-    let mut out = Vec::new();
-    let mut depth = 0i32;
-    let mut start = 0usize;
-    for (i, c) in s.char_indices() {
-        match c {
-            '[' => depth += 1,
-            ']' => depth -= 1,
-            c if c == sep && depth == 0 => {
-                out.push(&s[start..i]);
-                start = i + c.len_utf8();
-            }
-            _ => {}
-        }
-    }
-    out.push(&s[start..]);
-    out
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn strip_brackets(s: &str) -> Result<&str, String> {
-    s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("expected [...], got {s:?}"))
-}
-
-/// 🧮️ Optional sparse-diff field: `_` when absent, otherwise `s` followed by the field's own encoding.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn enc_opt<T>(value: Option<&T>, enc: impl Fn(&T) -> String) -> String {
-    value.map_or_else(|| "_".to_string(), |v| format!("s{}", enc(v)))
-}
-
-/// 🧮️ Inverse of [`enc_opt`].
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dec_opt<T>(s: &str, dec: impl Fn(&str) -> Result<T, String>) -> Result<Option<T>, String> {
-    match s {
-        "_" => Ok(None),
-        other => other.strip_prefix('s').ok_or_else(|| format!("optional field: bad token {other:?}")).and_then(dec).map(Some),
-    }
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn enc_indexed_triple<D, T>(diff: &IndexedTripleDiff<D, T>, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = diff.removed.iter().map(|i| i.to_string()).collect::<Vec<_>>().join(",");
-    let modified = diff.modified.iter().map(|m| format!("{}:{}", m.index, enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = diff.added.iter().map(|a| format!("{}:{}", a.index, enc_t(&a.item))).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dec_indexed_triple<D, T>(body: &str, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<IndexedTripleDiff<D, T>, String> {
-    let three = split_top_level(body, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("indexed triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(|s| s.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed modified: bad entry {entry:?}"))?;
-            Ok(IndexModified { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, diff: dec_d(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (idx, rest) = entry.split_once(':').ok_or_else(|| format!("indexed added: bad entry {entry:?}"))?;
-            Ok(IndexAdded { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_t(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    Ok(IndexedTripleDiff { removed, modified, added })
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn enc_named_triple<K, D, T>(triple: &NamedTripleDiff<K, D, T>, enc_k: impl Fn(&K) -> String, enc_d: impl Fn(&D) -> String, enc_t: impl Fn(&T) -> String) -> String {
-    let removed = triple.removed.iter().map(&enc_k).collect::<Vec<_>>().join(",");
-    let modified = triple.modified.iter().map(|m| format!("{}:{}", enc_k(&m.key), enc_d(&m.diff))).collect::<Vec<_>>().join(",");
-    let added = triple.added.iter().map(enc_t).collect::<Vec<_>>().join(",");
-    format!("[{removed}];[{modified}];[{added}]")
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dec_named_triple<K, D, T>(s: &str, dec_k: impl Fn(&str) -> Result<K, String>, dec_d: impl Fn(&str) -> Result<D, String>, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedTripleDiff<K, D, T>, String> {
-    let three = split_top_level(s, ';');
-    let [removed_s, modified_s, added_s] = three.as_slice() else { return Err(format!("named triple: expected 3 sections, got {}", three.len())) };
-    let removed = split_top_level(strip_brackets(removed_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(&dec_k).collect::<Result<Vec<_>, String>>()?;
-    let modified = split_top_level(strip_brackets(modified_s)?, ',')
-        .into_iter()
-        .filter(|s| !s.is_empty())
-        .map(|entry| {
-            let (k, rest) = entry.split_once(':').ok_or_else(|| format!("named triple modified: bad entry {entry:?}"))?;
-            Ok(NamedModified { key: dec_k(k)?, diff: dec_d(rest)? })
-        })
-        .collect::<Result<Vec<_>, String>>()?;
-    let added = split_top_level(strip_brackets(added_s)?, ',').into_iter().filter(|s| !s.is_empty()).map(dec_t).collect::<Result<Vec<_>, String>>()?;
-    Ok(NamedTripleDiff { removed, modified, added })
-}
-
-/// 🧷 `NamedAdded<T>`-wrapping encode/decode pair (`index:item`, same `idx:rest` shape
-/// `enc_indexed_triple`/`dec_indexed_triple` already use for `IndexAdded<T>` above) — for a
-/// consumer instantiating `NamedTripleDiff<K, D, NamedAdded<T>>`, pass
-/// `|a| enc_named_added(a, enc_t)`/`|s| dec_named_added(s, dec_t)` as `enc_named_triple`'s/
-/// `dec_named_triple`'s own `enc_t`/`dec_t` argument.
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn enc_named_added<T>(a: &NamedAdded<T>, enc_t: impl Fn(&T) -> String) -> String {
-    format!("{}:{}", a.index, enc_t(&a.item))
-}
-
-// 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-pub fn dec_named_added<T>(s: &str, dec_t: impl Fn(&str) -> Result<T, String>) -> Result<NamedAdded<T>, String> {
-    let (idx, rest) = s.split_once(':').ok_or_else(|| format!("named added: bad entry {s:?}"))?;
-    Ok(NamedAdded { index: idx.parse::<usize>().map_err(|e: std::num::ParseIntError| e.to_string())?, item: dec_t(rest)? })
-}
-}
-pub use snapshot_wire2_codec::*;

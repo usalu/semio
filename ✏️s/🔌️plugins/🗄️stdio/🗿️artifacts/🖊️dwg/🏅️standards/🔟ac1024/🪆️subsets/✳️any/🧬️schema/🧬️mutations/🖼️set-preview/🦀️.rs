@@ -1,7 +1,7 @@
 //! 🖼️ `set-preview` — replaces the preview image block of the container. It builds its own sparse diff and concrete inverse from its payload and reads of `base`.
 
 use super::*;
-use crate::schema::snapshot::*;
+use crate::standards::v_ac1024::subsets::any::schema::snapshot::*;
 
 //#region 🔖️Payload
 #[derive(Clone, Debug, PartialEq, value_derive::ToValue, value_derive::FromValue, dsl::MutationLeaf, semio_framework_value::RetireOwned, semio_framework_value::CanonicalJsonTree)]

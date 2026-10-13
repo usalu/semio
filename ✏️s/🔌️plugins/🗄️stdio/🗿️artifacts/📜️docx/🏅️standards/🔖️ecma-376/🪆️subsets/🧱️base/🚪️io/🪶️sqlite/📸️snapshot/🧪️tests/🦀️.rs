@@ -1,7 +1,7 @@
 use crate::standards::v_ecma_376::subsets::base::io::sqlite::snapshot::*;
 #[path = "💰️backing/🦀️.rs"]
 mod owned_requests;
-use semio_framework_os_kernel::{ArtifactSqliteSnapshot,sqlite_snapshot::*};
+use semio_framework_os_kernel::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::*};
 fn deep_owned_document(depth:usize)->semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlDocument{
  use semio_s_artifact_stdio_xml::schema::snapshot::retained::{RetainedXmlDocument,RetainedXmlNode,RetainedXmlNodeKind,RetainedXmlText};
  let mut document=RetainedXmlDocument::default();
@@ -28,7 +28,7 @@ async fn sqlite_snapshot_docx_actual_exact_profile_declarations_preserve_owned_w
 }
 #[test]
 fn sqlite_snapshot_docx_native_protocol_checks_complete_literal_fields(){
- let snapshot=fixture();let bytes=<DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);let(_,body)=store::semio_format::unwrap_binary(&bytes).unwrap();
+ let snapshot=fixture();let bytes=<DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);let(_,body)=store::semio_format::unwrap_binary(&bytes).unwrap();
  let protocol=semio_framework_dsl::parse_protocol(crate::standards::v_ecma_376::subsets::base::io::binary::snapshot::COMPONENT_PROTOCOL_SEMIO).unwrap();
  assert_eq!(semio_framework_dsl::walk_protocol(&protocol,&body).unwrap().consumed,body.len());
  for length in[0,1,body.len()-1]{assert!(semio_framework_dsl::walk_protocol(&protocol,&body[..length]).is_err());}
@@ -36,7 +36,7 @@ fn sqlite_snapshot_docx_native_protocol_checks_complete_literal_fields(){
 }
 #[test]
 fn sqlite_snapshot_docx_native_grammar_describes_complete_owned_fields(){
- let snapshot=fixture();let text=<DocxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();let grammar=semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());snapshot.retire_sqlite_snapshot();
+ let snapshot=fixture();let text=<DocxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);let(envelope,body)=store::semio_format::split_text_preamble(&text).unwrap();let grammar=semio_framework_dsl::parse_grammar(crate::standards::v_ecma_376::subsets::base::io::text::snapshot::COMPONENT_GRAMMAR_SEMIO).unwrap();assert!(semio_framework_dsl::Recognizer::compile(&grammar, &semio_framework_os_kernel::os_dsl::grammar::family_fragments().expect("OS family grammar"), semio_framework_os_kernel::os_dsl::grammar::product_macros()).expect("selected grammar fragments").recognize(&format!("{}\n{body}",envelope.envelope_id())).unwrap());snapshot.retire_sqlite_snapshot();
 }
 fn fixture_position_u64(text:&str)->Option<u64>{
  if text.is_empty()||!text.bytes().all(|byte|byte.is_ascii_digit())||(text.len()>1&&text.starts_with('0')){return None;}
@@ -74,11 +74,11 @@ fn sqlite_snapshot_docx_closed_fixture_position_preserves_exact_unsigned_domain(
  let system=semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlExternalId::System{system_id:semio_s_artifact_stdio_xml::schema::snapshot::retained::RetainedXmlText::try_from_str("SYSTEM\0引用😀").unwrap()};
  let system_wire=semio_framework_value::ToValue::to_value(&system);assert_eq!(system_wire.get("systemId"),Some(&semio_framework_value::DslValue::String("SYSTEM\0引用😀".into())));assert!(system_wire.get("system_id").is_none());
  snapshot.xml_parts[0].document.doctype.as_mut().unwrap().external_id=Some(system);
- let bytes=<DocxSnapshot as store::ArtifactPack>::encode_pack(&snapshot);
- let restored=<DocxSnapshot as store::ArtifactPack>::decode_pack(&bytes).unwrap();
+ let bytes=<DocxSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&snapshot);
+ let restored=<DocxSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).unwrap();
  assert_eq!(restored,snapshot);restored.retire_sqlite_snapshot();
- let text=<DocxSnapshot as store::ArtifactDsl>::print_dsl(&snapshot);
- let restored=<DocxSnapshot as store::ArtifactDsl>::parse_dsl(&text).unwrap();
+ let text=<DocxSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&snapshot);
+ let restored=<DocxSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&text).unwrap();
  assert_eq!(restored,snapshot);restored.retire_sqlite_snapshot();
  snapshot.retire_sqlite_snapshot();
 }

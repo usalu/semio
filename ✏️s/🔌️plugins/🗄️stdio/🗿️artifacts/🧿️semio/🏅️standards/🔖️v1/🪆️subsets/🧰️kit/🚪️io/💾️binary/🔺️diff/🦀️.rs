@@ -5,30 +5,30 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::kit::schema::diff::*;
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_design_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_design_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_type_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_type_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_link_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_link_list};
-use crate::standards::v1::subsets::object::io::text::snapshot::{dec_child_opt};
-use crate::standards::v1::subsets::object::io::text::snapshot::{enc_child_opt};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child_list};
+use crate::io::text::snapshot::dec_design_list;
+use crate::io::text::snapshot::enc_design_list;
+use crate::io::text::snapshot::dec_type_list;
+use crate::io::text::snapshot::enc_type_list;
+use crate::io::text::snapshot::dec_link_list;
+use crate::io::text::snapshot::enc_link_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use crate::io::text::snapshot::dec_child_list;
+use crate::io::text::snapshot::enc_child_list;
 
 impl protocol::DiffBinary for SemioKitDiff {
 /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=types, bit1=designs, bit2=objects, bit3=models, bit4=properties,
 /// bit5=representations), then each present field as a varint byte length plus the same text the text codec prints for it.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::kit::io::text::diff::kit_diff_sections;
+    use crate::io::text::diff::kit_diff_sections;
     const DIFF_BINARY_FORMAT: u8 = 1;
     let sections = kit_diff_sections(self);
     let presence = sections.iter().enumerate().filter(|(_, section)| section.is_some()).fold(0u8, |bits, (index, _)| bits | (1 << index));
@@ -40,7 +40,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     Ok(out)
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
-    use crate::standards::v1::subsets::kit::io::text::diff::dec_kit_section;
+    use crate::io::text::diff::dec_kit_section;
     const DIFF_BINARY_FORMAT: u8 = 1;
     let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 2, detail };
     if bytes.len() < 2 {

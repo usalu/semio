@@ -3,7 +3,7 @@
 
 use crate::{Block3dSnapshot, Block3dVortexKindExtra};
 use ::semio_framework_schema::ArtifactSchema;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 #[path = "♻️retirement/🦀️.rs"]
 pub mod retirement;
@@ -22,7 +22,7 @@ pub struct Block3dArtifact {
     pub representations: Vec<BlockRepresentation>,
     #[state(artifact)]
     #[child(kind = "s.stdio.semio")]
-    pub catalog: store::ArtifactChild<SemioKitSnapshot>,
+    pub catalog: store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>,
     #[state(artifact)]
     pub vortex_kind_extra: Vec<Block3dVortexKindExtra>,
     #[state(artifact)]

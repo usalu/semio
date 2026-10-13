@@ -8,10 +8,10 @@ fn the_committed_transient_is_canonical_and_round_trips_every_codec() {
     let transient: FemGumballTransient = semio_framework_pack_json::from_json_str(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed transient decodes");
     let committed: semio_framework_value::DslValue = semio_framework_pack_json::from_json_str(FIXTURE, semio_framework_pack_json::JsonMemberPolicy::Reject).expect("the committed transient parses");
     assert_eq!(semio_framework_value::ToValue::to_value(&transient), committed, "decode→encode is a fixed point");
-    let printed = <FemGumballTransient as store::ArtifactDsl>::print_dsl(&transient);
-    assert_eq!(<FemGumballTransient as store::ArtifactDsl>::parse_dsl(&printed).expect("text round trip"), transient);
-    let packed = <FemGumballTransient as store::ArtifactPack>::encode_pack(&transient);
-    assert_eq!(<FemGumballTransient as store::ArtifactPack>::decode_pack(&packed).expect("pack round trip"), transient);
+    let printed = <FemGumballTransient as store::os_store::serialization::ArtifactDsl>::print_dsl(&transient);
+    assert_eq!(<FemGumballTransient as store::os_store::serialization::ArtifactDsl>::parse_dsl(&printed).expect("text round trip"), transient);
+    let packed = <FemGumballTransient as store::os_store::serialization::ArtifactPack>::encode_pack(&transient);
+    assert_eq!(<FemGumballTransient as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).expect("pack round trip"), transient);
     let operation = FemGumballTransientMutation::Snapshot { transient: transient.clone() };
     assert_eq!(<FemGumballTransientMutation as protocol::OpBinary>::decode_op(&protocol::OpBinary::encode_op(&operation).expect("encodes")).expect("decodes"), operation);
 }

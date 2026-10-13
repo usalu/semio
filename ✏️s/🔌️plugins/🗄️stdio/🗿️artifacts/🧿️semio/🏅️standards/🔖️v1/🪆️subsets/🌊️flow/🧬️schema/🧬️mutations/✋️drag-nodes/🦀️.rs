@@ -3,8 +3,8 @@
 //! whatever base it replays on. The flow editor's drag tool yields it, one per gesture.
 
 use super::*;
-use crate::standards::v1::subsets::base::schema::triples::NamedModified;
-use crate::standards::v1::subsets::flow::schema::diff::{FlowNodeDiff, FlowNodesDiff};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedModified;
+use crate::schema::diff::{FlowNodeDiff, FlowNodesDiff};
 
 //#region 🔖️Payload
 /// ✋️ `drag-nodes` payload — the node ids it moves and the offset every one of them moves by.

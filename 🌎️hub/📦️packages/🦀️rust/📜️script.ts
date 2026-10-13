@@ -49,8 +49,8 @@ import cargoCommandLimits from "../../../🧰️framework/🛍️products/🦑�
 import {repositoryCargoPreparationStorageV1} from "../../../🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🦀️cargo/🛠️preparation/📦️storage/🟦️.ts";
 import { produceFreshComponentV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts";
 import { type FreshBuildControlV1, type FreshComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🧾️source-epoch/🟦️.ts";
-import { FRESH_COMPONENT_MAX_BYTES } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏗️component-build/🟦️.ts";
-import { verifyFreshCatalogPackageV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
+import { COMPONENT_RECEIPT_FILE, SHIPPED_COMPONENT_MAX_BYTES, SHIPPED_COMPONENT_PROFILE, componentDeliverableV1, componentReceiptBindsV1, componentReceiptFindingsV1, componentReceiptValueV1, encodeComponentReceiptV1, parseComponentReceiptV1, readComponentReceiptV1, type ComponentReceiptV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏷️component-receipt/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/✅️catalog-verification/🟦️.ts";
 import { browserActorImportAdmissionV1, buildClosedBrowserActorArtifactV1, type ClosedBrowserActorArtifactV1 } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/📜️script.ts";
 import { ensureGuestSlimTypstFontsAt, ensurePreview2ShimVendorAt, hostShimSource, PLUGIN_HOST_SHIM_FILE, PREVIEW2_VENDOR_RELATIVE, pluginComponentBridgeSource, transpilePluginComponentAsync } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🌐️browser-bundle/🏗️materialization/🟦️.ts";
 import { MODULE_BRIDGE_FILE, moduleDirectoryName } from "../../../🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/📦️deployment/🟦️.ts";
@@ -89,7 +89,16 @@ class HubIoMatrixScript extends BundleScript {
 class HubFoundationSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("foundation-source-check accepts no arguments");
-    await runRepositoryCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")], this.repoRoot, "hub-foundation-source", 120_000);
+    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️foundation-source/🟦️.ts")],this.repoRoot,"hub-foundation-source",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
+  }
+}
+
+/** 🌳️ Runs the hub prebuild unit census: every crate of the planned component closure compiles once per profile
+ * (https://doc.rust-lang.org/cargo/reference/unstable.html#unit-graph). */
+class HubUnitCensusScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    if (segments.length) throw new Error("unit-census-check accepts no arguments");
+    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🌳️unit-census/🟦️.ts")],this.repoRoot,"hub-unit-census",{version:1,maximumElapsedMilliseconds:1_800_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
@@ -97,7 +106,7 @@ class HubFoundationSourceScript extends BundleScript {
 class HubSocketGrantCommandSourceScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("socket-grant-command-source-check accepts no arguments");
-    await runRepositoryCommand("bun", ["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")], this.repoRoot, "hub-socket-grant-command-source", 120_000);
+    await runRepositoryCommand(this.invocation,"bun",["test", join(this.repoRoot, "🌎️hub/🧪️tests/🧱️socket-grant-command-source/🟦️.ts")],this.repoRoot,"hub-socket-grant-command-source",{version:1,maximumElapsedMilliseconds:120_000,output:{maximumBytes:134217728,maximumLines:65536}});
   }
 }
 
@@ -107,9 +116,7 @@ class HubSocketGrantCommandSourceScript extends BundleScript {
 class HubLiveSignInScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     if (segments.length) throw new Error("live-sign-in-check accepts no arguments");
-    await runRepositoryCommand("bun", [join(this.repoRoot, "🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts")], this.repoRoot, "hub-live-sign-in", 300_000, {
-      env: { ...process.env, OS_HUB_CREDENTIAL_SIGN_IN: "1" },
-    });
+    await runRepositoryCommand(this.invocation,"bun",[join(this.repoRoot, "🌎️hub/🔐️auth/🧪️tests/🤝️live-sign-in/🟦️.ts")],this.repoRoot,"hub-live-sign-in",{version:1,maximumElapsedMilliseconds:300_000,output:{maximumBytes:134217728,maximumLines:65536}},{env: { ...process.env, OS_HUB_CREDENTIAL_SIGN_IN: "1" }});
   }
 }
 //#endregion 🧱️SourceGateRunners
@@ -1328,12 +1335,14 @@ async function proveNativeSocketGrantActor(repoRoot: string): Promise<void> {
           descriptorDigestV1,
           catalog: { generationId: "22".repeat(32) },
           package: {
-            pluginId: "native.socket-grant.probe",
-            packageId: "native.socket-grant.probe.codec",
+            pluginId: "socket-grant-probe",
+            packageId: "semio:socket-grant-probe",
             version: "1.0.0",
             componentSha256: "33".repeat(32),
             componentBlake3: "44".repeat(32),
             descriptorByteSha256: "55".repeat(32),
+            executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 },
+            componentReceipt: { schema: "semio.plugin.component-receipt/v1", pluginId: "socket-grant-probe", packageId: "semio:socket-grant-probe", profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: "33".repeat(32), wasmBytes: 4096, semanticDescriptorSha256: "55".repeat(32), toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) },
           },
           artifact: { kind: "native.socket-grant.probe", schema: "native.socket-grant.probe/v1", packSchemaHash: probePackSchemaHash },
           parentDialect: { artifactKind: "native.socket-grant.probe", standard: "1", subset: "*" },
@@ -1779,14 +1788,13 @@ type DocumentIndexedEventBodyV1 = {
   readonly entry: { readonly name: string; readonly dialect: { readonly artifactKind: string; readonly standard: string; readonly subset: string } };
 };
 
-/** ✍️ A mutable working copy of the browser-actor GIS descriptor, mutated one field per hostile case. */
-type BrowserActorGisDescriptorDraft = { hashes: Record<string, string>; manifest: Record<string, unknown>; executionProtocol: Record<string, unknown>; [key: string]: unknown };
+/** ✍️ A mutable working copy of the semantic browser-actor GIS descriptor, mutated one field per hostile case. */
+type BrowserActorGisDescriptorDraft = { hashes?: Record<string, string>; manifest: Record<string, unknown>; executionProtocol: Record<string, unknown>; [key: string]: unknown };
 
 /** 🧾️ The browser-actor GIS descriptor fixture (`🌐️browser-bundle/🧾️describe/🧫️fixtures/🔣️.json`). */
 type BrowserActorGisDescribeFixture = {
   readonly schema: string;
-  readonly descriptor: { readonly hashes: Record<string, string>; readonly manifest: Record<string, unknown>; readonly executionProtocol: Record<string, unknown>; readonly [key: string]: unknown };
-  readonly hashKeys: readonly string[];
+  readonly descriptor: { readonly manifest: Record<string, unknown>; readonly executionProtocol: Record<string, unknown>; readonly [key: string]: unknown };
   readonly cases: readonly Record<string, any>[];
   readonly localTransport: { readonly stallMs: number; readonly bodyMs: number };
 };
@@ -1851,7 +1859,7 @@ function browserDocumentOpenAuthority(plan: Record<string, any>, fixture: Browse
     installed.descriptor?.sha256 === installed.package?.descriptorByteSha256 &&
     Number.isSafeInteger(installed.component?.byteLength) &&
     installed.component.byteLength >= 1 &&
-    installed.component.byteLength <= 64 * 1024 * 1024 &&
+    installed.component.byteLength <= DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES &&
     Number.isSafeInteger(installed.descriptor?.byteLength) &&
     installed.descriptor.byteLength >= 1 &&
     installed.descriptor.byteLength <= 4 * 1024 * 1024 &&
@@ -3315,9 +3323,10 @@ class ScopedDirectorySocketCheckScript extends BundleScript {
           join(this.repoRoot, "📜️script.ts"),
           "nx",
           "run",
-          "@semio-tech/framework-os:test-quick",
+          "@semio-tech/framework-os:test",
           "--skip-nx-cache",
           "--",
+          "quick",
           "--run",
           "-t",
           "round trips scoped directory worker ownership without flattening scope|binds one document scope and treats close 4401 as terminal without reacquiring|backbone worker owns one full scoped stream and retires it terminally on 4401",
@@ -3389,7 +3398,7 @@ type NativeArtifactProviderFrontierFixture = {
     readonly feature: "native-artifact-execution";
     readonly providerId: "stdio+gis+vcs/native-codecs/v1";
     readonly receiptAuthority: "compiled-kind-schema-roster";
-    readonly pluginDependencies: readonly ["stdio/full-artifact-catalog", "gis", "vcs"];
+    readonly pluginDependencies: readonly ["stdio-catalog", "gis", "vcs"];
   };
   readonly configuredWithoutProvider: "reject";
 };
@@ -3403,21 +3412,23 @@ async function proveNativeArtifactProviderFrontier(repoRoot: string): Promise<nu
   if (String(fixture.schema) !== "semio.hub.native-artifact-provider-frontier/v1" || String(fixture.configuredWithoutProvider) !== "reject") throw new Error("native artifact provider frontier envelope differs");
   if (Boolean(fixture.headless.defaultFeatures) || JSON.stringify(fixture.headless.features) !== JSON.stringify(["sqlite"]) || fixture.headless.directPluginDependencies.length !== 0) throw new Error("headless hub profile is no longer provider-free");
   if (String(fixture.production.feature) !== "native-artifact-execution" || String(fixture.production.providerId) !== "stdio+gis+vcs/native-codecs/v1" || fixture.production.receiptAuthority !== "compiled-kind-schema-roster"
-    || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio/full-artifact-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
+    || JSON.stringify(fixture.production.pluginDependencies) !== JSON.stringify(["stdio-catalog", "gis", "vcs"])) throw new Error("production native artifact provider frontier differs");
   const manifest = readFileSync(join(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml"), "utf8");
   const feature = fixture.production.feature.replace(/[.*+?^$()|[\]\\]/gu, "\\$&");
   if (!new RegExp('^default\\s*=\\s*\\["sqlite",\\s*"' + feature + '"\\]$', "mu").test(manifest)) throw new Error("production Hub default does not retain native artifact execution");
   const featureRow = manifest.match(new RegExp("^" + feature + "\\s*=\\s*\\[([^\\n]+)\\]$", "mu"))?.[1] ?? "";
-  for (const dependency of ['"dep:semio-hub-stdio"', '"semio-hub-stdio/full-artifact-catalog"', '"dep:semio-hub-gis"', '"dep:semio-hub-vcs"']) {
+  const pluginPackages = fixture.production.pluginDependencies.map((plugin) => "semio-hub-" + plugin);
+  for (const dependency of pluginPackages.map((name) => '"dep:' + name + '"')) {
     if (!featureRow.includes(dependency)) throw new Error("native artifact execution feature omitted " + dependency);
   }
   const document = Bun.TOML.parse(manifest) as { dependencies: Record<string, { workspace?: boolean; optional?: boolean; "default-features"?: boolean }> };
   const ownerManifest = cargoWorkspaceForManifest(repoRoot, "🌎️hub/📦️packages/🦀️rust/Cargo.toml").manifest;
-  const owner = Bun.TOML.parse(readFileSync(join(repoRoot, ownerManifest), "utf8")) as { workspace: { dependencies: Record<string, { "default-features"?: boolean }> } };
-  for (const dependency of ["semio-hub-stdio", "semio-hub-gis", "semio-hub-vcs"]) {
+  const owner = Bun.TOML.parse(readFileSync(join(repoRoot, ownerManifest), "utf8")) as { workspace: { dependencies: Record<string, { path: string; "default-features"?: boolean }> } };
+  for (const dependency of pluginPackages) {
     const local = document.dependencies[dependency];
     const inherited = local?.workspace === true ? owner.workspace.dependencies[dependency] : undefined;
-    if (local?.optional !== true || (local["default-features"] ?? inherited?.["default-features"]) !== false) throw new Error(dependency + " is not an optional no-default dependency");
+    const declared = inherited ? (Bun.TOML.parse(readFileSync(join(repoRoot, dirname(ownerManifest), inherited.path, "Cargo.toml"), "utf8")) as { features?: Record<string, string[]> }).features ?? {} : {};
+    if (local?.optional !== true || !inherited || ("default" in declared && (local["default-features"] ?? inherited["default-features"]) !== false)) throw new Error(dependency + " is not an optional no-default dependency");
   }
   const authorityRoot = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/🦀️.rs"), "utf8");
   if (!/#\[cfg\(feature = "native-artifact-execution"\)\]\s+#\[path = "📇️native-openable-provider\/🦀️\.rs"\]\s+pub mod native_openable_provider;/u.test(authorityRoot)) throw new Error("native provider module escaped its production feature");
@@ -3762,7 +3773,7 @@ class CanonicalPairCheckScript extends BundleScript {
     const env = { ...process.env, RUST_MIN_STACK: "268435456" };
     runCargo(["test", "--manifest-path", "Cargo.toml", "--lib", "canonical_pair", "--", "--test-threads=1"], this.root, env);
     runCargo(["test", "--manifest-path", "Cargo.toml", "--bin", "os-hub", "canonical_pair_route", "--", "--test-threads=1"], this.root, env);
-    runCmd("bun", ["nx", "run", "os-hub-ts:test-quick", "--", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "os-hub-ts:test", "--", "quick", "--run", "-t", "canonical checkpoint pair neutral contract"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root, env);
   }
 }
@@ -3964,6 +3975,18 @@ function documentOpenNeutralExchange(candidate: unknown): void {
   documentOpenNeutralReceipt(root.planReceipt);
 }
 
+/** 📦️ The neutral oracle's document-open package: exact members, the current execution protocol, and a shipped component
+ * receipt binding the package's identity, component bytes and semantic descriptor bytes. */
+function documentOpenNeutralPackage(value: unknown): Record<string, any> {
+  const packageValue = documentOpenNeutralObject(value, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol", "componentReceipt"]);
+  const executionProtocol = documentOpenNeutralObject(packageValue.executionProtocol, ["appChannelVersion"]);
+  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("execution-protocol");
+  documentOpenNeutralText(packageValue.pluginId);
+  documentOpenNeutralText(packageValue.packageId);
+  if (!componentReceiptBindsV1(componentReceiptValueV1(packageValue.componentReceipt), { pluginId: packageValue.pluginId, packageId: packageValue.packageId, wasmSha256: packageValue.componentSha256, semanticDescriptorSha256: packageValue.descriptorByteSha256 })) throw new Error("component-receipt");
+  return packageValue;
+}
+
 function documentOpenNeutralIssueOutcome(candidate: Record<string, any>, subjectKind: unknown, role: unknown, fixture: Record<string, any>): { code: string; surfaceId?: string; write?: boolean } {
   try {
     documentOpenNeutralIntent(candidate);
@@ -3976,9 +3999,7 @@ function documentOpenNeutralIssueOutcome(candidate: Record<string, any>, subject
   const matches = fixture.catalogRows.filter((row: Record<string, any>) => {
     try {
       documentOpenNeutralParentDialect(row);
-      const packageValue = documentOpenNeutralObject(row.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
-      const executionProtocol = documentOpenNeutralObject(packageValue.executionProtocol, ["appChannelVersion"]);
-      if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("execution-protocol");
+      const packageValue = documentOpenNeutralPackage(row.package);
       const artifact = documentOpenNeutralObject(row.artifact, ["kind", "schema", "packSchemaHash"]);
       const surface = documentOpenNeutralObject(row.surface, ["surfaceId", "appId", "windowKindId", "role", "rendererTarget"]);
       documentOpenNeutralBrowserActor(row.browserActor, packageValue, surface.rendererTarget, false);
@@ -4032,11 +4053,7 @@ function documentOpenNeutralStructure(candidate: Record<string, any>, nowMs: num
   hash(root.descriptorDigestV1);
   const catalog = documentOpenNeutralObject(root.catalog, ["generationId"]);
   hash(catalog.generationId);
-  const packageValue = documentOpenNeutralObject(root.package, ["pluginId", "packageId", "version", "componentSha256", "componentBlake3", "descriptorByteSha256", "executionProtocol"]);
-  const executionProtocol = documentOpenNeutralObject(packageValue.executionProtocol, ["appChannelVersion"]);
-  if (executionProtocol.appChannelVersion !== DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1) throw new Error("execution-protocol");
-  documentOpenNeutralText(packageValue.pluginId);
-  documentOpenNeutralText(packageValue.packageId);
+  const packageValue = documentOpenNeutralPackage(root.package);
   documentOpenNeutralText(packageValue.version);
   hash(packageValue.componentSha256);
   hash(packageValue.componentBlake3);
@@ -4656,7 +4673,7 @@ function headlessStdioImportArguments(capture: HeadlessStdioMetadataCaptureV1, d
   if (dependencyRoots.length !== 1 || resolve(dependencyRoots[0]!) !== capture.depsDirectory) throw new Error("headless Stdio imports require exactly their captured private dependency root");
   const info = lstatSync(capture.capturedPath);
   if (!info.isFile() || info.isSymbolicLink() || dirname(capture.capturedPath) !== capture.depsDirectory) throw new Error("headless Stdio captured metadata is not a regular file inside its private dependency root");
-  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_hub_stdio=${capture.capturedPath}`, "-L", `dependency=${capture.depsDirectory}`, "-o", output, input];
+  return ["--edition=2021", "--crate-name", "stdio_native_surface_probe", "--crate-type=lib", "--emit=metadata", "--error-format=json", "--extern", `semio_hub_stdio_catalog=${capture.capturedPath}`, "-L", `dependency=${capture.depsDirectory}`, "-o", output, input];
 }
 
 /**
@@ -4673,7 +4690,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
     for (const [name, payload] of [["full", "full-metadata"], ["stdio-only", "stdio-only-metadata"]] as const) {
       const commandRoot = join(lawRoot, name), cargoTargetDir = join(commandRoot, "cargo-target"), runRoot = join(commandRoot, "headless-imports-proof"), sourcePath = join(commandRoot, "stdio.rs");
       const stdioUnit = join(commandRoot, "build-dir", "debug", "build", "semio-s-plugin-stdio-aaaa", "out"), depUnitOne = join(commandRoot, "build-dir", "debug", "build", "serde-bbbb", "out"), depUnitTwo = join(commandRoot, "build-dir", "debug", "build", "blake3-cccc", "out");
-      const stdioOriginalPath = join(stdioUnit, "libsemio_hub_stdio.rmeta"), depOne = join(depUnitOne, "libserde.rmeta"), depTwo = join(depUnitTwo, "libblake3.rmeta");
+      const stdioOriginalPath = join(stdioUnit, "libsemio_hub_stdio_catalog.rmeta"), depOne = join(depUnitOne, "libserde.rmeta"), depTwo = join(depUnitTwo, "libblake3.rmeta");
       mkdirSync(stdioUnit, { recursive: true });
       mkdirSync(depUnitOne, { recursive: true });
       mkdirSync(depUnitTwo, { recursive: true });
@@ -4683,7 +4700,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
       writeFileSync(stdioOriginalPath, payload, { flag: "wx", mode: 0o600 });
       writeFileSync(depOne, `${payload}-serde`, { flag: "wx", mode: 0o600 });
       writeFileSync(depTwo, `${payload}-blake3`, { flag: "wx", mode: 0o600 });
-      captures.push(captureHeadlessStdioMetadata({ artifactRoot: commandRoot, cargoTargetDir, runRoot, sourcePath, stdioOriginalPath, dependencyOriginalPaths: [depOne, depTwo, stdioOriginalPath], features: ["full-artifact-catalog"], check() {} }));
+      captures.push(captureHeadlessStdioMetadata({ artifactRoot: commandRoot, cargoTargetDir, runRoot, sourcePath, stdioOriginalPath, dependencyOriginalPaths: [depOne, depTwo, stdioOriginalPath], features: [], check() {} }));
     }
     if (captures[0]!.depsDirectory === captures[1]!.depsDirectory || captures[0]!.sha256 === captures[1]!.sha256) throw new Error("headless Stdio command captures are not isolated");
     if (captures[0]!.artifacts.length !== 3 || !captures[0]!.artifacts.every((artifact) => dirname(artifact.capturedPath) === captures[0]!.depsDirectory)) throw new Error("headless Stdio capture did not land its full dependency closure in one private directory");
@@ -4707,15 +4724,15 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
     mkdirSync(collisionTarget, { recursive: true });
     mkdirSync(collisionRun);
     writeFileSync(collisionSource, "pub const SOURCE: u8 = 1;\n", { flag: "wx", mode: 0o600 });
-    const collisionStdio = join(collisionStdioUnit, "libsemio_hub_stdio.rmeta"), collisionDuplicateName = join(collisionDepUnit, "libsemio_hub_stdio.rmeta");
+    const collisionStdio = join(collisionStdioUnit, "libsemio_hub_stdio_catalog.rmeta"), collisionDuplicateName = join(collisionDepUnit, "libsemio_hub_stdio_catalog.rmeta");
     writeFileSync(collisionStdio, "stdio", { flag: "wx", mode: 0o600 });
     writeFileSync(collisionDuplicateName, "stdio-again", { flag: "wx", mode: 0o600 });
     let rejectedCollision = false;
-    try { captureHeadlessStdioMetadata({ artifactRoot: collisionRoot, cargoTargetDir: collisionTarget, runRoot: collisionRun, sourcePath: collisionSource, stdioOriginalPath: collisionStdio, dependencyOriginalPaths: [collisionDuplicateName], features: ["full-artifact-catalog"], check() {} }); } catch { rejectedCollision = true; }
+    try { captureHeadlessStdioMetadata({ artifactRoot: collisionRoot, cargoTargetDir: collisionTarget, runRoot: collisionRun, sourcePath: collisionSource, stdioOriginalPath: collisionStdio, dependencyOriginalPaths: [collisionDuplicateName], features: [], check() {} }); } catch { rejectedCollision = true; }
     if (!rejectedCollision) throw new Error("headless Stdio capture admitted two dependency-closure artifacts with the same file name");
     const raceRoot = join(lawRoot, "race"), raceTarget = join(raceRoot, "cargo-target"), raceRun = join(raceRoot, "headless-imports-proof"), raceSource = join(raceRoot, "stdio.rs");
     const raceStdioUnit = join(raceRoot, "build-dir", "debug", "build", "stdio-aaaa", "out"), raceDepUnit = join(raceRoot, "build-dir", "debug", "build", "serde-bbbb", "out");
-    const raceStdio = join(raceStdioUnit, "libsemio_hub_stdio.rmeta"), raceDep = join(raceDepUnit, "libserde.rmeta");
+    const raceStdio = join(raceStdioUnit, "libsemio_hub_stdio_catalog.rmeta"), raceDep = join(raceDepUnit, "libserde.rmeta");
     mkdirSync(raceStdioUnit, { recursive: true });
     mkdirSync(raceDepUnit, { recursive: true });
     mkdirSync(raceTarget, { recursive: true });
@@ -4731,7 +4748,7 @@ function proveHeadlessStdioMetadataCaptureContract(artifactRoot: string): void {
         writeFileSync(raceDep, "raced", { flag: "wx", mode: 0o600 });
       }
     });
-    try { captureHeadlessStdioMetadata({ artifactRoot: raceRoot, cargoTargetDir: raceTarget, runRoot: raceRun, sourcePath: raceSource, stdioOriginalPath: raceStdio, dependencyOriginalPaths: [raceDep], features: ["full-artifact-catalog"], check() {} }, racingReader); } catch { refusedRace = true; }
+    try { captureHeadlessStdioMetadata({ artifactRoot: raceRoot, cargoTargetDir: raceTarget, runRoot: raceRun, sourcePath: raceSource, stdioOriginalPath: raceStdio, dependencyOriginalPaths: [raceDep], features: [], check() {} }, racingReader); } catch { refusedRace = true; }
     if (!refusedRace) throw new Error("headless Stdio metadata replacement during capture was accepted");
     console.log("headless-stdio-metadata-capture-oracle: private-commands=2 closure-complete=1 replacement-stable=1 replacement-during-capture-denied=1 second-dependency-root-denied=1 outside-target-denied=1 colliding-artifact-name-denied=1");
   } finally {
@@ -4746,9 +4763,9 @@ async function proveHeadlessStdioImports(invocation: ScriptInvocation, repoRoot:
   const reportPath = join(receipt.artifactDir, "build.stdout");
   const report = lstatSync(reportPath);
   if (!report.isFile() || report.isSymbolicLink() || report.size > 256 * 1024 * 1024) throw new Error("headless Stdio Cargo report is not bounded regular output");
-  const sourcePath = join(repoRoot, "✏️s/🔌️plugins/🗄️stdio/📦️packages/🦀️rust/🦀️.rs");
+  const sourcePath = join(repoRoot, "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/🦀️.rs");
   const records = readFileSync(reportPath, "utf8").split("\n").filter(Boolean).map((line) => JSON.parse(line)).filter((row) => row.reason === "compiler-artifact");
-  const stdio = records.filter((row) => row.target?.name === "semio_hub_stdio" && resolve(row.target.src_path) === sourcePath);
+  const stdio = records.filter((row) => row.target?.name === "semio_hub_stdio_catalog" && resolve(row.target.src_path) === sourcePath);
   if (stdio.length !== 1 || JSON.stringify([...stdio[0].features].sort()) !== JSON.stringify([...fixture.features].sort())) throw new Error("headless Stdio build did not report the exact catalog-only feature closure");
   const libraries = stdio[0].filenames.filter((path: unknown) => typeof path === "string" && path.endsWith(".rmeta")) as string[];
   if (libraries.length !== 1) throw new Error("headless Stdio build did not report one full metadata artifact");
@@ -4833,13 +4850,12 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
         {
           package: "semio-hub-stdio",
           target: { kind: "test", name: "native_openable_provider" },
-          cargoArgs: ["--no-default-features", "--features", "full-artifact-catalog"],
           laws: ["native_codec_projection_pack_schema_hashes_equal_live_receipts", "las_native_receipt_binds_canonical_graph_and_independent_blake3", "native_composition_and_validation_claims_are_disjoint_but_each_exclusive", "artifact_owned_native_codec_receipts_form_one_complete_static_bijection", "native_catalog_matches_every_decoded_descriptor_kind_without_guest_app_assembly", "native_catalog_commitment_covers_all_definition_semantics_and_codec_authorities", "generic_plugin_builder_preserves_domain_owned_topic_contributions", "native_catalog_dependency_is_exactly_its_compiled_owner"],
         },
         {
-          package: "semio-hub-stdio",
-          target: { kind: "lib", name: "semio_hub_stdio" },
-          cargoArgs: ["--no-default-features", "--features", "full-artifact-catalog"],
+          package: "semio-hub-stdio-catalog",
+          target: { kind: "lib", name: "semio_hub_stdio_catalog" },
+          cargoArgs: [],
           laws: ["catalog_projection_budget_matches_serde_and_refuses_before_overdraw", "catalog_projection_preflight_matches_actual_serde_payload_bytes"],
         },
         {
@@ -4864,7 +4880,7 @@ class NativeOpenableCatalogProviderCheckScript extends BundleScript {
       ], progress(event) {
         console.log(`native-openable-provider ${event.stage}: ${event.package} ${event.law ?? ""} artifacts=${event.artifactDir}`);
       } };
-    const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package === "semio-hub-stdio") : options.groups;
+    const [integration, ...remaining] = stdioOnly ? options.groups.filter((group) => group.package.startsWith("semio-hub-stdio")) : options.groups;
     if (!integration) throw new Error("native Stdio integration target is absent");
     const receipts = [...(await runRepositoryExactCargoLaws({ ...options, groups: [integration] }))];
     const stdioReceipt = receipts[0];
@@ -5296,7 +5312,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   const fixture = JSON.parse(readFileSync(join(root, "🔣️.json"), "utf8")) as ExecutionTargetLeaseFixture;
   const validateFields = hubSchemaExport(repoRoot, "schema://os.directory/DocumentExecutionTargetLeaseFieldsV1");
   if (fixture.schema !== "semio.os.document-execution-target-lease-corpus/v1" || fixture.version !== 1) throw new Error("execution target lease corpus schema drift");
-  if (Object.keys(fixture).sort().join(",") !== "componentHex,descriptorHex,expected,hostile,hubOrigin,intent,manifest,nowMs,plan,schema,socketGrant,version") throw new Error("execution target lease corpus envelope drift");
+  if (Object.keys(fixture).sort().join(",") !== "componentHex,componentReceiptCases,descriptorHex,expected,hostile,hubOrigin,intent,manifest,nowMs,plan,schema,socketGrant,version") throw new Error("execution target lease corpus envelope drift");
   if (!Number.isSafeInteger(fixture.nowMs) || fixture.nowMs < 1 || !/^https?:\/\/[^/]+$/u.test(fixture.hubOrigin)) throw new Error("execution target lease corpus clock/origin drift");
   if (!/^(?:[0-9a-f]{2})+$/u.test(fixture.componentHex) || !/^(?:[0-9a-f]{2})+$/u.test(fixture.descriptorHex)) throw new Error("execution target lease corpus asset bytes are not canonical hex");
   if (!hubSchemaExport(repoRoot, "schema://hub.directory/DocumentOpenIntentV1")(fixture.intent)) throw new Error("execution target lease corpus intent is not the owned document-open-intent contract");
@@ -5306,7 +5322,7 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   const expected = fixture.expected as Record<string, any>;
   if (Object.keys(expected).sort().join(",") !== "assetBody,assetMethod,assetPaths,componentMaxBytes,descriptorMaxBytes,forbiddenStatusFragments,manifestMaxBytes,openPlanPath,progressStages,progressUnitBytes,rendererClaims,rendererState,rotation,socketGrantPath,status,statusRoles,viewerWriteRejectedLocally")
     throw new Error("execution target lease corpus expectation envelope drift");
-  if (expected.assetMethod !== "POST" || expected.assetBody !== "semio.hub.document-open-intent/v1" || expected.componentMaxBytes !== 67108864 || expected.descriptorMaxBytes !== 4194304 || expected.manifestMaxBytes !== 8192 || expected.progressUnitBytes !== 65536)
+  if (expected.assetMethod !== "POST" || expected.assetBody !== "semio.hub.document-open-intent/v1" || expected.componentMaxBytes !== DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES || expected.descriptorMaxBytes !== DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES || expected.manifestMaxBytes !== 8192 || expected.progressUnitBytes !== 65536)
     throw new Error("execution target lease corpus bound drift");
   if (expected.progressStages.join(",") !== "manifest,component,descriptor,verify" || expected.rendererState !== "renderer-unavailable" || expected.viewerWriteRejectedLocally !== true) throw new Error("execution target lease corpus staging drift");
   if (Object.values(expected.rendererClaims as Record<string, unknown>).some((claim) => claim !== false) || Object.keys(expected.rendererClaims).sort().join(",") !== "activationRegistry,attachBackbone,loadPluginModule,wgpuScanner") throw new Error("execution target lease corpus renderer claims drift");
@@ -5320,6 +5336,19 @@ async function proveExecutionTargetLeaseCorpus(repoRoot: string): Promise<void> 
   if (fixture.hostile.length < 40 || new Set(fixture.hostile.map((row) => row.name)).size !== fixture.hostile.length) throw new Error("execution target lease corpus hostile inventory drift");
   for (const row of fixture.hostile) {
     if (!["manifest", "component", "descriptor", "verify", "exchange", "publication", "asset-request"].includes(row.stage)) throw new Error(`execution target lease corpus hostile stage drift: ${row.name}`);
+  }
+  const shippedReceipt = hubSchemaExport(repoRoot, "schema://os.directory/DocumentShippedComponentReceiptV1");
+  for (const row of (fixture as unknown as { componentReceiptCases: readonly { id: string; path: readonly string[] | null; value: unknown; accepted: boolean }[] }).componentReceiptCases) {
+    const lease = structuredClone(fixture.manifest) as Record<string, any>;
+    if (row.path === null) delete lease.package.componentReceipt;
+    else if (row.path.length === 1) lease.package.componentReceipt[row.path[0]!] = row.value;
+    let admitted = true;
+    try {
+      parseDocumentExecutionTargetLeaseFieldsV1(lease);
+    } catch {
+      admitted = false;
+    }
+    if (admitted !== row.accepted || (admitted && (!validateFields(lease) || !shippedReceipt(lease.package.componentReceipt)))) throw new Error(`execution target lease corpus receipt law drift: ${row.id}`);
   }
   for (const [name, row] of [
     ["DocumentOpenPlanV1", fixture.plan],
@@ -5504,7 +5533,7 @@ class ExecutionTargetLeaseBrowserCheckScript extends BundleScript {
   async run(): Promise<void> {
     await proveExecutionTargetLeaseCorpus(this.repoRoot);
     proveExecutionTargetLeaseSource(this.repoRoot);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-long", "--skip-nx-cache", "--", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], {
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "long", "--run", "-t", "browser execution target lease|browser GIS viewer exposes localized renderer-unavailable"], {
       cwd: this.repoRoot,
       ...orchestratorBudgetOpts(),
     });
@@ -6101,28 +6130,25 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     const codec = { encode: encodePackValue, decode: decodePackValue };
     const deepEqual = (await import("fast-deep-equal")).default;
     const expected: BrowserActorGisDescriptorDraft = structuredClone(fixture.descriptor);
-    for (const key of fixture.hashKeys) expected.hashes[key] = "";
     const staged = encodePackValue(fixture.descriptor);
     for (const row of fixture.cases) {
       const value: BrowserActorGisDescriptorDraft = structuredClone(fixture.descriptor);
-      for (const key of fixture.hashKeys) value.hashes[key] = "";
-      if (row.name === "hash-not-empty") value.hashes.wasmSha256 = "a".repeat(64);
+      if (row.name === "hash-not-empty") value.hashes = { wasmSha256: "a".repeat(64), coreWasmSha256: "", descriptorSha256: "" };
       if (row.name === "plugin-change") value.manifest.pluginId = "stdio";
       if (row.name === "execution-protocol-change") value.executionProtocol.appChannelVersion = 13;
       if (row.name === "extra-field") value.extra = true;
-      const encoded = row.name === "raw-staged" ? staged : encodePackValue(value);
+      const encoded = encodePackValue(value);
       const guest = row.name === "trailing-byte" ? new Uint8Array([...encoded, 0]) : encoded;
       let accepted = true;
       try {
         api.assertBrowserActorDescribeCapacityV1(row.name === "capacity-over" ? 1024 * 1024 - 7 : staged.byteLength);
-        const changedStage = structuredClone(fixture.descriptor);
-        changedStage.hashes.coreWasmSha256 = "invalid";
-        const stagedInput = row.name === "staged-trailing-byte" ? new Uint8Array([...staged, 0]) : row.name === "staged-bad-hash" ? encodePackValue(changedStage) : staged;
+        const boundStage: BrowserActorGisDescriptorDraft = { ...structuredClone(fixture.descriptor), hashes: { wasmSha256: "a".repeat(64), coreWasmSha256: "b".repeat(64), descriptorSha256: "c".repeat(64) } };
+        const stagedInput = row.name === "staged-trailing-byte" ? new Uint8Array([...staged, 0]) : row.name === "staged-bound" ? encodePackValue(boundStage) : staged;
         api.verifyBrowserActorDescribeV1(guest, stagedInput, codec);
       } catch {
         accepted = false;
       }
-      const oracle = row.name !== "capacity-over" && row.name !== "trailing-byte" && !row.name.startsWith("staged-") && deepEqual(row.name === "raw-staged" ? fixture.descriptor : value, expected);
+      const oracle = row.name !== "capacity-over" && row.name !== "trailing-byte" && !row.name.startsWith("staged-") && deepEqual(value, expected);
       if (accepted !== row.accepted || accepted !== oracle) throw new Error("GIS describe law: " + row.name);
     }
     const artifactRoot = process.env.SEMIO_TEST_ARTIFACT_DIR;
@@ -6145,7 +6171,7 @@ class BrowserActorGisDescribeCheckScript extends BundleScript {
     try {
       const produced = await produceFreshComponentV1(
         this.repoRoot,
-        { pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", componentProfile: "wasm-release", rootCdylib: true },
+        { pluginId: "gis", cargoPackage: "semio-hub-gis-component", componentPackageId: "semio:gis", outputName: "semio_hub_gis_component.wasm", componentProfile: "wasm-release" },
         target,
         stage,
         {...build.control,invocation:this.invocation,process:parseFreshProcessPolicyV1({version:1,storage:repositoryCargoPreparationStorageV1(this.repoRoot),command:{version:1,scope:{schemaVersion:1,manifest:"Cargo.toml"},control:cargoCommandLimits,maximumElapsedMilliseconds:86_400_000}})},
@@ -6220,7 +6246,7 @@ class BrowserDocumentOpenCheckScript extends BundleScript {
   async run(): Promise<void> {
     const fixture = await proveBrowserDocumentOpenFixture(this.repoRoot);
     await proveBrowserDocumentOpenRuntime(this.repoRoot, fixture);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-quick", "--skip-nx-cache", "--", "--run", "-t", "browser document open"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "browser document open"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCmd("bun", ["./📜️script.ts", "open-plan-server-check"], { cwd: this.root, ...orchestratorBudgetOpts() });
     console.log("browser-document-open-check: neutral oracle, browser Worker D1 issue/exchange/WebSocket runtime, Session-gated activation, hostile bounds/cancellation/redaction, and current server laws passed");
   }
@@ -6286,7 +6312,7 @@ class SpacePublicBoundaryCheckScript extends BundleScript {
     });
     console.log(`space-public-boundary-laws: exact=${laws.length} laws=${laws.join(",")}`);
     for (const law of laws) runCargo([...target, law, "--", "--exact", "--test-threads=1"], this.root);
-    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test-quick", "--skip-nx-cache", "--", "--run", "-t", "DirectoryClient space public boundary"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
+    runCmd("bun", ["nx", "run", "@semio-tech/framework-os:test", "--skip-nx-cache", "--", "quick", "--run", "-t", "DirectoryClient space public boundary"], { cwd: this.repoRoot, ...orchestratorBudgetOpts() });
     runCargo(["check", "--manifest-path", "Cargo.toml", "--all-features", "--bin", "os-hub"], this.root);
     console.log("space-public-boundary-check: hostile neutral projection oracle, exact real REST/socket laws, TypeScript discriminator/unknown-field law, and hub all-feature check passed");
   }
@@ -7975,38 +8001,39 @@ export function trustedBootstrapPreflightDescriptorsV1(repoRoot: string, selecti
 }
 
 /** 🛫️ Fails a publication in milliseconds, before the hub build and every release build: each selected package and each extension
- * of one has a `dist/component-dev` deliverable that is exactly the component its committed descriptor names (`hashes.wasmSha256`, the
- * `rebuild-all` invariant), and that component imports only interfaces a closed browser actor admits — the rule the actor build applies
- * to the release component after its build (`browserActorImportAdmissionV1`). Every finding of every component is reported at once,
- * with the fix it needs. */
+ * of one has a shipped `wasm-release` deliverable whose `ComponentReceiptV1` names exactly those bytes and exactly the committed
+ * semantic descriptor (ticket 26/09/23 wave A2), and that component imports only interfaces a closed browser actor admits — the rule
+ * the actor build applies to the release component after its build (`browserActorImportAdmissionV1`). Every finding of every
+ * component is reported at once, with the fix it needs. */
 export function trustedBootstrapPreflightComponentsV1(repoRoot: string, selection: readonly TrustedBootstrapPackageSpecV1[]): void {
   const registryPath = join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/📇️registry/🤖️generated/🔌️plugins.json");
   if (!existsSync(registryPath)) throw new Error(`trusted catalog preflight needs the generated plugin registry ${relative(repoRoot, registryPath)}; run bun nx run @semio-tech/plugin-registry:generate`);
-  const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; cratePath?: unknown; wasmOut?: unknown; role?: unknown; extends?: unknown }[];
+  const registry = JSON.parse(readFileSync(registryPath, "utf8")) as readonly { pluginId?: unknown; packageId?: unknown; packageName?: unknown; cratePath?: unknown; role?: unknown; extends?: unknown }[];
   const selected = new Set(selection.map((spec) => spec.pluginId));
   const rows = registry.filter((row) => (row.role === "plugin" && selected.has(String(row.pluginId))) || (row.role === "extension" && selected.has(String(row.extends))));
   const missing = [...selected].filter((pluginId) => !rows.some((row) => row.pluginId === pluginId));
   if (missing.length > 0) throw new Error(`trusted catalog preflight: ${missing.join(", ")} not rows of the generated plugin registry`);
   const findings: string[] = [];
   for (const row of rows) {
-    if (typeof row.cratePath !== "string" || typeof row.wasmOut !== "string") { findings.push(`${String(row.pluginId)}: registry row carries no crate path or component name`); continue; }
-    const descriptor = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${row.pluginId} descriptor`, () => {});
-    const named = (packValueToExactJson(decodePackValue(descriptor)) as { hashes?: { wasmSha256?: unknown } }).hashes?.wasmSha256;
-    const path = join(repoRoot, row.cratePath, "dist", "component-dev", row.wasmOut);
-    if (!existsSync(path)) { findings.push(`${row.pluginId}: no component-dev deliverable ${relative(repoRoot, path)}; run bun nx run @semio-tech/plugin-registry:rebuild-all`); continue; }
-    const component = trustedBootstrapReadRegular(path, FRESH_COMPONENT_MAX_BYTES, `${row.pluginId} component-dev deliverable`, () => {});
+    if (typeof row.cratePath !== "string" || typeof row.packageName !== "string" || typeof row.packageId !== "string") { findings.push(`${String(row.pluginId)}: registry row carries no crate path, package name or package id`); continue; }
+    const pluginId = String(row.pluginId), fix = `run bun nx run workspace:release, then the crate's describe target`;
+    const deliverable = componentDeliverableV1(join(repoRoot, row.cratePath), row.packageName, SHIPPED_COMPONENT_PROFILE);
+    if (!existsSync(deliverable.wasm) || !existsSync(deliverable.receipt)) { findings.push(`${pluginId}: no shipped component with its receipt under ${relative(repoRoot, deliverable.directory)}; ${fix}`); continue; }
+    const descriptor = trustedBootstrapReadRegular(join(repoRoot, row.cratePath, "..", "..", "🛂️.descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `committed ${pluginId} descriptor`, () => {});
+    const component = trustedBootstrapReadRegular(deliverable.wasm, SHIPPED_COMPONENT_MAX_BYTES, `${pluginId} shipped component`, () => {});
     try {
-      if (createHash("sha256").update(component).digest("hex") !== named) findings.push(`${row.pluginId}: component-dev deliverable is not the component its committed descriptor names; run bun nx run @semio-tech/plugin-registry:rebuild-all`);
+      for (const finding of componentReceiptFindingsV1(readComponentReceiptV1(deliverable.receipt), { pluginId, packageId: row.packageId, profile: SHIPPED_COMPONENT_PROFILE }, component, descriptor)) findings.push(`${pluginId}: ${finding}; ${fix}`);
       const imports = browserActorImportAdmissionV1(component);
-      if (imports.refused.length > 0) findings.push(`${row.pluginId}: imports ${imports.refused.join(", ")}, which no closed browser actor admits; the guest must not link that capability`);
+      if (imports.refused.length > 0) findings.push(`${pluginId}: imports ${imports.refused.join(", ")}, which no closed browser actor admits; the guest must not link that capability`);
     } catch (error) {
-      findings.push(`${row.pluginId}: ${error instanceof Error ? error.message : String(error)}`);
+      findings.push(`${pluginId}: ${error instanceof Error ? error.message : String(error)}`);
     } finally {
       component.fill(0);
+      descriptor.fill(0);
     }
   }
   if (findings.length > 0) throw new Error(`trusted catalog preflight refused ${findings.length} of ${rows.length} components:\n  ${findings.join("\n  ")}`);
-  console.log(`trusted-catalog-preflight: ${rows.length} component-dev deliverables (${selected.size} packages + ${rows.length - selected.size} extensions) match their committed descriptors and import only browser-actor-admitted interfaces`);
+  console.log(`trusted-catalog-preflight: ${rows.length} shipped components (${selected.size} packages + ${rows.length - selected.size} extensions) carry receipts naming their bytes and their committed semantic descriptors, and import only browser-actor-admitted interfaces`);
 }
 
 /** 🧮️ Frames all resolved dependency identities in the native generation format. */
@@ -8104,13 +8131,14 @@ function trustedBootstrapOpenTargetOrder(left: TrustedBootstrapOpenTargetV1, rig
 }
 
 function trustedBootstrapProfileEncoding(profile: any, codecs: TrustedBootstrapCodecSetV1): Buffer {
-  const pieces = [Buffer.from("semio/hub/trusted-profile-generation/v1\0"), trustedBootstrapField(profile.id), trustedBootstrapCount(profile.selectedClosure.length)];
+  const pieces = [Buffer.from("semio/hub/trusted-profile-generation/v2\0"), trustedBootstrapField(profile.id), trustedBootstrapCount(profile.selectedClosure.length)];
   for (const identity of profile.selectedClosure) {
     const selected = profile.packages.find((candidate: any) => candidate.pluginId === identity.pluginId && candidate.packageId === identity.packageId && candidate.version === identity.version);
     if (!selected) throw new Error("trusted bootstrap package is outside selected closure");
     for (const value of [selected.pluginId, selected.packageId, selected.version, selected.role, selected.componentSha256, selected.componentBlake3, selected.descriptorSha256]) {
       pieces.push(trustedBootstrapField(/^[0-9a-f]{64}$/u.test(value) ? Buffer.from(value, "hex") : value));
     }
+    pieces.push(trustedBootstrapField(Buffer.from(encodeComponentReceiptV1(componentReceiptValueV1(selected.receipt)), "utf8")));
     pieces.push(trustedBootstrapField(trustedBootstrapCount(trustedBootstrapExecutionProtocol(selected.executionProtocol).appChannelVersion)));
     pieces.push(
       trustedBootstrapBrowserActorEncoding(selected.browserActor, { componentSha256: selected.componentSha256, descriptorByteSha256: selected.descriptorSha256 }, trustedBootstrapPackageRenderer(profile, selected.pluginId)),
@@ -8803,9 +8831,9 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   bootstrapAssert.deepEqual(Object.keys(fixture), ["schema", "profile", "sources", "limits", "framing", "cancellationStages", "hostile", "publication", "rotation"]);
   bootstrapAssert.equal(fixture.schema, "semio.hub.trusted-stdio-gis-bootstrap/v1");
   bootstrapAssert.equal(fixture.profile.id, "local-stdio-gis-open-v1");
-  bootstrapAssert.deepEqual(fixture.limits, { descriptorBytes: 4_194_304, descriptorBytesPlusOne: 4_194_305, componentBytes: 67_108_864, ioChunkBytes: 65_536, packageCount: 2, codecCount: 31, openTargetCount: 1 });
-  bootstrapAssert.deepEqual(fixture.framing, { closureDomain: "semio/hub/trusted-profile-selected-closure/v1\u0000", generationDomain: "semio/hub/trusted-profile-generation/v1\u0000", integerEndian: "big", lengthBytes: 8 });
-  bootstrapAssert.deepEqual(fixture.cancellationStages, ["build", "extract-core", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"]);
+  bootstrapAssert.deepEqual(fixture.limits, { descriptorBytes: 4_194_304, descriptorBytesPlusOne: 4_194_305, componentBytes: DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, ioChunkBytes: 65_536, packageCount: 2, codecCount: fixture.profile.packages.reduce((total: number, row: { codecCount: number }) => total + row.codecCount, 0), openTargetCount: 1 });
+  bootstrapAssert.deepEqual(fixture.framing, { closureDomain: "semio/hub/trusted-profile-selected-closure/v1\u0000", generationDomain: "semio/hub/trusted-profile-generation/v2\u0000", integerEndian: "big", lengthBytes: 8 });
+  bootstrapAssert.deepEqual(fixture.cancellationStages, ["build", "inspect-wit", "emit-descriptor", "stage-component", "stage-descriptor", "hash", "pre-publication"]);
   bootstrapAssert.deepEqual(fixture.hostile, [
     "stale-stdio-component", "stale-stdio-descriptor", "stale-stdio-codec", "wrong-stdio-version", "wrong-gis-version", "missing-map", "missing-terrain",
     "duplicate-terrain", "terrain-target", "non-wasm", "readonly-editor", "mixed-package", "closure-order", "path-escape", "path-collision",
@@ -8817,7 +8845,9 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   bootstrapAssert.equal(new Set(fixture.rotation.writeCases.map((row: any) => row.id)).size, 7);
   for (const row of fixture.rotation.writeCases) bootstrapAssert(["new", "old", "absent"].includes(row.retained) && Number.isInteger(row.byteLength) && row.byteLength >= 1 && row.byteLength <= 67_108_864, row.id);
   for (const identity of fixture.profile.selectedClosure) bootstrapAssert(validateIdentity(identity), "bootstrap closure identity must satisfy the scope-owned contract");
+  const validateReceipt = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleReceiptV1");
   for (const record of fixture.profile.packages) {
+    bootstrapAssert(validateReceipt(record.receipt) && componentReceiptBindsV1(componentReceiptValueV1(record.receipt), { pluginId: record.pluginId, packageId: record.packageId, wasmSha256: record.componentSha256, semanticDescriptorSha256: record.descriptorSha256 }), `${record.pluginId} receipt must be a shipped receipt binding its component to its descriptor`);
     bootstrapAssert(validateActor(record.browserActor), `${record.pluginId} browser actor must satisfy the scope-owned contract`);
     bootstrapAssert(validateProtocol(record.executionProtocol), `${record.pluginId} execution protocol must satisfy the scope-owned contract`);
     for (const dependency of record.dependencies) bootstrapAssert(validateIdentity(dependency), `${record.pluginId} dependency must satisfy the scope-owned contract`);
@@ -8833,7 +8863,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   const profile = fixture.profile;
   const unique = (rows: readonly TrustedBootstrapCodec[]): boolean =>
     rows.length === new Set(rows.map((row) => JSON.stringify([row.artifactKind, row.artifactSchema, row.packSchemaHash]))).size && rows.every((row) => /^(?!0{64}$)[0-9a-f]{64}$/u.test(row.packSchemaHash));
-  if (stdio.plugin_id !== "stdio" || stdio.package_id !== "semio:stdio" || codecs.stdio.length !== 29 || !unique(codecs.stdio)) throw new Error("stdio bootstrap closure is not exact 29");
+  if (stdio.plugin_id !== "stdio" || stdio.package_id !== "semio:stdio" || codecs.stdio.length !== profile.packages[1]?.codecCount || !unique(codecs.stdio)) throw new Error(`stdio bootstrap closure is not the profile's exact ${profile.packages[1]?.codecCount} codecs`);
   if (
     gis.pluginId !== "gis" ||
     gis.packageId !== "semio:gis" ||
@@ -8850,7 +8880,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     profile.packages[0].codecCount !== 2 ||
     profile.packages[0].targetCount !== 1 ||
     profile.packages[1].pluginId !== "stdio" ||
-    profile.packages[1].codecCount !== 29 ||
+    profile.packages[1].codecCount !== codecs.stdio.length ||
     profile.packages[1].targetCount !== 0
   )
     throw new Error("trusted bootstrap package/target cardinality drifted");
@@ -8873,7 +8903,10 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   changed.packages[1].descriptorSha256 = profile.packages[1].descriptorSha256;
   changed.packages[1].pluginModule = { ...profile.packages[1].pluginModule, blake3: "38".repeat(32) };
   const changedPluginModule = createHash("sha256").update(trustedBootstrapProfileEncoding(changed, codecs)).digest("hex");
-  if ([changedComponent, changedDescriptor, changedCodec, changedPluginModule].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
+  changed.packages[1].pluginModule = profile.packages[1].pluginModule;
+  changed.packages[1].receipt = { ...profile.packages[1].receipt, provenanceSha256: "39".repeat(32) };
+  const changedReceipt = createHash("sha256").update(trustedBootstrapProfileEncoding(changed, codecs)).digest("hex");
+  if ([changedComponent, changedDescriptor, changedCodec, changedPluginModule, changedReceipt].some((digest) => digest === generationNode)) throw new Error("trusted bootstrap generation omits zero-target stdio authority");
   const target = profile.openTargets[0];
   if (
     target.pluginId !== "gis" ||
@@ -8903,7 +8936,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     rotation.stalePlan.issuedGenerationId !== rotation.initialGenerationId ||
     rotation.stalePlan.observedGenerationId !== rotation.nextGenerationId ||
     rotation.freshPlan.issuedGenerationId !== rotation.nextGenerationId ||
-    fixture.cancellationStages.length !== 8 ||
+    fixture.cancellationStages.length !== 7 ||
     fixture.hostile.length !== 19 ||
     !fixture.hostile.includes("stale-plan-generation")
   )
@@ -8922,22 +8955,28 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
     quotas: {},
     contributions: {},
     assets: [],
-    hashes: { wasmSha256: "41".repeat(32), coreWasmSha256: "42".repeat(32), descriptorSha256: "" },
   };
-  descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
   const jsonBytes = Buffer.from(JSON.stringify(descriptor));
   const packBytes = Buffer.from(encodePackValue(descriptor));
-  const expected = { pluginId: "gis", packageId: "semio:gis", version: "0.1.0", role: "plugin" as const, execution: "isolated" as const, wasmSha256: descriptor.hashes.wasmSha256, coreWasmSha256: descriptor.hashes.coreWasmSha256 };
-  verifyFreshCatalogPackageV1(jsonBytes, packBytes, expected);
+  const binding = { pluginId: "gis", packageId: "semio:gis", wasmSha256: "41".repeat(32), semanticDescriptorSha256: createHash("sha256").update(packBytes).digest("hex") };
+  const freshPair = (json: Uint8Array, pack: Uint8Array) => {
+    const pair = verifySemanticDescriptorPairBytesV1(json, pack);
+    if (pair.pluginId !== "gis" || pair.packageId !== "semio:gis" || pair.version !== "0.1.0" || pair.role !== "plugin" || pair.execution !== "isolated") throw new Error("fresh descriptor identity differs");
+    return pair;
+  };
+  const receipt = componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", ...binding, profile: "wasm-release", target: "wasm32-wasip2", wasmBytes: 4096, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "43".repeat(32), provenanceSha256: "44".repeat(32) });
+  if (freshPair(jsonBytes, packBytes).semanticSha256 !== binding.semanticDescriptorSha256 || !componentReceiptBindsV1(receipt, binding)) throw new Error("fresh semantic descriptor and its receipt do not bind");
+  if (componentReceiptBindsV1({ ...receipt, profile: "wasm-prototype" }, binding) || componentReceiptBindsV1(receipt, { ...binding, semanticDescriptorSha256: "45".repeat(32) })) throw new Error("fresh receipt law admitted a non-shipped or foreign binding");
   const hostilePairs = [
     [Buffer.from(JSON.stringify({ ...descriptor, manifest: { ...descriptor.manifest, version: "9.9.9" } })), packBytes],
     [jsonBytes, Buffer.concat([packBytes, Buffer.from([0])])],
     [Buffer.from([0xff]), packBytes],
+    [Buffer.from(JSON.stringify({ ...descriptor, hashes: { wasmSha256: "41".repeat(32) } })), Buffer.from(encodePackValue({ ...descriptor, hashes: { wasmSha256: "41".repeat(32) } }))],
   ] as const;
   for (const [json, pack] of hostilePairs) {
     let rejected = false;
     try {
-      verifyFreshCatalogPackageV1(json, pack, expected);
+      freshPair(json, pack);
     } catch {
       rejected = true;
     }
@@ -8945,7 +8984,7 @@ async function proveTrustedStdioGisBootstrapFixture(repoRoot: string): Promise<v
   }
   await proveTrustedRotationSourceFixture(fixture);
   console.log(
-    `trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=4 stale-plan=1 scope-exports=5+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`,
+    `trusted-stdio-gis-bootstrap-oracle: packages=2 codecs=${codecs.stdio.length + codecs.gis.length} targets=1 hostile=${fixture.hostile.length} cancellation=${fixture.cancellationStages.length} descriptor-pairs=5 receipt-laws=3 stale-plan=1 scope-exports=5+node+webcrypto+first-party-pack+blake3=1; no materialization or hub activation claim`,
   );
 }
 
@@ -9119,6 +9158,9 @@ function trustedBootstrapFsyncDirectory(path: string): void {
   }
 }
 
+/** 📏️ The most native codecs one bootstrap package may contribute, the bound of the stdio codec catalog itself. */
+const TRUSTED_BOOTSTRAP_PACKAGE_CODEC_MAX = 1024;
+
 /** 🪪️ Projects only the schema-admitted fixed native codec closure into immutable generation inputs. */
 function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly<{ gisVersion: string; codecs: Readonly<Record<"gis" | "stdio", readonly TrustedBootstrapCodec[]>> }> {
   const fail = (): never => {
@@ -9132,17 +9174,14 @@ function projectTrustedBootstrapCodecsV1(stdio: unknown, gis: unknown): Readonly
   const digest = (value: unknown): value is string => typeof value === "string" && /^(?!0{64}$)[0-9a-f]{64}$/u.test(value);
   const s = record(stdio, ["schema", "provider_id", "plugin_id", "package_id", "receipts"]);
   const g = record(gis, ["schema", "pluginId", "packageId", "packageVersion", "receipts"]);
-  if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length !== 29) return fail();
-  const hostile = ["missing", "duplicate", "foreign-package", "wrong-version", "bare-kind", "wrong-schema", "wrong-extension", "zero-hash"];
+  if (s.schema !== "semio.stdio.native-openable-catalog-provider/v1" || s.provider_id !== "stdio/native-codecs/v1" || s.plugin_id !== "stdio" || s.package_id !== "semio:stdio" || !Array.isArray(s.receipts) || s.receipts.length === 0 || s.receipts.length > TRUSTED_BOOTSTRAP_PACKAGE_CODEC_MAX) return fail();
   if (
     g.schema !== "semio.gis.native-codec-receipts/v1" ||
     g.pluginId !== "gis" ||
     g.packageId !== "semio:gis" ||
     g.packageVersion !== "0.1.0" ||
     !Array.isArray(g.receipts) ||
-    g.receipts.length !== 2 ||
-    !Array.isArray(g.hostile) ||
-    JSON.stringify([...g.hostile].sort()) !== JSON.stringify(hostile.sort())
+    g.receipts.length !== 2
   )
     return fail();
   const stdioRows = s.receipts.map((value: unknown) => {
@@ -9283,10 +9322,23 @@ type TrustedBootstrapGenerationReceiptV1 = Readonly<{
   dependencies: readonly TrustedBootstrapIdentityV1[];
   component: Readonly<{ byteLength: number; sha256: string }>;
   descriptor: Readonly<{ byteLength: number; sha256: string }>;
+  componentReceipt: ComponentReceiptV1;
   executionProtocol: Readonly<DocumentExecutionProtocolV1>;
   browserActor: TrustedBootstrapBrowserActorV1;
   pluginModule: TrustedBootstrapPluginModuleRecordV1;
 }>;
+
+/** 🧾️ The digest a plugin module's `🧾️receipt.json` must carry: the SHA-256 of the package receipt's canonical encoding. */
+function trustedBootstrapReceiptSha256(receipt: ComponentReceiptV1): string {
+  return createHash("sha256").update(encodeComponentReceiptV1(receipt)).digest("hex");
+}
+
+/** 🔗️ A catalog record's receipt, admitted only as a shipped receipt naming exactly the record's package, component and descriptor. */
+function trustedBootstrapRecordReceipt(record: any): ComponentReceiptV1 {
+  const receipt = componentReceiptValueV1(record.receipt);
+  if (!componentReceiptBindsV1(receipt, { pluginId: record.pluginId, packageId: record.packageId, wasmSha256: record.component.sha256, semanticDescriptorSha256: record.descriptor.sha256 }) || receipt.wasmBytes !== record.component.byteLength) throw new Error(`trusted ${record.pluginId} receipt does not bind its component to its semantic descriptor`);
+  return receipt;
+}
 
 /** 🧩️ Where a package record finds its plugin module manifest: `TrustedBundlePluginModuleV1`. */
 type TrustedBootstrapPluginModuleRecordV1 = Readonly<{ path: string; byteLength: number; sha256: string; blake3: string }>;
@@ -9320,7 +9372,7 @@ function trustedBootstrapPluginModuleEncoding(record: TrustedBootstrapPluginModu
 function trustedBootstrapReadPluginModule(root: string, receipt: TrustedBootstrapGenerationReceiptV1, check: () => void): TrustedPluginModuleBundleV1 {
   const bytes = readStableBuildFile(join(root, receipt.pluginModule.path), TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES, { remaining: TRUSTED_PLUGIN_MODULE_BUNDLE_MAX_BYTES }, check);
   if (bytes.byteLength !== receipt.pluginModule.byteLength || createHash("sha256").update(bytes).digest("hex") !== receipt.pluginModule.sha256 || blake3Hex(bytes) !== receipt.pluginModule.blake3) throw new Error("generation plugin module manifest differs from its record");
-  return decodeTrustedPluginModuleBundleV1(bytes, { ...receipt.identity, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 });
+  return decodeTrustedPluginModuleBundleV1(bytes, { ...receipt.identity, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256, receiptSha256: trustedBootstrapReceiptSha256(receipt.componentReceipt) });
 }
 
 /**
@@ -9330,9 +9382,11 @@ function trustedBootstrapReadPluginModule(root: string, receipt: TrustedBootstra
  */
 function trustedBootstrapCarryPluginModule(sourceRoot: string, stageRoot: string, sourceReceipt: TrustedBootstrapGenerationReceiptV1, record: any, descriptor: Uint8Array, check: () => void): TrustedBootstrapPluginModuleRecordV1 {
   const source = trustedBootstrapReadPluginModule(sourceRoot, sourceReceipt, check);
+  const componentReceipt = trustedBootstrapRecordReceipt(record);
   const replacements = new Map<string, Uint8Array>([
     [`${source.moduleDirectory}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE}`, descriptor],
     [`${source.moduleDirectory}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE}`, Buffer.from(`${JSON.stringify(packValueToExactJson(decodePackValue(descriptor)), null, 2)}\n`, "utf8")],
+    [`${source.moduleDirectory}/${COMPONENT_RECEIPT_FILE}`, Buffer.from(encodeComponentReceiptV1(componentReceipt), "utf8")],
   ]);
   const blobs = join(stageRoot, "plugin-modules");
   mkdirSync(blobs, { recursive: true, mode: 0o700 });
@@ -9345,7 +9399,7 @@ function trustedBootstrapCarryPluginModule(sourceRoot: string, stageRoot: string
   });
   const descriptorByteSha256 = createHash("sha256").update(descriptor).digest("hex");
   const manifest = encodeTrustedPluginModuleBundleV1({ ...source, sourceComponentSha256: record.component.sha256, sourceDescriptorByteSha256: descriptorByteSha256, files });
-  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: record.pluginId, packageId: record.packageId, version: record.version, componentSha256: record.component.sha256, descriptorByteSha256 });
+  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: record.pluginId, packageId: record.packageId, version: record.version, componentSha256: record.component.sha256, descriptorByteSha256, receiptSha256: trustedBootstrapReceiptSha256(componentReceipt) });
   trustedBootstrapWriteNew(join(stageRoot, trustedBootstrapPluginModuleManifestPath(record.pluginId)), manifest, check);
   return Object.freeze({ path: trustedBootstrapPluginModuleManifestPath(record.pluginId), byteLength: manifest.byteLength, sha256: createHash("sha256").update(manifest).digest("hex"), blake3: blake3Hex(manifest) });
 }
@@ -9360,11 +9414,10 @@ function trustedBootstrapAbortSignal(control: FreshBuildControlV1): { readonly s
 }
 
 /**
- * 🧩️ Materializes one package's browser plugin module from its own fresh component and staged descriptor —
- * host shim, jco component module, core Wasm (never re-optimized, so it stays the exact module the
- * descriptor's `coreWasmSha256` names), bridge, both descriptor forms and the vendored imports — and stages
- * it content-addressed in the generation: every file once under `plugin-modules/<sha256>` (shared across
- * packages), the canonical manifest at `packages/<plugin>/plugin-module.json`.
+ * 🧩️ Materializes one package's browser plugin module from its own fresh component and staged semantic descriptor —
+ * host shim, jco component module, core Wasm, bridge, both descriptor forms, the package's canonical component receipt
+ * and the vendored imports — and stages it content-addressed in the generation: every file once under
+ * `plugin-modules/<sha256>` (shared across packages), the canonical manifest at `packages/<plugin>/plugin-module.json`.
  */
 async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonly<{ pluginId: string; outputName: string }>, stage: string, stageRoot: string, work: string, receipt: FreshComponentReceiptV1, control: FreshBuildControlV1, check: () => void): Promise<TrustedBootstrapPluginModuleRecordV1> {
   const moduleRoot = join(work, "plugin-module");
@@ -9376,7 +9429,7 @@ async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonl
   if (!ensureGuestSlimTypstFontsAt(moduleRoot, repoRoot)) throw new Error("trusted plugin module needs the staged guestslim typst font seed");
   const descriptor = trustedBootstrapReadRegular(join(stage, "descriptor.semio"), DOCUMENT_EXECUTION_TARGET_DESCRIPTOR_MAX_BYTES, `fresh ${request.pluginId} descriptor for its plugin module`, check);
   if (descriptor.byteLength !== receipt.descriptor.byteLength || createHash("sha256").update(descriptor).digest("hex") !== receipt.descriptor.sha256) throw new Error("fresh descriptor differs from its receipt before plugin module materialization");
-  const componentBase = `${request.outputName.slice(0, -".wasm".length)}_component`;
+  const componentBase = request.outputName.slice(0, -".wasm".length);
   writeFileSync(join(moduleDir, PLUGIN_HOST_SHIM_FILE), hostShimSource());
   const abort = trustedBootstrapAbortSignal(control);
   try {
@@ -9388,10 +9441,9 @@ async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonl
   writeFileSync(join(moduleDir, MODULE_BRIDGE_FILE), pluginComponentBridgeSource(componentBase, request.outputName));
   writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE), `${JSON.stringify(packValueToExactJson(decodePackValue(descriptor)), null, 2)}\n`);
   writeFileSync(join(moduleDir, TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE), descriptor);
+  writeFileSync(join(moduleDir, COMPONENT_RECEIPT_FILE), encodeComponentReceiptV1(receipt.componentReceipt));
   rmSync(join(moduleDir, `${componentBase}.d.ts`), { force: true });
   rmSync(join(moduleDir, "interfaces"), { recursive: true, force: true });
-  const core = readStableBuildFile(join(moduleDir, `${componentBase}.core.wasm`), TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES, { remaining: TRUSTED_PLUGIN_MODULE_FILE_MAX_BYTES }, check);
-  if (createHash("sha256").update(core).digest("hex") !== receipt.coreSha256) throw new Error(`trusted ${request.pluginId} plugin module core differs from the core its descriptor names`);
   const walk = (relative: string): string[] =>
     readdirSync(join(moduleRoot, relative), { withFileTypes: true }).flatMap((entry) => {
       const path = relative ? `${relative}/${entry.name}` : entry.name;
@@ -9422,7 +9474,7 @@ async function trustedBootstrapPluginModuleV1(repoRoot: string, request: Readonl
     files,
   };
   const manifest = encodeTrustedPluginModuleBundleV1(bundle);
-  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: request.pluginId, packageId: receipt.packageId, version: receipt.version, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256 });
+  decodeTrustedPluginModuleBundleV1(manifest, { pluginId: request.pluginId, packageId: receipt.packageId, version: receipt.version, componentSha256: receipt.component.sha256, descriptorByteSha256: receipt.descriptor.sha256, receiptSha256: trustedBootstrapReceiptSha256(receipt.componentReceipt) });
   trustedBootstrapWriteNew(join(stage, "plugin-module.json"), manifest, check);
   trustedBootstrapFsyncDirectory(blobs);
   rmSync(moduleRoot, { recursive: true, force: true });
@@ -9436,6 +9488,7 @@ function trustedBootstrapGenerationReceipt(record: any): TrustedBootstrapGenerat
     identity, dependencies: trustedBootstrapDependencies(record.dependencies),
     component: Object.freeze({ byteLength: record.component.byteLength, sha256: record.component.sha256 }),
     descriptor: Object.freeze({ byteLength: record.descriptor.byteLength, sha256: record.descriptor.sha256 }),
+    componentReceipt: trustedBootstrapRecordReceipt(record),
     executionProtocol: trustedBootstrapExecutionProtocol(record.executionProtocol),
     // 🖥️ The renderer this receipt validates the actor against comes from the actor's own kind, not
     // from the package's name: this helper is re-run on an already-projected receipt (which carries
@@ -9459,7 +9512,7 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
     const selected = trustedBootstrapDependencies([...bundleReceipts.values()].map((receipt) => receipt.identity));
     for (const [plugin, receipt] of receipts) {
       const expected = bundleReceipts.get(plugin);
-      if (!expected || JSON.stringify(expected) !== JSON.stringify(trustedBootstrapGenerationReceipt({ ...receipt.identity, ...receipt }))) throw new Error("generation bundle metadata differs from its retained receipt");
+      if (!expected || JSON.stringify(expected) !== JSON.stringify(trustedBootstrapGenerationReceipt({ ...receipt.identity, ...receipt, receipt: receipt.componentReceipt }))) throw new Error("generation bundle metadata differs from its retained receipt");
     }
     // 📁️ The published tree is EXACTLY what the bundle's own package records name: one directory per
     // selected package, `browser/closed-actor.mjs` exactly where a record carries a closed actor and
@@ -9538,12 +9591,13 @@ function trustedBootstrapVerifyGeneration(root: string, bundle: Uint8Array, rece
  * own descriptor) and one vendored import — the TS twin of the hub's `fixture_plugin_module_files`. */
 type TrustedBootstrapFixturePluginModuleV1 = Readonly<{ record: TrustedBootstrapPluginModuleRecordV1; manifest: Uint8Array; blobs: ReadonlyMap<string, Uint8Array> }>;
 
-function trustedBootstrapFixturePluginModule(identity: Readonly<{ pluginId: string; packageId: string; version: string }>, componentSha256: string, descriptor: Uint8Array): TrustedBootstrapFixturePluginModuleV1 {
+function trustedBootstrapFixturePluginModule(identity: Readonly<{ pluginId: string; packageId: string; version: string }>, componentSha256: string, descriptor: Uint8Array, componentReceipt: ComponentReceiptV1): TrustedBootstrapFixturePluginModuleV1 {
   const utf8 = (text: string) => Buffer.from(text, "utf8");
   const contents: [string, Uint8Array][] = [
     [`${identity.pluginId}/${MODULE_BRIDGE_FILE}`, utf8("export async function createActorApi() {}\n")],
     [`${identity.pluginId}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_JSON_FILE}`, utf8(JSON.stringify({ manifest: { pluginId: identity.pluginId } }))],
     [`${identity.pluginId}/${TRUSTED_PLUGIN_MODULE_DESCRIPTOR_PACK_FILE}`, descriptor],
+    [`${identity.pluginId}/${COMPONENT_RECEIPT_FILE}`, utf8(encodeComponentReceiptV1(componentReceipt))],
     [`${PREVIEW2_VENDOR_RELATIVE}/io.js`, utf8("export const streams = {};\n")],
   ];
   const blobs = new Map<string, Uint8Array>();
@@ -9556,7 +9610,7 @@ function trustedBootstrapFixturePluginModule(identity: Readonly<{ pluginId: stri
     });
   const descriptorByteSha256 = createHash("sha256").update(descriptor).digest("hex");
   const manifest = encodeTrustedPluginModuleBundleV1({ schema: TRUSTED_PLUGIN_MODULE_SCHEMA, ...identity, sourceComponentSha256: componentSha256, sourceDescriptorByteSha256: descriptorByteSha256, moduleDirectory: identity.pluginId, entry: `${identity.pluginId}/${MODULE_BRIDGE_FILE}`, files });
-  decodeTrustedPluginModuleBundleV1(manifest, { ...identity, componentSha256, descriptorByteSha256 });
+  decodeTrustedPluginModuleBundleV1(manifest, { ...identity, componentSha256, descriptorByteSha256, receiptSha256: trustedBootstrapReceiptSha256(componentReceipt) });
   return Object.freeze({ record: Object.freeze({ path: trustedBootstrapPluginModuleManifestPath(identity.pluginId), byteLength: manifest.byteLength, sha256: createHash("sha256").update(manifest).digest("hex"), blake3: blake3Hex(manifest) }), manifest, blobs });
 }
 
@@ -9568,6 +9622,11 @@ function trustedBootstrapWriteFixturePluginModule(root: string, module: TrustedB
   for (const [sha256, bytes] of module.blobs) writeFileSync(join(root, trustedBootstrapPluginModuleBlobPath(sha256)), bytes);
 }
 
+/** 🧾️ The shipped receipt a never-executed fixture component carries for exactly these bytes and this semantic descriptor. */
+function trustedBootstrapFixtureReceipt(identity: Readonly<{ pluginId: string; packageId: string }>, component: Readonly<{ byteLength: number; sha256: string }>, descriptorSha256: string): ComponentReceiptV1 {
+  return componentReceiptValueV1({ schema: "semio.plugin.component-receipt/v1", pluginId: identity.pluginId, packageId: identity.packageId, profile: "wasm-release", target: "wasm32-wasip2", wasmSha256: component.sha256, wasmBytes: component.byteLength, semanticDescriptorSha256: descriptorSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) });
+}
+
 /** 🧫️ Constructs only neutral descriptor projections for physical publication-fence laws. */
 function trustedBootstrapStageFixturePackages(fixture: any, actor: any, component: Uint8Array): { packages: any[]; descriptors: Map<string, Buffer>; modules: Map<string, TrustedBootstrapFixturePluginModuleV1> } {
   const descriptors = new Map(["gis", "stdio"].map((plugin) => [plugin, Buffer.from(encodePackValue(fixture.descriptors[plugin]))]));
@@ -9576,12 +9635,13 @@ function trustedBootstrapStageFixturePackages(fixture: any, actor: any, componen
     const source = { component: identity(component), descriptor: identity(descriptors.get(pluginId)!) };
     return {
       pluginId, packageId: `semio:${pluginId}`, version: "0.1.0", ...source,
+      receipt: trustedBootstrapFixtureReceipt({ pluginId, packageId: `semio:${pluginId}` }, source.component, source.descriptor.sha256),
       dependencies: pluginId === "gis" ? [{ pluginId: "stdio", packageId: "semio:stdio", version: "0.1.0" }] : [],
       executionProtocol: fixture.executionProtocol,
       browserActor: pluginId === "gis" ? { ...actor, path: "packages/gis/browser/closed-actor.mjs", sourceComponentSha256: source.component.sha256, sourceDescriptorByteSha256: source.descriptor.sha256 } : { kind: "none" },
     };
   });
-  const modules = new Map(records.map((record) => [record.pluginId, trustedBootstrapFixturePluginModule(record, record.component.sha256, descriptors.get(record.pluginId)!)]));
+  const modules = new Map(records.map((record) => [record.pluginId, trustedBootstrapFixturePluginModule(record, record.component.sha256, descriptors.get(record.pluginId)!, record.receipt)]));
   const packages = records.map((record) => ({ ...record, pluginModule: modules.get(record.pluginId)!.record }));
   return { packages, descriptors, modules };
 }
@@ -9595,7 +9655,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
   const validateProtocol = hubSchemaExport(repoRoot, "schema://hub.artifact-authority.trusted-catalog/TrustedBundleExecutionProtocolV1");
   assert.deepEqual(Object.keys(fixture), ["schema", "componentHex", "descriptors", "executionProtocol", "cases"]);
   assert.equal(fixture.schema, "semio.hub.generation-stage.v1");
-  assert.equal(fixture.componentHex, "616263");
+  assert.equal(fixture.componentHex, "0061736d0d000100");
   assert.deepEqual(fixture.descriptors, {
     gis: { packageId: "semio:gis", manifest: { pluginId: "gis", version: "0.1.0", dependencies: [{ pluginId: "stdio", version: "=0.1.0" }] }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
     stdio: { packageId: "semio:stdio", manifest: { pluginId: "stdio", version: "0.1.0", dependencies: [] }, executionProtocol: { appChannelVersion: DOCUMENT_EXECUTION_PROTOCOL_APP_CHANNEL_VERSION_V1 } },
@@ -9639,7 +9699,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     }
     mkdirSync(join(stage, "packages/gis/browser"));
     const actorPath = join(stage, "packages/gis/browser/closed-actor.mjs");
-    writeFileSync(actorPath, component);
+    writeFileSync(actorPath, Buffer.from(actorFixture.bodyHex, "hex"));
     const componentPath = join(stage, "packages/gis/component.wasm");
     if (test.change === "component") writeFileSync(componentPath, "xbc");
     if (test.change === "descriptor") writeFileSync(join(stage, "packages/stdio/descriptor.semio"), "xef");
@@ -9668,7 +9728,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
       const digest = await identity(bytes);
       caseDescriptors.set("gis", bytes);
       writeFileSync(join(stage, "packages/gis/descriptor.semio"), bytes);
-      Object.assign(casePackages[0], { descriptor: digest, browserActor: { ...casePackages[0].browserActor, sourceDescriptorByteSha256: digest.sha256 } });
+      Object.assign(casePackages[0], { descriptor: digest, receipt: { ...casePackages[0].receipt, semanticDescriptorSha256: digest.sha256 }, browserActor: { ...casePackages[0].browserActor, sourceDescriptorByteSha256: digest.sha256 } });
       caseReceipts.set("gis", trustedBootstrapGenerationReceipt(casePackages[0]));
     }
     if (test.change === "missing-protocol" || test.change === "unsupported-protocol") {
@@ -9689,7 +9749,7 @@ async function proveTrustedGenerationStageFixture(repoRoot: string): Promise<voi
     }
     for (const [index, plugin] of ["gis", "stdio"].entries()) {
       if (!existsSync(join(stage, "packages", plugin))) continue;
-      const module = trustedBootstrapFixturePluginModule(casePackages[index], casePackages[index].component.sha256, caseDescriptors.get(plugin)!);
+      const module = trustedBootstrapFixturePluginModule(casePackages[index], casePackages[index].component.sha256, caseDescriptors.get(plugin)!, casePackages[index].receipt);
       trustedBootstrapWriteFixturePluginModule(stage, module);
       casePackages[index].pluginModule = module.record;
       caseReceipts.set(plugin, { ...caseReceipts.get(plugin)!, pluginModule: module.record });
@@ -9885,7 +9945,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     assert.equal(accepted, row.accepted, row.id);
   }
   const stageFixture = JSON.parse(readFileSync(join(root, "../🧱️generation-stage/🔣️.json"), "utf8"));
-  const component = Buffer.from("abc");
+  const component = Buffer.from("0061736d0d000100", "hex");
   const digest = async (bytes: Uint8Array) => await webSha256Hex(bytes);
   const actorFixture = JSON.parse(readFileSync(join(root, "../🌐️browser-actor/🔣️.json"), "utf8"));
   const { packages, descriptors, modules } = trustedBootstrapStageFixturePackages(stageFixture, actorFixture.closed, component);
@@ -9894,7 +9954,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
     assert.equal(record.descriptor.sha256, await digest(descriptors.get(record.pluginId)!));
     assert.equal(record.pluginModule.sha256, await digest(modules.get(record.pluginId)!.manifest));
   }
-  const bundle = Buffer.from(JSON.stringify({ schemaVersion: 3, profiles: [{ id: fixture.profileId, generationId: fixture.generationId }], packages }) + "\n");
+  const bundle = Buffer.from(JSON.stringify({ schemaVersion: 4, profiles: [{ id: fixture.profileId, generationId: fixture.generationId }], packages }) + "\n");
   for (const row of fixture.cases) {
     const dataRoot = join(evidence, row.change), trustedRoot = join(dataRoot, "trusted-catalog"), generationRoot = join(trustedRoot, "generations", fixture.generationId);
     mkdirSync(join(generationRoot, "packages/gis/browser"), { recursive: true });
@@ -9905,7 +9965,7 @@ async function proveTrustedPublicationFixture(repoRoot: string): Promise<void> {
       trustedBootstrapWriteFixturePluginModule(generationRoot, modules.get(plugin)!);
     }
     const actorPath = join(generationRoot, "packages/gis/browser/closed-actor.mjs"), bundlePath = join(generationRoot, "trusted-catalog.json");
-    writeFileSync(actorPath, component); writeFileSync(bundlePath, bundle);
+    writeFileSync(actorPath, Buffer.from(actorFixture.bodyHex, "hex")); writeFileSync(bundlePath, bundle);
     const receipt = { profileId: fixture.profileId, generationId: fixture.generationId, bundlePath, bundleSha256: await digest(bundle) };
     trustedBootstrapVerifyGeneration(generationRoot, bundle, new Map(packages.map((record) => [record.pluginId, trustedBootstrapGenerationReceipt(record)])), () => {});
     const pointerPath = join(trustedRoot, "current.json"), previous = Buffer.from(JSON.stringify({ profileId: fixture.profileId, generationId: "dd".repeat(32), bundleSha256: "ee".repeat(32), publicationRevision: "1" }) + "\n");
@@ -9989,50 +10049,50 @@ const TRUSTED_BOOTSTRAP_ALL_PACKAGES = "stdio,stdio-image,stdio-media,stdio-cad,
 export const TRUSTED_BOOTSTRAP_LINKED_PACKAGES = "stdio,gis";
 
 const TRUSTED_BOOTSTRAP_PACKAGES: readonly TrustedBootstrapPackageSpecV1[] = Object.freeze([
-  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-hub-stdio", componentPackageId: "semio:stdio", outputName: "semio_hub_stdio.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-hub-stdio-image", componentPackageId: "semio:stdio-image", outputName: "semio_hub_stdio_image.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-hub-stdio-media", componentPackageId: "semio:stdio-media", outputName: "semio_hub_stdio_media.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-hub-stdio-cad", componentPackageId: "semio:stdio-cad", outputName: "semio_hub_stdio_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-bim", cargoPackage: "semio-hub-stdio-bim", componentPackageId: "semio:stdio-bim", outputName: "semio_hub_stdio_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-mesh", cargoPackage: "semio-hub-stdio-mesh", componentPackageId: "semio:stdio-mesh", outputName: "semio_hub_stdio_mesh.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-pdf", cargoPackage: "semio-hub-stdio-pdf", componentPackageId: "semio:stdio-pdf", outputName: "semio_hub_stdio_pdf.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-office", cargoPackage: "semio-hub-stdio-office", componentPackageId: "semio:stdio-office", outputName: "semio_hub_stdio_office.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-semio", cargoPackage: "semio-hub-stdio-semio", componentPackageId: "semio:stdio-semio", outputName: "semio_hub_stdio_semio.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "stdio-binary", cargoPackage: "semio-hub-stdio-binary", componentPackageId: "semio:stdio-binary", outputName: "semio_hub_stdio_binary.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "gis", cargoPackage: "semio-hub-gis", componentPackageId: "semio:gis", outputName: "semio_hub_gis.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
-  Object.freeze({ pluginId: "animate", cargoPackage: "semio-hub-animate", componentPackageId: "semio:animate", outputName: "semio_hub_animate.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "architect", cargoPackage: "semio-hub-architect", componentPackageId: "semio:architect", outputName: "semio_hub_architect.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "bim", cargoPackage: "semio-hub-bim", componentPackageId: "semio:bim", outputName: "semio_hub_bim.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "block", cargoPackage: "semio-hub-block", componentPackageId: "semio:block", outputName: "semio_hub_block.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "cad", cargoPackage: "semio-hub-cad", componentPackageId: "semio:cad", outputName: "semio_hub_cad.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "dag", cargoPackage: "semio-hub-dag", componentPackageId: "semio:dag", outputName: "semio_hub_dag.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "demonstrator", cargoPackage: "semio-hub-demonstrator", componentPackageId: "semio:demonstrator", outputName: "semio_hub_demonstrator.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "draw", cargoPackage: "semio-hub-draw", componentPackageId: "semio:draw", outputName: "semio_hub_draw.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "energy", cargoPackage: "semio-hub-energy", componentPackageId: "semio:energy", outputName: "semio_hub_energy.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "fem", cargoPackage: "semio-hub-fem", componentPackageId: "semio:fem", outputName: "semio_hub_fem.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "flow", cargoPackage: "semio-hub-flow", componentPackageId: "semio:flow", outputName: "semio_hub_flow.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "forms", cargoPackage: "semio-hub-forms", componentPackageId: "semio:forms", outputName: "semio_hub_forms.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "imperative", cargoPackage: "semio-hub-imperative", componentPackageId: "semio:imperative", outputName: "semio_hub_imperative.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "layout", cargoPackage: "semio-hub-layout", componentPackageId: "semio:layout", outputName: "semio_hub_layout.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-hub-lowpoly", componentPackageId: "semio:lowpoly", outputName: "semio_hub_lowpoly.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-hub-mathematical", componentPackageId: "semio:mathematical", outputName: "semio_hub_mathematical.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "norm", cargoPackage: "semio-hub-norm", componentPackageId: "semio:norm", outputName: "semio_hub_norm.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "note", cargoPackage: "semio-hub-note", componentPackageId: "semio:note", outputName: "semio_hub_note.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "playbook", cargoPackage: "semio-hub-playbook", componentPackageId: "semio:playbook", outputName: "semio_hub_playbook.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "procedural", cargoPackage: "semio-hub-procedural", componentPackageId: "semio:procedural", outputName: "semio_hub_procedural.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "process", cargoPackage: "semio-hub-process", componentPackageId: "semio:process", outputName: "semio_hub_process.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "puzzle", cargoPackage: "semio-hub-puzzle", componentPackageId: "semio:puzzle", outputName: "semio_hub_puzzle.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "raster", cargoPackage: "semio-hub-raster", componentPackageId: "semio:raster", outputName: "semio_hub_raster.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "reasoning", cargoPackage: "semio-hub-reasoning", componentPackageId: "semio:reasoning", outputName: "semio_hub_reasoning.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "remodel", cargoPackage: "semio-hub-remodel", componentPackageId: "semio:remodel", outputName: "semio_hub_remodel.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "sequence", cargoPackage: "semio-hub-sequence", componentPackageId: "semio:sequence", outputName: "semio_hub_sequence.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "shooting", cargoPackage: "semio-hub-shooting", componentPackageId: "semio:shooting", outputName: "semio_hub_shooting.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "sourcing", cargoPackage: "semio-hub-sourcing", componentPackageId: "semio:sourcing", outputName: "semio_hub_sourcing.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "space", cargoPackage: "semio-hub-space", componentPackageId: "semio:space", outputName: "semio_hub_space.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "trinity", cargoPackage: "semio-hub-trinity", componentPackageId: "semio:trinity", outputName: "semio_hub_trinity.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "vcs", cargoPackage: "semio-hub-vcs", componentPackageId: "semio:vcs", outputName: "semio_hub_vcs.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "wfc", cargoPackage: "semio-hub-wfc", componentPackageId: "semio:wfc", outputName: "semio_hub_wfc.wasm", linkedCodecRegistry: null, opensDocuments: true }),
-  Object.freeze({ pluginId: "writer", cargoPackage: "semio-hub-writer", componentPackageId: "semio:writer", outputName: "semio_hub_writer.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio", cargoPackage: "semio-hub-stdio-component", componentPackageId: "semio:stdio", outputName: "semio_hub_stdio_component.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🗄️stdio/🔌️plugin/📇️catalog/📜️native-codec-factories.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-image", cargoPackage: "semio-hub-stdio-image-component", componentPackageId: "semio:stdio-image", outputName: "semio_hub_stdio_image_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-media", cargoPackage: "semio-hub-stdio-media-component", componentPackageId: "semio:stdio-media", outputName: "semio_hub_stdio_media_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-cad", cargoPackage: "semio-hub-stdio-cad-component", componentPackageId: "semio:stdio-cad", outputName: "semio_hub_stdio_cad_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-bim", cargoPackage: "semio-hub-stdio-bim-component", componentPackageId: "semio:stdio-bim", outputName: "semio_hub_stdio_bim_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-mesh", cargoPackage: "semio-hub-stdio-mesh-component", componentPackageId: "semio:stdio-mesh", outputName: "semio_hub_stdio_mesh_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-pdf", cargoPackage: "semio-hub-stdio-pdf-component", componentPackageId: "semio:stdio-pdf", outputName: "semio_hub_stdio_pdf_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-office", cargoPackage: "semio-hub-stdio-office-component", componentPackageId: "semio:stdio-office", outputName: "semio_hub_stdio_office_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-semio", cargoPackage: "semio-hub-stdio-semio-component", componentPackageId: "semio:stdio-semio", outputName: "semio_hub_stdio_semio_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "stdio-binary", cargoPackage: "semio-hub-stdio-binary-component", componentPackageId: "semio:stdio-binary", outputName: "semio_hub_stdio_binary_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "gis", cargoPackage: "semio-hub-gis-component", componentPackageId: "semio:gis", outputName: "semio_hub_gis_component.wasm", linkedCodecRegistry: "🌎️hub/🧩️compositions/🌍️gis/📇️native-codecs/🔣️.json", opensDocuments: true }),
+  Object.freeze({ pluginId: "animate", cargoPackage: "semio-hub-animate-component", componentPackageId: "semio:animate", outputName: "semio_hub_animate_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "architect", cargoPackage: "semio-hub-architect-component", componentPackageId: "semio:architect", outputName: "semio_hub_architect_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "bim", cargoPackage: "semio-hub-bim-component", componentPackageId: "semio:bim", outputName: "semio_hub_bim_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "block", cargoPackage: "semio-hub-block-component", componentPackageId: "semio:block", outputName: "semio_hub_block_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "cad", cargoPackage: "semio-hub-cad-component", componentPackageId: "semio:cad", outputName: "semio_hub_cad_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "dag", cargoPackage: "semio-hub-dag-component", componentPackageId: "semio:dag", outputName: "semio_hub_dag_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "demonstrator", cargoPackage: "semio-hub-demonstrator-component", componentPackageId: "semio:demonstrator", outputName: "semio_hub_demonstrator_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "draw", cargoPackage: "semio-hub-draw-component", componentPackageId: "semio:draw", outputName: "semio_hub_draw_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "energy", cargoPackage: "semio-hub-energy-component", componentPackageId: "semio:energy", outputName: "semio_hub_energy_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "fem", cargoPackage: "semio-hub-fem-component", componentPackageId: "semio:fem", outputName: "semio_hub_fem_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "flow", cargoPackage: "semio-hub-flow-component", componentPackageId: "semio:flow", outputName: "semio_hub_flow_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "forms", cargoPackage: "semio-hub-forms-component", componentPackageId: "semio:forms", outputName: "semio_hub_forms_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "imperative", cargoPackage: "semio-hub-imperative-component", componentPackageId: "semio:imperative", outputName: "semio_hub_imperative_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "layout", cargoPackage: "semio-hub-layout-component", componentPackageId: "semio:layout", outputName: "semio_hub_layout_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "lowpoly", cargoPackage: "semio-hub-lowpoly-component", componentPackageId: "semio:lowpoly", outputName: "semio_hub_lowpoly_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "mathematical", cargoPackage: "semio-hub-mathematical-component", componentPackageId: "semio:mathematical", outputName: "semio_hub_mathematical_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "norm", cargoPackage: "semio-hub-norm-component", componentPackageId: "semio:norm", outputName: "semio_hub_norm_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "note", cargoPackage: "semio-hub-note-component", componentPackageId: "semio:note", outputName: "semio_hub_note_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "playbook", cargoPackage: "semio-hub-playbook-component", componentPackageId: "semio:playbook", outputName: "semio_hub_playbook_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "procedural", cargoPackage: "semio-hub-procedural-component", componentPackageId: "semio:procedural", outputName: "semio_hub_procedural_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "process", cargoPackage: "semio-hub-process-component", componentPackageId: "semio:process", outputName: "semio_hub_process_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "puzzle", cargoPackage: "semio-hub-puzzle-component", componentPackageId: "semio:puzzle", outputName: "semio_hub_puzzle_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "raster", cargoPackage: "semio-hub-raster-component", componentPackageId: "semio:raster", outputName: "semio_hub_raster_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "reasoning", cargoPackage: "semio-hub-reasoning-component", componentPackageId: "semio:reasoning", outputName: "semio_hub_reasoning_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "remodel", cargoPackage: "semio-hub-remodel-component", componentPackageId: "semio:remodel", outputName: "semio_hub_remodel_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sequence", cargoPackage: "semio-hub-sequence-component", componentPackageId: "semio:sequence", outputName: "semio_hub_sequence_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "shooting", cargoPackage: "semio-hub-shooting-component", componentPackageId: "semio:shooting", outputName: "semio_hub_shooting_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "sourcing", cargoPackage: "semio-hub-sourcing-component", componentPackageId: "semio:sourcing", outputName: "semio_hub_sourcing_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "space", cargoPackage: "semio-hub-space-component", componentPackageId: "semio:space", outputName: "semio_hub_space_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "trinity", cargoPackage: "semio-hub-trinity-component", componentPackageId: "semio:trinity", outputName: "semio_hub_trinity_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "vcs", cargoPackage: "semio-hub-vcs-component", componentPackageId: "semio:vcs", outputName: "semio_hub_vcs_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "wfc", cargoPackage: "semio-hub-wfc-component", componentPackageId: "semio:wfc", outputName: "semio_hub_wfc_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
+  Object.freeze({ pluginId: "writer", cargoPackage: "semio-hub-writer-component", componentPackageId: "semio:writer", outputName: "semio_hub_writer_component.wasm", linkedCodecRegistry: null, opensDocuments: true }),
 ]);
 
 /** 🧾️ Resolves a comma-separated `--packages` list against the selectable closure, in list order. */
@@ -10278,7 +10338,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
       if (control.cancelled() || control.remainingMs() <= 0) throw new Error("trusted codec capture cancelled");
       control.checkpoint("capture-codecs", 0, 8);
     });
-    const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "wasm-release" as const, rootCdylib: true }));
+    const requests = selection.map((spec) => ({ pluginId: spec.pluginId, cargoPackage: spec.cargoPackage, componentPackageId: spec.componentPackageId, outputName: spec.outputName, componentProfile: "wasm-release" as const }));
     const receipts = new Map<string, FreshComponentReceiptV1>();
     const compilerInvocations = new Map<string, readonly string[]>();
     const actorProducers = new Map<string, Omit<ActorProducerV1,"compiler"> & {compilerName:string}>();
@@ -10418,6 +10478,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
         componentSha256: receipt.component.sha256,
         componentBlake3: receipt.component.blake3,
         descriptorSha256: receipt.descriptor.sha256,
+        receipt: receipt.componentReceipt,
         dependencies: dependencies.get(identity.pluginId)!,
         executionProtocol: descriptorClaims.get(identity.pluginId)!.executionProtocol,
         browserActor: browserActors.get(identity.pluginId)!,
@@ -10437,6 +10498,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
       dependencies: dependencies.get(plugin)!,
       component: { path: `packages/${plugin}/component.wasm`, byteLength: receipt.component.byteLength, sha256: receipt.component.sha256, blake3: receipt.component.blake3 },
       descriptor: { path: `packages/${plugin}/descriptor.semio`, byteLength: receipt.descriptor.byteLength, sha256: receipt.descriptor.sha256 },
+      receipt: receipt.componentReceipt,
       executionProtocol: descriptorClaims.get(plugin)!.executionProtocol,
       browserActor: browserActors.get(plugin)!,
       pluginModule: pluginModules.get(plugin)!,
@@ -10444,7 +10506,7 @@ export async function materializeTrustedCatalogBundle(invocation: ScriptInvocati
       openTargets: openTargets.filter((declared) => declared.pluginId === plugin).map(({ pluginId: _owner, ...target }) => target),
     });
     const bundle = {
-      schemaVersion: 3,
+      schemaVersion: 4,
       profiles: [
         {
           id: profileSummary.id,
@@ -10525,7 +10587,7 @@ function trustedBootstrapReadCurrentBundle(current: TrustedBootstrapMaterializat
   try {
     if (createHash("sha256").update(bytes).digest("hex") !== current.bundleSha256) throw new Error("trusted rotation source bundle differs from its retained digest");
     const bundle = JSON.parse(new TextDecoder("utf-8", { fatal: true }).decode(bytes));
-    if (bundle.schemaVersion !== 3 || bundle.profiles?.length !== 1 || !Array.isArray(bundle.packages) || bundle.packages.length === 0 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
+    if (bundle.schemaVersion !== 4 || bundle.profiles?.length !== 1 || !Array.isArray(bundle.packages) || bundle.packages.length === 0 || bundle.profiles[0]?.id !== current.profileId || bundle.profiles[0]?.generationId !== current.generationId)
       throw new Error("trusted rotation source differs from the exact retained profile generation");
     return bundle;
   } finally {
@@ -10582,7 +10644,7 @@ async function proveTrustedGisColdMapComponentV1(invocation: ScriptInvocation, r
         {
           package: "semio-hub-gis",
           target: { kind: "test", name: "component_cold_map_patch" },
-          cargoArgs: ["--no-default-features", "--features", "component-receipt-acceptance"],
+          cargoArgs: ["--features", "component-receipt-acceptance"],
           laws: ["genuine_gis_component_cold_loads_and_patches_the_exact_tiled_map_surface", "genuine_gis_component_rejects_stale_cold_authority_before_loading"],
         },
       ],
@@ -10765,7 +10827,7 @@ async function proveTrustedRotationSourceFixture(fixture: Record<string, any>): 
   const evidence = mkdtempSync(join(artifactRoot, "rotation-source-"));
   for (const law of fixture.rotation.sourceCases) {
     const path = join(evidence, `${law.change}.json`);
-    const bundle = { schemaVersion: 3, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
+    const bundle = { schemaVersion: 4, profiles: [{ id: fixture.profile.id, generationId: fixture.profile.generationId }], packages: [{}, {}] };
     const bytes = Buffer.from(JSON.stringify(bundle));
     const sha256 = await webSha256Hex(bytes);
     writeFileSync(path, bytes, { flag: "wx" });
@@ -10838,7 +10900,7 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       const destinationRoot = join(stageRoot, "packages", plugin);
       mkdirSync(destinationRoot, { recursive: true, mode: 0o700 });
       const sourceReceipt = trustedBootstrapGenerationReceipt(record);
-      const component = trustedBootstrapReadRegular(join(sourceRoot, "component.wasm"), 64 * 1024 * 1024, `${plugin} rotation component`, checkGeneration);
+      const component = trustedBootstrapReadRegular(join(sourceRoot, "component.wasm"), DOCUMENT_EXECUTION_TARGET_COMPONENT_MAX_BYTES, `${plugin} rotation component`, checkGeneration);
       let descriptor = trustedBootstrapReadRegular(join(sourceRoot, "descriptor.semio"), 4 * 1024 * 1024, `${plugin} rotation descriptor`, checkGeneration);
       let actorBytes: Uint8Array | undefined;
       try {
@@ -10866,37 +10928,22 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
         }
         if (plugin === "stdio") {
           const value = decodePackValue(descriptor) as unknown as Record<string, any>;
-          if (
-            value.packageId !== record.packageId ||
-            value.manifest?.pluginId !== plugin ||
-            value.manifest?.version !== record.version ||
-            value.role !== record.role ||
-            value.execution !== "isolated" ||
-            typeof value.hashes?.coreWasmSha256 !== "string"
-          )
+          if (value.packageId !== record.packageId || value.manifest?.pluginId !== plugin || value.manifest?.version !== record.version || value.role !== record.role || value.execution !== "isolated" || "hashes" in value)
             throw new Error("trusted rotation Stdio descriptor identity changed");
           value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`;
-          value.hashes.descriptorSha256 = "";
-          value.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(value)).digest("hex");
           const updatedDescriptor = Buffer.from(encodePackValue(value));
           descriptor.fill(0);
           descriptor = updatedDescriptor;
           const json = Buffer.from(JSON.stringify(packValueToExactJson(value as PackValue)), "utf8");
           try {
-            verifyFreshCatalogPackageV1(json, descriptor, {
-              pluginId: plugin,
-              packageId: record.packageId,
-              version: record.version,
-              role: "plugin",
-              execution: "isolated",
-              wasmSha256: record.component.sha256,
-              coreWasmSha256: value.hashes.coreWasmSha256,
-            });
+            const pair = verifySemanticDescriptorPairBytesV1(json, descriptor);
+            if (pair.pluginId !== plugin || pair.packageId !== record.packageId || pair.version !== record.version || pair.role !== "plugin" || pair.execution !== "isolated") throw new Error("trusted rotation Stdio descriptor identity changed");
           } finally {
             json.fill(0);
           }
           record.descriptor.byteLength = descriptor.byteLength;
           record.descriptor.sha256 = createHash("sha256").update(descriptor).digest("hex");
+          record.receipt = { ...trustedBootstrapRecordReceipt({ ...record, descriptor: sourceReceipt.descriptor }), semanticDescriptorSha256: record.descriptor.sha256 };
         }
         trustedBootstrapWriteNew(join(destinationRoot, "component.wasm"), component, checkGeneration);
         trustedBootstrapWriteNew(join(destinationRoot, "descriptor.semio"), descriptor, checkGeneration);
@@ -10916,6 +10963,7 @@ async function materializeTrustedStdioGisRotation(repoRoot: string, dataRoot: st
       componentSha256: record.component.sha256,
       componentBlake3: record.component.blake3,
       descriptorSha256: record.descriptor.sha256,
+      receipt: record.receipt,
       dependencies: record.dependencies,
       executionProtocol: record.executionProtocol,
       browserActor: record.browserActor,
@@ -11195,6 +11243,7 @@ async function proveTrustedStdioGisCandidatePlan(run: LocalHubRun, receipt: Trus
         componentBlake3: selected.component.blake3,
         descriptorByteSha256: selected.descriptor.sha256,
         executionProtocol: trustedBootstrapExecutionProtocol(selected.executionProtocol),
+        componentReceipt: trustedBootstrapRecordReceipt(selected),
       }) ||
     JSON.stringify(plan.artifact) !== JSON.stringify({ kind: target.artifactKind, schema: target.artifactSchema, packSchemaHash: target.packSchemaHash }) ||
     JSON.stringify(plan.parentDialect) !== JSON.stringify(target.parentDialect) ||
@@ -13375,14 +13424,15 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     await proveGisMapTwoAuthorCompositionFixture(this.invocation, this.repoRoot);
     const describeSource = readFileSync(resolve(this.repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🖨️describe/🏭️fresh-component/🟦️.ts"), "utf8");
     const producerStart = describeSource.indexOf("function freshStage(");
-    const producerEnd = describeSource.indexOf("\n/** 🛂️ The ONE describe route", producerStart);
+    const producerEnd = describeSource.length;
     const producer = describeSource.slice(producerStart, producerEnd);
     if (
       producerStart < 0 ||
       producerEnd < 0 ||
       !producer.includes('CARGO_INCREMENTAL: "0"') ||
       !producer.includes("pluginWasmArtifactPath(") ||
-      !producer.includes("verifyFreshCatalogPackageV1(") ||
+      !producer.includes("verifySemanticDescriptorPairBytesV1(") ||
+      !producer.includes("freshComponentReceiptV1(") ||
       !producer.includes("readStableBuildFile(cargoComponent") ||
       !producer.includes("freshStage(snapshot.descriptorBytes") ||
       !producer.includes("snapshot?.descriptorBytes.fill(0)") ||
@@ -13394,7 +13444,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       producer.includes("plugin-registry:generate") ||
       producer.includes("ownerRoot")
     )
-      throw new Error("fresh component producer is not isolated, descriptor-verified, bounded, close-before-cleanup, or side-effect free");
+      throw new Error("fresh component producer is not isolated, descriptor-verified, receipt-bound, bounded, close-before-cleanup, or side-effect free");
     const catalogSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/🔏️trusted-catalog/🦀️.rs"), "utf8");
     const providerSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🗿️artifact-authority/📇️native-openable-provider/🦀️.rs"), "utf8");
     const runtimeSource = readFileSync(resolve(this.repoRoot, "🌎️hub/🏗️bootstrap/🦀️.rs"), "utf8").split("\nmod tests {")[0]!;
@@ -13403,7 +13453,8 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
     const receiptResolution = runtimeCompact.indexOf(".authority_for_authenticated_exchange(&intent.plan_receipt");
     const targetResolution = runtimeCompact.indexOf("catalog.resolve_document_open(&authority.descriptor", receiptResolution);
     if (
-      !catalogSource.includes("bundle.schema_version != 3") ||
+      !catalogSource.includes("bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION") ||
+      !catalogSource.includes("record.receipt.binds(&record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256)") ||
       !catalogSource.includes("trusted_profile_generation(&bundle, &profile)") ||
       !catalogSource.includes("selected profile must resolve at least one document-open target") ||
       !catalogSource.includes("selected profile resolved a different number of document-open targets than it declares") ||
@@ -13448,7 +13499,7 @@ class TrustedStdioGisBundleCheckScript extends BundleScript {
       ["candidate compare-current snapshot", ordered(candidate, "const expectedCurrent = trustedBootstrapReadCurrentPointer(dataRoot)", "await proveTrustedGisColdMapComponentV1")],
       ["candidate stale plan", ordered(candidate, "if (stalePlan) await proveTrustedStdioGisStalePlanRejected", "const plan = await proveTrustedStdioGisCandidatePlan")],
       ["stale receipt cleanup", /finally\s*\{\s*stalePlan\.receipt\s*=\s*"";\s*\}/u.test(stalePlan)],
-      ["rotation descriptor", rotation.includes("verifyFreshCatalogPackageV1(") && rotation.includes("trustedBootstrapProfileEncoding(")],
+      ["rotation descriptor", rotation.includes("verifySemanticDescriptorPairBytesV1(") && rotation.includes("trustedBootstrapProfileEncoding(")],
       ["server-owned rotation", rotation.includes('value.manifest.label = `Stdio trusted rotation ${randomBytes(8).toString("hex")}`')],
       ["rotation publication", ordered(rotation, "renameSync(stageRoot, generationRoot)", "trustedBootstrapFsyncDirectory(generationsRoot)")],
       ["bootstrap candidate", ordered(bootstrap, "materializeTrustedCatalogBundle", "validateAndPublishTrustedStdioGisCandidate")],
@@ -14245,7 +14296,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   if (fixture.hostile.length < 8 || fixture.hostile.length > 24 || fixture.hostile.some((row) => !homeMutations.includes(row.mutation))) throw new Error("directory Home browser process hostile inventory drift");
   if (new Set(fixture.hostile.map((row) => row.mutation)).size !== homeMutations.length) throw new Error("directory Home browser process hostile mutations are not exhaustive");
   const modelChecks = directoryHomeBrowserProcessModel(fixture);
-  const guestTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", fixture.spaceGuest.target], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  const guestTree = runProbe("cargo", ["tree", "--manifest-path", join(repoRoot, "🌎️hub/Cargo.toml"), "-e", "features", "-p", fixture.spaceGuest.package, "--target", fixture.spaceGuest.target], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   if (guestTree.status !== 0) throw new Error(`directory Home Space guest graph oracle failed: ${guestTree.stderr}`);
   for (const forbidden of fixture.spaceGuest.forbiddenPackages) {
     if (new RegExp(`(?:^|\\s)${forbidden} v`, "mu").test(guestTree.stdout)) throw new Error(`directory Home Space guest graph retained forbidden package ${forbidden}`);
@@ -14254,7 +14305,7 @@ async function proveDirectoryHomeBrowserProcessSource(repoRoot: string): Promise
   const rustc = runProbe("rustc", ["-vV"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   const hostTarget = rustc.status === 0 ? rustc.stdout.match(/^host: (.+)$/mu)?.[1] : undefined;
   if (!hostTarget) throw new Error(`directory Home Space native target oracle failed: ${rustc.stderr}`);
-  const nativeTree = runProbe("cargo", ["tree", "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
+  const nativeTree = runProbe("cargo", ["tree", "--manifest-path", join(repoRoot, "🌎️hub/Cargo.toml"), "-e", "features", "-p", fixture.spaceGuest.package, "--target", hostTarget, "-i", "semio-framework-os-kernel"], { cwd: repoRoot, budgetMs: fixture.limits.stepMs });
   if (nativeTree.status !== 0 || !nativeTree.stdout.includes(`semio-framework-os-kernel feature "${fixture.spaceGuest.nativeFeature}"`)) throw new Error("directory Home Space native graph lost the kernel sync transport");
   const worker = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/👷️worker/🟦️.ts"), "utf8");
   const owner = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx"), "utf8");
@@ -14470,11 +14521,9 @@ async function proveDirectoryHomeBrowserControllerRuntime(repoRoot: string, fixt
 }
 
 function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixture: DirectoryHomeBrowserProcessFixture): void {
-  const moduleRoot = join(pluginModulesRootIn(repoRoot, "dev"), fixture.home.moduleDirectory);
+  const moduleRoot = join(pluginModulesRootIn(repoRoot), fixture.home.moduleDirectory);
   const manifest = JSON.parse(readFileSync(join(moduleRoot, "🔣️.json"), "utf8")) as Record<string, any>;
-  const wasmPath = join(moduleRoot, "semio_s_plugin_space_component.core.wasm");
-  const actual = createHash("sha256").update(readFileSync(wasmPath)).digest("hex");
-  const expected = manifest.hashes?.coreWasmSha256;
+  const descriptorSha256 = createHash("sha256").update(readFileSync(join(moduleRoot, "🛂️.descriptor.semio"))).digest("hex");
   const app = manifest.manifest?.apps?.find((candidate: Record<string, any>) => candidate.id === fixture.home.appId);
   const failures = [];
   if (!app) failures.push(`missing-app=${fixture.home.appId}`);
@@ -14483,7 +14532,12 @@ function assertDirectoryHomeBrowserComponentAttestation(repoRoot: string, fixtur
       if (!app.windowKinds?.some((window: Record<string, any>) => window.actions?.some((action: Record<string, any>) => action.id === actionId))) failures.push(`missing-action=${actionId}`);
     }
   }
-  if (!/^[0-9a-f]{64}$/u.test(expected ?? "") || expected !== actual) failures.push(`core-wasm-sha256 expected=${expected ?? "<missing>"} actual=${actual}`);
+  try {
+    const receipt = readComponentReceiptV1(join(moduleRoot, COMPONENT_RECEIPT_FILE));
+    if (receipt.pluginId !== "space" || receipt.semanticDescriptorSha256 !== descriptorSha256 || "hashes" in manifest) failures.push(`receipt names ${receipt.pluginId} with descriptor ${receipt.semanticDescriptorSha256}, module descriptor ${descriptorSha256}`);
+  } catch (error) {
+    failures.push(`receipt ${(error as Error).message}`);
+  }
   if (failures.length > 0) throw new Error(`directory Home browser process blocked before discovery: Space component attestation rejected: ${failures.join("; ")}`);
 }
 
@@ -14501,7 +14555,7 @@ async function proveDirectoryHomeBrowserStaticWasmProcessRuntime(
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🏛️ShellHost/🧬️contracts/📇️directory-bootstrap/🟦️.tsx")),
     bundleModule(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/📺️renderer/🧑‍🎨engine/🧱️elements/🔌️PluginRuntime/🟦️.tsx")),
   ]);
-  const pluginRoot = pluginModulesRootIn(repoRoot, "dev");
+  const pluginRoot = pluginModulesRootIn(repoRoot);
   const mime = (path: string): string => (path.endsWith(".wasm") ? "application/wasm" : path.endsWith(".json") ? "application/json; charset=utf-8" : "text/javascript; charset=utf-8");
   const physicalPluginPath = (urlPath: string): string | undefined => {
     const prefix = "/🔌️plugin-modules/";
@@ -15406,19 +15460,21 @@ async function proveDocumentCheckInV1(repoRoot: string): Promise<number> {
   const job = readFileSync(join(repoRoot, "🌎️hub/🗿️artifact-authority/📌️check-in/🦀️.rs"), "utf8");
   const ledger = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🛢️db/🗿️artifact/🦀️.rs"), "utf8");
   const store = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/🦀️.rs"), "utf8");
+  const codec = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🏪️store/📦️codec/🦀️.rs"), "utf8");
   const wit = readFileSync(join(repoRoot, "🧰️framework/🛍️products/💻️os/🔨️modules/🔌️plugin/🧬️schema/📜️.wit"), "utf8");
   for (const [name, body, markers] of [
     ["hub", hub, ["/spaces/{space_id}/documents/{document_id}/check-ins", "/spaces/{space_id}/documents/{document_id}/check-ins/{request_id}/cancel", "artifact_ledger_tail", "claim_or_read_checkpoint_publication"]],
     ["job", job, ["TrustedArtifactReplayCodec", "materialize_check_in", "DocumentCheckInRefusalV1"]],
     ["ledger", ledger, ["pub async fn artifact_ledger_tail"]],
-    ["store", store, ["pub async fn replay_envelopes_onto_pair", "ingest_remote"]],
+    ["store", store, ["ingest_remote"]],
+    ["codec", codec, ["pub async fn replay_envelopes_onto_pair"]],
     ["wit", wit, ["replay-envelopes: async func"]],
   ] as const) {
     for (const marker of markers) if (!body.includes(marker)) throw new Error(`check-in ${name} boundary is missing ${marker}`);
     checks++;
   }
   if (hub.includes("checkpoint-publications")) throw new Error("the client upload route must stay deleted");
-  console.log(`document-check-in-oracle: requests=${fixture.valid.requests.length}+${fixture.invalid.requests.length} statuses=${fixture.valid.statuses.length}+${fixture.invalid.statuses.length} ajv=2 typescript=2 boundaries=5`);
+  console.log(`document-check-in-oracle: requests=${fixture.valid.requests.length}+${fixture.invalid.requests.length} statuses=${fixture.valid.statuses.length}+${fixture.invalid.statuses.length} ajv=2 typescript=2 boundaries=6`);
   return checks;
 }
 
@@ -17544,6 +17600,7 @@ const router = new ScriptRouter(import.meta.dir)
   .register("io-matrix", HubIoMatrixScript)
   .register("foundation-source-check", HubFoundationSourceScript)
   .register("socket-grant-command-source-check", HubSocketGrantCommandSourceScript)
+  .register("unit-census-check", HubUnitCensusScript)
   .register("component-codec-check", ComponentCodecCheckScript)
   .register("test", TestScript)
   .register("test-inference-client-contract", InferenceClientContractTestScript)

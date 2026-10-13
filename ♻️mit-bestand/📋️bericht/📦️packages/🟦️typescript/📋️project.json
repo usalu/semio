@@ -237,6 +237,7 @@
     },
     "test": {
       "executor": "nx:run-commands",
+      "dependsOn": ["build"],
       "options": {
         "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
         "command": "bun ./📜️script.ts test",
@@ -402,110 +403,6 @@
         "command": "bun ../../🔨️modules/👥️actor-network/📜️script.ts akteursnetz check",
         "forwardAllArgs": false
       }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": false
-      },
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/**/*",
-        "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
-        "{workspaceRoot}/bun.lock",
-        {
-          "runtime": "bun --version"
-        },
-        {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
-        },
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/📝️kompaktbericht/**/*",
-        "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*",
-        {
-          "dependentTasksOutputFiles": "**/*.pdf",
-          "transitive": true
-        }
-      ],
-      "dependsOn": [
-        "build"
-      ]
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "options": {
-        "cwd": "♻️mit-bestand/📋️bericht/📦️packages/🟦️typescript",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": false
-      },
-      "cache": true,
-      "outputs": [],
-      "inputs": [
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/**/*",
-        "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🔣️taxonomy.json",
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/🔨️modules/📄️documents/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📇️catalog/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/🔧️toolchain/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/📜️script.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🖨️tectonic-template-compilation/📚️bundle/🔒️dependencies.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/📥️source-staging/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🔤print-font-catalog/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🎨print-design-token-paints/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖋️latex/**/*",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🔨️modules/🕸️graph/📐️.tex",
-        "{workspaceRoot}/🧰️framework/🛍️products/📓️print/🖼️assets/🔤️font/**/*.ttf",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🌗️mixing/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎨️styling/🔣️.json",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🏃️process/🧭️routing/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/🗂️workspaces/🟦️.ts",
-        "{workspaceRoot}/🧰️framework/🛍️products/🦑️repo/🔨️modules/📚️library/⚡️caching/📦️artifacts/🟦️.ts",
-        "{workspaceRoot}/bun.lock",
-        {
-          "runtime": "bun --version"
-        },
-        {
-          "runtime": "node -p \"process.platform.concat(process.arch)\""
-        },
-        "{workspaceRoot}/♻️mit-bestand/📋️bericht/📝️kompaktbericht/**/*",
-        "!{workspaceRoot}/♻️mit-bestand/📋️bericht/**/dist/**/*",
-        {
-          "dependentTasksOutputFiles": "**/*.pdf",
-          "transitive": true
-        }
-      ],
-      "dependsOn": [
-        "build"
-      ]
     }
   }
 }

@@ -3,7 +3,7 @@
 //! `bfrange` in both scalar and array forms), the predefined `Identity-H`/`-V` maps, and the
 //! byte-sequence → code splitter every composite font's text showing relies on (§9.7.6.2).
 
-use super::super::lexer::{Lexer, Token};
+use crate::standards::v1_7::subsets::base::modules::lexer::{Lexer, Token};
 use crate::standards::v1_7::subsets::base::schema::snapshot::{PdfCidMapping, PdfCodespaceRange, PdfEmbeddedCMap, PdfObject, PdfToUnicode, PdfToUnicodeMapping};
 
 //#region 🔖️Parsing

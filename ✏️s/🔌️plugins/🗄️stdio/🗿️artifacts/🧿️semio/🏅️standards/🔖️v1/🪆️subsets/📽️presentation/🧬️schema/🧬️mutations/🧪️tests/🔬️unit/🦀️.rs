@@ -1,8 +1,8 @@
 use super::*;
-use crate::standards::v1::subsets::presentation::io::binary::mutations::wire_tag;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::document::schema::snapshot::DocRun;
-use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
+use crate::io::binary::mutations::wire_tag;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocRun;
+use crate::schema::snapshot::{PlaceholderKind, SlidePictureImage, SlideTableCell, SlideTableRow};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -142,7 +142,7 @@ async fn mutation_diff_law() {
         let applied_via_diff = apply_valid(diff_direct.diff(), &base);
 
         let mut via_apply = base.clone();
-        let (__next, diff_from_apply) = crate::applied(&via_apply, &mutation);
+        let (__next, diff_from_apply) = semio_s_artifact_stdio_semio_base::applied(&via_apply, &mutation);
         via_apply = __next;
 
         assert_eq!(applied_via_diff, via_apply, "mutation_diff_law: apply mismatch for {mutation:?}");
@@ -158,9 +158,9 @@ async fn inverse_law() {
         let base = fixture();
 
         let mut round_tripped = base.clone();
-        round_tripped = crate::applied(&round_tripped, &mutation).0;
+        round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &mutation).0;
         for inverse_mutation in <SemioPresentationMutation as Mutation<SemioPresentationSnapshot>>::inverse(&mutation, &base).expect("valid retained mutation inverse fixture").into_iter().rev() {
-            round_tripped = crate::applied(&round_tripped, &inverse_mutation).0;
+            round_tripped = semio_s_artifact_stdio_semio_base::applied(&round_tripped, &inverse_mutation).0;
         }
         assert_eq!(round_tripped, base, "inverse_law (mutation-level).await failed for {mutation:?}");
 
@@ -184,7 +184,7 @@ fn assert_absorb_matches_sequential(base: &SemioPresentationSnapshot, d1: &Semio
 }
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-fn slides_triple(diff: &SemioPresentationDiff) -> &crate::standards::v1::subsets::presentation::schema::diff::SlidesDiff {
+fn slides_triple(diff: &SemioPresentationDiff) -> &crate::schema::diff::SlidesDiff {
     diff.slides.as_ref().expect("slides diff present")
 }
 
@@ -277,8 +277,8 @@ async fn absorb_law() {
 #[semio_framework_async_macros::async_test]
 async fn codec_retention_law() {
     let snap = fixture();
-    let bytes = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(&bytes).expect("decode");
+    let bytes = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&bytes).expect("decode");
     assert_eq!(decoded, snap);
 }
 //#endregion 🔖️FieldSweep
@@ -330,7 +330,7 @@ async fn op_text_binary_roundtrip_law() {
 /// 🎯️ Position law: removing ANY slide, master or layout (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn removals_invert_at_every_position() {
-    let base = crate::standards::v1::subsets::presentation::schema::snapshot::demo_semio_presentation_snapshot();
+    let base = crate::schema::snapshot::demo_semio_presentation_snapshot();
     for index in 0..base.slides.len() {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioPresentationMutation::RemoveSlide(remove_slide::RemoveSlide { index }), &base).await;
     }

@@ -1,7 +1,7 @@
 use super::*;
-use crate::kernel::{EntityHeader, TextField};
-use crate::registers::{AuditAction, AuditEvent};
-use crate::{empty_plugin, sample_plugin, EntityId};
+use crate::standards::v1::subsets::any::schema::kernel::{EntityHeader, TextField};
+use crate::standards::v1::subsets::any::schema::registers::{AuditAction, AuditEvent};
+use crate::standards::v1::subsets::any::schema::{snapshot::{empty_plugin, sample_plugin}, kernel::EntityId};
 
 fn event(timestamp: &str, success: bool) -> AuditEvent {
     AuditEvent {

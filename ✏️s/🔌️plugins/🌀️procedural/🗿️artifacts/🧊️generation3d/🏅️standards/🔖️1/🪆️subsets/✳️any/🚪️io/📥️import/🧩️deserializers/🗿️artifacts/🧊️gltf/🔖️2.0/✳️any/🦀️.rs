@@ -2,12 +2,18 @@
 use crate::standards::v1::subsets::any::io::mesh_bridge::{import_semio_mesh, io_error};
 use crate::Generation3dSnapshot;
 use semio_framework_plugin::ArtifactDeserializer;
-use semio_s_artifact_stdio_gltf::GltfSnapshot;
-use semio_s_artifact_stdio_gltf::schema::snapshot::{GltfDocument, GltfNode, GltfPrimitive, GltfMaterial, GltfSampler, GltfAlphaMode, GltfJson};
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfDocument;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfNode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfPrimitive;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfMaterial;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSampler;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfAlphaMode;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfJson;
 use semio_framework_artifact_flow_flow::{Widget, WidgetLayout, SynapseSpec, OrderedSet};
 use semio_framework_artifact_flow_flow::neural::{Dictionary, Value, Atom};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::io::import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use semio_s_artifact_stdio_semio_mesh_import::deserializers::artifacts::gltf::v2_0::any::SemioMeshFromGltf;
+use semio_s_artifact_stdio_semio_mesh::schema::snapshot::SemioMeshSnapshot;
 
 /// 🔧️ The neuron kind glTF geometry re-enters the flow graph through, after normalization.
 pub const IMPORT_NEURON_KIND: &str = "brep.mesh.construct";
@@ -52,7 +58,7 @@ fn capacity_error() -> semio_framework_diagnostic::TextError {
 
 fn decode(bytes: &[u8]) -> Result<GltfSnapshot, semio_framework_diagnostic::TextError> {
     if bytes.len() > 16_000_000 { return Err(capacity_error()); }
-    let decoded = if bytes.starts_with(GLB_MAGIC) { semio_s_artifact_stdio_gltf::engine::decode_glb(bytes) } else { semio_s_artifact_stdio_gltf::engine::parse_gltf_document(bytes) };
+    let decoded = if bytes.starts_with(GLB_MAGIC) { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::decode_glb(bytes) } else { semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::import::parse_gltf_document(bytes) };
     decoded.map_err(|error| io_error(format!("generation3d←gltf: {error}")))
 }
 
@@ -181,7 +187,7 @@ fn enrich_surfaces(snapshot: &mut Generation3dSnapshot, from: &GltfSnapshot) -> 
         let mut attributes = payload.get("attributes").and_then(Json::as_object).cloned().unwrap_or_else(Object::new);
         for (semantic, index) in &primitive.attributes {
             if matches!(semantic.as_str(), "POSITION" | "NORMAL" | "TEXCOORD_0" | "COLOR_0") { continue; }
-            let decoded = semio_s_artifact_stdio_gltf::engine::decode_accessor(&from.document, &from.buffers, *index).map_err(io_error)?;
+            let decoded = semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::io::decode_accessor(&from.document, &from.buffers, *index).map_err(io_error)?;
             let width = decoded.accessor_type.components();
             if decoded.count != vertices || width > 16 || decoded.components.iter().any(|value| !value.is_finite() || !(*value as f32).is_finite()) { return Err(io_error("glTF authored channel disagrees with its finite vertex domain")); }
             let (name, kind) = if let Some(set) = semantic.strip_prefix("TEXCOORD_") {

@@ -1,7 +1,7 @@
 //! 📰️ Handcrafted XML document, node, attribute, declaration and entity relations.
 
 use crate::standards::v1_0::subsets::base::schema::snapshot::{XmlAttr, XmlDeclaration, XmlDocument, XmlDoctype, XmlDtdDeclaration, XmlExternalId, XmlNode, XmlQuote, XmlSnapshot};
-use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, ArtifactSqliteSnapshot};
+use semio_framework_os_kernel::{sqlite_snapshot::{SqliteDatabase, SqliteRow, SqliteSnapshotControl, SqliteSnapshotPhase, SqliteValue}, os_store::serialization::ArtifactSqliteSnapshot};
 #[path="💰️backing/🦀️.rs"]
 mod backing;
 

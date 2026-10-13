@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::triples::NamedAdded;
-use protocol::{DiffBinary,DiffCodec,DiffText};
+use semio_s_artifact_stdio_semio_base::schema::triples::NamedAdded;
+use protocol::{DiffBinary,DiffText};
 
 //#region Fixtures
 /// 🧪️ Every field/collection mutable, incl. a nested `blocks[].entities` add/remove/modify and
@@ -8,7 +8,7 @@ use protocol::{DiffBinary,DiffCodec,DiffText};
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_a() -> SemioCadSnapshot {
     SemioCadSnapshot {
-        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "keep".into(), color_index: 1, line_type: "CONTINUOUS".into(), visible: true }, CadLayer { name: "layer-remove".into(), color_index: 2, line_type: "DASHED".into(), visible: false }],
         blocks: vec![
             CadBlock {
@@ -31,7 +31,7 @@ fn sweep_a() -> SemioCadSnapshot {
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
 fn sweep_b() -> SemioCadSnapshot {
     SemioCadSnapshot {
-        schema: crate::standards::v1::subsets::cad::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
+        schema: crate::schema::snapshot::STDIO_SEMIOCAD_DOCUMENT_SCHEMA.into(),
         layers: vec![CadLayer { name: "keep".into(), color_index: 9, line_type: "DASHDOT".into(), visible: false }, CadLayer { name: "layer-add".into(), color_index: 4, line_type: "HIDDEN".into(), visible: true }],
         blocks: vec![
             CadBlock {

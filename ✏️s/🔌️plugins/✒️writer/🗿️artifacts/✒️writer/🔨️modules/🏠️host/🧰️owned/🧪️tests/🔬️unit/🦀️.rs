@@ -36,13 +36,13 @@ impl store::ArtifactOwnedValueRetirementFactory<protocol::Edit<WriterMutation>> 
     }
 }
 
-fn writer_edit_source(bytes: &[u8]) -> store::OwnedSchemaRecordCursor {
-    const FIELDS: &[store::OwnedSchemaFieldSpec] = &[store::OwnedSchemaFieldSpec { id: 1, key: "value", required: true }];
-    let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: bytes.len() }).expect("exact Writer edit page credits");
-    pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(bytes).expect("bounded Writer edit page")).unwrap_or_else(|_| panic!("pre-admitted Writer edit page"));
+fn writer_edit_source(bytes: &[u8]) -> store::os_store::owned_schema_decode::OwnedSchemaRecordCursor {
+    const FIELDS: &[store::os_store::owned_schema_decode::OwnedSchemaFieldSpec] = &[store::os_store::owned_schema_decode::OwnedSchemaFieldSpec { id: 1, key: "value", required: true }];
+    let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: bytes.len() }).expect("exact Writer edit page credits");
+    pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(bytes).expect("bounded Writer edit page")).unwrap_or_else(|_| panic!("pre-admitted Writer edit page"));
     pages.seal().expect("sealed Writer edit source");
-    let tokens = store::OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), pages).unwrap_or_else(|_| panic!("sealed Writer edit tokens"));
-    store::OwnedSchemaRecordCursor::try_new(store::OwnedSchemaRecordSpec { fields: FIELDS }, tokens).unwrap_or_else(|_| panic!("valid Writer edit wrapper schema"))
+    let tokens = store::os_store::owned_schema_decode::OwnedSchemaTokenCursor::try_new(semio_framework_job::OperationId(1), semio_framework_job::Generation(1), pages).unwrap_or_else(|_| panic!("sealed Writer edit tokens"));
+    store::os_store::owned_schema_decode::OwnedSchemaRecordCursor::try_new(store::os_store::owned_schema_decode::OwnedSchemaRecordSpec { fields: FIELDS }, tokens).unwrap_or_else(|_| panic!("valid Writer edit wrapper schema"))
 }
 
 /// 🧹️ Retires one entry authority (and the mutation array beneath it) to its exact terminal-empty
@@ -50,8 +50,8 @@ fn writer_edit_source(bytes: &[u8]) -> store::OwnedSchemaRecordCursor {
 /// already unwinding is a `panic in a destructor during cleanup` → SIGABRT that kills the whole test
 /// binary — which is why every exit path of `drive_writer_edit` below goes through here, including
 /// the refusal paths a malformed fixture takes.
-fn retire_writer_edit_authority(authority: &mut dyn store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>) {
-    let refusal = |diagnostic: store::OwnedSchemaDecodeDiagnostic| -> usize { panic!("a Writer edit authority quotes its close: {}", diagnostic.code) };
+fn retire_writer_edit_authority(authority: &mut dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>) {
+    let refusal = |diagnostic: store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic| -> usize { panic!("a Writer edit authority quotes its close: {}", diagnostic.code) };
     for _ in 0..100_000 {
         if authority.terminal_is_empty() {
             return;
@@ -68,14 +68,14 @@ fn retire_writer_edit_authority(authority: &mut dyn store::ArtifactOwnedHistoryE
     panic!("Writer edit authority did not reach its terminal-empty witness within its bounded close ladder")
 }
 
-fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> Result<protocol::Edit<WriterMutation>, store::OwnedSchemaDecodeDiagnostic> {
+fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> Result<protocol::Edit<WriterMutation>, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
     let mut source = writer_edit_source(bytes);
-    let decoder = store::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
-    let mut authority = store::ArtifactOwnedHistoryEntryDecoder::begin_entry(
+    let decoder = store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
+    let mut authority = store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder::begin_entry(
         decoder.as_ref(),
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
+        store::os_store::owned_schema_decode::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
         std::sync::Arc::new(UnusedWriterEditRetirementFactory),
     );
     let outcome = drive_writer_edit_tokens(&mut source, authority.as_mut(), cancel);
@@ -84,10 +84,10 @@ fn drive_writer_edit(bytes: &[u8], cancel: semio_framework_job::CancelToken) -> 
 }
 
 fn drive_writer_edit_tokens(
-    source: &mut store::OwnedSchemaRecordCursor,
-    authority: &mut dyn store::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>,
+    source: &mut store::os_store::owned_schema_decode::OwnedSchemaRecordCursor,
+    authority: &mut dyn store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryAuthority<protocol::Edit<WriterMutation>>,
     cancel: semio_framework_job::CancelToken,
-) -> Result<protocol::Edit<WriterMutation>, store::OwnedSchemaDecodeDiagnostic> {
+) -> Result<protocol::Edit<WriterMutation>, store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic> {
     let mut pending = None;
     let mut preview_sequence = 0;
     for _ in 0..100_000 {
@@ -96,25 +96,25 @@ fn drive_writer_edit_tokens(
         let field = match pending.take() {
             Some(field) => field,
             None => match source.step(&mut context) {
-                store::OwnedSchemaRecordStep::Pending => continue,
-                store::OwnedSchemaRecordStep::FieldToken { field_id: 1, token, terminal } => (token, terminal),
-                store::OwnedSchemaRecordStep::Fault(diagnostic) => return Err(diagnostic),
-                store::OwnedSchemaRecordStep::Cancelled => return Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-source-cancelled", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
-                store::OwnedSchemaRecordStep::Complete => break,
-                store::OwnedSchemaRecordStep::FieldToken { .. } => unreachable!("single Writer wrapper field"),
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::Pending => continue,
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::FieldToken { field_id: 1, token, terminal } => (token, terminal),
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::Fault(diagnostic) => return Err(diagnostic),
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::Cancelled => return Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-source-cancelled", offset: 0, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() }),
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::Complete => break,
+                store::os_store::owned_schema_decode::OwnedSchemaRecordStep::FieldToken { .. } => unreachable!("single Writer wrapper field"),
             },
         };
         match authority.accept_token(field.0, field.1, source, &mut context) {
-            Ok(store::ArtifactEnvelopeFieldDecodeStep::Pending) => pending = Some(field),
-            Ok(store::ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {}
-            Ok(store::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
-                return authority.take_value().ok_or(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-value-missing", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
+            Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::Pending) => pending = Some(field),
+            Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::TokenComplete) => {}
+            Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::FieldComplete) => {
+                return authority.take_value().ok_or(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-value-missing", offset: 0, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() });
             }
-            Ok(store::ArtifactEnvelopeFieldDecodeStep::RecordComplete) => unreachable!("entry authority never owns the wrapper record"),
+            Ok(store::os_store::owned_schema_decode::ArtifactEnvelopeFieldDecodeStep::RecordComplete) => unreachable!("entry authority never owns the wrapper record"),
             Err(diagnostic) => return Err(diagnostic),
         }
     }
-    Err(store::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-did-not-complete", offset: 0, line: 0, column: 0, path: store::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
+    Err(store::os_store::owned_schema_decode::OwnedSchemaDecodeDiagnostic { code: "writer-envelope.test-did-not-complete", offset: 0, line: 0, column: 0, path: store::os_store::owned_schema_decode::OwnedSchemaPath::ROOT , refusal_kind: semio_framework_value::ValueRefusalKind::InvariantViolated, retained_progress: semio_framework_value::RetainedCloneProgress::default() })
 }
 
 #[semio_framework_async_macros::async_test]
@@ -163,8 +163,8 @@ async fn writer_document_text_round_trips_through_the_store() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     assert_eq!(store.snapshot().expect("snapshot"), jack_snapshot());
     store::os_store::test_support::assert_document_text_round_trip(&store).await;
     store::os_store::test_support::assert_document_pack_round_trip(&store).await;
@@ -181,8 +181,8 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     // 🔐️ Through the owner-installing constructor: a bare `ArtifactStore::new` installs no catalog
     // and `reserve_edit_history_slot` then refuses every `Apply`
     // (`edit history insertion requires its exact mutation retirement factory`).
-    let mut store = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
-    store.dispatch(store::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
+    let mut store = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, "writer", schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid artifact store fixture");
+    store.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: jack_mutations(), transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply");
     let edit: &Edit<WriterMutation> = store.envelope().vcs.edits.last().expect("dispatch must have recorded an edit");
     store::os_store::test_support::assert_command_envelope_round_trip::<WriterSnapshot, WriterMutation>(edit, &ArtifactId(store.envelope().id.clone()), &SchemaId(store.envelope().schema.clone())).await;
 }
@@ -193,18 +193,18 @@ async fn command_envelope_round_trip_holds_for_an_applied_operation() {
 /// is already unwinding from a test's own failed assertion becomes a `panic in a destructor during
 /// cleanup` — a NON-unwinding abort that kills the whole test binary and hides the first, real
 /// failure. Every witness in this file therefore checks `std::thread::panicking()` first, the shape
-/// `store::ArtifactEnvelope::drop` already uses.
+/// `store::os_store::store_schema::ArtifactEnvelope::drop` already uses.
 ///
 /// This law can only pass when the guard is there: without it the panic below aborts the process
 /// instead of being caught here.
 #[semio_framework_async_macros::async_test]
 async fn a_live_owner_dropped_during_a_panic_unwinds_instead_of_aborting() {
-    let decoder = store::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
-    let authority = store::ArtifactOwnedHistoryEntryDecoder::begin_entry(
+    let decoder = store::os_store::owned_schema_decode::ArtifactEnvelopeOwnedFieldCatalog::<WriterSnapshot, WriterMutation>::edit_history_decoder(&WriterEnvelopeOwnedFieldCatalog);
+    let authority = store::os_store::owned_schema_decode::ArtifactOwnedHistoryEntryDecoder::begin_entry(
         decoder.as_ref(),
         semio_framework_job::OperationId(1),
         semio_framework_job::Generation(1),
-        store::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
+        store::os_store::owned_schema_decode::OwnedSchemaPath::field("value").expect("bounded Writer test path"),
         std::sync::Arc::new(UnusedWriterEditRetirementFactory),
     );
     assert!(!authority.terminal_is_empty(), "a freshly begun entry authority is NOT terminal-empty, or this law proves nothing");
@@ -266,20 +266,20 @@ async fn a_document_folded_from_the_hub_tail_reloads_again() {
         assert_eq!(payload, envelope.diff.payload, "captured checkpoint includes the explicit current line field");
         assert_eq!(id, envelope.mutation_id, "current checkpoint address covers all bytes");
     }
-    let mut folded = new_writer_store(store::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid writer store fixture");
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit before the tail");
+    let mut folded = new_writer_store(store::os_store::document_materialize::create_document_envelope(crate::WRITER_DOCUMENT_SCHEMA, document_id, schema::empty_writer_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("valid writer store fixture");
+    folded.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed before the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit before the tail");
     for value in tail {
         folded.ingest_remote(hub_tail_envelope(value)).await.expect("every operation and transition of the hub tail folds");
     }
-    folded.dispatch(store::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit after the tail");
+    folded.dispatch(store::os_store::store_schema::ArtifactCommand::Apply { mutations: vec![schema::mutations::edit_text("user1 typed after the hub tail".to_string())], transaction: None }, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a locally authored edit after the tail");
     let hub_actors: std::collections::BTreeSet<&str> = tail.iter().map(|value| value["actor"].as_str().expect("hub tail actor")).collect();
     let edits = &folded.envelope().vcs.edits;
     let from_hub = edits.iter().filter(|edit| edit.actor.as_deref().is_some_and(|actor| hub_actors.contains(actor))).count();
     assert_eq!((from_hub, edits.len() - from_hub), (15, 2), "STEP 8's mixed shape: the hub's 15 operations beside this replica's own 2 edits");
     assert!(edits.iter().all(|edit| edit.mutation_meta.first().and_then(|meta| meta.mutation_id.as_ref()).is_some_and(|id| id.0 == edit.id)), "every edit — folded or authored here — is named after its own operation, the shape SeedHistory must seed once");
     let edit_count = folded.envelope().vcs.edits.len();
-    let files = store::print_document_pack(folded.envelope()).await.expect("print the folded document pack");
-    let parsed: store::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");
+    let files = store::os_store::text_format::print_document_pack(folded.envelope()).await.expect("print the folded document pack");
+    let parsed: store::os_store::text_format::ParsedDocumentText<WriterSnapshot, WriterMutation> = store::os_store::text_format::parse_document_pack(&files.pack, &files.spr).await.expect("parse the folded document pack");
     let reloaded = parsed.into_envelope();
     assert_eq!(reloaded.vcs.edits.len(), edit_count, "the folded hub tail reloads with every operation and transition, not a duplicate mutation id fault");
     retire_writer_envelope(reloaded);

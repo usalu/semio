@@ -1,6 +1,6 @@
 use super::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::drawing::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use crate::schema::snapshot::{DrawCanvas, DrawLayer, PathSegment, STDIO_SEMIODRAWING_DOCUMENT_SCHEMA};
 use store::{InferenceCache, InferenceCacheConfig};
 
 // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
@@ -8,7 +8,7 @@ fn fixture() -> SemioDrawingSnapshot {
     SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
-        styles: vec![DrawStyle { name: "s1".into(), fill: Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None }],
+        styles: vec![DrawStyle { name: "s1".into(), fill: Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None }],
         layers: vec![DrawLayer {
             id: "l0".into(),
             name: "base".into(),
@@ -103,8 +103,8 @@ fn two_independent_styled_siblings() -> SemioDrawingSnapshot {
         schema: STDIO_SEMIODRAWING_DOCUMENT_SCHEMA.into(),
         canvas: DrawCanvas { width: 10.0, height: 10.0, background: None },
         styles: vec![
-            DrawStyle { name: "s1".into(), fill: Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None },
-            DrawStyle { name: "s2".into(), fill: Some(crate::standards::v1::subsets::base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(3.0), opacity: None },
+            DrawStyle { name: "s1".into(), fill: Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 1.0, g: 0.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(2.0), opacity: None },
+            DrawStyle { name: "s2".into(), fill: Some(semio_s_artifact_stdio_semio_base::schema::geometry::SemioRgba { r: 0.0, g: 1.0, b: 0.0, a: 1.0 }), stroke: None, stroke_width: Some(3.0), opacity: None },
         ],
         layers: vec![DrawLayer {
             id: "l0".into(),

@@ -17,15 +17,15 @@
 //! This is honest per the recipe's weak/strong-entity split: from this subset's point of view
 //! `DocBlock` is a value struct it does not own the internals of, so it is never sub-diffed here.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
 
-use crate::standards::v1::subsets::document::schema::snapshot::DocBlock;
-use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-use crate::standards::v1::subsets::presentation::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::DocBlock;
+use crate::schema::snapshot::SemioPresentationSnapshot;
+use crate::schema::snapshot::{PlaceholderKind, Slide, SlideFrame, SlideLayout, SlideMaster, SlidePictureImage, SlideShape, SlideTableCell, SlideTableRow};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -752,15 +752,15 @@ impl MutationDiff<SemioPresentationSnapshot> for SemioPresentationDiff {
     fn apply(&self, base: &SemioPresentationSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioPresentationSnapshot> {
         let mut next = base.clone();
         if let Some(d) = &self.masters {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |added| added.item.id.clone(), ["masters"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.masters, d, |item| item.id.clone(), |added| added.item.id.clone(), ["masters"])?;
             apply_named(&mut next.masters, d, |m| m.id.clone(), apply_master);
         }
         if let Some(d) = &self.layouts {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |added| added.item.id.clone(), ["layouts"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.layouts, d, |item| item.id.clone(), |added| added.item.id.clone(), ["layouts"])?;
             apply_named(&mut next.layouts, d, |l| l.id.clone(), apply_layout);
         }
         if let Some(d) = &self.slides {
-            crate::standards::v1::subsets::base::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_indexed_triple(d, next.slides.len(), ["slides"])?;
             apply_indexed(&mut next.slides, d, apply_slide);
         }
         Ok(next)
@@ -1051,7 +1051,7 @@ pub(crate) fn snapshot_b() -> SemioPresentationSnapshot {
 
 /// 🌱 Representative `SemioPresentationDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-presentation"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioPresentationDiff> {
     vec![SemioPresentationDiff::default(), SemioPresentationDiff { masters: Some(Default::default()), layouts: Some(Default::default()), slides: Some(Default::default()) }]

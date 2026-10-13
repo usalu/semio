@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `🛂compliance-records` per Wave C.
 
 use super::RenameComplianceRecord;
-use crate::diff::{ProgramComplianceRecordsDelta, ProgramComplianceRecordsPatchEntry};
-use crate::registers::ComplianceRecordPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramComplianceRecordsDelta, ProgramComplianceRecordsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::ComplianceRecordPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameComplianceRecord, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

@@ -1,8 +1,8 @@
 //! 🔊️ Borrowed Audio primitives admit exact authored sample and tag cells before typed construction.
 use super::{SemioAudioSnapshot,ValueError,ValueRefusalKind};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::SqliteDatabaseLimits};
 use semio_framework_value::native_decoding::NativeDecodeControl;
-use crate::standards::v1::subsets::base::io::sqlite::snapshot::native_decoding as native;
+use semio_s_artifact_stdio_semio_base::io::sqlite::snapshot::native_decoding as native;
 type Result<T>=std::result::Result<T,ValueError>;
 fn invalid()->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,"Semio Audio native field differs from its declared shape")}
 fn add(a:usize,b:usize)->Result<usize>{a.checked_add(b).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"Semio Audio complete cell extent overflow"))}
@@ -22,7 +22,7 @@ fn sample(word:u32)->usize{if word&0x7f800000==0x7f800000&&word&0x007fffff!=0{32
 fn format(value:u8)->Result<usize>{match value{0=>Ok(4),1..=3=>Ok(5),4|5=>Ok(3),_=>Err(invalid())}}
 fn document_format(value:Option<&str>)->Result<usize>{match value{Some("pcm8")=>Ok(4),Some("pcm16"|"pcm24"|"pcm32")|None=>Ok(5),Some("f32"|"f64")=>Ok(3),_=>Err(invalid())}}
 /// 🎚️ Counts actual binary32 source words without allocating channels or samples.
-pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
   let mut reader=store::ByteReader::new(body);if reader.read_u8().map_err(|_|invalid())?!=1{return Err(invalid())}
   let schema=text(&mut reader,control)?;reader.read_u32_le().map_err(|_|invalid())?;let format=format(reader.read_u8().map_err(|_|invalid())?)?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(16,schema)?,format)?)?;
@@ -33,9 +33,9 @@ pub(super)fn binary(body:&[u8],control:&mut NativeDecodeControl<'_>,limits:Sqlit
  })
 }
 /// 📝️ Preserves original lexical u32 and format defaults while measuring complete document cells.
-pub(super)fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
+pub fn document(body:&str,control:&mut NativeDecodeControl<'_>,limits:SqliteDatabaseLimits)->Result<()>{
  layout(limits)?;control.scoped_stage(|control|{
-  let fields=native::fields(body,["schema","sampleRate","format","channels","tags"],control)?;let schema=native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?;crate::standards::v1::subsets::mesh::io::text::snapshot::parse_u32(fields[1].ok_or_else(invalid)?).map_err(|_|invalid())?;let format=document_format(fields[2])?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(16,schema)?,format)?)?;
+  let fields=native::fields(body,["schema","sampleRate","format","channels","tags"],control)?;let schema=native::hex_text_extent(fields[0].ok_or_else(invalid)?,control)?;semio_s_artifact_stdio_semio_base::io::text::codec::parse_u32(fields[1].ok_or_else(invalid)?).map_err(|_|invalid())?;let format=document_format(fields[2])?;let mut census=Census{limits,rows:0,bytes:0};census.row(add(add(16,schema)?,format)?)?;
   let mut channels=native::Items::new(fields[3].unwrap_or("[]"))?;let count=channels.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;
   while let Some(value)=channels.next(control)?{census.row(24)?;let mut samples=native::Items::new(value)?;let count=samples.count(control,limits.max_rows)?;census.future(count)?;control.scoped_stage(|control|{control.begin_stage(count)?;while let Some(value)=samples.next(control)?{let word=u32::from_str_radix(value,16).map_err(|_|invalid())?;census.row(sample(word))?;control.step()?;}Ok::<_,ValueError>(())})?;control.step()?;}
   let mut tags=native::Items::new(fields[4].unwrap_or("[]"))?;let count=tags.count(control,limits.max_rows)?;census.future(count)?;control.begin_stage(count)?;

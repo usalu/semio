@@ -6,7 +6,7 @@ use crate::Puzzle5dSnapshot;
 use ::semio_framework_schema::ArtifactSchema;
 use protocol::{DiffAlgebra, MutationDiff};
 use protocol::list_delta::RowPatch;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_kit::schema::snapshot::SemioKitSnapshot;
 
 //#region 🔖️Diff
 /// 🔺️ Sparse typed delta for the puzzle5d artifact: per-field entity patches and id-keyed collection deltas.
@@ -28,7 +28,7 @@ pub struct Puzzle5dDiff {
     #[child(kind = "s.stdio.semio")]
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     #[state(artifact)]
-    pub kind_catalogs: Option<Option<store::ArtifactChild<SemioKitSnapshot>>>,
+    pub kind_catalogs: Option<Option<store::os_store::artifact_child::ArtifactChild<SemioKitSnapshot>>>,
     #[value(default, skip_serializing_if = "Option::is_none", deserialize_with = "deserialize_double_option")]
     #[state(artifact)]
     pub kind_catalogs_extra: Option<Option<Puzzle5dKindCatalogsExtra>>,

@@ -5,12 +5,12 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::image::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::image::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::triples::{IndexAdded, IndexModified, IndexedTripleDiff, NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_named_triple, enc_indexed_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{SemioColorspace, SemioImageFrame, SemioImageMetadataEntry, SemioImageSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 /// 🔧️ Unconditional — the `#[cfg(test)] mod tests` block below calls `print_diff`/`parse_diff`/
@@ -204,6 +204,5 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::standards::v1::subsets::image::io::text::diff::{hex_encode, hex_decode, hex_encode_str, hex_decode_str, parse_u8, parse_u32, enc_colorspace, dec_colorspace, enc_frame, dec_frame, enc_frame_diff, dec_frame_diff, enc_metadata_entry, dec_metadata_entry, enc_frames_diff, dec_frames_diff, enc_metadata_diff, dec_metadata_diff};
+use crate::io::text::diff::{hex_encode, hex_decode, hex_encode_str, hex_decode_str, parse_u8, parse_u32, enc_colorspace, dec_colorspace, enc_frame, dec_frame, enc_frame_diff, dec_frame_diff, enc_metadata_entry, dec_metadata_entry, enc_frames_diff, dec_frames_diff, enc_metadata_diff, dec_metadata_diff};
 }
-#[cfg(test)] pub use diff_codec::*;

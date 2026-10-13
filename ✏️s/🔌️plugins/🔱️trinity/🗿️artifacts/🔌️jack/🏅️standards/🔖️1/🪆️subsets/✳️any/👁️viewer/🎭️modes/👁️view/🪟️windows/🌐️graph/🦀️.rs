@@ -6,7 +6,7 @@
 //! and emits no mutations by construction (`ViewEmit`).
 
 use crate::JackSnapshot;
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::{SemioGraphNode,SemioGraphPortKind,SemioGraphSnapshot};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::{SemioGraphNode, SemioGraphPortKind, SemioGraphSnapshot};
 use semio_framework_ui_locale::LocalizedLabel;
 use semio_framework_plugin::NodeGraphEdgeRecord;
 use semio_framework_plugin::NodeGraphNodeRecord;

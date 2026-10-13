@@ -72,7 +72,7 @@ fn canonical_reader_large_borrowed_map_matches_serde_and_transfers_exact_root() 
     for bytes in [FRAME_COPY_FLOOR, 100, 4096] {
         let (mut reader, fixture, lifetime) = make_reader();
         let address = Arc::as_ptr(reader.owned.root.as_ref().unwrap());
-        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::component::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
+        let expected = serde_json::to_vec(&test_support::SerdeValue(&crate::os_store::ledger::CursorRevisionAccumulator::revision_value(reader.owned.root.as_ref().unwrap().as_ref()))).unwrap();
         assert_eq!(expected, fixture["expectedJson"].as_str().unwrap().as_bytes());
         assert_eq!(expected.len() as u64, reader_fixture["expectedByteLength"].as_u64().unwrap());
         assert!(reader.take_root().is_none());

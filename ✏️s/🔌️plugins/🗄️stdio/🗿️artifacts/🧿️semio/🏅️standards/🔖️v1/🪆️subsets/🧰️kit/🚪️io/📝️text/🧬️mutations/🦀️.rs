@@ -3,23 +3,20 @@
 //! keyword per semantic verb, grammar `keyword:arg1,arg2,...`. Reuses the snapshot facet's own
 //! real hex/bracket encoders for children/links/types/pieces/connections (never re-derived).
 
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
+use crate::schema::mutations::SemioKitMutation;
 
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level};
-use crate::standards::v1::subsets::kit::schema::mutations::{
-    add_design::AddDesign, add_type::AddType, bind_representation::BindRepresentation, change_representation_pin::ChangeRepresentationPin, create_model::CreateModel, create_object::CreateObject, create_properties::CreateProperties,
-    delete_model::DeleteModel, delete_object::DeleteObject, delete_properties::DeleteProperties, edit_design::EditDesign, remove_design::RemoveDesign, remove_type::RemoveType, rename_type::RenameType, unbind_representation::UnbindRepresentation,
-};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_connection};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_connection};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_piece};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_piece};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_pin};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_pin};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_ref};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_ref};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_str};
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use {crate::schema::mutations::add_design::AddDesign, crate::schema::mutations::add_type::AddType, crate::schema::mutations::bind_representation::BindRepresentation, crate::schema::mutations::change_representation_pin::ChangeRepresentationPin, crate::schema::mutations::create_model::CreateModel, crate::schema::mutations::create_object::CreateObject, crate::schema::mutations::create_properties::CreateProperties, crate::schema::mutations::delete_model::DeleteModel, crate::schema::mutations::delete_object::DeleteObject, crate::schema::mutations::delete_properties::DeleteProperties, crate::schema::mutations::edit_design::EditDesign, crate::schema::mutations::remove_design::RemoveDesign, crate::schema::mutations::remove_type::RemoveType, crate::schema::mutations::rename_type::RenameType, crate::schema::mutations::unbind_representation::UnbindRepresentation};
+use crate::io::text::snapshot::dec_connection;
+use crate::io::text::snapshot::enc_connection;
+use crate::io::text::snapshot::dec_piece;
+use crate::io::text::snapshot::enc_piece;
+use crate::io::text::snapshot::dec_pin;
+use crate::io::text::snapshot::enc_pin;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_ref;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_ref;
+use crate::io::text::snapshot::dec_str;
+use crate::io::text::snapshot::enc_str;
 
 //#region 📖️SemioGrammar
 pub const COMPONENT_GRAMMAR_SEMIO: &str = include_str!("📖️.grammar.semio");
@@ -32,20 +29,20 @@ fn parse_usize(s: &str) -> Result<usize, String> {
     s.parse().map_err(|e: std::num::ParseIntError| e.to_string())
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_pieces(pieces: &[crate::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece]) -> String {
+fn enc_pieces(pieces: &[crate::schema::snapshot::SemioKitPiece]) -> String {
     format!("[{}]", pieces.iter().map(enc_piece).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_pieces(s: &str) -> Result<Vec<crate::standards::v1::subsets::kit::schema::snapshot::SemioKitPiece>, String> {
+fn dec_pieces(s: &str) -> Result<Vec<crate::schema::snapshot::SemioKitPiece>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("pieces: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_piece).collect()
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn enc_connections(cs: &[crate::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection]) -> String {
+fn enc_connections(cs: &[crate::schema::snapshot::SemioKitConnection]) -> String {
     format!("[{}]", cs.iter().map(enc_connection).collect::<Vec<_>>().join(","))
 }
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
-fn dec_connections(s: &str) -> Result<Vec<crate::standards::v1::subsets::kit::schema::snapshot::SemioKitConnection>, String> {
+fn dec_connections(s: &str) -> Result<Vec<crate::schema::snapshot::SemioKitConnection>, String> {
     let inner = s.strip_prefix('[').and_then(|s| s.strip_suffix(']')).ok_or_else(|| format!("connections: expected brackets, got {s:?}"))?;
     split_top_level(inner, ',').into_iter().filter(|s| !s.is_empty()).map(dec_connection).collect()
 }
@@ -198,24 +195,24 @@ mod tests;
 #[allow(unused_imports)]
 mod mutations_codec {
 use super::*;
-use crate::standards::v1::subsets::kit::schema::mutations::*;
-use crate::standards::v1::subsets::kit::schema::diff::SemioKitDiff;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
-use crate::standards::v1::subsets::kit::schema::mutations::add_design;
-use crate::standards::v1::subsets::kit::schema::mutations::add_type;
-use crate::standards::v1::subsets::kit::schema::mutations::bind_representation;
-use crate::standards::v1::subsets::kit::schema::mutations::change_representation_pin;
-use crate::standards::v1::subsets::kit::schema::mutations::create_model;
-use crate::standards::v1::subsets::kit::schema::mutations::create_object;
-use crate::standards::v1::subsets::kit::schema::mutations::create_properties;
-use crate::standards::v1::subsets::kit::schema::mutations::delete_model;
-use crate::standards::v1::subsets::kit::schema::mutations::delete_object;
-use crate::standards::v1::subsets::kit::schema::mutations::delete_properties;
-use crate::standards::v1::subsets::kit::schema::mutations::edit_design;
-use crate::standards::v1::subsets::kit::schema::mutations::remove_design;
-use crate::standards::v1::subsets::kit::schema::mutations::remove_type;
-use crate::standards::v1::subsets::kit::schema::mutations::rename_type;
-use crate::standards::v1::subsets::kit::schema::mutations::unbind_representation;
+use crate::schema::mutations::*;
+use crate::schema::diff::SemioKitDiff;
+use crate::schema::snapshot::SemioKitSnapshot;
+use crate::schema::mutations::add_design;
+use crate::schema::mutations::add_type;
+use crate::schema::mutations::bind_representation;
+use crate::schema::mutations::change_representation_pin;
+use crate::schema::mutations::create_model;
+use crate::schema::mutations::create_object;
+use crate::schema::mutations::create_properties;
+use crate::schema::mutations::delete_model;
+use crate::schema::mutations::delete_object;
+use crate::schema::mutations::delete_properties;
+use crate::schema::mutations::edit_design;
+use crate::schema::mutations::remove_design;
+use crate::schema::mutations::remove_type;
+use crate::schema::mutations::rename_type;
+use crate::schema::mutations::unbind_representation;
 
 /// 📥️ Decodes this subset's own default-derived JSON projection — the exact shape the committed
 /// `<kind>/🧪️tests/<fixture>/🦠️mutation/🔣️.json` specification-vector fixtures carry

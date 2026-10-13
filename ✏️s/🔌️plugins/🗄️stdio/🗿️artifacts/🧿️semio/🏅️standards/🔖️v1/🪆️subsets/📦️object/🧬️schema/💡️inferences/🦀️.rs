@@ -11,7 +11,7 @@
 //! composition census (which children are present) plus the object's own real `transform.
 //! translation`, never a fabricated geometry bounding box.
 
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
+use crate::schema::snapshot::SemioObjectSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::composition::compute_semio_object_composition;

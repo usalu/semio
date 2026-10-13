@@ -12,7 +12,7 @@
 //! frame -- `animation` carries no pixel/palette data at all (see the deserializer's own doc
 //! comment), so this never fabricates image content, only real, honest frame TIMING.
 
-use crate::standards::v1::subsets::animation::schema::snapshot::SemioAnimationSnapshot;
+use semio_s_artifact_stdio_semio_animation::schema::snapshot::SemioAnimationSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_gif::schema::snapshot::GifFrame;
 use semio_s_artifact_stdio_gif::GifSnapshot;

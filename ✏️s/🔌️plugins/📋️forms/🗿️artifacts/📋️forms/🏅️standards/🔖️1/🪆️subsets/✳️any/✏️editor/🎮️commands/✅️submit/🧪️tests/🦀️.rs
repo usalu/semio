@@ -25,8 +25,8 @@ fn submission_routes_errors_and_prevents_duplicate_responses() {
         assert_eq!(next.submitted_response_id.as_deref(), Some(spec.responses[0].id.as_str()));
         let answers: serde_json::Value = serde_json::from_str(&semio_framework_pack_json::to_json_string(&spec.responses[0].answers)).unwrap();
         assert_eq!(answers, case["expected"]["response"]["answers"]);
-        let packed = <FormsTryWindowConfig as store::ArtifactPack>::encode_pack(&next);
-        let restored = <FormsTryWindowConfig as store::ArtifactPack>::decode_pack(&packed).unwrap();
+        let packed = <FormsTryWindowConfig as store::os_store::serialization::ArtifactPack>::encode_pack(&next);
+        let restored = <FormsTryWindowConfig as store::os_store::serialization::ArtifactPack>::decode_pack(&packed).unwrap();
         assert_eq!(restored, next);
         assert!(handle_window(&spec, &restored, &transient, "revision-b".into()).unwrap().0.artifact_mutations.is_empty());
     }

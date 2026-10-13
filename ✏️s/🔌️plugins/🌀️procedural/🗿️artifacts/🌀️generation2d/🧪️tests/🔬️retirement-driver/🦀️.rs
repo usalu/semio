@@ -117,7 +117,7 @@ pub(crate) fn close_work<A: semio_framework_plugin::ArtifactApp, W: semio_framew
 pub(crate) fn close_instance_owner_turn<O: semio_framework_plugin::ArtifactInstanceOperationOwner + 'static>(handle: &semio_framework_plugin::ArtifactInstanceOperationOwnerHandle) -> bool {
     handle
         .with_mut::<O, _>(|owner| {
-            let demand = owner.retirement_demands(store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| semio_framework_plugin::Fault::from(error.to_string()))?;
+            let demand = owner.retirement_demands(store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).map_err(|error| semio_framework_plugin::Fault::from(error.to_string()))?;
             let step = owner.close_step(exact_grant(demand))?;
             Ok(matches!(step, semio_framework_plugin::PluginLifecycleStep::Complete(_)))
         })

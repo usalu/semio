@@ -1570,7 +1570,7 @@ where
 /// `Box::new([const { None }; N])` and `Box::new(core::array::from_fn(fill))` are heap
 /// *destinations* with a **stack source**: the array expression is a value, materialised in the
 /// caller's frame and only then moved into the allocation. At `opt-level = 0` — `dev`, `test`,
-/// `wasm-dev`, where LLVM neither colours nor reuses stack slots — that costs
+/// where LLVM neither colours nor reuses stack slots — that costs
 /// `len * size_of::<T>()` of stack in the constructing frame, however large. Measured instances of
 /// exactly that defect: 5 670 928 B for `[Option<AdmittedSurfaceEntry<World3dState>>; 256]`,
 /// 16 779 328 B for `[EngineSurfaceSlot; 256]`, 11 929 152 B for `[Option<UiSurfaceSlot>; 64]` — on

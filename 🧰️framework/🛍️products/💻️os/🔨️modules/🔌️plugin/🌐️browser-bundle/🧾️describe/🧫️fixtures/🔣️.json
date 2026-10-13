@@ -4,7 +4,9 @@
     "descriptorVersion": 1,
     "packageId": "semio:gis",
     "execution": "isolated",
-    "executionProtocol": { "appChannelVersion": 23 },
+    "executionProtocol": {
+      "appChannelVersion": 23
+    },
     "manifest": {
       "pluginId": "gis",
       "version": "1.0.0",
@@ -18,26 +20,12 @@
           ]
         }
       ]
-    },
-    "hashes": {
-      "wasmSha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "coreWasmSha256": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "descriptorSha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
     }
   },
-  "hashKeys": [
-    "wasmSha256",
-    "coreWasmSha256",
-    "descriptorSha256"
-  ],
   "cases": [
     {
       "name": "normalized",
       "accepted": true
-    },
-    {
-      "name": "raw-staged",
-      "accepted": false
     },
     {
       "name": "hash-not-empty",
@@ -68,7 +56,7 @@
       "accepted": false
     },
     {
-      "name": "staged-bad-hash",
+      "name": "staged-bound",
       "accepted": false
     }
   ],

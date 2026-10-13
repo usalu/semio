@@ -5,15 +5,15 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod snapshot_codec {
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::{split_top_level, strip_brackets};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::{split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 /// 🧪️ Table-specific hex/bracket value primitives backing the hand-rolled `ArtifactDsl` below —
@@ -111,7 +111,7 @@ pub(crate) fn parse_table_snapshot_body(body: &str) -> Result<SemioTableSnapshot
 }
 
 /// 🎁 Real structured text/binary codecs, wrapped in the repo-wide `store::semio_format` envelope.
-impl store::ArtifactDsl for SemioTableSnapshot {
+impl store::os_store::serialization::ArtifactDsl for SemioTableSnapshot {
     const EXTENSION: &'static str = "semio";
     fn envelope_id() -> &'static str {
         STDIO_SEMIOTABLE_DOCUMENT_SCHEMA
@@ -127,7 +127,7 @@ impl store::ArtifactDsl for SemioTableSnapshot {
 
     fn print_dsl(&self) -> String {
         let body = print_table_snapshot_body(self);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
@@ -154,19 +154,19 @@ pub fn decode_semio_table_snapshot_json(text: &str) -> Result<SemioTableSnapshot
 }
 
 /// 📝️ Parses `s.stdio.semio.table` DSL text into a [`SemioTableSnapshot`] — a named pass-through of this snapshot's own
-/// `store::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
+/// `store::os_store::serialization::ArtifactDsl` impl above, whose trait and error type are both unnameable outside this
 /// crate, so `📊️mutate-semio-table`'s `identity-round-trip` scenario reaches the real committed
 /// artifact (`../../🖼️assets/📃️sheet/🗣️.dsl.semio`) through this instead.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn parse_semio_table_dsl(text: &str) -> Result<SemioTableSnapshot, String> {
-    <SemioTableSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
+    <SemioTableSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string())
 }
 
 /// 📝️ Renders a [`SemioTableSnapshot`] back as `s.stdio.semio.table` DSL text — the inverse of
 /// [`parse_semio_table_dsl`].
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn print_semio_table_dsl(snapshot: &SemioTableSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(snapshot)
+    store::os_store::serialization::ArtifactDsl::print_dsl(snapshot)
 }
 }
 pub use snapshot_codec::*;
@@ -174,16 +174,16 @@ pub use snapshot_codec::*;
 #[allow(unused_imports)]
 mod snapshot_wire_codec {
 use super::*;
-use crate::standards::v1::subsets::table::schema::snapshot::*;
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::value::io::text::diff::{dec_semio_value};
-use crate::standards::v1::subsets::value::io::text::diff::{enc_semio_value};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{read_str_lp};
-use crate::standards::v1::subsets::drawing::io::binary::snapshot::{write_str_lp};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{dec_str};
-use crate::standards::v1::subsets::drawing::io::text::snapshot::{enc_str};
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValue;
+use crate::schema::snapshot::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use semio_s_artifact_stdio_semio_value::io::text::diff::dec_semio_value;
+use semio_s_artifact_stdio_semio_value::io::text::diff::enc_semio_value;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::read_str_lp;
+use semio_s_artifact_stdio_semio_base::io::binary::codec::write_str_lp;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_str;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_str;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValue;
 use framework_schema::ArtifactSchema;
 
 

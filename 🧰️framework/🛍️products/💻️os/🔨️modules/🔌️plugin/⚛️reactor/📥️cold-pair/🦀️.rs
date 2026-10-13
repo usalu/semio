@@ -17,7 +17,7 @@ enum ColdDocumentPairPhase {
 
 struct ColdDocumentPairOwner {
     header: ColdDocumentPairHeader,
-    files: Rc<store::ArtifactPackFiles>,
+    files: Rc<store::os_store::serialization::ArtifactPackFiles>,
     pack_hash: semio_framework_hash::Sha256,
     spr_hash: semio_framework_hash::Sha256,
     aggregate_hash: semio_framework_hash::Sha256,
@@ -40,7 +40,7 @@ impl ColdDocumentPairOwner {
         let reserved_pages = header.page_count;
         Ok(Self {
             header,
-            files: Rc::new(store::ArtifactPackFiles { pack, spr, ops: String::new() }),
+            files: Rc::new(store::os_store::serialization::ArtifactPackFiles { pack, spr, ops: String::new() }),
             pack_hash: semio_framework_hash::Sha256::new(),
             spr_hash: semio_framework_hash::Sha256::new(),
             aggregate_hash: semio_framework_hash::Sha256::new(),
@@ -114,26 +114,26 @@ impl ColdDocumentPairOwner {
     }
 }
 
-pub(crate) struct ColdDocumentPairLoad {
+struct ColdDocumentPairLoad {
     owner: Rc<RefCell<ColdDocumentPairOwner>>,
-    files: Rc<store::ArtifactPackFiles>,
+    files: Rc<store::os_store::serialization::ArtifactPackFiles>,
     finished: bool,
 }
 
 impl ColdDocumentPairLoad {
     #[cfg(test)]
-    pub(crate) fn lifetime(&self) -> ActorInstanceLifetime {
+    fn lifetime(&self) -> ActorInstanceLifetime {
         self.owner.borrow().header.lifetime
     }
 
-    pub(crate) fn files(&self) -> &store::ArtifactPackFiles {
+    fn files(&self) -> &store::os_store::serialization::ArtifactPackFiles {
         &self.files
     }
 }
 
 /// 🛬️ The archive operation id a cold pair's stepped document load runs under: the transfer generation with the high
 /// bit set, so it never collides with a host-chosen archive load sequence.
-pub(crate) const COLD_PAIR_DOCUMENT_LOAD_OPERATION: u64 = 1 << 63;
+const COLD_PAIR_DOCUMENT_LOAD_OPERATION: u64 = 1 << 63;
 
 /// 🛬️ A verified cold pair whose document loads through the stepped document archive load (`📓️api-stepped-document-load.md`
 /// §8): the claimed load, the archive operation and the last page's cursor every `Loading` answer carries.
@@ -168,9 +168,9 @@ impl Drop for ColdDocumentPairLoad {
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(crate) struct ColdDocumentPairCloseStep {
-    pub(crate) wiped_bytes: usize,
-    pub(crate) closed: bool,
+struct ColdDocumentPairCloseStep {
+    wiped_bytes: usize,
+    closed: bool,
 }
 
 pub(crate) struct ColdDocumentPairIngressRegistry<const N: usize> {
@@ -331,7 +331,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
     }
 
     #[cfg(test)]
-    pub(crate) fn request_close(&mut self, lifetime: ActorInstanceLifetime) -> bool {
+    fn request_close(&mut self, lifetime: ActorInstanceLifetime) -> bool {
         let Some(owner) = self.slots[Self::slot_index(lifetime)].as_ref() else {
             return false;
         };
@@ -399,7 +399,7 @@ impl<const N: usize> ColdDocumentPairIngressRegistry<N> {
         Ok(())
     }
 
-    pub(crate) fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdDocumentPairCloseStep {
+    fn close_step(&mut self, lifetime: ActorInstanceLifetime) -> ColdDocumentPairCloseStep {
         let index = Self::slot_index(lifetime);
         let Some(owner) = self.slots[index].as_ref().cloned() else {
             return ColdDocumentPairCloseStep { wiped_bytes: 0, closed: true };

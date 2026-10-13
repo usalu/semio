@@ -16,12 +16,12 @@ pub const PUZZLE2D_NAKAGIN_EXAMPLE_TEXT: &str = include_str!("../../../📚️ex
 
 /// 📖️ Parses `.puzzle2d` DSL text into a `Puzzle2dSnapshot`.
 pub fn parse_dsl(text: &str) -> Result<Puzzle2dSnapshot, semio_framework_diagnostic::TextError> {
-    <Puzzle2dSnapshot as store::ArtifactDsl>::parse_dsl(text)
+    <Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)
 }
 
 /// 🖨️ Prints a `Puzzle2dSnapshot` back to `.puzzle2d` DSL text.
 pub fn print_dsl(document: &Puzzle2dSnapshot) -> String {
-    store::ArtifactDsl::print_dsl(document)
+    store::os_store::serialization::ArtifactDsl::print_dsl(document)
 }
 
 //#region 🧪️Tests
@@ -43,7 +43,7 @@ use crate::{Puzzle2dCamera, Puzzle2dEdge, Puzzle2dMeta, Puzzle2dNode, Puzzle2dTa
 use ::semio_framework_schema::ArtifactSchema;
 
 /// ✉️ P6 handcrafted ArtifactDsl/ArtifactPack (derive no longer emits these traits).
-impl store::ArtifactDsl for Puzzle2dSnapshot {
+impl store::os_store::serialization::ArtifactDsl for Puzzle2dSnapshot {
     const EXTENSION: &'static str = "puzzle2d";
     fn envelope_id() -> &'static str {
         "puzzle.puzzle2d"
@@ -58,7 +58,7 @@ impl store::ArtifactDsl for Puzzle2dSnapshot {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }

@@ -10,12 +10,12 @@
 //! replaced, never sub-diffed — same treatment `BcfCamera`/`XlsxCellValue` get), so
 //! `CadEntityRecordDiff.entity` is a plain `Option<CadEntity>`, not a nested diff type.
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff, NamedAdded};
 
 
 
-use crate::standards::v1::subsets::cad::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
+use crate::schema::snapshot::{CadBlock, CadEntity, CadEntityRecord, CadLayer, SemioCadSnapshot};
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
 
@@ -204,15 +204,15 @@ impl MutationDiff<SemioCadSnapshot> for SemioCadDiff {
     fn apply(&self, base: &SemioCadSnapshot, _capability: protocol::ApplyCapability) -> protocol::MutationApplyResult<SemioCadSnapshot> {
         let mut next = base.clone();
         if let Some(ld) = &self.layers {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |added| added.item.name.clone(), ["layers"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.layers, ld, |layer| layer.name.clone(), |added| added.item.name.clone(), ["layers"])?;
             apply_named(&mut next.layers, ld, |l| l.name.clone(), apply_layer);
         }
         if let Some(bd) = &self.blocks {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |added| added.item.name.clone(), ["blocks"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.blocks, bd, |block| block.name.clone(), |added| added.item.name.clone(), ["blocks"])?;
             apply_named(&mut next.blocks, bd, |b| b.name.clone(), apply_block);
         }
         if let Some(ed) = &self.entities {
-            crate::standards::v1::subsets::base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |added| added.item.handle.clone(), ["entities"])?;
+            semio_s_artifact_stdio_semio_base::schema::triples::validate_named_triple(&next.entities, ed, |entity| entity.handle.clone(), |added| added.item.handle.clone(), ["entities"])?;
             apply_named(&mut next.entities, ed, |e| e.handle.clone(), apply_entity_record);
         }
         Ok(next)
@@ -342,7 +342,7 @@ fn inverse_entity_record(base: &CadEntityRecord, diff: &CadEntityRecordDiff) -> 
 //#region 🔖️Demo
 /// 🌱 Representative `SemioCadDiff` cases built declaratively (empty/no-op and an empty-but-present row triple per collection) — single source of truth for `diff_grammar_conformance_law`/`protocol_walk_law` in
 /// `🎹️composer/🦀️.rs`.
-#[cfg(all(test, feature = "conversion-cad"))]
+#[cfg(test)]
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub(crate) fn demo_diff_cases() -> Vec<SemioCadDiff> {
     vec![SemioCadDiff::default(), SemioCadDiff { layers: Some(Default::default()), blocks: Some(Default::default()), entities: Some(Default::default()) }]

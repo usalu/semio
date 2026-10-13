@@ -3,9 +3,9 @@
 //! A [`Pipeline`] is an ordered list of steps over one [`Work`] (the session, the imported inputs and the groups of result handles). A step that is a lane J operation job is advanced with the remaining fuel of the grant, every other step is one unit, so a widget job yields between import, kernel call and export. A panic inside the kernel becomes a `generation3d.geometry.kernel` fault instead of tearing the engine down.
 
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind, ImportedShape, MeshTransfer, ShapeTessellationJob, ShapeValue};
-use semio_framework_3d::brep::queries::tessellation::TessellationStep;
-use semio_framework_3d::brep::representation::topology::history::PersistentLabel;
+use {semio_framework_3d_brep_engine::{BrepOperation, BrepOperationAdmission, BrepOperationJob, BrepOperationStep, GeometryHandle, GeometryKind, ImportedShape, ShapeTessellationJob, ShapeValue}, semio_framework_3d_brep_representation::contract::MeshTransfer};
+use semio_framework_3d_brep_queries::tessellation::TessellationStep;
+use semio_framework_3d_brep_representation::topology::history::PersistentLabel;
 use std::collections::{BTreeSet, VecDeque};
 use std::panic::{catch_unwind, AssertUnwindSafe};
 use std::sync::Arc;

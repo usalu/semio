@@ -91,7 +91,7 @@ describe("plugin publication source ownership", () => {
   });
 
   test("owns implementation bodies under anonymous semantic leaves", () => {
-    expect(fixture.owners).toHaveLength(15);
+    expect(fixture.owners).toHaveLength(17);
     for (const owner of fixture.owners) {
       const path = resolve(repoRoot, owner.path);
       expect(existsSync(path), owner.path).toBe(true);

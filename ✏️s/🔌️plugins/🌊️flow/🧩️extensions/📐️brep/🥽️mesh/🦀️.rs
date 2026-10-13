@@ -5,7 +5,7 @@ use semio_framework_value::ValueType;
 use semio_framework_value::{ValueError,RetirementDemand,retained_clone::{RetainedCloneGrant,RetainedCloneProgress,RetainedCloneStep},retirement::controlled::ControlledRetirement};
 use semio_framework_3d::mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3 as MeshVector, VertexId, WeldMode, MirrorAxis, MeshModelingJob, MeshModelingStep, MeshModelingProgress, MeshTessellationJob, MeshTessellationStep};
 use std::collections::{BTreeMap, HashMap, HashSet};
-use semio_framework_3d::brep::queries::tessellation::{TessellationJob,TessellationStep};
+use semio_framework_3d_brep_queries::tessellation::{TessellationJob, TessellationStep};
 use semio_framework_mesh_engine::{HistoryFoldIndex,MeshAttribute, MeshTexture, PolygonMeshSource};
 use semio_framework_mesh_engine::io::text::{PolygonSourcePreparation, parse_polygon_mesh_source};
 
@@ -184,11 +184,11 @@ enum MeshRetirement {
     Kernel(MeshKernelRetirement),Owned(Option<Box<dyn semio_framework_value::ErasedSnapshotRetirement>>),Empty,
 }
 struct MeshKernelRetirement {
-    payload:ControlledRetirement<(TessellationJob,Option<semio_framework_3d::brep::engine::MeshTransfer>,String)>,
+    payload:ControlledRetirement<(TessellationJob,Option<semio_framework_3d_brep_representation::contract::MeshTransfer>,String)>,
     session:SessionCapture,
 }
 impl MeshKernelRetirement {
-    fn new(session:Session,shape:GeometryHandle,job:TessellationJob,mesh:Option<semio_framework_3d::brep::engine::MeshTransfer>)->Self {Self {payload:ControlledRetirement::new((job,mesh,shape.0)).unwrap_or_else(|_|panic!("original BRep mesh owner requires typed retirement")),session:session.capture()}}
+    fn new(session:Session,shape:GeometryHandle,job:TessellationJob,mesh:Option<semio_framework_3d_brep_representation::contract::MeshTransfer>)->Self {Self {payload:ControlledRetirement::new((job,mesh,shape.0)).unwrap_or_else(|_|panic!("original BRep mesh owner requires typed retirement")),session:session.capture()}}
     fn terminal_is_empty(&self)->bool {self.payload.terminal_is_empty() && self.session.terminal_is_empty()}
     fn demands(&self,copy:usize)->Result<RetirementDemand,ValueError> {
         if !self.payload.terminal_is_empty() {return Ok(RetirementDemand {copy_bytes:self.payload.next_copy_byte_demand()?,capacity_bytes:self.payload.next_capacity_byte_demand(copy)?,release_bytes:self.payload.next_release_byte_demand()?,depth:self.payload.next_depth_demand()?});}
@@ -254,7 +254,7 @@ enum MeshJobOutput { Mesh(MeshOutputState), Analysis(MeshAnalysisState) }
 struct MeshImportState {
     session: Session,
     tessellation: Option<MeshTessellationJob>,
-    cursor: Option<semio_framework_3d::brep::engine::MeshImportCursor>,
+    cursor: Option<semio_framework_3d_brep_engine::MeshImportCursor>,
     tolerance: f64,
     source_retirement: Option<MeshRetirement>,
     transfer_retirement: Option<MeshRetirement>,
@@ -600,7 +600,7 @@ impl MeshOperatorJob {
                     Ok(MeshTessellationStep::Cancelled(_))=>{import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));self.cancelled=true;}
                     Ok(MeshTessellationStep::Working(_))=>{},
                     Ok(MeshTessellationStep::Done(mut mesh))=>{
-                        let cursor=semio_framework_3d::brep::engine::MeshImportCursor::validate_admission_counts(mesh.positions.len(),mesh.indices.len(),import.tolerance).and_then(|()|semio_framework_3d::brep::engine::MeshImportCursor::new(std::mem::take(&mut mesh.positions),std::mem::take(&mut mesh.normals),std::mem::take(&mut mesh.indices),import.tolerance)).map_err(|error|invalid(error.to_string()));
+                        let cursor=semio_framework_3d_brep_engine::MeshImportCursor::validate_admission_counts(mesh.positions.len(),mesh.indices.len(),import.tolerance).and_then(|()|semio_framework_3d_brep_engine::MeshImportCursor::new(std::mem::take(&mut mesh.positions),std::mem::take(&mut mesh.normals),std::mem::take(&mut mesh.indices),import.tolerance)).map_err(|error|invalid(error.to_string()));
                         import.source_retirement=Some(MeshRetirement::Tessellation(import.tessellation.take().unwrap()));
                         import.transfer_retirement=Some(MeshRetirement::Transfer(mesh));
                         match cursor {Ok(cursor)=>import.cursor=Some(cursor),Err(error)=>import.fault=Some(error)}

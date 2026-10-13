@@ -7,8 +7,8 @@
 //! incremental caching needed for a single min/max pass (same ruling `cad`'s own `📦bounds` facet
 //! reaches for its own entity-point fold).
 
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint3;
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3;
+use crate::schema::snapshot::SemioModelSnapshot;
 
 //#region 🔖️Bounds
 /// 📦️ Semio model position envelope.

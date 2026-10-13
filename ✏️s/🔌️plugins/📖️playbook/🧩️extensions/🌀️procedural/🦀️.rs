@@ -162,7 +162,7 @@ pub struct ModuleRenderPayload {
 
 //#region 🔖️ArtifactCodec
 /// 📜️ Handcrafted ArtifactDsl (P6): uses this type's `__dsl_*` helpers + parse/print, not derive emission.
-impl store::ArtifactDsl for ModuleRenderPayload {
+impl store::os_store::serialization::ArtifactDsl for ModuleRenderPayload {
     const EXTENSION: &'static str = Self::__DSL_EXTENSION;
     fn envelope_id() -> &'static str {
         "playbook.procedural"
@@ -177,25 +177,25 @@ impl store::ArtifactDsl for ModuleRenderPayload {
     }
     fn print_dsl(&self) -> String {
         let body = semio_framework_dsl_record::print(&self.__dsl_to_record(), &Self::__dsl_spec(), semio_framework_dsl_record::JoinMode::Document);
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Dsl, 1).expect("valid envelope_id");
         store::semio_format::wrap_text(&envelope, &body)
     }
 }
 
 /// 📦️ Handcrafted ArtifactPack (P6): envelope-wrapped pack body via `__dsl_*` record lowering.
-impl store::ArtifactPack for ModuleRenderPayload {
+impl store::os_store::serialization::ArtifactPack for ModuleRenderPayload {
     fn encode_pack_with(&self, options: &store::PackEncodeOptions) -> Result<Vec<u8>, store::PackError> {
         let inner = store::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)?;
-        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
+        let envelope = store::semio_format::SemioEnvelope::from_envelope_id(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1).map_err(|e| store::PackError::from(e.into_value_error()))?;
         Ok(store::semio_format::wrap_binary(&envelope, &inner))
     }
     fn decode_pack_with(bytes: &[u8], options: &store::PackDecodeOptions) -> Result<Self, store::PackError> {
         let (envelope, inner) = store::semio_format::unwrap_binary(bytes).map_err(|e| store::PackError::from(e.into_value_error()))?;
-        if !envelope.matches_identity(<Self as store::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
-            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
+        if !envelope.matches_identity(<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), store::semio_format::Component::Pack, 1) {
+            return Err(store::PackError::from(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("pack envelope mismatch: expected {}.pack v1, got {}", <Self as store::os_store::serialization::ArtifactDsl>::envelope_id(), envelope.binary_token()))));
         }
         let (record, _report) = store::pack_rt::decode_document(&inner, &Self::__dsl_spec(), options)?;
-        Self::__dsl_from_record(&record).map_err(store::text_error_to_pack_error)
+        Self::__dsl_from_record(&record).map_err(store::os_store::serialization::text_error_to_pack_error)
     }
     fn record_spec() -> Option<semio_framework_dsl_record::RecordSpec> {
         Some(Self::__dsl_spec())
@@ -470,8 +470,8 @@ impl ModuleGeometryOwner {
     fn new() -> Self {
         let session = Session::new();
         let mut registry = Registry::new();
-        semio_s_plugin_flow_extension_math::register(&mut registry);
-        semio_s_plugin_flow_extension_brep::register(&mut registry, &session);
+        semio_s_plugin_flow_math::register(&mut registry);
+        semio_s_plugin_flow_brep::register(&mut registry, &session);
         registry.finalize();
         let (registry, registry_retirement) = SharedRegistry::new(registry);
         Self { session: session.capture(), registry: Some(registry), registry_retirement, closing: false, imported: None, stale: Vec::new(), retirement: ValueRetirement::default() }
@@ -1020,7 +1020,7 @@ impl ArtifactApp for ModuleApp {
     /// 📬️ Without a publication authority on the artifact lane every `Artifact`-lane tool fails
     /// closed with `interactive-job.publication-authority-missing`, so the `Migrated` classification
     /// alone would move the refusal one stage later instead of curing it.
-    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+    fn build_artifact_store_one_item_preparation_factory() -> Option<std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
         Some(store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>())
     }
 
@@ -1212,7 +1212,7 @@ fn solid_format_arg() -> ActionArgDef {
     ActionArgDef::select("format", LocalizedLabel::native("Format", "Format"), SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, LocalizedLabel::data(format.to_uppercase()))).collect()).default_value(&"obj")
 }
 
-fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
+pub fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssemblyError> {
     Plugin::<ProceduralModuleApps>::builder(MODULE_PLUGIN_ID)
         .label("Playbook Module Procedural")
         .version(env!("CARGO_PKG_VERSION"))
@@ -1228,7 +1228,7 @@ fn module_plugin_bundle() -> Result<Plugin<ProceduralModuleApps>, PluginAssembly
         .try_build()
 }
 
-fn module_extension_bundle() -> ExtensionBundle {
+pub fn module_extension_bundle() -> ExtensionBundle {
     let mut bundle = ExtensionBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", env!("CARGO_PKG_VERSION"))
         .extends("playbook").depends_on("playbook", semio_framework::tree_pin!()).mode(ExecutionMode::Isolated);
     for (topic, kind_key) in [("playbook.blockKind", "blockKind"), ("forms.questionKind", "questionKind")] {
@@ -1245,7 +1245,6 @@ fn module_extension_bundle() -> ExtensionBundle {
     bundle
 }
 
-semio_framework_plugin::extension_exports!(semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, module_extension_bundle, module_plugin_bundle, ProceduralModuleApps);
 //#endregion 🔖️App
 
 //#region 🧪️Tests

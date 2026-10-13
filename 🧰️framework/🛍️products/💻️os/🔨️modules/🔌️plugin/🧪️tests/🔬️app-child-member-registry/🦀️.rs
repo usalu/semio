@@ -132,9 +132,9 @@ mod child_member_registry_tests {
         for capacity in [0,8192,65536]{
             let(mut pending,heap)=observe_heap_allocations_on_this_thread(||{let mut value=String::with_capacity(capacity);value.push_str("snapshot/Original/α\0😀");Some(value)});let held=heap.requested_bytes-heap.released_bytes;let pointer=pending.as_ref().unwrap().as_ptr();let mut pump=SnapshotReadReturnPump::new();let mut births=0;let mut releases=0;let mut turns=0;
             while pending.is_some()||!pump.terminal_is_empty(){
-                let(quote,heap)=observe_heap_allocations_on_this_thread(||pump.retirement_demands(grant.maximum_copy_bytes,||store::artifact_retirement_owned_birth_demands(&pending)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(quote.copy_bytes<=grant.maximum_copy_bytes&&quote.capacity_bytes<=grant.maximum_capacity_bytes&&quote.release_bytes<=grant.maximum_release_bytes&&quote.depth<=grant.maximum_depth);
-                let next_demand=store::artifact_retirement_owned_birth_demands(&pending).unwrap();for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:quote.depth-1,..grant}),(quote.copy_bytes>0).then(||RetainedCloneGrant{maximum_copy_bytes:quote.copy_bytes-1,..grant}),(quote.capacity_bytes>0).then(||RetainedCloneGrant{maximum_capacity_bytes:quote.capacity_bytes-1,..grant}),(quote.release_bytes>0).then(||RetainedCloneGrant{maximum_release_bytes:quote.release_bytes-1,..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||pump.drive(next_demand,|original|{let mut next=None;let receipt=store::artifact_retirement_admit_owned(&mut pending,&mut next,original).map_err(|error|plugin_sdk_fault(error.into_message()))?.progress();Ok((next,receipt))},denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if turns==0{assert_eq!(pending.as_ref().unwrap().as_ptr(),pointer)}}
-                let(step,heap)=observe_heap_allocations_on_this_thread(||pump.drive(next_demand,|original|{let mut next=None;let receipt=store::artifact_retirement_admit_owned(&mut pending,&mut next,original).map_err(|error|plugin_sdk_fault(error.into_message()))?.progress();Ok((next,receipt))},grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000);
+                let(quote,heap)=observe_heap_allocations_on_this_thread(||pump.retirement_demands(grant.maximum_copy_bytes,||store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&pending)).unwrap());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));assert!(quote.copy_bytes<=grant.maximum_copy_bytes&&quote.capacity_bytes<=grant.maximum_capacity_bytes&&quote.release_bytes<=grant.maximum_release_bytes&&quote.depth<=grant.maximum_depth);
+                let next_demand=store::os_store::snapshot_read::artifact_retirement_owned_birth_demands(&pending).unwrap();for denied in [Some(RetainedCloneGrant{maximum_items:0,..grant}),Some(RetainedCloneGrant{maximum_depth:quote.depth-1,..grant}),(quote.copy_bytes>0).then(||RetainedCloneGrant{maximum_copy_bytes:quote.copy_bytes-1,..grant}),(quote.capacity_bytes>0).then(||RetainedCloneGrant{maximum_capacity_bytes:quote.capacity_bytes-1,..grant}),(quote.release_bytes>0).then(||RetainedCloneGrant{maximum_release_bytes:quote.release_bytes-1,..grant})].into_iter().flatten(){let(step,heap)=observe_heap_allocations_on_this_thread(||pump.drive(next_demand,|original|{let mut next=None;let receipt=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending,&mut next,original).map_err(|error|plugin_sdk_fault(error.into_message()))?.progress();Ok((next,receipt))},denied).unwrap());assert_eq!(step.progress(),Default::default());assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));if turns==0{assert_eq!(pending.as_ref().unwrap().as_ptr(),pointer)}}
+                let(step,heap)=observe_heap_allocations_on_this_thread(||pump.drive(next_demand,|original|{let mut next=None;let receipt=store::os_store::snapshot_read::artifact_retirement_admit_owned(&mut pending,&mut next,original).map_err(|error|plugin_sdk_fault(error.into_message()))?.progress();Ok((next,receipt))},grant).unwrap());let receipt=step.progress();assert!(receipt.fits(grant));assert_eq!((heap.requested_bytes,heap.released_bytes),(receipt.retained_capacity_bytes,receipt.released_bytes));births+=heap.requested_bytes;releases+=heap.released_bytes;turns+=1;assert!(turns<100000);
             }
             assert!(pending.is_none());assert!(pump.active.is_none());assert_eq!(releases,held+births);let(_,heap)=observe_heap_allocations_on_this_thread(||drop(pump));assert_eq!((heap.requested_bytes,heap.released_bytes),(0,0));eprintln!("[DEBUG] original snapshot pump concrete typed Box capacity={capacity} turns={turns} original={held} births={births} releases={releases} originalPointer={pointer:p} allDenied0heap terminalDrop0");
         }
@@ -327,8 +327,8 @@ mod child_member_registry_tests {
             slot: slot.into(),
             child_id: child_id.into(),
         };
-        let mut pages = store::OwnedSchemaDecodePages::try_with_credits(store::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).expect("one retained member page credit");
-        pages.admit_page(store::OwnedSchemaDecodePage::try_from_slice(&[1, 2, 3]).expect("bounded member page")).unwrap_or_else(|_| panic!("pre-admitted member page"));
+        let mut pages = store::os_store::owned_schema_decode::OwnedSchemaDecodePages::try_with_credits(store::os_store::owned_schema_decode::OwnedSchemaDecodeCredits { maximum_pages: 1, maximum_bytes: 3 }).expect("one retained member page credit");
+        pages.admit_page(store::os_store::owned_schema_decode::OwnedSchemaDecodePage::try_from_slice(&[1, 2, 3]).expect("bounded member page")).unwrap_or_else(|_| panic!("pre-admitted member page"));
         pages.seal().expect("complete member page set");
         let request = store::MemberOpenRequest::new(
             semio_framework_job::OperationId(operation),
@@ -351,9 +351,9 @@ mod child_member_registry_tests {
     }
 
     /// 🧳️ Preserves the original prepared policy without deriving funding from a demand.
-    fn original_prepared_fixture_grant() -> store::ArtifactStoreOneItemGrant {
+    fn original_prepared_fixture_grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
         let original = original_member_fixture_grant();
-        store::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth }
+        store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth }
     }
 
     fn close_ingress(mut ingress: OwnedDocumentMemberIngress, grant: RetainedCloneGrant) {
@@ -483,7 +483,7 @@ mod child_member_registry_tests {
         let mut alias = retained.clone();
         let pointer = std::sync::Arc::as_ptr(alias.root.as_ref().unwrap());
         let full = original_prepared_fixture_grant();
-        let zero = store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full };
+        let zero = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..full };
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| alias.close_prepared_structure_step(&retained, zero).unwrap());
         assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
@@ -501,7 +501,7 @@ mod child_member_registry_tests {
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         assert_eq!(semio_framework_trace::observe_heap_allocations_on_this_thread(|| drop(external)).1.released_bytes, 0);
         let bytes = child_content_arc_bytes::<ChildContentRoot>();
-        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_release_bytes: bytes - 1, ..full }).unwrap());
+        let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_release_bytes: bytes - 1, ..full }).unwrap());
         assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
         assert_eq!((heap.requested_bytes, heap.released_bytes), (0, 0));
         let (step, heap) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| exclusive.close_prepared_structure_step(&ChildContentView::EMPTY, full).unwrap());
@@ -527,19 +527,19 @@ mod child_member_registry_tests {
             let pointer = text.as_ptr();
             let mut owner = PreparedChildContentEntry { entry: std::mem::ManuallyDrop::new(None), metadata: std::mem::ManuallyDrop::new(Some([text, String::new(), String::new(), String::new(), String::new(), String::new(), String::new()])), metadata_cursor: 0, visibility: std::mem::ManuallyDrop::new(Some(original_visibility.clone())), generation: 7 };
             assert_eq!(owner.next_close_byte_demand(), physical);
-            let full = store::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth };
+            let full = store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: original.maximum_items, maximum_copy_bytes: original.maximum_copy_bytes, maximum_capacity_bytes: original.maximum_capacity_bytes, maximum_release_bytes: original.maximum_release_bytes, maximum_depth: original.maximum_depth };
             let demand = owner.retirement_demands();
             assert_eq!(demand.copy_bytes, 0);
             let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&unrelated_visibility, full).unwrap());
             assert_eq!(step, RetainedCloneStep::Progress(Default::default())); assert_eq!((events.requested_bytes, events.released_bytes), (0, 0)); assert_eq!(owner.metadata.as_ref().unwrap()[0].as_ptr(), pointer);
-            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: 0, ..full }] {
+            for grant in [store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_depth: 0, ..full }] {
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&original_visibility, grant).unwrap());
                 assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
                 assert_eq!(owner.metadata.as_ref().unwrap()[0].as_ptr(), pointer);
                 assert_eq!(owner.next_close_byte_demand(), physical);
             }
-            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&original_visibility, store::ArtifactStoreOneItemGrant { maximum_release_bytes: caller, ..full }).unwrap());
+            let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| owner.close_metadata_step(&original_visibility, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_release_bytes: caller, ..full }).unwrap());
             let expected = row["releasedBytes"].as_u64().unwrap() as usize;
             assert_eq!(step.progress(), RetainedCloneProgress { copied_items: usize::from(expected != 0), copied_bytes: if expected != 0 { demand.copy_bytes } else { 0 }, released_bytes: expected, ..Default::default() });
             assert_eq!((events.requested_bytes, events.released_bytes), (0, expected));
@@ -577,7 +577,7 @@ mod child_member_registry_tests {
         for (turn, physical) in [page_bytes, root_bytes].into_iter().enumerate() {
             assert_eq!(view.prepared_structure_close_byte_demand(), physical);
             let root_pointer = std::sync::Arc::as_ptr(view.root.as_ref().unwrap());
-            for grant in [store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::ArtifactStoreOneItemGrant { maximum_depth: view.prepared_structure_close_depth_demand() - 1, ..full }] {
+            for grant in [store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_release_bytes: physical - 1, ..full }, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_depth: view.prepared_structure_close_depth_demand() - 1, ..full }] {
                 let (step, events) = semio_framework_trace::observe_heap_allocations_on_this_thread(|| view.close_prepared_structure_step(&ChildContentView::EMPTY, grant).unwrap());
                 assert_eq!(step, RetainedCloneStep::Progress(Default::default()));
                 assert_eq!((events.requested_bytes, events.released_bytes), (0, 0));
@@ -589,7 +589,7 @@ mod child_member_registry_tests {
             assert_eq!((events.requested_bytes, events.released_bytes), (0, physical));
         }
         assert_eq!(view.prepared_structure_close_byte_demand(), 0);
-        assert_eq!(view.close_prepared_structure_step(&ChildContentView::EMPTY, store::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }).unwrap(), RetainedCloneStep::Complete(Default::default()));
+        assert_eq!(view.close_prepared_structure_step(&ChildContentView::EMPTY, store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 0, ..full }).unwrap(), RetainedCloneStep::Complete(Default::default()));
         println!("[DEBUG] prepared child scaffold exact Arc page={page_bytes} root={root_bytes} allocator release matches each whole grant");
     }
 

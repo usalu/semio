@@ -5,27 +5,27 @@ pub const COMPONENT_GRAMMAR_PATH: &str = concat!(module_path!(), "::📖️.gram
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::kit::schema::diff::*;
+use crate::schema::diff::*;
 use protocol::{DiffText,DiffBinary};
-use crate::standards::v1::subsets::kit::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
-use crate::standards::v1::subsets::model::schema::snapshot::SemioModelSnapshot;
-use crate::standards::v1::subsets::object::schema::snapshot::SemioObjectSnapshot;
-use crate::standards::v1::subsets::value::schema::snapshot::SemioValueSnapshot;
+use crate::schema::snapshot::{SemioKitDesign, SemioKitSnapshot, SemioKitType};
+use semio_s_artifact_stdio_semio_model::schema::snapshot::SemioModelSnapshot;
+use semio_s_artifact_stdio_semio_object::schema::snapshot::SemioObjectSnapshot;
+use semio_s_artifact_stdio_semio_value::schema::snapshot::SemioValueSnapshot;
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt, split_top_level, strip_brackets};
-use crate::standards::v1::subsets::base::schema::triples::Replace;
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child, dec_connection, dec_design, dec_link, dec_pin, dec_piece, dec_str, dec_type, enc_child, enc_connection, enc_design, enc_link, enc_pin, enc_piece, enc_str, enc_type};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_design_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_design_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_type_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_type_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_link_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_link_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child_opt};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child_opt};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{dec_child_list};
-use crate::standards::v1::subsets::kit::io::text::snapshot::{enc_child_list};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_indexed_triple, dec_opt, enc_indexed_triple, enc_opt, split_top_level, strip_brackets};
+use semio_s_artifact_stdio_semio_base::schema::triples::Replace;
+use {semio_s_artifact_stdio_semio_base::io::text::codec::{dec_child, enc_child}, crate::io::text::snapshot::{dec_connection, dec_design, dec_link, dec_pin, dec_piece, dec_str, dec_type, enc_connection, enc_design, enc_link, enc_pin, enc_piece, enc_str, enc_type}};
+use crate::io::text::snapshot::dec_design_list;
+use crate::io::text::snapshot::enc_design_list;
+use crate::io::text::snapshot::dec_type_list;
+use crate::io::text::snapshot::enc_type_list;
+use crate::io::text::snapshot::dec_link_list;
+use crate::io::text::snapshot::enc_link_list;
+use semio_s_artifact_stdio_semio_base::io::text::codec::dec_child_opt;
+use semio_s_artifact_stdio_semio_base::io::text::codec::enc_child_opt;
+use crate::io::text::snapshot::dec_child_list;
+use crate::io::text::snapshot::enc_child_list;
 
 /// 🏷️ Field tags in presence-bit order: types, designs, objects, models, properties, representations.
 pub(crate) const KIT_DIFF_TAGS: [&str; 6] = ["t", "d", "o", "m", "p", "r"];

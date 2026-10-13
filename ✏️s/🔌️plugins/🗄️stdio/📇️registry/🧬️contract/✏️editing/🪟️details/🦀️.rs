@@ -1,7 +1,7 @@
 //! 🪟️ Bounded, localized typed snapshot details shared by stdio artifact editors.
 
 use super::{snapshot_edit_actions, INSERT_SNAPSHOT_VALUE_ACTION_ID, MOVE_SNAPSHOT_VALUE_ACTION_ID, REMOVE_SNAPSHOT_VALUE_ACTION_ID, RENAME_SNAPSHOT_KEY_ACTION_ID, REPLACE_SNAPSHOT_SOURCE_ACTION_ID, SET_SNAPSHOT_VALUE_ACTION_ID};
-use crate::kernel::ArtifactDsl;
+use crate::kernel::os_store::serialization::ArtifactDsl;
 use semio_framework_value::{DslValue, Number, ToValue, ValueShape};
 use semio_framework_plugin::app::{TextDraftView, TextView, TextWindowKit, TreeWindowKit, WindowKit};
 use semio_framework_plugin::plugin_app_close_prelude as ui;
@@ -2093,13 +2093,13 @@ macro_rules! snapshot_details_editor_support {
         }
 
         $(
-            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
+            fn build_document_store_owners(grant: semio_framework_value::retained_clone::RetainedCloneGrant) -> Option<Result<(semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwners<Self::Snapshot, Self::Mutation>, semio_framework_value::retained_clone::RetainedCloneProgress), semio_framework_plugin::plugin_app_close_prelude::store::os_store::document_store_owners::DocumentStoreOwnersAdmissionError<Self::Snapshot, Self::Mutation>>> {
                 Some($document_store_owners(grant))
             }
         )?
 
         fn build_artifact_store_one_item_preparation_factory(
-        ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
+        ) -> Option<std::sync::Arc<dyn semio_framework_plugin::plugin_app_close_prelude::store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<Self::Snapshot, Self::Mutation>>> {
             let factory = semio_framework_plugin::plugin_app_close_prelude::store::mutation_apply_preparation_factory::<Self::Snapshot, Self::Mutation>();
             $(
                 let _ = stringify!($bounded_native);

@@ -27,51 +27,6 @@
         "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
         "command": "bun ./📜️script.ts test retirement"
       }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "dependsOn": [],
-      "inputs": [
-        "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test quick",
-        "forwardAllArgs": true
-      }
-    },
-    "test-long": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "dependsOn": [],
-      "inputs": [
-        "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test long",
-        "forwardAllArgs": true
-      }
-    },
-    "test-exhaustive": {
-      "executor": "nx:run-commands",
-      "cache": false,
-      "outputs": [],
-      "dependsOn": [],
-      "inputs": [
-        "{projectRoot}/../../**/*",
-        "{workspaceRoot}/🧰️framework/🔨️modules/🖱️ui/🎚️axes/**/*"
-      ],
-      "options": {
-        "cwd": "🧰️framework/🔨️modules/🖱️ui/🌐️locale/📦️packages/🦀️rust",
-        "command": "bun ./📜️script.ts test exhaustive",
-        "forwardAllArgs": true
-      }
     }
   },
   "tags": [

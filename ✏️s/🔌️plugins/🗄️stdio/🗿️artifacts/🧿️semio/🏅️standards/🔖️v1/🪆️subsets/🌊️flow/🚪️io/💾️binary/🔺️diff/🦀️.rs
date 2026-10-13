@@ -5,13 +5,13 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::flow::schema::diff::*;
-use crate::standards::v1::subsets::base::schema::geometry::SemioPoint2;
-use crate::standards::v1::subsets::base::schema::triples::{NamedModified, NamedTripleDiff};
-use crate::standards::v1::subsets::base::io::text::snapshot::{dec_named_triple, enc_named_triple};
-use crate::standards::v1::subsets::audio::io::text::diff::{strip_brackets};
-use crate::standards::v1::subsets::audio::io::text::diff::{split_top_level};
-use crate::standards::v1::subsets::flow::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint2;
+use semio_s_artifact_stdio_semio_base::schema::triples::{NamedModified, NamedTripleDiff};
+use semio_s_artifact_stdio_semio_base::io::text::codec::{dec_named_triple, enc_named_triple};
+use semio_s_artifact_stdio_semio_base::io::text::codec::strip_brackets;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{FlowEdge, FlowNode, FlowParam, PortRef, SemioFlowSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::command::DiffAlgebra;
 use protocol::MutationDiff;
@@ -168,6 +168,6 @@ fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
 }
 }
 
-use crate::standards::v1::subsets::flow::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_f64, dec_f64, enc_point2, dec_point2, enc_port_ref, dec_port_ref, enc_param, dec_param, enc_node, dec_node, enc_edge, dec_edge, enc_param_diff, dec_param_diff, enc_params_diff, dec_params_diff, enc_node_diff, dec_node_diff, enc_nodes_diff, dec_nodes_diff, enc_edge_diff, dec_edge_diff, enc_edges_diff, dec_edges_diff};
+use crate::io::text::diff::{hex_encode, hex_decode, enc_str, dec_str, enc_f64, dec_f64, enc_point2, dec_point2, enc_port_ref, dec_port_ref, enc_param, dec_param, enc_node, dec_node, enc_edge, dec_edge, enc_param_diff, dec_param_diff, enc_params_diff, dec_params_diff, enc_node_diff, dec_node_diff, enc_nodes_diff, dec_nodes_diff, enc_edge_diff, dec_edge_diff, enc_edges_diff, dec_edges_diff};
 }
 pub use diff_codec::*;

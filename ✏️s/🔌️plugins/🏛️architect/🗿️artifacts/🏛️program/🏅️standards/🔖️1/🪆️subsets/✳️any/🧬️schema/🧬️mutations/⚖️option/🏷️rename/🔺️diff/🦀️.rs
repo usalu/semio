@@ -2,10 +2,10 @@
 //! `ProgramDiff` builder, never apply-then-capture. Split from `⚖️options` per Wave C.
 
 use super::RenameOptionEvaluation;
-use crate::diff::{ProgramOptionsDelta, ProgramOptionsPatchEntry};
-use crate::registers::OptionEvaluationPatch;
-use crate::ProgramDiff;
-use crate::ProgramSnapshot;
+use crate::standards::v1::subsets::any::schema::diff::{ProgramOptionsDelta, ProgramOptionsPatchEntry};
+use crate::standards::v1::subsets::any::schema::registers::OptionEvaluationPatch;
+use crate::standards::v1::subsets::any::schema::diff::ProgramDiff;
+use crate::standards::v1::subsets::any::schema::snapshot::ProgramSnapshot;
 
 /// ✏️ Error `mutation.target-missing` if absent, Warning `mutation.no-op` if the name is unchanged (both empty diff), else `modified = [{id, name: Some(new_name)}]`.
 pub fn diff(payload: &RenameOptionEvaluation, base: &ProgramSnapshot) -> protocol::MutationOutcome<ProgramDiff> {

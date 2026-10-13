@@ -1,5 +1,5 @@
 //! 🧩️ Actual Hub-owned component codec integration across caller selected runtimes.
-use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,OwnedRuntime,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash};
+use semio_framework_plugin_host::{GuestRuntime,GuestRuntimes,WasmtimeRuntime,SharedEngineConfig,PackageRef,PackageId,PackageHash}; use semio_framework_plugin_interpreter::OwnedRuntime;
 use semio_framework::kernel::Budget;
 const MINTED_DOCUMENT_ID:&str="artifact-0123456789abcdef0123456789abcdef";
 fn repo_root()->std::path::PathBuf {std::path::Path::new(env!("CARGO_MANIFEST_DIR")).ancestors().find(|p|p.join("nx.json").is_file()).unwrap().to_path_buf()}
@@ -77,9 +77,9 @@ mod exhaustive {
 use super::*;
 #[tokio::test]
 async fn actual_gis_owned_codec_honors_the_callers_finite_fuel_budget() {
-    let path=repo_root().join("🌎️hub/🧩️compositions/🌍️gis/📦️packages/🦀️rust/dist/component-release/semio_hub_gis.wasm");
+    let path=repo_root().join("🌎️hub/🧩️compositions/🌍️gis/🧩️component/📦️packages/🦀️rust/dist/components/semio_hub_gis_component.wasm");
     let bytes=std::fs::read(&path).expect("required actual GIS component producer output");
-    let runtime=OwnedRuntime::new();let compiled=runtime.compile(&package_ref("semio:gis",&bytes),&bytes).await.unwrap();
+    let runtime=OwnedRuntime::new();let compiled=runtime.compile_component(&bytes).unwrap();
     let pair=runtime.codec_genesis(&compiled,"gis.map",MINTED_DOCUMENT_ID,codec_budget()).await.unwrap();
     assert!(!pair.pack.is_empty()&&!pair.spr.is_empty());
     assert_ne!(runtime.codec_pack_schema_hash(&compiled,"gis.map",codec_budget()).await.unwrap(),[0;32]);

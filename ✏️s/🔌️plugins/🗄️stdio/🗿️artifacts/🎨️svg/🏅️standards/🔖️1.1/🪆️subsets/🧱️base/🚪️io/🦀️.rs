@@ -473,13 +473,13 @@ pub mod derived_construction {
             Self { snapshot, diagnostics: Vec::new(), elements: ElementBuilder::new(), view_box: None, width: None, height: None, xmlns: None }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SvgSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(mut self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
-            let (next, diff) = store::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
+            let (next, diff) = store::os_store::replay::apply_outcome(&self.snapshot, protocol::Mutation::diff(&mutation, &self.snapshot));
             self.snapshot = next;
             (self, diff)
         }
@@ -584,7 +584,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
             for source in sources {
                 match source {
                     AnalyzeSource::Text(text) => {
-                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
+                        match if store::semio_format::split_text_preamble(text).is_ok() { <SvgSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).map_err(|error| error.to_string()) } else { SvgSnapshot::import_utf8(text.as_bytes()) } {
                             Ok(snapshot) => {
                                 match svg_document_to_typed(&native_svg_document(&snapshot.doc)) {
                                     Ok(typed) => parts.typed = Some(typed),
@@ -601,7 +601,7 @@ use semio_s_artifact_stdio_xml::standards::v1_0::subsets::base::io::text::snapsh
                             }
                         }
                     }
-                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SvgSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => {
                             if let Ok(typed) = svg_document_to_typed(&native_svg_document(&snapshot.doc)) {
                                 parts.typed = Some(typed);

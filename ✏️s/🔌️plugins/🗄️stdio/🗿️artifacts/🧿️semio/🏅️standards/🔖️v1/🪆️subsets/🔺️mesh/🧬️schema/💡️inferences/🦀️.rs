@@ -12,7 +12,7 @@
 //! already-authoritative snapshot data under a different name; faking either was rejected, not
 //! merely deferred).
 
-use crate::standards::v1::subsets::mesh::schema::snapshot::SemioMeshSnapshot;
+use crate::schema::snapshot::SemioMeshSnapshot;
 use framework_schema::ArtifactSchema;
 use std::collections::BTreeMap;
 

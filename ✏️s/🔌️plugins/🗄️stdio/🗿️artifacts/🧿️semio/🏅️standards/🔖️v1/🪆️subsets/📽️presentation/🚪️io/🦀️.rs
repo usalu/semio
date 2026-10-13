@@ -4,16 +4,10 @@
 //! 📤️export/🧵️serializers.
 //#region 🎹️DerivedComposition
 pub mod derived_composition {
-    #[cfg(feature = "conversion-presentation")]
-    use super::super::export::serializers::artifacts::pptx::v_ecma_376::any::SemioPresentationToPptx;
-    #[cfg(feature = "conversion-presentation")]
-    use super::super::import::deserializers::artifacts::pptx::v_ecma_376::any::SemioPresentationFromPptx;
-    use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
-    use crate::standards::v1::subsets::presentation::io::SemioPresentationAnalyzer;
+    use crate::schema::snapshot::SemioPresentationSnapshot;
+    use crate::io::SemioPresentationAnalyzer;
     use semio_framework_diagnostic::Diagnostic;
 use semio_framework_diagnostic::TextSpan;
-    #[cfg(feature = "conversion-presentation")]
-    use semio_framework_plugin::{deserializer_entry_of, io::register_composer_entries, serializer_entry_of, io::ComposerEntry};
     use {semio_framework_plugin::io::register_subset_validator,semio_framework_plugin::io::subset_validator_entry_of,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactComposition,semio_framework_plugin::io::ComposeError,semio_framework_plugin::io::ComposeSource,semio_framework_plugin::io::Composition,semio_framework_artifact_reference::Dialect,semio_framework_plugin::io::IoPayload,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId,semio_framework_plugin::io::SubsetValidator,semio_framework_plugin::io::SubsetValidatorEntry};
 
     const DIALECT: Dialect = Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") };
@@ -89,8 +83,8 @@ use semio_framework_diagnostic::TextSpan;
         const DIALECT: Dialect = DIALECT;
         async fn validate(payload: &IoPayload) -> Vec<Diagnostic> {
             let decoded = match payload {
-                IoPayload::Binary(bytes) => <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes).ok(),
-                IoPayload::Text(text) => <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text).ok(),
+                IoPayload::Binary(bytes) => <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).ok(),
+                IoPayload::Text(text) => <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text).ok(),
             };
             match decoded {
                 Some(snapshot) => check_presentation_referential_integrity(&snapshot),
@@ -107,16 +101,6 @@ use semio_framework_diagnostic::TextSpan;
     //#endregion 🔖️SubsetValidator
 
     //#region 🔖️IoEntries
-    /// 🚪️ presentation<->pptx bridge row (W4 G6) — one `deserializer_entry_of` (pptx -> semio) +
-    /// one `serializer_entry_of` (semio -> pptx); `register_composer_entries` derives all 4 `IoKey`s
-    /// from these 2 rows (see `document`'s own composer for the fuller doc comment on this mechanism).
-    #[cfg(feature = "conversion-presentation")]
-    static IO_ENTRIES: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-    // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
-    #[cfg(feature = "conversion-presentation")]
-    fn io_entries() -> &'static [ComposerEntry] {
-        IO_ENTRIES.get_or_init(|| vec![deserializer_entry_of::<SemioPresentationFromPptx>(), serializer_entry_of::<SemioPresentationToPptx>()])
-    }
     //#endregion 🔖️IoEntries
 
     //#region 🔖️Register
@@ -124,14 +108,12 @@ use semio_framework_diagnostic::TextSpan;
     /// presentation<->pptx io bridge row. Called from this artifact's standard-level `engine::register()`.
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register() {
-        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor()).expect("schema descriptor publication");
-        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") }, store::ArtifactCodec::bare::<SemioPresentationSnapshot, crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(
-            crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
+        ::semio_framework_schema_registry::register_artifact_schema_descriptor(crate::schema::semio_presentation_artifact_schema_descriptor()).expect("schema descriptor publication");
+        semio_framework_plugin::io::register_native_document_codec(Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") }, store::bare_artifact_codec::<SemioPresentationSnapshot, crate::schema::mutations::SemioPresentationMutation>(
+            crate::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA,
         ))
         .expect("static Stdio registration must be available and conflict-free");
         register_subset_validator(validator_entry()).expect("static Stdio registration must be available and conflict-free");
-        #[cfg(feature = "conversion-presentation")]
-        register_composer_entries(io_entries()).expect("static Stdio registration must be available and conflict-free");
         register_artifact_inferences();
     }
 
@@ -140,15 +122,10 @@ use semio_framework_diagnostic::TextSpan;
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn declare(builder: semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady>) -> semio_framework_plugin::app::ArtifactDeclarationBuilder<semio_framework_plugin::app::DeclarationReady> {
         let builder = builder
-            .schemas([crate::standards::v1::subsets::presentation::schema::semio_presentation_artifact_schema_descriptor()])
-            .document_codec_bare::<SemioPresentationSnapshot, crate::standards::v1::subsets::presentation::schema::mutations::SemioPresentationMutation>(crate::standards::v1::subsets::presentation::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") })
+            .schemas([crate::schema::semio_presentation_artifact_schema_descriptor()])
+            .document_codec_bare::<SemioPresentationSnapshot, crate::schema::mutations::SemioPresentationMutation>(crate::schema::snapshot::STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA, Dialect { artifact_kind: "s.stdio.semio", standard: StandardId("v1"), subset: SubsetId("presentation") })
             .subset_validators(std::slice::from_ref(validator_entry()))
-            .inferences([crate::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor()]);
-        #[cfg(feature = "conversion-presentation")]
-        let builder = {
-            static COMPOSERS: std::sync::OnceLock<Vec<ComposerEntry>> = std::sync::OnceLock::new();
-            builder.composers(crate::semio_written(io_entries(), &COMPOSERS))
-        };
+            .inferences([crate::schema::inferences::semio_presentation_artifact_inference_descriptor()]);
         builder
     }
 
@@ -157,12 +134,12 @@ use semio_framework_diagnostic::TextSpan;
     /// registry, ticket 26/08/12/INTRODUCE-INFERENCE-SCHEMA-FAMILY-WITH-DEPENDENCY-AWARE-CACHING).
     // 🚫️async: E1 pure inherent-impl helper (file verified I/O-free, consumed via opaque-type-hostile call site) — see R9
     pub fn register_artifact_inferences() {
-        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::standards::v1::subsets::presentation::schema::inferences::semio_presentation_artifact_inference_descriptor()).expect("schema descriptor publication");
+        ::semio_framework_schema_registry::register_artifact_inference_descriptor(crate::schema::inferences::semio_presentation_artifact_inference_descriptor()).expect("schema descriptor publication");
     }
     //#endregion 🔖️Register
 
     //#region 🧪️Tests
-    #[cfg(all(test, feature = "conversion-presentation"))]
+    #[cfg(test)]
     include!("🧪️tests/🔬️derived-composition-unit/🦀️.rs");
     //#endregion 🧪️Tests
 }
@@ -179,11 +156,11 @@ pub mod text;
 pub mod sqlite;
 
 pub mod derived_construction {
-    use crate::standards::v1::subsets::presentation::schema::diff::SemioPresentationDiff;
+    use crate::schema::diff::SemioPresentationDiff;
     #[cfg(test)]
-    use crate::standards::v1::subsets::presentation::schema::mutations::insert_master;
-    use crate::standards::v1::subsets::presentation::schema::mutations::{SemioPresentationMutation};
-    use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+    use crate::schema::mutations::insert_master;
+    use crate::schema::mutations::SemioPresentationMutation;
+    use crate::schema::snapshot::SemioPresentationSnapshot;
     use semio_framework_plugin::ArtifactBuilder;
 
     #[derive(Clone, Debug, Default)]
@@ -202,10 +179,10 @@ pub mod derived_construction {
             Self { snapshot }
         }
         fn from_text(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> {
-            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text)?))
+            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text)?))
         }
         fn from_binary(bytes: &[u8]) -> Result<Self, store::PackError> {
-            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes)?))
+            Ok(Self::from_snapshot(<SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)?))
         }
         fn mutate(self, mutation: Self::Mutation) -> (Self, protocol::MutationOutcome<Self::Diff>) {
             let outcome = <SemioPresentationMutation as protocol::Mutation<SemioPresentationSnapshot>>::diff(&mutation, &self.snapshot);
@@ -231,7 +208,7 @@ pub mod derived_construction {
 pub use derived_construction::*;
 
 pub mod derived_analysis {
-    use crate::standards::v1::subsets::presentation::schema::snapshot::{SemioPresentationSnapshot, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
+    use crate::schema::snapshot::{SemioPresentationSnapshot, STDIO_SEMIOPRESENTATION_DOCUMENT_SCHEMA};
     use {semio_framework_plugin::io::Analysis,semio_framework_plugin::io::AnalyzeSource,semio_framework_plugin::ArtifactAnalysis,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 
     #[derive(Clone, Debug, Default)]
@@ -271,14 +248,14 @@ pub mod derived_analysis {
             let mut confidence = semio_framework_plugin::io::Confidence::High;
             for source in sources {
                 match source {
-                    AnalyzeSource::Text(text) => match <SemioPresentationSnapshot as store::ArtifactDsl>::parse_dsl(text) {
+                    AnalyzeSource::Text(text) => match <SemioPresentationSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(text) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;
                             diagnostics.push(semio_framework_diagnostic::Diagnostic::error("stdio.analyze.text", semio_framework_diagnostic::TextSpan::at(1, 1), err.to_string()));
                         }
                     },
-                    AnalyzeSource::Binary(bytes) => match <SemioPresentationSnapshot as store::ArtifactPack>::decode_pack(bytes) {
+                    AnalyzeSource::Binary(bytes) => match <SemioPresentationSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes) {
                         Ok(snapshot) => parts.snapshot = Some(snapshot),
                         Err(err) => {
                             confidence = semio_framework_plugin::io::Confidence::Low;

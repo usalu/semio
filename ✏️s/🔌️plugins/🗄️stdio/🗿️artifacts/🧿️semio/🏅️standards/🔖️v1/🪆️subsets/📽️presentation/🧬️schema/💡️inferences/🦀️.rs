@@ -6,7 +6,7 @@
 //! own outline facet establishes, since `SlideShape::TextBox`/`Table` cell content reuse
 //! `document::DocBlock` verbatim, per this subset's own module doc comment).
 
-use crate::standards::v1::subsets::presentation::schema::snapshot::SemioPresentationSnapshot;
+use crate::schema::snapshot::SemioPresentationSnapshot;
 use framework_schema::ArtifactSchema;
 
 use super::outline::compute_semio_presentation_outline;

@@ -4,7 +4,7 @@ use super::*;
 /// `🔖️Composition`'s "a child handle is two strings" rule; never the resolved model content
 /// (that lives in the child's own document, out of `CadSnapshot`'s reach).
 pub fn sample_model_child(child_id: &str) -> CadModelChild {
-    store::ArtifactChild::new(child_id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } })
+    store::os_store::artifact_child::ArtifactChild::new(child_id.into(), semio_framework_artifact_reference::ArtifactRef { artifact_id: child_id.to_string(), dialect: semio_framework_artifact_reference::ArtifactDialect { artifact_kind: "s.stdio.semio".into(), standard: "v1".into(), subset: "model".into() } })
 }
 
 pub fn sample_reference() -> CadReference {

@@ -18,7 +18,7 @@ use crate::STDIO_IFC_DOCUMENT_SCHEMA;
 use framework_schema::ArtifactSchema;
 use semio_s_artifact_stdio_contract::part21::{parse_part21, write_part21, Part21Document, Part21Header, Part21Instance, Part21Value};
 
-impl store::ArtifactDsl for IfcSnapshot {
+impl store::os_store::serialization::ArtifactDsl for IfcSnapshot {
     const EXTENSION: &'static str = "ifc";
     fn envelope_id() -> &'static str { STDIO_IFC_DOCUMENT_SCHEMA }
     fn parse_dsl(text: &str) -> Result<Self, semio_framework_diagnostic::TextError> { native::parse_text(text) }

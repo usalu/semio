@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::text::snapshot::*;
 use crate::GENERATION_3D_SCHEMA;
 use semio_framework_os_kernel::os_store::test_support;
-use store::ArtifactDsl;
+use store::os_store::serialization::ArtifactDsl;
 
 #[test]
 fn dsl_round_trip_empty_projection() {
@@ -31,7 +31,7 @@ fn dsl_round_trip_every_bundled_example() {
 async fn command_envelope_round_trip_holds_for_an_applied_operation() {
     use crate::standards::v1::subsets::any::schema::mutations::Generation3dMutation;
     use protocol::{ArtifactId, Edit, SchemaId};
-    use store::{create_document_envelope, ArtifactCommand, ArtifactStore};
+    use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, ArtifactStore};
 
     let mut store = crate::store_fixture::document_store(Generation3dSnapshot::default()).await;
     use crate::standards::v1::subsets::any::schema::mutations::create_widget::CreateWidget;

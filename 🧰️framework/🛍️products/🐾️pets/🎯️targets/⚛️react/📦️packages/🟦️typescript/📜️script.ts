@@ -1,4 +1,5 @@
 #!/usr/bin/env bun
+import { typecheckProject } from "../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️typescript/🟦️.ts";
 import { receiveScriptProcessInvocation } from "../../../../../../🔨️modules/🏃️process/🧭️routing/📥️invocation/🏃️process/🟦️.ts";
 /** ⚛️ `@semio-tech/pets-react` router: `bun ./📜️script.ts <test [quick|long|exhaustive] | typecheck | dev>`. */
 import { join } from "node:path";
@@ -17,8 +18,8 @@ class TestScript extends BundleScript {
 
 /** 🪁️ `typecheck` — the target, its stories and its suites against the compiler. */
 class TypecheckScript extends BundleScript {
-  run(segments: string[]): void {
-    runCmd(process.execPath, [join(this.repoRoot, "node_modules", "typescript", "bin", "tsc"), "--noEmit", "-p", "tsconfig.json", ...segments], { cwd: this.root });
+  async run(segments: string[]): Promise<void> {
+    await typecheckProject({ workspace: this.repoRoot, cwd: this.root, project: "tsconfig.json", owner: "pets-react:typescript", args: segments, timeoutMs: 120_000, execution: { signal: this.invocation.control.signal } });
   }
 }
 

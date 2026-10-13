@@ -42,7 +42,7 @@ export type FrameworkOsWgpuBootExecution = {
   readonly onProgress?: (event: WgpuBootProgress) => void;
 };
 
-const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu.js";
+const DEFAULT_RENDERER_MODULE_URL = "/renderer-modules/wgpu/semio-framework-os-renderer-wgpu-component.js";
 
 /** 🪆️ Boots one independently rooted frame Worker and retires only that mount. */
 export async function bootFrameworkOsWgpu(options: FrameworkOsWgpuBootOptions, execution: FrameworkOsWgpuBootExecution = {}): Promise<WgpuBrowserMount> {

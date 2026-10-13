@@ -5,8 +5,8 @@ use crate::standards::v1::subsets::any::schema::mutations::RewriteRuleMutation;
 use crate::RewritingSnapshot;
 use semio_framework_plugin::app::ChildContentView;
 use semio_framework_plugin::{Emit, Fault, FaultCode, FaultOrigin, NoConfigMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::mutations::{change_node_kind::ChangeNodeKind, change_node_label::ChangeNodeLabel, SemioGraphMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::GraphNodeId;
+use {semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_kind::ChangeNodeKind, semio_s_artifact_stdio_semio_graph::schema::mutations::change_node_label::ChangeNodeLabel, semio_s_artifact_stdio_semio_graph::schema::mutations::SemioGraphMutation};
+use semio_s_artifact_stdio_semio_graph::schema::snapshot::GraphNodeId;
 
 /// 🩹️ Sets `name` or `kind` of the named nodes of the rule's working (before) graph — or, when `node_ids` is empty, of the nodes
 /// selected in the `graph` domain, which is what a rail press means — as ONE edit of the composed `workingGraph` child: one

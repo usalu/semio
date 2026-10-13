@@ -81,7 +81,7 @@ fn box_chain(size: f64) -> Generation3dSnapshotRead {
     )
 }
 
-fn solid_volume(shape: &semio_framework_3d::brep::engine::ShapeValue) -> (f64, f64) {
+fn solid_volume(shape: &semio_framework_3d_brep_engine::ShapeValue) -> (f64, f64) {
     let mesh = shape.tessellate(0.05).expect("a box tessellates");
     let corner = |index: u32| -> [f64; 3] { let at = index as usize * 3; [f64::from(mesh.position[at]), f64::from(mesh.position[at + 1]), f64::from(mesh.position[at + 2])] };
     let signed: f64 = mesh.index.chunks(3).map(|triangle| {

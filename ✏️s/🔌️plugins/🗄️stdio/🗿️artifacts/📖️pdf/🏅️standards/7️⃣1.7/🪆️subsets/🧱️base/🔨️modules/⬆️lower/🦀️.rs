@@ -6,9 +6,10 @@
 
 use super::colour::{entry, lower_colour_space, lower_ext_g_state, lower_function, lower_shading, push_opt, raw_stream, stream};
 use super::content::{content_references, print_content, FontTable};
-use super::fonts::{base_encoding_name, cmap, encode_text_string, FontCodec};
+use crate::standards::v1_7::subsets::base::modules::fonts::{base_encoding_name, cmap, FontCodec};
+use crate::standards::v1_7::subsets::base::io::encode_text_string;
 use super::images::lower_image;
-use super::lexer::{PResult, PdfEngineError};
+use crate::standards::v1_7::subsets::base::io::{PResult, PdfEngineError};
 use super::xref::ObjectSink;
 use crate::standards::v1_7::subsets::base::schema::snapshot::*;
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -409,7 +410,7 @@ impl Lowering<'_> {
         crate::standards::v1_7::subsets::base::io::foreign_artifacts::require_font_artifact_kind(program)?;
         let mut object=self.artifacts.resolve(program.reference())?;
         let PdfObject::Stream {dict,data,filters}=&mut object else {return Err(PdfEngineError::Unsupported("font artifact is not a native stream".into()));};
-        let key=match program {PdfFontProgram::Type1 {..}=>"FontFile",PdfFontProgram::TrueType {..}=>{if let (Some(glyphs),true)=(glyphs,self.options.subset_fonts) {*data=super::fonts::TrueTypeFont::parse(data).map_err(PdfEngineError::Malformed)?.subset(glyphs);filters.clear();dict.retain(|entry|entry.key!="Length1");dict.push(entry("Length1",PdfObject::Int(data.len() as i64)));}"FontFile2"},_=>"FontFile3"};
+        let key=match program {PdfFontProgram::Type1 {..}=>"FontFile",PdfFontProgram::TrueType {..}=>{if let (Some(glyphs),true)=(glyphs,self.options.subset_fonts) {*data=crate::standards::v1_7::subsets::base::modules::fonts::TrueTypeFont::parse(data).map_err(PdfEngineError::Malformed)?.subset(glyphs);filters.clear();dict.retain(|entry|entry.key!="Length1");dict.push(entry("Length1",PdfObject::Int(data.len() as i64)));}"FontFile2"},_=>"FontFile3"};
         Ok((key,PdfObject::Ref(self.add(object))))
     }
 

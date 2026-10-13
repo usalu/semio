@@ -6,7 +6,8 @@ import { decodeCargoProvenanceV1 } from "../../../../../../../🔨️modules/�
 import { repoCacheDirectory } from "../../../../../../🦑️repo/🔨️modules/📚️library/⚡️caching/🟦️.ts";
 import { readStableBuildFile } from "../../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
 import { semanticOwnedInputFileSnapshot } from "../../../../../../🦑️repo/🔨️modules/📚️library/🔍️discovery/🟦️.ts";
-import { FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, freshWasmArtifactSize } from "../../🏗️component-build/🟦️.ts";
+import { FRESH_IO_CHUNK_BYTES, freshWasmArtifactSize } from "../../🏗️component-build/🟦️.ts";
+import { SHIPPED_COMPONENT_MAX_BYTES } from "../../🏷️component-receipt/🟦️.ts";
 import { FRESH_SOURCE_EPOCH_LIMITS, captureFreshSourceEpochV1, freshSourceEpochBytesV1, freshSourceOrderedJson, parseFreshRustDepInfoV1 } from "../../🧾️source-epoch/🟦️.ts";
 import {parseFreshProcessPolicyV1,type FreshProcessControlV1} from "../../🏭️fresh-component/🎛️control/🟦️.ts";
 import { setImmediate } from "node:timers/promises";
@@ -36,7 +37,6 @@ export function createFreshComponentTests() {
     componentHex: string;
     componentSha256: string;
     componentBlake3: string;
-    coreHex: string;
     laws: readonly string[];
   }>;
   type FreshProcessFixtureV1 = Readonly<{
@@ -159,8 +159,7 @@ export function createFreshComponentTests() {
     assert(artifactRoot !== undefined && artifactRoot.includes("🗑️generated"));
     mkdirSync(artifactRoot, { recursive: true });
     const evidence = mkdtempSync(join(artifactRoot, "fresh-component-staging-"));
-    const component = Buffer.from(fixture.componentHex, "hex"),
-      core = Buffer.from(fixture.coreHex, "hex");
+    const component = Buffer.from(fixture.componentHex, "hex");
     const descriptor = {
       descriptorVersion: 1,
       packageId: "semio:gis",
@@ -174,26 +173,28 @@ export function createFreshComponentTests() {
       quotas: {},
       contributions: {},
       assets: [],
-      hashes: { wasmSha256: fixture.componentSha256, coreWasmSha256: createHash("sha256").update(core).digest("hex"), descriptorSha256: "" },
     };
-    descriptor.hashes.descriptorSha256 = createHash("sha256").update(encodePackValue(descriptor)).digest("hex");
-    const descriptorBytes = encodePackValue(descriptor);
-    const paths = { component: join(evidence, "component.wasm"), core: join(evidence, "core.wasm"), descriptorPack: join(evidence, "descriptor.semio"), descriptorJson: join(evidence, "descriptor.json") };
+    const semanticBytes = encodePackValue(descriptor);
+    const descriptorBytes = semanticBytes;
+    const semanticSha256 = createHash("sha256").update(semanticBytes).digest("hex");
+    const binding = { wasmSha256: fixture.componentSha256, coreWasmSha256: "2".repeat(64), descriptorSha256: "3".repeat(64) };
+    const componentReceipt = { schema: "semio.plugin.component-receipt/v1" as const, pluginId: "gis", packageId: "semio:gis", profile: "wasm-release" as const, target: "wasm32-wasip2" as const, wasmSha256: fixture.componentSha256, wasmBytes: component.byteLength, semanticDescriptorSha256: semanticSha256, toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)", sourceTreeDigest: "3".repeat(64), provenanceSha256: "4".repeat(64) };
+    const paths = { component: join(evidence, "component.wasm"), descriptorPack: join(evidence, "descriptor.semio"), descriptorJson: join(evidence, "descriptor.json") };
     for (const [key, bytes] of [
       ["component", component],
-      ["core", core],
-      ["descriptorPack", descriptorBytes],
+      ["descriptorPack", semanticBytes],
       ["descriptorJson", Buffer.from(JSON.stringify(descriptor))],
     ] as const)
       writeFileSync(paths[key], bytes);
     assert.equal(freshWasmArtifactSize(paths.component, component.byteLength, "fixture WASIp2 component"), component.byteLength);
     assert.throws(() => freshWasmArtifactSize(paths.component, component.byteLength - 1, "fixture WASIp2 component"), new RegExp(`byteLength=${component.byteLength} maximum=${component.byteLength - 1}`));
     const control: FreshBuildControlV1 = { cancelled: () => false, remainingMs: () => 60_000, checkpoint() {} };
-    const capturedComponent = readStableBuildFile(paths.component, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
-    const capturedCore = readStableBuildFile(paths.core, FRESH_COMPONENT_MAX_BYTES, { remaining: FRESH_COMPONENT_MAX_BYTES }, () => {});
-    writeFileSync(paths.core, "replaced-core");
-    const snapshot = await captureFreshComponentInputs(repoRoot, { pluginId: "gis", componentPackageId: "semio:gis" }, capturedComponent, capturedCore, paths, control);
-    assert.equal(snapshot.coreSha256, descriptor.hashes.coreWasmSha256);
+    const capturedComponent = readStableBuildFile(paths.component, SHIPPED_COMPONENT_MAX_BYTES, { remaining: SHIPPED_COMPONENT_MAX_BYTES }, () => {});
+    const request = { pluginId: "gis", componentPackageId: "semio:gis", cargoPackage: "semio-s-plugin-gis" };
+    const divergent = encodePackValue({ ...descriptor, manifest: { ...descriptor.manifest, label: "Committed GIS" } });
+    await assert.rejects(captureFreshComponentInputs(repoRoot, request, capturedComponent, paths, control, divergent), /different semantic descriptor than the committed pair/);
+    const snapshot = await captureFreshComponentInputs(repoRoot, request, capturedComponent, paths, control, semanticBytes);
+    assert.equal(snapshot.descriptorSha256, semanticSha256);
     assert.equal(snapshot.componentSha256, fixture.componentSha256);
     assert.equal(snapshot.componentBlake3, fixture.componentBlake3);
     assert.equal(snapshot.componentSha256, Buffer.from(await crypto.subtle.digest("SHA-256", component)).toString("hex"));
@@ -233,15 +234,17 @@ export function createFreshComponentTests() {
     assert.equal(checkpoints, 2);
     assert.equal(existsSync(cancelled), false);
     writeFileSync(paths.component, component);
-    writeFileSync(paths.core, core);
-    writeFileSync(paths.descriptorPack, descriptorBytes);
+    writeFileSync(paths.descriptorPack, encodePackValue({ ...descriptor, packageId: "semio:foreign" }));
     writeFileSync(paths.descriptorJson, JSON.stringify({ ...descriptor, packageId: "semio:foreign" }));
-    await assert.rejects(captureFreshComponentInputs(repoRoot, { pluginId: "gis", componentPackageId: "semio:gis" }, capturedComponent, capturedCore, paths, control), /identity/);
+    await assert.rejects(captureFreshComponentInputs(repoRoot, request, capturedComponent, paths, control, semanticBytes), /identity/);
+    writeFileSync(paths.descriptorPack, encodePackValue({ ...descriptor, hashes: binding }));
+    writeFileSync(paths.descriptorJson, JSON.stringify({ ...descriptor, hashes: binding }));
+    await assert.rejects(captureFreshComponentInputs(repoRoot, request, capturedComponent, paths, control, semanticBytes), /unknown fields hashes/);
     const cloneSnapshot = () => ({ ...snapshot, componentBytes: Uint8Array.from(component), descriptorBytes: Uint8Array.from(descriptorBytes) });
     const handoff = async <T>(name: string, input: ReturnType<typeof cloneSnapshot>, buildControl: FreshBuildControlV1, derive: (lease: FreshComponentLeaseV1) => Promise<T>) => {
       const stage = join(evidence, name);
       mkdirSync(stage);
-      return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], buildControl, derive);
+      return await stageFreshComponentInputs({ pluginId: "gis", componentPackageId: "semio:gis" }, input, stage, ["checkpoint", "describe", "jobs", "reactor"], componentReceipt, buildControl, derive);
     };
     let retainedLease: FreshComponentLeaseV1 | undefined, retainedLoan: Uint8Array<ArrayBuffer> | undefined;
     const retainedInput = cloneSnapshot();
@@ -266,7 +269,9 @@ export function createFreshComponentTests() {
     assert.equal(produced.derived, produced.receipt.component.sha256);
     assert.equal(produced.receipt.component.sha256, fixture.componentSha256);
     assert.deepEqual(readFileSync(join(evidence, "loan-success/component.wasm")), component);
-    assert.deepEqual(Object.keys(produced.receipt).sort(), ["component", "coreSha256", "descriptor", "packageId", "pluginId", "version", "witExports"]);
+    assert.deepEqual(Object.keys(produced.receipt).sort(), ["component", "componentReceipt", "descriptor", "packageId", "pluginId", "version", "witExports"]);
+    assert.deepEqual(produced.receipt.componentReceipt, componentReceipt);
+    assert.equal(produced.receipt.descriptor.sha256, componentReceipt.semanticDescriptorSha256);
     assert(retainedLoan!.every((byte) => byte === 0));
     assert(retainedInput.componentBytes.every((byte) => byte === 0));
     assert(retainedInput.descriptorBytes.every((byte) => byte === 0));
@@ -351,7 +356,6 @@ export function createFreshComponentTests() {
       if (failure) assert.deepEqual(readdirSync(join(evidence, `loan-unawaited-${failure}`)), []);
     }
     snapshot.componentBytes.fill(0);
-    capturedCore.fill(0);
     snapshot.descriptorBytes.fill(0);
     console.log(`fresh-component-staging: WebCrypto=1 Pack=1 BLAKE3=1 laws=${fixture.laws.length} evidence=${evidence}`);
   }

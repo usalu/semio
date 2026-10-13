@@ -5,9 +5,9 @@ pub const COMPONENT_PROTOCOL_PATH: &str = concat!(module_path!(), "::📡️.pro
 #[allow(unused_imports)]
 mod diff_codec {
 use super::*;
-use crate::standards::v1::subsets::table::schema::diff::*;
-use crate::standards::v1::subsets::base::io::text::snapshot::split_top_level;
-use crate::standards::v1::subsets::table::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
+use crate::schema::diff::*;
+use semio_s_artifact_stdio_semio_base::io::text::codec::split_top_level;
+use crate::schema::snapshot::{SemioTableColumn, SemioTableRow, SemioTableSnapshot};
 use framework_schema::ArtifactSchema;
 use protocol::MutationDiff;
 /// 🧪️ Hand-rolled `protocol::DiffCodec`. Unlike `🔤️text` (one mutable field), `table` has TWO —
@@ -16,17 +16,17 @@ use protocol::MutationDiff;
 /// both present). `split_top_level(line, ';')` parses back (bracket-nesting aware, so a `;` can
 /// never appear inside an encoded column/row's own hex/bracket payload — there is none — this is
 /// purely a top-level field separator).
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_row};
-use crate::standards::v1::subsets::table::io::text::snapshot::{dec_column};
-use crate::standards::v1::subsets::table::io::text::snapshot::{enc_column};
+use crate::io::text::snapshot::dec_row;
+use crate::io::text::snapshot::enc_row;
+use crate::io::text::snapshot::dec_column;
+use crate::io::text::snapshot::enc_column;
 
 impl protocol::DiffBinary for SemioTableDiff {
 /// ⚡️ Real binary diff frame: `format u8` + `presence u8` (bit0=`columns`, bit1=`rows`) are two REAL fixed fields; each present
 /// section follows as a varint byte length plus the same `enc_indexed_triple` text this facet's `print_diff` emits.
 fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::table::io::text::diff::{enc_columns, enc_rows};
+    use crate::io::text::diff::{enc_columns, enc_rows};
     let presence: u8 = (if self.columns.is_some() { 0b0000_0001 } else { 0 }) | (if self.rows.is_some() { 0b0000_0010 } else { 0 });
     let mut out = vec![DIFF_BINARY_FORMAT, presence];
     for section in [self.columns.as_ref().map(enc_columns), self.rows.as_ref().map(enc_rows)].into_iter().flatten() {
@@ -37,7 +37,7 @@ fn encode_diff(&self) -> Result<Vec<u8>, protocol::ProtocolError> {
 }
 fn decode_diff(bytes: &[u8]) -> Result<Self, protocol::ProtocolError> {
     const DIFF_BINARY_FORMAT: u8 = 1;
-    use crate::standards::v1::subsets::table::io::text::diff::{dec_columns, dec_rows};
+    use crate::io::text::diff::{dec_columns, dec_rows};
     let malformed = |what: &'static str, detail: String| protocol::ProtocolError::Malformed { what, offset: 2, detail };
     if bytes.len() < 2 {
         return Err(protocol::ProtocolError::Malformed { what: "diff header", offset: 0, detail: "truncated (need format+presence)".to_string() });

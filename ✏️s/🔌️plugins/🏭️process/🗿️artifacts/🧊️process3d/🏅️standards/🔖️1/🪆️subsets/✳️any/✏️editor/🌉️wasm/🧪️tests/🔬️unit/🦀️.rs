@@ -7,7 +7,7 @@ use crate::mutations::delete_step::DeleteStep;
 use crate::mutations::replace_stock_solid::ReplaceStockSolid;
 use crate::standards::v1::subsets::any::schema::mutations::Process3dMutation;
 use crate::{brep_child_handle, brep_snapshot_for_working_solid, empty_process3d_snapshot, Pose, ProcessMeasure, ProcessStep, StepOrigin, WorkingSolid, PROCESS_3D_SCHEMA};
-use store::{create_document_envelope, ArtifactCommand, Author};
+use store::{os_store::document_materialize::create_document_envelope, os_store::store_schema::ArtifactCommand, Author};
 
 fn cut_step(id: &str) -> ProcessStep {
     ProcessStep { id: id.into(), label: "Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: WorkingSolid::Box { width: 0.1, depth: 0.1, height: 0.1 }, pose: Pose::default() } }
@@ -30,7 +30,7 @@ fn drill_step(id: &str) -> ProcessStep {
 /// every fixture to finish through [`close_store`].
 async fn new_store() -> Process3dStore {
     let mut store = Process3dStore::new(create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None), protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
 }
 
@@ -41,7 +41,7 @@ fn close_store(mut store: Process3dStore) {
     use semio_framework_plugin::ArtifactOwnedDisposer;
     let mut disposer = semio_framework_plugin::ArtifactDocumentStoreDisposer::<Process3dSnapshot, Process3dMutation>::new();
     for _ in 0..1_048_576 {
-        let demand = disposer.retirement_demands(&store, store::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close demand");
+        let demand = disposer.retirement_demands(&store, store::os_store::owned_schema_decode::ARTIFACT_ENVELOPE_DECODE_PAGE_BYTES).expect("Process3d fixture store close demand");
         match disposer.close_step(&mut store, crate::host::owned::process3d_demand_grant(demand)).expect("Process3d fixture store close step") {
             semio_framework_plugin::PluginLifecycleStep::Complete(_) => {
                 assert!(disposer.terminal_is_empty(&store));
@@ -112,7 +112,7 @@ async fn a_placed_step_edited_in_history_replays_its_downstream() {
     let empty = empty_process3d_snapshot();
     assert_eq!(store.state_before(&ids[0], &drafts).expect("the preview base folds").as_ref(), &empty, "the preview base is the state right before the edited step");
     let mut replay = store.begin_report_replay(&drafts, Some(&ids[0])).expect("the replay begins at the edited step");
-    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::ReplayStep::Finished(_)));
+    assert!(matches!(replay.step(store.replay_edits(), &mut || false).expect("the replay steps"), store::os_store::replay::ReplayStep::Finished(_)));
     let result = replay.finish().expect("a finished replay yields its result");
     assert!(!store.replay_report(&result).expect("report").blocks_finalize(), "a deeper drill never blocks finalizing");
     let fresh = fold(&empty, &[edited, log[1].clone(), log[2].clone()]);
@@ -174,7 +174,7 @@ async fn sets_stock_to_imported_solid_and_backwards_restores() {
 async fn process3d_document_text_round_trips_after_apply_and_checkpoint() {
     let envelope = create_document_envelope(PROCESS_3D_SCHEMA, "process3d", empty_process3d_snapshot(), None);
     let mut store = Process3dStore::new(envelope, protocol::ActorId(protocol::LOCAL_ACTOR_ID.into())).await.expect("new store");
-    store.install_document_store_owners_exact(store::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
+    store.install_document_store_owners_exact(store::os_store::document_store_owners::funded_bounded_artifact_store_owners::<Process3dSnapshot, Process3dMutation>().expect("Process3d fixture funds its bounded catalog")).map_err(|(error, _)| error).expect("Process3d fixture installs its bounded catalog");
     store
         .dispatch(ArtifactCommand::Apply {
             mutations: vec![

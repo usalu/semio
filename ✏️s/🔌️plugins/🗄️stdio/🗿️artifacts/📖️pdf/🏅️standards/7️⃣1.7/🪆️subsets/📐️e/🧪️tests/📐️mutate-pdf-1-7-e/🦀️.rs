@@ -133,9 +133,10 @@ fn round_trip_oracle(ctx: &Context) -> Result<Outcome, String> {
 mod subject {
     use super::{arranged_input, mutable_input};
     use semio_repo_test_host::{Context, Json, Outcome};
-    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::{decode_pdf, encode_pdf};
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::import::decode_pdf;
+    use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::io::export::encode_pdf;
     use semio_repo_test_host::law::wire_operation;
-    use semio_s_artifact_stdio_pdf::{mutation_from_payload_json, mutation_payload_json};
+    use semio_s_artifact_stdio_contract::{mutation_from_payload_json, mutation_payload_json};
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::base::schema::snapshot::PdfSnapshot;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::io::mutation_bridge::apply_e_conformance_mutation;
     use semio_s_artifact_stdio_pdf::standards::v1_7::subsets::e::schema::mutations::PdfEMutation;

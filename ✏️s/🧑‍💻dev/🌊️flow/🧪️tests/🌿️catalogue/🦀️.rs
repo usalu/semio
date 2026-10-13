@@ -17,25 +17,25 @@ fn install_first_party_light_flow_extensions_for_tests() {
     use std::sync::Once;
     static ONCE: Once = Once::new();
     ONCE.call_once(|| {
-        register_linked_flow_extension_installer("primitive", |registry| { semio_s_plugin_flow_extension_primitive::register(registry); });
-        register_linked_flow_extension_installer("math", |registry| { semio_s_plugin_flow_extension_math::register(registry); });
-        register_linked_flow_extension_installer("text", |registry| { semio_s_plugin_flow_extension_text::register(registry); });
-        register_linked_flow_extension_installer("logic", |registry| { semio_s_plugin_flow_extension_logic::register(registry); });
-        register_linked_flow_extension_installer("dictionary", |registry| { semio_s_plugin_flow_extension_dictionary::register(registry); });
-        register_linked_flow_extension_installer("list", |registry| { semio_s_plugin_flow_extension_list::register(registry); });
-        register_linked_flow_extension_installer("draw", |registry| { semio_s_plugin_flow_extension_draw::register(registry); });
-        register_linked_flow_extension_installer("bim", |registry| { semio_s_plugin_flow_extension_bim::register(registry); });
-        register_linked_flow_extension_installer("brep", |registry| { semio_s_plugin_flow_extension_brep::register(registry, geometry_session()); });
+        register_linked_flow_extension_installer("primitive", |registry| { semio_s_plugin_flow_primitive::register(registry); });
+        register_linked_flow_extension_installer("math", |registry| { semio_s_plugin_flow_math::register(registry); });
+        register_linked_flow_extension_installer("text", |registry| { semio_s_plugin_flow_text::register(registry); });
+        register_linked_flow_extension_installer("logic", |registry| { semio_s_plugin_flow_logic::register(registry); });
+        register_linked_flow_extension_installer("dictionary", |registry| { semio_s_plugin_flow_dictionary::register(registry); });
+        register_linked_flow_extension_installer("list", |registry| { semio_s_plugin_flow_list::register(registry); });
+        register_linked_flow_extension_installer("draw", |registry| { semio_s_plugin_flow_draw::register(registry); });
+        register_linked_flow_extension_installer("bim", |registry| { semio_s_plugin_flow_bim::register(registry); });
+        register_linked_flow_extension_installer("brep", |registry| { semio_s_plugin_flow_brep::register(registry, geometry_session()); });
         for (plugin_id, manifest) in [
-            ("flow-extension-primitive", semio_s_plugin_flow_extension_primitive::extension_manifest_json()),
-            ("flow-extension-math", semio_s_plugin_flow_extension_math::extension_manifest_json()),
-            ("flow-extension-text", semio_s_plugin_flow_extension_text::extension_manifest_json()),
-            ("flow-extension-logic", semio_s_plugin_flow_extension_logic::extension_manifest_json()),
-            ("flow-extension-dictionary", semio_s_plugin_flow_extension_dictionary::extension_manifest_json()),
-            ("flow-extension-list", semio_s_plugin_flow_extension_list::extension_manifest_json()),
-            ("flow-extension-draw", semio_s_plugin_flow_extension_draw::extension_manifest_json()),
-            ("flow-extension-bim", semio_s_plugin_flow_extension_bim::extension_manifest_json()),
-            ("flow-extension-brep", complete_fixture_registration(semio_s_plugin_flow_extension_brep::extension_manifest_json())),
+            ("flow-extension-primitive", semio_s_plugin_flow_primitive::extension_manifest_json()),
+            ("flow-extension-math", semio_s_plugin_flow_math::extension_manifest_json()),
+            ("flow-extension-text", semio_s_plugin_flow_text::extension_manifest_json()),
+            ("flow-extension-logic", semio_s_plugin_flow_logic::extension_manifest_json()),
+            ("flow-extension-dictionary", semio_s_plugin_flow_dictionary::extension_manifest_json()),
+            ("flow-extension-list", semio_s_plugin_flow_list::extension_manifest_json()),
+            ("flow-extension-draw", semio_s_plugin_flow_draw::extension_manifest_json()),
+            ("flow-extension-bim", semio_s_plugin_flow_bim::extension_manifest_json()),
+            ("flow-extension-brep", complete_fixture_registration(semio_s_plugin_flow_brep::extension_manifest_json())),
         ] {
             install_flow_extension_manifest(plugin_id, &manifest).expect("fixture extension admission");
         }
@@ -148,7 +148,7 @@ fn app_catalogue_carries_every_operator_and_palette_section() {
 fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -238,7 +238,7 @@ fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
 fn rectangle_extrude_fixture_evaluates_solid_output() {
     let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -314,7 +314,7 @@ fn rectangle_extrude_fixture_evaluates_solid_output() {
 #[test]
 fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
     // 🩹️ Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
-    // handcrafted DSL (`crate::os_store::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
+    // handcrafted DSL (`crate::os_store::serialization::ArtifactDsl`) — inlined the same flow-fixture JSON this test actually
     // parses (`FlowHost::parse_host_snapshot_json`), decoupled from procedural's document format.
     let json = r#"{
   "schema": "flow.host_snapshot",
@@ -382,8 +382,8 @@ fn supplied_operator_registries_and_geometry_ports_keep_host_authorities_indepen
     let sessions = [semio_s_spatial_kernel_semio_session::Session::new(), semio_s_spatial_kernel_semio_session::Session::new()];
     let mut handles = Vec::new();
     for (session, row) in sessions.iter().zip(fixture["boxes"].as_array().unwrap()) {
-        let mut registry = semio_s_plugin_flow_extension_brep::module_registry(session);
-        semio_s_plugin_flow_extension_primitive::register(&mut registry);
+        let mut registry = semio_s_plugin_flow_brep::module_registry(session);
+        semio_s_plugin_flow_primitive::register(&mut registry);
         let infos = std::sync::Arc::new(registry.operator_infos().map(|info| (info.id.clone(),info.clone())).collect());
         let (registry, mut retirement) = neural_engine::SharedRegistry::new(registry);
         let mut host = FlowHost::default().with_operator_registry(registry).with_geometry_port(session.port());

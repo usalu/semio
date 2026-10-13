@@ -29,12 +29,12 @@ fn large_raster_density_edit_uses_compact_owned_event() {
     let emit = <JpgAnyEditor as editing::SnapshotEditingEditor>::snapshot_edit_emit(&event, &snapshot).expect("density edit emits");
     let [JpgMutation::ChangeJfifHeader(_payload)] = emit.artifact_mutations.as_slice() else { panic!("density edit must use its typed JFIF header intent") };
     
-    assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
+    assert!(<JpgMutation as protocol::OpBinary>::encode_op(&emit.artifact_mutations[0]).expect("density mutation encodes").len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES);
     let next = protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&emit.artifact_mutations[0], &snapshot).diff(), &snapshot).expect("density mutation applies");
     assert_eq!(next.image.jfif_x_density, 75);
     assert_eq!(next.image.pixels, snapshot.image.pixels);
     let inverse = <JpgMutation as protocol::Mutation<JpgSnapshot>>::inverse(&emit.artifact_mutations[0], &snapshot).expect("valid retained mutation inverse fixture");
-    assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
+    assert!(inverse.iter().all(|mutation| <JpgMutation as protocol::OpBinary>::encode_op(mutation).is_ok_and(|bytes| bytes.len() < store::os_store::one_item::ARTIFACT_STORE_ONE_ITEM_MAXIMUM_BYTES)));
     let restored = inverse.into_iter().fold(next, |current, mutation| protocol::apply_diff(<JpgMutation as protocol::Mutation<JpgSnapshot>>::diff(&mutation, &current).diff(), &current).expect("density inverse applies"));
     assert_eq!(restored, snapshot);
 

@@ -4,12 +4,11 @@
   "originalLaw": "🧰️framework/🛍️products/💻️os/🔨️modules/🏃️run/🧪️tests/🔬️unit/🦀️.rs",
   "law": "🧪️tests/🛂️committed-descriptor/🦀️.rs",
   "fixture": "🧫️fixtures/🛂️committed-descriptor/🔣️.json",
-  "descriptorPath": "🌎️hub/🧩️compositions/🏙️bim/🛂️.descriptor.semio",
-  "componentDirectory": "🌎️hub/🧩️compositions/🏙️bim/📦️packages/🦀️rust/dist",
-  "componentName": "semio_hub_bim.wasm",
-  "profiles": [
-    "component-dev",
-    "component-release"
+  "descriptorPath": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/🛂️.descriptor.semio",
+  "componentDirectory": "🌎️hub/🧩️compositions/🏙️bim/🧩️component/📦️packages/🦀️rust/dist",
+  "componentName": "semio_hub_bim_component.wasm",
+  "deliverables": [
+    "components"
   ],
   "pluginId": "bim",
   "load": "hot_reload_plugin",

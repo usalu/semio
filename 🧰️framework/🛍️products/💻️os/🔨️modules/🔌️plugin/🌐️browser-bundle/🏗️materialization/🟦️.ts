@@ -1,6 +1,7 @@
 #!/usr/bin/env bun
 import { SHARD_LIVENESS_POLICY } from "../../../../../../🔨️modules/🎭️actor/📮️shard-client/🫀️liveness/🟦️.ts";
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 /** 🌐 Shared jco transpile + plugin web glue (dev runner + extension store).
  *
  * MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (H2): `pluginWorkerSource`/`PLUGIN_WORKER_FILE`
@@ -81,6 +82,7 @@ export type PluginWebMaterializeContext = {
   readonly signal?: AbortSignal;
   readonly optimize?: boolean;
   readonly wasmOptBin?: string;
+  readonly cores?: number;
 };
 
 /** 🔤️ The staged typst font seed `semio-framework-os-infinite:fonts` publishes — the one source of the
@@ -1062,7 +1064,7 @@ const WASM_OPT_ARGS: readonly string[] = [
 
 /** 🪶️ Optimizes extracted component cores with the native tool prepared by Nx. */
 function optimizePluginCoreModules(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): void {
-  if (!(ctx.optimize ?? (semioBuildMode() === "ship" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  if (!(ctx.optimize ?? (semioBuildMode() === "release" && process.env.SEMIO_WASM_OPT !== "0"))) return;
   const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
   const wasmOptBin = selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot);
   for (const file of readdirSync(outDir)) {
@@ -1217,90 +1219,45 @@ export function transpilePluginComponent(artifact: string, outDir: string, compo
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }
 
-/** 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): non-blocking subprocess spawn, used ONLY
- * by {@link transpilePluginComponentAsync} below. The shared repo-lib's `runNodeBinStatus`/
- * `runCmdStatus` (used by the SYNC {@link transpilePluginComponent} above, which stays exactly as-is
- * for its one other caller, the extension store's `webMaterialize`) both wrap Node's `spawnSync` —
- * correct and desired for a genuinely one-at-a-time step (e.g. `cargo build`), but fatal to any attempt
- * at running several plugins' jco transpile CONCURRENTLY: an async concurrency limiter wrapped around a
- * synchronous blocking call achieves zero real overlap, since nothing else in this process can run
- * while the thread is stuck inside `spawnSync`. `stdio` is piped rather than inherited for the same
- * reason: several of these may be in flight at once, and `"inherit"` would interleave unrelated
- * processes' output byte-by-byte on the parent's own stdout/stderr; buffered output is instead
- * surfaced (as one block) only on failure. Reuses the shared repo-lib's `resolveWorkspaceBin` for the
- * exact same monorepo-aware `.bin/` lookup `runNodeBinStatus` itself uses, rather than
- * reimplementing it. */
-function spawnAsync(cmd: string, args: readonly string[], cwd: string, signal?: AbortSignal): Promise<void> {
-  signal?.throwIfAborted();
-  return new Promise((resolveSpawn, rejectSpawn) => {
-    const child = spawn(cmd, args as string[], { cwd, shell: false, detached: signal !== undefined && process.platform !== "win32", stdio: ["ignore", "pipe", "pipe"] });
-    const progress = setInterval(() => console.log(`Running ${cmd.split(/[\\/]/).pop()}…`), 10000);
-    let output = "", forced: ReturnType<typeof setTimeout> | undefined;
-    const terminate = (force = false): void => {
-      if (!child.pid) return;
-      if (process.platform === "win32") { spawn("taskkill", ["/pid", String(child.pid), "/T", "/F"], { stdio: "ignore", windowsHide: true }); return; }
-      try { process.kill(-child.pid, force ? "SIGKILL" : "SIGTERM"); } catch {}
-    };
-    const cancel = (): void => { terminate(); forced ??= setTimeout(() => terminate(true), 2_000); };
-    signal?.addEventListener("abort", cancel, { once: true });
-    const capture = (chunk: Buffer): void => { output = (output + chunk.toString("utf8")).slice(-64 * 1024); };
-    child.stdout?.on("data", capture); child.stderr?.on("data", capture);
-    child.on("error", rejectSpawn);
-    child.on("close", (code) => {
-      clearInterval(progress);
-      if (forced) clearTimeout(forced);
-      signal?.removeEventListener("abort", cancel);
-      if (signal?.aborted) rejectSpawn(signal.reason);
-      else if (code === 0) resolveSpawn();
-      else rejectSpawn(new Error(`${cmd} ${args.join(" ")} exited with status ${code}\n${output}`));
-    });
-  });
-}
-
-function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal): Promise<void> {
+function spawnNodeBinAsync(args: readonly string[], cwd: string, signal?: AbortSignal): Promise<string> {
   const binName = args[0]!;
   const resolved = resolveWorkspaceBin(binName, cwd);
-  return spawnAsync("node", [resolved ?? binName, ...args.slice(1)], cwd, signal);
+  return captureOwnedCommandV1("node", [resolved ?? binName, ...args.slice(1)], cwd, signal ? { signal } : {});
 }
 
-/** 🪶️ Async twin of {@link optimizePluginCoreModules} — same ship-mode-only `wasm-opt` pass,
- * same `WASM_OPT_ARGS`, just spawned via {@link spawnAsync} instead of `runCmdStatus`'s `spawnSync` so
- * it can run concurrently with sibling plugins' own optimize pass under
- * `📜️script.ts`'s bounded-parallel materialize stage (T-P8). */
-export async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
-  if (!(ctx.optimize ?? (semioBuildMode() === "ship" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+/** 🎚️ The `wasm-opt` executable a context selects and the exact arguments every shipped core is optimized with. */
+export function pluginWasmOptToolV1(ctx: Pick<PluginWebMaterializeContext, "repoRoot" | "wasmOptBin">): Readonly<{ command: string; args: readonly string[] }> {
   const selected = ctx.wasmOptBin ?? process.env.SEMIO_WASM_OPT_BIN;
-  const wasmOptBin = selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot);
-  for (const file of readdirSync(outDir)) {
-    if (!file.startsWith(`${componentBase}.core`) || !file.endsWith(".wasm")) continue;
+  return Object.freeze({ command: selected ? resolve(ctx.repoRoot, selected) : preparedBinaryen(ctx.repoRoot), args: WASM_OPT_ARGS });
+}
+
+/** 🧩️ The extracted core modules jco wrote for one component, in name order. */
+export function pluginCoreModuleFilesV1(outDir: string, componentBase: string): readonly string[] {
+  return readdirSync(outDir).filter((file) => file.startsWith(`${componentBase}.core`) && file.endsWith(".wasm")).sort();
+}
+
+/** 🪶️ Optimizes one extracted core with `wasm-opt -Oz` into `output`, on `ctx.cores` threads (Binaryen's `BINARYEN_CORES`) when the caller holds that many job slots. */
+export async function optimizePluginCoreModuleAsync(core: string, output: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  const tool = pluginWasmOptToolV1(ctx);
+  try { await captureOwnedCommandV1(tool.command, [core, ...tool.args, "-o", output], ctx.repoRoot, { env: { ...process.env, ...(ctx.cores === undefined ? {} : { BINARYEN_CORES: String(ctx.cores) }) }, ...(ctx.signal ? { signal: ctx.signal } : {}) }); }
+  catch (cause) { ctx.signal?.throwIfAborted(); throw new Error(`wasm-opt failed for ${core}`, { cause }); }
+}
+
+/** 🪶️ Async twin of {@link optimizePluginCoreModules}: the same ship-mode-only `wasm-opt` pass over every extracted core, spawned without blocking. */
+export async function optimizePluginCoreModulesAsync(outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  if (!(ctx.optimize ?? (semioBuildMode() === "release" && process.env.SEMIO_WASM_OPT !== "0"))) return;
+  for (const file of pluginCoreModuleFilesV1(outDir, componentBase)) {
     const coreWasm = join(outDir, file);
-    const optimized = `${coreWasm}.opt`;
-    try {
-      await spawnAsync(wasmOptBin, [coreWasm, ...WASM_OPT_ARGS, "-o", optimized], ctx.repoRoot, ctx.signal);
-    } catch (cause) {
-      ctx.signal?.throwIfAborted();
-      throw new Error(`wasm-opt failed for ${coreWasm}`, { cause });
-    }
-    renameSync(optimized, coreWasm);
+    await optimizePluginCoreModuleAsync(coreWasm, `${coreWasm}.opt`, ctx);
+    renameSync(`${coreWasm}.opt`, coreWasm);
   }
 }
 
-/** 🚀️ MICROKERNEL-POOLED-ACTOR-PLUGIN-RUNTIME (T-P8): async twin of
- * {@link transpilePluginComponent} — identical jco invocation, ship-mode `wasm-opt` pass, and
- * preview2-shim-import rewrite, but spawned non-blockingly so `📜️script.ts`'s bounded-parallel
- * MATERIALIZE stage (`buildPluginCatalog`) can actually overlap several plugins' transpile/optimize
- * work in wall-clock time — the sync {@link transpilePluginComponent} above cannot provide that overlap
- * no matter how it is scheduled from the caller side (see {@link spawnAsync}'s doc). Kept as a SEPARATE
- * export rather than changing the sync function in place: the extension store's `webMaterialize`
- * (`🏪️store/📥️installation/🟦️.ts`, outside this packet's owned paths) calls the sync version without awaiting
- * it, relying on it blocking until done before it deletes the temp artifact directory in its own
- * `finally` — flipping that function to async out from under that caller would silently race the
- * artifact's cleanup against jco still reading it. */
-export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+/** 🧬️ The location-independent half of a component's transpile: jco's module files with the async result lifting and the versioned core asset URLs
+ * rewritten, before any `wasm-opt` pass and before the preview2 shim imports are pointed at a vendor directory. A pure function of the component bytes,
+ * the jco version, `componentBase` and this file, so it is cached by content. */
+export async function transpilePluginComponentModulesAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
   try {
-    // 🧪️ terra-web-bridges: same flags/map pair as the sync {@link transpilePluginComponent} above —
-    // see that function's own doc for why no `--async-mode` flag is needed and why `host-async` maps
-    // to the same shim file `pure` already does.
     await spawnNodeBinAsync(["@bytecodealliance/jco", "transpile", artifact, "-o", outDir, "--name", componentBase, "--map", "semio:framework/pure=./🟨️.js", "--map", "semio:framework/host-async=./🟨️.js"], ctx.repoRoot, ctx.signal);
   } catch (cause) {
     ctx.signal?.throwIfAborted();
@@ -1308,6 +1265,12 @@ export async function transpilePluginComponentAsync(artifact: string, outDir: st
   }
   rewriteJcoAsyncResultLiftingAt(join(outDir, `${componentBase}.js`));
   rewriteJcoComponentAssetUrlsAt(join(outDir, `${componentBase}.js`));
+}
+
+/** 🚀️ Async twin of {@link transpilePluginComponent}: the same jco invocation (no `--async-mode` flag, `pure` and `host-async` mapped to one shim, see
+ * that function's doc), the ship-mode `wasm-opt` pass and the preview2 shim import rewrite, spawned without blocking so several components overlap. */
+export async function transpilePluginComponentAsync(artifact: string, outDir: string, componentBase: string, ctx: PluginWebMaterializeContext): Promise<void> {
+  await transpilePluginComponentModulesAsync(artifact, outDir, componentBase, ctx);
   await optimizePluginCoreModulesAsync(outDir, componentBase, ctx);
   rewritePreview2ShimImports(join(outDir, `${componentBase}.js`), ctx.preview2VendorDir);
 }

@@ -4,7 +4,7 @@ use super::adapters::{bounded_message, AUTHORITY_MAX_CODEC_TEXT_BYTES, TRUSTED_C
 use super::{AcceptedArtifactOperation, ArtifactPair, ArtifactValidationStage, AuthorityError, AuthorityProgress, AuthorityProgressStage, OperationContext, TrustedArtifactCatalog, TrustedArtifactCodec, TrustedArtifactGenesisCodec, TrustedArtifactIdentity, TrustedArtifactReplayCodec};
 use directory::os_directory::{DocumentDescriptor, DocumentExecutionProtocolV1, DocumentOpenArtifactV1, DocumentOpenGrantV1, DocumentOpenPackageV1, DocumentOpenRendererTargetV1, DocumentOpenSurfaceRoleV1, DocumentOpenSurfaceV1};
 use directory::os_directory::io::binary::artifact_hash::hex_lower;
-use directory::os_store::{self, ArtifactCodec};
+use directory::os_store::{self, serialization::ArtifactCodec};
 use directory::io::{ArtifactAssemblyRegistryPlan,ArtifactCodecBinding,ArtifactCatalogBinding,ArtifactCatalogCapability,ArtifactCatalogTarget};
 use semio_framework::{DslValue, PackageDescriptor, Version};
 use semio_framework_hash::{Hasher, Sha256};
@@ -15,7 +15,8 @@ use std::sync::Arc;
 
 #[path = "🧬️schema/🦀️.rs"]
 pub mod schema;
-use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
+use schema::{publication_revision, TrustedBundleFileV1, TrustedBundleGrantV1, TrustedBundleIdentityV1, TrustedBundleOpenRole, TrustedBundleOpenTargetV1, TrustedBundlePackageRole, TrustedBundlePackageV1, TrustedBundleProfileV1, TrustedBundleRendererTarget, TrustedBundleV1, TrustedCatalogCurrentPointerV1, TrustedCatalogPublicationCommandV1, TrustedCatalogPublicationReceiptV1, TRUSTED_CATALOG_PUBLICATION_MAX_BYTES, TRUSTED_CATALOG_PUBLICATION_OUTCOME_DURABLE, TRUSTED_CATALOG_PUBLICATION_OUTCOME_UNCONFIRMED, TRUSTED_CATALOG_PUBLICATION_RECEIPT_SCHEMA, TRUSTED_CATALOG_PUBLICATION_SCHEMA, TRUSTED_BUNDLE_SCHEMA_VERSION, TRUSTED_CATALOG_GUEST_RESIDENCY, TrustedCatalogGuestResidencyStateV1, TrustedCatalogGuestResidencyV1, TrustedCatalogLoadProgressV1, TrustedCatalogPackagePhaseV1, TrustedCatalogPackageProgressV1, GuestCodecVerificationV1, GUEST_CODEC_VERIFICATION_SCHEMA};
+use directory::os_component_receipt::ComponentReceiptV1;
 use directory::os_plugin_module_schema::{TrustedPluginModuleBundleV1, TrustedPluginModuleFileV1, TrustedPluginModuleIndexEntryV1, TrustedPluginModuleIndexV1, TRUSTED_PLUGIN_MODULE_INDEX_SCHEMA};
 
 #[path = "🌐️browser-actor/🦀️.rs"]
@@ -411,6 +412,7 @@ pub struct VerifiedTrustedPackage {
     descriptor_sha256: [u8; 32],
     component: TrustedCatalogAsset,
     descriptor_bytes: Arc<[u8]>,
+    receipt: ComponentReceiptV1,
     browser_actor: DocumentOpenBrowserActorV1,
     browser_actor_asset: Option<TrustedCatalogAsset>,
     descriptor: Arc<PackageDescriptor>,
@@ -455,6 +457,11 @@ impl VerifiedTrustedPackage {
     /// 🗂️ Returns the decoded existing `PackageDescriptor`.
     pub fn descriptor(&self) -> &PackageDescriptor {
         &self.descriptor
+    }
+
+    /// 🧾️ Returns the shipped receipt binding the semantic descriptor to the component bytes.
+    pub fn receipt(&self) -> &ComponentReceiptV1 {
+        &self.receipt
     }
 
     /// 🧩️ Returns the package's verified plugin module.
@@ -502,7 +509,7 @@ pub(crate) trait GuestResidentFootprintV1 {
     fn footprint_bytes(&self) -> u64;
 }
 
-impl GuestResidentFootprintV1 for semio_framework_plugin_host::CompiledHandle {
+impl GuestResidentFootprintV1 for semio_framework_plugin_interpreter::OwnedCompiledGuest {
     /// 🧊️ Beyond its parsed component (which its registration charges) a compiled guest holds the owned interpreter's codec
     /// origin once a codec call assembled it: the guest's linear memory right after its plugin bundle assembled.
     fn footprint_bytes(&self) -> u64 {
@@ -829,10 +836,10 @@ impl TrustedCatalogLoadProgressCellV1 {
 /// by that call, whichever comes first — so a hub serves without interpreting its whole catalog first and
 /// no codec call ever runs on a row its component did not answer as the trust record says.
 struct GuestArtifactComponent {
-    runtime: Arc<semio_framework_plugin_host::OwnedRuntime>,
+    runtime: Arc<semio_framework_plugin_interpreter::OwnedRuntime>,
     package: PackageRef,
     component: TrustedCatalogAsset,
-    compiled: GuestResidencyV1<semio_framework_plugin_host::CompiledHandle>,
+    compiled: GuestResidencyV1<semio_framework_plugin_interpreter::OwnedCompiledGuest>,
     position: usize,
     component_sha256: [u8; 32],
     rows: Vec<(String, [u8; 32])>,
@@ -842,13 +849,13 @@ struct GuestArtifactComponent {
 }
 
 impl GuestArtifactComponent {
-    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_host::CompiledHandle>, AuthorityError> {
+    async fn compiled(&self, context: &OperationContext<'_>) -> Result<Arc<semio_framework_plugin_interpreter::OwnedCompiledGuest>, AuthorityError> {
         self.compiled
             .acquire(context, || async {
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 0, total_units: 1 })?;
                 let bytes = self.component.read(context).await?;
-                let (runtime, package) = (Arc::clone(&self.runtime), self.package.clone());
-                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&package, &bytes).map_err(semio_framework_plugin_host::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
+                let runtime = Arc::clone(&self.runtime);
+                let compiled = interpret_off_worker(context, move |_handle, _progress, _cancellation| runtime.compile_component(&bytes).map_err(semio_framework_plugin_interpreter::TurnFault::Host)).await?.map_err(|error| catalog_error(format!("{}: {error}", self.package.package.0)))?;
                 context.report(AuthorityProgress { stage: AuthorityProgressStage::GuestCompiling, completed_units: 1, total_units: 1 })?;
                 Ok(compiled)
             })
@@ -910,7 +917,7 @@ impl GuestArtifactComponent {
     }
 
     /// 🔐️ One row: the component's own `pack-schema-hash`, compared with the trust record and remembered for this engine.
-    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_host::CompiledHandle>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
+    async fn verify_row(&self, compiled: Arc<semio_framework_plugin_interpreter::OwnedCompiledGuest>, schema: &str, expected: [u8; 32], context: &OperationContext<'_>) -> Result<(), AuthorityError> {
         context.checkpoint()?;
         let (runtime, row_schema) = (Arc::clone(&self.runtime), schema.to_string());
         let observed = interpret_off_worker(context, move |handle, progress, cancellation| handle.block_on(runtime.codec_pack_schema_hash_observed(&compiled, &row_schema, GUEST_CODEC_BUDGET, |fuel, _elapsed| progress(fuel), cancellation)))
@@ -1001,14 +1008,14 @@ impl GuestArtifactCodecBinding {
 /// the call at its next step, so no interpretation outlives the operation that asked for it and a
 /// runtime being dropped waits for none. The outer result is the caller's own outcome, the inner one
 /// the guest's answer. Guest codec calls belong to the hub's runtime; outside one they are refused.
-async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_host::TurnFault>, AuthorityError>
+async fn interpret_off_worker<T, F>(context: &OperationContext<'_>, call: F) -> Result<Result<T, semio_framework_plugin_interpreter::TurnFault>, AuthorityError>
 where
     T: Send + 'static,
-    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_host::GuestCallCancellation) -> Result<T, semio_framework_plugin_host::TurnFault> + Send + 'static,
+    F: FnOnce(&tokio::runtime::Handle, &mut dyn FnMut(u64), &semio_framework_plugin_interpreter::GuestCallCancellation) -> Result<T, semio_framework_plugin_interpreter::TurnFault> + Send + 'static,
 {
     let handle = tokio::runtime::Handle::try_current().map_err(|_| catalog("guest codec calls run on the hub runtime"))?;
     let (sender, mut observations) = tokio::sync::mpsc::unbounded_channel::<u64>();
-    let released = GuestCallRelease(semio_framework_plugin_host::GuestCallCancellation::default());
+    let released = GuestCallRelease(semio_framework_plugin_interpreter::GuestCallCancellation::default());
     let (blocking, cancellation) = (handle.clone(), released.0.clone());
     let joined = handle.spawn_blocking(move || {
         call(
@@ -1027,7 +1034,7 @@ where
             Err(_) => {}
         }
     }
-    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_host::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
+    Ok(joined.await.unwrap_or_else(|error| Err(semio_framework_plugin_interpreter::TurnFault::Trapped(format!("guest codec call ended abnormally: {error}")))))
 }
 
 /// ⏲️ How often a caller awaiting a guest call between two fuel observations (one per 25 M fuel or 5 s)
@@ -1037,7 +1044,7 @@ const GUEST_CALL_CANCELLATION_POLL: std::time::Duration = std::time::Duration::f
 /// 🧯️ The awaiting side of one guest call: however its caller is released — answered, refused, cancelled or
 /// dropped mid-await — the call is cancelled, which ends its interpretation at the next step (a call that already
 /// returned is unaffected).
-struct GuestCallRelease(semio_framework_plugin_host::GuestCallCancellation);
+struct GuestCallRelease(semio_framework_plugin_interpreter::GuestCallCancellation);
 
 impl Drop for GuestCallRelease {
     fn drop(&mut self) {
@@ -1137,7 +1144,7 @@ impl TrustedArtifactGenesisCodec for VerifiedNativeArtifactCodec {
 
 /// 🗂️ Process-lifetime snapshot produced only after complete bundle verification and codec activation.
 pub struct VerifiedTrustedCatalog {
-    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_host::CompiledHandle>>,
+    residency: Arc<GuestResidencyLedgerV1<semio_framework_plugin_interpreter::OwnedCompiledGuest>>,
     guests: Box<[Arc<GuestArtifactComponent>]>,
     progress: Arc<TrustedCatalogLoadProgressCellV1>,
     packages: Box<[VerifiedTrustedPackage]>,
@@ -1239,6 +1246,7 @@ impl VerifiedTrustedCatalog {
                 version: package.version.clone(),
                 component_sha256: hex_lower(&package.component_sha256),
                 descriptor_byte_sha256: hex_lower(&package.descriptor_sha256),
+                receipt_sha256: hex_lower(&Sha256::digest(&package.receipt.encode_canonical())),
                 dependencies: package.dependencies.clone(),
                 dialect_artifact_kinds: package.descriptor.manifest.apps.iter().map(|app| app.dialect.artifact_kind.clone()).collect::<BTreeSet<_>>().into_iter().collect(),
                 extends_plugin_id: (package.descriptor.role == semio_framework::PackageRole::Extension).then(|| package.descriptor.manifest.dependencies.first().map(|dependency| dependency.plugin_id.clone())).flatten(),
@@ -1398,7 +1406,7 @@ impl TrustedArtifactCatalog for Arc<VerifiedTrustedCatalog> {
 /// 🪪️ What a remembered verification was computed by: the owned engine's semantic identity and the
 /// fuel ceiling every guest codec call runs under.
 pub(crate) fn guest_codec_engine_identity() -> String {
-    format!("{}:fuel-{}", semio_framework_plugin_host::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
+    format!("{}:fuel-{}", semio_framework_plugin_interpreter::owned_engine_identity(), GUEST_CODEC_BUDGET.fuel)
 }
 
 /// 🗃️ The hub's content-addressed memory of guest codec verifications (`GuestCodecVerificationV1`),
@@ -1532,7 +1540,7 @@ impl TrustedCatalogLoader {
     ) -> Result<VerifiedTrustedCatalog, AuthorityError> {
         let (catalog, registration) = Self::verify_selected(root, bundle_path, bundle_bytes, profile_id, providers, verifications, context).await?;
         let assembly = semio_framework_schema_registry::assembly::begin().map_err(catalog_error)?;
-        os_store::preflight_document_codecs_in_assembly(&assembly, &registration.document_codecs).map_err(catalog_error)?;
+        os_store::codec_registry::preflight_document_codecs_in_assembly(&assembly, &registration.document_codecs).map_err(catalog_error)?;
         directory::io::preflight_artifact_codec_bindings_in_assembly(&assembly,&registration.document_bindings,&registration.document_codecs).map_err(catalog_error)?;
         directory::io::preflight_artifact_catalog_bindings_in_assembly(&assembly,&registration.catalog_bindings,&registration.document_codecs).map_err(catalog_error)?;
         context.checkpoint()?;
@@ -1554,7 +1562,7 @@ impl TrustedCatalogLoader {
         context: &OperationContext<'_>,
     ) -> Result<(VerifiedTrustedCatalog, ArtifactAssemblyRegistryPlan), AuthorityError> {
         context.report(AuthorityProgress { stage: AuthorityProgressStage::Preflight, completed_units: 0, total_units: 1 })?;
-        let guest_runtime = Arc::new(semio_framework_plugin_host::OwnedRuntime::new());
+        let guest_runtime = Arc::new(semio_framework_plugin_interpreter::OwnedRuntime::new());
         let residency = GuestResidencyLedgerV1::new(TRUSTED_CATALOG_GUEST_RESIDENCY);
         let progress = context.catalog_progress().unwrap_or_default();
         let bundle: TrustedBundleV1 = serde_json::from_slice(&bundle_bytes).map_err(catalog_error)?;
@@ -1701,7 +1709,7 @@ impl TrustedCatalogLoader {
 
         for (stage, native_bindings) in staged.into_iter().zip(previews) {
             let StagedTrustedPackage { position, record, component, component_sha256, component_blake3, descriptor_bytes, descriptor_sha256, descriptor, browser_actor, browser_actor_asset, plugin_module } = stage;
-            let catalog_package=DocumentOpenPackageV1{plugin_id:record.plugin_id.clone(),package_id:record.package_id.clone(),version:record.version.clone(),component_sha256:hex_lower(&component_sha256),component_blake3:hex_lower(&component_blake3),descriptor_byte_sha256:hex_lower(&descriptor_sha256),execution_protocol:DocumentExecutionProtocolV1{app_channel_version:descriptor.execution_protocol.app_channel_version}};
+            let catalog_package=DocumentOpenPackageV1{plugin_id:record.plugin_id.clone(),package_id:record.package_id.clone(),version:record.version.clone(),component_sha256:hex_lower(&component_sha256),component_blake3:hex_lower(&component_blake3),descriptor_byte_sha256:hex_lower(&descriptor_sha256),execution_protocol:DocumentExecutionProtocolV1{app_channel_version:descriptor.execution_protocol.app_channel_version},component_receipt:record.receipt.clone()};
             context.checkpoint()?;
             let binding_map = validate_native_bindings(&native_bindings)?;
             let mut consumed_bindings = BTreeSet::new();
@@ -1794,6 +1802,7 @@ impl TrustedCatalogLoader {
                         component_blake3: hex_lower(&component_blake3),
                         descriptor_byte_sha256: hex_lower(&descriptor_sha256),
                         execution_protocol: DocumentExecutionProtocolV1 { app_channel_version: descriptor.execution_protocol.app_channel_version },
+                        component_receipt: record.receipt.clone(),
                     },
                     artifact: DocumentOpenArtifactV1 { kind: target.artifact_kind.clone(), schema: target.artifact_schema.clone(), pack_schema_hash: target.pack_schema_hash.clone() },
                     surface: DocumentOpenSurfaceV1 { surface_id: target.surface_id.clone(), app_id: target.app_id.clone(), window_kind_id: target.window_kind_id.clone(), role, renderer_target },
@@ -1842,6 +1851,7 @@ impl TrustedCatalogLoader {
                 descriptor_sha256,
                 component,
                 descriptor_bytes: descriptor_bytes.into(),
+                receipt: record.receipt.clone(),
                 browser_actor,
                 browser_actor_asset,
                 descriptor: Arc::new(descriptor),
@@ -1897,7 +1907,8 @@ async fn verify_plugin_module(
     let (manifest_sha256, manifest_blake3) = dual_hash(&manifest_bytes, context).await?;
     verify_digest(&record.plugin_module.sha256, manifest_sha256, "plugin module sha256")?;
     verify_digest(&record.plugin_module.blake3, manifest_blake3, "plugin module blake3")?;
-    let source = TrustedPluginModuleSourceV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version, component_sha256, descriptor_byte_sha256: descriptor_sha256 };
+    let receipt_sha256 = hex_lower(&Sha256::digest(&record.receipt.encode_canonical()));
+    let source = TrustedPluginModuleSourceV1 { plugin_id: &record.plugin_id, package_id: &record.package_id, version: &record.version, component_sha256, descriptor_byte_sha256: descriptor_sha256, receipt_sha256: &receipt_sha256 };
     let bundle = decode_plugin_module_bundle(&manifest_bytes, source)?;
     let mut files = BTreeMap::new();
     for file in &bundle.files {
@@ -2224,7 +2235,7 @@ fn append_trusted_profile_dependencies(encoded: &mut Vec<u8>, dependencies: &[Tr
 /// different bundle whose rows happen to concatenate identically.
 fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleProfileV1) -> Result<String, AuthorityError> {
     let mut encoded = Vec::new();
-    encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v1\0");
+    encoded.extend_from_slice(b"semio/hub/trusted-profile-generation/v2\0");
     append_document_open_catalog_field(&mut encoded, profile.id.as_bytes())?;
     encoded.extend_from_slice(&u32::try_from(profile.selected_closure.len()).map_err(catalog_error)?.to_be_bytes());
     for identity in &profile.selected_closure {
@@ -2245,6 +2256,7 @@ fn trusted_profile_generation(bundle: &TrustedBundleV1, profile: &TrustedBundleP
             decode_digest(&package.component.sha256, "profile component sha256")?.as_slice(),
             decode_digest(&package.component.blake3, "profile component blake3")?.as_slice(),
             decode_digest(&package.descriptor.sha256, "profile descriptor sha256")?.as_slice(),
+            package.receipt.encode_canonical().as_slice(),
             package.execution_protocol.app_channel_version.to_be_bytes().as_slice(),
         ] {
             append_document_open_catalog_field(&mut encoded, value)?;
@@ -2360,7 +2372,7 @@ fn validate_file(file: &TrustedBundleFileV1, maximum: u64) -> Result<(), Authori
 /// meaningful: to a native codec of the same package below, and to the descriptor's own app and
 /// artifact kind in `validate_descriptor_open_target`.
 fn validate_bundle(bundle: &TrustedBundleV1, profile_id: &str) -> Result<SelectedTrustedBundleV1, AuthorityError> {
-    if bundle.schema_version != 3 || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
+    if bundle.schema_version != TRUSTED_BUNDLE_SCHEMA_VERSION || bundle.packages.is_empty() || bundle.packages.len() > TRUSTED_CATALOG_MAX_PACKAGES || bundle.profiles.is_empty() || bundle.profiles.len() > TRUSTED_BUNDLE_MAX_PROFILES || !valid_identity(profile_id) {
         return Err(catalog("trusted bundle shape or version is invalid"));
     }
     let mut plugins = BTreeMap::new();
@@ -2565,9 +2577,10 @@ fn validate_native_bindings(bindings: &[NativeCodecBinding]) -> Result<BTreeMap<
     Ok(map)
 }
 
-/// 🪪️ A decoded descriptor must be exactly the package its trust record names, speaking this hub's app channel.
-/// A refusal names the package and every field that differs; a catalog published for another app channel is named as
-/// such, because the operator's remedy (publish the catalog again with this tree) differs from a tampered descriptor's.
+/// 🪪️ A decoded semantic descriptor must be exactly the package its trust record names, speaking this hub's app channel,
+/// and the record's shipped receipt must bind exactly that descriptor to exactly the record's component bytes. A refusal
+/// names the package and every field that differs; a catalog published for another app channel is named as such, because
+/// the operator's remedy (publish the catalog again with this tree) differs from a tampered descriptor's.
 fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDescriptor, packages: &[TrustedBundlePackageV1]) -> Result<(), AuthorityError> {
     let differing: Vec<&str> = [
         (descriptor.descriptor_version != 1, "descriptorVersion"),
@@ -2575,8 +2588,8 @@ fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDesc
         (!record.role.matches(descriptor.role), "role"),
         (descriptor.manifest.plugin_id != record.plugin_id, "pluginId"),
         (descriptor.manifest.version != record.version, "version"),
-        (descriptor.hashes.wasm_sha256 != record.component.sha256, "wasmSha256"),
         (descriptor.execution_protocol != record.execution_protocol, "executionProtocol"),
+        (record.receipt.wasm_bytes != record.component.byte_length, "receipt wasmBytes"),
     ]
     .into_iter()
     .filter_map(|(differs, field)| differs.then_some(field))
@@ -2592,9 +2605,7 @@ fn validate_descriptor(record: &TrustedBundlePackageV1, descriptor: &PackageDesc
             directory::os_spr::CHANNEL_VERSION
         )));
     }
-    if decode_digest(&descriptor.hashes.core_wasm_sha256, "descriptor core wasm sha256")? == [0; 32] || decode_digest(&descriptor.hashes.descriptor_sha256, "descriptor metadata sha256")? == [0; 32] {
-        return Err(catalog("decoded package descriptor hash metadata is zero"));
-    }
+    record.receipt.binds(&record.plugin_id, &record.package_id, &record.component.sha256, &record.descriptor.sha256).map_err(|refusal| catalog(&format!("package {} {refusal}", record.package_id)))?;
     if descriptor.manifest.dependencies.len() != record.dependencies.len() {
         return Err(catalog("decoded manifest dependency count does not match the trust record"));
     }
@@ -2693,15 +2704,15 @@ fn decode_package_descriptor(bytes: &[u8]) -> Result<PackageDescriptor, Authorit
     options.limits.max_items = 262_144;
     options.limits.max_depth = 64;
     options.limits.max_total_alloc = TRUSTED_DESCRIPTOR_MAX_MATERIALIZATION;
-    let value = os_store::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
+    let value = os_pack::pack_rt::decode_wire_value_with_options(bytes, &options).map_err(catalog_error)?;
     reject_duplicate_descriptor_fields(&value)?;
-    let canonical = os_store::pack_rt::encode_wire_value(&value);
+    let canonical = os_pack::pack_rt::encode_wire_value(&value);
     if canonical != bytes {
         return Err(catalog("package descriptor is not its exact canonical schema projection"));
     }
     let descriptor: PackageDescriptor = semio_framework_value::FromValue::from_value(value).map_err(catalog_error)?;
     let projection = semio_framework_value::ToValue::to_value(&descriptor);
-    if os_store::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
+    if os_pack::pack_rt::encode_wire_value(&projection) != bytes { return Err(catalog("package descriptor is not its exact canonical schema projection")); }
     Ok(descriptor)
 }
 
@@ -2759,62 +2770,83 @@ fn report_package_progress(context: &OperationContext<'_>, package_position: usi
 }
 
 /// 🧫️ The files of a never-executed fixture plugin module: its entry, both descriptor forms (the packed one
-/// the package's own descriptor) and one vendored import shared by every fixture module.
+/// the package's own descriptor), the package's canonical receipt and one vendored import shared by every fixture module.
 #[cfg(any(test, feature = "integration-fixtures"))]
-pub fn fixture_plugin_module_files(plugin_id: &str, descriptor_bytes: &[u8]) -> Vec<(String, Vec<u8>)> {
+pub fn fixture_plugin_module_files(plugin_id: &str, descriptor_bytes: &[u8], receipt: &ComponentReceiptV1) -> Vec<(String, Vec<u8>)> {
     vec![
         (format!("{plugin_id}/🌉️bridge.js"), b"export async function createActorApi() {}\n".to_vec()),
         (format!("{plugin_id}/🔣️.json"), serde_json::json!({ "manifest": { "pluginId": plugin_id } }).to_string().into_bytes()),
         (format!("{plugin_id}/🛂️.descriptor.semio"), descriptor_bytes.to_vec()),
+        (format!("{plugin_id}/{}", plugin_module::TRUSTED_PLUGIN_MODULE_RECEIPT_FILE), receipt.encode_canonical()),
         ("🪞️vendor/🤝️bytecode-alliance/🪟️preview2-shim/io.js".to_owned(), b"export const streams = {};\n".to_vec()),
     ]
 }
 
+/// 🧫️ The shipped receipt a never-executed fixture component carries: it names exactly the component bytes with this digest
+/// and length and this semantic descriptor.
+#[cfg(any(test, feature = "integration-fixtures"))]
+pub fn fixture_component_receipt(plugin_id: &str, package_id: &str, wasm_sha256: &str, wasm_bytes: u64, descriptor_bytes: &[u8]) -> ComponentReceiptV1 {
+    ComponentReceiptV1 {
+        schema: directory::os_component_receipt::COMPONENT_RECEIPT_SCHEMA.into(),
+        plugin_id: plugin_id.into(),
+        package_id: package_id.into(),
+        profile: directory::os_component_receipt::ComponentProfileV1::WasmRelease,
+        target: directory::os_component_receipt::COMPONENT_TARGET.into(),
+        wasm_sha256: wasm_sha256.into(),
+        wasm_bytes,
+        semantic_descriptor_sha256: hex_lower(&Sha256::digest(descriptor_bytes)),
+        toolchain: "rustc 1.99.0-nightly (9f36de775bc636c8e88c31a173c2bcb6995956a0)".into(),
+        source_tree_digest: "3".repeat(64),
+        provenance_sha256: "4".repeat(64),
+    }
+}
+
 /// 🧫️ Writes one package's fixture plugin module beneath `root` and answers the `pluginModule` record naming it.
 #[cfg(any(test, feature = "integration-fixtures"))]
-pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &str, version: &str, component_sha256: &str, descriptor_bytes: &[u8]) -> Result<serde_json::Value, AuthorityError> {
+pub fn write_fixture_plugin_module(root: &Path, plugin_id: &str, package_id: &str, version: &str, receipt: &ComponentReceiptV1, descriptor_bytes: &[u8]) -> Result<serde_json::Value, AuthorityError> {
     let descriptor_byte_sha256 = hex_lower(&Sha256::digest(descriptor_bytes));
-    let source = TrustedPluginModuleSourceV1 { plugin_id, package_id, version, component_sha256, descriptor_byte_sha256: &descriptor_byte_sha256 };
-    let record = plugin_module::write_plugin_module_bundle(root, &format!("plugin-module-{plugin_id}.json"), source, plugin_id, &fixture_plugin_module_files(plugin_id, descriptor_bytes))?;
+    let receipt_sha256 = hex_lower(&Sha256::digest(&receipt.encode_canonical()));
+    let source = TrustedPluginModuleSourceV1 { plugin_id, package_id, version, component_sha256: &receipt.wasm_sha256, descriptor_byte_sha256: &descriptor_byte_sha256, receipt_sha256: &receipt_sha256 };
+    let record = plugin_module::write_plugin_module_bundle(root, &format!("plugin-module-{plugin_id}.json"), source, plugin_id, &fixture_plugin_module_files(plugin_id, descriptor_bytes, receipt))?;
     serde_json::to_value(record).map_err(catalog_error)
 }
 
 /// 🧫️ Shares headless Stdio metadata between native GIS fixtures; synthetic bytes are never executed.
 #[cfg(all(feature = "native-artifact-execution", any(test, feature = "integration-fixtures")))]
 fn headless_stdio_fixture_package(root: &Path) -> Result<(serde_json::Value, serde_json::Value), AuthorityError> {
-    let dependency = semio_hub_stdio::catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
+    let dependency = semio_hub_stdio_catalog::native_artifact_catalog_dependency().map_err(catalog_error)?;
     let version = dependency.version.0.to_string();
-    let receipts = semio_hub_stdio::catalog::native_codec_factory_receipts().map_err(catalog_error)?;
+    let receipts = semio_hub_stdio_catalog::native_codec_factory_receipts().map_err(catalog_error)?;
     let mut builder = semio_framework_plugin::Plugin::<semio_framework_plugin::app::NoPluginApp>::builder("stdio").label("Stdio Fixture").version(version.clone()).package_id("semio:stdio");
-    for kind in semio_hub_stdio::catalog::native_codec_artifact_kinds() {
+    for kind in semio_hub_stdio_catalog::native_codec_artifact_kinds() {
         builder = builder.artifact_kind(kind);
     }
-    let plugin = builder.contributes_topic(semio_hub_stdio::catalog::native_artifact_catalog_contribution().map_err(catalog_error)?).try_library().map_err(catalog_error)?;
+    let plugin = builder.contributes_topic(semio_hub_stdio_catalog::native_artifact_catalog_contribution().map_err(catalog_error)?).try_library().map_err(catalog_error)?;
     let component = b"synthetic-stdio-component-for-linked-catalog-test";
     let component_sha256 = hex_lower(&Sha256::digest(component));
     let mut component_blake3 = Hasher::new();
     component_blake3.update(component);
-    let mut descriptor = semio_framework::PackageDescriptor {
+    let descriptor = semio_framework::PackageDescriptor {
         descriptor_version: 1, package_id: "semio:stdio".into(), role: semio_framework::PackageRole::Plugin,
         manifest: plugin.manifest, activation_events: Vec::new(), capability_requests: Vec::new(), extension_points: Vec::new(),
         execution: semio_framework::ExecutionMode::Isolated,
         execution_protocol: semio_framework::ExecutionProtocol { app_channel_version: directory::os_spr::CHANNEL_VERSION },
         quotas: semio_framework::kernel::QuotaSchema::default(), contributions: semio_framework::ContributionSet::default(), assets: Vec::new(),
-        hashes: semio_framework::PackageHashes { wasm_sha256: component_sha256.clone(), core_wasm_sha256: component_sha256.clone(), descriptor_sha256: String::new() },
     };
-    descriptor.hashes.descriptor_sha256 = hex_lower(&Sha256::digest(&os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor))));
-    let bytes = os_store::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
+    let bytes = os_pack::pack_rt::encode_wire_value(&semio_framework_value::ToValue::to_value(&descriptor));
     decode_package_descriptor(&bytes)?;
     std::fs::write(root.join("stdio-component.wasm"), component).map_err(catalog_error)?;
     std::fs::write(root.join("stdio-descriptor.semio"), &bytes).map_err(catalog_error)?;
     let identity = serde_json::json!({ "pluginId": "stdio", "packageId": "semio:stdio", "version": version });
     let codecs: Vec<_> = receipts.into_iter().map(|receipt| serde_json::json!({ "artifactKind": receipt.artifact_kind, "artifactSchema": receipt.schema, "packSchemaHash": hex_lower(&receipt.pack_schema_hash) })).collect();
-    let plugin_module = write_fixture_plugin_module(root, "stdio", "semio:stdio", &version, &component_sha256, &bytes)?;
+    let receipt = fixture_component_receipt("stdio", "semio:stdio", &component_sha256, component.len() as u64, &bytes);
+    let plugin_module = write_fixture_plugin_module(root, "stdio", "semio:stdio", &version, &receipt, &bytes)?;
     let record = serde_json::json!({
         "pluginId": "stdio", "packageId": "semio:stdio", "version": version, "role": "plugin", "dependencies": [],
         "executionProtocol": { "appChannelVersion": descriptor.execution_protocol.app_channel_version },
         "component": { "path": "stdio-component.wasm", "byteLength": component.len(), "sha256": component_sha256, "blake3": hex_lower(component_blake3.finalize().as_bytes()) },
         "descriptor": { "path": "stdio-descriptor.semio", "byteLength": bytes.len(), "sha256": hex_lower(&Sha256::digest(&bytes)) },
+        "receipt": receipt,
         "browserActor": { "kind": "none" }, "pluginModule": plugin_module, "nativeCodecs": codecs, "openTargets": [],
     });
     serde_json::from_value::<TrustedBundlePackageV1>(record.clone()).map_err(catalog_error)?;

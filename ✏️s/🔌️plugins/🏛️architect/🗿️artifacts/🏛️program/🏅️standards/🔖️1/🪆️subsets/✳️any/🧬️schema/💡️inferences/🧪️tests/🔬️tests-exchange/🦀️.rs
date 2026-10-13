@@ -1,7 +1,7 @@
 use crate::standards::v1::subsets::any::io::export::serializers::artifacts::csv::v_rfc4180::any::export_relationships_csv;
 use super::*;
 use crate::standards::v1::subsets::any::io::text::inferences::{export_json,import_json};
-use crate::sample_plugin;
+use crate::standards::v1::subsets::any::schema::snapshot::sample_plugin;
 
 #[semio_framework_async_macros::async_test]
 async fn json_round_trip() {

@@ -2,7 +2,7 @@
 use crate::standards::v1_7::subsets::base::io::text::snapshot as snapshot_text;
 use semio_framework_value::{ValueError,ValueRefusalKind};
 use crate::standards::v1_7::subsets::base::io::sqlite::snapshot::*;
-use store::ArtifactSqliteSnapshot;
+use store::os_store::serialization::ArtifactSqliteSnapshot;
 fn write_page(out:&mut Projection<'_,'_>,value:&PdfPage)->Result<i64,ValueError>{let content=content::write_ops(out,&value.content)?;let group=value.group.as_ref().map(|value|resource::write_group(out,value)).transpose()?;let transition=value.transition.as_ref().map(|value|cos::write_dictionary(out,value)).transpose()?;let actions=cos::write_dictionary(out,&value.additional_actions)?;let extra=cos::write_dictionary(out,&value.extra)?;let mut cells=value.media_box.map(C::Real).to_vec();for array in [&value.crop_box,&value.bleed_box,&value.trim_box,&value.art_box]{cells.extend(array_cells(array));}cells.extend([C::Integer(i64::from(value.rotate)),real_cell(value.user_unit),C::Integer(content),group.map_or(C::Null,C::Integer),text_cell(&value.thumbnail),integer_cell(value.struct_parents),transition.map_or(C::Null,C::Integer),real_cell(value.duration),text_cell(&value.metadata),C::Integer(actions),C::Integer(extra)]);let key=out.insert("pdf_page",&cells)?;for(ordinal,value)in value.annotations.iter().enumerate(){let annotation=annotation::write_annotation(out,value)?;out.insert("pdf_page_annotation",&[C::Integer(key),C::Integer(ordinal as i64),C::Integer(annotation)])?;}Ok(key)}
 fn read_page(reader:&mut Reader<'_,'_,'_>,key:i64)->Result<PdfPage,ValueError>{let row=reader.take("pdf_page",key,32)?;let mut annotations=Vec::new();for child in reader.children("pdf_page_annotation",1,2,key)?{let child=reader.take("pdf_page_annotation",child.rowid,4)?;annotations.push(annotation::read_annotation(reader,child.integer(3)?)?);}Ok(PdfPage{media_box:[row.real(1)?,row.real(2)?,row.real(3)?,row.real(4)?],crop_box:optional_array(row,5)?,bleed_box:optional_array(row,9)?,trim_box:optional_array(row,13)?,art_box:optional_array(row,17)?,rotate:integer(row,21)?,user_unit:optional_real(row,22)?,content:content::read_ops(reader,row.integer(23)?)?,annotations,group:optional_integer(row,24)?.map(|key|resource::read_group(reader,key)).transpose()?,thumbnail:reader.optional_text(row,25)?,struct_parents:optional_typed_integer(row,26)?,transition:optional_integer(row,27)?.map(|key|cos::read_dictionary(reader,key)).transpose()?,duration:optional_real(row,28)?,metadata:reader.optional_text(row,29)?,additional_actions:cos::read_dictionary(reader,row.integer(30)?)?,extra:cos::read_dictionary(reader,row.integer(31)?)?})}
 fn write_colors(out:&mut Projection<'_,'_>,value:&PdfNamedColorSpace)->Result<i64,ValueError>{let color=color::write_color(out,&value.color_space)?;out.insert("pdf_named_color",&[C::Text(&value.name),C::Integer(color)])}
@@ -15,51 +15,16 @@ fn write_collection<T>(out:&mut Projection<'_,'_>,table:&str,values:&[T],write:i
 fn read_collection<T>(reader:&mut Reader<'_,'_,'_>,table:&'static str,read:impl Fn(&mut Reader<'_,'_,'_>,i64)->Result<T,ValueError>)->Result<Vec<T>,ValueError>{let mut values=Vec::new();for child in reader.children(table,1,2,1)?{let child=reader.take(table,child.rowid,4)?;values.push(read(reader,child.integer(3)?)?);}Ok(values)}
 
 impl ArtifactSqliteSnapshot for PdfSnapshot{
-    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(||->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)}
-    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admission::borrowed(record,native,limits)?;snapshot_text::from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
+    fn encode_sqlite_snapshot_native(&self,encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{(||->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;Ok(())})()?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|native|snapshot_text::to_record_controlled(self,native),control,native_owner)}
+    fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut Control<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{let limits=control.limits();store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),snapshot_text::spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, semio_framework_value::ValueError> = (|| {admission::borrowed(record,native,limits)?;snapshot_text::from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)}
     fn retire_sqlite_snapshot(self){<Self as pack::value::FromValue>::retire_decoded(self)}
     const SQLITE_SCHEMA:&'static str=include_str!("../🗄️.sql");
     fn preflight_sqlite_snapshot_encoding(&self,_encoding:sqlite_snapshot::SnapshotEncoding,control:&mut Control<'_>)->Result<(),ValueError>{control.checkpoint(Phase::EncodeNative,0,0)?;let mut forecast=Projection::forecast(control)?;self.write_sqlite_rows(&mut forecast)?;forecast.finish_forecast()?;Ok(())}
-    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
-        use crate::standards::v1_7::subsets;
-        if dialect.artifact_kind!="s.stdio.pdf"||dialect.standard!="1.7"{return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.7 snapshot does not own this dialect"));}
-        control.checkpoint(Phase::ProjectSnapshot,0,0)?;
-        let mut diagnostics=match dialect.subset.as_str(){
-            "*"=>return Ok(store::io_schema::IoOutcome::clean(())),
-            "a"=>subsets::a::io::check_pdf_a_conformance(self),
-            "x"=>subsets::x::io::check_x_conformance(self),
-            "e"=>subsets::e::io::check_e_conformance(self),
-            "ua"=>subsets::ua::io::check_ua_conformance(self),
-            "vt"=>subsets::vt::io::check_vt_conformance(self),
-            "h"=>subsets::h::io::check_h_conformance(self),
-            _=>return Err(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.7 snapshot subset has no semantic validator")),
-        };
-        let action_severity=match dialect.subset.as_str(){"a"|"e"=>Some(semio_framework_diagnostic::Severity::Error),"x"|"vt"|"h"=>Some(semio_framework_diagnostic::Severity::Warning),_=>None};
-        let mut report=|code:&str,message:String,severity:semio_framework_diagnostic::Severity|{diagnostics.push(semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new(code),severity,span:semio_framework_diagnostic::TextSpan::at(1,1),message,expected:None,scope:semio_framework_diagnostic::FaultScope::default()});};
-        if self.encryption.is_some()&&matches!(dialect.subset.as_str(),"a"|"x"|"e"|"vt"){report("stdio.pdf.sqlite.encryption-forbidden","typed document encryption is forbidden by this PDF profile".into(),semio_framework_diagnostic::Severity::Error);}
-        if let Some(severity)=action_severity{
-            for(index,row)in database.table("pdf_action")?.rows.iter().enumerate(){
-                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_action")?.rows.len())?;}
-                let kind=row.text(1)?;
-                if matches!(kind,"javaScript"|"launch")||(kind=="unknown"&&matches!(row.optional_text(22)?,Some("JavaScript"|"Launch"))){report("stdio.pdf.sqlite.forbidden-action",format!("semantic action {} has forbidden kind {kind}",row.rowid),severity);}
-            }
-            let mut names=BTreeMap::new();
-            for(index,row)in database.table("pdf_cos_value")?.rows.iter().enumerate(){
-                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_cos_value")?.rows.len())?;}
-                if row.text(1)?=="name"{names.insert(row.rowid,row.text(8)?);}
-            }
-            for(index,row)in database.table("pdf_cos_dictionary_entry")?.rows.iter().enumerate(){
-                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_cos_dictionary_entry")?.rows.len())?;}
-                if row.text(3)?=="JS"||(row.text(3)?=="S"&&matches!(names.get(&row.integer(4)?),Some(&"JavaScript"|&"Launch"))){report("stdio.pdf.sqlite.forbidden-dictionary-action",format!("semantic dictionary {} contains a forbidden action entry",row.integer(1)?),severity);}
-            }
-        }
-        if matches!(dialect.subset.as_str(),"x"|"vt"){
-            for(index,page)in self.pages.iter().enumerate(){if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,self.pages.len())?;}if page.trim_box.is_none()&&page.art_box.is_none(){report("stdio.pdf.sqlite.page-box-required",format!("typed page {index} has neither TrimBox nor ArtBox"),semio_framework_diagnostic::Severity::Error);}}
-        }
-        control.check_value_bytes(diagnostics.iter().try_fold(0usize,|sum,value|sum.checked_add(value.message.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PDF diagnostic byte count overflow")))?)?;
-        control.checkpoint(Phase::ProjectSnapshot,1,1)?;
-        Ok(store::io_schema::IoOutcome{value:(),diagnostics})
-    })().map_err(store::io_schema::IoError::from_value_error)}
+    fn validate_sqlite_snapshot_subset(&self,dialect:&semio_framework_artifact_reference::ArtifactDialect,database:&Db,control:&mut Control<'_>)->store::io_schema::IoResult<()>{
+        if dialect.artifact_kind!="s.stdio.pdf"||dialect.standard!="1.7"{return Err(store::io_schema::IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue,"PDF1.7 snapshot does not own this dialect")));}
+        control.checkpoint(Phase::ProjectSnapshot,0,0).map_err(store::io_schema::IoError::from_value_error)?;
+        store::io::validate_registered_snapshot_subset(dialect,self,database,control)
+    }
     fn to_sqlite_database(&self,control:&mut Control<'_>)->Result<Db,ValueError>{self.project_sqlite_database(control)}
     fn from_sqlite_database(db:&Db,control:&mut Control<'_>)->Result<Self,ValueError>{(||->Result<Self,ValueError>{
         sqlite_snapshot::validate_sqlite_database_schema(db,Self::SQLITE_SCHEMA,control.limits())?;let mut reader=Reader::new(db,control)?;let row=reader.take("pdf_document",1,18)?;
@@ -99,3 +64,35 @@ impl PdfSnapshot{
         Ok(())
     }
 }
+
+/// 📏️ The relational rules one PDF conformance profile adds on top of its typed checks.
+#[derive(Clone,Copy,Debug)]
+pub struct PdfConformanceProfile{pub encryption_forbidden:bool,pub action_severity:Option<semio_framework_diagnostic::Severity>,pub page_box_required:bool}
+
+/// 🛡️ Completes one conformance subset's validation: it folds the profile's relational rules over the projected rows onto the subset's typed `diagnostics`, bounded and cancellable by `control`.
+pub fn validate_conformance_profile(snapshot:&PdfSnapshot,database:&Db,control:&mut Control<'_>,mut diagnostics:Vec<semio_framework_diagnostic::Diagnostic>,profile:PdfConformanceProfile)->store::io_schema::IoResult<()>{(||->Result<store::io_schema::IoOutcome<()>,ValueError>{
+        let mut report=|code:&str,message:String,severity:semio_framework_diagnostic::Severity|{diagnostics.push(semio_framework_diagnostic::Diagnostic{code:semio_framework_diagnostic::FaultCode::new(code),severity,span:semio_framework_diagnostic::TextSpan::at(1,1),message,expected:None,scope:semio_framework_diagnostic::FaultScope::default()});};
+        if profile.encryption_forbidden&&snapshot.encryption.is_some(){report("stdio.pdf.sqlite.encryption-forbidden","typed document encryption is forbidden by this PDF profile".into(),semio_framework_diagnostic::Severity::Error);}
+        if let Some(severity)=profile.action_severity{
+            for(index,row)in database.table("pdf_action")?.rows.iter().enumerate(){
+                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_action")?.rows.len())?;}
+                let kind=row.text(1)?;
+                if matches!(kind,"javaScript"|"launch")||(kind=="unknown"&&matches!(row.optional_text(22)?,Some("JavaScript"|"Launch"))){report("stdio.pdf.sqlite.forbidden-action",format!("semantic action {} has forbidden kind {kind}",row.rowid),severity);}
+            }
+            let mut names=BTreeMap::new();
+            for(index,row)in database.table("pdf_cos_value")?.rows.iter().enumerate(){
+                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_cos_value")?.rows.len())?;}
+                if row.text(1)?=="name"{names.insert(row.rowid,row.text(8)?);}
+            }
+            for(index,row)in database.table("pdf_cos_dictionary_entry")?.rows.iter().enumerate(){
+                if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,database.table("pdf_cos_dictionary_entry")?.rows.len())?;}
+                if row.text(3)?=="JS"||(row.text(3)?=="S"&&matches!(names.get(&row.integer(4)?),Some(&"JavaScript"|&"Launch"))){report("stdio.pdf.sqlite.forbidden-dictionary-action",format!("semantic dictionary {} contains a forbidden action entry",row.integer(1)?),severity);}
+            }
+        }
+        if profile.page_box_required{
+            for(index,page)in snapshot.pages.iter().enumerate(){if index%256==0{control.checkpoint(Phase::ProjectSnapshot,index,snapshot.pages.len())?;}if page.trim_box.is_none()&&page.art_box.is_none(){report("stdio.pdf.sqlite.page-box-required",format!("typed page {index} has neither TrimBox nor ArtBox"),semio_framework_diagnostic::Severity::Error);}}
+        }
+        control.check_value_bytes(diagnostics.iter().try_fold(0usize,|sum,value|sum.checked_add(value.message.len()).ok_or_else(||ValueError::new(ValueRefusalKind::OwnershipLimit,"PDF diagnostic byte count overflow")))?)?;
+        control.checkpoint(Phase::ProjectSnapshot,1,1)?;
+        Ok(store::io_schema::IoOutcome{value:(),diagnostics})
+    })().map_err(store::io_schema::IoError::from_value_error)}

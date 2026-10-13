@@ -2,7 +2,7 @@ mod tests {
     use super::*;
 
     /// 📜️ `from_next`/`next` are the pair `Body::from_seed`/`Body::to_seed` use to carry the label
-    /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::brep::representation::topology`).
+    /// high-water-mark forward across a rebuild instead of restarting at 0 (see `crate::topology`).
     #[semio_framework_async_macros::async_test]
     async fn from_next_seeds_the_counter_and_next_reports_it_without_advancing() {
         let mut source = LabelSource::from_next(42);

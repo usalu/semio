@@ -2,7 +2,7 @@
 use crate::standards::v1::subsets::any::schema::snapshot::Puzzle2dSnapshot;
 use crate::{Puzzle2dCamera,Puzzle2dNode,Puzzle2dNodeAnchor,Puzzle2dHandle,Puzzle2dEdge,Puzzle2dTargetRegion,Puzzle2dMeta,Puzzle2dKindCompatibility,Puzzle2dCompatSpecificity,Puzzle2dKindCatalogs,Puzzle2dCatalogNodeKind,Puzzle2dRepresentation,Puzzle2dHandleTemplate,Puzzle2dAttribute,Puzzle2dAuthor,Puzzle2dCatalogHandleKind,Puzzle2dCatalogEdgeKind,Puzzle2dCatalogWireKind};
 use std::collections::{BTreeMap,BTreeSet};
-use store::{ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,FloatColumn,read_binary64,ieee754_is_null}}};
+use store::{os_store::serialization::ArtifactSqliteSnapshot,sqlite_snapshot::{SqliteDatabase,SqliteRow,SqliteValue,SqliteSnapshotControl,SqliteSnapshotPhase,SnapshotEncoding,validate_sqlite_database_schema,artifact::{RowWriter,Cell,FloatColumn,read_binary64,ieee754_is_null}}};
 use semio_framework_value::{ValueError,ValueRefusalKind,list::PagedList,paged::PagedUtf8};
 fn invalid(message:impl Into<String>)->ValueError{ValueError::new(ValueRefusalKind::InvalidValue,message)}
 
@@ -153,13 +153,13 @@ mod semantic_cells;
 impl ArtifactSqliteSnapshot for Puzzle2dSnapshot{
  const SQLITE_SCHEMA:&'static str=include_str!("🗄️.sql");
  fn encode_sqlite_snapshot_native(&self,encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>,native_owner:&mut semio_framework_os_kernel::NativeSnapshotEncodeOwner<'_, '_>)->Result<store::io_schema::IoPayload,ValueError>{
-  admit_typed(self,SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
+  admit_typed(self,SqliteSnapshotPhase::EncodeNative,control)?;store::encode_sqlite_snapshot_record_native(encoding,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|native|self.__dsl_to_record_controlled(native),control,native_owner)
  }
  fn retire_sqlite_snapshot(self){drop(self)}
  fn to_sqlite_database(&self,control:&mut SqliteSnapshotControl<'_>)->Result<SqliteDatabase,ValueError>{project(self,control)}
  fn from_sqlite_database(database:&SqliteDatabase,control:&mut SqliteSnapshotControl<'_>)->Result<Self,ValueError>{restore(database,control)}
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
-  let limits=control.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
+  let limits=control.limits();semantic_cells::extent(limits)?;store::decode_sqlite_snapshot_record_native(payload,<Self as store::os_store::serialization::ArtifactDsl>::envelope_id(),Self::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {semantic_cells::admit_record(record,limits,native)?;Self::__dsl_from_record_controlled(record,native)})(); *snapshot_output = Some(constructed?); Ok(()) },control,native_control)
  }
  fn preflight_sqlite_snapshot_encoding(&self,_encoding:SnapshotEncoding,control:&mut SqliteSnapshotControl<'_>)->Result<(),ValueError>{
   admit_typed(self,SqliteSnapshotPhase::EncodeNative,control)
@@ -176,7 +176,7 @@ impl ArtifactSqliteSnapshot for crate::Puzzle2dPlaySnapshot{
  }
  fn decode_sqlite_snapshot_native(payload:&store::io_schema::IoPayload,control:&mut SqliteSnapshotControl<'_>,native_control: &mut semio_framework_os_kernel::NativeSnapshotDecodeOwner<'_, '_>)->Result<Self,ValueError>{
   let limits=control.limits();semantic_cells::extent(limits)?;
-  store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as store::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
+  store::decode_sqlite_snapshot_record_native(payload,<Puzzle2dSnapshot as store::os_store::serialization::ArtifactDsl>::envelope_id(),Puzzle2dSnapshot::__dsl_spec_producer(),|record, snapshot_output, native,_body| { let constructed: Result<_, ValueError> = (|| {
    semantic_cells::admit_record(record,limits,native)?;
    native.charge(size_of::<Puzzle2dSnapshot>()+2*size_of::<usize>())?;
    Puzzle2dSnapshot::__dsl_from_record_controlled(record,native).map(Self::from_typed)

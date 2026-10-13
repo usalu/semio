@@ -1161,30 +1161,69 @@ pub async fn io_compose_via(hub: &IoKey, target: &IoKey, sources: &[ErasedCompos
 /// module doesn't have), `SubsetValidator` can live directly HERE: its signature is already
 /// erased over `IoPayload` (mirroring `ComposerEntry.compose`'s own `fn(&[ErasedComposeSource])`
 /// erasure) -- a concrete artifact implements it by decoding its own typed `Snapshot` out of the
-/// payload internally (via `store::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
+/// payload internally (via `crate::os_store::serialization::ArtifactPack`/`ArtifactDsl`, exactly like `ComposerEntry`'s
 /// erasure already does one layer up), so this module never needs to know the concrete type.
 pub trait SubsetValidator {
     const DIALECT: Dialect;
     fn validate(payload: &IoPayload) -> impl std::future::Future<Output = Vec<Diagnostic>> + Send;
 }
 
+/// 🪶️ A subset's conformance policy over one owned typed snapshot and its exact relational
+/// projection. The owning artifact's `ArtifactSqliteSnapshot::validate_sqlite_snapshot_subset`
+/// resolves it by dialect through `validate_registered_snapshot_subset`, so a base model never
+/// names the subsets that extend it: the dependency points from each subset to its base only.
+pub trait SnapshotSubsetValidator: SubsetValidator {
+    type Snapshot: 'static;
+    fn validate_snapshot(snapshot: &Self::Snapshot, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()>;
+}
+
+/// 🧩️ Type-erased `SnapshotSubsetValidator::validate_snapshot`; it refuses a snapshot of any other type.
+pub type SnapshotSubsetValidation = fn(&dyn std::any::Any, &crate::sqlite_snapshot::SqliteDatabase, &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()>;
+
 /// 🧾️ Type-erased subset-validator vtable row -- the registry stores this, mirroring how
 /// `ComposerEntry` stores a plain `fn` pointer rather than a trait object.
 pub struct SubsetValidatorEntry {
     pub dialect: Dialect,
     pub validate: fn(&IoPayload) -> Vec<Diagnostic>,
+    pub validate_snapshot: Option<SnapshotSubsetValidation>,
+}
+
+// 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
+// `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
+// to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.
+fn validate_payload_thunk<V: SubsetValidator>(payload: &IoPayload) -> Vec<Diagnostic> {
+    ::semio_framework_async::poll::resolve_ready(V::validate(payload))
 }
 
 /// 🎹️ Erases a typed `SubsetValidator` impl into a `SubsetValidatorEntry` row -- the
 /// `ComposerEntry::of::<C>()`-style helper for this trait.
 pub fn subset_validator_entry_of<V: SubsetValidator>() -> SubsetValidatorEntry {
-    // 🚫️async: E4 fn-pointer slot — `SubsetValidatorEntry.validate` is a bare `fn` pointer;
-    // `SubsetValidator::validate` stays `async fn` (a real trait method) and this thunk drives it
-    // to completion synchronously via `resolve_ready`, same pattern as the `IoEntry` constructors.
-    fn validate<V: SubsetValidator>(payload: &IoPayload) -> Vec<Diagnostic> {
-        ::semio_framework_async::poll::resolve_ready(V::validate(payload))
+    SubsetValidatorEntry { dialect: V::DIALECT, validate: validate_payload_thunk::<V>, validate_snapshot: None }
+}
+
+/// 🎹️ Erases a `SnapshotSubsetValidator` into a row that serves both payload and owned-snapshot validation.
+pub fn snapshot_subset_validator_entry_of<V: SnapshotSubsetValidator>() -> SubsetValidatorEntry {
+    fn validate_snapshot<V: SnapshotSubsetValidator>(snapshot: &dyn std::any::Any, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+        match snapshot.downcast_ref::<V::Snapshot>() {
+            Some(snapshot) => V::validate_snapshot(snapshot, database, control),
+            None => Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::InvalidValue, format!("snapshot type does not own subset {}", ArtifactDialect::from(V::DIALECT).to_coordinate())))),
+        }
     }
-    SubsetValidatorEntry { dialect: V::DIALECT, validate: validate::<V> }
+    SubsetValidatorEntry { dialect: V::DIALECT, validate: validate_payload_thunk::<V>, validate_snapshot: Some(validate_snapshot::<V>) }
+}
+
+/// 🛡️ Runs the owned-snapshot validator registered for exactly `dialect`. The base `*` subset is
+/// unconstrained and always clean; any other dialect without a registered snapshot validator is
+/// refused, because a real subset must never pass unchecked.
+pub fn validate_registered_snapshot_subset<S: 'static>(dialect: &ArtifactDialect, snapshot: &S, database: &crate::sqlite_snapshot::SqliteDatabase, control: &mut crate::sqlite_snapshot::SqliteSnapshotControl<'_>) -> crate::io_schema::IoResult<()> {
+    if dialect.subset == SubsetId::ANY.0 {
+        return Ok(crate::io_schema::IoOutcome::clean(()));
+    }
+    let validate = subset_validator_registry().read().map_err(|_| crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::literal(semio_framework_value::ValueRefusalKind::InvariantViolated, "subset validator registry unavailable")))?.get(dialect).and_then(|entry| entry.validate_snapshot);
+    match validate {
+        Some(validate) => validate(snapshot, database, control),
+        None => Err(crate::io_schema::IoError::from_value_error(semio_framework_value::ValueError::new(semio_framework_value::ValueRefusalKind::UnsupportedOwner, format!("owned snapshot subset {} has no semantic validator", dialect.to_coordinate())))),
+    }
 }
 
 static SUBSET_VALIDATOR_REGISTRY: std::sync::OnceLock<RwLock<BTreeMap<ArtifactDialect, &'static SubsetValidatorEntry>>> = std::sync::OnceLock::new();
@@ -1224,7 +1263,11 @@ pub enum SubsetValidationError {
 }
 
 fn same_subset_validator_entry(left: &SubsetValidatorEntry, right: &SubsetValidatorEntry) -> bool {
-    left.dialect == right.dialect && std::ptr::fn_addr_eq(left.validate, right.validate)
+    left.dialect == right.dialect && std::ptr::fn_addr_eq(left.validate, right.validate) && match (left.validate_snapshot, right.validate_snapshot) {
+        (Some(left), Some(right)) => std::ptr::fn_addr_eq(left, right),
+        (None, None) => true,
+        _ => false,
+    }
 }
 
 /// 📌️ Registers one subset validator without replacing an established dialect owner.
@@ -1855,8 +1898,8 @@ pub struct ArtifactAssemblyRegistryPlan {
     pub composer_entries: Vec<&'static ComposerEntry>,
     pub subset_validators: Vec<&'static SubsetValidatorEntry>,
     pub format_descriptors: Vec<FormatDescriptor>,
-    pub document_codecs: Vec<store::ArtifactCodec>,
-    pub dialect_migrations: Vec<store::DialectMigration>,
+    pub document_codecs: Vec<crate::os_store::serialization::ArtifactCodec>,
+    pub dialect_migrations: Vec<crate::os_store::codec_registry::DialectMigration>,
     pub native_snapshots: Vec<io_mechanism::NativeSnapshotRegistration>,
     pub document_bindings: Vec<ArtifactCodecBinding>,
     pub catalog_bindings: Vec<ArtifactCatalogBinding>,
@@ -1876,7 +1919,7 @@ pub enum ArtifactAssemblyRegistryError {
     Composer(Box<IoRegistryRegistrationError>),
     SubsetValidator(SubsetValidatorRegistryError),
     Format(FormatRegistryError),
-    Store(Box<store::ArtifactAssemblyStoreRegistryError>),
+    Store(Box<crate::os_store::codec_registry::ArtifactAssemblyStoreRegistryError>),
     NativeSnapshot(io_mechanism::IoRegistryError),
     Binding(ArtifactCodecBindingError),
     Catalog(ArtifactCatalogBindingError),
@@ -1900,18 +1943,27 @@ impl std::fmt::Display for ArtifactAssemblyRegistryError {
 impl std::error::Error for ArtifactAssemblyRegistryError {}
 
 /// 🧰️ Publishes an imperative native codec and its exact snapshot dialect atomically.
-pub fn register_native_snapshot_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
+pub fn register_native_snapshot_codec(dialect: Dialect, codec: crate::os_store::serialization::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
-    let contributor=match &codec.native_identity{store::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),store::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
+    let contributor=match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
     let binding=ArtifactCodecBinding::from_codec(ArtifactCodecBindingChannel::DirectNative,contributor,Some(dialect.artifact_kind.to_string()),Vec::new(),Some(dialect.into()),None,&codec);
     let plan = ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: vec![io_mechanism::NativeSnapshotRegistration { dialect: dialect.into(), codec }], ..Default::default() };
     commit_artifact_assembly_registry_plan(&assembly, plan)
 }
 
+/// 📣️ Publishes the exact native registration a snapshot owner declares through
+/// [`crate::os_store::serialization::ArtifactPack::native_snapshot_registration`]; an owner that declares none publishes nothing.
+pub fn publish_native_snapshot<P: crate::os_store::serialization::ArtifactPack>() -> Result<(), ArtifactAssemblyRegistryError> {
+    match P::native_snapshot_registration() {
+        Some((dialect, codec)) => register_native_snapshot_codec(dialect, codec),
+        None => Ok(()),
+    }
+}
+
 /// 📦️ Publishes a native document codec and any actual owner-declared relational capability.
-pub fn register_native_document_codec(dialect: Dialect, codec: store::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
+pub fn register_native_document_codec(dialect: Dialect, codec: crate::os_store::serialization::ArtifactCodec) -> Result<(), ArtifactAssemblyRegistryError> {
     let assembly = semio_framework_schema_registry::assembly::begin().map_err(ArtifactAssemblyRegistryError::Transaction)?;
-    let contributor=match &codec.native_identity{store::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),store::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
+    let contributor=match &codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
     let binding=ArtifactCodecBinding::from_codec(ArtifactCodecBindingChannel::DirectDocumentNative,contributor,Some(dialect.artifact_kind.to_string()),Vec::new(),Some(dialect.into()),None,&codec);
     let plan = ArtifactAssemblyRegistryPlan { document_bindings:vec![binding],document_codecs: vec![codec.clone()], native_snapshots: io_mechanism::NativeSnapshotRegistration::from_capability(dialect.into(), codec).into_iter().collect(), ..Default::default() };
     commit_artifact_assembly_registry_plan(&assembly, plan)
@@ -1920,7 +1972,7 @@ pub fn register_native_document_codec(dialect: Dialect, codec: store::ArtifactCo
 /// 📌️ Acquires every affected write lock, preflights every candidate, then commits without any
 /// fallible operation after the first registry mutation.
 pub fn commit_artifact_assembly_registry_plan(assembly: &semio_framework_schema_registry::assembly::Transaction, plan: ArtifactAssemblyRegistryPlan) -> Result<(), ArtifactAssemblyRegistryError> {
-    let mut store_guards = store::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
+    let mut store_guards = crate::os_store::codec_registry::acquire_artifact_assembly_store_registry_guards(assembly).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
     let mut composers = io_registry().write().map_err(|_| ArtifactAssemblyRegistryError::Composer(Box::new(IoRegistryRegistrationError::Unavailable(IoRegistryUnavailable { registry: "io-composer" }))))?;
     let mut subset_validators = subset_validator_registry().write().map_err(|_| ArtifactAssemblyRegistryError::SubsetValidator(SubsetValidatorRegistryError::Unavailable(IoRegistryUnavailable { registry: "subset-validator" })))?;
     let mut formats = format_catalog().write().map_err(|_| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Unavailable(IoRegistryUnavailable { registry: "format-catalog" })))?;
@@ -1946,7 +1998,7 @@ pub fn commit_artifact_assembly_registry_plan(assembly: &semio_framework_schema_
     validate_subset_validators(&subset_validators, &plan.subset_validators).map_err(ArtifactAssemblyRegistryError::SubsetValidator)?;
     let (proposed_formats, proposed_formats_by_kind) = index_format_descriptors(plan.format_descriptors.iter().cloned()).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
     validate_format_descriptors(&formats, &proposed_formats, &proposed_formats_by_kind).map_err(|error| ArtifactAssemblyRegistryError::Format(FormatRegistryError::Conflict(error)))?;
-    store::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
+    crate::os_store::codec_registry::preflight_artifact_assembly_store_registry_guards(&store_guards, &plan.document_codecs, &plan.dialect_migrations).map_err(|error| ArtifactAssemblyRegistryError::Store(Box::new(error)))?;
     for (key, entry) in proposed_composers {
         composers.entry(key).or_insert(entry);
     }
@@ -1956,7 +2008,7 @@ pub fn commit_artifact_assembly_registry_plan(assembly: &semio_framework_schema_
     for (key, descriptor) in proposed_formats {
         formats.entry(key).or_insert(descriptor);
     }
-    store::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
+    crate::os_store::codec_registry::commit_artifact_assembly_store_registry_guards(&mut store_guards, plan.document_codecs, plan.dialect_migrations);
     native_snapshots.extend(proposed_snapshots);
     bindings.extend(proposed_bindings);
     catalog.extend(proposed_catalog);
@@ -2093,12 +2145,12 @@ pub mod io_mechanism {
 
     //#region 🔖️DslTxtCarrier
     /// 🗒️ Serialize any `ArtifactDsl` document as UTF-8 carrier text (stdio.txt body law).
-    pub fn serialize_dsl_txt<S: store::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
-        Ok(IoOutcome::clean(IoPayload::Text(store::ArtifactDsl::print_dsl(from))))
+    pub fn serialize_dsl_txt<S: crate::os_store::serialization::ArtifactDsl>(from: &S) -> IoResult<IoPayload> {
+        Ok(IoOutcome::clean(IoPayload::Text(crate::os_store::serialization::ArtifactDsl::print_dsl(from))))
     }
 
     /// 📃️ Parse carrier text (or UTF-8 binary) back into an `ArtifactDsl` document.
-    pub fn deserialize_dsl_txt<S: store::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
+    pub fn deserialize_dsl_txt<S: crate::os_store::serialization::ArtifactDsl>(payload: &IoPayload) -> IoResult<S> {
         let text = match payload {
             IoPayload::Text(text) => text.as_str(),
             IoPayload::Binary(bytes) => std::str::from_utf8(bytes).map_err(|error| IoError::from_value_error(ValueError::new(ValueRefusalKind::InvalidValue, error.to_string())))?,
@@ -2172,18 +2224,18 @@ pub mod io_mechanism {
     #[derive(Clone)]
     pub struct NativeSnapshotRegistration {
         pub dialect: ArtifactDialect,
-        pub codec: store::ArtifactCodec,
+        pub codec: crate::os_store::serialization::ArtifactCodec,
     }
 
     impl NativeSnapshotRegistration {
         /// 🪶️ Publishes a snapshot registration only for an owner-declared relational capability.
-        pub fn from_capability(dialect: ArtifactDialect, codec: store::ArtifactCodec) -> Option<Self> {
+        pub fn from_capability(dialect: ArtifactDialect, codec: crate::os_store::serialization::ArtifactCodec) -> Option<Self> {
             codec.snapshot_sqlite.as_ref()?;
             Some(Self { dialect, codec })
         }
     }
 
-    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, store::ArtifactCodec>;
+    pub(super) type NativeSnapshotMap = BTreeMap<ArtifactDialect, crate::os_store::serialization::ArtifactCodec>;
     static NATIVE_SNAPSHOT_REGISTRY: std::sync::OnceLock<RwLock<NativeSnapshotMap>> = std::sync::OnceLock::new();
 
     pub(super) fn native_snapshot_registry() -> &'static RwLock<NativeSnapshotMap> {
@@ -2222,7 +2274,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     pub fn register_native_snapshots_in_assembly(assembly: &semio_framework_schema_registry::assembly::Transaction, registrations: &[NativeSnapshotRegistration]) -> Result<(), super::ArtifactAssemblyRegistryError> {
         let document_codecs=registrations.iter().map(|registration|registration.codec.clone()).collect();
         let document_bindings=registrations.iter().map(|registration|{
-            let contributor=match &registration.codec.native_identity{store::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),store::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
+            let contributor=match &registration.codec.native_identity{crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Typed{owner,..}=>owner.to_string(),crate::os_store::serialization::ArtifactNativeSnapshotIdentity::Guest{plugin_id,..}=>plugin_id.clone()};
             super::ArtifactCodecBinding::from_codec(super::ArtifactCodecBindingChannel::DirectNative,contributor,Some(registration.dialect.artifact_kind.clone()),Vec::new(),Some(registration.dialect.clone()),None,&registration.codec)
         }).collect();
         super::commit_artifact_assembly_registry_plan(assembly,super::ArtifactAssemblyRegistryPlan{document_codecs,document_bindings,native_snapshots:registrations.to_vec(),..Default::default()})
@@ -2540,7 +2592,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         resolve_route(&registry, from, into, max_hops).await
     }
 
-    fn typed_snapshot_codec<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<store::ArtifactCodec, IoError> {
+    fn typed_snapshot_codec<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect) -> Result<crate::os_store::serialization::ArtifactCodec, IoError> {
 use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCoordinateText as _};
 
         let codec = native_snapshot_registry().read().map_err(|_| refusal(ValueRefusalKind::InvariantViolated, "native snapshot registry unavailable"))?.get(dialect).cloned().ok_or_else(|| IoError::from_value_error(ValueError::new(ValueRefusalKind::UnsupportedOwner, format!("unregistered typed snapshot dialect {}", dialect.to_coordinate()))))?;
@@ -2551,12 +2603,12 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
         Ok(codec)
     }
 
-    fn validate_typed_snapshot_subset<P: store::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, IoError> {
-        store::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)
+    fn validate_typed_snapshot_subset<P: crate::os_store::serialization::ArtifactSqliteSnapshot>(dialect: &ArtifactDialect, snapshot: &P, database: &SqliteDatabase, control: &mut SqliteSnapshotControl<'_>) -> Result<Vec<Diagnostic>, IoError> {
+        crate::os_store::codec_registry::validate_owned_sqlite_snapshot_subset(snapshot, dialect, database, control).map(|outcome| outcome.diagnostics)
     }
 
     /// 📤️ Exports the complete owned snapshot through its exact registered relational model, as the original caller that owns and closes the retirement recipient.
-    pub async fn io_export_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
+    pub async fn io_export_sqlite_snapshot<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, snapshot: &P, encoding: SnapshotEncoding, limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<Vec<u8>> {
         typed_snapshot_codec::<P>(dialect)?;
         SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
             control.checkpoint(SqliteSnapshotPhase::ProjectSnapshot, 0, 0).map_err(IoError::from_value_error)?;
@@ -2569,7 +2621,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 📥️ Reconstructs every typed snapshot field directly from its declared relational tables, as the original caller that owns and closes the retirement recipient.
-    pub async fn io_import_sqlite_snapshot<P: store::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
+    pub async fn io_import_sqlite_snapshot<P: crate::os_store::serialization::ArtifactSqliteSnapshot + 'static>(dialect: &ArtifactDialect, bytes: &[u8], limits: SqliteDatabaseLimits, progress: &mut dyn FnMut(SqliteSnapshotProgress) -> bool) -> IoResult<P> {
         typed_snapshot_codec::<P>(dialect)?;
         SqliteSnapshotControl::run_as_original_caller(progress, limits, |control| {
             let mut database = import_sqlite_database_controlled(bytes, control).map_err(IoError::from_value_error)?;
@@ -2788,7 +2840,7 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
 
     //#region 🔖️Constructors
     /// 🎹️ Builds an `IoEntry` from a `Serializer<S>` impl for a binary-pack-native `S`. Bounds on
-    /// `store::ArtifactPack` directly rather than inventing a parallel "native decode" trait —
+    /// `crate::os_store::serialization::ArtifactPack` directly rather than inventing a parallel "native decode" trait —
     /// this file already depends on `store::` throughout (e.g. `ArtifactAssemblyRegistryPlan`
     /// a few regions up), so this introduces no new dependency. The plugin's own decode function is
     /// `S::decode_pack`, resolved by monomorphization of the inner `run` item — never a runtime
@@ -2796,8 +2848,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// field cannot capture anyway. This is the smallest constructor shape that keeps a plugin from
     /// ever hand-writing an `IoEntry` literal while never leaking pack/DSL encoding into its code. A composed head carrier
     /// ([`native_carrier`]) hands its owned children to the serializer.
-    pub fn serializer_entry<S: store::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
-        fn run<S: store::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    pub fn serializer_entry<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let IoPayload::Binary(bytes) = payload else { return Err(refusal(ValueRefusalKind::InvalidValue, "serializer_entry: expected binary native payload")); };
             control.checkpoint().map_err(IoError::from_value_error)?;
             let (parent, children) = native_carrier(bytes,&mut control.snapshot_decode().map_err(IoError::from_value_error)?)?;
@@ -2808,8 +2860,8 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 📝️ Runs the exact text-native owner under the original native decoder.
-    pub fn serializer_entry_text<S: store::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
-        fn run<S: store::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+    pub fn serializer_entry_text<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(own: Dialect) -> IoEntry {
+        fn run<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Serializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             control.checkpoint().map_err(IoError::from_value_error)?;
             let (value, children) = match payload {
                 IoPayload::Text(text) => (S::decode_native_snapshot(store::NativeSnapshotInput::Text(text), control.decode().map_err(IoError::from_value_error)?).map_err(IoError::from_value_error)?, ArchiveChildren::empty()),
@@ -2836,11 +2888,11 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     /// `T::CONFORMANCE` (D5's `SubsetValidator` replacement) after a successful deserialize,
     /// folding its diagnostics into the returned `IoOutcome` — `conformance_runs_after_deserialize`
     /// below proves the diagnostics reach the caller.
-    pub fn deserializer_entry<S: store::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `serializer_entry`'s twin above; `T::CONFORMANCE` is
         // already a plain `fn(&S) -> Vec<Diagnostic>` (never async, see `Deserializer`'s own doc
         // comment) so it needs no `resolve_ready` wrapping, only `T::deserialize`.
-        fn run<S: store::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        fn run<S: crate::os_store::serialization::ArtifactPack + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {
@@ -2852,9 +2904,9 @@ use semio_framework_artifact_reference::io::text::artifact_reference::{DialectCo
     }
 
     /// 🎹️ `deserializer_entry`'s twin for a DSL-text-native `S`.
-    pub fn deserializer_entry_text<S: store::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
+    pub fn deserializer_entry_text<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(own: Dialect) -> IoEntry {
         // 🚫️async: E4 fn-pointer slot — see `deserializer_entry` above.
-        fn run<S: store::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
+        fn run<S: crate::os_store::serialization::ArtifactDsl + store::ArtifactNativeSnapshot, T: Deserializer<S>>(payload: &IoPayload, control: &mut IoRunControl<'_, '_>) -> IoResult<IoPayload> {
             let outcome = ::semio_framework_async::poll::resolve_ready(T::deserialize(payload, control))?;
             let mut diagnostics = outcome.diagnostics;
             if let Some(conformance) = T::CONFORMANCE {

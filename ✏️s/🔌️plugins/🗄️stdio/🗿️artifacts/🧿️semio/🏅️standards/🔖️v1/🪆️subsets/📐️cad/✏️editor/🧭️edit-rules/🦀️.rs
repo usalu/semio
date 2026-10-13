@@ -1,6 +1,6 @@
 //! 🧭️ The CAD editor's edit rules: which snapshot pointer raises which ONE concrete CAD mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{ent, ins, keyed, named, rem};
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{ent, ins, keyed, named, rem};
 use semio_s_artifact_stdio_contract::editing::{EditRules, Selector};
 
 const LAYER: Selector = named("name", "name");

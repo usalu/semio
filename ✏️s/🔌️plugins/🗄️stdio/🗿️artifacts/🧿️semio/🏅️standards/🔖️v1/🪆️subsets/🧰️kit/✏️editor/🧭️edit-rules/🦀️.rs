@@ -1,8 +1,8 @@
 //! 🧭️ The kit editor's edit rules: which snapshot pointer raises which ONE concrete kit mutation kind. An edit no kind expresses is refused, never approximated.
 
-use crate::editor::semio_base::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, slot_edit, spread_snake, Entries, Reshape, Slot, ITEM};
-use crate::standards::v1::subsets::kit::schema::mutations::SemioKitMutation;
-use crate::standards::v1::subsets::kit::schema::snapshot::SemioKitSnapshot;
+use semio_s_artifact_stdio_semio_base::editor::edit_plumbing::{complete_by, ent, ins, keyed, named, rem, resolve, slot_edit, spread_snake, Entries, Reshape, Slot, ITEM};
+use crate::schema::mutations::SemioKitMutation;
+use crate::schema::snapshot::SemioKitSnapshot;
 use semio_framework_plugin::Fault;
 use semio_framework_value::DslValue;
 use semio_s_artifact_stdio_contract::editing::{EditRules, RowKey, Selector, SnapshotEditEvent};

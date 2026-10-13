@@ -1,3 +1,7 @@
+#[cfg(test)] use crate::bounded_ownership::PluginLifecycleStep;
+#[cfg(test)] use crate::store_lifecycle::ArtifactSnapshotDisposer;
+#[cfg(test)] use semio_framework::MediaForm;
+#[cfg(test)] use semio_framework::MediaClass;
 mod artifact_media_export_credit_tests {
     use super::*;
 

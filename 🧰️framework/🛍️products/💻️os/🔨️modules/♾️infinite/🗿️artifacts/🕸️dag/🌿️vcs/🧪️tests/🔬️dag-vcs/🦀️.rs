@@ -230,7 +230,7 @@ fn dag_document_dsl_round_trips_the_demo_fixture() {
 #[test]
 fn bundled_demo_fixture_is_canonical() {
     let actual = crate::DAG_DEMO_TEXT;
-    let expected = <DagSnapshot as crate::os_store::ArtifactDsl>::print_dsl(&default_dag_document());
+    let expected = <DagSnapshot as crate::os_store::serialization::ArtifactDsl>::print_dsl(&default_dag_document());
     assert_eq!(actual, expected, "bundled demo fixture must stay in canonical owned DSL form");
 }
 

@@ -11,12 +11,12 @@ use store::PackError;
 
 /// 📦️ Encodes a `Document` to its binary pack form.
 pub fn encode(document: &Iso16757Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(document)
+    store::os_store::serialization::ArtifactPack::encode_pack(document)
 }
 
 /// 📖️ Decodes a `Document` from its binary pack form.
 pub fn decode(bytes: &[u8]) -> Result<Iso16757Snapshot, PackError> {
-    <Iso16757Snapshot as store::ArtifactPack>::decode_pack(bytes)
+    <Iso16757Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes)
 }
 
 #[cfg(test)]
@@ -37,12 +37,12 @@ use crate::standards::v1::subsets::any::io::text::snapshot::*;
 /// was parsed rather than copied.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn decode_iso16757_pack(bytes: &[u8]) -> Result<Iso16757Snapshot, String> {
-    <Iso16757Snapshot as store::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
+    <Iso16757Snapshot as store::os_store::serialization::ArtifactPack>::decode_pack(bytes).map_err(|error| format!("{error:?}"))
 }
 /// 📦️ Encodes a [`Iso16757Snapshot`] to its binary `.pack.semio` envelope.
 // 🚫️async: E1 pure codec/computation helper (file verified I/O-free, consumed via Fn-bound combinator/Display) — see R9
 pub fn encode_iso16757_pack(snapshot: &Iso16757Snapshot) -> Vec<u8> {
-    store::ArtifactPack::encode_pack(snapshot)
+    store::os_store::serialization::ArtifactPack::encode_pack(snapshot)
 }
 }
 pub use native_snapshot_codec::*;

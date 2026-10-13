@@ -59,7 +59,7 @@ impl semio_framework_dsl_record::native_encoding::FieldProjectionSource for Intr
     }
     fn projection_key(&self, path: &[usize], index: usize) -> Result<&str, MediaValueError> { match self.at(path)? { DslValue::Object(items) => items.get(index).map(|(key, _)| key.as_str()).ok_or_else(media_projection_error), _ => Err(media_projection_error()) } }
 }
-fn media_projection_error() -> MediaValueError { MediaValueError::literal(MediaRefusal::InvariantViolated, "intrinsic media original source path changed") }
+pub(crate) fn media_projection_error() -> MediaValueError { MediaValueError::literal(MediaRefusal::InvariantViolated, "intrinsic media original source path changed") }
 fn media_frontier_error() -> MediaValueError { MediaValueError::literal(MediaRefusal::OwnershipLimit, "intrinsic media frontier exceeds original receiving grant") }
 
 fn close_intrinsic_cursor(cursor: &mut MediaPackCursor, native: &mut semio_framework_value::NativeEncodeControl<'_>, wallet: &mut store::NativeSnapshotBodyWallet) -> Result<(), MediaValueError> {
@@ -127,7 +127,7 @@ fn encode_intrinsic_parts(port: &str, schema: &str, value: &DslValue, owner: &mu
     })
 }
 
-fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<(String, String, String), MediaValueError> {
+pub(crate) fn copy_media_text_parts(port: &str, schema: &str, text: &str, owner: &mut store::NativeSnapshotEncodeOwner<'_, '_>) -> Result<(String, String, String), MediaValueError> {
     owner.receive::<(String, String, String), (String, String, String)>(|slot, native, wallet| {
         *slot = Some((String::new(), String::new(), String::new())); let parts = slot.as_mut().unwrap();
         wallet.copy_encode_text_into(native, port, &mut parts.0, 2)?; wallet.copy_encode_text_into(native, schema, &mut parts.1, 2)?; wallet.copy_encode_text_into(native, text, &mut parts.2, 2)?;

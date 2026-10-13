@@ -1,7 +1,7 @@
 //! 📜️ Literal space checkpoint, clock, author, member and alternative entities.
 #[path="📏️preflight/🦀️.rs"]mod preflight;
 use crate::os_spr::HybridLogicalTimestamp;
-use crate::os_store::{ArtifactSqliteSnapshot, S_SPACE_HISTORY_SCHEMA, SpaceAlternative, SpaceCheckpoint, SpaceHistoryMutation, SpaceHistorySnapshot, SpaceMemberPin};
+use crate::os_store::{serialization::ArtifactSqliteSnapshot, space_history_document::S_SPACE_HISTORY_SCHEMA, space_history_document::SpaceAlternative, space_history_document::SpaceCheckpoint, SpaceHistoryMutation, space_history_document::SpaceHistorySnapshot, space_history_document::SpaceMemberPin};
 use crate::os_vcs::Author;
 use crate::sqlite_snapshot::{
     SnapshotEncoding, SqliteDatabase, SqliteSnapshotControl, SqliteSnapshotPhase,
@@ -21,7 +21,7 @@ pub const SQLITE_SNAPSHOT_DIALECT: semio_framework_artifact_reference::Dialect =
 /// 📣️ Explicit owner registration publishes the history factory and semantic capability atomically.
 /// Call before registry I/O; generic Store construction and retained hydration do not publish codecs.
 pub fn register_sqlite_snapshot() -> Result<(), crate::io::ArtifactAssemblyRegistryError> {
-    crate::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, crate::os_store::ArtifactCodec::bare::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA))
+    crate::io::register_native_snapshot_codec(SQLITE_SNAPSHOT_DIALECT, crate::os_store::bare_artifact_codec::<SpaceHistorySnapshot, SpaceHistoryMutation>(S_SPACE_HISTORY_SCHEMA))
 }
 fn schema(control: &mut SqliteSnapshotControl<'_>) -> Result<(), ValueError> {
     if SpaceHistorySnapshot::SQLITE_SCHEMA.len() > control.limits().max_schema_bytes { Err(ValueError::new(ValueRefusalKind::OwnershipLimit, "space history authored schema byte limit exceeded")) } else { Ok(()) }

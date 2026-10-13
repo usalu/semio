@@ -1,21 +1,20 @@
 {
   "schema": "semio.build.wasi-profile-policy/v1",
-  "runtimeDirectories": ["wasm-dev", "wasm-release"],
-  "publicationProfile": "wasm-release",
-  "developmentPackageOverrides": {"semio-framework-os-flow":{"opt-level":2},"semio-framework-os-kernel-neural-engine":{"opt-level":2},"semio-framework-pack":{"opt-level":2},"semio-framework-replication":{"opt-level":2},"semio-s-artifact-lowpoly-lowpoly":{"opt-level":2},"semio-s-artifact-puzzle-3d":{"opt-level":2},"semio-s-artifact-remodel-remodeling":{"opt-level":2},"semio-s-artifact-wfc-bitmap":{"opt-level":2},"semio-s-plugin-flow-extension-brep":{"opt-level":2},"semio-s-plugin-flow-extension-math":{"opt-level":2},"semio-hub-norm":{"strip":"symbols"},"semio-hub-procedural":{"opt-level":2},"semio-s-plugin-wfc-engine":{"opt-level":2}},
-  "artifactPaths": [{"packageName":"semio-hub-gis","profile":null,"expectedRelativePath":"wasm32-wasip2/wasm-dev/semio_hub_gis.wasm"},{"packageName":"semio-hub-gis","profile":"wasm-release","expectedRelativePath":"wasm32-wasip2/wasm-release/semio_hub_gis.wasm"}],
+  "shippedProfile": "wasm-release",
+  "iterateProfile": "wasm-prototype",
+  "runtimeDirectories": ["wasm-release", "wasm-prototype"],
+  "release": {"inherits": "release", "opt-level": "s", "lto": "thin", "codegen-units": 16, "strip": "symbols", "incremental": false, "trim-paths": "object"},
+  "iterate": {"inherits": "wasm-release", "opt-level": 1, "lto": false, "codegen-units": 256, "incremental": true, "debug-assertions": true, "overflow-checks": true, "strip": "none"},
+  "iterateHotPackages": {"semio-framework-os-flow": {"opt-level": 2}, "semio-framework-os-kernel-neural-engine": {"opt-level": 2}, "semio-framework-pack": {"opt-level": 2}, "semio-framework-replication": {"opt-level": 2}},
+  "artifactPaths": [{"packageName": "semio-hub-gis", "profile": "wasm-release", "expectedRelativePath": "wasm32-wasip2/wasm-release/semio_hub_gis_component.wasm"}, {"packageName": "semio-hub-gis", "profile": "wasm-prototype", "expectedRelativePath": "wasm32-wasip2/wasm-prototype/semio_hub_gis_component.wasm"}],
   "cases": [
-    { "mode": "dev", "override": null, "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
-    { "mode": "ship", "override": null, "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
-    { "mode": "dev", "override": "wasm-dev", "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
-    { "mode": "dev", "override": "wasm-release", "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
-    { "mode": "ship", "override": "wasm-dev", "expectedProfile": "wasm-dev", "expectedDirectory": "wasm-dev" },
-    { "mode": "ship", "override": "wasm-release", "expectedProfile": "wasm-release", "expectedDirectory": "wasm-release" },
-    { "mode": "dev", "override": "dev", "expectedProfile": null, "expectedDirectory": null },
-    { "mode": "dev", "override": "debug", "expectedProfile": null, "expectedDirectory": null },
-    { "mode": "ship", "override": "release", "expectedProfile": null, "expectedDirectory": null },
-    { "mode": "dev", "override": "", "expectedProfile": null, "expectedDirectory": null },
-    { "mode": "ship", "override": "wasm-release ", "expectedProfile": null, "expectedDirectory": null },
-    { "mode": "dev", "override": "foreign", "expectedProfile": null, "expectedDirectory": null }
+    { "profile": "wasm-release", "valid": true, "shipped": true, "expectedArgs": ["-p", "semio-hub-vcs", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-release"] },
+    { "profile": "wasm-prototype", "valid": true, "shipped": false, "expectedArgs": ["-p", "semio-hub-vcs", "--lib", "--target", "wasm32-wasip2", "--profile", "wasm-prototype"] },
+    { "profile": "wasm-dev", "valid": false },
+    { "profile": "dev", "valid": false },
+    { "profile": "release", "valid": false },
+    { "profile": "", "valid": false },
+    { "profile": "wasm-release ", "valid": false },
+    { "profile": "foreign", "valid": false }
   ]
 }

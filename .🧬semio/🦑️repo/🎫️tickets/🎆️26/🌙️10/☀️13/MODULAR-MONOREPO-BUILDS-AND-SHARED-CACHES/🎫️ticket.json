@@ -1,0 +1,10 @@
+{
+  "title": "Modular Monorepo Builds And Shared Caches",
+  "emoji": "🏗️",
+  "status": "open",
+  "description": "Refactor build infrastructure and code architecture for layered growth; explicit prototype and release modes; fast warm incremental builds; safe shared caches and maximum parallel resources across simultaneous agents. Actual model fleet GPT 6.1 Sol (MCP registry only supports generic codex identifier).",
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪2c05fa61823c40458eb8f19886c25607"
+  ]
+}

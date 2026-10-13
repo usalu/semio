@@ -1,7 +1,10 @@
-import { acquireCargoBuildLeaseV1 } from "../🏗️native-build/🔒️lease/🟦️.ts";
+import { buildModePolicy, type BuildMode } from "../../🏗️build/🎚️mode/🟦️.ts";
+import { acquireNativeCapacityLeaseV1, acquireCargoBuildLeaseV1 } from "../🏗️native-build/🔒️lease/🟦️.ts";
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { join, resolve } from "node:path";
 import { validateJsonSchemaSubset } from "../../../🧬️schema/✅️validator/🟦️.ts";
+import { stageArtifacts } from "../📤️publication/🟦️.ts";
+import { collectArtifactFiles } from "../🗂️files/🟦️.ts";
 import { runOwnedCommand } from "../../🎛️owned-execution/🟦️.ts";
 
 export type WasmPackWebPkg = {
@@ -15,9 +18,10 @@ export type WasmPackWebPkg = {
 };
 
 /** 🕸️ Binds the exact source owner, tools, mode, compiler storage and deadline. */
-export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; mode: "dev" | "ship"; artifactDirectory: string; buildDirectory: string; leaseDirectory: string; budgetMs: number; packageName: string; searchPath: string; bindgen: Readonly<{ command: string; args: readonly string[] }>; wasmPack: Readonly<{ command: string; args: readonly string[] }> }>;
-/** 📦️ Selects one owned browser package publication without discovering repository policy. */
-export type WasmPackWebBuildOptions = Readonly<{ rsDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; outputDirectory?: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; shipProfile?: string; devOptimizedCrates?: readonly string[]; signal?: AbortSignal }>;
+export type WasmBuildPolicyV1 = Readonly<{ version: 1; cwd: string; mode: BuildMode; artifactDirectory: string; buildDirectory: string; leaseDirectory: string; budgetMs: number; packageName: string; searchPath: string; bindgen: Readonly<{ command: string; args: readonly string[] }>; wasmPack: Readonly<{ command: string; args: readonly string[] }> }>;
+/** 📦️ Selects one owned browser package publication without discovering repository policy: `rsDir` owns the published package,
+ * `componentDir` is the `🧩️component` cdylib crate wasm-bindgen links (a library crate is never a cdylib). */
+export type WasmPackWebBuildOptions = Readonly<{ rsDir: string; componentDir: string; logPrefix: string; pkg: WasmPackWebPkg; wasmBaseName: string; outputDirectory?: string; threads?: boolean; cargoFeatures?: readonly string[]; noDefaultFeatures?: boolean; prototypeOptimizedCrates?: readonly string[]; signal?: AbortSignal }>;
 /** 🔌️ Executes an explicitly selected compiler with bounded cancellation. */
 export type WasmBuildExecutionPortV1 = Readonly<{ run: (command: string, args: readonly string[], options: Readonly<{ cwd: string; environment: Readonly<Record<string,string|undefined>>; budgetMs: number; label: string; signal?: AbortSignal }>) => Promise<void> }>;
 const wasmPolicySchema = JSON.parse(readFileSync(new URL("./🧬️schema/🔣️.json", import.meta.url), "utf8"));
@@ -66,49 +70,52 @@ export function wasmBuildArguments(profile: string): { pack: string[]; cargo: st
 }
 
 /** ⚙️ The `cargo --config` overrides that optimize `crates` in the dev profile of one build. */
-export function devOptimizedCargoConfigArgs(crates: readonly string[]): string[] {
-  return crates.flatMap((crate) => ["--config", `profile.dev.package.${crate}.opt-level=3`]);
+export function prototypeOptimizedCargoConfigArgs(crates: readonly string[]): string[] {
+  return crates.flatMap((crate) => ["--config", `profile.wasm-prototype.package.${crate}.opt-level=3`]);
 }
 
 /** 📦️`wasm-pack build` for `--target web`, restores `pkg/package.json`, verifies wasm output. */
 export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: WasmBuildPolicyV1, port: WasmBuildExecutionPortV1 = { run: async (command, args, options) => { await runOwnedCommand(command, [...args], options.cwd, options.label, options.budgetMs, { env: options.environment, signal: options.signal }); } }): Promise<void> {
   policy = admitWasmPolicy(policy);
   if (resolve(policy.cwd) !== resolve(opts.rsDir)) throw Error("WASM policy belongs to a different owner");
-  const { rsDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, shipProfile = "release", devOptimizedCrates = [] } = opts;
+  const { rsDir, componentDir, logPrefix, pkg, wasmBaseName, outputDirectory = "pkg", threads = false, cargoFeatures = [], noDefaultFeatures = false, prototypeOptimizedCrates = [] } = opts;
   const captureRoot = policy.artifactDirectory;
   mkdirSync(captureRoot, { recursive: true });
   const cargoOutput = mkdtempSync(join(captureRoot, "wasm-cargo-"));
+  const packageOutput = mkdtempSync(join(captureRoot, "wasm-package-"));
   const controller = new AbortController(), abort = () => controller.abort();
   opts.signal?.addEventListener("abort",abort,{once:true});
   process.once("SIGINT",abort); process.once("SIGTERM",abort);
   if (opts.signal?.aborted) abort();
+  let capacity: Awaited<ReturnType<typeof acquireNativeCapacityLeaseV1>> | undefined;
   let lease: Awaited<ReturnType<typeof acquireCargoBuildLeaseV1>> | undefined;
   try {
-    const pkgDir = wasmOutputDirectory(rsDir, outputDirectory);
-    const profile = policy.mode === "ship" ? shipProfile : "dev";
+    const activeDirectory = wasmOutputDirectory(rsDir, outputDirectory), pkgDir = packageOutput;
+    const profile = buildModePolicy(policy.mode).wasmProfile;
+    capacity = await acquireNativeCapacityLeaseV1({ directory: policy.leaseDirectory, signal: controller.signal });
     lease = await acquireCargoBuildLeaseV1({ directory: policy.leaseDirectory, buildDirectory: policy.buildDirectory, args: ["--profile",profile], signal: controller.signal });
     controller.signal.throwIfAborted();
     const wasmPath = join(pkgDir, `${wasmBaseName}_bg.wasm`);
     const { pack: packProfileArgs, cargo: cargoProfileArgs } = wasmBuildArguments(profile);
-    const profileOutDir = profile === "dev" ? "debug" : profile;
-    const buildEnv = { ...process.env, PATH: policy.searchPath, CARGO_TARGET_DIR: cargoOutput, CARGO_BUILD_BUILD_DIR: policy.buildDirectory };
-    const invoke = async (command: string, args: readonly string[]) => { await port.run(command, args, { cwd: rsDir, environment: buildEnv, budgetMs: policy.budgetMs, label: logPrefix, signal: controller.signal }); };
+    const profileOutDir = profile;
+    const buildEnv = { ...process.env, SEMIO_NATIVE_CAPACITY_HELD: "true", PATH: policy.searchPath, CARGO_TARGET_DIR: cargoOutput, CARGO_BUILD_BUILD_DIR: policy.buildDirectory };
+    const invoke = async (command: string, args: readonly string[]) => { await port.run(command, args, { cwd: componentDir, environment: buildEnv, budgetMs: policy.budgetMs, label: logPrefix, signal: controller.signal }); };
     const buildLabel = threads ? "cargo build (threaded) + wasm-bindgen" : "wasm-pack build";
     console.log(`[${logPrefix}] ${buildLabel} ${packProfileArgs.join(" ")} --target web --out-dir ${outputDirectory} --out-name ${wasmBaseName} --no-pack`);
     const t0 = Date.now();
-    const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature]), ...(profile === "dev" ? devOptimizedCargoConfigArgs(devOptimizedCrates) : [])];
+    const featureArgs = [...(noDefaultFeatures ? (["--no-default-features"] as const) : []), ...cargoFeatures.flatMap((feature) => ["--features", feature]), ...(policy.mode === "prototype" ? prototypeOptimizedCargoConfigArgs(prototypeOptimizedCrates) : [])];
     if (threads) {
-      const crateName = policy.packageName;
+      const crateName = readFileSync(join(componentDir, "Cargo.toml"), "utf8").match(/^name\s*=\s*"([^"]+)"/m)?.[1];
       if (!crateName) {
-        throw new Error(`[${logPrefix}] missing package name in Cargo.toml`);
+        throw new Error(`[${logPrefix}] missing package name in ${join(componentDir, "Cargo.toml")}`);
       }
       const cargoWasm = join(cargoOutput, `wasm32-unknown-unknown/${profileOutDir}`, `${crateName.replace(/-/g, "_")}.wasm`);
       const threadedCargoArgs = ["build", "--locked", ...cargoProfileArgs, "--target", "wasm32-unknown-unknown", "-Z", "build-std=std,panic_abort", ...featureArgs];
       await invoke("cargo", threadedCargoArgs);
       if (!existsSync(pkgDir)) mkdirSync(pkgDir, { recursive: true });
-      await invoke(policy.bindgen.command, [...policy.bindgen.args, cargoWasm, "--out-dir", outputDirectory, "--typescript", "--target", "web", "--out-name", wasmBaseName]);
+      await invoke(policy.bindgen.command, [...policy.bindgen.args, cargoWasm, "--out-dir", pkgDir, "--typescript", "--target", "web", "--out-name", wasmBaseName]);
     } else {
-      const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", outputDirectory, "--out-name", wasmBaseName, "--no-pack", "--", "--locked", ...featureArgs];
+      const buildArgs = ["build", "--mode", "no-install", ...packProfileArgs, "--target", "web", "--out-dir", pkgDir, "--out-name", wasmBaseName, "--no-pack", ...(policy.mode === "prototype" ? ["--no-opt"] : []), "--", "--locked", ...featureArgs];
       await invoke(policy.wasmPack.command, [...policy.wasmPack.args, ...buildArgs]);
     }
     console.log(`[${logPrefix}] wasm build done in ${((Date.now() - t0) / 1000).toFixed(1)}s`);
@@ -126,13 +133,16 @@ export async function buildWasmWebV1(opts: WasmPackWebBuildOptions, policy: Wasm
 
     if (existsSync(wasmPath)) {
       const sz = (statSync(wasmPath).size / (1024 * 1024)).toFixed(2);
-      console.log(`[${logPrefix}] pkg/${wasmBaseName}_bg.wasm ready (${sz} MiB) + pkg/package.json restored`);
+      const files = await collectArtifactFiles(pkgDir, controller.signal);
+      await stageArtifacts(join(rsDir, "dist/wasm", policy.mode), `${policy.packageName}:wasm:${policy.mode}`, files, { signal: controller.signal, leaseDirectory: policy.leaseDirectory });
+      await stageArtifacts(activeDirectory, `${policy.packageName}:wasm:active`, files, { signal: controller.signal, leaseDirectory: policy.leaseDirectory });
+      console.log(`[${logPrefix}] dist/wasm/${policy.mode}/${wasmBaseName}_bg.wasm ready (${sz} MiB)`);
     } else {
       throw new Error(`[${logPrefix}] expected wasm output missing: ${wasmPath}`);
     }
   } finally {
-    try { rmSync(cargoOutput, { recursive: true, force: true }); }
-    finally { lease?.release(); opts.signal?.removeEventListener("abort",abort); process.removeListener("SIGINT",abort); process.removeListener("SIGTERM",abort); }
+    try { rmSync(cargoOutput, { recursive: true, force: true }); rmSync(packageOutput, { recursive: true, force: true }); }
+    finally { lease?.release(); capacity?.release(); opts.signal?.removeEventListener("abort",abort); process.removeListener("SIGINT",abort); process.removeListener("SIGTERM",abort); }
   }
 }
 

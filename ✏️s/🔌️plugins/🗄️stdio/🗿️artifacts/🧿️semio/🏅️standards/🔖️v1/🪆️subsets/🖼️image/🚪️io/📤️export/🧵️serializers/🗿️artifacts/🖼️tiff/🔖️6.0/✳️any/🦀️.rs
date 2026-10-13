@@ -12,7 +12,7 @@
 //!   not a byte-exact inverse of every possible TIFF field type). A metadata value that is not
 //!   ASCII or contains a NUL has no owned TIFF text form and is refused by the page validation.
 
-use crate::standards::v1::subsets::image::schema::snapshot::SemioImageSnapshot;
+use semio_s_artifact_stdio_semio_image::schema::snapshot::SemioImageSnapshot;
 use {semio_framework_plugin::ArtifactSerializer,semio_framework_artifact_reference::Dialect,semio_framework_artifact_reference::StandardId,semio_framework_artifact_reference::SubsetId};
 use semio_s_artifact_stdio_tiff::{
     schema::snapshot::{TiffIfd, TiffSampleBlock, TiffTag, TiffValues, TiffWord64, TAG_BITS_PER_SAMPLE, TAG_IMAGE_LENGTH, TAG_IMAGE_WIDTH, TAG_PHOTOMETRIC, TAG_SAMPLES_PER_PIXEL},

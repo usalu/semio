@@ -1,7 +1,7 @@
 //! 🔒️ Command-local create-scene validation and scene-reference mechanics.
 
-use crate::schema::snapshot::GltfScene;
-use crate::GltfSnapshot;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfScene;
+use semio_s_artifact_stdio_gltf_model::standards::v2_0::subsets::any::schema::snapshot::GltfSnapshot;
 
 //#region 🔖️Rejection
 #[derive(semio_framework_value::RetireOwned, Clone, Debug, PartialEq, Eq, value_derive::ToValue, value_derive::FromValue)]

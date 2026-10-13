@@ -27,8 +27,8 @@ pub(crate) mod context {
 
     /// 🧸️ The live scene composed from the app's `content` member store (design §20.15: the parent holds no content).
     pub async fn live_scene(app: &DagApp) -> crate::DagScene {
-        use semio_s_artifact_stdio_semio::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
-        use store::{ArtifactPack, SpaceMember};
+        use semio_s_artifact_stdio_semio_graph::schema::snapshot::SemioGraphSnapshot;
+        use store::{os_store::serialization::ArtifactPack, SpaceMember};
         let snapshot = app.snapshot().expect("DAG parent projection");
         let bytes = app.child_store("content", &snapshot.content.child_id).await.expect("DAG content child").document_pack_bytes().await.expect("DAG content child pack");
         crate::dag_scene_of_content(&SemioGraphSnapshot::decode_pack(&bytes).expect("DAG content child snapshot"))
@@ -300,7 +300,7 @@ async fn an_unknown_body_key_renders_a_diagnostic_instead_of_panicking() {
 async fn two_instances_converge_disjoint_edits_via_backbone() {
     use crate::editor::dag::unit_tests::context::{new_app, DagApp};
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
-    use store::MemoryBackbone;
+    use store::os_store::backbone::MemoryBackbone;
     async fn probe(app: &DagApp) -> (bool, bool) {
         let nodes = crate::editor::dag::unit_tests::context::live_scene(app).await.nodes;
         (nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Note { .. })), nodes.iter().any(|node| matches!(node.kind, semio_framework_artifact_infinite_dag::DagNodeKind::Slider { .. })))
@@ -308,8 +308,8 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
     let mut instance_a = new_app().await;
     let mut instance_b = new_app().await;
     let (backbone_a, backbone_b) = MemoryBackbone::pair("mem://dag-convergence", "mem://dag-convergence").await;
-    instance_a.attach_backbone(store::Backbones::Memory(backbone_a)).await.expect("attach a");
-    instance_b.attach_backbone(store::Backbones::Memory(backbone_b)).await.expect("attach b");
+    instance_a.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_a)).await.expect("attach a");
+    instance_b.attach_backbone(store::os_store::backbone::Backbones::Memory(backbone_b)).await.expect("attach b");
     let genesis = probe(&instance_a).await;
     let receiver = meta("actor-a").instance_id;
     instance_a.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("actor-a"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("a applies its edit");
@@ -340,10 +340,10 @@ async fn two_instances_converge_disjoint_edits_via_backbone() {
 async fn ingest_operations_is_idempotent_for_dag() {
     use crate::editor::dag::unit_tests::context::new_app;
     use semio_framework_plugin::artifact_app_laws::{close_registered_fixture_app, meta, settle_registered_typed_operation};
-    use store::{Backbone, BackboneMessage, MemoryBackbone};
+    use store::{os_store::backbone::Backbone, os_store::backbone::BackboneMessage, os_store::backbone::MemoryBackbone};
     let mut sender = new_app().await;
     let (near, mut far) = MemoryBackbone::pair("mem://dag-idempotent", "mem://dag-idempotent").await;
-    sender.attach_backbone(store::Backbones::Memory(near)).await.expect("attach sender");
+    sender.attach_backbone(store::os_store::backbone::Backbones::Memory(near)).await.expect("attach sender");
     let genesis = crate::editor::dag::unit_tests::context::live_scene(&sender).await.nodes.len();
     sender.dispatch_typed(DagCommand::AddNode(add_node::AddNode { kind: "note".into(), x: None, y: None }), &meta("local"), &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("apply command");
     settle_registered_typed_operation(&mut sender, meta("local").instance_id, semio_framework_plugin::MountedOwnerPolicyV1::INTERACTIVE_COMPONENT, &mut semio_framework_plugin::artifact_app_laws::fixture_identity()).await.expect("the add publishes");

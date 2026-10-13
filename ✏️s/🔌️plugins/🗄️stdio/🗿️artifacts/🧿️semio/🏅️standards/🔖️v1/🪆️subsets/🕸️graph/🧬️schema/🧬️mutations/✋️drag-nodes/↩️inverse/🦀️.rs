@@ -1,7 +1,7 @@
 //! ↩️ Inverse for `DragNodes`.
 
-use crate::standards::v1::subsets::graph::schema::mutations::{move_node::MoveNode, SemioGraphMutation};
-use crate::standards::v1::subsets::graph::schema::snapshot::SemioGraphSnapshot;
+use {crate::schema::mutations::move_node::MoveNode, crate::schema::mutations::SemioGraphMutation};
+use crate::schema::snapshot::SemioGraphSnapshot;
 
 //#region 🔖️Inverse
 /// ↩️ The exact undo: one absolute `move-node` per moved node carrying its BASE position — never a negated offset.

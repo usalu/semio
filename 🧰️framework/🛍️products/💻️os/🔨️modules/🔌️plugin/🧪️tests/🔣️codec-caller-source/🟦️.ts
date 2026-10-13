@@ -255,7 +255,7 @@ function hostileSources(fixture: Fixture, sources: Sources): void {
   const broadImpl = { ...candidate, builder: candidate.builder.replace("impl<PA: PluginApp> PluginBuilder<Ready, PA>", "impl<PA: PluginApp + Sync> PluginBuilder<Ready, PA>") };
   assert.notEqual(broadImpl.builder, candidate.builder);
   assert(inspect(fixture, broadImpl).problems.length > 0, "enclosing impl widening");
-  const capturing = { ...candidate, plugin: candidate.plugin.replace("codec: fn(String) -> store::ArtifactCodec,", "codec: Box<dyn Fn(String) -> store::ArtifactCodec>,") };
+  const capturing = { ...candidate, plugin: candidate.plugin.replace("codec: fn(String) -> store::os_store::serialization::ArtifactCodec,", "codec: Box<dyn Fn(String) -> store::os_store::serialization::ArtifactCodec>,") };
   assert.notEqual(capturing.plugin, candidate.plugin);
   assert(inspect(fixture, capturing).problems.length > 0, "erased fn pointer replacement");
   for (const field of fixture.native.codecFields.slice(0, 2)) {

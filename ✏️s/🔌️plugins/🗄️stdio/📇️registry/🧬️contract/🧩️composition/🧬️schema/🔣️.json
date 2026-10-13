@@ -12,7 +12,8 @@
     "apps",
     "nativeFactories",
     "openTargets",
-    "catalogFeatures",
+    "catalogPackage",
+    "symbolPackages",
     "playgrounds",
     "mutationDescriptors",
     "mutationCoordinates"
@@ -165,7 +166,16 @@
         }
       }
     },
-    "catalogFeatures": {
+    "catalogPackage": {
+      "description": "🧩️ The crate whose `contribution()` the full catalog selects instead of `package`'s, or null when `package` is its own catalog.",
+      "type": [
+        "string",
+        "null"
+      ],
+      "pattern": "^[a-z][a-z0-9-]*$"
+    },
+    "symbolPackages": {
+      "description": "🔤️ The further crates the contribution's app types, factories and mutation descriptors may name.",
       "type": "array",
       "uniqueItems": true,
       "items": {

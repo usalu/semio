@@ -21,8 +21,8 @@ fn view_config_default_matches_the_read_only_preview_defaults() {
     assert_eq!(config.effective_show_mode(), "shaded");
     assert_eq!(config.preview_camera, Generation3dViewCamera { position: [4.0, -4.0, 3.0], target: [0.0, 0.0, 0.0], fov: 45.0 });
     assert_eq!(config.sun(), semio_framework_plugin::WorldSunConfig::default());
-    let pack = <Generation3dViewConfig as store::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the viewer default must be pack-encodable before the registry constructs its store");
-    assert_eq!(<Generation3dViewConfig as store::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the viewer default pack must decode"), config);
+    let pack = <Generation3dViewConfig as store::os_store::serialization::ArtifactPack>::encode_pack_with(&config, &store::PackEncodeOptions::default()).expect("the viewer default must be pack-encodable before the registry constructs its store");
+    assert_eq!(<Generation3dViewConfig as store::os_store::serialization::ArtifactPack>::decode_pack_with(&pack, &store::PackDecodeOptions::default()).expect("the viewer default pack must decode"), config);
 }
 
 #[test]

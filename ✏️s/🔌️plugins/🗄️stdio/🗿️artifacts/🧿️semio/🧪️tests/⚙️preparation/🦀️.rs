@@ -5,19 +5,19 @@ static ORIGINAL_OWNER_HEAP: semio_framework_trace::HeapWitness = semio_framework
 
 use semio_framework_os_kernel as store;
 use semio_framework_plugin::ArtifactEditor;
-use semio_s_artifact_stdio_semio::editor::{semio_document::SemioDocumentEditor, semio_flow::SemioFlowEditor, semio_text::SemioTextEditor, semio_value::SemioValueEditor};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::mutations::{set_block_content::SetBlockContent, DocBlockPath, DocPathSegment, SemioDocumentMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::mutations::{set_node_label::SetNodeLabel, SemioFlowMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::mutations::{edit_run::EditRun, SemioTextMutation};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::mutations::{set_node::SetNode, set_value::SetValue, SemioValueMutation, SemioValuePathSegment};
-use semio_s_artifact_stdio_semio::standards::v1::subsets::value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
+use {semio_s_artifact_stdio_semio_document::editor::SemioDocumentEditor, semio_s_artifact_stdio_semio_flow::editor::SemioFlowEditor, semio_s_artifact_stdio_semio_text::editor::SemioTextEditor, semio_s_artifact_stdio_semio_value::editor::SemioValueEditor};
+use {semio_s_artifact_stdio_semio_document::schema::mutations::set_block_content::SetBlockContent, semio_s_artifact_stdio_semio_document::schema::mutations::{DocBlockPath, DocPathSegment, SemioDocumentMutation}};
+use semio_s_artifact_stdio_semio_document::schema::snapshot::{DocBlock, DocRun, SemioDocumentSnapshot};
+use {semio_s_artifact_stdio_semio_flow::schema::mutations::set_node_label::SetNodeLabel, semio_s_artifact_stdio_semio_flow::schema::mutations::SemioFlowMutation};
+use semio_s_artifact_stdio_semio_flow::schema::snapshot::{FlowNode, SemioFlowSnapshot};
+use {semio_s_artifact_stdio_semio_text::schema::mutations::edit_run::EditRun, semio_s_artifact_stdio_semio_text::schema::mutations::SemioTextMutation};
+use semio_s_artifact_stdio_semio_text::schema::snapshot::{SemioTextRun, SemioTextSnapshot};
+use {semio_s_artifact_stdio_semio_value::schema::mutations::set_node::SetNode, semio_s_artifact_stdio_semio_value::schema::mutations::set_value::SetValue, semio_s_artifact_stdio_semio_value::schema::mutations::{SemioValueMutation, SemioValuePathSegment}};
+use semio_s_artifact_stdio_semio_value::schema::snapshot::{SemioValue, SemioValueEntry, SemioValueNode, SemioValueSnapshot, ValueId};
 use std::fmt::Debug;
 
-fn grant() -> store::ArtifactStoreOneItemGrant {
-    store::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 }
+fn grant() -> store::os_store::one_item::ArtifactStoreOneItemGrant {
+    store::os_store::one_item::ArtifactStoreOneItemGrant { maximum_items: 1, maximum_copy_bytes: 1 << 16, maximum_capacity_bytes: 1 << 26, maximum_release_bytes: 1 << 26, maximum_depth: 4096 }
 }
 
 fn authoring_law<E: ArtifactEditor>(label: &str, base: E::Snapshot, mutation: E::Mutation, expected: E::Snapshot)

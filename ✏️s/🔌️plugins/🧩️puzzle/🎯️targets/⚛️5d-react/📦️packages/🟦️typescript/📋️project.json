@@ -16,13 +16,6 @@
         "command": "bun ./📜️script.ts test",
         "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"
       }
-    },
-    "test-quick": {
-      "executor": "nx:run-commands",
-      "options": {
-        "command": "bun ./📜️script.ts test quick",
-        "cwd": "✏️s/🔌️plugins/🧩️puzzle/🎯️targets/⚛️5d-react/📦️packages/🟦️typescript"
-      }
     }
   },
   "tags": ["scope:plugin", "type:renderer", "technology:puzzle"]

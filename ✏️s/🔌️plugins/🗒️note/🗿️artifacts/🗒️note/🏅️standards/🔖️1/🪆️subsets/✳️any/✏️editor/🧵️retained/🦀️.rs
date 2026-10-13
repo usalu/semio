@@ -490,7 +490,7 @@ pub fn build(request: ArtifactOwnedToolJobRequest<EditorApp<NotePlayApp>>) -> Re
 /// 📬️ Document-lane publication authority for every retained note verb (ticket 26/09/17/NOTE-PLUGIN-END-TO-END):
 /// the bespoke root-scalar factory admitted only grid mutations, so `addBlock`/`inkApplyEvents`/`patchBlocks`
 /// failed `admits only exact retained root-scalar mutations` in the running app.
-pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation>> {
+pub fn artifact_preparation_factory() -> std::sync::Arc<dyn store::os_store::one_item_publication::ArtifactStoreOneItemPreparationFactory<NoteSnapshot, crate::op::NoteMutation>> {
     store::mutation_apply_preparation_factory::<NoteSnapshot, crate::op::NoteMutation>()
 }
 

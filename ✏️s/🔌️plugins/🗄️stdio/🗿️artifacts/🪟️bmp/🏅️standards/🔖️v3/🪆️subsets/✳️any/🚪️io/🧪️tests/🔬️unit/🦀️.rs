@@ -131,13 +131,13 @@ fn bitfield_paint_preserves_unmasked_precision_bits() {
 
 #[test]
 fn canonical_history_outputs_are_exact_mutation_results() {
-    let direct_before = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio")).unwrap();
+    let direct_before = <BmpSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio")).unwrap();
     let direct_after = paint_direct_region_controlled(&direct_before, &bmp_revision(&direct_before), BmpRegion { x: 0, y: 0, width: 1, height: 1 }, BmpColor { red: 17, green: 34, blue: 51, alpha: 255 }, &mut |_, _| true).unwrap();
-    let direct_expected = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio")).unwrap();
+    let direct_expected = <BmpSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🖌️paint-direct-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio")).unwrap();
     assert_eq!(direct_after, direct_expected);
 
-    let indexed_before = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio")).unwrap();
+    let indexed_before = <BmpSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/⬅️before/🗣️.dsl.semio")).unwrap();
     let indexed_after = paint_indexed_region_controlled(&indexed_before, &bmp_revision(&indexed_before), BmpRegion { x: 0, y: 0, width: 1, height: 1 }, 1, &mut |_, _| true).unwrap();
-    let indexed_expected = <BmpSnapshot as store::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio")).unwrap();
+    let indexed_expected = <BmpSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(include_str!("../../../🧫️fixtures/🧬️history-edits/🎨️paint-indexed-region/🎯️direct/📸️snapshot/➡️after/🗣️.dsl.semio")).unwrap();
     assert_eq!(indexed_after, indexed_expected);
 }

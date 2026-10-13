@@ -46,7 +46,7 @@ mod subject {
 
     fn bind_replacement(ctx: &Context, mutation: &mut RewriteRuleMutation, role: &str) -> Result<(), String> {
         if let RewriteRuleMutation::EditWorkingGraph(edit) = mutation {
-            let child = semio_s_artifact_stdio_semio::standards::v1::subsets::graph::io::text::snapshot::decode_semio_graph_snapshot_json(&owner::declared_text(ctx, role)?).map_err(|error| error.into_message())?;
+            let child = semio_s_artifact_stdio_semio_graph::io::text::snapshot::decode_semio_graph_snapshot_json(&owner::declared_text(ctx, role)?).map_err(|error| error.into_message())?;
             semio_s_artifact_trinity_jack::materialize_jack_snapshot(&mut edit.new_working_graph.content, child);
         }
         Ok(())

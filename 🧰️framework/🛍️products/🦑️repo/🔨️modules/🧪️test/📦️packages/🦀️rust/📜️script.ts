@@ -11,7 +11,7 @@ import { runRepositoryCommand } from "../../../📚️library/🏃️process/�
 class CheckScript extends BundleScript {
   async run(args: string[]): Promise<void> {
     if (args.length) throw new Error("The neutral test host check accepts no arguments");
-    await runRepositoryCommand("cargo", ["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")], this.repoRoot, "repo-test-host:check");
+    await runRepositoryCommand(this.invocation,"cargo",["check", "--locked", "--manifest-path", resolve(this.root, "Cargo.toml")],this.repoRoot,"repo-test-host:check",{version:1,maximumElapsedMilliseconds:0,output:null});
   }
 }
 

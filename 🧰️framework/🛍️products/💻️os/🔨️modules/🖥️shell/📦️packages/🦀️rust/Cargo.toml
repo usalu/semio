@@ -15,7 +15,6 @@ workspace = true
 
 [lib]
 name = "semio_framework_os_shell"
-crate-type = ["rlib", "cdylib"]
 path = "🦀️.rs"
 
 [features]

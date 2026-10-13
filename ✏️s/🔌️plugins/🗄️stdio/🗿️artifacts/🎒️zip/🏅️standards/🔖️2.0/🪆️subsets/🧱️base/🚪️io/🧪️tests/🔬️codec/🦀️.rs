@@ -154,8 +154,8 @@ fn zip_deflate_round_trip() {
 #[test]
 fn codec_round_trip() {
     let snap = ZipSnapshot { schema: STDIO_ZIP_DOCUMENT_SCHEMA.into(), entries: vec![ZipEntry { name: "x".into(), data: b"y".to_vec(), ..Default::default() }], comment: String::new(), ..Default::default() };
-    let pack = store::ArtifactPack::encode_pack(&snap);
-    let decoded = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode");
+    let pack = store::os_store::serialization::ArtifactPack::encode_pack(&snap);
+    let decoded = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode");
     assert_eq!(decoded, snap);
 }
 
@@ -466,11 +466,11 @@ async fn deterministic_logical_round_trip() {
     let logical = decode_zip(archive_bytes).expect("decode the committed OPC package");
     assert_eq!(logical.entries.len(), 6);
 
-    let dsl = <ZipSnapshot as store::ArtifactDsl>::print_dsl(&logical);
-    let from_dsl = <ZipSnapshot as store::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
+    let dsl = <ZipSnapshot as store::os_store::serialization::ArtifactDsl>::print_dsl(&logical);
+    let from_dsl = <ZipSnapshot as store::os_store::serialization::ArtifactDsl>::parse_dsl(&dsl).expect("parse logical ZIP DSL");
     assert_eq!(from_dsl, logical);
-    let pack = <ZipSnapshot as store::ArtifactPack>::encode_pack(&logical);
-    let from_pack = <ZipSnapshot as store::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
+    let pack = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(&logical);
+    let from_pack = <ZipSnapshot as store::os_store::serialization::ArtifactPack>::decode_pack(&pack).expect("decode logical ZIP pack");
     assert_eq!(from_pack, logical);
 
     let self_diff = ZipDiff::default();

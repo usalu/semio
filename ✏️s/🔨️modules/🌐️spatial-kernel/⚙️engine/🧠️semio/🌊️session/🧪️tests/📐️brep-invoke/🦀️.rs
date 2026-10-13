@@ -17,7 +17,7 @@ fn session() -> &'static Session {
     static SESSION: std::sync::OnceLock<Session> = std::sync::OnceLock::new();
     SESSION.get_or_init(Session::new)
 }
-use semio_framework_3d::brep::engine::BREP_KERNEL_OPERATIONS;
+use semio_framework_3d_brep_representation::contract::BREP_KERNEL_OPERATIONS;
 use serde_json::{json, Value};
 use std::collections::BTreeMap;
 // #endregion 🔖️Imports

@@ -3,7 +3,7 @@ use super::*;
 /// 🧭️ The actual original boundary/normal/projection producer consumes its quoted scalar bytes without hidden allocations.
 #[test]
 fn original_mesh_tessellation_face_preparation_prices_exact_original_work(){
-    use crate::brep::queries::tessellation::tests::observe_tessellation_system as observe;
+    use crate::test_support::observe_tessellation_system as observe;
     use protocol::value::{retained_clone::{RetainedCloneGrant,RetainedCloneProgress},retirement::controlled::ControlledRetirement};
     let law:serde_json::Value=serde_json::from_str(include_str!("../../../🧫️fixtures/🧩️tessellation/🎟️owners.json")).unwrap();
     for close_copy in law["copyGrants"].as_array().unwrap().iter().map(|value|value.as_u64().unwrap()as usize){

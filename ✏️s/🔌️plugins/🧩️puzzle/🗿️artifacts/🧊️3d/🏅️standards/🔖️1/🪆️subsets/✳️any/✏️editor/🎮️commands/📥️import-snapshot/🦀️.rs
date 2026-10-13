@@ -58,8 +58,8 @@ fn refuse(ctx: &mut Puzzle3dActionCtx<'_>, fault: Puzzle3dImportFault) {
 /// 🌱️ The sanctioned whole-document replacement: the imported `document` as a pack plus a fresh, edit-free op log. A
 /// natural-file import is the load path, not a mutation — it carries no inverse and journals no history row.
 pub fn puzzle3d_load_document_effect(document: &crate::Puzzle3dSnapshot) -> Effect {
-    let pack = <crate::Puzzle3dSnapshot as store::ArtifactPack>::encode_pack(document);
-    let spr = ::semio_framework_async::poll::resolve_ready(store::empty_document_spr(crate::editor::puzzle3d::PUZZLE3D_PLAY_APP_ID, crate::PUZZLE_3D_SCHEMA));
+    let pack = <crate::Puzzle3dSnapshot as store::os_store::serialization::ArtifactPack>::encode_pack(document);
+    let spr = ::semio_framework_async::poll::resolve_ready(store::os_store::text_format::empty_document_spr(crate::editor::puzzle3d::PUZZLE3D_PLAY_APP_ID, crate::PUZZLE_3D_SCHEMA));
     Effect::LoadDocument { pack, spr }
 }
 

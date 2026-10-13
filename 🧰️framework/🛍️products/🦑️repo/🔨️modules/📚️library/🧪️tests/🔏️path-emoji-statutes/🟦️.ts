@@ -101,8 +101,8 @@ test("normalization reads explicit catalogs and canonicalizes both mutation pair
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [sourceRoot]: contract.domains }, mutationCatalogSourceOwners: { [contract.catalog]: contract.source } };
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
   const syntax = ts.createSourceFile("normalization.ts", source, ts.ScriptTarget.Latest, true);
-  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "normalizeMutationCasePairs"];
-  const definitions = names.map((name) => syntax.statements.filter(ts.isFunctionDeclaration).find((node) => node.name?.text === name));
+  const names = ["projectionCatalogVectors", "projectionCatalogEntryForSubset", "projectionCatalogsForMutationSource", "canonicalProjectedMutationOwner", "normalizeMutationCasePairs", "entrySubtree", "entrySubtreeIndexes"];
+  const definitions = names.map((name) => syntax.statements.find((node) => ts.isFunctionDeclaration(node) ? node.name?.text === name : ts.isVariableStatement(node) && node.declarationList.declarations.some((declaration) => declaration.name.getText(syntax) === name)));
   expect(definitions.every(Boolean)).toBe(true);
   const entries = new Map<string, any>(), documents = new Map<string, string>();
   for (const [owner, mutationId] of [[contract.source, "create-node"], [contract.catalog, "create-camera"]]) {
@@ -479,7 +479,9 @@ test("domain-owned mutations keep explicit identities with short unique operatio
 
 test("mutation projection catalog lookup uses the one canonical oracle collection", () => {
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
-  const definition = source.match(/^function projectionCatalogEntryForSubset\([\s\S]*?^\}/mu)?.[0];
+  const pick = (name: string): string | undefined => source.match(new RegExp(`^function ${name}(?:<[^>]*>)?\\([\\s\\S]*?^\\}`, "mu"))?.[0];
+  const parts = [pick("projectionCatalogEntryForSubset"), pick("entrySubtree"), source.match(/^const entrySubtreeIndexes = .*;$/mu)?.[0]];
+  const definition = parts.every(Boolean) ? parts.join("\n") : undefined;
   expect(definition).toBeDefined();
   for (const compile of [
     (code: string) => new Bun.Transpiler({ loader: "ts" }).transformSync(code),
@@ -552,7 +554,7 @@ test("normalization discovers exact domain mutation scenarios without flattening
   const artifactRoot = "🗿️fixture", subsetRoot = `${artifactRoot}/🏅️standards/🔖️1/🪆️subsets/✳️any`, mutationRoot = `${subsetRoot}/🧬️schema/🧬️mutations`;
   const taxonomy = { ...loadCatalogTaxonomy(), mutationDomainOwners: { [mutationRoot]: fixture.mutationDomainContract.domains } };
   const source = readFileSync(join(root, "../../🧹️normalization/🟦️.ts"), "utf8");
-  const definitions = ["mutationDomainOwnerLocation", "projectionDirectorySlug", "projectionSourceAt", "canonicalProjectedMemberName", "canonicalProjectedMutationOwner"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}`, "m"))![0]).join("\n");
+  const definitions = ["mutationDomainOwnerLocation", "projectionDirectorySlug", "projectionSourceAt", "canonicalProjectedMemberName", "canonicalProjectedMutationOwner", "memberNamesByFold", "memberNameFolds"].map((name) => source.match(new RegExp(`^function ${name}\\([\\s\\S]*?^}|^const ${name} = .*;$`, "m"))![0]).join("\n");
   const support = { basename, dirname, subsetIdForDirectoryName, mutationCatalogSourceOwner, mutationOwnerIdentity, mutationOwnerRelativePath, pathEmojiStatuteFindings, splitLeadingEmoji: leadingEmojiIdentity, emojiFold: (value: string) => value.replaceAll("\uFE0F", "") };
   const literalKinds: Record<string, string> = { "🏅️standards": "standards", "🔖️1": "standard", "🪆️subsets": "subsets", "✳️any": "subset", "🧬️schema": "schema", "🧬️mutations": "schema", "🧪️tests": "tests" };
   for (const compile of [

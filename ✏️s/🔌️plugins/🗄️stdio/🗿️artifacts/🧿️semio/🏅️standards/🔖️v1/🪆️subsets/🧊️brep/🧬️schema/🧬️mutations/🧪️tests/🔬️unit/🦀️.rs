@@ -1,7 +1,6 @@
-use crate::standards::v1::subsets::drawing::io::text::snapshot::hex_decode;
-use crate::standards::v1::subsets::brep::io::text::mutations::decode_semio_brep_mutation_json;
+use crate::io::text::mutations::decode_semio_brep_mutation_json;
 use super::*;
-use protocol::{DiffBinary,DiffCodec,DiffText, Mutation, MutationDiff, OpText, SemanticMutation};
+use protocol::{DiffBinary,DiffText, Mutation, OpText, SemanticMutation};
 
 /// 🔧️ Sorts every collection by id, for comparisons that must not depend on display order. Position-exact restoration is
 /// asserted separately by `deletions_invert_at_every_position`.
@@ -47,7 +46,7 @@ async fn inverse_round_trip_law_covers_every_variant() {
 #[semio_framework_async_macros::async_test]
 async fn create_delete_vertex_round_trips_explicitly() {
     let base = fixture();
-    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }, tol: 2e-7, at: None });
+    let create = SemioBrepMutation::CreateVertex(create_vertex::CreateVertex { id: "v3".into(), point: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3 { x: 2.0, y: 2.0, z: 2.0 }, tol: 2e-7, at: None });
     let after_create = round_trip(&base, &create);
     assert!(after_create.vertices.iter().any(|v| v.id == "v3"));
 
@@ -92,15 +91,15 @@ async fn replace_and_move_of_an_absent_target_have_empty_inverse_and_are_no_ops(
     let base = fixture();
     let replace = SemioBrepMutation::ReplaceCurve(replace_curve::ReplaceCurve {
         edge_id: "e-missing".into(),
-        new_curve: crate::standards::v1::subsets::brep::schema::snapshot::BrepCurve::Line {
-            origin: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
-            direction: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default(),
+        new_curve: crate::schema::snapshot::BrepCurve::Line {
+            origin: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3::default(),
+            direction: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3::default(),
         },
     });
     assert!(replace.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(protocol::apply_diff(replace.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "replace-curve on an absent edge is a no-op");
 
-    let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: crate::standards::v1::subsets::base::schema::geometry::SemioPoint3::default() });
+    let mv = SemioBrepMutation::MoveVertex(move_vertex::MoveVertex { vertex_id: "v-missing".into(), new_point: semio_s_artifact_stdio_semio_base::schema::geometry::SemioPoint3::default() });
     assert!(mv.inverse(&base).expect("valid retained mutation inverse fixture").is_empty());
     assert_eq!(protocol::apply_diff(mv.diff(&base).diff(), &base).expect("apply must succeed for a well-formed fixture"), base, "move-vertex on an absent vertex is a no-op");
 }
@@ -140,7 +139,7 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
     }
     for test_case in fixture["diffCases"].as_array().expect("tolerance diff cases are an array") {
-        let accepted = crate::standards::v1::subsets::brep::io::text::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
+        let accepted = crate::io::text::diff::decode_semio_brep_diff_json(&test_case["diff"].to_string()).is_ok();
         assert_eq!(accepted, test_case["accepted"].as_bool().expect("case declares acceptance"), "{}", test_case["id"].as_str().expect("case id is a string"));
     }
 }
@@ -149,7 +148,7 @@ async fn language_neutral_tolerance_contract_matches_rust_decoder() {
 async fn language_neutral_delete_inverses_preserve_distinct_tolerances() {
     let fixture: serde_json::Value = serde_json::from_str(include_str!("../../../../🧫️fixtures/📏️tolerance/🔣️.json")).expect("tolerance cases decode");
     for test_case in fixture["inverseCases"].as_array().expect("inverse cases are an array") {
-        let base = crate::standards::v1::subsets::brep::io::text::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
+        let base = crate::io::text::snapshot::decode_semio_brep_snapshot_json(&test_case["before"].to_string()).expect("inverse base decodes");
         let mutation = decode_semio_brep_mutation_json(&test_case["mutation"].to_string()).expect("delete mutation decodes");
         let expected = test_case["expectedInverse"].as_array().expect("expected inverse is an array").iter().map(|operation| decode_semio_brep_mutation_json(&operation.to_string()).expect("expected inverse operation decodes")).collect::<Vec<_>>();
         let actual = mutation.inverse(&base).expect("valid retained mutation inverse fixture");
@@ -169,7 +168,7 @@ async fn language_neutral_tolerance_codec_rejections_match_rust() {
         let accepted = match test_case["encoding"].as_str().expect("diff codec encoding is a string") {
             "text" => SemioBrepDiff::parse_diff(test_case["value"].as_str().expect("text diff case has a value")).is_ok(),
             "binary" => {
-                let bytes = crate::standards::v1::subsets::value::io::text::diff::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
+                let bytes = semio_s_artifact_stdio_semio_base::io::text::codec::hex_decode(test_case["bytesHex"].as_str().expect("binary diff case has bytes")).expect("binary diff fixture is hex");
                 SemioBrepDiff::decode_diff(&bytes).is_ok()
             }
             other => panic!("unknown diff codec encoding {other:?}"),
@@ -235,7 +234,7 @@ async fn kinds_match_the_enum_and_the_catalog() {
 /// 🎯️ Position law: deleting ANY vertex (with its incident edges), edge, face, shell or solid (first, middle, last) is undone at its original index.
 #[semio_framework_async_macros::async_test]
 async fn deletions_invert_at_every_position() {
-    let base = crate::standards::v1::subsets::brep::schema::snapshot::demo_brep_snapshot();
+    let base = crate::schema::snapshot::demo_brep_snapshot();
     for item in &base.vertices {
         protocol::os_spr::protocol_laws::assert_mutation_inverse_sum_law(&SemioBrepMutation::DeleteVertex(delete_vertex::DeleteVertex { id: item.id.clone() }), &base).await;
     }

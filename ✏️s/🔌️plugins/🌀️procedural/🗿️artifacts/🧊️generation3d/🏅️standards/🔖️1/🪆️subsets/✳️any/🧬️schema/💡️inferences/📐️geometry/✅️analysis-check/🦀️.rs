@@ -8,9 +8,9 @@
 
 use super::analysis_measure::{cancelled, lost_state, query_fault, scope_of, staged};
 use crate::standards::v1::subsets::any::schema::inferences::geometry::prelude::*;
-use semio_framework_3d::brep::engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, GeometryHandle, ShapeRoot, ShapeValue};
-use semio_framework_3d::brep::operations::boolean::BooleanOp;
-use semio_framework_3d::brep::queries::analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
+use semio_framework_3d_brep_engine::{BrepBooleanAdmission, BrepBooleanJob, BrepBooleanStep, GeometryHandle, ShapeRoot, ShapeValue};
+use semio_framework_3d_brep_operations::boolean::BooleanOp;
+use semio_framework_3d_brep_queries::analysis::{manifold_report, topology_counts, validity, IssueSeverity, ManifoldReport, ShapeScope, ValidityReport, Watertightness};
 use semio_framework_3d::mesh::{HalfedgeMesh, MeshQualityReport};
 use std::collections::BTreeMap;
 use std::panic::{catch_unwind, AssertUnwindSafe};

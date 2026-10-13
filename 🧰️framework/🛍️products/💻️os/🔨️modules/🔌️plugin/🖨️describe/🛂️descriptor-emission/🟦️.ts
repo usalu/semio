@@ -1,38 +1,35 @@
 import { buildBudgetMs } from "../../../../../../🔨️modules/🏃️process/⏱️budget/🟦️.ts";
-import { createHash } from "node:crypto";
-import { closeSync, lstatSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, renameSync, rmSync, statSync } from "node:fs";
+import { closeSync, lstatSync, mkdtempSync, openSync, readFileSync, readSync, realpathSync, rmSync, statSync } from "node:fs";
 import { join, resolve } from "node:path";
+import { createHash } from "node:crypto";
 import { devToolingEnv, runCmdStatus } from "../../../../../🦑️repo/🔨️modules/📚️library/📦️packages/🟦️typescript/🟦️.ts";
+import { captureOwnedCommandV1 } from "../../../../../../🔨️modules/🏃️process/🎛️owned-execution/🟦️.ts";
 import { BundleScript } from "../../../../../../🔨️modules/🏃️process/🧭️routing/🟦️.ts";
-import { verifyDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
-import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_COMPONENT_MAX_BYTES, FRESH_IO_CHUNK_BYTES, cargoTargetRoot, publishedDescriptorEmitter } from "../🏗️component-build/🟦️.ts";
+import { verifySemanticDescriptorPairBytesV1 } from "../../📇️registry/✅️catalog-verification/🟦️.ts";
+import { ITERATE_COMPONENT_MAX_BYTES } from "../🏷️component-receipt/🟦️.ts";
+import { CRATE_NAME, DESCRIPTOR_JSON_FILENAME, DESCRIPTOR_PACK_FILENAME, FRESH_IO_CHUNK_BYTES, publishedDescriptorEmitter } from "../🏗️component-build/🟦️.ts";
 import { freshPathIsWithin } from "../🧾️source-epoch/🟦️.ts";
 export type DescriptorEmissionRequestV1 = Readonly<{
-  rawComponentPath: string;
-  extractedCorePath: string;
-  ownerRoot: string;
-  artifactRoot?: string;
+  component: string;
+  artifactRoot: string;
 }>;
 
-export type DescriptorEmissionReceiptV1 = Readonly<{
+export type SemanticDescriptorEmissionV1 = Readonly<{
   pluginId: string;
   packageId: string;
   role: "plugin" | "extension";
   version: string;
-  ownerRoot: string;
-  jsonPath: string;
-  packPath: string;
-  rawSha256: string;
-  coreSha256: string;
-  descriptorSha256: string;
-  jsonByteLength: number;
-  packByteLength: number;
+  componentSha256: string;
+  jsonBytes: Uint8Array;
+  packBytes: Uint8Array;
+  semanticSha256: string;
 }>;
 
 export type DescriptorEmissionControlV1 = Readonly<{
   cancelled?: () => boolean;
   deadlineMs?: number;
   checkpoint?: (stage: string) => void;
+  signal?: AbortSignal;
 }>;
 
 export class DescribeScript extends BundleScript {
@@ -87,55 +84,29 @@ function emissionArtifact(root: string, path: string, label: string, maximum: nu
   return { path: real, sha256: hash.digest("hex") };
 }
 
-/** 🛂️ The owner descriptor receipt contract: emits `🛂️.descriptor.semio` + `🔣️.json` for
- * `ownerRoot` from ONE decoded descriptor, out of two independently supplied artifacts — the raw
- * `wasm32-wasip2` component and the separately extracted core module. Both are hashed here, in this
- * process, from the exact bytes on disk; the emitter blanks exactly `hashes.descriptorSha256` for its
- * two-pass self hash; both forms are strict-decoded, compared semantically, re-encoded canonically and
- * checked against those two hashes BEFORE a single owner byte moves. Inputs must be regular
- * non-symlink files inside `artifactRoot` (cargo's target root by default, never the source tree) and
- * `ownerRoot` a regular directory inside the repository; every stage is cancellable and deadline
- * bounded, and a failure at any stage leaves the previous owner pair exactly as it was. */
-export function emitOwnerDescriptorPairV1(repoRoot: string, request: DescriptorEmissionRequestV1, control: DescriptorEmissionControlV1 = {}): DescriptorEmissionReceiptV1 {
+/** 🛂️ The semantic descriptor emission contract: runs the published emitter once over ONE component inside `artifactRoot`
+ * (a crate's deliverable directory, never the source tree) and returns the canonical semantic `🛂️.descriptor.semio` +
+ * `🔣️.json` pair in memory, strict-decoded, compared form against form and refused if it carries any byte identity or a
+ * placeholder identity. Nothing is published here: the describe stage decides whether the pair is verified against the
+ * committed one, written over it, or kept local (ticket 26/09/23 wave A2). Every stage is cancellable and deadline bounded. */
+export async function emitSemanticDescriptorV1(repoRoot: string, request: DescriptorEmissionRequestV1, control: DescriptorEmissionControlV1 = {}): Promise<SemanticDescriptorEmissionV1> {
   const startedAt = Date.now();
   const budgetMs = control.deadlineMs ?? buildBudgetMs();
   emissionGuard(control, startedAt, budgetMs, "validate");
-  const artifactRoot = emissionDirectory(repoRoot, request.artifactRoot ?? cargoTargetRoot(repoRoot), "artifact root");
-  const ownerRoot = emissionDirectory(repoRoot, request.ownerRoot, "owner root");
-  const raw = emissionArtifact(artifactRoot, request.rawComponentPath, "raw component", FRESH_COMPONENT_MAX_BYTES);
-  const core = emissionArtifact(artifactRoot, request.extractedCorePath, "extracted core module", FRESH_COMPONENT_MAX_BYTES);
-  if (raw.path === core.path) throw new Error("raw component and extracted core module are the same file");
-  if (raw.sha256 === core.sha256) throw new Error("raw component and extracted core module have the same SHA-256");
+  const artifactRoot = emissionDirectory(repoRoot, request.artifactRoot, "artifact root");
+  const component = emissionArtifact(artifactRoot, request.component, "component", ITERATE_COMPONENT_MAX_BYTES);
   emissionGuard(control, startedAt, budgetMs, "emit");
-  const staging = mkdtempSync(join(ownerRoot, ".🛂️descriptor-staging-"));
+  const staging = mkdtempSync(join(artifactRoot, ".🛂️descriptor-staging-"));
   try {
     const emitter = publishedDescriptorEmitter(repoRoot);
     emissionGuard(control, startedAt, budgetMs, "describe");
-    const status = runCmdStatus(emitter, ["describe", raw.path, "--core", core.path, "--out", staging], { cwd: repoRoot, env: devToolingEnv(), budgetMs: remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt) });
-    if (status !== 0) throw new Error(`descriptor emitter exited with ${status}`);
+    const remaining = remainingDescriptorEmissionBudgetMs(budgetMs, Date.now() - startedAt), signals = [control.signal, remaining === 0 ? undefined : AbortSignal.timeout(remaining)].filter((value): value is AbortSignal => value !== undefined);
+    await captureOwnedCommandV1(emitter, ["describe", component.path, "--out", staging], repoRoot, { env: devToolingEnv(), ...(signals.length ? { signal: AbortSignal.any(signals) } : {}) }).catch((error: unknown) => { throw new Error(`descriptor emitter failed: ${error instanceof Error ? error.message : String(error)}`, { cause: error }); });
     emissionGuard(control, startedAt, budgetMs, "verify");
-    const packPath = join(staging, DESCRIPTOR_PACK_FILENAME);
-    const jsonPath = join(staging, DESCRIPTOR_JSON_FILENAME);
-    const packBytes = readFileSync(packPath);
-    const jsonBytes = readFileSync(jsonPath);
-    const pair = verifyDescriptorPairBytesV1(jsonBytes, packBytes, { wasmSha256: raw.sha256, coreWasmSha256: core.sha256 });
-    emissionGuard(control, startedAt, budgetMs, "publish");
-    renameSync(packPath, join(ownerRoot, DESCRIPTOR_PACK_FILENAME));
-    renameSync(jsonPath, join(ownerRoot, DESCRIPTOR_JSON_FILENAME));
-    return {
-      pluginId: pair.pluginId,
-      packageId: pair.packageId,
-      role: pair.role,
-      version: pair.version,
-      ownerRoot,
-      jsonPath: join(ownerRoot, DESCRIPTOR_JSON_FILENAME),
-      packPath: join(ownerRoot, DESCRIPTOR_PACK_FILENAME),
-      rawSha256: raw.sha256,
-      coreSha256: core.sha256,
-      descriptorSha256: pair.hashes.descriptorSha256,
-      jsonByteLength: jsonBytes.byteLength,
-      packByteLength: packBytes.byteLength,
-    };
+    const packBytes = readFileSync(join(staging, DESCRIPTOR_PACK_FILENAME));
+    const jsonBytes = readFileSync(join(staging, DESCRIPTOR_JSON_FILENAME));
+    const pair = verifySemanticDescriptorPairBytesV1(jsonBytes, packBytes);
+    return { pluginId: pair.pluginId, packageId: pair.packageId, role: pair.role, version: pair.version, componentSha256: component.sha256, jsonBytes, packBytes, semanticSha256: pair.semanticSha256 };
   } finally {
     rmSync(staging, { recursive: true, force: true });
   }
